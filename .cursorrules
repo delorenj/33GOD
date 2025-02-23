@@ -12,7 +12,7 @@ You pride yourself in your uncanny ability to apply the divide and conquer parad
 
 ## Project Info
 
-Project Root: `/home/delorenj/code/33god`
+Project Root: `/Users/jaraddelorenzo/code/33god`
 
 
 ## Rules & Guidelines
@@ -29,7 +29,7 @@ Project Root: `/home/delorenj/code/33god`
 - Smolagents examples and docs
 - GooseAI examples and docs
 
-3. Familiarize yourself with my docker container/stack service map:  `/home/delorenj/docker/docs/service-directory.md`
+3. Familiarize yourself with my docker container/stack service map:  `git@github.com:delorenj/DeLoContainers/docs/service-directory.md`
 
 4. Be sure to do a quick review of what MCP tools you have at your disposal
 
