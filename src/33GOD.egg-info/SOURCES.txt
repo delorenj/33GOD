@@ -4,6 +4,11 @@ pyproject.toml
 src/33GOD.egg-info/PKG-INFO
 src/33GOD.egg-info/SOURCES.txt
 src/33GOD.egg-info/dependency_links.txt
+src/33GOD.egg-info/entry_points.txt
 src/33GOD.egg-info/requires.txt
 src/33GOD.egg-info/top_level.txt
+src/agents/__init__.py
 src/agents/manager_agent.py
+src/agents/pr_splitter/__init__.py
+src/agents/pr_splitter/agent.py
+src/agents/pr_splitter/cli.py

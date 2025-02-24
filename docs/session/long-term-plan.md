@@ -1,15 +1,32 @@
-# Long-Term Plan
+# Long Term Plan: Future Enhancements for the PR Splitter Agent System
 
-Create an autonomous Agentic PR splitter
+## Vision
+The PR splitter agent is envisioned to evolve into a fully integrated component of a broader agent collection, where a main root agent will handle agent discovery and delegation. While the MVP focuses on local operation, future iterations will extend functionality to work seamlessly with remote repositories, advanced change analysis, and dynamic agent coordination.
 
-## User Story
+## Key Enhancements & Features
 
-- [ ] agent finds the optimal logical split points
-- [ ] sum_of_features[basePR] === sum[br1, br2,..,brX]
-- [ ] The final result can be quantifiably proven to have 100% parity with the base branch
-- [ ] bugs uncovered during analysis should be stored in a document that can be addressed after the splitting is complete
-- [ ] Each commit must Not exceed 1000 source lines of code, give or take a hundred or so lines
-- [ ] There Should be zero code from a future PR that is present in an earlier PR 
-    - For instance, if a PR contains 3 features, the stacked PRs should each feature must be progressively introduced throughout the stack in a way that does not violate temporality.
-- [ ] pr documentation is created befored being turned into a PR on github.
+1. **Dynamic Branch Splitting Process:**
+   - The MVP will process one split at a time.
+   - Instead of predetermined branch names, the agent will analyze the changes and determine logical split points.
+   - In the current design, the branch for splitting will be determined dynamically during analysis.
 
+2. **Automated Termination Condition:**
+   - The agent will continuously split until the remaining differential changes fall below a defined threshold (e.g., less than 1000 lines).
+   - This termination condition ensures that the process ends naturally without manual intervention.
+   - Future algorithms may refine this threshold based on more detailed heuristics.
+
+3. **CLI Command & Local Environment Assumptions:**
+   - For now, the PR splitter agent will run locally, automatically detecting the current working branch and using “staging” as the merge target.
+   - The CLI command (e.g., “pr-split”) will trigger the analysis and splitting process.
+   - Future work could include integrating Git commands to accurately detect and work with branch names.
+
+4. **Integration into a Larger Agent Collection:**
+   - While the MVP stands alone, the long term goal is to integrate the PR splitter with a root agent responsible for agent discovery and delegation.
+   - This root agent (e.g., the eventual 33God agent) will orchestrate various specialized agents, enabling a modular and extensible system.
+
+## Roadmap
+- **Short Term (MVP):** Implement and solidify the PR splitter agent with local Git clone assumptions, dynamic termination based on split diff threshold, and basic CLI integration.
+- **Mid Term:** Enhance analysis to refine branch split points, integrate with Git for real-time branch detection, and enable more detailed change reporting.
+- **Long Term:** Integrate the PR splitter into a larger framework of agent systems, featuring dynamic agent discovery, delegation, and coordinated operations across multiple repositories.
+
+This document captures the updated vision and technical requirements for the future evolution of the PR splitter agent system.
