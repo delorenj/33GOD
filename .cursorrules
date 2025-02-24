@@ -27,7 +27,6 @@ Project Root: `/Users/jaraddelorenzo/code/33god`
 
 2. Prepare your context by searching using your ragdocs tool for the latest:
 - Smolagents examples and docs
-- GooseAI examples and docs
 
 3. Familiarize yourself with my docker container/stack service map:  `git@github.com:delorenj/DeLoContainers/docs/service-directory.md`
 

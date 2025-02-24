@@ -1,0 +1,11 @@
+[project]
+name = "33GOD"
+version = "0.1.0"
+description = "A minimal manager agent for PR splitting using smolagents"
+dependencies = [
+    "smolagents"
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
