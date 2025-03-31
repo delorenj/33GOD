@@ -1,13 +1,15 @@
-from smolagents import CodeAgent, HfApiModel
+from smolagents import CodeAgent, LiteLLMModel
 from agents.pr_splitter.prompts import SYSTEM_PROMPT
+
+model = LiteLLMModel(model_id="")
 
 class PRSplitterAgent(CodeAgent):
     def __init__(self):
-        model = HfApiModel()
+        model = LiteLLMModel()
         model.system_prompt = SYSTEM_PROMPT
         super().__init__(
-            tools=[],  # No tools needed for initial MVP
-            model=model  # Model with system prompt configured
+            tools=[],
+            model=model
         )
 
     def run(self, input_text: str) -> None:
