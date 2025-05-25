@@ -1,6 +1,0 @@
-Metadata-Version: 2.2
-Name: 33GOD
-Version: 0.1.0
-Summary: A minimal manager agent for PR splitting using smolagents
-License-File: LICENSE
-Requires-Dist: smolagents

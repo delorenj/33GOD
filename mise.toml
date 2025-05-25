@@ -1,3 +1,4 @@
 [tools]
-python = "latest"
+python = "3.13.2"
 uv = "latest"
+

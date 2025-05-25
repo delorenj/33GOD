@@ -1,18 +1,5 @@
 [project]
 name = "33GOD"
 version = "0.1.0"
-description = "A minimal manager agent for PR splitting using smolagents"
-dependencies = [
-    "smolagents"
-]
+description = "A framework for developing and orchestrating AI agents by leveraging the universally understood analogy of a corporate organizational structure.
 
-[project.scripts]
-pr-split = "agents.pr_splitter.cli:main"
-
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-packages = ["agents", "agents.pr_splitter"]
