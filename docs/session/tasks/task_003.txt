@@ -1,0 +1,71 @@
+# Task ID: 3
+# Title: Database: Define PostgreSQL Schema and Seed Initial Data
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Define the PostgreSQL database schema for `departments`, `agents`, and `company` tables. Create an SQL script to seed the initial 'foundingMembers' department and the 'Tonny Trosk' cofounder agent (employeeId: 123) with its details. Ensure FastAPI can connect to the PostgreSQL instance.
+# Details:
+1. Create `db_init/schema.sql`: Define `CREATE TABLE` statements for:
+    - `departments` (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, parent_department_id INTEGER REFERENCES departments(id) NULLABLE).
+    - `agents` (id SERIAL PRIMARY KEY, employee_id VARCHAR(50) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL, role VARCHAR(255), responsibilities TEXT, provider VARCHAR(100), model VARCHAR(100), department_id INTEGER REFERENCES departments(id), skills JSONB, access JSONB, resume JSONB, lifetime_cost INTEGER DEFAULT 0).
+    - `company` (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL) - if needed for a top-level entity.
+2. Create `db_init/seed.sql`: `INSERT INTO` statements for:
+    - `departments`: 'foundingMembers' department.
+    - `agents`: 'Tonny Trosk' (employeeId: '123', name: 'Tonny Trosk', role: 'cofounder', department_id linked to 'foundingMembers', other fields as specified or sensible defaults, `lifetimeCost` as a hardcoded integer).
+3. Modify `postgres` service in `docker-compose.yml` to run these scripts on initialization, e.g., by mounting them to `/docker-entrypoint-initdb.d/`.
+4. Configure FastAPI backend with database connection URL (e.g., via environment variable like `DATABASE_URL=postgresql://user:password@postgres:5432/dbname`).
+
+# Test Strategy:
+Restart the `postgres` service (`docker-compose restart postgres` or `docker-compose up -d --force-recreate postgres`). Connect to the PostgreSQL database using a DB client. Verify that the `departments` and `agents` tables exist and contain the seeded data for 'foundingMembers' and 'Tonny Trosk'.
+
+# Subtasks:
+## 1. Create PostgreSQL Schema Definition Script [pending]
+### Dependencies: None
+### Description: Create the schema.sql file with CREATE TABLE statements for departments, agents, and company tables with proper relationships and constraints.
+### Details:
+Create db_init/schema.sql with the following tables:
+1. departments: id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, parent_department_id INTEGER REFERENCES departments(id) NULL
+2. agents: id SERIAL PRIMARY KEY, employee_id VARCHAR(50) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL, role VARCHAR(255), responsibilities TEXT, provider VARCHAR(100), model VARCHAR(100), department_id INTEGER REFERENCES departments(id), skills JSONB, access JSONB, resume JSONB, lifetime_cost INTEGER DEFAULT 0
+3. company: id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL
+Ensure proper foreign key constraints and indexes for performance.
+
+## 2. Create Data Seed Script for Initial Entities [pending]
+### Dependencies: 3.1
+### Description: Create the seed.sql script to populate the database with the foundingMembers department and Tonny Trosk agent with appropriate values.
+### Details:
+Create db_init/seed.sql with INSERT statements for:
+1. Insert 'foundingMembers' into departments table
+2. Insert 'Tonny Trosk' into agents table with employeeId '123', role 'cofounder', and appropriate department_id reference to foundingMembers
+3. Set reasonable default values for other fields (skills, access, resume as empty JSONB objects, lifetime_cost as 0)
+4. Optionally insert a company record if needed for the application
+
+## 3. Configure Docker Compose for Database Initialization [pending]
+### Dependencies: 3.1, 3.2
+### Description: Modify the docker-compose.yml file to mount the schema and seed scripts to the PostgreSQL container's initialization directory.
+### Details:
+Update the postgres service in docker-compose.yml to:
+1. Mount the db_init directory to /docker-entrypoint-initdb.d/ in the container
+2. Ensure proper execution order by naming files with numeric prefixes (e.g., 01-schema.sql, 02-seed.sql)
+3. Set appropriate environment variables for database name, user, and password
+4. Configure volume for persistent data storage if needed
+
+## 4. Configure FastAPI Database Connection [pending]
+### Dependencies: 3.3
+### Description: Set up the database connection configuration in the FastAPI application to connect to the PostgreSQL database.
+### Details:
+1. Create a database.py module in the FastAPI app
+2. Configure the connection string using environment variables (DATABASE_URL)
+3. Implement connection pooling using SQLAlchemy or asyncpg
+4. Create a get_db() dependency function for route handlers
+5. Add environment variable configuration in docker-compose.yml for the FastAPI service
+
+## 5. Implement Database Models and Test Connection [pending]
+### Dependencies: 3.4
+### Description: Create SQLAlchemy or Pydantic models corresponding to the database schema and implement a test endpoint to verify database connectivity.
+### Details:
+1. Create models for Department, Agent, and Company entities that match the database schema
+2. Implement a simple GET endpoint to retrieve the founding members department and Tonny Trosk's information
+3. Add error handling for database connection issues
+4. Implement proper connection closing to prevent resource leaks
+5. Document the database schema and models in the project documentation
+

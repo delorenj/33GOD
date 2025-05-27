@@ -1,0 +1,48 @@
+# Task ID: 7
+# Title: CLI Frontend: Implement `chat` Command
+# Status: pending
+# Dependencies: 5, 6
+# Priority: medium
+# Description: Implement the `33god chat <employee_id> "<prompt_string>"` command in the Typer CLI application. This command makes an HTTP POST request to the backend's `/api/v1/agents/{employee_id}/chat` endpoint with the provided prompt and prints the agent's response.
+# Details:
+1. In the Typer CLI application (`cli/main.py`):
+2. Implement `33god chat <employee_id> "<prompt_string>"` command:
+    - Takes `employee_id` (string) and `prompt_string` (string) as arguments.
+    - Use `requests` or `httpx` to make a POST request to `BACKEND_API_URL/agents/{employee_id}/chat`.
+    - The request body should be JSON: `{ "prompt": prompt_string }`.
+    - Print the `response` field from the JSON response received from the backend.
+
+# Test Strategy:
+Ensure the backend API service is running. Run `python main.py chat 123 "Should we use Python for this?"`. Verify the command prints an enthusiastic agreement response from the 'Tonny Trosk' agent via the backend.
+
+# Subtasks:
+## 1. Define chat command structure in Typer CLI [pending]
+### Dependencies: None
+### Description: Add the chat command to the Typer CLI application structure with appropriate parameters and help text.
+### Details:
+In cli/main.py, add a new command function decorated with @app.command() named 'chat'. Define two parameters: employee_id as a str with appropriate help text explaining it's the ID of the employee to chat with, and prompt_string as a str with help text explaining it's the message to send to the agent. Include appropriate command help text explaining the purpose of the chat command.
+
+## 2. Implement API endpoint URL construction [pending]
+### Dependencies: 7.1
+### Description: Create a function to properly construct the API endpoint URL for the chat request using the employee_id.
+### Details:
+Create a helper function that takes employee_id as a parameter and returns the full URL for the chat endpoint by combining the base BACKEND_API_URL with the path '/api/v1/agents/{employee_id}/chat'. Ensure the employee_id is properly URL-encoded if necessary. This function will be used by the chat command to construct the target URL.
+
+## 3. Implement HTTP POST request functionality [pending]
+### Dependencies: 7.2
+### Description: Create the core functionality to send the HTTP POST request to the backend with the prompt data.
+### Details:
+Using the requests or httpx library, implement the functionality to send a POST request to the URL constructed in the previous subtask. Create a JSON payload with the format { "prompt": prompt_string }. Set appropriate headers for content type (application/json). Include error handling for connection issues, timeouts, or invalid responses. Return the response object for further processing.
+
+## 4. Implement response parsing and display [pending]
+### Dependencies: 7.3
+### Description: Extract and display the agent's response from the API response JSON.
+### Details:
+Parse the JSON response from the API call. Extract the 'response' field from the JSON. Implement error handling for cases where the response doesn't contain the expected field or isn't valid JSON. Format the response appropriately for display in the terminal (handling potential multiline responses, etc.). Print the formatted response to stdout.
+
+## 5. Add error handling and user feedback [pending]
+### Dependencies: 7.4
+### Description: Enhance the command with comprehensive error handling and user feedback for different scenarios.
+### Details:
+Implement specific error handling for common failure scenarios: 1) Backend server unreachable, 2) Authentication failures, 3) Employee ID not found, 4) Rate limiting or quota issues, 5) Unexpected server errors. For each error case, provide a clear, user-friendly error message. Add progress indicators or messages (e.g., 'Sending message...', 'Waiting for response...') to improve user experience during potentially slow operations. Include a verbose mode that shows additional details about the request/response when enabled.
+

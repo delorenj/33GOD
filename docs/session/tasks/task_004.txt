@@ -1,0 +1,68 @@
+# Task ID: 4
+# Title: Backend API: Update Structure Endpoint to Use Database
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Modify the `GET /api/v1/company/structure` endpoint in the FastAPI backend to query the PostgreSQL database for the company structure (departments and agents) instead of returning hardcoded data. Transform query results into the required JSON response format.
+# Details:
+1. In the FastAPI backend, establish a database connection (e.g., using SQLAlchemy with Pydantic models, or a library like `asyncpg` or `psycopg2-binary`).
+2. Update the `GET /api/v1/company/structure` endpoint logic:
+    - Query the `departments` table for 'foundingMembers'.
+    - Query the `agents` table for 'Tonny Trosk' linked to that department.
+    - Construct the JSON response dynamically based on the data retrieved from the database, ensuring it matches the structure from `WalkingSkeleton.md` (CEO node can be conceptual or fetched if a `company` table holds this).
+3. Ensure proper error handling if data is not found.
+
+# Test Strategy:
+Ensure the database is seeded (Task 3). Run `docker-compose up -d backend_api`. Send a GET request to `http://localhost:8000/api/v1/company/structure`. Verify the response matches the data seeded in the database and conforms to the expected JSON structure. Modify data in the DB and re-test to ensure dynamic retrieval.
+
+# Subtasks:
+## 1. Set up database connection with SQLAlchemy [pending]
+### Dependencies: None
+### Description: Establish a connection to the PostgreSQL database using SQLAlchemy ORM. Create the necessary database models for departments and agents.
+### Details:
+1. Install required packages: `sqlalchemy`, `psycopg2-binary`, and `pydantic`. 
+2. Create a database connection module in `app/db/database.py` that establishes a connection pool. 
+3. Define SQLAlchemy models for `Department` and `Agent` in `app/models/` directory. 
+4. Create a database session factory function. 
+5. Implement dependency injection for database sessions in FastAPI.
+
+## 2. Create database query functions for company structure [pending]
+### Dependencies: None
+### Description: Implement functions to query the departments and agents tables to retrieve the company structure data.
+### Details:
+1. Create a repository module `app/repositories/company_repository.py`. 
+2. Implement a function to fetch the 'foundingMembers' department. 
+3. Implement a function to fetch agents associated with departments, particularly 'Tonny Trosk'. 
+4. Add error handling for cases where data is not found. 
+5. Ensure functions use async/await pattern if using async database drivers.
+
+## 3. Implement data transformation logic [pending]
+### Dependencies: None
+### Description: Create utility functions to transform database query results into the required JSON response format for the company structure.
+### Details:
+1. Create a module `app/services/structure_service.py`. 
+2. Implement a function that takes database entities and transforms them into a nested structure. 
+3. Ensure the CEO node is at the top level, followed by departments and agents. 
+4. Handle edge cases like missing departments or agents. 
+5. Format the response to match exactly the structure from WalkingSkeleton.md.
+
+## 4. Update the GET /api/v1/company/structure endpoint [pending]
+### Dependencies: None
+### Description: Modify the existing endpoint to use the new database query and transformation functions instead of hardcoded data.
+### Details:
+1. Locate the endpoint handler in the appropriate router file. 
+2. Inject the database session dependency. 
+3. Replace hardcoded data with calls to the repository functions. 
+4. Use the transformation service to format the response. 
+5. Implement proper error handling with appropriate HTTP status codes (404 for not found, 500 for server errors).
+
+## 5. Add comprehensive error handling and logging [pending]
+### Dependencies: None
+### Description: Enhance the endpoint with proper error handling, logging, and edge case management to ensure robustness.
+### Details:
+1. Implement try/except blocks to catch database connection errors. 
+2. Add specific error responses for common failure scenarios (e.g., database unavailable, data not found). 
+3. Implement logging throughout the request flow to aid debugging. 
+4. Add validation to ensure the response always follows the expected structure even in partial data scenarios. 
+5. Document the error responses in the API documentation.
+

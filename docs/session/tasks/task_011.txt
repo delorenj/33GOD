@@ -1,0 +1,94 @@
+# Task ID: 11
+# Title: System Integration: Finalize Dockerization, E2E Testing, and READMEs
+# Status: pending
+# Dependencies: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+# Priority: high
+# Description: Ensure all components (Backend API, PostgreSQL, Web Frontend, CLI) are correctly containerized and orchestrated with Docker Compose. Polish Dockerfiles and `docker-compose.yml` for environment variables, networking, and volumes. Create basic READMEs for each component outlining setup and run instructions. Perform end-to-end testing of the full user story.
+# Details:
+1. Review all Dockerfiles (`backend/Dockerfile`, `frontend/Dockerfile`, potentially `cli/Dockerfile`) for best practices (e.g., minimize layers, use `.dockerignore`, multi-stage builds for frontend).
+2. Review and finalize `docker-compose.yml`:
+    - Ensure correct service dependencies (`depends_on`).
+    - Consistent and clear service naming.
+    - Proper port mappings.
+    - Secure and configurable environment variable setup (e.g., using an `.env` file for `DATABASE_URL`, `OPENROUTER_API_KEY`, `REACT_APP_API_BASE_URL` for frontend, `CLI_API_URL` for CLI).
+    - Verify volume for PostgreSQL data persistence.
+3. Create/update `README.md` for `backend`, `frontend`, `cli` directories: Include brief description, prerequisites, how to build, how to run (locally and via Docker Compose), and available environment variables.
+4. Create a root `README.md` explaining the overall project and how to run everything using `docker-compose`.
+
+# Test Strategy:
+Perform comprehensive end-to-end testing as per PRD Section 8 (Definition of Done for MS1):
+1. Clean Docker environment: `docker-compose down -v --remove-orphans`.
+2. Build and start all services: `docker-compose up --build -d`.
+3. Web Dashboard: Access `http://localhost:3360`. Verify CEO and 'Tonny Trosk' nodes display. Chat with 'Tonny Trosk' via modal and verify enthusiastic response.
+4. CLI: Execute `docker-compose exec <backend_service_or_dedicated_cli_service> python cli/main.py departments list` and verify company structure output. Execute `docker-compose exec <backend_service_or_dedicated_cli_service> python cli/main.py chat 123 "Final CLI Test"` and verify agent's response.
+5. RabbitMQ: Re-run RabbitMQ connectivity test scripts (Task 10).
+6. Check logs of all services (`docker-compose logs -f`) for errors during tests.
+7. Verify READMEs are clear and accurate.
+
+# Subtasks:
+## 1. Optimize and Finalize All Dockerfiles [pending]
+### Dependencies: None
+### Description: Review and optimize Dockerfiles for backend, frontend, and CLI components following Docker best practices.
+### Details:
+1. Review and update `backend/Dockerfile`: Use appropriate base image, minimize layers, implement proper caching for dependencies, set up non-root user, and include health checks.
+2. Review and update `frontend/Dockerfile`: Implement multi-stage build to reduce final image size, properly handle node_modules caching, and set up proper build arguments for environment variables.
+3. Create or update `cli/Dockerfile`: Ensure proper packaging of CLI tool with dependencies.
+4. Create `.dockerignore` files for each component to exclude unnecessary files.
+5. Document build arguments and environment variables in each Dockerfile.
+
+## 2. Configure Docker Compose for Full System Integration [pending]
+### Dependencies: 11.1
+### Description: Create or update the docker-compose.yml file to orchestrate all services with proper dependencies, networking, and environment configuration.
+### Details:
+1. Define services for backend, frontend, database, and CLI in `docker-compose.yml`.
+2. Configure proper service dependencies using `depends_on` and health checks.
+3. Set up networking between containers with appropriate port mappings.
+4. Create a template `.env` file for environment variables (DATABASE_URL, OPENROUTER_API_KEY, etc.).
+5. Configure volume for PostgreSQL data persistence.
+6. Set up proper restart policies for services.
+7. Add comments in the docker-compose file explaining key configurations.
+
+## 3. Create Component-Specific READMEs [pending]
+### Dependencies: 11.1
+### Description: Create detailed README.md files for backend, frontend, and CLI components with setup and usage instructions.
+### Details:
+1. For each component (backend, frontend, CLI), create a README.md that includes:
+   - Brief component description and purpose
+   - Prerequisites for local development
+   - Installation and setup instructions
+   - Available environment variables and configuration options
+   - How to build and run locally
+   - How to build and run with Docker
+   - Troubleshooting common issues
+2. Include code examples where appropriate.
+3. Document API endpoints for backend, UI features for frontend, and commands for CLI.
+
+## 4. Create Root Project README [pending]
+### Dependencies: 11.2, 11.3
+### Description: Create a comprehensive root README.md that explains the overall project architecture and provides instructions for running the complete system.
+### Details:
+1. Create a root `README.md` that includes:
+   - Project overview and purpose
+   - System architecture diagram or description
+   - List of all components and their relationships
+   - Prerequisites for running the complete system
+   - Step-by-step instructions for starting the system with Docker Compose
+   - How to access each component (URLs, ports)
+   - Development workflow instructions
+   - Troubleshooting section for common issues
+2. Include a quick-start guide for new developers.
+3. Document how components interact with each other.
+
+## 5. Perform End-to-End Testing [pending]
+### Dependencies: 11.2
+### Description: Conduct comprehensive end-to-end testing of the complete system to verify all components work together correctly.
+### Details:
+1. Create a test plan covering key user flows through the system.
+2. Start the complete system using Docker Compose.
+3. Test user registration and authentication if applicable.
+4. Test core functionality across frontend, backend, and CLI components.
+5. Verify data persistence in PostgreSQL across system restarts.
+6. Test error handling and edge cases.
+7. Document any issues found and create tickets for them.
+8. Verify environment variable configuration works correctly across components.
+

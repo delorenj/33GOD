@@ -1,0 +1,71 @@
+# Task ID: 9
+# Title: Web Frontend: Implement Agent Chat Modal and Interaction
+# Status: pending
+# Dependencies: 5, 8
+# Priority: high
+# Description: In the web frontend, implement functionality where clicking on the 'Tonny Trosk' React Flow node opens a simple modal (using ShadCN/UI Dialog). The modal should contain an input field for a message and a submit button. Submitting the message should call the `POST /api/v1/agents/123/chat` backend endpoint and display the agent's response within the modal.
+# Details:
+1. In the React Flow setup (`App.tsx` or a dedicated component), add an `onNodeClick` handler.
+2. If the clicked node is 'Tonny Trosk' (e.g., `node.id === '123'`):
+    - Use ShadCN/UI Dialog (`<Dialog>`, `<DialogTrigger>`, `<DialogContent>`, `<DialogHeader>`, `<DialogTitle>`, `<DialogDescription>`, `<DialogFooter>`).
+    - The Dialog content should include an `<Input />` (from ShadCN/UI) for the prompt and a `<Button />` to submit.
+    - Manage prompt input and agent response using React state (e.g., `useState`).
+    - On button click, make an async POST request to `/api/v1/agents/123/chat` (using `fetch` or `axios`) with `{ "prompt": "user_input_from_modal" }`.
+    - Update state with the agent's response (`data.response`) and display it in the modal.
+    - Handle loading/error states during the API call.
+
+# Test Strategy:
+Ensure backend and frontend services are running. Open `http://localhost:3360`. Click on the 'Tonny Trosk' node. Verify a modal dialog opens. Enter a prompt (e.g., "Hello Tonny!") and click submit. Verify the modal displays an enthusiastic agreement response from the agent. Check browser network tab for the POST request and response.
+
+# Subtasks:
+## 1. Implement onNodeClick handler in React Flow [pending]
+### Dependencies: None
+### Description: Add an onNodeClick event handler to the React Flow component that identifies when the 'Tonny Trosk' node is clicked and triggers the chat modal.
+### Details:
+1. In App.tsx or the component containing ReactFlow, implement the onNodeClick handler function.
+2. Check if the clicked node has id '123' (Tonny Trosk).
+3. If it matches, set a state variable (e.g., isDialogOpen) to true to open the modal.
+4. Add necessary state management using useState hook: const [isDialogOpen, setIsDialogOpen] = useState(false).
+
+## 2. Create ShadCN/UI Dialog component for chat interface [pending]
+### Dependencies: 9.1
+### Description: Implement a ShadCN/UI Dialog component that serves as the chat modal with appropriate structure and styling.
+### Details:
+1. Import necessary Dialog components from ShadCN/UI: Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, and DialogFooter.
+2. Structure the Dialog with a clear title ('Chat with Tonny Trosk'), description, and footer.
+3. Ensure the Dialog's open state is controlled by the isDialogOpen state variable.
+4. Add a function to close the dialog (setIsDialogOpen(false)) and attach it to appropriate events.
+
+## 3. Add input field and submit button to the Dialog [pending]
+### Dependencies: 9.2
+### Description: Implement the chat input field and submit button within the Dialog component with proper state management.
+### Details:
+1. Add a ShadCN/UI Input component for user message input.
+2. Create state for the input: const [userInput, setUserInput] = useState('').
+3. Add an onChange handler to update userInput state as the user types.
+4. Add a ShadCN/UI Button component with appropriate styling for submission.
+5. Implement basic validation to prevent empty message submission.
+
+## 4. Implement API call to chat endpoint [pending]
+### Dependencies: 9.3
+### Description: Create the functionality to send the user's message to the backend API and handle the response.
+### Details:
+1. Create a submitMessage async function that will be called when the submit button is clicked.
+2. Use fetch or axios to make a POST request to '/api/v1/agents/123/chat' with the body { "prompt": userInput }.
+3. Add loading state: const [isLoading, setIsLoading] = useState(false).
+4. Set isLoading to true before the API call and false after it completes.
+5. Add error handling with try/catch and create an error state to store any errors.
+6. Create a state variable for the agent's response: const [agentResponse, setAgentResponse] = useState('').
+7. Update the agentResponse state with data.response from the API response.
+
+## 5. Display agent response and implement loading/error states [pending]
+### Dependencies: 9.4
+### Description: Update the Dialog UI to display the agent's response, loading indicators, and error messages.
+### Details:
+1. Add a section in the Dialog to display the agent's response when available.
+2. Implement conditional rendering to show a loading spinner (ShadCN/UI Spinner or similar) when isLoading is true.
+3. Display error messages when the error state is not empty.
+4. Style the response area to clearly differentiate between user input and agent responses.
+5. Add the ability to send multiple messages in sequence, maintaining a clean UI between submissions.
+6. Clear the input field after submission but preserve the conversation history.
+

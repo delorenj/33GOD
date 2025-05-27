@@ -1,0 +1,90 @@
+# Task ID: 8
+# Title: Web Frontend: Project Setup, Layout, and Structure Display (React Flow)
+# Status: pending
+# Dependencies: 4
+# Priority: high
+# Description: Initialize a React project using Vite with TypeScript. Install and configure Tailwind CSS, React Flow, Zustand, and ShadCN/UI. Create a basic page layout accessible at `http://localhost:3360`. Fetch the company structure from `GET /api/v1/company/structure` on page load, store it in a Zustand store, and render a CEO node and the 'Tonny Trosk' cofounder agent node using React Flow. Create a Dockerfile for the frontend and add it to `docker-compose.yml`.
+# Details:
+1. Create frontend project directory (e.g., `frontend`).
+2. Initialize React project: `npx create-vite@latest frontend --template react-ts`.
+3. Install dependencies: `npm install tailwindcss postcss autoprefixer reactflow zustand @radix-ui/react-dialog class-variance-authority clsx lucide-react tailwind-merge shadcn-ui` (or `yarn add ...`).
+4. Initialize Tailwind CSS: `npx tailwindcss init -p`. Configure `tailwind.config.js` and `index.css`.
+5. Initialize ShadCN/UI: `npx shadcn-ui@latest init`.
+6. Create a Zustand store (`src/store.js`) to hold company structure (nodes, edges).
+7. Create a main App component (`src/App.tsx`):
+    - On mount (`useEffect`), fetch data from backend's `/api/v1/company/structure` (ensure backend URL is configurable, e.g. via `VITE_API_URL` in `.env`).
+    - Update Zustand store with fetched data, transforming it into React Flow `nodes` (e.g., { id: 'ceo', type: 'input', data: { label: 'CEO' }, position: { x: 250, y: 5 } }, { id: '123', data: { label: 'Tonny Trosk (Cofounder)' }, position: { x: 250, y: 100 } }) and `edges`.
+    - Use `<ReactFlowProvider>`, `<ReactFlow nodes={nodes} edges={edges} ... />`, `<Controls />`, `<Background />` to render the graph.
+8. Create `frontend/Dockerfile`: Multi-stage build. Stage 1: `node:18-alpine` to build the React app (`npm run build`). Stage 2: `nginx:alpine` to copy build artifacts from Stage 1 to `/usr/share/nginx/html` and serve static content. Configure Nginx for single-page application (SPA) routing.
+9. Add `frontend_web` service to `docker-compose.yml`: build context `./frontend`, ports `3360:80` (if Nginx serves on 80 internally), depends_on `backend_api`.
+
+# Test Strategy:
+Run `docker-compose up -d --build frontend_web`. Open `http://localhost:3360` in a browser. Verify the page loads with basic layout. Check that a CEO node and a 'Tonny Trosk' cofounder node are rendered by React Flow. Inspect browser network tab to confirm API call to `/api/v1/company/structure` is successful. Check console for errors.
+
+# Subtasks:
+## 1. Initialize React Project with Vite and Configure Dependencies [pending]
+### Dependencies: None
+### Description: Set up a new React project with TypeScript using Vite. Install and configure all required dependencies including Tailwind CSS, React Flow, Zustand, and ShadCN/UI.
+### Details:
+1. Create frontend project directory (`frontend`)
+2. Initialize React project with TypeScript template: `npx create-vite@latest frontend --template react-ts`
+3. Navigate to project directory and install core dependencies: `npm install tailwindcss postcss autoprefixer reactflow zustand @radix-ui/react-dialog class-variance-authority clsx lucide-react tailwind-merge`
+4. Initialize Tailwind CSS: `npx tailwindcss init -p`
+5. Configure `tailwind.config.js` to include content paths
+6. Update `src/index.css` with Tailwind directives
+7. Initialize ShadCN/UI: `npx shadcn-ui@latest init`
+8. Configure development server to run on port 3360 in `vite.config.ts`
+
+## 2. Create Zustand Store for Company Structure [pending]
+### Dependencies: None
+### Description: Implement a Zustand store to manage the company structure data, including nodes and edges for React Flow.
+### Details:
+1. Create `src/store/companyStore.ts` file
+2. Define types for company structure data, nodes, and edges
+3. Implement a Zustand store with:
+   - State interface containing nodes, edges, and loading state
+   - Actions to fetch company structure data
+   - Actions to update nodes and edges
+   - Helper functions to transform API data to React Flow format
+4. Export the store hook for use in components
+
+## 3. Implement API Integration and Data Fetching [pending]
+### Dependencies: None
+### Description: Create service to fetch company structure data from the backend API and transform it into the format required by React Flow.
+### Details:
+1. Create `src/services/api.ts` for API integration
+2. Set up environment variables in `.env` file with `VITE_API_URL`
+3. Implement fetch function to get company structure from `GET /api/v1/company/structure`
+4. Create data transformation functions to convert API response to React Flow nodes and edges
+5. Handle error cases and loading states
+6. Connect the API service to the Zustand store created in the previous subtask
+
+## 4. Build React Flow Component and Basic Layout [pending]
+### Dependencies: None
+### Description: Create the main application layout and implement the React Flow component to display the company structure graph.
+### Details:
+1. Create basic layout components in `src/components/layout`
+2. Implement the main App component in `src/App.tsx`
+3. Add React Flow provider and component setup
+4. Implement useEffect hook to fetch data on component mount
+5. Connect to the Zustand store to access nodes and edges
+6. Add React Flow Controls and Background components
+7. Style the CEO node and 'Tonny Trosk' cofounder node with appropriate visual elements
+8. Implement basic zoom and pan functionality
+9. Add loading and error states to the UI
+
+## 5. Create Dockerfile and Update Docker Compose Configuration [pending]
+### Dependencies: None
+### Description: Create a Dockerfile for the frontend application and update the docker-compose.yml file to include the frontend service.
+### Details:
+1. Create `frontend/Dockerfile` with multi-stage build:
+   - Stage 1: Use `node:18-alpine` to build the React app
+   - Stage 2: Use `nginx:alpine` to serve the built static files
+2. Create nginx configuration for SPA routing
+3. Update `docker-compose.yml` to add a `frontend_web` service:
+   - Set build context to `./frontend`
+   - Map port 3360:80
+   - Add dependency on `backend_api` service
+4. Test the Docker setup locally
+5. Document any environment variables or configuration needed for production deployment
+

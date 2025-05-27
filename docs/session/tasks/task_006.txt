@@ -1,0 +1,70 @@
+# Task ID: 6
+# Title: CLI Frontend: Setup and `departments list` Command
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Set up the Typer application structure for the CLI frontend. Implement the `33god departments list [--detailed]` command, which makes an HTTP GET request to the backend's `/api/v1/company/structure` endpoint and prints the formatted JSON response. Configure the backend API URL.
+# Details:
+1. Create CLI project directory (e.g., `cli`).
+2. Initialize Typer application (Python 3.11+): `main.py`, `requirements.txt` (Typer, Requests/HTTPX).
+3. Implement `33god departments list [--detailed]` command:
+    - Use `typer.Option` for `--detailed` if specific behavior is needed, otherwise assume default is detailed.
+    - Use `requests` or `httpx` to make a GET request to the backend API (e.g., `http://localhost:8000/api/v1/company/structure`).
+    - Pretty-print the JSON response to the console.
+4. Allow backend API URL configuration via an environment variable (e.g., `APP_API_URL`) with a default (e.g., `http://localhost:8000/api/v1`).
+5. Consider adding a Dockerfile for the CLI for consistent execution environment or for running commands via `docker-compose exec`.
+
+# Test Strategy:
+Ensure the backend API service is running. From the CLI project directory (or via Docker if set up), run `python main.py departments list`. Verify the output is the JSON company structure fetched from the backend. Test with and without `--detailed` if implemented differently.
+
+# Subtasks:
+## 1. Create CLI project structure and initialize Typer application [pending]
+### Dependencies: None
+### Description: Set up the basic project structure for the CLI frontend and initialize the Typer application with required dependencies.
+### Details:
+1. Create a `cli` directory in the project root
+2. Create `main.py` as the entry point for the CLI application
+3. Initialize a Typer application instance in `main.py`
+4. Create `requirements.txt` with necessary dependencies (Typer, requests/httpx)
+5. Set up basic command structure with a root command group named `33god`
+
+## 2. Implement configuration management for backend API URL [pending]
+### Dependencies: 6.1
+### Description: Create a configuration module to manage the backend API URL and other potential configuration values.
+### Details:
+1. Create a `config.py` module in the CLI directory
+2. Implement a function to read the backend API URL from environment variable `APP_API_URL`
+3. Set a default value of `http://localhost:8000/api/v1` if the environment variable is not set
+4. Create a function to construct full endpoint URLs by combining the base API URL with specific endpoints
+5. Add appropriate error handling for malformed URLs
+
+## 3. Create departments command group and list command structure [pending]
+### Dependencies: 6.1
+### Description: Implement the command structure for the departments command group and the list subcommand with its options.
+### Details:
+1. Create a `departments` command group under the root `33god` command
+2. Implement the `list` subcommand under the `departments` group
+3. Add a `--detailed` flag option to the `list` command using `typer.Option`
+4. Set up the command function signature with appropriate type hints
+5. Create a basic help text for the command and its options
+
+## 4. Implement HTTP client for backend API requests [pending]
+### Dependencies: 6.2
+### Description: Create a client module to handle HTTP requests to the backend API endpoints.
+### Details:
+1. Create an `api_client.py` module in the CLI directory
+2. Implement a function to make GET requests to the backend API using requests/httpx
+3. Add error handling for connection issues, timeouts, and HTTP errors
+4. Create a specific function for fetching department structure from `/api/v1/company/structure`
+5. Return the JSON response data from the API
+
+## 5. Implement response formatting and command execution [pending]
+### Dependencies: 6.3, 6.4
+### Description: Complete the implementation of the departments list command by connecting it to the API client and formatting the response.
+### Details:
+1. Connect the `list` command function to the API client to fetch department data
+2. Implement pretty-printing of the JSON response using `json.dumps` with appropriate indentation
+3. Add conditional formatting based on the `--detailed` flag
+4. Implement proper error message display for API request failures
+5. Add colorized output for better readability using a library like `rich` or `colorama`
+

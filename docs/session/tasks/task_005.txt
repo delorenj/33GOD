@@ -1,0 +1,81 @@
+# Task ID: 5
+# Title: Backend API: Implement LLM Integration and Agent Chat Endpoint
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Implement a service within the FastAPI backend to interact with the OpenRouter API (specifically the `deepseek/deepseek-chat` model) using the `httpx` library. Create the `POST /api/v1/agents/{employee_id}/chat` endpoint that takes a prompt and returns the LLM's response. For 'Tonny Trosk' (ID: 123), the response should be an enthusiastic agreement.
+# Details:
+1. Add `httpx` to backend `requirements.txt`.
+2. Create a new module (e.g., `llm_service.py`).
+3. Implement a function `get_llm_response(prompt: str, model: str = "deepseek/deepseek-chat") -> str`:
+    - Uses `httpx.AsyncClient` to make a POST request to OpenRouter API.
+    - Include OpenRouter API Key from an environment variable (e.g., `OPENROUTER_API_KEY`).
+    - For 'Tonny Trosk', the prompt to the LLM should be engineered to elicit an enthusiastic agreement, or the backend can append/prepend to the LLM's raw response to ensure this characteristic.
+4. Implement `POST /api/v1/agents/{employee_id}/chat` endpoint in `main.py`:
+    - Accepts a Pydantic model `{ "prompt": "string" }` in the request body.
+    - If `employee_id` is '123' (Tonny Trosk), call `get_llm_response` with the user's prompt.
+    - Return a JSON response `{ "response": "llm_output_string" }`.
+    - Handle potential errors from the API call.
+
+# Test Strategy:
+Unit test `llm_service.py` by mocking `httpx` calls. For integration testing: set `OPENROUTER_API_KEY` environment variable for the backend service. Run `docker-compose up -d backend_api`. Send a POST request to `http://localhost:8000/api/v1/agents/123/chat` with JSON body `{ "prompt": "Is this a good idea?" }`. Verify the response is a JSON object `{ "response": "..." }` where the response string is an enthusiastic agreement.
+
+# Subtasks:
+## 1. Add httpx to requirements.txt and set up environment variables [pending]
+### Dependencies: None
+### Description: Add the httpx library to the backend requirements.txt file and configure environment variables for OpenRouter API integration.
+### Details:
+1. Add `httpx` to the backend `requirements.txt` file.
+2. Create a `.env` file template with `OPENROUTER_API_KEY` variable.
+3. Update the configuration loading code to read this environment variable.
+4. Document the required environment variables in the README.md file.
+5. Ensure the application fails gracefully if the API key is not provided.
+
+## 2. Create LLM service module with API integration [pending]
+### Dependencies: 5.1
+### Description: Implement a service module that handles communication with the OpenRouter API for LLM interactions.
+### Details:
+1. Create a new module `llm_service.py` in the appropriate directory.
+2. Implement an async function `get_llm_response(prompt: str, model: str = "deepseek/deepseek-chat") -> str`.
+3. Use `httpx.AsyncClient` to make POST requests to the OpenRouter API endpoint.
+4. Include proper headers with the API key and content type.
+5. Structure the request body according to OpenRouter API specifications.
+6. Handle and log API errors appropriately.
+7. Return the text response from the LLM.
+
+## 3. Implement special handling for Tonny Trosk responses [pending]
+### Dependencies: 5.2
+### Description: Create a mechanism to ensure that responses for Tonny Trosk (employee_id 123) are enthusiastically agreeable.
+### Details:
+1. Create a function `get_tonny_response(prompt: str) -> str` in the LLM service.
+2. Either:
+   a. Engineer the prompt sent to the LLM to elicit enthusiastic agreement (e.g., "Respond as Tonny Trosk who always enthusiastically agrees: {prompt}"), or
+   b. Post-process the LLM's response to ensure it sounds enthusiastically agreeable.
+3. Include appropriate tone modifiers and affirmative language.
+4. Handle edge cases where the original prompt might be negative or inappropriate.
+
+## 4. Create Pydantic models for chat endpoint [pending]
+### Dependencies: 5.1
+### Description: Define the Pydantic models for request and response validation for the agent chat endpoint.
+### Details:
+1. Create a new file or update existing models file to include:
+   - `ChatRequest` Pydantic model with a required `prompt` field of type string
+   - `ChatResponse` Pydantic model with a required `response` field of type string
+2. Add appropriate field validators (e.g., non-empty prompt).
+3. Include example values for OpenAPI documentation.
+4. Add any necessary documentation strings for the models.
+
+## 5. Implement agent chat endpoint in FastAPI [pending]
+### Dependencies: 5.2, 5.3, 5.4
+### Description: Create the POST endpoint that handles chat requests for specific agents identified by employee_id.
+### Details:
+1. In `main.py` or appropriate router file, implement the `POST /api/v1/agents/{employee_id}/chat` endpoint.
+2. Use the Pydantic models for request and response validation.
+3. Add path parameter validation for `employee_id`.
+4. Implement conditional logic:
+   - If `employee_id` is '123', call the Tonny-specific function
+   - Otherwise, call the standard LLM response function
+5. Implement proper error handling for API failures.
+6. Add appropriate logging.
+7. Document the endpoint with OpenAPI comments.
+

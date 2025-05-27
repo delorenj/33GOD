@@ -1,0 +1,88 @@
+# Task ID: 10
+# Title: RabbitMQ: Setup Service and Verify Basic Connectivity
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Ensure the RabbitMQ service is correctly included and configured in `docker-compose.yml`. Create simple standalone Python scripts (one publisher, one consumer) using the `pika` library to publish a dummy message to a test queue and consume it, thereby verifying basic RabbitMQ connectivity. This is for verification only and not integrated into the main user story flow for MS1.
+# Details:
+1. Confirm RabbitMQ service definition in `docker-compose.yml` (from Task 1) is running and accessible on its default port (5672).
+2. Create `rabbitmq_test/publisher.py`:
+    - Install `pika` (`pip install pika`).
+    - Connect to RabbitMQ (e.g., `amqp://guest:guest@localhost:5672/` if running locally or `amqp://guest:guest@rabbitmq:5672/` if script is run from another container in the same Docker network).
+    - Declare a queue (e.g., `test_queue`).
+    - Publish a message (e.g., "Hello RabbitMQ!") to the queue.
+3. Create `rabbitmq_test/consumer.py`:
+    - Install `pika`.
+    - Connect to RabbitMQ.
+    - Declare the same queue (`test_queue`).
+    - Define a callback function to process received messages (e.g., print it).
+    - Start consuming messages from the queue.
+4. These scripts are typically run from your local machine (adjusting hostname if needed) or from within a temporary container that has Python and Pika installed.
+
+# Test Strategy:
+With `docker-compose up -d` running all services (including RabbitMQ). Execute `python rabbitmq_test/publisher.py`. Then, execute `python rabbitmq_test/consumer.py`. Verify that the consumer script prints "Hello RabbitMQ!". Check RabbitMQ management UI (if accessible at `http://localhost:15672`) for queue creation and message flow.
+
+# Subtasks:
+## 1. Verify RabbitMQ Configuration in docker-compose.yml [pending]
+### Dependencies: None
+### Description: Confirm that the RabbitMQ service is properly defined in the docker-compose.yml file and that it's running and accessible on the default port (5672).
+### Details:
+1. Check docker-compose.yml for RabbitMQ service definition with proper image (rabbitmq:3-management), port mappings (5672:5672 for AMQP, 15672:15672 for management UI), and any necessary environment variables.
+2. Run 'docker-compose up -d' to start the services.
+3. Verify RabbitMQ is running with 'docker ps' and check that the container status is 'Up'.
+4. Test basic connectivity to the management interface at http://localhost:15672 (default credentials: guest/guest).
+
+## 2. Create Project Structure and Install Dependencies [pending]
+### Dependencies: 10.1
+### Description: Set up the project directory structure and install the necessary Python dependencies for testing RabbitMQ connectivity.
+### Details:
+1. Create a 'rabbitmq_test' directory in the project root.
+2. Create a Python virtual environment: 'python -m venv venv' (optional but recommended).
+3. Activate the virtual environment.
+4. Install pika: 'pip install pika'.
+5. Create a requirements.txt file with 'pika==1.2.0' (or the latest stable version).
+6. Create empty files for publisher.py and consumer.py in the rabbitmq_test directory.
+
+## 3. Implement Publisher Script [pending]
+### Dependencies: 10.2
+### Description: Create a Python script that connects to RabbitMQ and publishes a test message to a queue.
+### Details:
+1. In rabbitmq_test/publisher.py, implement the following:
+   - Import pika
+   - Establish a connection to RabbitMQ using pika.ConnectionParameters
+   - Create a channel
+   - Declare a queue named 'test_queue'
+   - Publish a message (e.g., 'Hello RabbitMQ!') to the queue
+   - Close the connection
+2. Add proper error handling and logging
+3. Make the script configurable to connect to either localhost or the rabbitmq service name depending on where it's run from
+4. Add a main block to allow the script to be run directly
+
+## 4. Implement Consumer Script [pending]
+### Dependencies: 10.2
+### Description: Create a Python script that connects to RabbitMQ and consumes messages from the test queue.
+### Details:
+1. In rabbitmq_test/consumer.py, implement the following:
+   - Import pika
+   - Establish a connection to RabbitMQ using pika.ConnectionParameters
+   - Create a channel
+   - Declare the same queue ('test_queue')
+   - Define a callback function that processes received messages (print the message body)
+   - Set up basic_consume with the callback function
+   - Start consuming with channel.start_consuming()
+2. Add proper error handling and logging
+3. Make the script configurable like the publisher
+4. Add a main block with a try/except to handle keyboard interrupts gracefully
+
+## 5. Test End-to-End Message Flow [pending]
+### Dependencies: 10.3, 10.4
+### Description: Verify the complete message flow by running both the publisher and consumer scripts and confirming messages are successfully transmitted.
+### Details:
+1. Start the consumer script in one terminal window
+2. Run the publisher script in another terminal window
+3. Verify that the consumer receives and displays the message sent by the publisher
+4. Test with different message content
+5. Test the scripts both from the local machine (connecting to localhost) and from within a Docker container (connecting to the rabbitmq service name)
+6. Document any connection string differences needed for different environments
+7. Create a simple README.md in the rabbitmq_test directory explaining how to run the tests
+

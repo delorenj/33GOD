@@ -1,0 +1,73 @@
+# Task ID: 2
+# Title: Backend API: Initial FastAPI Setup & Hardcoded Structure Endpoint
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create the FastAPI project structure for the backend API. Integrate Pydantic for data validation. Implement the initial `GET /api/v1/company/structure` endpoint to return hardcoded data representing the CEO node, 'foundingMembers' department, and 'Tonny Trosk' cofounder agent, matching the structure in `WalkingSkeleton.md`. Create a Dockerfile for the FastAPI application and add it as a service to `docker-compose.yml`.
+# Details:
+1. Create backend project directory (e.g., `backend`).
+2. Initialize FastAPI project (Python 3.11+): `main.py`, `requirements.txt` (FastAPI, Pydantic, Uvicorn).
+3. Define Pydantic models for the company structure (CEO, Department, Agent) as per `WalkingSkeleton.md` example.
+4. Implement `GET /api/v1/company/structure` endpoint in `main.py` returning a hardcoded Python dictionary matching the specified JSON structure for CEO, 'foundingMembers' department, and 'Tonny Trosk' (employeeId: 123).
+5. Create `backend/Dockerfile`: Use `python:3.11-slim` base image, copy app files, install dependencies from `requirements.txt`, expose port 8000, CMD `uvicorn main:app --host 0.0.0.0 --port 8000`.
+6. Add `backend_api` service to `docker-compose.yml`: build context `./backend`, ports `8000:8000`, depends_on `postgres` and `rabbitmq`.
+
+# Test Strategy:
+Run `docker-compose up -d --build backend_api`. Send a GET request to `http://localhost:8000/api/v1/company/structure` using `curl` or Postman. Verify the response is a JSON object matching the hardcoded structure defined in `WalkingSkeleton.md`.
+
+# Subtasks:
+## 1. Create FastAPI Project Structure [pending]
+### Dependencies: None
+### Description: Set up the initial FastAPI project directory structure with necessary files and dependencies.
+### Details:
+1. Create a `backend` directory at the project root
+2. Create `main.py` as the entry point for the FastAPI application
+3. Create `requirements.txt` with the following dependencies: FastAPI, Pydantic, Uvicorn
+4. Create a basic FastAPI app instance in `main.py`
+5. Set up a simple health check endpoint (`GET /health`) that returns a 200 status
+
+## 2. Define Pydantic Models for Company Structure [pending]
+### Dependencies: 2.1
+### Description: Create Pydantic models to represent the company structure entities (CEO, Department, Agent) according to the specification.
+### Details:
+1. Create a `models.py` file in the backend directory
+2. Define the Agent model with fields: id, name, role, employeeId
+3. Define the Department model with fields: id, name, description, agents (list of Agent)
+4. Define the CEO model with fields: id, name, role, departments (list of Department)
+5. Ensure all models use proper Pydantic typing and validation
+
+## 3. Implement Hardcoded Structure Endpoint [pending]
+### Dependencies: 2.2
+### Description: Create the GET /api/v1/company/structure endpoint that returns a hardcoded company structure matching the specification.
+### Details:
+1. In `main.py`, create a new route handler for `GET /api/v1/company/structure`
+2. Implement the handler to return a hardcoded structure with:
+   - CEO node
+   - 'foundingMembers' department
+   - 'Tonny Trosk' agent with employeeId 123
+3. Ensure the response structure matches the example in WalkingSkeleton.md
+4. Use the Pydantic models for type validation before returning the response
+
+## 4. Create Dockerfile for Backend API [pending]
+### Dependencies: 2.1
+### Description: Create a Dockerfile to containerize the FastAPI application.
+### Details:
+1. Create a `Dockerfile` in the backend directory
+2. Use `python:3.11-slim` as the base image
+3. Set the working directory to `/app`
+4. Copy `requirements.txt` and install dependencies
+5. Copy all application files to the container
+6. Expose port 8000
+7. Set the CMD to run uvicorn: `CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]`
+
+## 5. Add Backend Service to docker-compose.yml [pending]
+### Dependencies: 2.4
+### Description: Update the project's docker-compose.yml file to include the backend API service.
+### Details:
+1. Open the existing `docker-compose.yml` file
+2. Add a new service called `backend_api`
+3. Configure it to build from the `./backend` context
+4. Map container port 8000 to host port 8000
+5. Set dependencies on the `postgres` and `rabbitmq` services using `depends_on`
+6. Ensure the service configuration allows for proper networking between containers
+

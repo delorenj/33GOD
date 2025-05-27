@@ -1,0 +1,742 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Initialize Project Repositories and Basic Docker Compose Setup",
+      "description": "Set up Git repositories for backend, frontend, and CLI. Create the initial docker-compose.yml file with PostgreSQL (latest stable) and RabbitMQ (latest stable) services. Define basic networking and a volume for PostgreSQL data persistence.",
+      "details": "1. Initialize a monorepo or separate Git repositories for backend, frontend, and CLI components.\n2. Create `docker-compose.yml` in the project root.\n3. Define `postgres` service: image `postgres:latest`, environment variables for default user/password/db, volume for data persistence (e.g., `pgdata:/var/lib/postgresql/data`), expose port 5432.\n4. Define `rabbitmq` service: image `rabbitmq:latest` (or `rabbitmq:management` for UI), expose ports 5672 (AMQP) and 15672 (management UI).\n5. Define a top-level `volumes` key for `pgdata`.\n6. Define a default network for services to communicate.",
+      "testStrategy": "Run `docker-compose up -d`. Verify PostgreSQL and RabbitMQ containers are running using `docker ps`. Attempt to connect to PostgreSQL using a DB client (e.g., `psql` or DBeaver). Access RabbitMQ management UI if `rabbitmq:management` image is used (typically `http://localhost:15672`).",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Initialize Git Repositories for Project Components",
+          "description": "Set up the repository structure for the project, either as a monorepo or as separate repositories for backend, frontend, and CLI components.",
+          "dependencies": [],
+          "details": "Create a new directory for the project. Initialize Git repositories using `git init` for each component (backend, frontend, CLI). If using a monorepo approach, set up a directory structure with subdirectories for each component. Create initial README.md files in each repository with project description and setup instructions. Add .gitignore files appropriate for each technology stack.",
+          "status": "pending",
+          "testStrategy": "Verify Git repositories are properly initialized with `git status`. Ensure .gitignore files are properly configured by testing with sample files that should be ignored."
+        },
+        {
+          "id": 2,
+          "title": "Configure PostgreSQL Service in Docker Compose",
+          "description": "Set up the PostgreSQL database service in the docker-compose.yml file with proper configuration for development use.",
+          "dependencies": [
+            1
+          ],
+          "details": "Create a docker-compose.yml file in the project root. Define a 'postgres' service using the latest stable PostgreSQL image. Configure environment variables for database name, username, and password (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB). Map port 5432 to the host machine. Create a named volume for data persistence (pgdata:/var/lib/postgresql/data). Add healthcheck configuration to ensure the database is properly initialized before dependent services start.",
+          "status": "pending",
+          "testStrategy": "Run `docker-compose up postgres -d` and verify connection to the database using a PostgreSQL client. Check that the volume is created with `docker volume ls`."
+        },
+        {
+          "id": 3,
+          "title": "Configure RabbitMQ Service in Docker Compose",
+          "description": "Set up the RabbitMQ message broker service in the docker-compose.yml file with management UI enabled.",
+          "dependencies": [
+            1
+          ],
+          "details": "Add a 'rabbitmq' service to the docker-compose.yml file using the rabbitmq:management image for UI access. Expose port 5672 for AMQP protocol and port 15672 for the management web interface. Configure environment variables for default user and password if needed (RABBITMQ_DEFAULT_USER, RABBITMQ_DEFAULT_PASS). Add appropriate container name and restart policy. Include healthcheck configuration to verify the service is fully operational.",
+          "status": "pending",
+          "testStrategy": "Run `docker-compose up rabbitmq -d` and verify the management interface is accessible at http://localhost:15672. Test connection using a RabbitMQ client library."
+        },
+        {
+          "id": 4,
+          "title": "Define Docker Network Configuration",
+          "description": "Set up the networking configuration in docker-compose.yml to enable communication between services.",
+          "dependencies": [
+            2,
+            3
+          ],
+          "details": "Define a custom bridge network in the docker-compose.yml file under the 'networks' section. Configure all services to use this network. Set appropriate network aliases for services if needed. Ensure the network configuration allows for service discovery using container names. Document the network configuration in comments for future reference.",
+          "status": "pending",
+          "testStrategy": "Run `docker-compose up -d` and test inter-service communication by executing commands inside containers using `docker-compose exec`. Verify network is created with `docker network ls`."
+        },
+        {
+          "id": 5,
+          "title": "Create Project Documentation and Verification Script",
+          "description": "Document the project setup and create a verification script to ensure all components are properly configured.",
+          "dependencies": [
+            4
+          ],
+          "details": "Create a comprehensive README.md in the project root with setup instructions, architecture overview, and development workflow. Document environment variables used in the docker-compose.yml file. Create a shell script (verify-setup.sh) that checks if Docker and Docker Compose are installed, runs docker-compose up, and verifies that all services are running correctly. Include instructions for troubleshooting common issues. Add a .env.example file with sample environment variables.",
+          "status": "pending",
+          "testStrategy": "Run the verification script on a clean environment to ensure it correctly identifies the system state. Have another team member follow the documentation to verify clarity and completeness."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Backend API: Initial FastAPI Setup & Hardcoded Structure Endpoint",
+      "description": "Create the FastAPI project structure for the backend API. Integrate Pydantic for data validation. Implement the initial `GET /api/v1/company/structure` endpoint to return hardcoded data representing the CEO node, 'foundingMembers' department, and 'Tonny Trosk' cofounder agent, matching the structure in `WalkingSkeleton.md`. Create a Dockerfile for the FastAPI application and add it as a service to `docker-compose.yml`.",
+      "details": "1. Create backend project directory (e.g., `backend`).\n2. Initialize FastAPI project (Python 3.11+): `main.py`, `requirements.txt` (FastAPI, Pydantic, Uvicorn).\n3. Define Pydantic models for the company structure (CEO, Department, Agent) as per `WalkingSkeleton.md` example.\n4. Implement `GET /api/v1/company/structure` endpoint in `main.py` returning a hardcoded Python dictionary matching the specified JSON structure for CEO, 'foundingMembers' department, and 'Tonny Trosk' (employeeId: 123).\n5. Create `backend/Dockerfile`: Use `python:3.11-slim` base image, copy app files, install dependencies from `requirements.txt`, expose port 8000, CMD `uvicorn main:app --host 0.0.0.0 --port 8000`.\n6. Add `backend_api` service to `docker-compose.yml`: build context `./backend`, ports `8000:8000`, depends_on `postgres` and `rabbitmq`.",
+      "testStrategy": "Run `docker-compose up -d --build backend_api`. Send a GET request to `http://localhost:8000/api/v1/company/structure` using `curl` or Postman. Verify the response is a JSON object matching the hardcoded structure defined in `WalkingSkeleton.md`.",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create FastAPI Project Structure",
+          "description": "Set up the initial FastAPI project directory structure with necessary files and dependencies.",
+          "dependencies": [],
+          "details": "1. Create a `backend` directory at the project root\n2. Create `main.py` as the entry point for the FastAPI application\n3. Create `requirements.txt` with the following dependencies: FastAPI, Pydantic, Uvicorn\n4. Create a basic FastAPI app instance in `main.py`\n5. Set up a simple health check endpoint (`GET /health`) that returns a 200 status",
+          "status": "pending",
+          "testStrategy": "Manually verify the project structure exists and run the application locally to ensure it starts without errors."
+        },
+        {
+          "id": 2,
+          "title": "Define Pydantic Models for Company Structure",
+          "description": "Create Pydantic models to represent the company structure entities (CEO, Department, Agent) according to the specification.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a `models.py` file in the backend directory\n2. Define the Agent model with fields: id, name, role, employeeId\n3. Define the Department model with fields: id, name, description, agents (list of Agent)\n4. Define the CEO model with fields: id, name, role, departments (list of Department)\n5. Ensure all models use proper Pydantic typing and validation",
+          "status": "pending",
+          "testStrategy": "Write simple assertions to verify model validation works correctly for valid and invalid data."
+        },
+        {
+          "id": 3,
+          "title": "Implement Hardcoded Structure Endpoint",
+          "description": "Create the GET /api/v1/company/structure endpoint that returns a hardcoded company structure matching the specification.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. In `main.py`, create a new route handler for `GET /api/v1/company/structure`\n2. Implement the handler to return a hardcoded structure with:\n   - CEO node\n   - 'foundingMembers' department\n   - 'Tonny Trosk' agent with employeeId 123\n3. Ensure the response structure matches the example in WalkingSkeleton.md\n4. Use the Pydantic models for type validation before returning the response",
+          "status": "pending",
+          "testStrategy": "Test the endpoint manually with a browser or curl to verify the correct JSON structure is returned."
+        },
+        {
+          "id": 4,
+          "title": "Create Dockerfile for Backend API",
+          "description": "Create a Dockerfile to containerize the FastAPI application.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a `Dockerfile` in the backend directory\n2. Use `python:3.11-slim` as the base image\n3. Set the working directory to `/app`\n4. Copy `requirements.txt` and install dependencies\n5. Copy all application files to the container\n6. Expose port 8000\n7. Set the CMD to run uvicorn: `CMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]`",
+          "status": "pending",
+          "testStrategy": "Build the Docker image locally and verify it runs without errors."
+        },
+        {
+          "id": 5,
+          "title": "Add Backend Service to docker-compose.yml",
+          "description": "Update the project's docker-compose.yml file to include the backend API service.",
+          "dependencies": [
+            4
+          ],
+          "details": "1. Open the existing `docker-compose.yml` file\n2. Add a new service called `backend_api`\n3. Configure it to build from the `./backend` context\n4. Map container port 8000 to host port 8000\n5. Set dependencies on the `postgres` and `rabbitmq` services using `depends_on`\n6. Ensure the service configuration allows for proper networking between containers",
+          "status": "pending",
+          "testStrategy": "Run `docker-compose up` and verify the backend service starts correctly and is accessible on port 8000."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Database: Define PostgreSQL Schema and Seed Initial Data",
+      "description": "Define the PostgreSQL database schema for `departments`, `agents`, and `company` tables. Create an SQL script to seed the initial 'foundingMembers' department and the 'Tonny Trosk' cofounder agent (employeeId: 123) with its details. Ensure FastAPI can connect to the PostgreSQL instance.",
+      "details": "1. Create `db_init/schema.sql`: Define `CREATE TABLE` statements for:\n    - `departments` (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, parent_department_id INTEGER REFERENCES departments(id) NULLABLE).\n    - `agents` (id SERIAL PRIMARY KEY, employee_id VARCHAR(50) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL, role VARCHAR(255), responsibilities TEXT, provider VARCHAR(100), model VARCHAR(100), department_id INTEGER REFERENCES departments(id), skills JSONB, access JSONB, resume JSONB, lifetime_cost INTEGER DEFAULT 0).\n    - `company` (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL) - if needed for a top-level entity.\n2. Create `db_init/seed.sql`: `INSERT INTO` statements for:\n    - `departments`: 'foundingMembers' department.\n    - `agents`: 'Tonny Trosk' (employeeId: '123', name: 'Tonny Trosk', role: 'cofounder', department_id linked to 'foundingMembers', other fields as specified or sensible defaults, `lifetimeCost` as a hardcoded integer).\n3. Modify `postgres` service in `docker-compose.yml` to run these scripts on initialization, e.g., by mounting them to `/docker-entrypoint-initdb.d/`.\n4. Configure FastAPI backend with database connection URL (e.g., via environment variable like `DATABASE_URL=postgresql://user:password@postgres:5432/dbname`).",
+      "testStrategy": "Restart the `postgres` service (`docker-compose restart postgres` or `docker-compose up -d --force-recreate postgres`). Connect to the PostgreSQL database using a DB client. Verify that the `departments` and `agents` tables exist and contain the seeded data for 'foundingMembers' and 'Tonny Trosk'.",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create PostgreSQL Schema Definition Script",
+          "description": "Create the schema.sql file with CREATE TABLE statements for departments, agents, and company tables with proper relationships and constraints.",
+          "dependencies": [],
+          "details": "Create db_init/schema.sql with the following tables:\n1. departments: id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, parent_department_id INTEGER REFERENCES departments(id) NULL\n2. agents: id SERIAL PRIMARY KEY, employee_id VARCHAR(50) UNIQUE NOT NULL, name VARCHAR(255) NOT NULL, role VARCHAR(255), responsibilities TEXT, provider VARCHAR(100), model VARCHAR(100), department_id INTEGER REFERENCES departments(id), skills JSONB, access JSONB, resume JSONB, lifetime_cost INTEGER DEFAULT 0\n3. company: id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL\nEnsure proper foreign key constraints and indexes for performance.",
+          "status": "pending",
+          "testStrategy": "Validate the SQL syntax using a PostgreSQL client or linter. Ensure all required fields and relationships are properly defined."
+        },
+        {
+          "id": 2,
+          "title": "Create Data Seed Script for Initial Entities",
+          "description": "Create the seed.sql script to populate the database with the foundingMembers department and Tonny Trosk agent with appropriate values.",
+          "dependencies": [
+            1
+          ],
+          "details": "Create db_init/seed.sql with INSERT statements for:\n1. Insert 'foundingMembers' into departments table\n2. Insert 'Tonny Trosk' into agents table with employeeId '123', role 'cofounder', and appropriate department_id reference to foundingMembers\n3. Set reasonable default values for other fields (skills, access, resume as empty JSONB objects, lifetime_cost as 0)\n4. Optionally insert a company record if needed for the application",
+          "status": "pending",
+          "testStrategy": "Verify the INSERT statements have correct syntax and reference valid foreign keys."
+        },
+        {
+          "id": 3,
+          "title": "Configure Docker Compose for Database Initialization",
+          "description": "Modify the docker-compose.yml file to mount the schema and seed scripts to the PostgreSQL container's initialization directory.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Update the postgres service in docker-compose.yml to:\n1. Mount the db_init directory to /docker-entrypoint-initdb.d/ in the container\n2. Ensure proper execution order by naming files with numeric prefixes (e.g., 01-schema.sql, 02-seed.sql)\n3. Set appropriate environment variables for database name, user, and password\n4. Configure volume for persistent data storage if needed",
+          "status": "pending",
+          "testStrategy": "Test by running docker-compose up and verifying the database initializes without errors."
+        },
+        {
+          "id": 4,
+          "title": "Configure FastAPI Database Connection",
+          "description": "Set up the database connection configuration in the FastAPI application to connect to the PostgreSQL database.",
+          "dependencies": [
+            3
+          ],
+          "details": "1. Create a database.py module in the FastAPI app\n2. Configure the connection string using environment variables (DATABASE_URL)\n3. Implement connection pooling using SQLAlchemy or asyncpg\n4. Create a get_db() dependency function for route handlers\n5. Add environment variable configuration in docker-compose.yml for the FastAPI service",
+          "status": "pending",
+          "testStrategy": "Write a simple test endpoint that queries the database to verify connectivity."
+        },
+        {
+          "id": 5,
+          "title": "Implement Database Models and Test Connection",
+          "description": "Create SQLAlchemy or Pydantic models corresponding to the database schema and implement a test endpoint to verify database connectivity.",
+          "dependencies": [
+            4
+          ],
+          "details": "1. Create models for Department, Agent, and Company entities that match the database schema\n2. Implement a simple GET endpoint to retrieve the founding members department and Tonny Trosk's information\n3. Add error handling for database connection issues\n4. Implement proper connection closing to prevent resource leaks\n5. Document the database schema and models in the project documentation",
+          "status": "pending",
+          "testStrategy": "Test the endpoint by running the application and making a request to verify it returns the expected data from the seeded database."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Backend API: Update Structure Endpoint to Use Database",
+      "description": "Modify the `GET /api/v1/company/structure` endpoint in the FastAPI backend to query the PostgreSQL database for the company structure (departments and agents) instead of returning hardcoded data. Transform query results into the required JSON response format.",
+      "details": "1. In the FastAPI backend, establish a database connection (e.g., using SQLAlchemy with Pydantic models, or a library like `asyncpg` or `psycopg2-binary`).\n2. Update the `GET /api/v1/company/structure` endpoint logic:\n    - Query the `departments` table for 'foundingMembers'.\n    - Query the `agents` table for 'Tonny Trosk' linked to that department.\n    - Construct the JSON response dynamically based on the data retrieved from the database, ensuring it matches the structure from `WalkingSkeleton.md` (CEO node can be conceptual or fetched if a `company` table holds this).\n3. Ensure proper error handling if data is not found.",
+      "testStrategy": "Ensure the database is seeded (Task 3). Run `docker-compose up -d backend_api`. Send a GET request to `http://localhost:8000/api/v1/company/structure`. Verify the response matches the data seeded in the database and conforms to the expected JSON structure. Modify data in the DB and re-test to ensure dynamic retrieval.",
+      "priority": "high",
+      "dependencies": [
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Set up database connection with SQLAlchemy",
+          "description": "Establish a connection to the PostgreSQL database using SQLAlchemy ORM. Create the necessary database models for departments and agents.",
+          "dependencies": [],
+          "details": "1. Install required packages: `sqlalchemy`, `psycopg2-binary`, and `pydantic`. \n2. Create a database connection module in `app/db/database.py` that establishes a connection pool. \n3. Define SQLAlchemy models for `Department` and `Agent` in `app/models/` directory. \n4. Create a database session factory function. \n5. Implement dependency injection for database sessions in FastAPI.",
+          "status": "pending",
+          "testStrategy": "Write unit tests to verify database connection can be established and models can be instantiated correctly."
+        },
+        {
+          "id": 2,
+          "title": "Create database query functions for company structure",
+          "description": "Implement functions to query the departments and agents tables to retrieve the company structure data.",
+          "dependencies": [],
+          "details": "1. Create a repository module `app/repositories/company_repository.py`. \n2. Implement a function to fetch the 'foundingMembers' department. \n3. Implement a function to fetch agents associated with departments, particularly 'Tonny Trosk'. \n4. Add error handling for cases where data is not found. \n5. Ensure functions use async/await pattern if using async database drivers.",
+          "status": "pending",
+          "testStrategy": "Create unit tests with mock database responses to verify query functions return expected data structures."
+        },
+        {
+          "id": 3,
+          "title": "Implement data transformation logic",
+          "description": "Create utility functions to transform database query results into the required JSON response format for the company structure.",
+          "dependencies": [],
+          "details": "1. Create a module `app/services/structure_service.py`. \n2. Implement a function that takes database entities and transforms them into a nested structure. \n3. Ensure the CEO node is at the top level, followed by departments and agents. \n4. Handle edge cases like missing departments or agents. \n5. Format the response to match exactly the structure from WalkingSkeleton.md.",
+          "status": "pending",
+          "testStrategy": "Write unit tests with sample database entities to verify the transformation produces the correct JSON structure."
+        },
+        {
+          "id": 4,
+          "title": "Update the GET /api/v1/company/structure endpoint",
+          "description": "Modify the existing endpoint to use the new database query and transformation functions instead of hardcoded data.",
+          "dependencies": [],
+          "details": "1. Locate the endpoint handler in the appropriate router file. \n2. Inject the database session dependency. \n3. Replace hardcoded data with calls to the repository functions. \n4. Use the transformation service to format the response. \n5. Implement proper error handling with appropriate HTTP status codes (404 for not found, 500 for server errors).",
+          "status": "pending",
+          "testStrategy": "Create integration tests that verify the endpoint returns the correct structure when the database contains expected data."
+        },
+        {
+          "id": 5,
+          "title": "Add comprehensive error handling and logging",
+          "description": "Enhance the endpoint with proper error handling, logging, and edge case management to ensure robustness.",
+          "dependencies": [],
+          "details": "1. Implement try/except blocks to catch database connection errors. \n2. Add specific error responses for common failure scenarios (e.g., database unavailable, data not found). \n3. Implement logging throughout the request flow to aid debugging. \n4. Add validation to ensure the response always follows the expected structure even in partial data scenarios. \n5. Document the error responses in the API documentation.",
+          "status": "pending",
+          "testStrategy": "Write tests that simulate various error conditions (database connection failure, missing data) and verify appropriate error responses are returned."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Backend API: Implement LLM Integration and Agent Chat Endpoint",
+      "description": "Implement a service within the FastAPI backend to interact with the OpenRouter API (specifically the `deepseek/deepseek-chat` model) using the `httpx` library. Create the `POST /api/v1/agents/{employee_id}/chat` endpoint that takes a prompt and returns the LLM's response. For 'Tonny Trosk' (ID: 123), the response should be an enthusiastic agreement.",
+      "details": "1. Add `httpx` to backend `requirements.txt`.\n2. Create a new module (e.g., `llm_service.py`).\n3. Implement a function `get_llm_response(prompt: str, model: str = \"deepseek/deepseek-chat\") -> str`:\n    - Uses `httpx.AsyncClient` to make a POST request to OpenRouter API.\n    - Include OpenRouter API Key from an environment variable (e.g., `OPENROUTER_API_KEY`).\n    - For 'Tonny Trosk', the prompt to the LLM should be engineered to elicit an enthusiastic agreement, or the backend can append/prepend to the LLM's raw response to ensure this characteristic.\n4. Implement `POST /api/v1/agents/{employee_id}/chat` endpoint in `main.py`:\n    - Accepts a Pydantic model `{ \"prompt\": \"string\" }` in the request body.\n    - If `employee_id` is '123' (Tonny Trosk), call `get_llm_response` with the user's prompt.\n    - Return a JSON response `{ \"response\": \"llm_output_string\" }`.\n    - Handle potential errors from the API call.",
+      "testStrategy": "Unit test `llm_service.py` by mocking `httpx` calls. For integration testing: set `OPENROUTER_API_KEY` environment variable for the backend service. Run `docker-compose up -d backend_api`. Send a POST request to `http://localhost:8000/api/v1/agents/123/chat` with JSON body `{ \"prompt\": \"Is this a good idea?\" }`. Verify the response is a JSON object `{ \"response\": \"...\" }` where the response string is an enthusiastic agreement.",
+      "priority": "high",
+      "dependencies": [
+        2
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Add httpx to requirements.txt and set up environment variables",
+          "description": "Add the httpx library to the backend requirements.txt file and configure environment variables for OpenRouter API integration.",
+          "dependencies": [],
+          "details": "1. Add `httpx` to the backend `requirements.txt` file.\n2. Create a `.env` file template with `OPENROUTER_API_KEY` variable.\n3. Update the configuration loading code to read this environment variable.\n4. Document the required environment variables in the README.md file.\n5. Ensure the application fails gracefully if the API key is not provided.",
+          "status": "pending",
+          "testStrategy": "Verify that the application correctly loads the environment variables and handles missing variables appropriately."
+        },
+        {
+          "id": 2,
+          "title": "Create LLM service module with API integration",
+          "description": "Implement a service module that handles communication with the OpenRouter API for LLM interactions.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a new module `llm_service.py` in the appropriate directory.\n2. Implement an async function `get_llm_response(prompt: str, model: str = \"deepseek/deepseek-chat\") -> str`.\n3. Use `httpx.AsyncClient` to make POST requests to the OpenRouter API endpoint.\n4. Include proper headers with the API key and content type.\n5. Structure the request body according to OpenRouter API specifications.\n6. Handle and log API errors appropriately.\n7. Return the text response from the LLM.",
+          "status": "pending",
+          "testStrategy": "Create unit tests with mocked API responses to verify the function correctly processes responses and handles errors."
+        },
+        {
+          "id": 3,
+          "title": "Implement special handling for Tonny Trosk responses",
+          "description": "Create a mechanism to ensure that responses for Tonny Trosk (employee_id 123) are enthusiastically agreeable.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. Create a function `get_tonny_response(prompt: str) -> str` in the LLM service.\n2. Either:\n   a. Engineer the prompt sent to the LLM to elicit enthusiastic agreement (e.g., \"Respond as Tonny Trosk who always enthusiastically agrees: {prompt}\"), or\n   b. Post-process the LLM's response to ensure it sounds enthusiastically agreeable.\n3. Include appropriate tone modifiers and affirmative language.\n4. Handle edge cases where the original prompt might be negative or inappropriate.",
+          "status": "pending",
+          "testStrategy": "Test with various prompts to ensure Tonny's responses consistently maintain the enthusiastic agreement characteristic."
+        },
+        {
+          "id": 4,
+          "title": "Create Pydantic models for chat endpoint",
+          "description": "Define the Pydantic models for request and response validation for the agent chat endpoint.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a new file or update existing models file to include:\n   - `ChatRequest` Pydantic model with a required `prompt` field of type string\n   - `ChatResponse` Pydantic model with a required `response` field of type string\n2. Add appropriate field validators (e.g., non-empty prompt).\n3. Include example values for OpenAPI documentation.\n4. Add any necessary documentation strings for the models.",
+          "status": "pending",
+          "testStrategy": "Create unit tests to verify model validation works correctly for valid and invalid inputs."
+        },
+        {
+          "id": 5,
+          "title": "Implement agent chat endpoint in FastAPI",
+          "description": "Create the POST endpoint that handles chat requests for specific agents identified by employee_id.",
+          "dependencies": [
+            2,
+            3,
+            4
+          ],
+          "details": "1. In `main.py` or appropriate router file, implement the `POST /api/v1/agents/{employee_id}/chat` endpoint.\n2. Use the Pydantic models for request and response validation.\n3. Add path parameter validation for `employee_id`.\n4. Implement conditional logic:\n   - If `employee_id` is '123', call the Tonny-specific function\n   - Otherwise, call the standard LLM response function\n5. Implement proper error handling for API failures.\n6. Add appropriate logging.\n7. Document the endpoint with OpenAPI comments.",
+          "status": "pending",
+          "testStrategy": "Create integration tests that verify:\n1. The endpoint returns correct responses for Tonny Trosk\n2. The endpoint correctly passes prompts to the LLM service for other employee IDs\n3. Error handling works as expected"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "CLI Frontend: Setup and `departments list` Command",
+      "description": "Set up the Typer application structure for the CLI frontend. Implement the `33god departments list [--detailed]` command, which makes an HTTP GET request to the backend's `/api/v1/company/structure` endpoint and prints the formatted JSON response. Configure the backend API URL.",
+      "details": "1. Create CLI project directory (e.g., `cli`).\n2. Initialize Typer application (Python 3.11+): `main.py`, `requirements.txt` (Typer, Requests/HTTPX).\n3. Implement `33god departments list [--detailed]` command:\n    - Use `typer.Option` for `--detailed` if specific behavior is needed, otherwise assume default is detailed.\n    - Use `requests` or `httpx` to make a GET request to the backend API (e.g., `http://localhost:8000/api/v1/company/structure`).\n    - Pretty-print the JSON response to the console.\n4. Allow backend API URL configuration via an environment variable (e.g., `APP_API_URL`) with a default (e.g., `http://localhost:8000/api/v1`).\n5. Consider adding a Dockerfile for the CLI for consistent execution environment or for running commands via `docker-compose exec`.",
+      "testStrategy": "Ensure the backend API service is running. From the CLI project directory (or via Docker if set up), run `python main.py departments list`. Verify the output is the JSON company structure fetched from the backend. Test with and without `--detailed` if implemented differently.",
+      "priority": "medium",
+      "dependencies": [
+        4
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create CLI project structure and initialize Typer application",
+          "description": "Set up the basic project structure for the CLI frontend and initialize the Typer application with required dependencies.",
+          "dependencies": [],
+          "details": "1. Create a `cli` directory in the project root\n2. Create `main.py` as the entry point for the CLI application\n3. Initialize a Typer application instance in `main.py`\n4. Create `requirements.txt` with necessary dependencies (Typer, requests/httpx)\n5. Set up basic command structure with a root command group named `33god`",
+          "status": "pending",
+          "testStrategy": "Verify the application structure is correct and the CLI can be invoked without errors using `python main.py --help`"
+        },
+        {
+          "id": 2,
+          "title": "Implement configuration management for backend API URL",
+          "description": "Create a configuration module to manage the backend API URL and other potential configuration values.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a `config.py` module in the CLI directory\n2. Implement a function to read the backend API URL from environment variable `APP_API_URL`\n3. Set a default value of `http://localhost:8000/api/v1` if the environment variable is not set\n4. Create a function to construct full endpoint URLs by combining the base API URL with specific endpoints\n5. Add appropriate error handling for malformed URLs",
+          "status": "pending",
+          "testStrategy": "Test with different environment variable values to ensure proper URL construction and fallback to defaults"
+        },
+        {
+          "id": 3,
+          "title": "Create departments command group and list command structure",
+          "description": "Implement the command structure for the departments command group and the list subcommand with its options.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a `departments` command group under the root `33god` command\n2. Implement the `list` subcommand under the `departments` group\n3. Add a `--detailed` flag option to the `list` command using `typer.Option`\n4. Set up the command function signature with appropriate type hints\n5. Create a basic help text for the command and its options",
+          "status": "pending",
+          "testStrategy": "Verify the command structure is correct by running `python main.py departments list --help` and checking the output"
+        },
+        {
+          "id": 4,
+          "title": "Implement HTTP client for backend API requests",
+          "description": "Create a client module to handle HTTP requests to the backend API endpoints.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. Create an `api_client.py` module in the CLI directory\n2. Implement a function to make GET requests to the backend API using requests/httpx\n3. Add error handling for connection issues, timeouts, and HTTP errors\n4. Create a specific function for fetching department structure from `/api/v1/company/structure`\n5. Return the JSON response data from the API",
+          "status": "pending",
+          "testStrategy": "Test with mock responses to verify proper handling of successful responses and various error conditions"
+        },
+        {
+          "id": 5,
+          "title": "Implement response formatting and command execution",
+          "description": "Complete the implementation of the departments list command by connecting it to the API client and formatting the response.",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "1. Connect the `list` command function to the API client to fetch department data\n2. Implement pretty-printing of the JSON response using `json.dumps` with appropriate indentation\n3. Add conditional formatting based on the `--detailed` flag\n4. Implement proper error message display for API request failures\n5. Add colorized output for better readability using a library like `rich` or `colorama`",
+          "status": "pending",
+          "testStrategy": "Test the command with both successful and failed API responses, verifying proper formatting and error handling"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "CLI Frontend: Implement `chat` Command",
+      "description": "Implement the `33god chat <employee_id> \"<prompt_string>\"` command in the Typer CLI application. This command makes an HTTP POST request to the backend's `/api/v1/agents/{employee_id}/chat` endpoint with the provided prompt and prints the agent's response.",
+      "details": "1. In the Typer CLI application (`cli/main.py`):\n2. Implement `33god chat <employee_id> \"<prompt_string>\"` command:\n    - Takes `employee_id` (string) and `prompt_string` (string) as arguments.\n    - Use `requests` or `httpx` to make a POST request to `BACKEND_API_URL/agents/{employee_id}/chat`.\n    - The request body should be JSON: `{ \"prompt\": prompt_string }`.\n    - Print the `response` field from the JSON response received from the backend.",
+      "testStrategy": "Ensure the backend API service is running. Run `python main.py chat 123 \"Should we use Python for this?\"`. Verify the command prints an enthusiastic agreement response from the 'Tonny Trosk' agent via the backend.",
+      "priority": "medium",
+      "dependencies": [
+        5,
+        6
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Define chat command structure in Typer CLI",
+          "description": "Add the chat command to the Typer CLI application structure with appropriate parameters and help text.",
+          "dependencies": [],
+          "details": "In cli/main.py, add a new command function decorated with @app.command() named 'chat'. Define two parameters: employee_id as a str with appropriate help text explaining it's the ID of the employee to chat with, and prompt_string as a str with help text explaining it's the message to send to the agent. Include appropriate command help text explaining the purpose of the chat command.",
+          "status": "pending",
+          "testStrategy": "Verify the command appears in the CLI help output with correct parameter descriptions by running the CLI with --help flag."
+        },
+        {
+          "id": 2,
+          "title": "Implement API endpoint URL construction",
+          "description": "Create a function to properly construct the API endpoint URL for the chat request using the employee_id.",
+          "dependencies": [
+            1
+          ],
+          "details": "Create a helper function that takes employee_id as a parameter and returns the full URL for the chat endpoint by combining the base BACKEND_API_URL with the path '/api/v1/agents/{employee_id}/chat'. Ensure the employee_id is properly URL-encoded if necessary. This function will be used by the chat command to construct the target URL.",
+          "status": "pending",
+          "testStrategy": "Test with various employee_id values including those with special characters to ensure proper URL encoding."
+        },
+        {
+          "id": 3,
+          "title": "Implement HTTP POST request functionality",
+          "description": "Create the core functionality to send the HTTP POST request to the backend with the prompt data.",
+          "dependencies": [
+            2
+          ],
+          "details": "Using the requests or httpx library, implement the functionality to send a POST request to the URL constructed in the previous subtask. Create a JSON payload with the format { \"prompt\": prompt_string }. Set appropriate headers for content type (application/json). Include error handling for connection issues, timeouts, or invalid responses. Return the response object for further processing.",
+          "status": "pending",
+          "testStrategy": "Test with mock responses to verify correct request formation and error handling."
+        },
+        {
+          "id": 4,
+          "title": "Implement response parsing and display",
+          "description": "Extract and display the agent's response from the API response JSON.",
+          "dependencies": [
+            3
+          ],
+          "details": "Parse the JSON response from the API call. Extract the 'response' field from the JSON. Implement error handling for cases where the response doesn't contain the expected field or isn't valid JSON. Format the response appropriately for display in the terminal (handling potential multiline responses, etc.). Print the formatted response to stdout.",
+          "status": "pending",
+          "testStrategy": "Test with various mock response formats including valid responses, missing fields, and malformed JSON."
+        },
+        {
+          "id": 5,
+          "title": "Add error handling and user feedback",
+          "description": "Enhance the command with comprehensive error handling and user feedback for different scenarios.",
+          "dependencies": [
+            4
+          ],
+          "details": "Implement specific error handling for common failure scenarios: 1) Backend server unreachable, 2) Authentication failures, 3) Employee ID not found, 4) Rate limiting or quota issues, 5) Unexpected server errors. For each error case, provide a clear, user-friendly error message. Add progress indicators or messages (e.g., 'Sending message...', 'Waiting for response...') to improve user experience during potentially slow operations. Include a verbose mode that shows additional details about the request/response when enabled.",
+          "status": "pending",
+          "testStrategy": "Test each error scenario to ensure appropriate error messages are displayed. Test with slow network connections to verify progress indicators work as expected."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Web Frontend: Project Setup, Layout, and Structure Display (React Flow)",
+      "description": "Initialize a React project using Vite with TypeScript. Install and configure Tailwind CSS, React Flow, Zustand, and ShadCN/UI. Create a basic page layout accessible at `http://localhost:3360`. Fetch the company structure from `GET /api/v1/company/structure` on page load, store it in a Zustand store, and render a CEO node and the 'Tonny Trosk' cofounder agent node using React Flow. Create a Dockerfile for the frontend and add it to `docker-compose.yml`.",
+      "details": "1. Create frontend project directory (e.g., `frontend`).\n2. Initialize React project: `npx create-vite@latest frontend --template react-ts`.\n3. Install dependencies: `npm install tailwindcss postcss autoprefixer reactflow zustand @radix-ui/react-dialog class-variance-authority clsx lucide-react tailwind-merge shadcn-ui` (or `yarn add ...`).\n4. Initialize Tailwind CSS: `npx tailwindcss init -p`. Configure `tailwind.config.js` and `index.css`.\n5. Initialize ShadCN/UI: `npx shadcn-ui@latest init`.\n6. Create a Zustand store (`src/store.js`) to hold company structure (nodes, edges).\n7. Create a main App component (`src/App.tsx`):\n    - On mount (`useEffect`), fetch data from backend's `/api/v1/company/structure` (ensure backend URL is configurable, e.g. via `VITE_API_URL` in `.env`).\n    - Update Zustand store with fetched data, transforming it into React Flow `nodes` (e.g., { id: 'ceo', type: 'input', data: { label: 'CEO' }, position: { x: 250, y: 5 } }, { id: '123', data: { label: 'Tonny Trosk (Cofounder)' }, position: { x: 250, y: 100 } }) and `edges`.\n    - Use `<ReactFlowProvider>`, `<ReactFlow nodes={nodes} edges={edges} ... />`, `<Controls />`, `<Background />` to render the graph.\n8. Create `frontend/Dockerfile`: Multi-stage build. Stage 1: `node:18-alpine` to build the React app (`npm run build`). Stage 2: `nginx:alpine` to copy build artifacts from Stage 1 to `/usr/share/nginx/html` and serve static content. Configure Nginx for single-page application (SPA) routing.\n9. Add `frontend_web` service to `docker-compose.yml`: build context `./frontend`, ports `3360:80` (if Nginx serves on 80 internally), depends_on `backend_api`.",
+      "testStrategy": "Run `docker-compose up -d --build frontend_web`. Open `http://localhost:3360` in a browser. Verify the page loads with basic layout. Check that a CEO node and a 'Tonny Trosk' cofounder node are rendered by React Flow. Inspect browser network tab to confirm API call to `/api/v1/company/structure` is successful. Check console for errors.",
+      "priority": "high",
+      "dependencies": [
+        4
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Initialize React Project with Vite and Configure Dependencies",
+          "description": "Set up a new React project with TypeScript using Vite. Install and configure all required dependencies including Tailwind CSS, React Flow, Zustand, and ShadCN/UI.",
+          "dependencies": [],
+          "details": "1. Create frontend project directory (`frontend`)\n2. Initialize React project with TypeScript template: `npx create-vite@latest frontend --template react-ts`\n3. Navigate to project directory and install core dependencies: `npm install tailwindcss postcss autoprefixer reactflow zustand @radix-ui/react-dialog class-variance-authority clsx lucide-react tailwind-merge`\n4. Initialize Tailwind CSS: `npx tailwindcss init -p`\n5. Configure `tailwind.config.js` to include content paths\n6. Update `src/index.css` with Tailwind directives\n7. Initialize ShadCN/UI: `npx shadcn-ui@latest init`\n8. Configure development server to run on port 3360 in `vite.config.ts`",
+          "status": "pending",
+          "testStrategy": "Verify the project structure is correct and all dependencies are installed. Run `npm run dev` to ensure the development server starts without errors on port 3360."
+        },
+        {
+          "id": 2,
+          "title": "Create Zustand Store for Company Structure",
+          "description": "Implement a Zustand store to manage the company structure data, including nodes and edges for React Flow.",
+          "dependencies": [],
+          "details": "1. Create `src/store/companyStore.ts` file\n2. Define types for company structure data, nodes, and edges\n3. Implement a Zustand store with:\n   - State interface containing nodes, edges, and loading state\n   - Actions to fetch company structure data\n   - Actions to update nodes and edges\n   - Helper functions to transform API data to React Flow format\n4. Export the store hook for use in components",
+          "status": "pending",
+          "testStrategy": "Create simple unit tests to verify store initialization, state updates, and data transformation functions."
+        },
+        {
+          "id": 3,
+          "title": "Implement API Integration and Data Fetching",
+          "description": "Create service to fetch company structure data from the backend API and transform it into the format required by React Flow.",
+          "dependencies": [],
+          "details": "1. Create `src/services/api.ts` for API integration\n2. Set up environment variables in `.env` file with `VITE_API_URL`\n3. Implement fetch function to get company structure from `GET /api/v1/company/structure`\n4. Create data transformation functions to convert API response to React Flow nodes and edges\n5. Handle error cases and loading states\n6. Connect the API service to the Zustand store created in the previous subtask",
+          "status": "pending",
+          "testStrategy": "Test API integration with mock data. Verify error handling works correctly and data transformation produces valid React Flow nodes and edges."
+        },
+        {
+          "id": 4,
+          "title": "Build React Flow Component and Basic Layout",
+          "description": "Create the main application layout and implement the React Flow component to display the company structure graph.",
+          "dependencies": [],
+          "details": "1. Create basic layout components in `src/components/layout`\n2. Implement the main App component in `src/App.tsx`\n3. Add React Flow provider and component setup\n4. Implement useEffect hook to fetch data on component mount\n5. Connect to the Zustand store to access nodes and edges\n6. Add React Flow Controls and Background components\n7. Style the CEO node and 'Tonny Trosk' cofounder node with appropriate visual elements\n8. Implement basic zoom and pan functionality\n9. Add loading and error states to the UI",
+          "status": "pending",
+          "testStrategy": "Manually test the React Flow rendering with sample data. Verify nodes are displayed correctly and the graph is interactive."
+        },
+        {
+          "id": 5,
+          "title": "Create Dockerfile and Update Docker Compose Configuration",
+          "description": "Create a Dockerfile for the frontend application and update the docker-compose.yml file to include the frontend service.",
+          "dependencies": [],
+          "details": "1. Create `frontend/Dockerfile` with multi-stage build:\n   - Stage 1: Use `node:18-alpine` to build the React app\n   - Stage 2: Use `nginx:alpine` to serve the built static files\n2. Create nginx configuration for SPA routing\n3. Update `docker-compose.yml` to add a `frontend_web` service:\n   - Set build context to `./frontend`\n   - Map port 3360:80\n   - Add dependency on `backend_api` service\n4. Test the Docker setup locally\n5. Document any environment variables or configuration needed for production deployment",
+          "status": "pending",
+          "testStrategy": "Build and run the Docker container locally. Verify the application is accessible at http://localhost:3360 and can communicate with the backend API."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Web Frontend: Implement Agent Chat Modal and Interaction",
+      "description": "In the web frontend, implement functionality where clicking on the 'Tonny Trosk' React Flow node opens a simple modal (using ShadCN/UI Dialog). The modal should contain an input field for a message and a submit button. Submitting the message should call the `POST /api/v1/agents/123/chat` backend endpoint and display the agent's response within the modal.",
+      "details": "1. In the React Flow setup (`App.tsx` or a dedicated component), add an `onNodeClick` handler.\n2. If the clicked node is 'Tonny Trosk' (e.g., `node.id === '123'`):\n    - Use ShadCN/UI Dialog (`<Dialog>`, `<DialogTrigger>`, `<DialogContent>`, `<DialogHeader>`, `<DialogTitle>`, `<DialogDescription>`, `<DialogFooter>`).\n    - The Dialog content should include an `<Input />` (from ShadCN/UI) for the prompt and a `<Button />` to submit.\n    - Manage prompt input and agent response using React state (e.g., `useState`).\n    - On button click, make an async POST request to `/api/v1/agents/123/chat` (using `fetch` or `axios`) with `{ \"prompt\": \"user_input_from_modal\" }`.\n    - Update state with the agent's response (`data.response`) and display it in the modal.\n    - Handle loading/error states during the API call.",
+      "testStrategy": "Ensure backend and frontend services are running. Open `http://localhost:3360`. Click on the 'Tonny Trosk' node. Verify a modal dialog opens. Enter a prompt (e.g., \"Hello Tonny!\") and click submit. Verify the modal displays an enthusiastic agreement response from the agent. Check browser network tab for the POST request and response.",
+      "priority": "high",
+      "dependencies": [
+        5,
+        8
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement onNodeClick handler in React Flow",
+          "description": "Add an onNodeClick event handler to the React Flow component that identifies when the 'Tonny Trosk' node is clicked and triggers the chat modal.",
+          "dependencies": [],
+          "details": "1. In App.tsx or the component containing ReactFlow, implement the onNodeClick handler function.\n2. Check if the clicked node has id '123' (Tonny Trosk).\n3. If it matches, set a state variable (e.g., isDialogOpen) to true to open the modal.\n4. Add necessary state management using useState hook: const [isDialogOpen, setIsDialogOpen] = useState(false).",
+          "status": "pending",
+          "testStrategy": "Test by clicking on different nodes in the flow and verify that only clicking on node '123' opens the modal."
+        },
+        {
+          "id": 2,
+          "title": "Create ShadCN/UI Dialog component for chat interface",
+          "description": "Implement a ShadCN/UI Dialog component that serves as the chat modal with appropriate structure and styling.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Import necessary Dialog components from ShadCN/UI: Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, and DialogFooter.\n2. Structure the Dialog with a clear title ('Chat with Tonny Trosk'), description, and footer.\n3. Ensure the Dialog's open state is controlled by the isDialogOpen state variable.\n4. Add a function to close the dialog (setIsDialogOpen(false)) and attach it to appropriate events.",
+          "status": "pending",
+          "testStrategy": "Verify that the dialog appears with correct styling and can be closed using the close button or escape key."
+        },
+        {
+          "id": 3,
+          "title": "Add input field and submit button to the Dialog",
+          "description": "Implement the chat input field and submit button within the Dialog component with proper state management.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. Add a ShadCN/UI Input component for user message input.\n2. Create state for the input: const [userInput, setUserInput] = useState('').\n3. Add an onChange handler to update userInput state as the user types.\n4. Add a ShadCN/UI Button component with appropriate styling for submission.\n5. Implement basic validation to prevent empty message submission.",
+          "status": "pending",
+          "testStrategy": "Test typing in the input field, verify the submit button is disabled when input is empty, and enabled when text is entered."
+        },
+        {
+          "id": 4,
+          "title": "Implement API call to chat endpoint",
+          "description": "Create the functionality to send the user's message to the backend API and handle the response.",
+          "dependencies": [
+            3
+          ],
+          "details": "1. Create a submitMessage async function that will be called when the submit button is clicked.\n2. Use fetch or axios to make a POST request to '/api/v1/agents/123/chat' with the body { \"prompt\": userInput }.\n3. Add loading state: const [isLoading, setIsLoading] = useState(false).\n4. Set isLoading to true before the API call and false after it completes.\n5. Add error handling with try/catch and create an error state to store any errors.\n6. Create a state variable for the agent's response: const [agentResponse, setAgentResponse] = useState('').\n7. Update the agentResponse state with data.response from the API response.",
+          "status": "pending",
+          "testStrategy": "Test the API call with various inputs, verify loading states are correctly displayed, and test error handling by temporarily disconnecting from the network."
+        },
+        {
+          "id": 5,
+          "title": "Display agent response and implement loading/error states",
+          "description": "Update the Dialog UI to display the agent's response, loading indicators, and error messages.",
+          "dependencies": [
+            4
+          ],
+          "details": "1. Add a section in the Dialog to display the agent's response when available.\n2. Implement conditional rendering to show a loading spinner (ShadCN/UI Spinner or similar) when isLoading is true.\n3. Display error messages when the error state is not empty.\n4. Style the response area to clearly differentiate between user input and agent responses.\n5. Add the ability to send multiple messages in sequence, maintaining a clean UI between submissions.\n6. Clear the input field after submission but preserve the conversation history.",
+          "status": "pending",
+          "testStrategy": "Test the complete flow from input to response display, verify loading indicators appear during API calls, and confirm error messages are displayed appropriately when API calls fail."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "RabbitMQ: Setup Service and Verify Basic Connectivity",
+      "description": "Ensure the RabbitMQ service is correctly included and configured in `docker-compose.yml`. Create simple standalone Python scripts (one publisher, one consumer) using the `pika` library to publish a dummy message to a test queue and consume it, thereby verifying basic RabbitMQ connectivity. This is for verification only and not integrated into the main user story flow for MS1.",
+      "details": "1. Confirm RabbitMQ service definition in `docker-compose.yml` (from Task 1) is running and accessible on its default port (5672).\n2. Create `rabbitmq_test/publisher.py`:\n    - Install `pika` (`pip install pika`).\n    - Connect to RabbitMQ (e.g., `amqp://guest:guest@localhost:5672/` if running locally or `amqp://guest:guest@rabbitmq:5672/` if script is run from another container in the same Docker network).\n    - Declare a queue (e.g., `test_queue`).\n    - Publish a message (e.g., \"Hello RabbitMQ!\") to the queue.\n3. Create `rabbitmq_test/consumer.py`:\n    - Install `pika`.\n    - Connect to RabbitMQ.\n    - Declare the same queue (`test_queue`).\n    - Define a callback function to process received messages (e.g., print it).\n    - Start consuming messages from the queue.\n4. These scripts are typically run from your local machine (adjusting hostname if needed) or from within a temporary container that has Python and Pika installed.",
+      "testStrategy": "With `docker-compose up -d` running all services (including RabbitMQ). Execute `python rabbitmq_test/publisher.py`. Then, execute `python rabbitmq_test/consumer.py`. Verify that the consumer script prints \"Hello RabbitMQ!\". Check RabbitMQ management UI (if accessible at `http://localhost:15672`) for queue creation and message flow.",
+      "priority": "medium",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Verify RabbitMQ Configuration in docker-compose.yml",
+          "description": "Confirm that the RabbitMQ service is properly defined in the docker-compose.yml file and that it's running and accessible on the default port (5672).",
+          "dependencies": [],
+          "details": "1. Check docker-compose.yml for RabbitMQ service definition with proper image (rabbitmq:3-management), port mappings (5672:5672 for AMQP, 15672:15672 for management UI), and any necessary environment variables.\n2. Run 'docker-compose up -d' to start the services.\n3. Verify RabbitMQ is running with 'docker ps' and check that the container status is 'Up'.\n4. Test basic connectivity to the management interface at http://localhost:15672 (default credentials: guest/guest).",
+          "status": "pending",
+          "testStrategy": "Use 'docker-compose ps' to verify the container is running. Try accessing the management UI through a browser to confirm the service is responding."
+        },
+        {
+          "id": 2,
+          "title": "Create Project Structure and Install Dependencies",
+          "description": "Set up the project directory structure and install the necessary Python dependencies for testing RabbitMQ connectivity.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a 'rabbitmq_test' directory in the project root.\n2. Create a Python virtual environment: 'python -m venv venv' (optional but recommended).\n3. Activate the virtual environment.\n4. Install pika: 'pip install pika'.\n5. Create a requirements.txt file with 'pika==1.2.0' (or the latest stable version).\n6. Create empty files for publisher.py and consumer.py in the rabbitmq_test directory.",
+          "status": "pending",
+          "testStrategy": "Verify pika is installed correctly by running 'pip list | grep pika' or 'python -c \"import pika; print(pika.__version__)\"'"
+        },
+        {
+          "id": 3,
+          "title": "Implement Publisher Script",
+          "description": "Create a Python script that connects to RabbitMQ and publishes a test message to a queue.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. In rabbitmq_test/publisher.py, implement the following:\n   - Import pika\n   - Establish a connection to RabbitMQ using pika.ConnectionParameters\n   - Create a channel\n   - Declare a queue named 'test_queue'\n   - Publish a message (e.g., 'Hello RabbitMQ!') to the queue\n   - Close the connection\n2. Add proper error handling and logging\n3. Make the script configurable to connect to either localhost or the rabbitmq service name depending on where it's run from\n4. Add a main block to allow the script to be run directly",
+          "status": "pending",
+          "testStrategy": "Run the script and check for successful execution without errors. Verify the message was published by checking the RabbitMQ management UI under the Queues section."
+        },
+        {
+          "id": 4,
+          "title": "Implement Consumer Script",
+          "description": "Create a Python script that connects to RabbitMQ and consumes messages from the test queue.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. In rabbitmq_test/consumer.py, implement the following:\n   - Import pika\n   - Establish a connection to RabbitMQ using pika.ConnectionParameters\n   - Create a channel\n   - Declare the same queue ('test_queue')\n   - Define a callback function that processes received messages (print the message body)\n   - Set up basic_consume with the callback function\n   - Start consuming with channel.start_consuming()\n2. Add proper error handling and logging\n3. Make the script configurable like the publisher\n4. Add a main block with a try/except to handle keyboard interrupts gracefully",
+          "status": "pending",
+          "testStrategy": "Run the script and verify it starts without errors and waits for messages. It should not exit immediately unless there's an error."
+        },
+        {
+          "id": 5,
+          "title": "Test End-to-End Message Flow",
+          "description": "Verify the complete message flow by running both the publisher and consumer scripts and confirming messages are successfully transmitted.",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "1. Start the consumer script in one terminal window\n2. Run the publisher script in another terminal window\n3. Verify that the consumer receives and displays the message sent by the publisher\n4. Test with different message content\n5. Test the scripts both from the local machine (connecting to localhost) and from within a Docker container (connecting to the rabbitmq service name)\n6. Document any connection string differences needed for different environments\n7. Create a simple README.md in the rabbitmq_test directory explaining how to run the tests",
+          "status": "pending",
+          "testStrategy": "1. Run consumer first, then publisher, and verify message reception\n2. Check RabbitMQ management UI to confirm queue creation and message counts\n3. Try running multiple instances of the consumer to verify load balancing behavior\n4. Test error scenarios like stopping RabbitMQ while consumer is running"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "System Integration: Finalize Dockerization, E2E Testing, and READMEs",
+      "description": "Ensure all components (Backend API, PostgreSQL, Web Frontend, CLI) are correctly containerized and orchestrated with Docker Compose. Polish Dockerfiles and `docker-compose.yml` for environment variables, networking, and volumes. Create basic READMEs for each component outlining setup and run instructions. Perform end-to-end testing of the full user story.",
+      "details": "1. Review all Dockerfiles (`backend/Dockerfile`, `frontend/Dockerfile`, potentially `cli/Dockerfile`) for best practices (e.g., minimize layers, use `.dockerignore`, multi-stage builds for frontend).\n2. Review and finalize `docker-compose.yml`:\n    - Ensure correct service dependencies (`depends_on`).\n    - Consistent and clear service naming.\n    - Proper port mappings.\n    - Secure and configurable environment variable setup (e.g., using an `.env` file for `DATABASE_URL`, `OPENROUTER_API_KEY`, `REACT_APP_API_BASE_URL` for frontend, `CLI_API_URL` for CLI).\n    - Verify volume for PostgreSQL data persistence.\n3. Create/update `README.md` for `backend`, `frontend`, `cli` directories: Include brief description, prerequisites, how to build, how to run (locally and via Docker Compose), and available environment variables.\n4. Create a root `README.md` explaining the overall project and how to run everything using `docker-compose`.",
+      "testStrategy": "Perform comprehensive end-to-end testing as per PRD Section 8 (Definition of Done for MS1):\n1. Clean Docker environment: `docker-compose down -v --remove-orphans`.\n2. Build and start all services: `docker-compose up --build -d`.\n3. Web Dashboard: Access `http://localhost:3360`. Verify CEO and 'Tonny Trosk' nodes display. Chat with 'Tonny Trosk' via modal and verify enthusiastic response.\n4. CLI: Execute `docker-compose exec <backend_service_or_dedicated_cli_service> python cli/main.py departments list` and verify company structure output. Execute `docker-compose exec <backend_service_or_dedicated_cli_service> python cli/main.py chat 123 \"Final CLI Test\"` and verify agent's response.\n5. RabbitMQ: Re-run RabbitMQ connectivity test scripts (Task 10).\n6. Check logs of all services (`docker-compose logs -f`) for errors during tests.\n7. Verify READMEs are clear and accurate.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Optimize and Finalize All Dockerfiles",
+          "description": "Review and optimize Dockerfiles for backend, frontend, and CLI components following Docker best practices.",
+          "dependencies": [],
+          "details": "1. Review and update `backend/Dockerfile`: Use appropriate base image, minimize layers, implement proper caching for dependencies, set up non-root user, and include health checks.\n2. Review and update `frontend/Dockerfile`: Implement multi-stage build to reduce final image size, properly handle node_modules caching, and set up proper build arguments for environment variables.\n3. Create or update `cli/Dockerfile`: Ensure proper packaging of CLI tool with dependencies.\n4. Create `.dockerignore` files for each component to exclude unnecessary files.\n5. Document build arguments and environment variables in each Dockerfile.",
+          "status": "pending",
+          "testStrategy": "Build each Docker image individually and verify it runs correctly with sample configuration. Check image sizes and layer counts to ensure optimization."
+        },
+        {
+          "id": 2,
+          "title": "Configure Docker Compose for Full System Integration",
+          "description": "Create or update the docker-compose.yml file to orchestrate all services with proper dependencies, networking, and environment configuration.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Define services for backend, frontend, database, and CLI in `docker-compose.yml`.\n2. Configure proper service dependencies using `depends_on` and health checks.\n3. Set up networking between containers with appropriate port mappings.\n4. Create a template `.env` file for environment variables (DATABASE_URL, OPENROUTER_API_KEY, etc.).\n5. Configure volume for PostgreSQL data persistence.\n6. Set up proper restart policies for services.\n7. Add comments in the docker-compose file explaining key configurations.",
+          "status": "pending",
+          "testStrategy": "Run `docker-compose up` and verify all services start in the correct order. Test network connectivity between services."
+        },
+        {
+          "id": 3,
+          "title": "Create Component-Specific READMEs",
+          "description": "Create detailed README.md files for backend, frontend, and CLI components with setup and usage instructions.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. For each component (backend, frontend, CLI), create a README.md that includes:\n   - Brief component description and purpose\n   - Prerequisites for local development\n   - Installation and setup instructions\n   - Available environment variables and configuration options\n   - How to build and run locally\n   - How to build and run with Docker\n   - Troubleshooting common issues\n2. Include code examples where appropriate.\n3. Document API endpoints for backend, UI features for frontend, and commands for CLI.",
+          "status": "pending",
+          "testStrategy": "Have team members follow the README instructions to verify clarity and completeness. Ensure all environment variables and configuration options are documented."
+        },
+        {
+          "id": 4,
+          "title": "Create Root Project README",
+          "description": "Create a comprehensive root README.md that explains the overall project architecture and provides instructions for running the complete system.",
+          "dependencies": [
+            2,
+            3
+          ],
+          "details": "1. Create a root `README.md` that includes:\n   - Project overview and purpose\n   - System architecture diagram or description\n   - List of all components and their relationships\n   - Prerequisites for running the complete system\n   - Step-by-step instructions for starting the system with Docker Compose\n   - How to access each component (URLs, ports)\n   - Development workflow instructions\n   - Troubleshooting section for common issues\n2. Include a quick-start guide for new developers.\n3. Document how components interact with each other.",
+          "status": "pending",
+          "testStrategy": "Have someone unfamiliar with the project follow the README to set up and run the system. Verify all instructions are clear and accurate."
+        },
+        {
+          "id": 5,
+          "title": "Perform End-to-End Testing",
+          "description": "Conduct comprehensive end-to-end testing of the complete system to verify all components work together correctly.",
+          "dependencies": [
+            2
+          ],
+          "details": "1. Create a test plan covering key user flows through the system.\n2. Start the complete system using Docker Compose.\n3. Test user registration and authentication if applicable.\n4. Test core functionality across frontend, backend, and CLI components.\n5. Verify data persistence in PostgreSQL across system restarts.\n6. Test error handling and edge cases.\n7. Document any issues found and create tickets for them.\n8. Verify environment variable configuration works correctly across components.",
+          "status": "pending",
+          "testStrategy": "Create a checklist of user stories to test. For each story, document the steps performed, expected results, and actual results. Test on different environments (local, staging) if available."
+        }
+      ]
+    }
+  ]
+}

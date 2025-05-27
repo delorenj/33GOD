@@ -1,0 +1,48 @@
+# Task ID: 1
+# Title: Initialize Project Repositories and Basic Docker Compose Setup
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Set up Git repositories for backend, frontend, and CLI. Create the initial docker-compose.yml file with PostgreSQL (latest stable) and RabbitMQ (latest stable) services. Define basic networking and a volume for PostgreSQL data persistence.
+# Details:
+1. Initialize a monorepo or separate Git repositories for backend, frontend, and CLI components.
+2. Create `docker-compose.yml` in the project root.
+3. Define `postgres` service: image `postgres:latest`, environment variables for default user/password/db, volume for data persistence (e.g., `pgdata:/var/lib/postgresql/data`), expose port 5432.
+4. Define `rabbitmq` service: image `rabbitmq:latest` (or `rabbitmq:management` for UI), expose ports 5672 (AMQP) and 15672 (management UI).
+5. Define a top-level `volumes` key for `pgdata`.
+6. Define a default network for services to communicate.
+
+# Test Strategy:
+Run `docker-compose up -d`. Verify PostgreSQL and RabbitMQ containers are running using `docker ps`. Attempt to connect to PostgreSQL using a DB client (e.g., `psql` or DBeaver). Access RabbitMQ management UI if `rabbitmq:management` image is used (typically `http://localhost:15672`).
+
+# Subtasks:
+## 1. Initialize Git Repositories for Project Components [pending]
+### Dependencies: None
+### Description: Set up the repository structure for the project, either as a monorepo or as separate repositories for backend, frontend, and CLI components.
+### Details:
+Create a new directory for the project. Initialize Git repositories using `git init` for each component (backend, frontend, CLI). If using a monorepo approach, set up a directory structure with subdirectories for each component. Create initial README.md files in each repository with project description and setup instructions. Add .gitignore files appropriate for each technology stack.
+
+## 2. Configure PostgreSQL Service in Docker Compose [pending]
+### Dependencies: 1.1
+### Description: Set up the PostgreSQL database service in the docker-compose.yml file with proper configuration for development use.
+### Details:
+Create a docker-compose.yml file in the project root. Define a 'postgres' service using the latest stable PostgreSQL image. Configure environment variables for database name, username, and password (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB). Map port 5432 to the host machine. Create a named volume for data persistence (pgdata:/var/lib/postgresql/data). Add healthcheck configuration to ensure the database is properly initialized before dependent services start.
+
+## 3. Configure RabbitMQ Service in Docker Compose [pending]
+### Dependencies: 1.1
+### Description: Set up the RabbitMQ message broker service in the docker-compose.yml file with management UI enabled.
+### Details:
+Add a 'rabbitmq' service to the docker-compose.yml file using the rabbitmq:management image for UI access. Expose port 5672 for AMQP protocol and port 15672 for the management web interface. Configure environment variables for default user and password if needed (RABBITMQ_DEFAULT_USER, RABBITMQ_DEFAULT_PASS). Add appropriate container name and restart policy. Include healthcheck configuration to verify the service is fully operational.
+
+## 4. Define Docker Network Configuration [pending]
+### Dependencies: 1.2, 1.3
+### Description: Set up the networking configuration in docker-compose.yml to enable communication between services.
+### Details:
+Define a custom bridge network in the docker-compose.yml file under the 'networks' section. Configure all services to use this network. Set appropriate network aliases for services if needed. Ensure the network configuration allows for service discovery using container names. Document the network configuration in comments for future reference.
+
+## 5. Create Project Documentation and Verification Script [pending]
+### Dependencies: 1.4
+### Description: Document the project setup and create a verification script to ensure all components are properly configured.
+### Details:
+Create a comprehensive README.md in the project root with setup instructions, architecture overview, and development workflow. Document environment variables used in the docker-compose.yml file. Create a shell script (verify-setup.sh) that checks if Docker and Docker Compose are installed, runs docker-compose up, and verifies that all services are running correctly. Include instructions for troubleshooting common issues. Add a .env.example file with sample environment variables.
+
