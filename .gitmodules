@@ -1,0 +1,48 @@
+[submodule "agent-forge/trunk-main"]
+	path = agent-forge/trunk-main
+	url = git@github.com:delorenj/agent-forge.git
+[submodule "bloodbank/trunk-main"]
+	path = bloodbank/trunk-main
+	url = git@github.com:delorenj/bloodbank.git
+[submodule "candybar/trunk-main"]
+	path = candybar/trunk-main
+	url = git@github.com:delorenj/candybar.git
+[submodule "candystore/trunk-main"]
+	path = candystore/trunk-main
+	url = git@github.com:delorenj/candystore
+[submodule "degenerate/trunk-main"]
+	path = degenerate/trunk-main
+	url = git@github.com:delorenj/degenerate.git
+[submodule "flume/trunk-main"]
+	path = flume/trunk-main
+	url = git@github.com:delorenj/flume
+[submodule "holocene/trunk-main"]
+	path = holocene/trunk-main
+	url = git@github.com:delorenj/holocene.git
+[submodule "holyfields/trunk-main"]
+	path = holyfields/trunk-main
+	url = git@github.com:delorenj/holyfields.git
+[submodule "iMi/trunk-main"]
+	path = iMi/trunk-main
+	url = git@github.com:delorenj/iMi.git
+[submodule "jelmore/trunk-main"]
+	path = jelmore/trunk-main
+	url = git@github.com:delorenj/jelmore.git
+[submodule "perth/trunk-main"]
+	path = perth/trunk-main
+	url = git@github.com:delorenj/perth.git
+[submodule "TalkyTonny/trunk-main"]
+	path = TalkyTonny/trunk-main
+	url = git@github.com:delorenj/TalkyTonny.git
+[submodule "theboard/trunk-main"]
+	path = theboard/trunk-main
+	url = git@github.com:delorenj/theboard.git
+[submodule "theboardroom/trunk-main"]
+	path = theboardroom/trunk-main
+	url = git@github.com:delorenj/theboardroom
+[submodule "yi/trunk-main"]
+	path = yi/trunk-main
+	url = git@github.com:delorenj/yi
+[submodule "zellij-driver/trunk-main"]
+	path = zellij-driver/trunk-main
+	url = git@github.com:delorenj/zellij-driver.git

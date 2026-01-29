@@ -1,0 +1,68 @@
+[project]
+name = "event-store-manager"
+version = "0.1.0"
+description = "The Historian - Persists all Bloodbank events to PostgreSQL for queryable audit trail"
+authors = [
+    {name = "Jarad DeLorenzo", email = "jaradd@gmail.com"}
+]
+requires-python = ">=3.12"
+dependencies = [
+    # FastAPI for REST API
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+
+    # PostgreSQL async driver
+    "asyncpg>=0.30.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+
+    # RabbitMQ async client
+    "aio-pika>=9.5.0",
+
+    # Pydantic for data validation
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "structlog>=24.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",  # For FastAPI testing
+    "ruff>=0.8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]  # Line too long (handled by formatter)
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

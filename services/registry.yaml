@@ -1,0 +1,512 @@
+# Bloodbank Subscriber Services Registry
+#
+# This file defines all event consumer services in the 33GOD ecosystem.
+# Used by Candybar for network graph visualization and service discovery.
+#
+# To add a new service:
+# 1. Create a consumer using the template in templates/
+# 2. Add an entry to this registry
+# 3. Deploy the service
+
+version: "1.0"
+
+# Exchange configuration
+exchange:
+  name: "bloodbank.events.v1"
+  type: "topic"
+  durable: true
+
+# Service definitions
+services:
+  # ---------------------------------------------------------------------------
+  # Infrastructure Services (Layer 0)
+  # ---------------------------------------------------------------------------
+
+  event-store-manager:
+    name: "event-store-manager"
+    description: "The Historian - Persists all Bloodbank events to PostgreSQL for queryable audit trail"
+    type: "event-consumer"
+    queue_name: "event_store_manager_queue"
+    routing_keys:
+      - "#" # Subscribe to ALL events
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "infrastructure"
+      - "persistence"
+      - "event-sourcing"
+      - "observability"
+      - "postgresql"
+    produces:
+      - "event_store.event.persisted"
+      - "event_store.event.failed"
+    endpoints:
+      api: "http://localhost:8080/api/v1"
+      health: "http://localhost:8080/health"
+      docs: "http://localhost:8080/docs"
+      websocket: "ws://localhost:8080/api/v1/events/stream"
+
+  # ---------------------------------------------------------------------------
+  # Fireflies Transcript Processing Pipeline
+  # ---------------------------------------------------------------------------
+
+  fireflies-transcript-processor:
+    name: "fireflies-transcript-processor"
+    description: "Processes Fireflies transcript events, saves to DeLoDocs/Transcriptions, and publishes artifact.created events"
+    type: "event-consumer"
+    queue_name: "services.fireflies.transcript_processor"
+    routing_keys:
+      - "fireflies.transcript.ready"
+    produces:
+      - "artifact.created"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "transcript"
+      - "fireflies"
+      - "delodocs"
+      - "artifact"
+
+  fireflies-transcript-rag:
+    name: "fireflies-transcript-rag"
+    description: "Ingests Fireflies transcripts into RAG system"
+    type: "event-consumer"
+    queue_name: "fireflies_transcript_rag_queue"
+    routing_keys:
+      - "fireflies.transcript.ready"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "transcript"
+      - "fireflies"
+      - "rag"
+      - "vector-store"
+
+  fireflies-transcript-notifier:
+    name: "fireflies-transcript-notifier"
+    description: "Sends notifications when transcripts are ready"
+    type: "event-consumer"
+    queue_name: "fireflies_transcript_notifier_queue"
+    routing_keys:
+      - "fireflies.transcript.processed"
+      - "fireflies.transcript.failed"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "transcript"
+      - "notification"
+
+  # ---------------------------------------------------------------------------
+  # Node-RED Flow Orchestration (External Integration Layer)
+  # Note for LLM:
+  # I sense a code smell here. Would like some thoughts on this...
+  # Let's discuss our service, Fireflies Transcription Service.
+  # Above, each checkpoint in the transcription workflow is registered.
+  # Fine. I could wrap my head around and accept it. Basically, each incoming
+  # and outgoing event is a registered entity.
+  # Then we integrated Node-RED to the pipeline which is replacing n8n.
+  # Below we couple the registration of our Node-RED service to our Fireflies
+  # Transcription Service adding transcript commands and events to the list of
+  # Node-RED producers and consumers. Is this necessary? What is the mental model
+  # I need to grok this? Event Driven systems are couple-resistant in that any
+  # service can "listen" to events without putting a 'ding' in the coupling-rating
+  # of a system, but is that what's happening here? What's the significance of the
+  # above `fireflies-transcript-notifier` and the below Node-RED producer that fires
+  # off fireflies upload and ready events? I feel (correct me if i'm wrong) a better
+  # architecture would be fully encapsulated, dependency-free, domain-specific
+  # services (Fireflies Transcription Service), and Node-RED is there to act as
+  # the glue or highways between services - and i may be rubber ducking here, so
+  # bare with me - are we on the same page?
+  # ---------------------------------------------------------------------------
+
+  node-red-flow-orchestrator:
+    name: "node-red-flow-orchestrator"
+    description: "Node-RED workflow orchestration - file watching, webhook handling, and event bridging"
+    type: "event-producer"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "node-red"
+      - "workflow"
+      - "file-watch"
+      - "webhook"
+      - "integration"
+      - "fireflies"
+    produces:
+      - "fireflies.transcript.upload"
+      - "fireflies.transcript.ready"
+    consumes:
+      - "fireflies.transcript.upload" # Via exec node subscriber
+      - "fireflies.transcript.ready" # Via exec node subscriber
+    endpoints:
+      ui: "http://localhost:1880"
+      webhooks: "http://localhost:1880/webhooks/fireflies"
+    runtime:
+      type: "pm2"
+      config: "~/.node-red/ecosystem.config.js"
+      data_dir: "~/.node-red"
+      flows_source: "~/code/33GOD/services/node-red-flow-orchestrator/flows"
+
+  # ---------------------------------------------------------------------------
+  # Agent Thread Services
+  # ---------------------------------------------------------------------------
+
+  agent-thread-collector:
+    name: "agent-thread-collector"
+    description: "Collects agent thread prompts and responses"
+    type: "event-consumer"
+    queue_name: "agent_thread_collector_queue"
+    routing_keys:
+      - "agent.thread.prompt"
+      - "agent.thread.response"
+      - "agent.thread.error"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "agent"
+      - "telemetry"
+
+  agent-thread-analytics:
+    name: "agent-thread-analytics"
+    description: "Analyzes agent thread performance"
+    type: "event-consumer"
+    queue_name: "agent_thread_analytics_queue"
+    routing_keys:
+      - "agent.thread.prompt"
+      - "agent.thread.response"
+      - "agent.thread.error"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "agent"
+      - "analytics"
+      - "metrics"
+
+  agent-feedback-router:
+    name: "agent-feedback-router"
+    description: "Routes feedback requests to AgentForge and publishes responses"
+    type: "event-consumer"
+    queue_name: "services.agent.feedback_router"
+    routing_keys:
+      - "agent.feedback.requested"
+    produces:
+      - "agent.feedback.response"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "agent"
+      - "feedback"
+      - "monetization"
+
+  # ---------------------------------------------------------------------------
+  # LLM Observability Services
+  # ---------------------------------------------------------------------------
+
+  llm-collector:
+    name: "llm-collector"
+    description: "Collects LLM prompt/response telemetry"
+    type: "event-consumer"
+    queue_name: "llm_collector_queue"
+    routing_keys:
+      - "llm.prompt"
+      - "llm.response"
+      - "llm.error"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "llm"
+      - "telemetry"
+      - "observability"
+
+  llm-cost-calculator:
+    name: "llm-cost-calculator"
+    description: "Calculates LLM API costs"
+    type: "event-consumer"
+    queue_name: "llm_cost_calculator_queue"
+    routing_keys:
+      - "llm.response"
+      - "llm.error"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "llm"
+      - "cost"
+      - "analytics"
+
+  # ---------------------------------------------------------------------------
+  # Artifact Services
+  # ---------------------------------------------------------------------------
+
+  artifact-processor:
+    name: "artifact-processor"
+    description: "Processes artifact ingestion events"
+    type: "event-consumer"
+    queue_name: "artifact_processor_queue"
+    routing_keys:
+      - "artifact.ingestion.failed"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "artifact"
+      - "error-handling"
+
+  # ---------------------------------------------------------------------------
+  # Voice Interaction Services
+  # ---------------------------------------------------------------------------
+
+  tonny-agent:
+    name: "tonny-agent"
+    description: "Letta-powered AI agent for processing voice transcriptions and generating TTS responses"
+    type: "event-consumer"
+    queue_name: "services.tonny.agent"
+    routing_keys:
+      - "transcription.voice.completed"
+    produces:
+      - "tts.response.completed"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "voice"
+      - "ai-agent"
+      - "letta"
+      - "tts"
+      - "elevenlabs"
+      - "conversation"
+    endpoints:
+      health: "http://localhost:8000/health"
+      metrics: "http://localhost:8000/metrics"
+
+  # ---------------------------------------------------------------------------
+  # TheBoard Meeting Services
+  # ---------------------------------------------------------------------------
+
+  theboard-producer:
+    name: "theboard-producer"
+    description: "Multi-agent brainstorming simulation system (event producer)"
+    type: "event-producer"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "theboard"
+      - "brainstorming"
+      - "multi-agent"
+      - "producer"
+    produces:
+      - "theboard.service.registered"
+      - "theboard.service.health"
+      - "theboard.meeting.created"
+      - "theboard.meeting.started"
+      - "theboard.meeting.round_completed"
+      - "theboard.meeting.comment_extracted"
+      - "theboard.meeting.converged"
+      - "theboard.meeting.completed"
+      - "theboard.meeting.failed"
+    endpoints:
+      health: "http://localhost:8000/health"
+      docs: "http://localhost:8000/docs"
+
+  theboard-meeting-trigger:
+    name: "theboard-meeting-trigger"
+    description: "Creates TheBoard meetings from ecosystem trigger events (multi-queue FastStream)"
+    type: "event-consumer"
+    queue_names:
+      - "services.theboard.meeting_trigger"
+      - "services.theboard.feature_brainstorm"
+      - "services.theboard.architecture_review"
+      - "services.theboard.incident_postmortem"
+      - "services.theboard.decision_analysis"
+    routing_keys:
+      - "theboard.meeting.trigger"
+      - "feature.brainstorm.requested"
+      - "architecture.review.needed"
+      - "incident.postmortem.scheduled"
+      - "decision.analysis.required"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "theboard"
+      - "trigger"
+      - "automation"
+      - "faststream"
+
+  theboard-sync:
+    name: "theboard-sync"
+    description: "Syncs TheBoard meeting events for visualization and analytics"
+    type: "event-consumer"
+    queue_name: "theboard_sync_queue"
+    routing_keys:
+      - "theboard.meeting.#"
+      - "theboard.service.#"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "theboard"
+      - "meeting"
+      - "sync"
+      - "observability"
+
+  # ---------------------------------------------------------------------------
+  # GitHub Integration Services
+  # ---------------------------------------------------------------------------
+
+  github-pr-listener:
+    name: "github-pr-listener"
+    description: "Listens for GitHub PR events"
+    type: "event-consumer"
+    queue_name: "github_pr_listener_queue"
+    routing_keys:
+      - "github.pr.created"
+    status: "planned"
+    owner: "33GOD"
+    tags:
+      - "github"
+      - "pr"
+      - "integration"
+
+# Event type to consuming services mapping
+event_subscriptions:
+  transcription.voice.completed:
+    - "tonny-agent"
+
+  fireflies.transcript.ready:
+    - "fireflies-transcript-processor"
+    - "fireflies-transcript-rag"
+
+  fireflies.transcript.processed:
+    - "fireflies-transcript-notifier"
+
+  fireflies.transcript.failed:
+    - "fireflies-transcript-notifier"
+
+  agent.thread.prompt:
+    - "agent-thread-collector"
+    - "agent-thread-analytics"
+
+  agent.thread.response:
+    - "agent-thread-collector"
+    - "agent-thread-analytics"
+
+  agent.thread.error:
+    - "agent-thread-collector"
+    - "agent-thread-analytics"
+
+  agent.feedback.requested:
+    - "agent-feedback-router"
+
+  llm.prompt:
+    - "llm-collector"
+
+  llm.response:
+    - "llm-collector"
+    - "llm-cost-calculator"
+
+  llm.error:
+    - "llm-collector"
+
+  artifact.ingestion.failed:
+    - "artifact-processor"
+
+  # Legacy meeting events (deprecated, use theboard.meeting.*)
+  meeting.created:
+    - "theboard-sync"
+
+  meeting.started:
+    - "theboard-sync"
+
+  meeting.completed:
+    - "theboard-sync"
+
+  meeting.failed:
+    - "theboard-sync"
+
+  meeting.converged:
+    - "theboard-sync"
+
+  # TheBoard service lifecycle events
+  theboard.service.registered:
+    - "theboard-sync"
+
+  theboard.service.health:
+    - "theboard-sync"
+
+  # TheBoard meeting events (new namespace)
+  theboard.meeting.created:
+    - "theboard-sync"
+
+  theboard.meeting.started:
+    - "theboard-sync"
+
+  theboard.meeting.round_completed:
+    - "theboard-sync"
+
+  theboard.meeting.comment_extracted:
+    - "theboard-sync"
+
+  theboard.meeting.converged:
+    - "theboard-sync"
+
+  theboard.meeting.completed:
+    - "theboard-sync"
+
+  theboard.meeting.failed:
+    - "theboard-sync"
+
+  # TheBoard trigger events
+  theboard.meeting.trigger:
+    - "theboard-meeting-trigger"
+
+  feature.brainstorm.requested:
+    - "theboard-meeting-trigger"
+
+  architecture.review.needed:
+    - "theboard-meeting-trigger"
+
+  incident.postmortem.scheduled:
+    - "theboard-meeting-trigger"
+
+  decision.analysis.required:
+    - "theboard-meeting-trigger"
+
+  github.pr.created:
+    - "github-pr-listener"
+
+# Service topology for visualization
+topology:
+  # Layer 0: Infrastructure services (foundational, capture everything)
+  infrastructure:
+    - "event-store-manager"
+
+  # Layer 1: Event producers (active services generating events)
+  event_producers:
+    - "theboard-producer"
+
+  # Layer 2: External event sources (webhooks, integrations)
+  external_sources:
+    - "fireflies"
+    - "github"
+
+  # Layer 3: Event collectors
+  collectors:
+    - "llm-collector"
+    - "agent-thread-collector"
+
+  # Layer 4: Processors
+  processors:
+    - "fireflies-transcript-processor"
+    - "fireflies-transcript-rag"
+    - "agent-thread-analytics"
+    - "llm-cost-calculator"
+
+  # Layer 5: Orchestrators/Triggers
+  orchestrators:
+    - "theboard-meeting-trigger"
+
+  # Layer 6: Notifiers/Integrations
+  notifiers:
+    - "fireflies-transcript-notifier"
+    - "github-pr-listener"
+    - "theboard-sync"
+
+  # Layer 7: Error handlers
+  error_handlers:
+    - "artifact-processor"

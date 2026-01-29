@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "last_sync": null,
+  "domains": {
+    "event-infrastructure": {
+      "services": ["bloodbank", "holyfields", "candystore", "candybar"],
+      "last_commit": null,
+      "last_sync_date": null
+    },
+    "agent-orchestration": {
+      "services": ["flume", "yi", "agent-forge"],
+      "last_commit": null,
+      "last_sync_date": null
+    },
+    "workspace-management": {
+      "services": ["iMi", "jelmore", "zellij-driver", "perth"],
+      "last_commit": null,
+      "last_sync_date": null
+    },
+    "meeting-collaboration": {
+      "services": ["theboard", "theboardroom"],
+      "last_commit": null,
+      "last_sync_date": null
+    },
+    "dashboards-voice": {
+      "services": ["holocene", "TalkyTonny"],
+      "last_commit": null,
+      "last_sync_date": null
+    }
+  },
+  "service_paths": {
+    "bloodbank": "bloodbank/trunk-main",
+    "holyfields": "holyfields/trunk-main",
+    "candystore": "candystore/trunk-main",
+    "candybar": "candybar/trunk-main",
+    "flume": "flume/trunk-main",
+    "yi": "yi",
+    "agent-forge": "agent-forge",
+    "iMi": "iMi/trunk-main",
+    "jelmore": "jelmore/trunk-main",
+    "zellij-driver": "zellij-driver",
+    "perth": "perth/trunk-main",
+    "theboard": "theboard/trunk-main",
+    "theboardroom": "theboardroom/trunk-main",
+    "holocene": "holocene/trunk-main",
+    "TalkyTonny": "TalkyTonny/trunk-main"
+  }
+}

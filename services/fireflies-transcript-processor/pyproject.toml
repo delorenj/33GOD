@@ -1,0 +1,31 @@
+[project]
+name = "fireflies-transcript-processor"
+version = "0.2.0"
+description = "Processes Fireflies transcript events and saves them as Markdown to the Vault"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bloodbank",
+    "pydantic-settings>=2.0.0",
+    "faststream[rabbit]>=0.5.0",
+    "orjson>=3.9.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.uv.sources]
+bloodbank = { path = "../../bloodbank/trunk-main", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]

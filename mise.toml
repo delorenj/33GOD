@@ -1,0 +1,63 @@
+# 33GOD Mise Configuration
+# Documentation and project maintenance tasks
+
+[tools]
+rust = "1.85"
+
+[tasks.deg]
+description = "Run degenerate CLI (build if needed)"
+run = "cargo run --manifest-path degenerate/Cargo.toml --"
+alias = "degenerate"
+
+[tasks."deg:build"]
+description = "Build degenerate CLI"
+run = "cargo build --manifest-path degenerate/Cargo.toml --release"
+
+[tasks."deg:install"]
+description = "Install degenerate to cargo bin"
+run = "cargo install --path degenerate"
+
+# Documentation sync tasks
+[tasks."docs:sync"]
+description = "Sync all domain documentation with current code state"
+run = "cargo run --manifest-path degenerate/Cargo.toml -- sync"
+
+[tasks."docs:sync:dry"]
+description = "Check sync status without making changes"
+run = "cargo run --manifest-path degenerate/Cargo.toml -- sync --dry-run --verbose"
+
+[tasks."docs:drift"]
+description = "Check for documentation drift"
+run = "cargo run --manifest-path degenerate/Cargo.toml -- drift --show-commits"
+
+[tasks."docs:domains"]
+description = "List all domains and their services"
+run = "cargo run --manifest-path degenerate/Cargo.toml -- domains --verbose"
+
+[tasks."docs:report"]
+description = "Generate drift report to docs/sync/drift-report.md"
+run = "cargo run --manifest-path degenerate/Cargo.toml -- report"
+
+[tasks."docs:service"]
+description = "Show status of a specific service"
+run = "cargo run --manifest-path degenerate/Cargo.toml -- service"
+
+# Quick aliases
+[tasks.drift]
+description = "Quick drift check"
+run = "mise run docs:drift"
+
+[tasks.sync]
+description = "Quick sync"
+run = "mise run docs:sync"
+
+# Task file maintenance
+[tasks."task:new"]
+description = "Archive TASK(S).md then open TASKS.md"
+run = "./mise-tasks/task_new"
+raw = true
+
+[tasks."tasks:new"]
+description = "Alias for task:new"
+run = "mise run task:new"
+raw = true

@@ -1,0 +1,10 @@
+{
+  "service_name": "My New Service",
+  "service_slug": "{{ cookiecutter.service_name | lower | replace(' ', '-') }}",
+  "service_description": "A new Bloodbank event consumer service",
+  "author_name": "Jarad DeLorenzo",
+  "author_email": "jaradd@gmail.com",
+  "python_version": "3.12",
+  "queue_name": "{{ cookiecutter.service_slug }}",
+  "routing_key": "event.#"
+}

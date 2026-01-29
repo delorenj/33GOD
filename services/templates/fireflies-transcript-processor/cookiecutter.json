@@ -1,0 +1,29 @@
+{
+    "service_name": "fireflies-transcript-processor",
+    "service_module": "fireflies_transcript_processor",
+    "class_name": "FirefliesTranscriptProcessor",
+    "description": "Processes Fireflies transcript events from Bloodbank",
+    "event_types": [
+        "fireflies.transcript.ready"
+    ],
+    "handlers": [
+        {
+            "name": "ready",
+            "event_type": "fireflies.transcript.ready",
+            "description": "Handle Fireflies transcript ready events",
+            "payload_type": "FirefliesTranscriptReadyPayload"
+        }
+    ],
+    "service_settings": [
+        {
+            "name": "log_level",
+            "type": "str",
+            "default": "\"INFO\""
+        },
+        {
+            "name": "processing_batch_size",
+            "type": "int",
+            "default": "10"
+        }
+    ]
+}

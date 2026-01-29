@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#MISE description="Archive TASK(S).md then open TASKS.md"
+#MISE hide=true
+set -euo pipefail
+
+archive_dir="@bmad/devlog/tasks"
+ts="$(date +%Y%m%d%H%M)"
+
+mkdir -p "$archive_dir"
+
+archive_file() {
+  local src="$1"
+  local dest="${archive_dir}/${ts}-task.md"
+
+  # Avoid clobbering if run multiple times in the same minute.
+  if [[ -e "$dest" ]]; then
+    local i=1
+    while [[ -e "${archive_dir}/${ts}-task-${i}.md" ]]; do
+      i=$((i + 1))
+    done
+    dest="${archive_dir}/${ts}-task-${i}.md"
+  fi
+
+  mv "$src" "$dest"
+  echo "Archived $src -> $dest"
+}
+
+if [[ -f "TASK.md" ]]; then
+  archive_file "TASK.md"
+fi
+
+if [[ -f "TASKS.md" ]]; then
+  archive_file "TASKS.md"
+fi
+
+vi "TASKS.md"

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ cookiecutter.service_name }}"
+version = "0.1.0"
+description = "{{ cookiecutter.description }}"
+requires-python = ">=3.11"
+dependencies = [
+    "bloodbank @ file:///home/delorenj/code/bloodbank/trunk-main",
+    "aio-pika>=9",
+    "orjson",
+    "pydantic>=2",
+    "pydantic-settings>=2.0",
+]
+
+[project.scripts]
+{{ cookiecutter.service_name }} = "{{ cookiecutter.service_module }}.consumer:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.uv]
+package = true
