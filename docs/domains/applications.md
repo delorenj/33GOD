@@ -32,7 +32,7 @@ This domain serves as the **human-machine interface layer** of the 33GOD ecosyst
 
 ### 1. TheBoard - Multi-Agent Brainstorming System
 
-**Directory:** `/home/user/33GOD/theboard/trunk-main`
+**Directory:** `theboard/trunk-main`
 
 #### Purpose and Responsibilities
 
