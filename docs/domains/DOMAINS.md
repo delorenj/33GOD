@@ -8,11 +8,11 @@
 
 | Domain | Components | Load When... |
 |--------|------------|--------------|
-| [Infrastructure](#infrastructure) | Bloodbank, Holyfields, Candystore | Events, messaging, schemas, contracts |
+| [Infrastructure](#infrastructure) | Bloodbank, Holyfields, Candystore, Candybar | Events, messaging, schemas, contracts |
 | [Agent Orchestration](#agent-orchestration) | Flume, Yi, AgentForge, Holocene | Agents, teams, roles, protocols |
 | [Workspace Management](#workspace-management) | iMi, Jelmore, Zellij-Driver, Perth | Git, worktrees, sessions, terminals |
 | [Meeting & Collaboration](#meeting--collaboration) | TheBoard, TheBoard Room | Brainstorming, meetings, convergence |
-| [Dashboards & Voice](#dashboards--voice) | Holocene, TalkyTonny | Dashboard, voice, UI, visualization |
+| [Dashboards & Voice](#dashboards--voice) | Holocene, TalkyTonny, Candybar | Dashboard, voice, UI, visualization |
 | [Development Tools](#development-tools) | Jelmore, Degenerate, BMAD | Docs sync, methodology, coding sessions |
 
 ---
