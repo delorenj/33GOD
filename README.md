@@ -45,6 +45,7 @@
 |-----------|-------------|
 | **[Bloodbank](bloodbank/)** | Central event bus providing RabbitMQ-based messaging infrastructure. All services communicate through Bloodbank events with topic exchanges, schema validation, and correlation tracking. |
 | **[Holyfields](holyfields/)** | Schema registry and microservice contract system. Maintains canonical event definitions using JSON Schema as source of truth, generating type-safe code for Python (Pydantic) and TypeScript (Zod). |
+| **[Candystore](services/)** | Event Store Manager that persists all events to PostgreSQL for audit and replay. |
 
 ### Git & Worktree Management
 
