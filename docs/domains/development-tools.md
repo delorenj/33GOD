@@ -576,12 +576,12 @@ mise run docs:service bloodbank
 
 ## Key Files
 
-- `/home/user/33GOD/jelmore/trunk-main/` - Session manager implementation
-- `/home/user/33GOD/degenerate/trunk-main/` - Drift detection CLI
-- `/home/user/33GOD/bmad/config.yaml` - BMAD methodology configuration
-- `/home/user/33GOD/bmad/devlog/tasks/` - Development task logs
-- `/home/user/33GOD/mise.toml` - Mise task definitions for Degenerate
-- `/home/user/33GOD/docs/sync/drift-report.md` - Generated drift report
+- `jelmore/trunk-main/` - Session manager implementation
+- `degenerate/trunk-main/` - Drift detection CLI
+- `bmad/config.yaml` - BMAD methodology configuration
+- `bmad/devlog/tasks/` - Development task logs
+- `mise.toml` - Mise task definitions for Degenerate
+- `docs/sync/drift-report.md` - Generated drift report
 
 ## Last Sync
 
