@@ -442,7 +442,7 @@ jobs:
 
 ### Service Registry
 
-The service registry (`/home/user/33GOD/services/registry.yaml`) is the central authority for:
+The service registry (`services/registry.yaml`) is the central authority for:
 - Service discovery
 - Queue bindings
 - Event routing configuration
