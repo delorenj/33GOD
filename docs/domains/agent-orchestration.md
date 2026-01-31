@@ -718,10 +718,10 @@ Pass this domain when the user's prompt involves:
 
 | Service | Location | Entry Point | Port |
 |---------|----------|-------------|------|
-| Flume | `/home/user/33GOD/flume/trunk-main/` | `packages/core/` | - |
-| Yi | `/home/user/33GOD/yi/trunk-main/` | `src/` | - |
-| AgentForge | `/home/user/33GOD/agent-forge/trunk-main/` | `agents/` | - |
-| Holocene | `/home/user/33GOD/holocene/trunk-main/` | `src/` | 5173 |
+| Flume | `flume/trunk-main/` | `packages/core/` | - |
+| Yi | `yi/trunk-main/` | `src/` | - |
+| AgentForge | `agent-forge/trunk-main/` | `agents/` | - |
+| Holocene | `holocene/trunk-main/` | `src/` | 5173 |
 
 ---
 
