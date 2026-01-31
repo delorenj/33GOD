@@ -1,0 +1,15 @@
+[tools]
+python = "3.10"
+
+[tasks.setup-training]
+description = "Setup OpenWakeWord local training environment"
+run = "./scripts/setup_local_training.sh"
+
+[tasks.train]
+description = "Train the 'hey tonny' wake word model locally"
+run = "./scripts/train_local.sh"
+depends = ["setup-training"]
+
+[tasks.record-samples]
+description = "Record voice samples for training data"
+run = "./record_samples.sh"

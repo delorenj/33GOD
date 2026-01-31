@@ -1,0 +1,513 @@
+openapi: 3.1.0
+info:
+  title: Holyfields Schema Registry API
+  description: |
+    Build-time API for schema validation, code generation, and contract testing.
+
+    Holyfields is a schema registry system that auto-generates language-specific
+    type-safe artifacts (Python Pydantic, TypeScript Zod) from JSON Schema definitions.
+
+    This API describes the CLI commands and validation workflows available for
+    schema management, code generation, and contract validation.
+
+    **Key Features:**
+    - JSON Schema (Draft 2020-12) contract definitions
+    - Python Pydantic model generation
+    - TypeScript Zod schema generation
+    - Contract validation tests
+    - Semantic versioning per component
+    - Breaking change detection
+
+    **Note**: This is a build-time tool, not a runtime service.
+    All operations are executed via CLI commands (mise tasks).
+
+  version: 0.1.0
+  contact:
+    name: 33GOD Platform Team
+    email: jarad@delorenzo.dev
+  license:
+    name: MIT
+
+servers:
+  - url: file:///home/delorenj/code/33GOD/holyfields/trunk-main
+    description: Local filesystem (build-time execution)
+
+tags:
+  - name: Validation
+    description: Schema validation operations
+  - name: Generation
+    description: Code generation operations
+  - name: Testing
+    description: Contract validation tests
+  - name: CI/CD
+    description: Continuous integration workflows
+
+paths:
+  /schemas/validate:
+    post:
+      tags:
+        - Validation
+      summary: Validate all schemas
+      description: |
+        Validates all JSON Schema files in the repository against JSON Schema Draft 2020-12.
+        Checks for syntax errors, invalid references, and schema violations.
+
+        **CLI Command**: `mise run validate:schemas`
+      operationId: validateSchemas
+      responses:
+        '200':
+          description: All schemas are valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+        '400':
+          description: Schema validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /schemas/{component}/{schema_name}/validate:
+    post:
+      tags:
+        - Validation
+      summary: Validate specific schema
+      description: |
+        Validates a single JSON Schema file.
+
+        **CLI Command**: `ajv validate -s {schema_file}`
+      operationId: validateSchema
+      parameters:
+        - name: component
+          in: path
+          required: true
+          description: Component name (e.g., 'theboard', 'common')
+          schema:
+            type: string
+            enum: [common, theboard, theboardroom]
+        - name: schema_name
+          in: path
+          required: true
+          description: Schema filename without extension
+          schema:
+            type: string
+            example: "meeting_created"
+      responses:
+        '200':
+          description: Schema is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaValidationResult'
+        '400':
+          description: Schema validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /generate/python:
+    post:
+      tags:
+        - Generation
+      summary: Generate Python Pydantic models
+      description: |
+        Generates Python Pydantic models from all JSON Schema files.
+        Output written to `generated/python/` directory.
+
+        **CLI Command**: `mise run generate:python`
+        **Tool**: datamodel-code-generator
+      operationId: generatePython
+      responses:
+        '200':
+          description: Python models generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationResult'
+        '500':
+          description: Code generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /generate/typescript:
+    post:
+      tags:
+        - Generation
+      summary: Generate TypeScript Zod schemas
+      description: |
+        Generates TypeScript Zod schemas and type definitions from all JSON Schema files.
+        Output written to `generated/typescript/` directory.
+
+        **CLI Command**: `mise run generate:typescript`
+        **Tool**: json-schema-to-zod
+      operationId: generateTypeScript
+      responses:
+        '200':
+          description: TypeScript schemas generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationResult'
+        '500':
+          description: Code generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /generate/all:
+    post:
+      tags:
+        - Generation
+      summary: Generate all language artifacts
+      description: |
+        Generates both Python and TypeScript artifacts in parallel.
+
+        **CLI Command**: `mise run generate:all`
+      operationId: generateAll
+      responses:
+        '200':
+          description: All artifacts generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationResult'
+        '500':
+          description: Code generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /test/python:
+    post:
+      tags:
+        - Testing
+      summary: Run Python contract tests
+      description: |
+        Runs pytest contract validation tests for generated Python models.
+        Validates that generated Pydantic models match schema expectations.
+
+        **CLI Command**: `mise run test:python`
+        **Framework**: pytest
+      operationId: testPython
+      responses:
+        '200':
+          description: All Python tests passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResult'
+        '500':
+          description: Tests failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestFailure'
+
+  /test/typescript:
+    post:
+      tags:
+        - Testing
+      summary: Run TypeScript contract tests
+      description: |
+        Runs vitest contract validation tests for generated TypeScript schemas.
+        Validates that generated Zod schemas match schema expectations.
+
+        **CLI Command**: `mise run test:typescript`
+        **Framework**: vitest
+      operationId: testTypeScript
+      responses:
+        '200':
+          description: All TypeScript tests passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResult'
+        '500':
+          description: Tests failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestFailure'
+
+  /test/all:
+    post:
+      tags:
+        - Testing
+      summary: Run all contract tests
+      description: |
+        Runs both Python and TypeScript contract validation tests.
+
+        **CLI Command**: `mise run test:all`
+      operationId: testAll
+      responses:
+        '200':
+          description: All tests passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResult'
+        '500':
+          description: Tests failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestFailure'
+
+  /ci/validate:
+    post:
+      tags:
+        - CI/CD
+      summary: Full CI validation pipeline
+      description: |
+        Runs complete validation pipeline:
+        1. Validate all schemas
+        2. Generate Python and TypeScript artifacts
+        3. Run all contract tests
+        4. Check for breaking changes
+
+        **CLI Command**: `mise run ci`
+      operationId: ciValidate
+      responses:
+        '200':
+          description: CI pipeline passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CIResult'
+        '500':
+          description: CI pipeline failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CIFailure'
+
+components:
+  schemas:
+    ValidationResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, failed]
+        schemas_validated:
+          type: integer
+          description: Number of schemas validated
+          example: 12
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+
+    SchemaValidationResult:
+      type: object
+      properties:
+        schema_path:
+          type: string
+          example: "theboard/events/meeting_created.json"
+        valid:
+          type: boolean
+          example: true
+        errors:
+          type: array
+          items:
+            type: string
+
+    ValidationError:
+      type: object
+      properties:
+        schema_path:
+          type: string
+          example: "theboard/events/invalid_schema.json"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+                description: JSON path to error location
+                example: "$.properties.event_type.type"
+              message:
+                type: string
+                example: "Invalid type: expected 'string', got 'number'"
+
+    GenerationResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, failed]
+        language:
+          type: string
+          enum: [python, typescript, all]
+        files_generated:
+          type: integer
+          description: Number of files generated
+          example: 24
+        output_directory:
+          type: string
+          example: "generated/python/"
+        errors:
+          type: array
+          items:
+            type: string
+
+    TestResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [passed, failed]
+        language:
+          type: string
+          enum: [python, typescript, all]
+        tests_run:
+          type: integer
+          example: 42
+        tests_passed:
+          type: integer
+          example: 42
+        tests_failed:
+          type: integer
+          example: 0
+        duration_ms:
+          type: integer
+          description: Test execution time in milliseconds
+          example: 1234
+
+    TestFailure:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [failed]
+        language:
+          type: string
+          enum: [python, typescript, all]
+        tests_run:
+          type: integer
+          example: 42
+        tests_passed:
+          type: integer
+          example: 40
+        tests_failed:
+          type: integer
+          example: 2
+        failures:
+          type: array
+          items:
+            type: object
+            properties:
+              test_name:
+                type: string
+                example: "test_meeting_created_event_validation"
+              error_message:
+                type: string
+                example: "AssertionError: Expected field 'meeting_id' to be required"
+
+    CIResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, failed]
+        validation:
+          $ref: '#/components/schemas/ValidationResult'
+        generation:
+          $ref: '#/components/schemas/GenerationResult'
+        testing:
+          $ref: '#/components/schemas/TestResult'
+        breaking_changes:
+          type: array
+          description: List of breaking changes detected
+          items:
+            type: object
+            properties:
+              component:
+                type: string
+                example: "theboard"
+              schema:
+                type: string
+                example: "meeting_created"
+              change_type:
+                type: string
+                enum: [field_removed, type_changed, required_added]
+              description:
+                type: string
+                example: "Field 'topic' removed from schema"
+
+    CIFailure:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [failed]
+        stage:
+          type: string
+          enum: [validation, generation, testing]
+          description: CI stage where failure occurred
+        error:
+          type: string
+          description: Error message
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+paths:
+  /schemas/catalog:
+    get:
+      tags:
+        - Validation
+      summary: Get schema catalog
+      description: |
+        Returns a catalog of all available schemas with metadata.
+
+        **CLI Command**: `find . -name "*.json" -path "*/events/*" -o -path "*/schemas/*"`
+      operationId: getSchemaCatalog
+      responses:
+        '200':
+          description: Schema catalog
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  components:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "theboard"
+                        version:
+                          type: string
+                          example: "1.0.0"
+                        schemas:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: "meeting_created"
+                              path:
+                                type: string
+                                example: "theboard/events/meeting_created.json"
+                              event_type:
+                                type: string
+                                example: "theboard.meeting.created"
+                              description:
+                                type: string
+                                example: "Emitted when a new meeting is created"

@@ -1,0 +1,346 @@
+openapi: 3.1.0
+info:
+  title: Bloodbank Event Publisher API
+  description: |
+    HTTP REST API for publishing events to the 33GOD event infrastructure.
+    Provides schema validation, correlation tracking, and RabbitMQ integration.
+
+    All events are wrapped in a standardized EventEnvelope with metadata
+    (timestamp, message ID, source) and published to the RabbitMQ 'events'
+    topic exchange with routing key patterns.
+
+    **Features:**
+    - Schema validation against Holyfields contracts
+    - Correlation chain tracking via Redis
+    - Idempotent message publishing
+    - Graceful degradation if dependencies unavailable
+
+  version: 1.0.0
+  contact:
+    name: 33GOD Platform Team
+    email: jarad@delorenzo.dev
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://events.delo.sh
+    description: Production
+
+tags:
+  - name: Events
+    description: Event publishing endpoints
+  - name: Health
+    description: Service health and status
+  - name: Correlation
+    description: Correlation chain tracking
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Returns service health status and dependency availability
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  rabbitmq:
+                    type: string
+                    enum: [connected, disconnected]
+                  redis:
+                    type: string
+                    enum: [connected, disconnected, not_configured]
+                  timestamp:
+                    type: string
+                    format: date-time
+                example:
+                  status: healthy
+                  rabbitmq: connected
+                  redis: connected
+                  timestamp: "2024-01-15T10:30:00Z"
+
+  /events/calendar:
+    post:
+      tags:
+        - Events
+      summary: Publish calendar event
+      description: Publishes a calendar event (meeting, reminder, etc.) to the event bus
+      operationId: publishCalendarEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalendarEvent'
+            examples:
+              meeting:
+                summary: Team meeting
+                value:
+                  summary: "Team Meeting"
+                  start_time: "2024-01-15T10:00:00Z"
+                  end_time: "2024-01-15T11:00:00Z"
+                  location: "Conference Room 4"
+      responses:
+        '200':
+          description: Event published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventEnvelope'
+        '400':
+          description: Invalid event payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /events/{event_type}:
+    post:
+      tags:
+        - Events
+      summary: Publish generic event
+      description: |
+        Generic endpoint for publishing any event type.
+        Event payload must conform to Holyfields schema for the given event_type.
+      operationId: publishEvent
+      parameters:
+        - name: event_type
+          in: path
+          required: true
+          description: Event routing key (e.g., 'theboard.meeting.created')
+          schema:
+            type: string
+            pattern: '^[a-z0-9]+\.[a-z0-9._]+$'
+          examples:
+            meeting:
+              value: 'theboard.meeting.created'
+            transcription:
+              value: 'talkytonny.transcription.completed'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Event payload matching Holyfields schema
+      responses:
+        '200':
+          description: Event published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventEnvelope'
+        '400':
+          description: Invalid event payload or schema validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Event type not found in schema registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /correlation/{message_id}:
+    get:
+      tags:
+        - Correlation
+      summary: Get correlation chain
+      description: |
+        Retrieves the correlation chain for a given message ID.
+        Shows parent messages, child messages, and full event lineage.
+      operationId: getCorrelationChain
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          description: UUID of the message
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Correlation chain retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrelationChain'
+        '404':
+          description: Message ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Correlation tracking unavailable (Redis disconnected)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    CalendarEvent:
+      type: object
+      description: Calendar event payload
+      required:
+        - summary
+        - start_time
+        - end_time
+      properties:
+        summary:
+          type: string
+          description: Event title/summary
+          example: "Team Meeting"
+        start_time:
+          type: string
+          format: date-time
+          description: Event start time (ISO 8601 UTC)
+          example: "2024-01-15T10:00:00Z"
+        end_time:
+          type: string
+          format: date-time
+          description: Event end time (ISO 8601 UTC)
+          example: "2024-01-15T11:00:00Z"
+        location:
+          type: string
+          nullable: true
+          description: Event location (optional)
+          example: "Conference Room 4"
+
+    EventEnvelope:
+      type: object
+      description: |
+        Standardized event wrapper with metadata.
+        All events are wrapped in this envelope before publishing to RabbitMQ.
+      required:
+        - id
+        - event_type
+        - timestamp
+        - source
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique message ID (deterministic hash of payload)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        event_type:
+          type: string
+          description: Event routing key
+          pattern: '^[a-z0-9]+\.[a-z0-9._]+$'
+          example: "calendar.event.created"
+        timestamp:
+          type: string
+          format: date-time
+          description: Event creation timestamp (ISO 8601 UTC)
+          example: "2024-01-15T10:30:00Z"
+        source:
+          type: string
+          description: Event producer identifier (service name + client IP)
+          example: "http/127.0.0.1"
+        data:
+          type: object
+          description: Event payload (varies by event_type)
+        correlation_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional correlation ID for tracking related events
+          example: "660e8400-e29b-41d4-a716-446655440001"
+
+    CorrelationChain:
+      type: object
+      description: Correlation chain showing event lineage
+      properties:
+        message_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        event_type:
+          type: string
+          example: "theboard.meeting.created"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        source:
+          type: string
+          example: "theboard-service"
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Parent message ID (if this is a derived event)
+          example: "440e8400-e29b-41d4-a716-446655440000"
+        children:
+          type: array
+          description: Child messages derived from this event
+          items:
+            type: string
+            format: uuid
+          example: ["660e8400-e29b-41d4-a716-446655440001"]
+        depth:
+          type: integer
+          description: Depth in correlation chain (0 = root event)
+          example: 0
+        metadata:
+          type: object
+          description: Additional correlation metadata
+          additionalProperties: true
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code or type
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Event payload failed schema validation"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (planned, not yet implemented)
+
+security: []
+# Future: Enable API key authentication
+# security:
+#   - ApiKey: []
