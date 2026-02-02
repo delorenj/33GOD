@@ -1,9 +1,6 @@
 [submodule "agent-forge/trunk-main"]
 	path = agent-forge/trunk-main
 	url = git@github.com:delorenj/agent-forge.git
-[submodule "bloodbank/trunk-main"]
-	path = bloodbank/trunk-main
-	url = git@github.com:delorenj/bloodbank.git
 [submodule "candybar/trunk-main"]
 	path = candybar/trunk-main
 	url = git@github.com:delorenj/candybar.git
@@ -46,3 +43,6 @@
 [submodule "zellij-driver/trunk-main"]
 	path = zellij-driver/trunk-main
 	url = git@github.com:delorenj/zellij-driver.git
+[submodule "bloodbank"]
+	path = bloodbank
+	url = git@github.com:delorenj/bloodbank.git
