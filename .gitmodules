@@ -1,48 +1,48 @@
-[submodule "agent-forge/trunk-main"]
-	path = agent-forge/trunk-main
+[submodule "agent-forge"]
+	path = agent-forge
 	url = git@github.com:delorenj/agent-forge.git
-[submodule "bloodbank/trunk-main"]
-	path = bloodbank/trunk-main
+[submodule "bloodbank"]
+	path = bloodbank
 	url = git@github.com:delorenj/bloodbank.git
-[submodule "candybar/trunk-main"]
-	path = candybar/trunk-main
+[submodule "candybar"]
+	path = candybar
 	url = git@github.com:delorenj/candybar.git
-[submodule "candystore/trunk-main"]
-	path = candystore/trunk-main
-	url = git@github.com:delorenj/candystore
-[submodule "degenerate/trunk-main"]
-	path = degenerate/trunk-main
+[submodule "candystore"]
+	path = candystore
+	url = git@github.com:delorenj/candystore.git
+[submodule "degenerate"]
+	path = degenerate
 	url = git@github.com:delorenj/degenerate.git
-[submodule "flume/trunk-main"]
-	path = flume/trunk-main
-	url = git@github.com:delorenj/flume
-[submodule "holocene/trunk-main"]
-	path = holocene/trunk-main
+[submodule "flume"]
+	path = flume
+	url = git@github.com:delorenj/flume.git
+[submodule "holocene"]
+	path = holocene
 	url = git@github.com:delorenj/holocene.git
-[submodule "holyfields/trunk-main"]
-	path = holyfields/trunk-main
+[submodule "holyfields"]
+	path = holyfields
 	url = git@github.com:delorenj/holyfields.git
-[submodule "iMi/trunk-main"]
-	path = iMi/trunk-main
+[submodule "iMi"]
+	path = iMi
 	url = git@github.com:delorenj/iMi.git
-[submodule "jelmore/trunk-main"]
-	path = jelmore/trunk-main
+[submodule "jelmore"]
+	path = jelmore
 	url = git@github.com:delorenj/jelmore.git
-[submodule "perth/trunk-main"]
-	path = perth/trunk-main
+[submodule "perth"]
+	path = perth
 	url = git@github.com:delorenj/perth.git
-[submodule "TalkyTonny/trunk-main"]
-	path = TalkyTonny/trunk-main
+[submodule "TalkyTonny"]
+	path = TalkyTonny
 	url = git@github.com:delorenj/TalkyTonny.git
-[submodule "theboard/trunk-main"]
-	path = theboard/trunk-main
+[submodule "theboard"]
+	path = theboard
 	url = git@github.com:delorenj/theboard.git
-[submodule "theboardroom/trunk-main"]
-	path = theboardroom/trunk-main
-	url = git@github.com:delorenj/theboardroom
-[submodule "yi/trunk-main"]
-	path = yi/trunk-main
-	url = git@github.com:delorenj/yi
-[submodule "zellij-driver/trunk-main"]
-	path = zellij-driver/trunk-main
+[submodule "theboardroom"]
+	path = theboardroom
+	url = git@github.com:delorenj/theboardroom.git
+[submodule "yi"]
+	path = yi
+	url = git@github.com:delorenj/yi.git
+[submodule "zellij-driver"]
+	path = zellij-driver
 	url = git@github.com:delorenj/zellij-driver.git
