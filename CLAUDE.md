@@ -1,5 +1,39 @@
 # Claude Code Configuration - SPARC Development Environment
 
+## 🎯 UNIVERSAL 33GOD FACTS (ALWAYS TRUE)
+
+**Architecture Core Principles:**
+1. **Everything is an Event**: All state changes flow through Bloodbank (RabbitMQ)
+2. **Registry as Truth**: `services/registry.yaml` defines service topology
+3. **Event-Driven Communication**: Components NEVER call each other directly
+4. **6 Domains**: Infrastructure, Agent Orchestration, Workspace Management, Meeting & Collaboration, Dashboards & Voice, Development Tools
+5. **17+ Components**: Each component has a GOD.md documenting its role
+
+**Documentation Hierarchy (GOD Documents):**
+- **System-Level**: `docs/GOD.md` - Overall architecture, cross-domain contracts
+- **Domain-Level**: `docs/domains/{domain}/GOD.md` - Domain-specific architecture
+- **Component-Level**: `{component}/GOD.md` - Technical deep-dive, event contracts
+
+**Event Contracts:**
+- **Pattern**: `{domain}.{entity}.{action}` (e.g., `imi.worktree.created`)
+- **Schemas**: Defined in `holyfields/schemas/`
+- **Validation**: Bloodbank validates all events at publish time
+- **Tracing**: `correlation_id` tracks event chains
+
+**When Working on 33GOD:**
+1. Check component's GOD.md for event contracts BEFORE making changes
+2. Update GOD docs when adding/changing Bloodbank events
+3. Document all emitted and consumed events in component GOD.md
+4. Git hook (`.githooks/pre-commit`) prompts for GOD doc updates
+
+**Critical Files:**
+- `docs/GOD.md` - System architecture
+- `docs/GOD-SYSTEM-GUIDE.md` - GOD doc maintenance guide
+- `services/registry.yaml` - Service topology
+- `holyfields/schemas/` - Event schemas
+
+---
+
 ## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT
 
 **ABSOLUTE RULES**:
@@ -343,6 +377,35 @@ Message 4: Write "file.js"
 ---
 
 Remember: **Claude Flow coordinates, Claude Code creates!**
+
+---
+
+## 📚 33GOD Documentation Quick Reference
+
+**System-Wide Architecture:**
+- `docs/GOD.md` - System topology, all domains, component registry
+
+**Domain Architecture (6 Domains):**
+- `docs/domains/infrastructure/GOD.md` - Bloodbank, Holyfields, Candystore, Candybar
+- `docs/domains/agent-orchestration/GOD.md` - Flume, Yi, AgentForge, Holocene
+- `docs/domains/workspace-management/GOD.md` - iMi, Jelmore, Zellij-Driver, Perth
+- `docs/domains/meeting-collaboration/GOD.md` - TheBoard, TheBoard Room
+- `docs/domains/dashboards-voice/GOD.md` - Holocene, TalkyTonny, Candybar
+- `docs/domains/development-tools/GOD.md` - Jelmore, Degenerate, BMAD
+
+**Component Deep-Dives:**
+- `{component}/GOD.md` - Event contracts, CLI/API reference, technical implementation
+
+**GOD Document Guide:**
+- `docs/GOD-SYSTEM-GUIDE.md` - How to create/maintain GOD docs
+
+**Event Schemas:**
+- `holyfields/schemas/` - All event definitions
+
+**Service Topology:**
+- `services/registry.yaml` - Authoritative service definitions
+
+---
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
