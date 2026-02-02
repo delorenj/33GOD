@@ -93,9 +93,10 @@ The **Registry** (`services/registry.yaml`) is the heartbeat of the architecture
 *   **Technology**: RabbitMQ + Pydantic Models
 *   **Role**: Guarantees delivery, handles routing patterns (Topic Exchange), and enforces schema validation for payloads.
 
-### iMi (Worktree Manager)
-*   **Role**: Manages Git worktrees for parallel development.
-*   **Integration**: Emits events when worktrees are created/deleted, allowing agents to switch contexts automatically.
+### iMi (Project Registry & Workspace Manager)
+*   **Role**: Authoritative registry for all 33GOD projects with entity-based workspace isolation. Each entity (human or Yi agent) has a completely isolated workspace directory with full project clones.
+*   **Authentication**: Token-based via `$IMI_IDENTITY_TOKEN` - all entities authenticate equally.
+*   **Integration**: Emits events when worktrees are created/deleted, tracks workspace access across entities, provides project UUIDs for cross-component reference.
 
 ### TheBoard (Meeting Sync)
 *   **Role**: Manages meeting lifecycles and "The Board" context.
