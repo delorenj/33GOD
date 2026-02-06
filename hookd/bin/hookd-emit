@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# hookd-emit - fire-and-forget hook event emitter
+#
+# Reads Claude Code tool output from stdin, wraps it in a typed envelope,
+# and writes to the hookd Unix socket. Designed to never block the hook
+# caller: exits 0 on any failure.
+#
+# Usage: hookd-emit <event_type> <tool_name>
+#   stdin: raw JSON tool output (piped by Claude Code)
+#
+# Examples:
+#   hookd-emit post_tool_use Write    # after a Write tool fires
+#   hookd-emit post_tool_use Edit     # after an Edit tool fires
+#   hookd-emit pre_tool_use Bash      # before a Bash tool fires
+#
+# Environment:
+#   HOOKD_SOCKET  - path to hookd Unix socket
+#                   (default: /run/user/$UID/hookd.sock)
+#   HOOKD_DEBUG   - set to 1 for stderr diagnostics
+
+set -euo pipefail
+
+EVENT_TYPE="${1:?Usage: hookd-emit <event_type> <tool_name>}"
+TOOL_NAME="${2:?Usage: hookd-emit <event_type> <tool_name>}"
+SOCKET="${HOOKD_SOCKET:-/run/user/$(id -u)/hookd.sock}"
+
+# Read all of stdin into buffer
+PAYLOAD=$(cat)
+
+# Silent exit if nothing to send or nowhere to send it
+[ -z "$PAYLOAD" ] && exit 0
+[ ! -S "$SOCKET" ] && exit 0
+
+TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
+
+# Build the envelope by piping payload through jq as stdin
+# This avoids shell expansion issues with embedded quotes/newlines
+printf '%s' "$PAYLOAD" \
+  | jq -c \
+    --arg et "$EVENT_TYPE" \
+    --arg tn "$TOOL_NAME" \
+    --arg ts "$TIMESTAMP" \
+    --argjson pid $$ \
+    '. as $payload | {event_type: $et, tool_name: $tn, payload: $payload, timestamp: $ts, pid: $pid}' \
+  | socat - UNIX-CONNECT:"$SOCKET" 2>/dev/null || true
+
+exit 0

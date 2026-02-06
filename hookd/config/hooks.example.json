@@ -1,0 +1,43 @@
+{
+  "$schema": "Claude Code hook configuration for hookd event pipeline",
+  "$note": "Copy relevant sections into .claude/settings.json to enable",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hookd-emit pre_tool_use \"$CLAUDE_TOOL_NAME\"",
+            "timeout": 5000,
+            "description": "Forward pre-tool-use events to hookd pipeline"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hookd-emit post_tool_use write",
+            "timeout": 5000,
+            "description": "Capture file mutation events (write/edit)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hookd-emit post_tool_use bash",
+            "timeout": 5000,
+            "description": "Capture bash execution events"
+          }
+        ]
+      }
+    ]
+  }
+}
