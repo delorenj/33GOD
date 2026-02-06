@@ -346,6 +346,47 @@ services:
       - "observability"
 
   # ---------------------------------------------------------------------------
+  # Tool Mutation Pipeline (hookd)
+  # ---------------------------------------------------------------------------
+
+  hookd-producer:
+    name: "hookd-producer"
+    description: "Claude Code tool mutation event pipeline - captures Write/Edit/Bash hook events via Unix socket daemon"
+    type: "event-producer"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "hookd"
+      - "tool-mutation"
+      - "claude-code"
+      - "observability"
+      - "producer"
+    produces:
+      - "tool.mutation.write"
+      - "tool.mutation.edit"
+      - "tool.mutation.multiedit"
+      - "tool.mutation.bash"
+      - "tool.mutation.notebookedit"
+    endpoints:
+      socket: "/run/user/$UID/hookd.sock"
+
+  mutation-ledger:
+    name: "mutation-ledger"
+    description: "Append-only ledger of tool mutation events - stores per-repo facts in SQLite for queryable history"
+    type: "event-consumer"
+    queue_name: "services.hookd.mutation_ledger"
+    routing_keys:
+      - "tool.mutation.#"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "hookd"
+      - "tool-mutation"
+      - "ledger"
+      - "sqlite"
+      - "observability"
+
+  # ---------------------------------------------------------------------------
   # GitHub Integration Services
   # ---------------------------------------------------------------------------
 
@@ -470,6 +511,22 @@ event_subscriptions:
   github.pr.created:
     - "github-pr-listener"
 
+  # Tool mutation events (hookd pipeline)
+  tool.mutation.write:
+    - "mutation-ledger"
+
+  tool.mutation.edit:
+    - "mutation-ledger"
+
+  tool.mutation.multiedit:
+    - "mutation-ledger"
+
+  tool.mutation.bash:
+    - "mutation-ledger"
+
+  tool.mutation.notebookedit:
+    - "mutation-ledger"
+
 # Service topology for visualization
 topology:
   # Layer 0: Infrastructure services (foundational, capture everything)
@@ -479,6 +536,7 @@ topology:
   # Layer 1: Event producers (active services generating events)
   event_producers:
     - "theboard-producer"
+    - "hookd-producer"
 
   # Layer 2: External event sources (webhooks, integrations)
   external_sources:
@@ -489,6 +547,7 @@ topology:
   collectors:
     - "llm-collector"
     - "agent-thread-collector"
+    - "mutation-ledger"
 
   # Layer 4: Processors
   processors:

@@ -1,0 +1,43 @@
+sprint:
+  name: "hookd Sprint 1 - Event Pipeline Foundation"
+  component: hookd
+  status: in_progress
+  date_created: 2026-02-06
+
+stories:
+  - id: HOOKD-1
+    title: "hookd-emit CLI"
+    size: S
+    status: done
+    blocked_by: []
+
+  - id: HOOKD-2
+    title: "hookd Rust daemon"
+    size: L
+    status: done
+    blocked_by: [HOOKD-1, HOOKD-3]
+
+  - id: HOOKD-3
+    title: "Bloodbank event schema + exchange setup"
+    size: M
+    status: done
+    blocked_by: []
+    notes: "Uses existing bloodbank.events.v1 exchange (not separate hookd.events)"
+
+  - id: HOOKD-4
+    title: "mutation-ledger consumer"
+    size: M
+    status: done
+    blocked_by: [HOOKD-3]
+
+  - id: HOOKD-5
+    title: "Claude Code hook configuration"
+    size: S
+    status: done
+    blocked_by: [HOOKD-1]
+
+  - id: HOOKD-6
+    title: "Integration test + end-to-end validation"
+    size: M
+    status: pending
+    blocked_by: [HOOKD-1, HOOKD-2, HOOKD-4]
