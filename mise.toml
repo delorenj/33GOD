@@ -66,3 +66,34 @@ raw = true
 description = "Check RabbitMQ exchange/queue health for 33GOD event backbone"
 run = "./mise-tasks/infra_status"
 raw = true
+
+# Manifest-driven component orchestration
+[tasks."component:list"]
+description = "List components from components.toml manifest"
+run = "./.mise/tasks/console.py list"
+
+[tasks."component:run"]
+description = "Run a task in a specific component: mise run component:run -- <component> <task> [-- args]"
+run = "./.mise/tasks/console.py run"
+raw = true
+
+# First delegated component wrappers (hookd)
+[tasks."hookd:build"]
+description = "Build hookd (delegated to hookd/mise.toml)"
+run = "./.mise/tasks/console.py delegate"
+raw = true
+
+[tasks."hookd:test"]
+description = "Test hookd (delegated to hookd/mise.toml)"
+run = "./.mise/tasks/console.py delegate"
+raw = true
+
+[tasks."hookd:dev"]
+description = "Run hookd in dev mode (delegated to hookd/mise.toml)"
+run = "./.mise/tasks/console.py delegate"
+raw = true
+
+[tasks."hookd:start"]
+description = "Start hookd daemon (delegated to hookd/mise.toml)"
+run = "./.mise/tasks/console.py delegate"
+raw = true

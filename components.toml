@@ -1,0 +1,19 @@
+# 33GOD component manifest
+# Source of truth for meta-repo task delegation.
+
+[components]
+agent-forge = { path = "agent-forge", kind = "submodule", enabled = true }
+bloodbank   = { path = "bloodbank", kind = "submodule", enabled = true }
+candybar    = { path = "candybar", kind = "submodule", enabled = true }
+candystore  = { path = "candystore", kind = "submodule", enabled = true }
+flume       = { path = "flume", kind = "submodule", enabled = true }
+HeyMa       = { path = "HeyMa", kind = "submodule", enabled = true }
+holocene    = { path = "holocene", kind = "submodule", enabled = true }
+holyfields  = { path = "holyfields", kind = "submodule", enabled = true }
+hookd       = { path = "hookd", kind = "local", enabled = true }
+iMi         = { path = "iMi", kind = "submodule", enabled = true }
+jelmore     = { path = "jelmore", kind = "submodule", enabled = true }
+perth       = { path = "perth", kind = "submodule", enabled = true }
+theboard    = { path = "theboard", kind = "submodule", enabled = true }
+yi          = { path = "yi", kind = "submodule", enabled = true }
+zellij-driver = { path = "zellij-driver", kind = "submodule", enabled = true }
