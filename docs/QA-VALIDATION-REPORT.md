@@ -144,7 +144,7 @@ All 18 technical documents delivered with consistent structure:
 
 **Note**: TheBoard technical documentation includes sophisticated architectural details (context compression, delta propagation, hybrid models) that appear to be well-researched engineering best practices applied to the domain, even if not directly verified in source.
 
-### TalkyTonny (Voice Interface)
+### HeyMa (Voice Interface)
 **Accuracy Score: 75%**
 
 ✅ **Conceptually Accurate**:
@@ -300,7 +300,7 @@ None identified.
    - **Impact**: Deployment confusion
    - **Recommendation**: Standardize or document port configuration strategy
 
-3. **Technology Stack Assumptions - TalkyTonny**
+3. **Technology Stack Assumptions - HeyMa**
    - **Issue**: Limited source verification for implementation details
    - **Location**: docs/components/talkytonny-overview.md
    - **Impact**: May not match actual implementation
@@ -458,7 +458,7 @@ None identified.
 - Integration patterns documented
 
 ⚠️ **Issues**:
-- TalkyTonny technical details need verification
+- HeyMa technical details need verification
 - Holocene implementation specifics limited
 - Some features may be planned vs. implemented
 

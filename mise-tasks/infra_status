@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONTAINER="${RABBIT_CONTAINER:-theboard-rabbitmq}"
+EXCHANGE="${BLOODBANK_EXCHANGE:-bloodbank.events.v1}"
+QUEUES=(
+  "${CANDYSTORE_QUEUE:-candystore.storage}"
+  "${EVENT_WATCHER_QUEUE:-event-watcher}"
+)
+
+say() { printf "%s\n" "$*"; }
+
+if ! command -v docker >/dev/null 2>&1; then
+  say "ERROR: docker not found"
+  exit 2
+fi
+
+if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+  say "ERROR: RabbitMQ container '$CONTAINER' not running"
+  say "  Hint: start theboard compose: cd theboard && docker compose up -d rabbitmq"
+  exit 2
+fi
+
+say "RabbitMQ container: $CONTAINER"
+docker ps --filter "name=^/${CONTAINER}$" --format '  status={{.Status}}  ports={{.Ports}}' | sed 's/^/  /'
+
+say "\nBroker status (rabbitmqctl status):"
+docker exec "$CONTAINER" rabbitmqctl status >/dev/null && say "  OK" || { say "  ERROR"; exit 2; }
+
+say "\nExchange check: $EXCHANGE"
+if docker exec "$CONTAINER" rabbitmqctl list_exchanges name type durable | awk '{print $1}' | grep -qx "$EXCHANGE"; then
+  docker exec "$CONTAINER" rabbitmqctl list_exchanges name type durable | awk -v ex="$EXCHANGE" 'NR==1 || $1==ex {print}' | sed 's/^/  /'
+else
+  say "  MISSING exchange '$EXCHANGE'"
+  exit 1
+fi
+
+say "\nQueue checks:"
+ALL_OK=1
+QUEUE_TABLE=$(docker exec "$CONTAINER" rabbitmqctl list_queues name durable messages consumers 2>/dev/null || true)
+
+for q in "${QUEUES[@]}"; do
+  if echo "$QUEUE_TABLE" | awk '{print $1}' | grep -qx "$q"; then
+    echo "$QUEUE_TABLE" | awk -v q="$q" 'NR==1 || $1==q {print}' | sed 's/^/  /'
+  else
+    say "  MISSING queue '$q'"
+    ALL_OK=0
+  fi
+done
+
+if [[ $ALL_OK -ne 1 ]]; then
+  say "\nTo create missing queues, start the relevant consumers:"
+  say "  - Candystore consumer declares '${CANDYSTORE_QUEUE:-candystore.storage}' on startup"
+  say "  - Bloodbank watch_events declares '${EVENT_WATCHER_QUEUE:-event-watcher}' on startup"
+  exit 1
+fi
+
+say "\nOK: infra status green"

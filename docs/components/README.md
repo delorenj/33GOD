@@ -108,7 +108,7 @@ This directory contains comprehensive technical implementation guides for all 18
     - Wildcard RabbitMQ subscription (captures ALL events)
     - <100ms storage latency, Prometheus metrics
 
-16. **[TalkyTonny](talkytonny-technical.md)** - Voice AI assistant
+16. **[HeyMa](heymama-technical.md)** - Voice AI assistant
     - WhisperLiveKit (faster-whisper transcription)
     - TonnyTray (Tauri desktop: Rust + React)
     - Chrome extension for browser transcription
@@ -157,8 +157,8 @@ Each technical guide includes:
 
 ### Languages
 - **Rust**: iMi, Perth, Zellij Driver, Degenerate
-- **Python**: Bloodbank, TheBoard, Candystore, TalkyTonny (backend), AgentForge, Jelmore
-- **TypeScript**: Flume, Yi, Holocene, Candybar, TheBoardroom, TalkyTonny (frontend)
+- **Python**: Bloodbank, TheBoard, Candystore, HeyMa (backend), AgentForge, Jelmore
+- **TypeScript**: Flume, Yi, Holocene, Candybar, TheBoardroom, HeyMa (frontend)
 - **JavaScript**: Services (Node-RED flows)
 
 ### Frameworks & Libraries
@@ -198,7 +198,7 @@ Each technical guide includes:
 
 ### Specialized Applications
 - TheBoard + TheBoardroom → AI brainstorming
-- TalkyTonny → Voice assistant
+- HeyMa → Voice assistant
 - Jelmore → CLI orchestration
 - Degenerate → Doc synchronization
 - Services → Microservices
@@ -206,7 +206,7 @@ Each technical guide includes:
 ## Integration Flow
 
 ```
-User Input → TalkyTonny → Bloodbank → Services → AgentForge
+User Input → HeyMa → Bloodbank → Services → AgentForge
                             ↓
                          Candystore → Candybar
                             ↓

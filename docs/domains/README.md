@@ -38,7 +38,7 @@ Provides distributed event streaming, schema validation, and service coordinatio
 - Webhook integration (Fireflies, GitHub)
 - Schema validation and code generation
 - Dead letter queue handling
-- Voice transcription (TalkyTonny)
+- Voice transcription (HeyMa)
 
 ---
 
@@ -106,7 +106,7 @@ Meeting lifecycle orchestration, convergence detection, and real-time visualizat
 ---
 
 ### 5. Dashboards & Voice
-**Components**: Candybar, TalkyTonny, Jelmore Dashboard
+**Components**: Candybar, HeyMa, Jelmore Dashboard
 
 Voice-controlled AI assistant, service registry visualization, and real-time observability dashboards.
 
@@ -165,7 +165,7 @@ All diagrams use professional Mermaid syntax with:
 | Workspace Management | iMi, Jelmore | Worktree Isolation | Git, SQLite, Redis |
 | Agent Orchestration | Flume, Yi, AgentForge | Hierarchical Delegation | Multi-framework adapters |
 | Meeting & Collaboration | TheBoard, TheBoardroom | Convergence Detection | Fireflies, WebSocket |
-| Dashboards & Voice | Candybar, TalkyTonny | Real-time Streaming | Whisper, WebSocket |
+| Dashboards & Voice | Candybar, HeyMa | Real-time Streaming | Whisper, WebSocket |
 
 ## Cross-Domain Integration
 

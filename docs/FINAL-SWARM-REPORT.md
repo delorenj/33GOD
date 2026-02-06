@@ -255,7 +255,7 @@ swarm/bloodbank/technical      → Technical specifications
 
 1. **Component Count**: Assumed 18 components based on AGENTS.md inventory:
    - Bloodbank, iMi, Flume, Yi, Holyfields, AgentForge, Holocene, BMAD
-   - TheBoard, TheBoardroom, Candybar, TalkyTonny, Jelmore
+   - TheBoard, TheBoardroom, Candybar, HeyMa, Jelmore
    - Perth, Zellij Driver, Candystore, Degenerate, Services
 
 2. **Data Flow & Dependencies**: Assumed "data flow" meant:

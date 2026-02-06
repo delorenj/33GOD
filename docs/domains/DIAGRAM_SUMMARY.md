@@ -18,7 +18,7 @@ All 5 domains now have comprehensive Mermaid diagram documentation covering data
 - Webhook integration (Fireflies.ai transform pipeline)
 - Schema generation and distribution (Holyfields build-time)
 - DLQ handling and retry logic
-- Voice transcription real-time flow (TalkyTonny)
+- Voice transcription real-time flow (HeyMa)
 
 #### Workspace Management Domain
 4. `workspace-management/data-flows.md` - 7 flow diagrams (15KB)
@@ -60,7 +60,7 @@ All 5 domains now have comprehensive Mermaid diagram documentation covering data
 15. `dashboards-voice/sequences.md` - Voice commands + dashboard updates (1.3KB)
 
 **Highlights**:
-- TalkyTonny voice transcription pipeline
+- HeyMa voice transcription pipeline
 - WebSocket real-time dashboard updates
 - Candybar service registry visualization
 - Holocene agent observability

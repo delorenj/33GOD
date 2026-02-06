@@ -1,6 +1,6 @@
 # Dashboards & Voice Domain - Data Flows
 
-## Voice Assistant Flow (TalkyTonny)
+## Voice Assistant Flow (HeyMa)
 
 ```mermaid
 flowchart LR

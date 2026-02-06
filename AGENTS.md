@@ -67,8 +67,8 @@ This document provides a comprehensive overview of the components, directories, 
 **Tech:** Next.js + Tauri (Nextauri).
 **Description:** The visual "Hub" for the 33GOD platform service registry. Visualizes service topology and health.
 
-### 🗣️ TalkyTonny
-**Directory:** `TalkyTonny/`
+### 🗣️ HeyMa
+**Directory:** `HeyMa/`
 **Role:** Voice Interface.
 **Tech:** Python (Whisper), Rust (Tauri), Chrome Extension.
 **Description:** A voice-to-text system allowing users to talk to their computer. Integrates WhisperLiveKit for transcription and ElevenLabs for TTS.

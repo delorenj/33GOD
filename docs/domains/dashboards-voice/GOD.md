@@ -9,7 +9,7 @@
 
 ## Domain Overview
 
-The Dashboards & Voice domain provides **human-facing interfaces** for interacting with the 33GOD ecosystem. Holocene is the mission control dashboard, and TalkyTonny enables voice interaction via Whisper transcription and ElevenLabs TTS.
+The Dashboards & Voice domain provides **human-facing interfaces** for interacting with the 33GOD ecosystem. Holocene is the mission control dashboard, and HeyMa enables voice interaction via Whisper transcription and ElevenLabs TTS.
 
 **Core Responsibility**: Enable human observation and voice-based control of the agent pipeline.
 
@@ -23,7 +23,7 @@ The Dashboards & Voice domain provides **human-facing interfaces** for interacti
 graph TB
     subgraph "Dashboards & Voice Domain"
         HC[Holocene<br/>Mission Control]
-        TT[TalkyTonny<br/>Voice Interface]
+        TT[HeyMa<br/>Voice Interface]
     end
 
     subgraph "External"
@@ -67,7 +67,7 @@ graph TB
 
 ---
 
-### TalkyTonny
+### HeyMa
 
 **Purpose**: Voice-to-text interface with AI-powered responses and text-to-speech output
 
@@ -85,7 +85,7 @@ graph TB
 - Tonny Agent (Letta): Response generation
 - ElevenLabs: Text-to-speech
 
-[📄 Component GOD Doc](../../TalkyTonny/GOD.md)
+[📄 Component GOD Doc](../../HeyMa/GOD.md)
 
 ---
 
@@ -97,8 +97,8 @@ Events that flow between components within this domain:
 
 | Event | Producer | Consumer(s) | Purpose |
 |-------|----------|-------------|---------|
-| `talkytonny.transcription.completed` | TalkyTonny | Tonny Agent | Process voice input |
-| `tonny.response.generated` | Tonny Agent | TalkyTonny | Speak response via TTS |
+| `heymama.transcription.completed` | HeyMa | Tonny Agent | Process voice input |
+| `tonny.response.generated` | Tonny Agent | HeyMa | Speak response via TTS |
 
 ### External Event Interfaces
 
@@ -148,28 +148,28 @@ Events exchanged with other domains:
 
 ---
 
-## TalkyTonny Voice Flow
+## HeyMa Voice Flow
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant TalkyTonny
+    participant HeyMa
     participant Whisper
     participant Tonny
     participant ElevenLabs
     participant Bloodbank
 
-    User->>TalkyTonny: Speaks command
-    TalkyTonny->>Whisper: Audio stream
-    Whisper->>TalkyTonny: Transcription
-    TalkyTonny->>Bloodbank: talkytonny.transcription.completed
+    User->>HeyMa: Speaks command
+    HeyMa->>Whisper: Audio stream
+    Whisper->>HeyMa: Transcription
+    HeyMa->>Bloodbank: heymama.transcription.completed
     Bloodbank->>Tonny: Event delivery
     Tonny->>Tonny: Process via Letta
     Tonny->>Bloodbank: tonny.response.generated
-    Bloodbank->>TalkyTonny: Event delivery
-    TalkyTonny->>ElevenLabs: Text response
-    ElevenLabs->>TalkyTonny: Audio stream
-    TalkyTonny->>User: Speaks response
+    Bloodbank->>HeyMa: Event delivery
+    HeyMa->>ElevenLabs: Text response
+    ElevenLabs->>HeyMa: Audio stream
+    HeyMa->>User: Speaks response
 ```
 
 **Voice Command Examples:**
@@ -199,7 +199,7 @@ sequenceDiagram
 - Agent status queries
 - Historical event queries
 
-### TalkyTonny Components
+### HeyMa Components
 
 **Chrome Extension:**
 - Browser-based voice capture
@@ -269,4 +269,4 @@ async def handle_voice_command(event: EventEnvelope):
 - **System Doc**: `../../GOD.md`
 - **Source Domain Docs**: `dashboards-voice.md`, `applications.md`
 - **Holocene UI**: React 18, Zustand, TanStack Query
-- **TalkyTonny**: Tauri + Chrome Extension
+- **HeyMa**: Tauri + Chrome Extension

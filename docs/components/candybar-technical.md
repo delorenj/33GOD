@@ -212,7 +212,7 @@ export function EventSearch() {
             >
                 <option value="">All sources</option>
                 <option value="theboard">TheBoard</option>
-                <option value="talkytonny">TalkyTonny</option>
+                <option value="heymama">HeyMa</option>
                 <option value="imi">iMi</option>
                 <option value="agentforge">AgentForge</option>
             </select>

@@ -424,7 +424,7 @@ subscriber = Subscriber(binding_key="calendar.event.created.v2")
 - **Candystore**: Universal event storage and audit trail
 - **Services**: Microservices consuming specific event streams
 - **TheBoard**: Publishes meeting orchestration events
-- **TalkyTonny**: Publishes transcription events
+- **HeyMa**: Publishes transcription events
 
 ---
 

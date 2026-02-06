@@ -12,7 +12,7 @@
 | [Agent Orchestration](#agent-orchestration) | Flume, Yi, AgentForge, Holocene | Agents, teams, roles, protocols |
 | [Workspace Management](#workspace-management) | iMi, Jelmore, Zellij-Driver, Perth | Git, worktrees, sessions, terminals |
 | [Meeting & Collaboration](#meeting--collaboration) | TheBoard, TheBoard Room | Brainstorming, meetings, convergence |
-| [Dashboards & Voice](#dashboards--voice) | Holocene, TalkyTonny, Candybar | Dashboard, voice, UI, visualization |
+| [Dashboards & Voice](#dashboards--voice) | Holocene, HeyMa, Candybar | Dashboard, voice, UI, visualization |
 | [Development Tools](#development-tools) | Jelmore, Degenerate, BMAD | Docs sync, methodology, coding sessions |
 
 ---
@@ -120,10 +120,10 @@
 
 **Components:**
 - **Holocene** — Mission control dashboard
-- **TalkyTonny** — Voice interface system
+- **HeyMa** — Voice interface system
 - **Candybar** — Service topology dashboard
 
-**Keywords:** `dashboard`, `voice`, `transcription`, `TTS`, `text-to-speech`, `Whisper`, `ElevenLabs`, `UI`, `visualization`, `portfolio`, `health`, `topology`, `Holocene`, `TalkyTonny`, `Candybar`
+**Keywords:** `dashboard`, `voice`, `transcription`, `TTS`, `text-to-speech`, `Whisper`, `ElevenLabs`, `UI`, `visualization`, `portfolio`, `health`, `topology`, `Holocene`, `HeyMa`, `Candybar`
 
 **Load this domain when the prompt mentions:**
 - Dashboard features or UI
@@ -228,6 +228,6 @@ User Prompt
 | Perth | Workspace Management |
 | TheBoard | Meeting & Collaboration |
 | TheBoard Room | Meeting & Collaboration |
-| TalkyTonny | Dashboards & Voice |
+| HeyMa | Dashboards & Voice |
 | Degenerate | Development Tools |
 | BMAD | Development Tools |

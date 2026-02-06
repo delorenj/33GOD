@@ -7,16 +7,16 @@
 | Service | Role | Tech Stack | Status |
 |---------|------|------------|--------|
 | **Holocene** | Mission control dashboard for 33GOD portfolio | React 18, Vite, TypeScript, Zustand, TanStack Query, Tailwind | Active |
-| **TalkyTonny** | Voice-to-text interface with TTS | Python (Whisper), Rust (Tauri), Chrome Extension, ElevenLabs | Active |
+| **HeyMa** | Voice-to-text interface with TTS | Python (Whisper), Rust (Tauri), Chrome Extension, ElevenLabs | Active |
 
 ## High-Level Purpose
 
-This domain owns the human-facing interfaces. Holocene is the mission control dashboard showing portfolio health, agent collaboration graphs, decision impacts, and project drill-downs. TalkyTonny provides voice interaction via Whisper transcription and ElevenLabs TTS.
+This domain owns the human-facing interfaces. Holocene is the mission control dashboard showing portfolio health, agent collaboration graphs, decision impacts, and project drill-downs. HeyMa provides voice interaction via Whisper transcription and ElevenLabs TTS.
 
 ## Key Contracts
 
 - **Holocene Data Sources**: Queries Bloodbank events, service registry, agent state
-- **TalkyTonny Events**: `transcription.voice.completed` → agent processing → `tts.response.completed`
+- **HeyMa Events**: `transcription.voice.completed` → agent processing → `tts.response.completed`
 
 ## Interconnections
 
@@ -26,7 +26,7 @@ graph TD
     HOL -->|reads| REG[registry.yaml]
     HOL -->|displays| DASH[Dashboard Views]
 
-    TT[TalkyTonny] -->|transcribes| WHISPER[Whisper]
+    TT[HeyMa] -->|transcribes| WHISPER[Whisper]
     TT -->|emits| BB
     TT -->|receives| TTS[ElevenLabs TTS]
     TONNY[Tonny Agent] -->|processes| TT
@@ -45,7 +45,7 @@ Pass this domain when:
 | Service | Port/Interface | Tech |
 |---------|----------------|------|
 | Holocene | Vite dev server | React 18, Zustand |
-| TalkyTonny | Tauri app / Chrome extension | Whisper, ElevenLabs |
+| HeyMa | Tauri app / Chrome extension | Whisper, ElevenLabs |
 
 ## Key Concepts
 
@@ -57,7 +57,7 @@ Pass this domain when:
 - **Risks & Blockers**: Active issues requiring attention
 - **Briefing Mode**: Auto-generated AM/PM summaries
 
-### TalkyTonny Components
+### HeyMa Components
 - **Chrome Extension**: Browser-based voice capture
 - **Tauri App**: Desktop voice interface
 - **WhisperLiveKit**: Real-time transcription
@@ -67,9 +67,9 @@ Pass this domain when:
 ## Key Files
 
 - `/home/delorenj/code/33GOD/holocene/trunk-main/` - Mission control dashboard
-- `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/` - Voice interface
-- `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/chrome-extension/` - Browser extension
-- `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/TonnyTray/` - Tauri desktop app
+- `/home/delorenj/code/33GOD/HeyMa/trunk-main/` - Voice interface
+- `/home/delorenj/code/33GOD/HeyMa/trunk-main/chrome-extension/` - Browser extension
+- `/home/delorenj/code/33GOD/HeyMa/trunk-main/TonnyTray/` - Tauri desktop app
 
 ## Last Sync
 

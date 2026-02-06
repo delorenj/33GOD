@@ -39,8 +39,8 @@ while IFS= read -r file; do
         candybar/*)
             COMPONENTS_CHANGED[candybar]=1
             ;;
-        TalkyTonny/*)
-            COMPONENTS_CHANGED[TalkyTonny]=1
+        HeyMa/*)
+            COMPONENTS_CHANGED[HeyMa]=1
             ;;
         theboardroom/*)
             COMPONENTS_CHANGED[theboardroom]=1

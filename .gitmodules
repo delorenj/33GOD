@@ -31,9 +31,9 @@
 [submodule "perth"]
 	path = perth
 	url = git@github.com:delorenj/perth.git
-[submodule "TalkyTonny"]
-	path = TalkyTonny
-	url = git@github.com:delorenj/TalkyTonny.git
+[submodule "HeyMa"]
+	path = HeyMa
+	url = git@github.com:delorenj/HeyMa.git
 [submodule "theboard"]
 	path = theboard
 	url = git@github.com:delorenj/theboard.git

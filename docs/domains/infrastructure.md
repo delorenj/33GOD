@@ -433,7 +433,7 @@ jobs:
 
 | Domain | Components | Events Consumed |
 |--------|------------|-----------------|
-| **Voice & Transcription** | TalkyTonny, Tonny Agent | `transcription.voice.completed` |
+| **Voice & Transcription** | HeyMa, Tonny Agent | `transcription.voice.completed` |
 | **Meeting Collaboration** | TheBoard, TheBoardRoom | `theboard.meeting.trigger`, `feature.brainstorm.requested` |
 | **Agent Orchestration** | AgentForge, Yi, Flume | `agent.feedback.requested`, `feature.requested` |
 | **Workspace Management** | iMi, Zellij Driver | `worktree.created`, `session.started` |

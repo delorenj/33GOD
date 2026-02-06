@@ -61,3 +61,8 @@ raw = true
 description = "Alias for task:new"
 run = "mise run task:new"
 raw = true
+
+[tasks."infra:status"]
+description = "Check RabbitMQ exchange/queue health for 33GOD event backbone"
+run = "./mise-tasks/infra_status"
+raw = true
