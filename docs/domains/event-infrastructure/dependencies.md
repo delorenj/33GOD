@@ -26,7 +26,7 @@ graph TB
     subgraph Runtime["Runtime Components"]
         Bloodbank[Bloodbank Publisher<br/>FastAPI]
         Consumers[Event Consumers<br/>Multiple Services]
-        TalkyTonny[TalkyTonny<br/>Voice Assistant]
+        HeyMa[HeyMa<br/>Voice Assistant]
     end
 
     subgraph Generated["Generated Artifacts"]
@@ -71,7 +71,7 @@ graph TB
     EventStore --> Consumers
     AgentFeedback --> Consumers
     TheBoard --> Bloodbank
-    TalkyTonny --> Bloodbank
+    HeyMa --> Bloodbank
 
     %% Integration dependencies
     Fireflies --> N8N
@@ -96,7 +96,7 @@ graph LR
         S3[TheBoard Meeting Producer]
         S4[TheBoardroom Visualizer]
         S5[Event Store Manager]
-        S6[TalkyTonny Voice]
+        S6[HeyMa Voice]
     end
 
     subgraph Infrastructure["Infrastructure Components"]
@@ -130,7 +130,7 @@ graph LR
     S5 -->|Consumes All Events| RMQ
     S5 -->|Persists to| PG
 
-    %% TalkyTonny dependencies
+    %% HeyMa dependencies
     S6 -->|Publishes via| BB
     S6 -->|Uses Schemas| HF
     S6 -->|Calls| N8N[n8n API]
@@ -169,7 +169,7 @@ graph TB
         TranscriptProcessed[transcript_processed.json]
     end
 
-    subgraph TalkyTonny["TalkyTonny Schemas (talkytonny/events/)"]
+    subgraph HeyMa["HeyMa Schemas (heymama/events/)"]
         TranscriptionCompleted[transcription_completed.json]
         CommandRecognized[command_recognized.json]
     end

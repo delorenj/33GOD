@@ -41,7 +41,7 @@ All domains now have consolidated GOD documents:
    - Focus: Multi-agent brainstorming, convergence detection
 
 5. **Dashboards & Voice** - `docs/domains/dashboards-voice/GOD.md`
-   - Components: Holocene, TalkyTonny
+   - Components: Holocene, HeyMa
    - Focus: Mission control, voice interface
 
 6. **Development Tools** - `docs/domains/development-tools/GOD.md`
@@ -179,7 +179,7 @@ Create GOD.md for remaining components:
 - [ ] `theboardroom/GOD.md`
 
 **Dashboards & Voice Domain:**
-- [ ] `TalkyTonny/GOD.md`
+- [ ] `HeyMa/GOD.md`
 
 **Development Tools Domain:**
 - [ ] `degenerate/GOD.md`

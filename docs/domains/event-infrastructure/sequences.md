@@ -157,7 +157,7 @@ sequenceDiagram
 
 ## 4. Voice Transcription Real-Time Sequence
 
-Shows the real-time audio streaming and event publishing flow for TalkyTonny.
+Shows the real-time audio streaming and event publishing flow for HeyMa.
 
 ```mermaid
 sequenceDiagram

@@ -5,7 +5,7 @@
 ```mermaid
 graph TB
     subgraph Voice
-        TalkyTonny[TalkyTonny<br/>Voice Service]
+        HeyMa[HeyMa<br/>Voice Service]
         TonnyTray[TonnyTray<br/>Desktop App]
     end
 
@@ -27,11 +27,11 @@ graph TB
         Redis[Redis]
     end
 
-    TonnyTray --> TalkyTonny
-    TalkyTonny --> Whisper
-    TalkyTonny --> ElevenLabs
-    TalkyTonny --> N8N
-    TalkyTonny --> RMQ
+    TonnyTray --> HeyMa
+    HeyMa --> Whisper
+    HeyMa --> ElevenLabs
+    HeyMa --> N8N
+    HeyMa --> RMQ
 
     Candybar --> RMQ
     Candybar --> Postgres

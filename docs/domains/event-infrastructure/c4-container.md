@@ -203,7 +203,7 @@ See: [bloodbank-publisher-api.yaml](/home/delorenj/code/33GOD/docs/domains/event
 - **Deployment**: Multiple independent services, Docker containers or systemd services
 
 #### Purpose
-Provides a reusable pattern for building event-driven microservices that react to domain events. Consumers connect to RabbitMQ, declare a queue, bind it to the `events` exchange with routing key patterns, and process events asynchronously. Each consumer is independent and can scale independently. Examples include TalkyTonny voice assistant, TheBoard meeting orchestrator, TheBoardroom visualization service.
+Provides a reusable pattern for building event-driven microservices that react to domain events. Consumers connect to RabbitMQ, declare a queue, bind it to the `events` exchange with routing key patterns, and process events asynchronously. Each consumer is independent and can scale independently. Examples include HeyMa voice assistant, TheBoard meeting orchestrator, TheBoardroom visualization service.
 
 #### Components
 This container pattern includes:
@@ -264,8 +264,8 @@ This container pattern includes:
 
 ---
 
-### TalkyTonny Voice Assistant Service
-- **Name**: TalkyTonny Voice Assistant Service
+### HeyMa Voice Assistant Service
+- **Name**: HeyMa Voice Assistant Service
 - **Description**: Voice-controlled AI assistant consuming speech-to-text events and producing workflow triggers
 - **Type**: Event Consumer / Event Producer
 - **Technology**: Python 3.10+ (FastAPI, WebSocket), Tauri/Rust desktop app, Whisper AI
@@ -357,13 +357,13 @@ C4Container
 
         Container(holyfields, "Holyfields Registry", "Node.js, TypeScript, Python", "Schema registry generating type-safe artifacts (Pydantic, Zod)")
 
-        Container(subscribers, "Event Consumers", "Python/Node.js, AMQP clients", "Subscriber services processing events (TalkyTonny, TheBoard, etc.)")
+        Container(subscribers, "Event Consumers", "Python/Node.js, AMQP clients", "Subscriber services processing events (HeyMa, TheBoard, etc.)")
 
         ContainerDb(redis, "Redis Cache", "Redis 7.x", "Correlation tracking and caching (optional)")
     }
 
     System_Boundary(voice_system, "Voice Assistant System") {
-        Container(talkytonny, "TalkyTonny Service", "Python, FastAPI, WebSocket, Whisper AI", "Voice transcription and workflow triggers")
+        Container(heymama, "HeyMa Service", "Python, FastAPI, WebSocket, Whisper AI", "Voice transcription and workflow triggers")
         Container(tonnytray, "TonnyTray Desktop App", "Tauri, Rust, React, TypeScript", "Desktop UI for voice control")
     }
 
@@ -429,14 +429,14 @@ C4Container
 2. **Holyfields Registry**: Build-time contract validation, no runtime execution
 3. **Bloodbank Publisher**: HTTP → AMQP gateway with validation
 4. **Event Consumers**: Independent business logic execution
-5. **TalkyTonny**: Voice transcription and workflow orchestration
+5. **HeyMa**: Voice transcription and workflow orchestration
 
 ### Communication Patterns
 
 1. **Synchronous (HTTP)**:
    - Event publishing (Producer → Bloodbank)
    - Schema validation API (Bloodbank → Holyfields)
-   - Webhook triggers (TalkyTonny → n8n)
+   - Webhook triggers (HeyMa → n8n)
 
 2. **Asynchronous (AMQP)**:
    - Event distribution (Bloodbank → RabbitMQ → Consumers)
@@ -444,7 +444,7 @@ C4Container
    - Retry and dead-letter handling
 
 3. **Real-time (WebSocket)**:
-   - Audio streaming (TonnyTray → TalkyTonny)
+   - Audio streaming (TonnyTray → HeyMa)
    - Live transcription delivery
 
 ### Deployment Strategy
@@ -488,7 +488,7 @@ C4Container
 
 1. **Bloodbank Publisher**: <50ms p99 latency for event publishing
 2. **RabbitMQ Broker**: 10k+ messages/second throughput
-3. **TalkyTonny Transcription**: <500ms latency from speech to event
+3. **HeyMa Transcription**: <500ms latency from speech to event
 4. **Consumer Processing**: Application-specific (varies by business logic)
 
 ## API Specifications
@@ -502,4 +502,4 @@ C4Container
 - [Bloodbank Event-Driven Architecture](/home/delorenj/code/33GOD/bloodbank/trunk-main/EventDrivenArchitecture.md)
 - [Holyfields Product Brief](/home/delorenj/code/33GOD/holyfields/trunk-main/docs/product-brief-holyfields-2026-01-14.md)
 - [Holyfields Technical Specification](/home/delorenj/code/33GOD/holyfields/trunk-main/docs/tech-spec-holyfields-2026-01-14.md)
-- [TalkyTonny Architecture](/home/delorenj/code/33GOD/TalkyTonny/feat-bloodbank-integration/README.md)
+- [HeyMa Architecture](/home/delorenj/code/33GOD/HeyMa/feat-bloodbank-integration/README.md)

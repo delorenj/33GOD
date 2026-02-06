@@ -1,14 +1,14 @@
-# TalkyTonny: Your Voice-Powered Development Assistant
+# HeyMa: Your Voice-Powered Development Assistant
 
 ## What It Does
 
-TalkyTonny is a voice-to-text interface that lets you interact with the 33GOD ecosystem using natural speech. Instead of typing commands, writing code, or clicking through interfaces, you just talk—and TalkyTonny translates your intentions into actions.
+HeyMa is a voice-to-text interface that lets you interact with the 33GOD ecosystem using natural speech. Instead of typing commands, writing code, or clicking through interfaces, you just talk—and HeyMa translates your intentions into actions.
 
 ## Why It Matters
 
 Development is mentally demanding work. The constant context switching between thinking about the problem and manipulating the tools creates cognitive friction. You have a clear idea in your head, but translating it to keyboard input, mouse clicks, and correct syntax requires breaking your flow.
 
-TalkyTonny eliminates this friction by letting you work at the speed of thought. Describe what you want in natural language, and the system handles the translation to technical commands, code generation, or UI interactions.
+HeyMa eliminates this friction by letting you work at the speed of thought. Describe what you want in natural language, and the system handles the translation to technical commands, code generation, or UI interactions.
 
 ## Real-World Benefits
 
@@ -22,12 +22,12 @@ TalkyTonny eliminates this friction by letting you work at the speed of thought.
 
 ## The Intelligence Layer
 
-TalkyTonny doesn't just do speech-to-text—it understands development context. It knows whether "run tests" means unit tests, integration tests, or the full suite based on your current work. It disambiguates based on your session history and project context.
+HeyMa doesn't just do speech-to-text—it understands development context. It knows whether "run tests" means unit tests, integration tests, or the full suite based on your current work. It disambiguates based on your session history and project context.
 
 ## The Multi-Modal Experience
 
-Combine voice input with visual output. Speak commands while seeing code updates happen in real-time. Get audio feedback for long-running operations. TalkyTonny bridges the gap between different modalities for the most efficient interaction model.
+Combine voice input with visual output. Speak commands while seeing code updates happen in real-time. Get audio feedback for long-running operations. HeyMa bridges the gap between different modalities for the most efficient interaction model.
 
 ## The Bottom Line
 
-TalkyTonny transforms human-computer interaction from mechanical typing to natural conversation. It's the difference between operating a complex machine and having a capable assistant who understands what you mean, not just what you say. Perfect for developers seeking efficiency, accessibility, or new ways to reduce cognitive load in complex development workflows.
+HeyMa transforms human-computer interaction from mechanical typing to natural conversation. It's the difference between operating a complex machine and having a capable assistant who understands what you mean, not just what you say. Perfect for developers seeking efficiency, accessibility, or new ways to reduce cognitive load in complex development workflows.

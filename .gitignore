@@ -63,8 +63,8 @@ logs/
 **/sync/
 
 # Component-level files outside trunk-main (should be in submodule)
-TalkyTonny/TRAINING_GUIDE.txt
-TalkyTonny/record_samples.sh
-TalkyTonny/samples/
-TalkyTonny/scripts/
-TalkyTonny/training/
+HeyMa/TRAINING_GUIDE.txt
+HeyMa/record_samples.sh
+HeyMa/samples/
+HeyMa/scripts/
+HeyMa/training/

@@ -153,8 +153,8 @@ This container deploys the following components:
 
 ---
 
-### TalkyTonny WhisperLiveKit Server
-- **Name**: TalkyTonny WhisperLiveKit Server
+### HeyMa WhisperLiveKit Server
+- **Name**: HeyMa WhisperLiveKit Server
 - **Description**: Real-time speech-to-text transcription server with WebSocket streaming and Whisper AI integration
 - **Type**: Web Application / WebSocket Server
 - **Technology**: Python 3.10+, FastAPI, WebSocket, faster-whisper, PyAudio, scipy/numpy
@@ -228,8 +228,8 @@ This container deploys the following components:
 
 #### Infrastructure
 - **Deployment Config**:
-  - Docker: `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/Dockerfile`
-  - Docker Compose: `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/docker-compose.yml`
+  - Docker: `/home/delorenj/code/33GOD/HeyMa/trunk-main/Dockerfile`
+  - Docker Compose: `/home/delorenj/code/33GOD/HeyMa/trunk-main/docker-compose.yml`
   - Entry point: `whisperlivekit-server --host 0.0.0.0 --model medium`
   - Base image: `nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04` (GPU) or CPU variant
 - **Scaling**: Horizontal scaling possible (each instance serves ~5-10 concurrent users)
@@ -330,7 +330,7 @@ This container deploys the following components:
 #### Dependencies
 
 ##### Containers Used
-- **TalkyTonny WhisperLiveKit Server**: Connects via WebSocket for transcription
+- **HeyMa WhisperLiveKit Server**: Connects via WebSocket for transcription
 
 ##### External Systems
 - **n8n Workflow Automation**: Webhook trigger endpoint
@@ -340,7 +340,7 @@ This container deploys the following components:
 #### Infrastructure
 - **Deployment Config**:
   - Build: Tauri CLI (`npm run tauri:build`)
-  - Config: `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/TonnyTray/src-tauri/tauri.conf.json`
+  - Config: `/home/delorenj/code/33GOD/HeyMa/trunk-main/TonnyTray/src-tauri/tauri.conf.json`
   - Entry point: `src-tauri/src/lib.rs`
   - Bundle: `.deb` (Linux), `.dmg` (macOS), `.exe` (Windows)
 - **Scaling**: Single-user desktop application
@@ -410,7 +410,7 @@ This container deploys the following components:
 #### Dependencies
 
 ##### Containers Used
-- **TalkyTonny WhisperLiveKit Server**: Connects via WebSocket for transcription
+- **HeyMa WhisperLiveKit Server**: Connects via WebSocket for transcription
 
 ##### External Systems
 - **Chrome Web Store**: Extension distribution (planned)
@@ -418,7 +418,7 @@ This container deploys the following components:
 
 #### Infrastructure
 - **Deployment Config**:
-  - Manifest: `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/chrome-extension/manifest.json`
+  - Manifest: `/home/delorenj/code/33GOD/HeyMa/trunk-main/chrome-extension/manifest.json`
   - Version: Manifest V3
   - Install: Manual load unpacked (development)
 - **Scaling**: Per-user installation (browser-based)
@@ -440,7 +440,7 @@ This container deploys the following components:
 - **Deployment**: Python virtual environment (uv), Docker container (planned)
 
 #### Purpose
-Provides session management and orchestration for AI agent coding workflows. Tracks active coding sessions, manages agent state, coordinates between voice input (TalkyTonny) and agent execution, and persists session context in Redis. Acts as the control plane for agent-driven development, bridging user intent (voice or CLI) with agent execution (Claude, Gemini). Currently CLI-focused with FastAPI HTTP API planned for web integration.
+Provides session management and orchestration for AI agent coding workflows. Tracks active coding sessions, manages agent state, coordinates between voice input (HeyMa) and agent execution, and persists session context in Redis. Acts as the control plane for agent-driven development, bridging user intent (voice or CLI) with agent execution (Claude, Gemini). Currently CLI-focused with FastAPI HTTP API planned for web integration.
 
 #### Components
 This container deploys the following components:
@@ -500,7 +500,7 @@ This container deploys the following components:
 
 ##### Containers Used
 - **RabbitMQ Event Broker**: Event coordination via AMQP
-- **TalkyTonny WhisperLiveKit**: Consumes transcription events for voice commands
+- **HeyMa WhisperLiveKit**: Consumes transcription events for voice commands
 
 ##### External Systems
 - **Redis**: Session state persistence
@@ -1024,14 +1024,14 @@ Due to the early stage of these services, comprehensive OpenAPI specifications w
 - **Bloodbank Publisher API**: See [Event Infrastructure Container Documentation](/home/delorenj/code/33GOD/docs/domains/event-infrastructure/c4-container.md)
 - **RabbitMQ AMQP Protocol**: Standard AMQP 0.9.1 (topic exchange pattern)
 - **Tauri IPC Protocol**: Type-safe commands documented in source code
-  - TonnyTray: `/home/delorenj/code/33GOD/TalkyTonny/trunk-main/TonnyTray/src-tauri/src/lib.rs`
+  - TonnyTray: `/home/delorenj/code/33GOD/HeyMa/trunk-main/TonnyTray/src-tauri/src/lib.rs`
   - Candybar: `/home/delorenj/code/33GOD/candybar/trunk-main/src-tauri/src/lib.rs`
 
 ## Related Documentation
 
 ### Component Architecture
 - [Candybar Components](/home/delorenj/code/33GOD/docs/domains/dashboards-voice/c4-component-candybar.md) (when created)
-- [TalkyTonny Components](/home/delorenj/code/33GOD/docs/domains/dashboards-voice/c4-component-talkytonny.md) (when created)
+- [HeyMa Components](/home/delorenj/code/33GOD/docs/domains/dashboards-voice/c4-component-heymama.md) (when created)
 - [Jelmore Components](/home/delorenj/code/33GOD/docs/domains/dashboards-voice/c4-component-jelmore.md) (when created)
 
 ### System Context
@@ -1040,7 +1040,7 @@ Due to the early stage of these services, comprehensive OpenAPI specifications w
 - [Domain Overview: Dashboards & Voice](/home/delorenj/code/33GOD/docs/domains/dashboards-voice.md)
 
 ### Technical References
-- [TalkyTonny CLAUDE.md](/home/delorenj/code/33GOD/TalkyTonny/trunk-main/CLAUDE.md) - Development guide
+- [HeyMa CLAUDE.md](/home/delorenj/code/33GOD/HeyMa/trunk-main/CLAUDE.md) - Development guide
 - [Jelmore pyproject.toml](/home/delorenj/code/33GOD/jelmore/trunk-main/pyproject.toml) - Python dependencies
 - [Candybar package.json](/home/delorenj/code/33GOD/candybar/trunk-main/package.json) - Frontend dependencies
 - [Holocene package.json](/home/delorenj/code/33GOD/holocene/trunk-main/package.json) - Dashboard dependencies
@@ -1080,7 +1080,7 @@ Due to the early stage of these services, comprehensive OpenAPI specifications w
 This domain represents the **human interface layer** of the 33GOD platform:
 
 1. **Visualization** (Candybar, Holocene): Make complex system behavior observable
-2. **Voice Interaction** (TalkyTonny, TonnyTray, Chrome Ext): Enable natural human-AI collaboration
+2. **Voice Interaction** (HeyMa, TonnyTray, Chrome Ext): Enable natural human-AI collaboration
 3. **Orchestration Interface** (Jelmore): Bridge human intent → agent execution
 
 All containers in this domain focus on **human ↔ system interaction** rather than internal system logic.

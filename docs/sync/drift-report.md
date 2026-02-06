@@ -112,7 +112,7 @@ Generated: 2026-01-29 10:22 UTC
 | Service | Drift | Latest Commit |
 |---------|-------|---------------|
 | Holocene | 4 | 1134b93 - Added deep agents agent: |
-| TalkyTonny | 3 | d4fa6c1 - tom |
+| HeyMa | 3 | d4fa6c1 - tom |
 
 **Drift Commits**:
 
@@ -122,7 +122,7 @@ Generated: 2026-01-29 10:22 UTC
 - `7ef44c3` chore: initial project setup with vite/node gitignore and project files (Jarad DeLorenzo)
 - `a01de3d` deepdive (Jarad DeLorenzo)
 
-*TalkyTonny*:
+*HeyMa*:
 - `d4fa6c1` tom (Jarad DeLorenzo)
 - `280ceb3`  🎉 Implementation Complete! Both MVPs Ready (Jarad DeLorenzo)
 - `224ce2e` Initial commit (Jarad DeLorenzo)

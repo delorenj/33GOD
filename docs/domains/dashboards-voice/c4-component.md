@@ -5,7 +5,7 @@
 This document describes the component-level architecture for the **Dashboards & Voice** domain within the 33GOD platform. This domain encompasses three major applications:
 
 - **Candybar**: Service registry visualization and event observability dashboard
-- **TalkyTonny**: Voice-controlled AI assistant with real-time transcription
+- **HeyMa**: Voice-controlled AI assistant with real-time transcription
 - **Jelmore**: Event-driven orchestration layer for agentic coders
 
 ## Domain Purpose
@@ -45,7 +45,7 @@ The Dashboards & Voice domain provides real-time visualization, voice interactio
 This domain consists of three major containers, each with their own component architecture:
 
 1. **Candybar**: Event observability dashboard (Tauri + React)
-2. **TalkyTonny**: Voice assistant system (Tauri + Python services)
+2. **HeyMa**: Voice assistant system (Tauri + Python services)
 3. **Jelmore**: Event orchestration CLI (Python)
 
 ---
@@ -232,10 +232,10 @@ C4Component
 
 ---
 
-## Container 2: TalkyTonny - Voice Assistant System
+## Container 2: HeyMa - Voice Assistant System
 
 ### Container Overview
-- **Name**: TalkyTonny
+- **Name**: HeyMa
 - **Type**: Multi-Component Voice System
 - **Purpose**: Real-time voice transcription and AI-powered voice interaction
 - **Technology**: Tauri (TonnyTray UI) + Python (WhisperLiveKit + Backend Services) + Chrome Extension
@@ -472,11 +472,11 @@ C4Component
   - Real-time transcription display
   - Extension popup UI
 
-### TalkyTonny Component Diagram
+### HeyMa Component Diagram
 
 ```mermaid
 C4Component
-    title Component Diagram for TalkyTonny (Voice Assistant System)
+    title Component Diagram for HeyMa (Voice Assistant System)
 
     Container_Boundary(tonnytray, "TonnyTray Desktop App") {
         Component(tauriMain, "Tauri Main App", "Rust", "Lifecycle, tray, IPC routing")
@@ -742,7 +742,7 @@ C4Component
 All three applications integrate with RabbitMQ for event-driven communication:
 
 - **Candybar**: Consumes from `bloodbank.events.v1` exchange
-- **TalkyTonny**: Publishes transcription events, consumes workflow responses
+- **HeyMa**: Publishes transcription events, consumes workflow responses
 - **Jelmore**: Consumes from `agent.prompt` queue, publishes command events
 
 #### Bloodbank Platform
@@ -771,7 +771,7 @@ interface BloodbankEvent {
 ### Integration Patterns
 
 #### Pattern 1: Voice Command to Jelmore Orchestration
-1. User speaks command into TalkyTonny
+1. User speaks command into HeyMa
 2. WhisperLiveKit transcribes speech to text
 3. TonnyTray publishes `voice.transcription.completed` event to RabbitMQ
 4. Jelmore consumes event from `agent.prompt` queue
@@ -814,7 +814,7 @@ interface BloodbankEvent {
 - CPU: Low (event processing is async, batched)
 - Network: Persistent RabbitMQ connection
 
-#### TalkyTonny (TonnyTray + WhisperLiveKit)
+#### HeyMa (TonnyTray + WhisperLiveKit)
 - Memory: 500 MB - 2 GB (depends on Whisper model size)
 - CPU: GPU-accelerated (CUDA) or CPU-only mode
 - Network: WebSocket connection (low bandwidth)
@@ -880,7 +880,7 @@ interface BloodbankEvent {
 - **Redis**: Password authentication, TLS support
 
 ### Data Privacy
-- **TalkyTonny**: Audio processed locally (no cloud transcription)
+- **HeyMa**: Audio processed locally (no cloud transcription)
 - **Jelmore**: Session data encrypted at rest in Redis
 - **Candybar**: Event data stored in memory only (ephemeral)
 
@@ -895,7 +895,7 @@ interface BloodbankEvent {
 - Memoized visualizations
 - Canvas rendering for cloud/graph views
 
-### TalkyTonny
+### HeyMa
 - Streaming audio processing (30ms chunks)
 - VAD-based silence detection (reduces processing load)
 - Model warmup on startup
@@ -925,7 +925,7 @@ interface BloodbankEvent {
 
 ### E2E Tests
 - **Candybar**: Playwright (UI automation)
-- **TalkyTonny**: Manual QA + audio pipeline tests
+- **HeyMa**: Manual QA + audio pipeline tests
 - **Jelmore**: CLI command tests
 
 ---
@@ -934,7 +934,7 @@ interface BloodbankEvent {
 
 ### Metrics
 - **Candybar**: Event counts, error rates, connection status
-- **TalkyTonny**: Audio levels, VAD activations, transcription latency, TTS queue depth
+- **HeyMa**: Audio levels, VAD activations, transcription latency, TTS queue depth
 - **Jelmore**: Session count, command latency, provider API latency
 
 ### Logging
@@ -958,7 +958,7 @@ interface BloodbankEvent {
   - Alerting rules (email, webhooks)
   - Historical event replay
 
-- **TalkyTonny**:
+- **HeyMa**:
   - Multi-language support (60+ languages)
   - Custom wake word detection
   - Offline mode (local TTS)
@@ -982,7 +982,7 @@ interface BloodbankEvent {
 
 ### Documentation
 - [Candybar Repository](https://github.com/delorenj/candybar)
-- [TalkyTonny Repository](https://github.com/delorenj/TalkyTonny)
+- [HeyMa Repository](https://github.com/delorenj/HeyMa)
 - [Jelmore Repository](https://github.com/delorenj/jelmore)
 - [Tauri Documentation](https://tauri.app/)
 - [Faster-Whisper Documentation](https://github.com/SYSTRAN/faster-whisper)

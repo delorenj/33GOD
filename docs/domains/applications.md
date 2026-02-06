@@ -24,7 +24,7 @@ This domain serves as the **human-machine interface layer** of the 33GOD ecosyst
 | **TheBoard** | `theboard/trunk-main` | Multi-agent brainstorming simulation | Python 3.12+, FastAPI, Agno, Letta, PostgreSQL, Redis, Qdrant | Active |
 | **TheBoard Room** | `theboardroom/trunk-main` | 3D visualization for meetings | TypeScript, PlayCanvas, Vite, Bun | Active |
 | **Candybar** | `candybar/trunk-main` | Service registry dashboard | Next.js 14, Tauri, React, shadcn/ui, Tailwind | Active |
-| **TalkyTonny** | `TalkyTonny/trunk-main` | Voice interface system | Python (Whisper), Rust (Tauri), Chrome Extension, ElevenLabs | Active |
+| **HeyMa** | `HeyMa/trunk-main` | Voice interface system | Python (Whisper), Rust (Tauri), Chrome Extension, ElevenLabs | Active |
 
 ---
 
@@ -205,13 +205,13 @@ Candybar is the visual "Hub" for the 33GOD platform, providing real-time visuali
 
 ---
 
-### 4. TalkyTonny - Voice Interface System
+### 4. HeyMa - Voice Interface System
 
-**Directory:** `/home/user/33GOD/TalkyTonny/trunk-main`
+**Directory:** `/home/user/33GOD/HeyMa/trunk-main`
 
 #### Purpose and Responsibilities
 
-TalkyTonny enables voice-driven interaction with the 33GOD ecosystem, transcribing speech to text and generating spoken responses. It serves as the auditory interface for hands-free operation and conversational AI assistance.
+HeyMa enables voice-driven interaction with the 33GOD ecosystem, transcribing speech to text and generating spoken responses. It serves as the auditory interface for hands-free operation and conversational AI assistance.
 
 #### Key Features
 
@@ -304,7 +304,7 @@ All Applications domain components integrate with Bloodbank as the central event
 TheBoard          -->  theboard.meeting.* events  -->  Bloodbank
 TheBoard Room     <--  theboard.meeting.* events  <--  Bloodbank
 Candybar          <--  WebSocket event stream     <--  Candystore <-- Bloodbank
-TalkyTonny        <->  voice/tts events           <->  Bloodbank
+HeyMa        <->  voice/tts events           <->  Bloodbank
 ```
 
 ### Meeting Trigger Service
@@ -363,7 +363,7 @@ await publisher.publish(
 
 ### Use Case 2: Voice-Driven Development
 
-**Trigger:** User speaks to TalkyTonny
+**Trigger:** User speaks to HeyMa
 
 ```
 User: "What's the status of the authentication service?"
@@ -473,7 +473,7 @@ await publisher.publish(
 - Adjust polling interval
 - Check service health endpoint implementations
 
-### TalkyTonny Issues
+### HeyMa Issues
 
 #### No Transcription
 
@@ -566,7 +566,7 @@ Include this domain for queries containing:
 - dashboard, visualization, topology, graph
 - voice, speech, transcription, TTS, ElevenLabs, Whisper
 - service registry, health check, monitoring
-- Candybar, TheBoard, TalkyTonny
+- Candybar, TheBoard, HeyMa
 - user interface, UI, frontend
 - 3D, PlayCanvas, WebGL
 - Tauri, desktop app, Chrome extension
@@ -580,7 +580,7 @@ Include this domain for queries containing:
 | TheBoard | `/home/user/33GOD/theboard/trunk-main/` |
 | TheBoard Room | `/home/user/33GOD/theboardroom/trunk-main/` |
 | Candybar | `/home/user/33GOD/candybar/trunk-main/` |
-| TalkyTonny | `/home/user/33GOD/TalkyTonny/trunk-main/` |
+| HeyMa | `/home/user/33GOD/HeyMa/trunk-main/` |
 | Meeting Trigger Service | `/home/user/33GOD/services/theboard-meeting-trigger/` |
 | Tonny Agent Service | `/home/user/33GOD/services/tonny/` |
 | Candystore (Event Store) | `/home/user/33GOD/services/candystore/` |

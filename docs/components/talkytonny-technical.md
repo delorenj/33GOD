@@ -1,8 +1,8 @@
-# TalkyTonny - Technical Implementation Guide
+# HeyMa - Technical Implementation Guide
 
 ## Overview
 
-TalkyTonny is a voice-controlled AI assistant system with real-time speech-to-text transcription, natural language processing, and text-to-speech response capabilities. It features three main components: WhisperLiveKit (Python transcription server), TonnyTray (Tauri desktop app), and a Chrome extension for browser-based transcription.
+HeyMa is a voice-controlled AI assistant system with real-time speech-to-text transcription, natural language processing, and text-to-speech response capabilities. It features three main components: WhisperLiveKit (Python transcription server), TonnyTray (Tauri desktop app), and a Chrome extension for browser-based transcription.
 
 ## Implementation Details
 
@@ -522,7 +522,7 @@ async def resilient_connection(server_url: str):
 ---
 
 **Quick Reference**:
-- GitHub: `33GOD/TalkyTonny`
+- GitHub: `33GOD/HeyMa`
 - WhisperLiveKit Port: 8888
 - Package Manager: uv (Python), npm (Node.js)
 - Docs: `QUICKSTART.md`, `TonnyTray/README.md`

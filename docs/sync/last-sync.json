@@ -23,7 +23,7 @@
       "last_sync_date": null
     },
     "dashboards-voice": {
-      "services": ["holocene", "TalkyTonny"],
+      "services": ["holocene", "HeyMa"],
       "last_commit": null,
       "last_sync_date": null
     }
@@ -43,6 +43,6 @@
     "theboard": "theboard/trunk-main",
     "theboardroom": "theboardroom/trunk-main",
     "holocene": "holocene/trunk-main",
-    "TalkyTonny": "TalkyTonny/trunk-main"
+    "HeyMa": "HeyMa/trunk-main"
   }
 }

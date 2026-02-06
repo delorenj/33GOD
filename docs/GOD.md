@@ -61,7 +61,7 @@ graph TB
 
     subgraph "Dashboards & Voice Domain"
         HC2[Holocene<br/>Mission Control]
-        TT[TalkyTonny<br/>Voice Interface]
+        TT[HeyMa<br/>Voice Interface]
     end
 
     subgraph "Development Tools Domain"
@@ -109,7 +109,7 @@ graph TB
 | **Agent Orchestration** | Agent lifecycle, teams, protocols | Flume, Yi, AgentForge, Holocene | [Agent Orchestration GOD](domains/agent-orchestration/GOD.md) |
 | **Workspace Management** | Git worktrees, sessions, terminals | iMi, Jelmore, Zellij-Driver, Perth | [Workspace Management GOD](domains/workspace-management/GOD.md) |
 | **Meeting & Collaboration** | Brainstorming, convergence, visualization | TheBoard, TheBoard Room | [Meeting & Collaboration GOD](domains/meeting-collaboration/GOD.md) |
-| **Dashboards & Voice** | UI, voice interface, monitoring | Holocene, TalkyTonny, Candybar | [Dashboards & Voice GOD](domains/dashboards-voice/GOD.md) |
+| **Dashboards & Voice** | UI, voice interface, monitoring | Holocene, HeyMa, Candybar | [Dashboards & Voice GOD](domains/dashboards-voice/GOD.md) |
 | **Development Tools** | Doc sync, methodology, coding sessions | Jelmore, Degenerate, BMAD | [Development Tools GOD](domains/development-tools/GOD.md) |
 
 ---
@@ -169,7 +169,7 @@ All event schemas are defined in **Holyfields** and validated by Bloodbank.
 | Perth | Workspace Management | Distribution | Development | _(To be created)_ |
 | TheBoard | Meeting & Collaboration | Orchestrator | Planning | _(To be created)_ |
 | TheBoard Room | Meeting & Collaboration | UI | Planning | [theboardroom/GOD.md](theboardroom/GOD.md) |
-| TalkyTonny | Dashboards & Voice | Voice UI | Development | [TalkyTonny/GOD.md](TalkyTonny/GOD.md) |
+| HeyMa | Dashboards & Voice | Voice UI | Development | [HeyMa/GOD.md](HeyMa/GOD.md) |
 | Degenerate | Development Tools | Doc Sync | Planning | _(To be created)_ |
 | BMAD | Development Tools | Methodology | Production | _(To be created)_ |
 

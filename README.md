@@ -16,7 +16,7 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌────────────┐  │
-│   │ TalkyTonny  │    │   Flume     │    │  AgentForge │    │  TheBoard  │  │
+│   │ HeyMa  │    │   Flume     │    │  AgentForge │    │  TheBoard  │  │
 │   │   (Voice)   │───▶│ (Protocol)  │───▶│   (Teams)   │───▶│(Brainstorm)│  │
 │   └─────────────┘    └─────────────┘    └─────────────┘    └────────────┘  │
 │          │                  │                  │                  │         │
@@ -77,7 +77,7 @@
 | **[TheBoard](theboard/)** | Multi-agent brainstorming simulation system. Features intelligent comment extraction, context compression, and convergence detection for ideation and architecture discussions. |
 | **[TheBoard Room](theboardroom/)** | Web UI for TheBoard brainstorming sessions. |
 | **[Candybar](candybar/)** | Service registry hub and topology visualization dashboard. Built with Next.js + Tauri, displays real-time service health, event flows, and system architecture. |
-| **[TalkyTonny](TalkyTonny/)** | Voice interface system integrating WhisperLiveKit for transcription and ElevenLabs for text-to-speech. Includes Chrome extension support. |
+| **[HeyMa](HeyMa/)** | Voice interface system integrating WhisperLiveKit for transcription and ElevenLabs for text-to-speech. Includes Chrome extension support. |
 
 ### Development Tools
 
@@ -92,7 +92,7 @@
 
 ```
 1. INITIATION
-   └─ Voice (TalkyTonny) │ Git commit │ Webhook │ Manual task
+   └─ Voice (HeyMa) │ Git commit │ Webhook │ Manual task
                          ▼
 2. ORCHESTRATION
    └─ Flume receives trigger → AgentForge assembles team

@@ -18,7 +18,7 @@ The platform is organized into **6 domains**, each owning a cohesive set of resp
 | **Agent Orchestration** | Protocol layer; agent communication, wrapping, team assembly | Flume, Yi, AgentForge, Holocene |
 | **Workspace Management** | Execution context; where agents perform work | iMi, Jelmore, Zellij-Driver, Perth |
 | **Meeting & Collaboration** | Multi-agent brainstorming and convergence | TheBoard, TheBoardroom |
-| **Dashboards & Voice** | Human-facing interfaces | Holocene, TalkyTonny, Candybar |
+| **Dashboards & Voice** | Human-facing interfaces | Holocene, HeyMa, Candybar |
 | **Development Tools** | Meta-tooling for development workflow | Jelmore, Degenerate, BMAD |
 
 ---
@@ -240,7 +240,7 @@ flume/packages/
 
 ### Dashboards & Voice
 
-#### TalkyTonny — Voice Interface System
+#### HeyMa — Voice Interface System
 - **Components**:
   - **WhisperLiveKit** — real-time STT (faster-whisper)
   - **Tonny Agent** — Letta-powered conversational AI
@@ -294,7 +294,7 @@ flume/packages/
 ### Event Flow Patterns
 
 ```
-User Input ──► TalkyTonny ──► Bloodbank ──► Services ──► AgentForge
+User Input ──► HeyMa ──► Bloodbank ──► Services ──► AgentForge
                                    │
                                    ▼
                             Candystore ──► Candybar
@@ -321,7 +321,7 @@ User Input ──► TalkyTonny ──► Bloodbank ──► Services ──►
 | `agent.feedback.requested` | Yi adapters | Agent pool |
 | `task.assigned` / `task.completed` | Flume | Yi, AgentForge |
 | `transcription.voice.completed` | WhisperLiveKit | Tonny Agent |
-| `tts.response.completed` | Tonny Agent | TalkyTonny clients |
+| `tts.response.completed` | Tonny Agent | HeyMa clients |
 | `worktree.created` | iMi | Jelmore, agents |
 
 ---
@@ -332,8 +332,8 @@ User Input ──► TalkyTonny ──► Bloodbank ──► Services ──►
 | Language | Components |
 |----------|------------|
 | **Rust** | iMi, Perth, Zellij-Driver, Degenerate |
-| **Python** | Bloodbank, TheBoard, Candystore, AgentForge, Jelmore, TalkyTonny (backend) |
-| **TypeScript** | Flume, Yi, Holocene, Candybar, TheBoardroom, TalkyTonny (frontend), Holyfields |
+| **Python** | Bloodbank, TheBoard, Candystore, AgentForge, Jelmore, HeyMa (backend) |
+| **TypeScript** | Flume, Yi, Holocene, Candybar, TheBoardroom, HeyMa (frontend), Holyfields |
 
 ### Databases
 | Database | Purpose | Used By |
@@ -394,7 +394,7 @@ Manager receives `TaskPayload` → Delegates to Contributors → Contributors re
 | Perth | `perth/trunk-main/` |
 | TheBoard | `theboard/trunk-main/` |
 | TheBoardroom | `theboardroom/trunk-main/` |
-| TalkyTonny | `TalkyTonny/trunk-main/` |
+| HeyMa | `HeyMa/trunk-main/` |
 | Degenerate | `degenerate/trunk-main/` |
 | BMAD Config | `bmad/config.yaml` |
 | Service Registry | `services/registry.yaml` |

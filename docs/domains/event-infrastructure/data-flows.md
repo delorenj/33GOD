@@ -321,7 +321,7 @@ flowchart LR
     style DebugTool fill:#9f6
 ```
 
-## 6. Voice Assistant Event Flow (TalkyTonny)
+## 6. Voice Assistant Event Flow (HeyMa)
 
 Shows the real-time voice transcription and event publishing pipeline.
 

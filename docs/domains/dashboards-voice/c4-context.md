@@ -6,7 +6,7 @@
 User-facing visualization and voice interaction platform providing mission control dashboards and real-time voice-to-text interfaces for the 33GOD agentic development ecosystem.
 
 ### Long Description
-The Dashboards & Voice domain serves as the primary human-system interface layer for the 33GOD platform. It combines **Holocene** (mission control dashboard) and **TalkyTonny** (voice interface) to provide comprehensive visibility and voice-driven interaction with the autonomous agent ecosystem. Holocene visualizes portfolio health, agent collaboration graphs, decision impacts, and real-time project status through a React-based dashboard that queries Bloodbank events and the service registry. TalkyTonny enables hands-free interaction through Whisper-powered speech recognition, Letta-driven intelligent response generation, and ElevenLabs text-to-speech output. Together, these systems democratize access to complex agent orchestration workflows, making them observable and controllable through both visual and conversational interfaces.
+The Dashboards & Voice domain serves as the primary human-system interface layer for the 33GOD platform. It combines **Holocene** (mission control dashboard) and **HeyMa** (voice interface) to provide comprehensive visibility and voice-driven interaction with the autonomous agent ecosystem. Holocene visualizes portfolio health, agent collaboration graphs, decision impacts, and real-time project status through a React-based dashboard that queries Bloodbank events and the service registry. HeyMa enables hands-free interaction through Whisper-powered speech recognition, Letta-driven intelligent response generation, and ElevenLabs text-to-speech output. Together, these systems democratize access to complex agent orchestration workflows, making them observable and controllable through both visual and conversational interfaces.
 
 ## Personas
 
@@ -45,7 +45,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 
 ### Voice User (Human User)
 - **Type**: Human User
-- **Description**: Users interacting with the system through voice commands via TalkyTonny (desktop app or browser extension)
+- **Description**: Users interacting with the system through voice commands via HeyMa (desktop app or browser extension)
 - **Goals**:
   - Query project status hands-free
   - Create tasks via voice commands
@@ -205,22 +205,22 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 
 ### Voice Transcription Journey
 
-**Persona**: Voice User → TalkyTonny (Desktop or Chrome Extension) → WhisperLiveKit
+**Persona**: Voice User → HeyMa (Desktop or Chrome Extension) → WhisperLiveKit
 
 1. **Launch Application**: User opens TonnyTray desktop app or activates Chrome extension
 2. **Microphone Access**: Grants microphone permissions to application
-3. **WebSocket Connection**: TalkyTonny connects to WhisperLiveKit at `ws://localhost:8888/asr`
+3. **WebSocket Connection**: HeyMa connects to WhisperLiveKit at `ws://localhost:8888/asr`
 4. **Session Handshake**: Receives session ID from server (UUID v4)
 5. **Recording Start**: User presses Push-to-Talk button or enables voice activation
 6. **Audio Streaming**: 16kHz PCM audio chunks sent to WhisperLiveKit via WebSocket
 7. **Real-Time Transcription**: Whisper model transcribes audio and sends partial results
 8. **Finalization**: User stops speaking, final transcription text generated
 9. **Event Publishing**: WhisperLiveKit publishes `transcription.voice.completed` event to Bloodbank
-10. **Display**: Transcription displayed in TalkyTonny UI
+10. **Display**: Transcription displayed in HeyMa UI
 11. **WAL Persistence**: Event persisted to write-ahead log (`raw_voice_ingest.jsonl`) for durability
 
 **Touchpoints**:
-- TalkyTonny desktop app (Tauri + Rust + React)
+- HeyMa desktop app (Tauri + Rust + React)
 - Chrome extension (JavaScript + WebSocket API)
 - WhisperLiveKit server (FastAPI + WebSocket + Faster-Whisper)
 - Bloodbank (RabbitMQ for event publishing)
@@ -230,7 +230,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 
 ### Conversational AI Journey
 
-**Persona**: Voice User → TalkyTonny → Tonny Agent (Letta) → ElevenLabs
+**Persona**: Voice User → HeyMa → Tonny Agent (Letta) → ElevenLabs
 
 1. **Transcription Event**: Tonny Agent consumes `transcription.voice.completed` event from Bloodbank
 2. **Event Validation**: HolyFields schema validates event payload
@@ -241,7 +241,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 7. **TTS Request**: Response text sent to ElevenLabs API for audio synthesis
 8. **Audio Streaming**: ElevenLabs returns audio stream (MP3 or WAV)
 9. **Event Publishing**: Tonny publishes `tts.response.completed` event to Bloodbank
-10. **Audio Playback**: TalkyTonny receives audio and plays through user's speakers
+10. **Audio Playback**: HeyMa receives audio and plays through user's speakers
 11. **Memory Update**: Letta stores conversation turn in core memory for future context
 
 **Touchpoints**:
@@ -256,7 +256,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 
 ### TTS Response Journey
 
-**Persona**: Tonny Agent → ElevenLabs API → TalkyTonny
+**Persona**: Tonny Agent → ElevenLabs API → HeyMa
 
 1. **Response Text**: Tonny Agent has generated response text (e.g., "Project holocene has 5 active tasks")
 2. **Voice Selection**: Tonny selects ElevenLabs voice ID (configured per user or default)
@@ -265,7 +265,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 5. **Audio Stream**: Receives audio data (MP3 or PCM)
 6. **Event Publishing**: Tonny publishes `tts.response.completed` event with audio metadata
 7. **Candybar Monitoring**: Event appears in Candybar for observability
-8. **TalkyTonny Subscription**: TalkyTonny (or client) consumes TTS event
+8. **HeyMa Subscription**: HeyMa (or client) consumes TTS event
 9. **Audio Playback**: Audio played through system speakers or headphones
 10. **Transcript Display**: Original text displayed alongside audio in UI
 
@@ -273,7 +273,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 - ElevenLabs API (`https://api.elevenlabs.io/v1/text-to-speech`)
 - Bloodbank (routing key: `tts.response.completed`)
 - Candybar desktop app (event monitoring)
-- TalkyTonny clients (desktop app, Chrome extension)
+- HeyMa clients (desktop app, Chrome extension)
 
 ---
 
@@ -289,7 +289,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 6. **Produces Events**: Sees published events (from service definition)
 7. **Health Check**: Clicks "Test Health Endpoint" button
 8. **Topology View**: Switches to topology graph showing service layers
-9. **Event Flow**: Traces event flow from WhisperLiveKit → Tonny → TalkyTonny
+9. **Event Flow**: Traces event flow from WhisperLiveKit → Tonny → HeyMa
 10. **Dependency Graph**: Views all services consuming transcription events
 
 **Touchpoints**:
@@ -352,7 +352,7 @@ The Dashboards & Voice domain serves as the primary human-system interface layer
 - **Type**: AI Model / Speech Recognition Engine
 - **Description**: OpenAI's Whisper models (tiny, base, small, medium, large-v3) optimized for fast CPU/GPU inference
 - **Integration Type**: Python SDK (faster-whisper library)
-- **Purpose**: Core transcription engine for TalkyTonny, converts voice audio to text with high accuracy
+- **Purpose**: Core transcription engine for HeyMa, converts voice audio to text with high accuracy
 
 ### ElevenLabs API
 - **Type**: API / Text-to-Speech Service
@@ -543,18 +543,18 @@ C4Context
 ### Container-Level Documentation
 - [Dashboards & Voice Container Documentation](./c4-container.md) - Deployment architecture, containerization, and runtime environments
 - [Holocene Container Architecture](../../../holocene/docs/container-architecture.md) - Holocene deployment structure
-- [TalkyTonny Container Architecture](../../../TalkyTonny/docs/container-architecture.md) - TalkyTonny deployment and services
+- [HeyMa Container Architecture](../../../HeyMa/docs/container-architecture.md) - HeyMa deployment and services
 
 ### Component-Level Documentation
 - [Dashboards & Voice Component Documentation](./c4-component.md) - Internal component structure and relationships
 - [Holocene Component Architecture](../../../holocene/docs/component-architecture.md) - Holocene frontend components
-- [TalkyTonny Component Architecture](../../../TalkyTonny/docs/component-architecture.md) - Voice pipeline components
+- [HeyMa Component Architecture](../../../HeyMa/docs/component-architecture.md) - Voice pipeline components
 
 ### Implementation Documentation
 - [Holocene README](../../../holocene/trunk-main/README.md) - Holocene setup and development guide
-- [TalkyTonny README](../../../TalkyTonny/trunk-main/CLAUDE.md) - TalkyTonny development guide
-- [WhisperLiveKit Bloodbank Integration](../../../TalkyTonny/trunk-main/docs/bloodbank-integration.md) - Event publishing implementation
-- [WhisperLiveKit Implementation Report](../../../TalkyTonny/trunk-main/docs/implementation-report.md) - Detailed implementation analysis
+- [HeyMa README](../../../HeyMa/trunk-main/CLAUDE.md) - HeyMa development guide
+- [WhisperLiveKit Bloodbank Integration](../../../HeyMa/trunk-main/docs/bloodbank-integration.md) - Event publishing implementation
+- [WhisperLiveKit Implementation Report](../../../HeyMa/trunk-main/docs/implementation-report.md) - Detailed implementation analysis
 
 ### Domain Overview
 - [Dashboards & Voice Domain Overview](../dashboards-voice.md) - High-level domain description
