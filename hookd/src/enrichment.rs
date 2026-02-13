@@ -144,7 +144,11 @@ fn extract_lines_changed(payload: &Value) -> Option<u32> {
 
 /// Run a git command and return trimmed stdout, or None on failure.
 fn git_command(work_dir: &str, args: &[&str]) -> Option<String> {
-    match Command::new("git").args(args).current_dir(work_dir).output() {
+    match Command::new("git")
+        .args(args)
+        .current_dir(work_dir)
+        .output()
+    {
         Ok(output) if output.status.success() => {
             Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
         }

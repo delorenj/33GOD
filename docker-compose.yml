@@ -1,0 +1,266 @@
+# 33GOD Full Stack Docker Compose
+# Location: ~/code/33GOD/docker-compose.yml
+#
+# This compose file runs the complete 33GOD infrastructure stack:
+# - RabbitMQ (theboard-rabbitmq): Event bus for Bloodbank
+# - Redis: Correlation tracking and caching
+# - Bloodbank: FastAPI event bus API (migrating from PM2)
+# - Holocene: Mission Control dashboard (Vite → nginx production build)
+#
+# Services communicate by name on the Docker network. No host-port gymnastics.
+
+version: "3.9"
+
+services:
+  # ============================================================================
+  # RabbitMQ - Event Bus
+  # ============================================================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: theboard-rabbitmq
+    hostname: theboard-rabbitmq
+    ports:
+      - "5673:5672"     # AMQP (host:container) - 5673 on host to avoid conflicts
+      - "15673:15672"   # Management UI (host:container)
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-REDACTED_CREDENTIAL}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./services/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=false"  # Internal service, no external routing
+
+  # ============================================================================
+  # Redis - Correlation Tracking & Caching
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: 33god-redis
+    hostname: 33god-redis
+    ports:
+      - "6380:6379"     # Redis port (6380 on host to avoid conflicts)
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=false"
+
+  # ============================================================================
+  # Bloodbank - Event Bus API
+  # ============================================================================
+  bloodbank:
+    build:
+      context: ./bloodbank
+      dockerfile: Dockerfile
+    container_name: 33god-bloodbank
+    hostname: bloodbank
+    ports:
+      - "8682:8682"     # FastAPI port
+    environment:
+      # RabbitMQ Connection
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-delorenj}:${RABBITMQ_PASS:-REDACTED_CREDENTIAL}@theboard-rabbitmq:5672/
+      BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      
+      # Redis Connection
+      REDIS_URL: redis://33god-redis:6379/0
+      
+      # Schema Validation
+      HOLYFIELDS_SCHEMA_DIR: /schemas
+      SCHEMA_VALIDATION_ENABLED: "true"
+      SCHEMA_VALIDATION_STRICT: "true"
+      
+      # Service Configuration
+      BLOODBANK_PORT: "8682"
+      BLOODBANK_HOST: "0.0.0.0"
+      
+      # Observability
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_ENDPOINT:-}
+      PROMETHEUS_PORT: "9090"
+    volumes:
+      - ./holyfields/schemas:/schemas:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8682/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bloodbank.rule=Host(`bloodbank.delo.sh`)"
+      - "traefik.http.routers.bloodbank.entrypoints=websecure"
+      - "traefik.http.routers.bloodbank.tls.certresolver=letsencrypt"
+      - "traefik.http.services.bloodbank.loadbalancer.server.port=8682"
+
+  # ============================================================================
+  # Holocene - Mission Control Dashboard
+  # ============================================================================
+  holocene:
+    build:
+      context: ./holocene
+      dockerfile: Dockerfile
+      args:
+        - VITE_BLOODBANK_API_URL=http://bloodbank:8682
+    container_name: 33god-holocene
+    hostname: holocene
+    ports:
+      - "11819:80"      # nginx serving built Vite app
+    environment:
+      # Runtime configuration (nginx serves static files, but API proxy needs this)
+      BLOODBANK_API_URL: http://bloodbank:8682
+      BLOODBANK_WS_URL: ws://bloodbank:8682
+      
+      # Plane API proxy configuration
+      PLANE_33GOD_API_KEY: ${PLANE_33GOD_API_KEY:-}
+      PROXY_PORT: "11820"
+    depends_on:
+      bloodbank:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.holocene.rule=Host(`holocene.delo.sh`)"
+      - "traefik.http.routers.holocene.entrypoints=websecure"
+      - "traefik.http.routers.holocene.tls.certresolver=letsencrypt"
+      - "traefik.http.services.holocene.loadbalancer.server.port=80"
+      # Optional: Google Auth middleware
+      - "traefik.http.routers.holocene.middlewares=google-auth@file"
+
+  # ============================================================================
+  # Infra Dispatcher - Bloodbank Consumer for Plane Webhook Dispatch
+  # ============================================================================
+  infra-dispatcher:
+    build:
+      context: ./bloodbank
+      dockerfile: Dockerfile
+    container_name: 33god-infra-dispatcher
+    hostname: infra-dispatcher
+    # Override default command to run dispatcher instead of API
+    command: ["python", "-m", "event_producers.infra_dispatcher"]
+    environment:
+      # RabbitMQ Connection (same as bloodbank)
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-delorenj}:${RABBITMQ_PASS:-REDACTED_CREDENTIAL}@theboard-rabbitmq:5672/
+      BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      
+      # OpenClaw Hook Configuration
+      OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
+      OPENCLAW_HOOK_URL: ${OPENCLAW_HOOK_URL:-http://host.docker.internal:18789/hooks/agent}
+      OPENCLAW_HOOK_DELIVER: ${OPENCLAW_HOOK_DELIVER:-false}
+      
+      # Dispatch Rules (Ready Gate)
+      INFRA_READY_STATES: ${INFRA_READY_STATES:-unstarted}
+      INFRA_READY_LABELS: ${INFRA_READY_LABELS:-ready,automation:go}
+      INFRA_COMPONENT_LABEL_PREFIX: ${INFRA_COMPONENT_LABEL_PREFIX:-comp:}
+      
+      # State Persistence
+      INFRA_DISPATCH_STATE_PATH: /state/infra-dispatch-state.json
+      
+      # Health Check Configuration
+      INFRA_RUN_CHECKS: ${INFRA_RUN_CHECKS:-true}
+      INFRA_CHECK_TIMEOUT_SECONDS: ${INFRA_CHECK_TIMEOUT_SECONDS:-900}
+      INFRA_COMPONENT_CHECKS_JSON: ${INFRA_COMPONENT_CHECKS_JSON:-}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      # State persistence (deduplication)
+      - ${INFRA_DISPATCH_STATE_HOST_PATH:-~/.config/openclaw/infra-dispatch-state.json}:/state/infra-dispatch-state.json
+      
+      # Component source mounts for health checks
+      # These must match paths in INFRA_COMPONENT_CHECKS_JSON
+      - ./bloodbank:/components/bloodbank:ro
+      - ./candystore:/components/candystore:ro
+      - ./candybar:/components/candybar:ro
+      - ./holyfields:/components/holyfields:ro
+      - ${PJANGLER_HOST_PATH:-~/code/pjangler}:/components/pjangler:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=infra-dispatcher"
+      - "33god.description=Plane webhook dispatcher to OpenClaw"
+
+  # ============================================================================
+  # Traefik - Edge Router (Optional - enable if running standalone)
+  # ============================================================================
+  # Uncomment this section if running Traefik as part of this stack.
+  # Otherwise, ensure Traefik is running elsewhere with access to this network.
+  #
+  # traefik:
+  #   image: traefik:v3.0
+  #   container_name: 33god-traefik
+  #   command:
+  #     - "--api.insecure=true"
+  #     - "--providers.docker=true"
+  #     - "--providers.docker.exposedbydefault=false"
+  #     - "--entrypoints.web.address=:80"
+  #     - "--entrypoints.websecure.address=:443"
+  #     - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+  #     - "--certificatesresolvers.letsencrypt.acme.email=admin@delo.sh"
+  #     - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #     - "8080:8080"  # Traefik dashboard
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - ./letsencrypt:/letsencrypt
+  #   networks:
+  #     - 33god-network
+
+# ==============================================================================
+# Volumes
+# ==============================================================================
+volumes:
+  rabbitmq-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+networks:
+  33god-network:
+    name: 33god-network
+    driver: bridge
+    # If connecting to external Traefik, ensure this network is shared:
+    # external: true

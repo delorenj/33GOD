@@ -41,11 +41,7 @@ impl Publisher {
 }
 
 /// Main publisher loop: connect, declare exchange, consume from channel.
-async fn publisher_loop(
-    mut rx: mpsc::Receiver<ToolMutationEvent>,
-    amqp_url: &str,
-    exchange: &str,
-) {
+async fn publisher_loop(mut rx: mpsc::Receiver<ToolMutationEvent>, amqp_url: &str, exchange: &str) {
     loop {
         match connect_and_publish(&mut rx, amqp_url, exchange).await {
             Ok(()) => {
@@ -101,10 +97,7 @@ async fn connect_and_publish(
 }
 
 /// Declare the topic exchange (idempotent).
-async fn declare_exchange(
-    channel: &Channel,
-    exchange: &str,
-) -> Result<(), lapin::Error> {
+async fn declare_exchange(channel: &Channel, exchange: &str) -> Result<(), lapin::Error> {
     channel
         .exchange_declare(
             exchange,

@@ -2,8 +2,8 @@
 
 > **Guaranteed Organizational Document** - Developer-facing reference for the Infrastructure domain
 >
-> **Last Updated**: 2026-02-01
-> **Components**: 4
+> **Last Updated**: 2026-02-12
+> **Components**: 5
 
 ---
 
@@ -26,12 +26,15 @@ graph TB
         BB[Bloodbank<br/>Event Bus]
         CS[Candystore<br/>Event Persistence]
         CB[Candybar<br/>Service Registry UI]
+        ID[Infra Dispatcher<br/>Plane → OpenClaw]
     end
 
     subgraph "External Systems"
         AGENTS[Agent Services]
         WM[Workspace Mgmt]
         DEV[Dev Tools]
+        PLANE[Plane]
+        OPENCLAW[OpenClaw]
     end
 
     HF -->|generates types| AGENTS
@@ -45,6 +48,10 @@ graph TB
     BB -->|persists| CS
     BB -->|streams to| CB
     CB -->|reads| REG[registry.yaml]
+    
+    PLANE -->|webhooks| BB
+    BB -->|webhook.plane.*| ID
+    ID -->|/hooks/agent| OPENCLAW
 ```
 
 ---
@@ -124,6 +131,53 @@ graph TB
 - WebSocket: Live event stream
 
 [📄 Component GOD Doc](../../candybar/GOD.md)
+
+---
+
+### Infra Dispatcher
+
+**Purpose**: Bloodbank consumer that dispatches Plane webhook events to OpenClaw Team Infra workers. Implements the "Ready Gate" pattern for ticket automation.
+
+**Type**: Event Consumer / Dispatcher
+**Status**: Production
+
+**Key Behavior:**
+1. Consumes `webhook.plane.#` events from Bloodbank
+2. Applies ready-gate: state=unstarted + labels=[ready, automation:go]
+3. Runs component health checks (M2 gate) before dispatch
+4. Forwards qualifying tickets to OpenClaw `/hooks/agent` endpoint
+
+**Default Component Health Checks:**
+| Component | Check Command |
+|-----------|---------------|
+| bloodbank | `pytest tests/test_infra_dispatcher.py` |
+| candystore | `pytest` |
+| candybar | `bun run lint && bun run build` |
+| holyfields | `mise run test:all` |
+| pjangler | `bun run build` |
+
+**Configuration:**
+- Environment: `~/.config/openclaw/infra-dispatch.env`
+- State File: `~/.config/openclaw/infra-dispatch-state.json` (deduplication)
+- Container: `infra-dispatcher` in compose.yml
+
+**Environment Variables:**
+- `OPENCLAW_HOOK_TOKEN` (required)
+- `OPENCLAW_HOOK_URL` (default: `http://host.docker.internal:18789/hooks/agent`)
+- `INFRA_READY_STATES` (default: `unstarted`)
+- `INFRA_READY_LABELS` (default: `ready,automation:go`)
+- `INFRA_COMPONENT_LABEL_PREFIX` (default: `comp:`)
+- `INFRA_RUN_CHECKS` (default: `true`)
+- `INFRA_CHECK_TIMEOUT_SECONDS` (default: `900`)
+
+**Deployment:**
+```bash
+# Containerized (recommended)
+docker-compose up -d infra-dispatcher
+
+# Legacy systemd (disable after migration)
+systemctl --user disable infra-dispatch.service
+```
 
 ---
 

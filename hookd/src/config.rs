@@ -36,8 +36,7 @@ impl Config {
             pid_file: env::var("HOOKD_PID_FILE")
                 .map(PathBuf::from)
                 .unwrap_or_else(|_| PathBuf::from(format!("{run_dir}/hookd.pid"))),
-            agent_id: env::var("CLAUDE_AGENT_ID")
-                .unwrap_or_else(|_| "unknown".to_string()),
+            agent_id: env::var("CLAUDE_AGENT_ID").unwrap_or_else(|_| "unknown".to_string()),
             git_cache_ttl_secs: env::var("HOOKD_GIT_CACHE_TTL")
                 .ok()
                 .and_then(|v| v.parse().ok())

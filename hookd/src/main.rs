@@ -49,8 +49,7 @@ async fn main() {
     if let Some(parent) = config.pid_file.parent() {
         fs::create_dir_all(parent).ok();
     }
-    fs::write(&config.pid_file, std::process::id().to_string())
-        .expect("failed to write PID file");
+    fs::write(&config.pid_file, std::process::id().to_string()).expect("failed to write PID file");
 
     // Start AMQP publisher
     let publisher = Publisher::spawn(&config);
