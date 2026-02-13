@@ -24,7 +24,7 @@ services:
       - "15673:15672"   # Management UI (host:container)
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-REDACTED_CREDENTIAL}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
@@ -77,7 +77,7 @@ services:
       - "8682:8682"     # FastAPI port
     environment:
       # RabbitMQ Connection
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-delorenj}:${RABBITMQ_PASS:-REDACTED_CREDENTIAL}@theboard-rabbitmq:5672/
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       
       # Redis Connection
@@ -173,7 +173,7 @@ services:
     command: ["python", "-m", "event_producers.infra_dispatcher"]
     environment:
       # RabbitMQ Connection (same as bloodbank)
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-delorenj}:${RABBITMQ_PASS:-REDACTED_CREDENTIAL}@theboard-rabbitmq:5672/
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       
       # OpenClaw Hook Configuration

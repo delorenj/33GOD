@@ -9,7 +9,7 @@
 #
 # Environment Variables:
 #   BLOODBANK_URL - Bloodbank HTTP API endpoint (default: http://localhost:8682)
-#   RABBIT_URL - Direct RabbitMQ connection (default: amqp://delorenj:REDACTED_CREDENTIAL@192.168.1.12:5672/)
+#   RABBIT_URL - Direct RabbitMQ connection (default: amqp://user:pass@localhost:5672/)
 #   BLOODBANK_ENABLED - Set to "false" to disable publishing (default: true)
 #   BLOODBANK_DEBUG - Set to "true" for verbose logging
 #

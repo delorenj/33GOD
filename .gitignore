@@ -68,3 +68,8 @@ HeyMa/record_samples.sh
 HeyMa/samples/
 HeyMa/scripts/
 HeyMa/training/
+
+# Environment files
+.env
+.env.local
+.env.*.local

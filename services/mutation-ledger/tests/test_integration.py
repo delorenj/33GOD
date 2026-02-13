@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import pika
 
 # ─── Test configuration ─────────────────────────────────────────────
-RABBIT_URL = os.environ.get("RABBIT_URL", "amqp://delorenj:REDACTED_CREDENTIAL@192.168.1.12:5672/")
+RABBIT_URL = os.environ.get("RABBIT_URL", "amqp://user:pass@localhost:5672/")
 EXCHANGE = "bloodbank.events.v1"
 ROUTING_KEY = "tool.mutation.write"
 TEST_COLLECTION = "mutations-test-integration"  # isolated test collection
