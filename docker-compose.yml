@@ -178,6 +178,12 @@ services:
       - ./candybar:/components/candybar:ro
       - ./holyfields:/components/holyfields:ro
       - ${PJANGLER_HOST_PATH:-~/code/pjangler}:/components/pjangler:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f infra_dispatcher || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
