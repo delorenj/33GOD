@@ -2,7 +2,7 @@
 
 > **Guaranteed Organizational Document** - System-wide developer reference
 >
-> **Last Updated**: 2026-02-01
+> **Last Updated**: 2026-02-18
 > **Architecture**: Event-Driven Microservices
 > **Domains**: 6
 
@@ -163,8 +163,8 @@ All event schemas are defined in **Holyfields** and validated by Bloodbank.
 | Yi | Agent Orchestration | Adapter | Planning | _(To be created)_ |
 | AgentForge | Agent Orchestration | Team Builder | Planning | _(To be created)_ |
 | Holocene | Agent Orchestration | Agent Store | Development | [holocene/GOD.md](holocene/GOD.md) |
-| iMi | Workspace Management | CLI | Production | [iMi/GOD.md](iMi/GOD.md) |
-| Jelmore | Workspace Management | API/CLI | Development | [jelmore/GOD.md](jelmore/GOD.md) |
+| iMi | Workspace Management | CLI | **Retired** | [iMi/GOD.md](iMi/GOD.md) |
+| Jelmore | Workspace Management | API/CLI | **Retired** | [jelmore/GOD.md](jelmore/GOD.md) |
 | Zellij-Driver | Workspace Management | CLI | Development | _(To be created)_ |
 | Perth | Workspace Management | Distribution | Development | _(To be created)_ |
 | TheBoard | Meeting & Collaboration | Orchestrator | Planning | _(To be created)_ |

@@ -2,7 +2,7 @@
 
 > **Guaranteed Organizational Document** - Developer-facing reference for the Workspace Management domain
 >
-> **Last Updated**: 2026-02-01
+> **Last Updated**: 2026-02-18
 > **Components**: 4
 
 ---
@@ -55,7 +55,7 @@ graph TB
 **Purpose**: Decentralized git worktree manager with agent claiming/releasing semantics and project registry
 
 **Type**: CLI / Git Manager
-**Status**: Production
+**Status**: **Retired** (as of 2026-02-13)
 
 **Key Events:**
 - **Emits**: `imi.worktree.created`, `imi.worktree.claimed`, `imi.worktree.released`
@@ -74,7 +74,7 @@ graph TB
 **Purpose**: Programmatic session manager for AI coding assistants (Claude Code, Codex, Gemini, etc.)
 
 **Type**: API / Session Manager
-**Status**: Development
+**Status**: **Retired** (as of 2026-02-13)
 
 **Key Events:**
 - **Emits**: `jelmore.session.started`, `jelmore.session.completed`, `jelmore.session.paused`

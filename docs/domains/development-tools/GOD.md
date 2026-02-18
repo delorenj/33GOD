@@ -2,7 +2,7 @@
 
 > **Guaranteed Organizational Document** - Developer-facing reference for the Development Tools domain
 >
-> **Last Updated**: 2026-02-01
+> **Last Updated**: 2026-02-18
 > **Components**: 3
 
 ---
@@ -55,7 +55,7 @@ graph TB
 **Purpose**: Programmatic session manager for AI coding assistants (Claude Code, Codex, Gemini, etc.)
 
 **Type**: API / Session Manager
-**Status**: Active
+**Status**: **Retired** (as of 2026-02-13)
 
 **Key Events:**
 - **Emits**: `jelmore.session.started`, `jelmore.session.completed`, `jelmore.session.paused`
