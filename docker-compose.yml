@@ -218,7 +218,7 @@ services:
       - ./holyfields:/components/holyfields:ro
       - ${PJANGLER_HOST_PATH:-~/code/pjangler}:/components/pjangler:ro
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f infra_dispatcher || exit 1"]
+      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
