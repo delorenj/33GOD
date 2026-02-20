@@ -48,8 +48,6 @@ graph TB
     end
 
     subgraph "Workspace Management Domain"
-        IM[iMi<br/>Worktree Manager]
-        JM[Jelmore<br/>Session Manager]
         ZD[Zellij-Driver<br/>Terminal Context]
         PT[Perth<br/>Zellij Distribution]
     end
@@ -81,8 +79,6 @@ graph TB
     HC -->|stores agents| BB
 
     %% Workspace connections
-    IM -->|emits worktree events| BB
-    JM -->|emits session events| BB
     ZD -->|terminal context| BB
     PT -->|multiplexer| ZD
 
@@ -107,7 +103,7 @@ graph TB
 |--------|---------|------------|---------|
 | **Infrastructure** | Event backbone, schemas, persistence | Bloodbank, Holyfields, Candystore, Candybar | [Infrastructure GOD](domains/infrastructure/GOD.md) |
 | **Agent Orchestration** | Agent lifecycle, teams, protocols | Flume, Yi, AgentForge, Holocene | [Agent Orchestration GOD](domains/agent-orchestration/GOD.md) |
-| **Workspace Management** | Git worktrees, sessions, terminals | iMi, Jelmore, Zellij-Driver, Perth | [Workspace Management GOD](domains/workspace-management/GOD.md) |
+| **Workspace Management** | Git worktrees, sessions, terminals | ~~iMi (Retired)~~, ~~Jelmore (Retired)~~, Zellij-Driver, Perth | [Workspace Management GOD](domains/workspace-management/GOD.md) |
 | **Meeting & Collaboration** | Brainstorming, convergence, visualization | TheBoard, TheBoard Room | [Meeting & Collaboration GOD](domains/meeting-collaboration/GOD.md) |
 | **Dashboards & Voice** | UI, voice interface, monitoring | Holocene, HeyMa, Candybar | [Dashboards & Voice GOD](domains/dashboards-voice/GOD.md) |
 | **Development Tools** | Doc sync, methodology, coding sessions | Jelmore, Degenerate, BMAD | [Development Tools GOD](domains/development-tools/GOD.md) |
