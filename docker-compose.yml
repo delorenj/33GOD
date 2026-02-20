@@ -90,6 +90,45 @@ services:
       - "traefik.http.services.bloodbank.loadbalancer.server.port=8682"
 
   # ============================================================================
+  # Bloodbank WebSocket Relay - Real-time Event Streaming
+  # ============================================================================
+  bloodbank-ws-relay:
+    build:
+      context: ./bloodbank/websocket-relay
+      dockerfile: Dockerfile
+    container_name: 33god-bloodbank-ws-relay
+    hostname: bloodbank-ws-relay
+    ports:
+      - "8683:8683"     # WebSocket port
+    environment:
+      # RabbitMQ Connection
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      ROUTING_KEY: ${RELAY_ROUTING_KEY:-agent.#}
+      
+      # WebSocket Server
+      WS_HOST: "0.0.0.0"
+      WS_PORT: "8683"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 8683)); s.close()' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - 33god-network
+      - theboard-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bloodbank-ws.rule=Host(`bloodbank-ws.delo.sh`)"
+      - "traefik.http.routers.bloodbank-ws.entrypoints=websecure"
+      - "traefik.http.routers.bloodbank-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.services.bloodbank-ws.loadbalancer.server.port=8683"
+      - "33god.service=bloodbank-ws-relay"
+      - "33god.description=WebSocket relay for real-time Bloodbank events"
+
+  # ============================================================================
   # Holocene - Mission Control Dashboard
   # ============================================================================
   holocene:
@@ -105,7 +144,7 @@ services:
     environment:
       # Runtime configuration (nginx serves static files, but API proxy needs this)
       BLOODBANK_API_URL: http://bloodbank:8682
-      BLOODBANK_WS_URL: ws://bloodbank:8682
+      BLOODBANK_WS_URL: ws://bloodbank-ws-relay:8683
       
       # Plane API proxy configuration
       PLANE_33GOD_API_KEY: ${PLANE_33GOD_API_KEY:-}
