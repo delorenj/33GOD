@@ -1,44 +1,32 @@
-[env]
-_.file = ".env"
-
-[tools]
-rust = "1.85"
-
-[tasks.install]
-description = "Install hookd binary"
-run = "cargo install --path ."
+# Hookd — mise.toml
+# Agents: run `mise build` here. Everything else is handled.
 
 [tasks.build]
-description = "Build hookd in release mode"
-run = "cargo build --release"
-
-[tasks.start]
-description = "Start hookd daemon"
-run = "cargo run --release"
-
-[tasks.dev]
-description = "Run hookd in dev mode"
-run = "cargo run"
+description = "Build hookd: bun install + typecheck"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+echo "▸ hookd: installing deps..."
+bun install --silent
+echo "▸ hookd: lint + build..."
+bun run lint && bun run build
+echo "✅ hookd: built"
+"""
 
 [tasks.test]
 description = "Run hookd tests"
-run = "cargo test"
+run = "bun run test"
 
 [tasks.lint]
-description = "Run clippy checks"
-run = "cargo clippy -- -D warnings"
+description = "Lint hookd"
+run = "bun run lint"
 
-[tasks.fmt]
-description = "Format rust sources"
-run = "cargo fmt --all"
+[tasks.dev]
+description = "Run hookd in dev mode"
+run = "bun run dev"
+raw = true
 
-[tasks.clean]
-description = "Clean build artifacts"
-run = "cargo clean"
-
-[tasks."context:bootstrap"]
-description = "Bootstrap hookd dev context"
-run = [
-  "echo 'hookd context bootstrap'",
-  "cargo fetch"
-]
+[tasks.start]
+description = "Start hookd daemon"
+run = "bun run start"
+raw = true

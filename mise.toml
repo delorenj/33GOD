@@ -1,8 +1,184 @@
-# 33GOD Mise Configuration
-# Documentation and project maintenance tasks
+# 33GOD Meta-Repo — mise.toml
+# ═══════════════════════════════════════════════════════════
+# CASCADING TASK SYSTEM
+#
+# Run from root → builds/deploys everything.
+# Run from component dir → builds/deploys just that component.
+#
+# Agents: just run `mise build` or `mise deploy`. The logic is
+# encapsulated here. You don't need to remember docker compose,
+# pnpm, uv, or anything else.
+# ═══════════════════════════════════════════════════════════
 
 [tools]
 rust = "1.85"
+
+# ─── Cascading Build ─────────────────────────────────────────
+# Root `mise build` fans out to every component with a mise.toml.
+# Each component's `build` task knows its own toolchain + Docker.
+
+[tasks.build]
+description = "Build ALL components (cascading)"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="{{ config_root }}"
+
+COMPONENTS=(bloodbank holocene hookd)
+
+echo "═══ 33GOD: Building all components ═══"
+FAILED=()
+for comp in "${COMPONENTS[@]}"; do
+  if [ -f "$ROOT/$comp/mise.toml" ]; then
+    echo ""
+    echo "─── Building: $comp ───"
+    if ! mise -C "$ROOT/$comp" run build; then
+      FAILED+=("$comp")
+      echo "❌ $comp: build FAILED"
+    fi
+  fi
+done
+
+echo ""
+if [ ${#FAILED[@]} -gt 0 ]; then
+  echo "═══ BUILD INCOMPLETE: ${FAILED[*]} failed ═══"
+  exit 1
+else
+  echo "═══ 33GOD: All components built ✅ ═══"
+fi
+"""
+
+[tasks."build:infra"]
+description = "Build infrastructure stack only (Bloodbank + relay)"
+run = "mise -C {{ config_root }}/bloodbank run build && mise -C {{ config_root }}/bloodbank run build:relay"
+
+[tasks."build:frontend"]
+description = "Build frontend stack only (Holocene)"
+run = "mise -C {{ config_root }}/holocene run build"
+
+# ─── Cascading Deploy ────────────────────────────────────────
+# Root `mise deploy` builds then deploys all Docker services.
+
+[tasks.deploy]
+description = "Deploy ALL components (build + restart containers)"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="{{ config_root }}"
+
+COMPONENTS=(bloodbank holocene)
+
+echo "═══ 33GOD: Deploying all components ═══"
+for comp in "${COMPONENTS[@]}"; do
+  if [ -f "$ROOT/$comp/mise.toml" ]; then
+    echo ""
+    echo "─── Deploying: $comp ───"
+    mise -C "$ROOT/$comp" run deploy
+  fi
+done
+
+echo ""
+echo "═══ 33GOD: All components deployed ✅ ═══"
+"""
+
+[tasks."deploy:infra"]
+description = "Deploy infrastructure only (Bloodbank + relay)"
+run = "mise -C {{ config_root }}/bloodbank run deploy"
+
+[tasks."deploy:frontend"]
+description = "Deploy frontend only (Holocene)"
+run = "mise -C {{ config_root }}/holocene run deploy"
+
+# ─── Infrastructure Services ─────────────────────────────────
+
+[tasks.up]
+description = "Start ALL Docker services (no rebuild)"
+run = "docker compose up -d"
+
+[tasks.down]
+description = "Stop all Docker services"
+run = "docker compose down"
+
+[tasks.ps]
+description = "Show running service status"
+run = "docker compose ps"
+
+[tasks.logs]
+description = "Tail all service logs"
+run = "docker compose logs -f --tail=50"
+raw = true
+
+# ─── Health & Status ─────────────────────────────────────────
+
+[tasks.health]
+description = "Health check all services"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "═══ 33GOD Service Health ═══"
+echo ""
+
+echo "▸ Docker containers:"
+docker compose ps --format 'table {{.Name}}\t{{.Status}}\t{{.Ports}}' 2>/dev/null || echo "  (compose not running)"
+echo ""
+
+echo "▸ Bloodbank API:"
+curl -sS http://127.0.0.1:8682/healthz 2>/dev/null || echo "  DOWN"
+echo ""
+
+echo "▸ RabbitMQ queues:"
+docker exec theboard-rabbitmq rabbitmqctl list_queues name consumers messages -q 2>/dev/null || echo "  (unreachable)"
+echo ""
+
+echo "▸ Holocene:"
+curl -sS -o /dev/null -w "HTTP %{http_code}" http://127.0.0.1:11819/health 2>/dev/null || echo "  DOWN"
+echo ""
+"""
+
+[tasks.status]
+description = "Quick status: containers + git state"
+run = """
+#!/usr/bin/env bash
+echo "═══ 33GOD Status ═══"
+echo ""
+echo "▸ Containers:"
+docker compose ps --format 'table {{.Name}}\t{{.Status}}' 2>/dev/null || true
+echo ""
+echo "▸ Git:"
+git status --short | head -20
+echo ""
+echo "▸ Submodules:"
+git submodule status | head -20
+"""
+
+# ─── Testing ─────────────────────────────────────────────────
+
+[tasks.test]
+description = "Run tests across all components"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="{{ config_root }}"
+COMPONENTS=(bloodbank hookd)
+FAILED=()
+for comp in "${COMPONENTS[@]}"; do
+  if [ -f "$ROOT/$comp/mise.toml" ]; then
+    echo "─── Testing: $comp ───"
+    if ! mise -C "$ROOT/$comp" run test 2>/dev/null; then
+      FAILED+=("$comp")
+    fi
+  fi
+done
+if [ ${#FAILED[@]} -gt 0 ]; then
+  echo "❌ Tests failed: ${FAILED[*]}"
+  exit 1
+else
+  echo "✅ All tests passed"
+fi
+"""
+
+# ─── Degenerate (GOD doc tooling) ────────────────────────────
 
 [tasks.deg]
 description = "Run degenerate CLI (build if needed)"
@@ -17,41 +193,86 @@ run = "cargo build --manifest-path degenerate/Cargo.toml --release"
 description = "Install degenerate to cargo bin"
 run = "cargo install --path degenerate"
 
-# Documentation sync tasks
-[tasks."docs:sync"]
-description = "Sync all domain documentation with current code state"
-run = "cargo run --manifest-path degenerate/Cargo.toml -- sync"
+# ─── Documentation ───────────────────────────────────────────
 
-[tasks."docs:sync:dry"]
-description = "Check sync status without making changes"
-run = "cargo run --manifest-path degenerate/Cargo.toml -- sync --dry-run --verbose"
+[tasks."docs:sync"]
+description = "Sync all domain docs with current code"
+run = "cargo run --manifest-path degenerate/Cargo.toml -- sync"
 
 [tasks."docs:drift"]
 description = "Check for documentation drift"
 run = "cargo run --manifest-path degenerate/Cargo.toml -- drift --show-commits"
 
-[tasks."docs:domains"]
-description = "List all domains and their services"
-run = "cargo run --manifest-path degenerate/Cargo.toml -- domains --verbose"
-
 [tasks."docs:report"]
-description = "Generate drift report to docs/sync/drift-report.md"
+description = "Generate drift report"
 run = "cargo run --manifest-path degenerate/Cargo.toml -- report"
 
-[tasks."docs:service"]
-description = "Show status of a specific service"
-run = "cargo run --manifest-path degenerate/Cargo.toml -- service"
+# ─── Infrastructure status ───────────────────────────────────
 
-# Quick aliases
-[tasks.drift]
-description = "Quick drift check"
-run = "mise run docs:drift"
+[tasks."infra:status"]
+description = "Check RabbitMQ exchange/queue health"
+run = "./mise-tasks/infra_status"
+raw = true
 
-[tasks.sync]
-description = "Quick sync"
-run = "mise run docs:sync"
+# ─── Manifest-driven component dispatch ──────────────────────
 
-# Task file maintenance
+[tasks."component:list"]
+description = "List components from manifest"
+run = "./.mise/tasks/console.py list"
+
+[tasks."component:run"]
+description = "Run task in component: mise run component:run -- <comp> <task>"
+run = "./.mise/tasks/console.py run"
+raw = true
+
+# ─── Delegated component shortcuts ───────────────────────────
+# Pattern: <component>:<task> delegates via console.py
+
+[tasks."bloodbank:build"]
+description = "Build Bloodbank"
+run = "mise -C {{ config_root }}/bloodbank run build"
+
+[tasks."bloodbank:deploy"]
+description = "Deploy Bloodbank"
+run = "mise -C {{ config_root }}/bloodbank run deploy"
+
+[tasks."bloodbank:health"]
+description = "Bloodbank health check"
+run = "mise -C {{ config_root }}/bloodbank run health"
+
+[tasks."holocene:build"]
+description = "Build Holocene"
+run = "mise -C {{ config_root }}/holocene run build"
+
+[tasks."holocene:deploy"]
+description = "Deploy Holocene"
+run = "mise -C {{ config_root }}/holocene run deploy"
+
+[tasks."holocene:dev"]
+description = "Holocene Vite dev server"
+run = "mise -C {{ config_root }}/holocene run dev"
+raw = true
+
+[tasks."hookd:build"]
+description = "Build hookd"
+run = "mise -C {{ config_root }}/hookd run build"
+
+[tasks."hookd:test"]
+description = "Test hookd"
+run = "mise -C {{ config_root }}/hookd run test"
+
+[tasks."hookd:dev"]
+description = "Run hookd in dev mode"
+run = "mise -C {{ config_root }}/hookd run dev"
+raw = true
+
+[tasks."hookd:start"]
+description = "Start hookd daemon"
+run = "mise -C {{ config_root }}/hookd run start"
+raw = true
+
+# ─── Task file maintenance ───────────────────────────────────
+
 [tasks."task:new"]
 description = "Archive TASK(S).md then open TASKS.md"
 run = "./mise-tasks/task_new"
@@ -60,40 +281,4 @@ raw = true
 [tasks."tasks:new"]
 description = "Alias for task:new"
 run = "mise run task:new"
-raw = true
-
-[tasks."infra:status"]
-description = "Check RabbitMQ exchange/queue health for 33GOD event backbone"
-run = "./mise-tasks/infra_status"
-raw = true
-
-# Manifest-driven component orchestration
-[tasks."component:list"]
-description = "List components from components.toml manifest"
-run = "./.mise/tasks/console.py list"
-
-[tasks."component:run"]
-description = "Run a task in a specific component: mise run component:run -- <component> <task> [-- args]"
-run = "./.mise/tasks/console.py run"
-raw = true
-
-# First delegated component wrappers (hookd)
-[tasks."hookd:build"]
-description = "Build hookd (delegated to hookd/mise.toml)"
-run = "./.mise/tasks/console.py delegate"
-raw = true
-
-[tasks."hookd:test"]
-description = "Test hookd (delegated to hookd/mise.toml)"
-run = "./.mise/tasks/console.py delegate"
-raw = true
-
-[tasks."hookd:dev"]
-description = "Run hookd in dev mode (delegated to hookd/mise.toml)"
-run = "./.mise/tasks/console.py delegate"
-raw = true
-
-[tasks."hookd:start"]
-description = "Start hookd daemon (delegated to hookd/mise.toml)"
-run = "./.mise/tasks/console.py delegate"
 raw = true
