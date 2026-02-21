@@ -65,6 +65,32 @@ services:
       - "33god.description=Platform database for asset registry and shared tables"
 
   # ============================================================================
+  # Postgres NOTIFY Bridge - Forwards DB events to Bloodbank
+  # ============================================================================
+  postgres-notify-bridge:
+    build:
+      context: ./services/postgres-notify-bridge
+      dockerfile: Dockerfile
+    container_name: 33god-postgres-notify-bridge
+    hostname: postgres-notify-bridge
+    environment:
+      POSTGRES_DSN: postgresql://${POSTGRES_USER:-delorenj}:${POSTGRES_PASSWORD}@33god-postgres:5432/33god
+      BLOODBANK_API_URL: http://bloodbank:8682
+      NOTIFY_CHANNEL: bloodbank_events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      bloodbank:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=postgres-notify-bridge"
+      - "33god.description=Forwards Postgres NOTIFY events to Bloodbank"
+
+  # ============================================================================
   # Bloodbank - Event Bus API
   # ============================================================================
   bloodbank:
