@@ -185,6 +185,37 @@ services:
       - "33god.description=WebSocket relay for real-time Bloodbank events"
 
   # ============================================================================
+  # Heartbeat Tick Publisher - Master clock for event-driven heartbeats
+  # ============================================================================
+  heartbeat-tick:
+    build:
+      context: ./bloodbank
+      dockerfile: Dockerfile
+    container_name: 33god-heartbeat-tick
+    hostname: heartbeat-tick
+    command: ["python", "-m", "heartbeat_tick.publisher"]
+    environment:
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      TICK_INTERVAL_S: "60"
+      LOG_LEVEL: INFO
+    healthcheck:
+      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - 33god-network
+      - theboard-network
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=heartbeat-tick"
+      - "33god.description=Master 60s tick publisher for event-driven heartbeat system"
+
+  # ============================================================================
   # Candystore - Event Store Manager ("The Historian")
   # Consumes ALL Bloodbank events, persists to PostgreSQL, serves REST API
   # ============================================================================
