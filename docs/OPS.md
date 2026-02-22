@@ -2,7 +2,7 @@
 
 > **Guaranteed Operational Document** — Read this before building, deploying, or touching infrastructure.
 >
-> **Last Updated**: 2026-02-21
+> **Last Updated**: 2026-02-22
 
 ---
 
@@ -214,6 +214,33 @@ docker compose up -d <service>
 mise ps       # Shows all services + status
 mise health   # Shows health + queue state
 ```
+
+### "Holocene dashboard shows no events"
+Three things to check:
+1. **Is the WS relay running?** `docker ps | grep ws-relay`
+2. **Is the agent status emitter running?** `crontab -l | grep emit-agent-status`
+3. **Is the relay bound to `#`?** `docker logs 33god-bloodbank-ws-relay 2>&1 | grep Bound`
+   - Must say `routing key '#'`, NOT `'agent.#'`
+
+### "RabbitMQ authentication failed after password rotation"
+Password rotations must be atomic:
+```bash
+# 1. Update the .env file
+vim ~/code/33GOD/.env  # Change RABBITMQ_PASS
+
+# 2. Change the password in RabbitMQ
+docker exec theboard-rabbitmq rabbitmqctl change_password delorenj "<new_password>"
+
+# 3. Restart ALL dependent services
+docker compose restart bloodbank bloodbank-ws-relay
+```
+Never rotate the password without steps 1-3 in sequence.
+
+### "API returns 200 but events don't appear in dashboard"
+This is the most dangerous failure mode — silent data loss. Check in order:
+1. Relay messages must include `"type": "event"` — check `websocket-relay/relay.py`
+2. Publisher must use `mandatory=True` + `on_return_raises=True` — check `event_producers/rabbit.py`
+3. Routing key must match queue bindings — check `docker exec theboard-rabbitmq rabbitmqctl list_bindings`
 
 ---
 

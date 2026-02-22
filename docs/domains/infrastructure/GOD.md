@@ -2,7 +2,7 @@
 
 > **Guaranteed Organizational Document** - Developer-facing reference for the Infrastructure domain
 >
-> **Last Updated**: 2026-02-12
+> **Last Updated**: 2026-02-22
 > **Components**: 5
 
 ---
@@ -60,19 +60,37 @@ graph TB
 
 ### Bloodbank
 
-**Purpose**: Central RabbitMQ-based event bus with schema validation and correlation tracking
+**Purpose**: Central RabbitMQ-based event bus — FastAPI publisher, WebSocket relay, heartbeat system
 
-**Type**: Event Bus / Message Broker
-**Status**: Production
+**Type**: Event Bus / Message Broker / Real-time Relay
+**Status**: Production (live E2E verified 2026-02-22)
+
+**Running Services:**
+- `33god-bloodbank` — FastAPI publisher at `:8682`
+- `33god-bloodbank-ws-relay` — WebSocket broadcaster at `:8683`
+- `theboard-rabbitmq` — RabbitMQ broker at `:5673` (AMQP) / `:15673` (mgmt)
 
 **Key Events:**
-- **Emits**: `bloodbank.health.status`, `bloodbank.message.dlq`
-- **Consumes**: All system events for routing
+- **Emits**: `agent.{name}.status`, `system.heartbeat`, `asset.created`
+- **Consumes**: All events via `#` wildcard routing
+
+**Event Flow (proven):**
+```
+POST /events/custom → RabbitMQ → WS Relay → Holocene dashboard
+```
+
+**Critical Implementation Notes:**
+- Publisher uses `mandatory=True` + `on_return_raises=True` (fail fast on unroutable)
+- WS relay messages MUST include `"type": "event"` wrapper or frontend drops them
+- Relay default routing key is `#` (all events, set in docker-compose.yml)
+- `emit-agent-status.py` runs every minute via cron (12 events/cycle)
+- Credentials in `~/code/33GOD/.env` — password rotations must restart all containers
 
 **Interfaces:**
-- AMQP: `amqp://localhost:5672`
-- Management UI: `http://localhost:15672`
-- Health API: `/health` (FastAPI)
+- API: `http://localhost:8682/healthz`, `/events/custom`
+- WebSocket: `ws://localhost:8683` (relay direct) or via Holocene nginx `/ws`
+- AMQP: `amqp://localhost:5673` (host-mapped)
+- Management UI: `http://localhost:15673`
 
 [📄 Component GOD Doc](../../bloodbank/GOD.md)
 

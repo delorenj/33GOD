@@ -2,7 +2,7 @@
 
 > **Guaranteed Organizational Document** - System-wide developer reference
 >
-> **Last Updated**: 2026-02-18
+> **Last Updated**: 2026-02-22
 > **Architecture**: Event-Driven Microservices
 > **Domains**: 6
 
@@ -191,9 +191,12 @@ graph LR
 ## Infrastructure Requirements
 
 ### Bloodbank (RabbitMQ)
-- **Connection**: `amqp://localhost:5672`
-- **Exchange**: `bloodbank.events` (topic)
-- **Management UI**: `http://localhost:15672`
+- **Connection**: `amqp://localhost:5673` (host-mapped from container 5672)
+- **Exchange**: `bloodbank.events.v1` (topic, durable)
+- **API**: `http://localhost:8682` (FastAPI publisher)
+- **WS Relay**: `ws://localhost:8683` (real-time broadcast)
+- **Management UI**: `http://localhost:15673`
+- **Credentials**: `~/code/33GOD/.env` (`RABBITMQ_USER` / `RABBITMQ_PASS`)
 
 ### Services Registry
 - **Location**: `/home/delorenj/code/33GOD/services/registry.yaml`
