@@ -160,7 +160,7 @@ services:
       # RabbitMQ Connection
       RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      ROUTING_KEY: ${RELAY_ROUTING_KEY:-agent.#}
+      ROUTING_KEY: ${RELAY_ROUTING_KEY:-#}
       
       # WebSocket Server
       WS_HOST: "0.0.0.0"
