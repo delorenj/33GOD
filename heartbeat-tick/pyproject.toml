@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "heartbeat-tick"
+version = "0.1.0"
+description = "33GOD Master Heartbeat Tick Publisher for Bloodbank"
+requires-python = ">=3.11"
+dependencies = [
+    "faststream[rabbit]>=0.5.0",
+    "aio-pika>=9.0",
+]
+
+[project.scripts]
+heartbeat-tick = "publisher:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.uv]
+package = false

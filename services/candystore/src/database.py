@@ -272,16 +272,22 @@ class EventStore:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(sql, *params)
 
+        def _parse_jsonb(val: Any) -> Any:
+            """asyncpg returns JSONB as str; parse back to dict."""
+            if isinstance(val, str):
+                return _json.loads(val)
+            return val if val is not None else {}
+
         return [
             EventEnvelope(
                 event_id=row["event_id"],
                 event_type=row["event_type"],
                 timestamp=row["timestamp"],
                 version=row["version"],
-                source=row["source"],
+                source=_parse_jsonb(row["source"]),
                 correlation_ids=list(row["correlation_ids"]),
-                agent_context=row["agent_context"],
-                payload=row["payload"],
+                agent_context=_parse_jsonb(row["agent_context"]) if row["agent_context"] else None,
+                payload=_parse_jsonb(row["payload"]),
             )
             for row in rows
         ]

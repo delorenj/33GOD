@@ -1,0 +1,35 @@
+{
+  "$schema": "heartbeat.v1",
+  "agent": "cack",
+  "checks": {
+    "sub_health": {
+      "cadenceMs": 900000,
+      "window": {"start": "00:00", "end": "23:59", "tz": "America/New_York"},
+      "lastRun": 0,
+      "priority": 1,
+      "handler": "sub_health",
+      "enabled": true
+    },
+    "quarterly_compaction": {
+      "cadenceMs": 21600000,
+      "triggerOnQuarters": ["Q1", "Q2", "Q3", "Q4"],
+      "lastRun": 0,
+      "priority": 2,
+      "handler": "quarterly_compaction",
+      "enabled": true
+    },
+    "daily_memory_review": {
+      "cadenceMs": 86400000,
+      "window": {"start": "06:00", "end": "09:00", "tz": "America/New_York"},
+      "lastRun": 0,
+      "priority": 3,
+      "handler": "memory_review",
+      "enabled": true,
+      "meta": {
+        "review_type": "daily_journal",
+        "target_directory": "memory/"
+      }
+    }
+  },
+  "paused": {}
+}

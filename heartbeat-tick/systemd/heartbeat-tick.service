@@ -1,0 +1,52 @@
+[Unit]
+Description=33GOD Master Heartbeat Tick Publisher for Bloodbank
+After=network.target rabbitmq.service
+Wants=rabbitmq.service
+
+[Service]
+Type=simple
+User=delorenj
+Group=delorenj
+WorkingDirectory=/home/delorenj/code/33GOD/heartbeat-tick
+
+# Environment file (create this with your actual values)
+EnvironmentFile=-/etc/heartbeat-tick.env
+
+# Default environment (override in /etc/heartbeat-tick.env)
+Environment="RABBITMQ_URL=amqp://delorenj@localhost:5673/"
+Environment="BLOODBANK_EXCHANGE=bloodbank.events.v1"
+Environment="TICK_INTERVAL_S=60"
+Environment="LOG_LEVEL=INFO"
+
+# Python path for the service
+Environment="PYTHONPATH=/home/delorenj/code/33GOD/bloodbank"
+
+# Run the publisher
+ExecStart=/home/delorenj/.local/bin/uv run --python 3.11 publisher.py
+
+# Restart policy
+Restart=always
+RestartSec=5
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Graceful shutdown
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/tmp
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=heartbeat-tick
+
+[Install]
+WantedBy=multi-user.target
