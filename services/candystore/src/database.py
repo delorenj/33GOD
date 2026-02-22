@@ -53,7 +53,7 @@ class EventStore:
 
         async with self.pool.acquire() as conn:
             # Enable UUID extension
-            await conn.execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
+            await conn.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
 
             # Events table
             await conn.execute("""
@@ -61,17 +61,28 @@ class EventStore:
                     event_id UUID PRIMARY KEY,
                     event_type VARCHAR(255) NOT NULL,
                     timestamp TIMESTAMPTZ NOT NULL,
-                    version VARCHAR(50) NOT NULL,
-                    source JSONB NOT NULL,
+                    version VARCHAR(50) NOT NULL DEFAULT '1.0.0',
+                    source JSONB NOT NULL DEFAULT '{}'::jsonb,
                     correlation_ids UUID[] DEFAULT '{}',
                     agent_context JSONB,
                     payload JSONB NOT NULL,
-                    persisted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                    INDEX idx_event_type (event_type),
-                    INDEX idx_timestamp (timestamp DESC),
-                    INDEX idx_correlation_ids USING GIN (correlation_ids)
+                    persisted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
             """)
+
+            # Indexes for events table (PostgreSQL: must be separate statements)
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_events_event_type ON events (event_type);"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events (timestamp DESC);"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_events_correlation_ids ON events USING GIN (correlation_ids);"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_events_persisted_at ON events (persisted_at DESC);"
+            )
 
             # Workflow state projections table
             await conn.execute("""
@@ -84,12 +95,20 @@ class EventStore:
                     event_count INT NOT NULL DEFAULT 0,
                     last_event_type VARCHAR(255),
                     agent_sessions TEXT[] DEFAULT '{}',
-                    checkpoints TEXT[] DEFAULT '{}',
-                    INDEX idx_workflow_type (workflow_type),
-                    INDEX idx_status (status),
-                    INDEX idx_updated_at (updated_at DESC)
+                    checkpoints TEXT[] DEFAULT '{}'
                 );
             """)
+
+            # Indexes for workflow_state table
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_workflow_state_type ON workflow_state (workflow_type);"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_workflow_state_status ON workflow_state (status);"
+            )
+            await conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_workflow_state_updated ON workflow_state (updated_at DESC);"
+            )
 
             logger.info("schema_initialized")
 

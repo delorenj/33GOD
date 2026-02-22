@@ -8,13 +8,24 @@ from pydantic import BaseModel, Field
 
 
 class EventEnvelope(BaseModel):
-    """Event envelope structure matching Bloodbank schema."""
+    """Event envelope structure matching Bloodbank schema.
+
+    Lenient defaults so events from any producer (emit-agent-status.py,
+    hookd, direct API publish) are accepted even when optional fields
+    are omitted.
+    """
 
     event_id: UUID = Field(description="Unique event identifier")
     event_type: str = Field(description="Event type (e.g., 'fireflies.transcript.ready')")
     timestamp: datetime = Field(description="Event timestamp")
-    version: str = Field(description="Event schema version")
-    source: dict[str, Any] = Field(description="Event source metadata")
+    version: str = Field(
+        default="1.0.0",
+        description="Event schema version",
+    )
+    source: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Event source metadata",
+    )
     correlation_ids: list[UUID] = Field(
         default_factory=list,
         description="Correlation IDs for causation tracking",
@@ -23,7 +34,10 @@ class EventEnvelope(BaseModel):
         default=None,
         description="Agent-specific context (checkpoint_id, session_id, etc.)",
     )
-    payload: dict[str, Any] = Field(description="Event payload data")
+    payload: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Event payload data",
+    )
 
 
 class WorkflowState(BaseModel):

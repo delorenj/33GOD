@@ -15,11 +15,12 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 # Set working directory
 WORKDIR /app
 
-# Copy dependency files
+# Copy dependency + source files
 COPY pyproject.toml ./
+COPY src/ ./src/
 
-# Install dependencies
-RUN uv pip install --system --no-cache -e .
+# Install package + dependencies
+RUN uv pip install --system --no-cache .
 
 # Production stage
 FROM python:3.12-slim

@@ -185,6 +185,52 @@ services:
       - "33god.description=WebSocket relay for real-time Bloodbank events"
 
   # ============================================================================
+  # Candystore - Event Store Manager ("The Historian")
+  # Consumes ALL Bloodbank events, persists to PostgreSQL, serves REST API
+  # ============================================================================
+  candystore:
+    build:
+      context: ./services/candystore
+      dockerfile: Dockerfile
+    container_name: 33god-candystore
+    hostname: candystore
+    ports:
+      - "8684:8080"     # Event store API port
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-delorenj}:${POSTGRES_PASSWORD}@33god-postgres:5432/${POSTGRES_DB:-33god}
+      DATABASE_POOL_SIZE: "10"
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      EVENT_STORE_MANAGER_QUEUE: candystore_events
+      EVENT_STORE_MANAGER_DLQ: candystore_events_dlq
+      EVENT_STORE_MANAGER_HOST: "0.0.0.0"
+      EVENT_STORE_MANAGER_PORT: "8080"
+      API_PREFIX: /api/v1
+      API_CORS_ORIGINS: "http://localhost:3000,http://localhost:3360,https://holocene.delo.sh"
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+      ENVIRONMENT: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      bloodbank:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - 33god-network
+      - theboard-network
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=candystore"
+      - "33god.description=Event persistence store - consumes and indexes all Bloodbank events"
+
+  # ============================================================================
   # Holocene - Mission Control Dashboard
   # ============================================================================
   holocene:
@@ -212,6 +258,8 @@ services:
       - ${OPENCLAW_AVATARS_PATH:-~/.openclaw/Avatars}:/usr/share/nginx/html/avatars:ro
     depends_on:
       bloodbank:
+        condition: service_healthy
+      candystore:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
