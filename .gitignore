@@ -73,3 +73,4 @@ HeyMa/training/
 .env
 .env.local
 .env.*.local
+.zed/
