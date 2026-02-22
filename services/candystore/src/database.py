@@ -1,5 +1,6 @@
 """PostgreSQL event store persistence layer."""
 
+import json as _json
 from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
@@ -130,22 +131,23 @@ class EventStore:
             async with self.pool.acquire() as conn:
                 async with conn.transaction():
                     # Insert event
+                    # asyncpg requires explicit JSON serialization for JSONB cols
                     await conn.execute(
                         """
                         INSERT INTO events (
                             event_id, event_type, timestamp, version,
                             source, correlation_ids, agent_context, payload
-                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8::jsonb)
                         ON CONFLICT (event_id) DO NOTHING
                         """,
                         envelope.event_id,
                         envelope.event_type,
                         envelope.timestamp,
                         envelope.version,
-                        envelope.source,
+                        _json.dumps(envelope.source) if envelope.source else "{}",
                         envelope.correlation_ids,
-                        envelope.agent_context,
-                        envelope.payload,
+                        _json.dumps(envelope.agent_context) if envelope.agent_context else None,
+                        _json.dumps(envelope.payload) if envelope.payload else "{}",
                     )
 
                     # Update workflow state projection if workflow_id present
@@ -235,8 +237,14 @@ class EventStore:
             param_idx += 1
 
         if query.event_type:
-            conditions.append(f"event_type = ${param_idx}")
-            params.append(query.event_type)
+            if query.event_type.endswith(".*"):
+                # Prefix match: agent.lenoon.* → LIKE 'agent.lenoon.%'
+                prefix = query.event_type[:-1]  # strip trailing *
+                conditions.append(f"event_type LIKE ${param_idx}")
+                params.append(f"{prefix}%")
+            else:
+                conditions.append(f"event_type = ${param_idx}")
+                params.append(query.event_type)
             param_idx += 1
 
         if query.start_time:

@@ -115,60 +115,62 @@ class EventConsumer:
         """
         Process a single message from Bloodbank.
 
-        Implements transactional outbox pattern:
+        Manual ack/reject to avoid double-processing from context manager.
         1. Deserialize event
         2. Persist to PostgreSQL
-        3. ACK message only if persist succeeds
+        3. ACK if persist succeeds, REJECT+requeue otherwise
         """
-        async with message.process():
-            try:
-                # Deserialize message body
-                body = json.loads(message.body.decode())
+        try:
+            # Deserialize message body
+            body = json.loads(message.body.decode())
 
-                # Parse into EventEnvelope
-                envelope = EventEnvelope(**body)
+            # Parse into EventEnvelope
+            envelope = EventEnvelope(**body)
 
+            logger.info(
+                "processing_event",
+                event_id=str(envelope.event_id),
+                event_type=envelope.event_type,
+                routing_key=message.routing_key,
+            )
+
+            # Persist to PostgreSQL
+            result: EventPersistenceResult = await self.event_store.persist_event(
+                envelope
+            )
+
+            if result.success:
                 logger.info(
-                    "processing_event",
-                    event_id=str(envelope.event_id),
-                    event_type=envelope.event_type,
-                    routing_key=message.routing_key,
+                    "event_persisted",
+                    event_id=str(result.event_id),
+                    persisted_at=result.persisted_at.isoformat(),
                 )
-
-                # Persist to PostgreSQL (transactional outbox)
-                result: EventPersistenceResult = await self.event_store.persist_event(
-                    envelope
-                )
-
-                if result.success:
-                    logger.info(
-                        "event_persisted",
-                        event_id=str(result.event_id),
-                        persisted_at=result.persisted_at.isoformat(),
-                    )
-                else:
-                    logger.error(
-                        "event_persistence_failed",
-                        event_id=str(result.event_id),
-                        error=result.error,
-                    )
-                    # Reject and requeue for retry
-                    await message.reject(requeue=True)
-
-            except json.JSONDecodeError as e:
+                await message.ack()
+            else:
                 logger.error(
-                    "invalid_json",
-                    error=str(e),
-                    body=message.body.decode()[:200],
+                    "event_persistence_failed",
+                    event_id=str(result.event_id),
+                    error=result.error,
                 )
-                # Don't requeue invalid JSON - send to DLQ
-                await message.reject(requeue=False)
-
-            except Exception as e:
-                logger.error(
-                    "message_processing_error",
-                    error=str(e),
-                    error_type=type(e).__name__,
-                )
-                # Reject and requeue for transient errors
                 await message.reject(requeue=True)
+
+        except json.JSONDecodeError as e:
+            logger.error(
+                "invalid_json",
+                error=str(e),
+                body=message.body.decode()[:200],
+            )
+            # Don't requeue invalid JSON - send to DLQ
+            await message.reject(requeue=False)
+
+        except Exception as e:
+            logger.error(
+                "message_processing_error",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            # Reject and requeue for transient errors
+            try:
+                await message.reject(requeue=True)
+            except Exception:
+                pass  # Already processed

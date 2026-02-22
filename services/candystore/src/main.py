@@ -1,6 +1,7 @@
 """Event Store Manager - The Historian service entrypoint."""
 
 import asyncio
+import logging
 import signal
 import sys
 from contextlib import asynccontextmanager
@@ -15,9 +16,18 @@ from .api import routes
 from .config import settings
 from .consumer import EventConsumer
 
+# Configure stdlib logging FIRST so structlog has handlers to write to
+logging.basicConfig(
+    format="%(message)s",
+    stream=sys.stdout,
+    level=getattr(logging, settings.log_level.upper(), logging.INFO),
+)
+
 # Configure structured logging
 structlog.configure(
     processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.stdlib.add_log_level,
         structlog.processors.StackInfoRenderer(),
@@ -55,8 +65,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Set event store in routes
     routes.set_event_store(consumer.event_store)
 
-    # Start consuming events in background
-    consumer_task = asyncio.create_task(consumer.start())
+    # Start consuming events in background with error surfacing
+    async def _run_consumer() -> None:
+        try:
+            await consumer.start()
+        except Exception as exc:
+            logger.error("consumer_fatal_error", error=str(exc), error_type=type(exc).__name__)
+            raise
+
+    consumer_task = asyncio.create_task(_run_consumer())
+
+    # Add callback to surface task exceptions immediately
+    def _on_consumer_done(task: asyncio.Task) -> None:
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc:
+            logger.error("consumer_task_failed", error=str(exc))
+
+    consumer_task.add_done_callback(_on_consumer_done)
 
     logger.info("event_store_manager_started")
 

@@ -34,9 +34,10 @@ async def health_check() -> dict[str, str]:
 async def query_events(
     workflow_id: UUID | None = Query(None, description="Filter by workflow ID"),
     correlation_id: UUID | None = Query(None, description="Filter by correlation ID"),
-    event_type: str | None = Query(None, description="Filter by event type"),
-    start_time: datetime | None = Query(None, description="Filter events after this time"),
-    end_time: datetime | None = Query(None, description="Filter events before this time"),
+    event_type: str | None = Query(None, description="Filter by event type (exact or prefix with *)"),
+    agent: str | None = Query(None, description="Filter by agent name (matches agent.{name}.* routing keys)"),
+    since: datetime | None = Query(None, alias="start_time", description="Filter events after this time"),
+    until: datetime | None = Query(None, alias="end_time", description="Filter events before this time"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum results to return"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
 ) -> list[EventEnvelope]:
@@ -46,25 +47,31 @@ async def query_events(
     Supports filtering by:
     - workflow_id: Get all events for a specific workflow
     - correlation_id: Get causation chain
-    - event_type: Filter by event type
-    - start_time/end_time: Time range filtering
+    - event_type: Filter by event type (exact match or prefix*)
+    - agent: Filter by agent name (matches agent.{name}.* routing keys)
+    - since/until (or start_time/end_time): Time range filtering
     """
     if not event_store:
         raise HTTPException(status_code=503, detail="Event store not available")
 
+    # If agent filter, convert to event_type prefix filter
+    effective_event_type = event_type
+    if agent and not event_type:
+        effective_event_type = f"agent.{agent}.*"
+
     query = EventQuery(
         workflow_id=workflow_id,
         correlation_id=correlation_id,
-        event_type=event_type,
-        start_time=start_time,
-        end_time=end_time,
+        event_type=effective_event_type,
+        start_time=since,
+        end_time=until,
         limit=limit,
         offset=offset,
     )
 
     try:
         events = await event_store.query_events(query)
-        logger.info("events_queried", count=len(events), query=query.model_dump())
+        logger.info("events_queried", count=len(events))
         return events
     except Exception as e:
         logger.error("query_events_failed", error=str(e))

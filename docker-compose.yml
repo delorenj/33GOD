@@ -206,7 +206,7 @@ services:
       EVENT_STORE_MANAGER_HOST: "0.0.0.0"
       EVENT_STORE_MANAGER_PORT: "8080"
       API_PREFIX: /api/v1
-      API_CORS_ORIGINS: "http://localhost:3000,http://localhost:3360,https://holocene.delo.sh"
+      API_CORS_ORIGINS: '["http://localhost:3000","http://localhost:3360","https://holocene.delo.sh"]'
       LOG_LEVEL: INFO
       LOG_FORMAT: json
       ENVIRONMENT: production
