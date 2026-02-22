@@ -225,12 +225,18 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
+      # Main router (HTML/JS/CSS) — behind Google Auth
       - "traefik.http.routers.holocene.rule=Host(`holocene.delo.sh`)"
       - "traefik.http.routers.holocene.entrypoints=websecure"
       - "traefik.http.routers.holocene.tls.certresolver=letsencrypt"
-      - "traefik.http.services.holocene.loadbalancer.server.port=80"
-      # Optional: Google Auth middleware
       - "traefik.http.routers.holocene.middlewares=google-auth@file"
+      # WebSocket router — NO auth (WS can't do OAuth redirects)
+      - "traefik.http.routers.holocene-ws.rule=Host(`holocene.delo.sh`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.holocene-ws.entrypoints=websecure"
+      - "traefik.http.routers.holocene-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.holocene-ws.priority=200"
+      # Shared service
+      - "traefik.http.services.holocene.loadbalancer.server.port=80"
 
   # ============================================================================
   # Infra Dispatcher - Bloodbank Consumer for Plane Webhook Dispatch
