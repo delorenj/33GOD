@@ -192,7 +192,9 @@ services:
       context: ./holocene
       dockerfile: Dockerfile
       args:
-        - VITE_BLOODBANK_API_URL=http://bloodbank:8682
+        - VITE_BLOODBANK_API_URL=/api/bloodbank
+        - VITE_BLOODBANK_WS_URL=/ws
+        - VITE_BLOODBANK_WS_FALLBACK_URL=/ws
     container_name: 33god-holocene
     hostname: holocene
     ports:
@@ -205,6 +207,9 @@ services:
       # Plane API proxy configuration
       PLANE_33GOD_API_KEY: ${PLANE_33GOD_API_KEY:-}
       PROXY_PORT: "11820"
+    volumes:
+      # Mount avatars for static serving
+      - ${OPENCLAW_AVATARS_PATH:-~/.openclaw/Avatars}:/usr/share/nginx/html/avatars:ro
     depends_on:
       bloodbank:
         condition: service_healthy
