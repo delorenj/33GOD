@@ -216,27 +216,33 @@ services:
       - "33god.description=Master 60s tick publisher for event-driven heartbeat system"
 
   # ============================================================================
-  # Heartbeat Consumer - Multi-agent tick processor
-  # Reads heartbeat.json for each agent, dispatches overdue checks on tick
+  # Heartbeat Router - Single service dispatches ALL agent heartbeat checks
+  # Consumes system.heartbeat.tick, scans heartbeat.json files, dispatches
+  # overdue checks via OpenClaw /hooks/agent endpoint. Also provisions
+  # per-agent inbox queues (agent.{name}.inbox → agent.{name}.#).
   # ============================================================================
-  heartbeat-consumer:
+  heartbeat-router:
     build:
       context: ./bloodbank
       dockerfile: Dockerfile
-    container_name: 33god-heartbeat-consumer
-    hostname: heartbeat-consumer
-    command: ["python", "-m", "heartbeat_tick.multi_consumer"]
+    container_name: 33god-heartbeat-router
+    hostname: heartbeat-router
+    command: ["python", "-m", "heartbeat_tick.router"]
     environment:
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      BLOODBANK_API: http://bloodbank:8682
-      AGENT_CONFIGS: /configs
-      LOG_LEVEL: INFO
+      OPENCLAW_HOOK_URL: ${OPENCLAW_HOOK_URL:-http://127.0.0.1:18789/hooks/agent}
+      OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
+      WORKSPACES_ROOT: ${HOME}/.openclaw
+      HEARTBEAT_STATE: /tmp/heartbeat-router-state.json
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
-      - ./bloodbank/heartbeat_tick/configs:/configs:ro
-    depends_on:
-      bloodbank:
-        condition: service_healthy
+      # Mount agent workspaces (read-only — only reads heartbeat.json)
+      - ${HOME}/.openclaw:${HOME}/.openclaw:ro
+    # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
+    # gateway.bind=loopback means it only listens on 127.0.0.1 — Docker bridge can't reach it
+    network_mode: host
     healthcheck:
       test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
       interval: 30s
@@ -244,13 +250,10 @@ services:
       retries: 3
       start_period: 15s
     restart: unless-stopped
-    networks:
-      - 33god-network
-      - theboard-network
     labels:
       - "traefik.enable=false"
-      - "33god.service=heartbeat-consumer"
-      - "33god.description=Multi-agent heartbeat consumer — dispatches overdue checks on tick"
+      - "33god.service=heartbeat-router"
+      - "33god.description=Single heartbeat router — scans all agent heartbeat.json, dispatches overdue checks via OpenClaw hooks"
 
   # ============================================================================
   # Candystore - Event Store Manager ("The Historian")
@@ -424,6 +427,8 @@ volumes:
   redis-data:
     driver: local
   postgres-data:
+    driver: local
+  heartbeat-router-state:
     driver: local
 
 # ==============================================================================
