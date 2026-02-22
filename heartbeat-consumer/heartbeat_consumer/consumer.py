@@ -14,7 +14,7 @@ from faststream import FastStream, Logger
 from faststream.rabbit import RabbitBroker, RabbitQueue, RabbitExchange
 
 from .config import HeartbeatConfig, CheckConfig
-from .handlers import get_handler, handle_health_report, handle_quarterly_compaction, register_handler
+from .handlers import get_handler, handle_sub_health, handle_quarterly_compaction, register_handler
 
 
 logger = logging.getLogger("heartbeat_consumer")

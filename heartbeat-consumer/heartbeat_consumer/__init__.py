@@ -11,11 +11,20 @@ __all__ = [
     "HeartbeatConsumer",
     "HeartbeatConfig",
     "CheckConfig",
+    "WindowConfig",
     "HandlerRegistry",
     "register_handler",
     "get_handler",
+    "handle_sub_health",
+    "handle_quarterly_compaction",
 ]
 
 from .consumer import HeartbeatConsumer
 from .config import HeartbeatConfig, CheckConfig, WindowConfig
-from .handlers import HandlerRegistry, register_handler, get_handler, handle_health_report, handle_quarterly_compaction
+from .handlers import (
+    HandlerRegistry,
+    register_handler,
+    get_handler,
+    handle_sub_health,
+    handle_quarterly_compaction,
+)

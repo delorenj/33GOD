@@ -216,6 +216,43 @@ services:
       - "33god.description=Master 60s tick publisher for event-driven heartbeat system"
 
   # ============================================================================
+  # Heartbeat Consumer - Multi-agent tick processor
+  # Reads heartbeat.json for each agent, dispatches overdue checks on tick
+  # ============================================================================
+  heartbeat-consumer:
+    build:
+      context: ./bloodbank
+      dockerfile: Dockerfile
+    container_name: 33god-heartbeat-consumer
+    hostname: heartbeat-consumer
+    command: ["python", "-m", "heartbeat_tick.multi_consumer"]
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      BLOODBANK_API: http://bloodbank:8682
+      AGENT_CONFIGS: /configs
+      LOG_LEVEL: INFO
+    volumes:
+      - ./bloodbank/heartbeat_tick/configs:/configs:ro
+    depends_on:
+      bloodbank:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - 33god-network
+      - theboard-network
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=heartbeat-consumer"
+      - "33god.description=Multi-agent heartbeat consumer — dispatches overdue checks on tick"
+
+  # ============================================================================
   # Candystore - Event Store Manager ("The Historian")
   # Consumes ALL Bloodbank events, persists to PostgreSQL, serves REST API
   # ============================================================================
