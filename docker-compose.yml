@@ -124,6 +124,7 @@ services:
       PROMETHEUS_PORT: "9090"
     volumes:
       - ./holyfields/schemas:/schemas:ro
+      - ./holyfields/src/holyfields:/app/holyfields:ro  # Generated Pydantic models
     depends_on:
       redis:
         condition: service_healthy
