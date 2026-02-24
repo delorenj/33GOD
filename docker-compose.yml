@@ -441,6 +441,38 @@ services:
       - "33god.description=Plane webhook dispatcher to OpenClaw"
 
   # ============================================================================
+  # hookd Compatibility Bridge (GOD-4 / MIG-1)
+  # Translates legacy hook calls into Bloodbank command envelopes
+  # ============================================================================
+  hookd-bridge:
+    build:
+      context: .
+      dockerfile: bloodbank/Dockerfile
+    container_name: 33god-hookd-bridge
+    hostname: hookd-bridge
+    command: ["python", "-m", "hookd_bridge"]
+    environment:
+      # Host networking: use localhost ports
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      BRIDGE_PORT: "18790"
+      BRIDGE_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:18790/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=hookd-bridge"
+      - "33god.description=Legacy hook → Bloodbank command bridge"
+
+  # ============================================================================
   # Command Adapter (GOD-3 / AGENT-CTRL-1)
   # Consumes commands from Bloodbank, runs FSM guards, dispatches via OpenClaw hooks
   # ============================================================================
