@@ -440,6 +440,51 @@ services:
       - "33god.service=infra-dispatcher"
       - "33god.description=Plane webhook dispatcher to OpenClaw"
 
+  # ============================================================================
+  # Command Adapter (GOD-3 / AGENT-CTRL-1)
+  # Consumes commands from Bloodbank, runs FSM guards, dispatches via OpenClaw hooks
+  # ============================================================================
+  command-adapter:
+    build:
+      context: ./bloodbank
+      dockerfile: Dockerfile
+    container_name: 33god-command-adapter
+    hostname: command-adapter
+    command: ["python", "-m", "command_adapter"]
+    environment:
+      # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      REDIS_URL: redis://127.0.0.1:6379
+
+      # OpenClaw Hook Configuration
+      OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
+      OPENCLAW_HOOK_URL: ${OPENCLAW_HOOK_URL:-http://127.0.0.1:18789/hooks/agent}
+
+      # Agent Roster (comma-separated, or "*" for all)
+      AGENT_ROSTER: ${AGENT_ROSTER:-cack,grolf,rererere,lenoon,tonny,tongy,rar,pepe,lalathing,momothecat,yi}
+
+      # Timeouts
+      HOOK_TIMEOUT_SECONDS: ${HOOK_TIMEOUT_SECONDS:-30}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
+    # AND Redis on localhost
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=command-adapter"
+      - "33god.description=Agent command adapter — FSM guards + OpenClaw dispatch"
+
 # ==============================================================================
 # Volumes
 # ==============================================================================
