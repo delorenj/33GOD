@@ -128,7 +128,8 @@ curl -sS http://127.0.0.1:8682/healthz 2>/dev/null || echo "  DOWN"
 echo ""
 
 echo "▸ RabbitMQ queues:"
-docker exec theboard-rabbitmq rabbitmqctl list_queues name consumers messages -q 2>/dev/null || echo "  (unreachable)"
+RABBIT=$(docker ps --format '{{.Names}}' | grep -E '^(33god-rabbitmq|theboard-rabbitmq)$' | head -1 || true)
+[[ -n "${RABBIT:-}" ]] && docker exec "$RABBIT" rabbitmqctl list_queues name consumers messages -q 2>/dev/null || echo "  (unreachable)"
 echo ""
 
 echo "▸ Holocene:"

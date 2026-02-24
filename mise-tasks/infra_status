@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONTAINER="${RABBIT_CONTAINER:-theboard-rabbitmq}"
+CONTAINER="${RABBIT_CONTAINER:-}"
+if [[ -z "$CONTAINER" ]]; then
+  if docker ps --format '{{.Names}}' | grep -qx '33god-rabbitmq'; then
+    CONTAINER='33god-rabbitmq'
+  elif docker ps --format '{{.Names}}' | grep -qx 'theboard-rabbitmq'; then
+    CONTAINER='theboard-rabbitmq'
+  else
+    CONTAINER='33god-rabbitmq'
+  fi
+fi
 EXCHANGE="${BLOODBANK_EXCHANGE:-bloodbank.events.v1}"
 QUEUES=(
   "${CANDYSTORE_QUEUE:-candystore.storage}"
@@ -17,7 +26,8 @@ fi
 
 if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
   say "ERROR: RabbitMQ container '$CONTAINER' not running"
-  say "  Hint: start theboard compose: cd theboard && docker compose up -d rabbitmq"
+  say "  Hint: start 33GOD broker: docker compose up -d rabbitmq"
+  say "  Or set RABBIT_CONTAINER explicitly for legacy environments"
   exit 2
 fi
 
