@@ -43,32 +43,28 @@ services:
   # Migration: stop theboard-rabbitmq first, then `docker compose up -d rabbitmq`
   # The exchange (bloodbank.events.v1) and queues will be auto-created by consumers.
   # ============================================================================
-  # NOTE: rabbitmq service DISABLED until coordinated migration from theboard-rabbitmq.
-  # DO NOT UNCOMMENT until migration day. theboard-rabbitmq is aliased as 'rabbitmq'
-  # on 33god-network as interim bridge. See memory/2026-02-24.md for context.
-  # --------------------------------------------------------------------------
-  # rabbitmq:
-  #   image: rabbitmq:3.12-management-alpine
-  #   container_name: 33god-rabbitmq
-  #   hostname: rabbitmq
-  #   environment:
-  #     RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
-  #     RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
-  #   ports:
-  #     - "5673:5672"
-  #     - "15673:15672"
-  #   volumes:
-  #     - rabbitmq-data:/var/lib/rabbitmq
-  #   healthcheck:
-  #     test: ["CMD", "rabbitmqctl", "status"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   restart: unless-stopped
-  #   networks:
-  #     - 33god-network
-  #   labels:
-  #     - "traefik.enable=false"
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: 33god-rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "5673:5672"       # AMQP (5673 on host)
+      - "15673:15672"     # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=false"
 
   # ============================================================================
   # PostgreSQL - 33GOD Platform Database
@@ -164,7 +160,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      # rabbitmq: disabled — using theboard-rabbitmq via network alias
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8682/healthz"]
       interval: 30s
@@ -211,12 +208,14 @@ services:
     restart: unless-stopped
     networks:
       - 33god-network
+      - proxy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bloodbank-ws.rule=Host(`bloodbank-ws.delo.sh`)"
       - "traefik.http.routers.bloodbank-ws.entrypoints=websecure"
       - "traefik.http.routers.bloodbank-ws.tls.certresolver=letsencrypt"
       - "traefik.http.services.bloodbank-ws.loadbalancer.server.port=8683"
+      - "traefik.docker.network=proxy"
       - "33god.service=bloodbank-ws-relay"
       - "33god.description=WebSocket relay for real-time Bloodbank events"
 
