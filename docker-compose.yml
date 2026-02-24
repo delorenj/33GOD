@@ -266,7 +266,8 @@ services:
       # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      OPENCLAW_HOOK_URL: ${OPENCLAW_HOOK_URL:-http://127.0.0.1:18789/hooks/agent}
+      # Point to hookd-bridge (MIG-1 CUTOVER)
+      OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
       WORKSPACES_ROOT: ${HOME}/.openclaw
       HEARTBEAT_STATE: /tmp/heartbeat-router-state.json
@@ -408,7 +409,8 @@ services:
       
       # OpenClaw Hook Configuration
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
-      OPENCLAW_HOOK_URL: ${OPENCLAW_HOOK_URL:-http://127.0.0.1:18789/hooks/agent}
+      # Point to hookd-bridge (MIG-1 CUTOVER)
+      OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_DELIVER: ${OPENCLAW_HOOK_DELIVER:-false}
       
       # Dispatch Rules (Ready Gate)
