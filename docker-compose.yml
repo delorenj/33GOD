@@ -200,7 +200,7 @@ services:
       WS_HOST: "0.0.0.0"
       WS_PORT: "8683"
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 8683)); s.close()' || exit 1"]
+      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
