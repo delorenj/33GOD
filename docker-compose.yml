@@ -127,8 +127,8 @@ services:
   # ============================================================================
   bloodbank:
     build:
-      context: ./bloodbank
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: bloodbank/Dockerfile
     container_name: 33god-bloodbank
     hostname: bloodbank
     ports:
@@ -224,8 +224,8 @@ services:
   # ============================================================================
   heartbeat-tick:
     build:
-      context: ./bloodbank
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: bloodbank/Dockerfile
     container_name: 33god-heartbeat-tick
     hostname: heartbeat-tick
     command: ["python", "-m", "heartbeat_tick.publisher"]
@@ -257,8 +257,8 @@ services:
   # ============================================================================
   heartbeat-router:
     build:
-      context: ./bloodbank
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: bloodbank/Dockerfile
     container_name: 33god-heartbeat-router
     hostname: heartbeat-router
     command: ["python", "-m", "heartbeat_tick.router"]
@@ -395,8 +395,8 @@ services:
   # ============================================================================
   infra-dispatcher:
     build:
-      context: ./bloodbank
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: bloodbank/Dockerfile
     container_name: 33god-infra-dispatcher
     hostname: infra-dispatcher
     # Override default command to run dispatcher instead of API
@@ -446,8 +446,8 @@ services:
   # ============================================================================
   command-adapter:
     build:
-      context: ./bloodbank
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: bloodbank/Dockerfile
     container_name: 33god-command-adapter
     hostname: command-adapter
     command: ["python", "-m", "command_adapter"]
