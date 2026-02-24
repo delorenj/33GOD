@@ -1,13 +1,16 @@
 # 33GOD Full Stack Docker Compose
 # Location: ~/code/33GOD/docker-compose.yml
 #
-# This compose file runs the complete 33GOD infrastructure stack:
+# Self-contained infrastructure stack:
+# - RabbitMQ: Event bus broker (bloodbank.events.v1 exchange)
 # - Redis: Correlation tracking and caching
+# - Postgres: Event persistence (Candystore) + platform data
 # - Bloodbank: FastAPI event bus API
-# - Holocene: Mission Control dashboard (Vite → nginx production build)
-# - Infra Dispatcher: Plane webhook dispatcher
+# - Holocene: Mission Control dashboard
+# - Heartbeat Router: Agent heartbeat dispatch
+# - Infra Dispatcher: Plane webhook → OpenClaw dispatch
+# - Candystore: Event persistence layer
 #
-# RabbitMQ: Uses existing theboard-rabbitmq from trunk-main via external network.
 # Traefik: Uses existing proxy network for routing.
 
 services:
@@ -25,6 +28,35 @@ services:
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - 33god-network
+    labels:
+      - "traefik.enable=false"
+
+  # ============================================================================
+  # RabbitMQ - Event Bus Broker
+  # Previously external (theboard-rabbitmq). Now owned by 33GOD stack.
+  # Migration: stop theboard-rabbitmq first, then `docker compose up -d rabbitmq`
+  # The exchange (bloodbank.events.v1) and queues will be auto-created by consumers.
+  # ============================================================================
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: 33god-rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "5673:5672"       # AMQP (5673 on host — 5672 used by other stacks)
+      - "15673:15672"     # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -103,7 +135,7 @@ services:
       - "8682:8682"     # FastAPI port
     environment:
       # RabbitMQ Connection
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       
       # Redis Connection
@@ -128,6 +160,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8682/healthz"]
       interval: 30s
@@ -138,7 +172,6 @@ services:
     networks:
       - 33god-network
       - proxy
-      - theboard-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bloodbank.rule=Host(`bloodbank.delo.sh`)"
@@ -159,7 +192,7 @@ services:
       - "8683:8683"     # WebSocket port
     environment:
       # RabbitMQ Connection
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       ROUTING_KEY: ${RELAY_ROUTING_KEY:-#}
       
@@ -175,7 +208,6 @@ services:
     restart: unless-stopped
     networks:
       - 33god-network
-      - theboard-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bloodbank-ws.rule=Host(`bloodbank-ws.delo.sh`)"
@@ -196,8 +228,8 @@ services:
     hostname: heartbeat-tick
     command: ["python", "-m", "heartbeat_tick.publisher"]
     environment:
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       TICK_INTERVAL_S: "60"
       LOG_LEVEL: INFO
@@ -210,7 +242,6 @@ services:
     restart: unless-stopped
     networks:
       - 33god-network
-      - theboard-network
     labels:
       - "traefik.enable=false"
       - "33god.service=heartbeat-tick"
@@ -271,7 +302,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-delorenj}:${POSTGRES_PASSWORD}@33god-postgres:5432/${POSTGRES_DB:-33god}
       DATABASE_POOL_SIZE: "10"
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@theboard-rabbitmq:5672/
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       EVENT_STORE_MANAGER_QUEUE: candystore_events
       EVENT_STORE_MANAGER_DLQ: candystore_events_dlq
@@ -296,7 +327,6 @@ services:
     restart: unless-stopped
     networks:
       - 33god-network
-      - theboard-network
     labels:
       - "traefik.enable=false"
       - "33god.service=candystore"
@@ -416,6 +446,8 @@ volumes:
     driver: local
   postgres-data:
     driver: local
+  rabbitmq-data:
+    driver: local
   heartbeat-router-state:
     driver: local
 
@@ -428,6 +460,4 @@ networks:
     driver: bridge
   proxy:
     external: true
-  theboard-network:
-    name: trunk-main_theboard-network
-    external: true
+  # theboard-network removed — RabbitMQ is now in 33god-network
