@@ -225,7 +225,6 @@ services:
   # No centralized global tick dependency. Rollback: restore heartbeat-tick
   # service and revert heartbeat-router command to heartbeat_tick.router.
   # ============================================================================
-
   # ============================================================================
   # Heartbeat Local Scheduler (BB-3) — Self-ticking agent heartbeat dispatch
   # Replaces the old heartbeat-tick (publisher) + heartbeat-router (consumer)
