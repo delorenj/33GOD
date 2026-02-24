@@ -6,6 +6,7 @@ from typing import Any
 
 import aio_pika
 import structlog
+from pydantic import ValidationError
 from aio_pika import ExchangeType, IncomingMessage
 from aio_pika.abc import AbstractRobustConnection
 
@@ -163,13 +164,25 @@ class EventConsumer:
             # Don't requeue invalid JSON - send to DLQ
             await message.reject(requeue=False)
 
+        except (ValidationError, ValueError, TypeError, KeyError) as e:
+            logger.error(
+                "message_validation_error",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            # Don't requeue validation errors — they'll never succeed
+            try:
+                await message.reject(requeue=False)
+            except Exception:
+                pass  # Already processed
+
         except Exception as e:
             logger.error(
                 "message_processing_error",
                 error=str(e),
                 error_type=type(e).__name__,
             )
-            # Reject and requeue for transient errors
+            # Reject and requeue for transient errors only
             try:
                 await message.reject(requeue=True)
             except Exception:
