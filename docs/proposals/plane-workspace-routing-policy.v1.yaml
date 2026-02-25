@@ -1,0 +1,62 @@
+version: 1
+updated_at: 2026-02-25
+owner: cack
+
+default_workspace: 33god
+fallback_board:
+  workspace: 33god
+  board: incubator
+  column: seed
+
+workspaces:
+  33god:
+    purpose: internal platform and pipeline work
+    projects:
+      - bloodbank
+      - holyfields
+      - holocene
+      - candystore
+      - candybar
+      - perth
+      - yi
+      - flume
+      - imi
+      - 33god
+      - infrastructure
+      - platform
+  lasertoast:
+    purpose: revenue products built with pipeline
+    projects:
+      - chorescore
+      - wean
+      - svgme
+      - overworld
+      - cack
+      - thermite
+      - jobby
+      - scalp
+      - stem
+      - digipop
+      - jacksnaps
+
+rules:
+  - match:
+      tags_any: [platform, infra, pipeline, bloodbank, holyfields, holocene, candystore, perth, yi, flume, imi]
+    route:
+      workspace: 33god
+  - match:
+      tags_any: [revenue, monetization, product, chorescore, wean, svgme, overworld, cack, thermite, jobby, scalp, stem, digipop, jacksnaps]
+    route:
+      workspace: lasertoast
+  - match:
+      kind_any: [idea, unknown]
+    route:
+      workspace: 33god
+      board: incubator
+      column: seed
+
+enforcement:
+  reject_cross_workspace_duplicate_project: true
+  require_workspace_decision_on_promote: true
+  allow_manual_override: true
+  require_override_reason: true
