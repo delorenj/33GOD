@@ -22,9 +22,9 @@ class EventEnvelope(BaseModel):
         default="1.0.0",
         description="Event schema version",
     )
-    source: dict[str, Any] = Field(
+    source: dict[str, Any] | str = Field(
         default_factory=dict,
-        description="Event source metadata",
+        description="Event source metadata (dict or service name string)",
     )
     correlation_ids: list[UUID] = Field(
         default_factory=list,

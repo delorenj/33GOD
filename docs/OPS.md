@@ -77,7 +77,7 @@ All containerized services live in `~/code/33GOD/docker-compose.yml`.
 | `holocene` | 33god-holocene | 11819 | Dashboard frontend |
 | `redis` | redis:7-alpine | 6379 | Cache + correlation tracking |
 | `postgres` | postgres:16-alpine | 5432 | Asset registry + event store |
-| `theboard-rabbitmq` | rabbitmq:3.12-management | 5673/15673 | Message broker |
+| `33god-rabbitmq` | rabbitmq:3.12-management | 5673/15673 | Message broker |
 
 ### Quick operations
 
@@ -229,7 +229,7 @@ Password rotations must be atomic:
 vim ~/code/33GOD/.env  # Change RABBITMQ_PASS
 
 # 2. Change the password in RabbitMQ
-docker exec theboard-rabbitmq rabbitmqctl change_password delorenj "<new_password>"
+docker exec 33god-rabbitmq rabbitmqctl change_password delorenj "<new_password>"
 
 # 3. Restart ALL dependent services
 docker compose restart bloodbank bloodbank-ws-relay
@@ -240,7 +240,7 @@ Never rotate the password without steps 1-3 in sequence.
 This is the most dangerous failure mode — silent data loss. Check in order:
 1. Relay messages must include `"type": "event"` — check `websocket-relay/relay.py`
 2. Publisher must use `mandatory=True` + `on_return_raises=True` — check `event_producers/rabbit.py`
-3. Routing key must match queue bindings — check `docker exec theboard-rabbitmq rabbitmqctl list_bindings`
+3. Routing key must match queue bindings — check `docker exec 33god-rabbitmq rabbitmqctl list_bindings`
 
 ---
 
