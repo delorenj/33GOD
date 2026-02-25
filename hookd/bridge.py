@@ -114,6 +114,9 @@ HOOK_ACTION_MAP: dict[str, str] = {
     "notify": "send_notification",
     "drift_check": "run_drift_check",
     "health_check": "run_health_check",
+    "git_maintenance": "run_git_maintenance",
+    "git-maintenance": "run_git_maintenance",
+    "git.maintenance": "run_git_maintenance",
 }
 
 
