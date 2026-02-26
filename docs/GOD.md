@@ -42,7 +42,7 @@
 
 ## Architecture Principles
 
-1. **Bloodbank Events are Everything**: State changes emit events, not synchronous calls. If it didn't emit an event, it didn't happen.
+1. **Bloodbank Events are Everything**: State changes emit events, not synchronous calls. If it didn't emit an event, it didn't happen. (See [GOD-14: Pure Event-Driven Pipeline](GOD-14.md))
 
 2. **Holyfields Defines the Law**: All event schemas are defined in Holyfields. No inline Pydantic models without corresponding schemas.
 
