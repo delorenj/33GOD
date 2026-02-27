@@ -291,6 +291,44 @@ services:
       - "33god.description=Single heartbeat router — scans all agent heartbeat.json, dispatches overdue checks via OpenClaw hooks"
 
   # ============================================================================
+  # Context Monitor (GOD-13) — Self-healing context automation
+  # Polls session usage, enforces >90% compaction, resets session on artifact update.
+  # ============================================================================
+  context-monitor:
+    build:
+      context: .
+      dockerfile: bloodbank/Dockerfile
+    container_name: 33god-context-monitor
+    hostname: context-monitor
+    command: ["python", "-m", "context_monitor.monitor"]
+    environment:
+      # Use host RabbitMQ (like heartbeat-router)
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+      OPENCLAW_HOME: ${HOME}/.openclaw
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      # Mount agent workspaces read-write (to truncate session files)
+      - ${HOME}/.openclaw:${HOME}/.openclaw:rw
+    # Host networking to reach RabbitMQ on 5673 and see correct paths
+    network_mode: host
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=context-monitor"
+      - "33god.description=Context Monitor — enforces 90% compaction policy and handles session resets"
+
+  # ============================================================================
   # Candystore - Event Store Manager ("The Historian")
   # Consumes ALL Bloodbank events, persists to PostgreSQL, serves REST API
   # ============================================================================
@@ -461,6 +499,12 @@ services:
       BRIDGE_PORT: "18790"
       BRIDGE_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      OUTBOX_DB_PATH: ${HOOKD_BRIDGE_OUTBOX_DB:-/var/lib/hookd-bridge/outbox.db}
+      OUTBOX_BATCH_SIZE: ${HOOKD_BRIDGE_OUTBOX_BATCH_SIZE:-50}
+      OUTBOX_FLUSH_INTERVAL_MS: ${HOOKD_BRIDGE_OUTBOX_FLUSH_INTERVAL_MS:-300}
+      OUTBOX_MAX_BACKOFF_SECONDS: ${HOOKD_BRIDGE_OUTBOX_MAX_BACKOFF_SECONDS:-60}
+    volumes:
+      - ./.state/hookd-bridge:/var/lib/hookd-bridge
     network_mode: host
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:18790/healthz || exit 1"]
