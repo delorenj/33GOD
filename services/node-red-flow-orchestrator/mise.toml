@@ -16,8 +16,9 @@ description = "Show Node-RED PM2 status"
 run = "pm2 info node-red"
 
 [tasks.restart]
-description = "Restart Node-RED"
-run = "pm2 restart node-red"
+description = "Deploy flows and restart Node-RED"
+depends = ["deploy-flows"]
+run = "echo 'Node-RED restarted with latest flows.'"
 
 [tasks.stop]
 description = "Stop Node-RED"
