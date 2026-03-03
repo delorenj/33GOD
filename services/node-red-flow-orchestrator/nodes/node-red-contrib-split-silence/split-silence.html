@@ -1,0 +1,130 @@
+<script type="text/javascript">
+  RED.nodes.registerType('split-silence', {
+    category: 'audio',
+    color: '#E9967A',
+    defaults: {
+      name:         { value: '' },
+      minSilence:   { value: 20, validate: RED.validators.number() },
+      threshold:    { value: -40, validate: RED.validators.number() },
+      minActivity:  { value: 60, validate: RED.validators.number() },
+      outputDir:    { value: '' },
+      outputFormat: { value: 'mp3' }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'split-silence.svg',
+    paletteLabel: 'split silence',
+    label: function () {
+      if (this.name) return this.name;
+      return 'split silence >' + this.minSilence + 'm';
+    },
+    labelStyle: function () {
+      return this.name ? 'node_label_italic' : '';
+    },
+    oneditprepare: function () {
+      var node = this;
+      // Show human-readable preview of tolerance
+      function updatePreview() {
+        var val = parseFloat($('#node-input-minSilence').val()) || 20;
+        var unit = val >= 60 ? (val / 60).toFixed(1) + ' hr' : val + ' min';
+        $('#silence-preview').text('Splits on silence gaps longer than ' + unit);
+      }
+      $('#node-input-minSilence').on('input change', updatePreview);
+      updatePreview();
+    }
+  });
+</script>
+
+<script type="text/html" data-template-name="split-silence">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-minSilence"><i class="fa fa-clock-o"></i> Split tolerance</label>
+    <input type="number" id="node-input-minSilence" min="1" step="1" style="width:80px">
+    <span> minutes</span>
+    <div id="silence-preview" style="margin-top:4px; color:#888; font-size:12px;"></div>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-threshold"><i class="fa fa-volume-off"></i> Silence threshold</label>
+    <input type="number" id="node-input-threshold" min="-80" max="0" step="1" style="width:80px">
+    <span> dB</span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-minActivity"><i class="fa fa-filter"></i> Min activity</label>
+    <input type="number" id="node-input-minActivity" min="0" step="1" style="width:80px">
+    <span> seconds (discard shorter chunks)</span>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-outputDir"><i class="fa fa-folder-o"></i> Output dir</label>
+    <input type="text" id="node-input-outputDir" placeholder="(same directory as input)">
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-outputFormat"><i class="fa fa-file-audio-o"></i> Output format</label>
+    <select id="node-input-outputFormat" style="width:120px">
+      <option value="mp3">MP3</option>
+      <option value="wav">WAV</option>
+      <option value="ogg">OGG</option>
+      <option value="m4a">M4A</option>
+    </select>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="split-silence">
+  <p>Detects silence gaps in audio/video files and splits them into
+  activity-only chunks using ffmpeg's <code>silencedetect</code> filter.</p>
+
+  <h3>Input</h3>
+  <dl class="message-properties">
+    <dt>filename <span class="property-type">string</span></dt>
+    <dd>Path to the media file to split. Falls back to <code>msg.payload</code>.</dd>
+  </dl>
+
+  <h3>Output</h3>
+  <p>Sends <strong>N messages</strong>, one per activity chunk found:</p>
+  <dl class="message-properties">
+    <dt>payload <span class="property-type">string</span></dt>
+    <dd>Absolute path to the extracted chunk file.</dd>
+    <dt>filename <span class="property-type">string</span></dt>
+    <dd>Same as <code>msg.payload</code>, for compatibility with file nodes.</dd>
+    <dt>chunk <span class="property-type">object</span></dt>
+    <dd>Chunk metadata: <code>file</code>, <code>chunk</code> (1-indexed),
+    <code>total_chunks</code>, <code>start</code>, <code>end</code>,
+    <code>duration</code> (seconds), <code>source</code> (original file).</dd>
+    <dt>parts <span class="property-type">object</span></dt>
+    <dd>Standard Node-RED <code>msg.parts</code> for join/sequence nodes.</dd>
+  </dl>
+
+  <h3>Configuration</h3>
+  <dl>
+    <dt>Split tolerance</dt>
+    <dd>Minimum silence gap (in minutes) required to trigger a split.
+    Default: 20 minutes. A 5-second pause won't split; a 25-minute gap will.</dd>
+
+    <dt>Silence threshold</dt>
+    <dd>Audio level below which sound is considered silence, in dB.
+    Default: &minus;40 dB. Lower values are stricter (only pure silence counts).</dd>
+
+    <dt>Min activity</dt>
+    <dd>Discard activity chunks shorter than this (seconds). Default: 60s.
+    Prevents tiny noise bursts from producing useless output files.</dd>
+
+    <dt>Output dir</dt>
+    <dd>Directory to write chunk files. Blank = same directory as input file.</dd>
+
+    <dt>Output format</dt>
+    <dd>Audio format for extracted chunks: MP3, WAV, OGG, or M4A.</dd>
+  </dl>
+
+  <h3>Requirements</h3>
+  <p><code>ffmpeg</code> and <code>ffprobe</code> must be installed and on the system PATH.</p>
+
+  <h3>Example flow</h3>
+  <p>Watch directory &rarr; <b>split-silence</b> &rarr; MinIO upload &rarr; transcription pipeline</p>
+</script>

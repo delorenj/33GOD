@@ -1,4 +1,5 @@
 {
   "WATCH_DIR": "/home/delorenj/audio/inbox",
-  "SCRIPTS_DIR": "/home/delorenj/code/33GOD/services/node-red-flow-orchestrator/scripts"
+  "SCRIPTS_DIR": "/home/delorenj/code/33GOD/services/node-red-flow-orchestrator/scripts",
+  "TRANSCRIPT_DIR": "/home/delorenj/code/DeLoDocs/Transcripts"
 }

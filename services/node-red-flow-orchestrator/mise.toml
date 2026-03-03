@@ -32,6 +32,10 @@ run = "pm2 start ~/.node-red/ecosystem.config.js"
 description = "Set up Python venv for helper scripts"
 run = ".mise/scripts/setup_scripts.sh"
 
+[tasks.install-custom-nodes]
+description = "Install local Node-RED contrib packages into ~/.node-red"
+run = ".mise/scripts/install_custom_nodes.sh"
+
 [tasks.generate-password-hash]
 description = "Generate bcrypt hash for Node-RED admin password"
 run = ".mise/scripts/generate_password_hash.sh"
