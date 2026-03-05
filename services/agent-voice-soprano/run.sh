@@ -10,4 +10,13 @@ if [[ -f "$ROOT/.env" ]]; then
   set +a
 fi
 
-exec uv run agent-voice-soprano
+if command -v uv >/dev/null 2>&1; then
+  exec uv run agent-voice-soprano
+fi
+
+if command -v mise >/dev/null 2>&1; then
+  exec mise x -- uv run agent-voice-soprano
+fi
+
+echo "Error: neither 'uv' nor 'mise' found in PATH" >&2
+exit 1
