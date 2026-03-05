@@ -1,0 +1,5 @@
+.env
+.venv/
+voice-profiles.yaml
+__pycache__/
+*.pyc

@@ -276,6 +276,23 @@ services:
       health: "http://localhost:8000/health"
       metrics: "http://localhost:8000/metrics"
 
+  agent-voice-soprano:
+    name: "agent-voice-soprano"
+    description: "Autoplays inbound agent message events via local Soprano TTS with per-agent voice profiles"
+    type: "event-consumer"
+    queue_name: "services.agent.voice_soprano"
+    routing_keys:
+      - "agent.*.message.received"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "voice"
+      - "tts"
+      - "soprano"
+      - "agent"
+      - "autoplay"
+      - "local-audio"
+
   # ---------------------------------------------------------------------------
   # TheBoard Meeting Services
   # ---------------------------------------------------------------------------
@@ -446,6 +463,9 @@ event_subscriptions:
 
   artifact.ingestion.failed:
     - "artifact-processor"
+
+  agent.message.received:
+    - "agent-voice-soprano"
 
   # Legacy meeting events (deprecated, use theboard.meeting.*)
   meeting.created:
