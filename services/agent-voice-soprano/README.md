@@ -26,7 +26,13 @@ Then edit:
 ## Run
 
 ```bash
-uv run agent-voice-soprano
+./run.sh
+```
+
+If your host has no CUDA/NVIDIA, keep `.env` at:
+
+```bash
+SOPRANO_EXTRA_ARGS="--device cpu"
 ```
 
 ## Smoke test (without speaking)
@@ -45,7 +51,7 @@ Each agent can use a different Soprano model path once you train/export them.
 default:
   enabled: true
   mode: stream
-  extra_args: "--device cuda"
+  extra_args: "--device cpu"
 
 agents:
   cack:
