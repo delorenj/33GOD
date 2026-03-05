@@ -68,7 +68,6 @@ async def handle_agent_message(message_dict: dict[str, Any]):
     ):
         logger.debug("Skip non-message event_type=%s", event_type)
         return
-
     payload = message_dict.get("payload") or {}
     if not isinstance(payload, dict):
         logger.debug("Skip non-dict payload: %s", type(payload).__name__)
