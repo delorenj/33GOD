@@ -38,7 +38,10 @@ class Settings(BaseSettings):
     exchange_name: str = Field(default_factory=_default_exchange_name, alias="EXCHANGE_NAME")
 
     queue_name: str = Field("services.agent.voice_soprano", alias="VOICE_QUEUE_NAME")
-    routing_key: str = Field("agent.*.message.received", alias="VOICE_ROUTING_KEY")
+    routing_key: str = Field("agent.*.message.*", alias="VOICE_ROUTING_KEY")
+
+    speak_on_received: bool = Field(False, alias="VOICE_SPEAK_ON_RECEIVED")
+    speak_on_sent: bool = Field(True, alias="VOICE_SPEAK_ON_SENT")
 
     soprano_bin: str = Field("soprano", alias="SOPRANO_BIN")
     soprano_timeout_sec: int = Field(45, alias="SOPRANO_TIMEOUT_SEC")

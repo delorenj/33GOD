@@ -56,6 +56,19 @@ def _extract_text(payload: dict[str, Any]) -> str | None:
 )
 async def handle_agent_message(message_dict: dict[str, Any]):
     event_type = str(message_dict.get("event_type", "")).strip()
+
+    if event_type.endswith(".message.received") and not settings.speak_on_received:
+        logger.debug("Skip received event (VOICE_SPEAK_ON_RECEIVED=false)")
+        return
+    if event_type.endswith(".message.sent") and not settings.speak_on_sent:
+        logger.debug("Skip sent event (VOICE_SPEAK_ON_SENT=false)")
+        return
+    if event_type and not (
+        event_type.endswith(".message.received") or event_type.endswith(".message.sent")
+    ):
+        logger.debug("Skip non-message event_type=%s", event_type)
+        return
+
     payload = message_dict.get("payload") or {}
     if not isinstance(payload, dict):
         logger.debug("Skip non-dict payload: %s", type(payload).__name__)

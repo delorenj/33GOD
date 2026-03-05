@@ -2,7 +2,7 @@
 
 Bloodbank consumer service that autoplays inbound agent messages using local `soprano`.
 
-- Consumes: `agent.*.message.received`
+- Consumes: `agent.*.message.*` (defaults to voicing **sent** replies)
 - Queue: `services.agent.voice_soprano`
 - Exchange: `bloodbank.events.v1`
 
@@ -22,6 +22,15 @@ cp voice-profiles.example.yaml voice-profiles.yaml
 Then edit:
 - `.env` for Rabbit/Soprano runtime config
 - `voice-profiles.yaml` for per-agent model mappings
+
+By default, only agent replies are spoken:
+
+```bash
+VOICE_SPEAK_ON_SENT=true
+VOICE_SPEAK_ON_RECEIVED=false
+```
+
+If you also want to hear inbound user messages, set `VOICE_SPEAK_ON_RECEIVED=true`.
 
 ## Run
 

@@ -282,7 +282,7 @@ services:
     type: "event-consumer"
     queue_name: "services.agent.voice_soprano"
     routing_keys:
-      - "agent.*.message.received"
+      - "agent.*.message.*"
     status: "active"
     owner: "33GOD"
     tags:
