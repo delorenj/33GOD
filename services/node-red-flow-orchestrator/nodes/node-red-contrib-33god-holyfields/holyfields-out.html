@@ -305,11 +305,26 @@
   </div>
   <div class="form-row">
     <label for="node-input-sourceType"><i class="fa fa-bolt"></i> source.type</label>
-    <input type="text" id="node-input-sourceType" placeholder="manual|agent|scheduled|heartbeat|file_watch|hook">
+    <select id="node-input-sourceType">
+      <option value="manual">manual</option>
+      <option value="agent">agent</option>
+      <option value="scheduled">scheduled</option>
+      <option value="heartbeat">heartbeat</option>
+      <option value="file_watch">file_watch</option>
+      <option value="hook">hook</option>
+      <option value="webhook">webhook</option>
+      <option value="service">service</option>
+    </select>
   </div>
   <div class="form-row">
     <label for="node-input-triggerType"><i class="fa fa-play"></i> source.trigger_type</label>
-    <input type="text" id="node-input-triggerType" placeholder="cli|api|scheduled|event|webhook">
+    <select id="node-input-triggerType">
+      <option value="api">api</option>
+      <option value="event">event</option>
+      <option value="scheduled">scheduled</option>
+      <option value="webhook">webhook</option>
+      <option value="manual">manual</option>
+    </select>
   </div>
 
   <div class="form-row">

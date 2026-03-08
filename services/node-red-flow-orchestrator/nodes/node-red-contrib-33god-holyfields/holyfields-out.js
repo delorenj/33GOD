@@ -42,6 +42,19 @@ module.exports = function (RED) {
       trigger_type: config.triggerType || "api",
     };
 
+    function normalizeSourceType(value) {
+      const raw = String(value || "").trim().toLowerCase();
+      if (!raw) return "manual";
+      if (raw === "watcher" || raw === "watch") return "file_watch";
+      return raw;
+    }
+
+    function normalizeTriggerType(value) {
+      const raw = String(value || "").trim().toLowerCase();
+      if (!raw) return "api";
+      return raw;
+    }
+
     const publishUrl = normalizePublishUrl(config.publishUrl);
 
     node.status({ fill: "grey", shape: "ring", text: schemaDetails ? schemaDetails.eventType : "ready" });
@@ -94,7 +107,12 @@ module.exports = function (RED) {
             event_type: eventType,
             timestamp: msg.timestamp || msgEnvelope.timestamp || new Date().toISOString(),
             version: msg.version || msgEnvelope.version || "1.0.0",
-            source: deepMerge(sourceDefaults, msg.source || msgEnvelope.source || {}),
+            source: (() => {
+              const mergedSource = deepMerge(sourceDefaults, msg.source || msgEnvelope.source || {});
+              mergedSource.type = normalizeSourceType(mergedSource.type);
+              mergedSource.trigger_type = normalizeTriggerType(mergedSource.trigger_type);
+              return mergedSource;
+            })(),
             correlation_ids: toArray(msg.correlation_ids || msgEnvelope.correlation_ids || []),
             payload: mergedPayload,
           }),
