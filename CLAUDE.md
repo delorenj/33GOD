@@ -1,5 +1,19 @@
 # Claude Code Configuration - SPARC Development Environment
 
+## 🚫 NON-NEGOTIABLE: NO WORK WITHOUT AN ACTIVE PLANE TICKET
+
+**Plane board:** https://plane.delo.sh/33god/
+
+1. Before writing/changing code, you must have an active Plane ticket.
+2. Move ticket to `In Progress` before first code change.
+3. Branch name must include ticket reference (`ABC-123` or `int-123`).
+4. Post progress updates on the ticket while you work.
+5. No ticket = no code changes, no commits, no PR.
+
+Enforcement: Git hooks (`pre-commit`, `commit-msg`) block non-ticket branches/commits.
+Emergency-only bypass: `ALLOW_NO_TICKET=1`.
+
+
 ## 🎯 UNIVERSAL 33GOD FACTS (ALWAYS TRUE)
 
 **Architecture Core Principles:**

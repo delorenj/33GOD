@@ -1,0 +1,362 @@
+<script type="text/javascript">
+  (function () {
+    function htmlEscape(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function parseJson(text, fallback) {
+      if (!text) return fallback;
+      try {
+        return JSON.parse(text);
+      } catch {
+        return fallback;
+      }
+    }
+
+    function stringifyPretty(value) {
+      try {
+        return JSON.stringify(value || {}, null, 2);
+      } catch {
+        return "{}";
+      }
+    }
+
+    RED.nodes.registerType("holyfields-out", {
+      category: "33GOD",
+      color: "#C0D8FF",
+      defaults: {
+        name: { value: "" },
+        catalogMode: { value: "vetted" },
+        schemaPath: { value: "" },
+        publishUrl: { value: "http://127.0.0.1:8682/events/custom" },
+        sourceHost: { value: "node-red" },
+        sourceApp: { value: "node-red-holyfields" },
+        sourceType: { value: "manual" },
+        triggerType: { value: "api" },
+        timeoutMs: { value: "10000", validate: RED.validators.number() },
+        payloadTemplate: { value: "{}" },
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "font-awesome/fa-paper-plane",
+      paletteLabel: "holyfields out",
+      label: function () {
+        return this.name || "holyfields out";
+      },
+      oneditprepare: function () {
+        const node = this;
+        const $catalogMode = $("#node-input-catalogMode");
+        const $schemaPath = $("#node-input-schemaPath");
+        const $schemaMeta = $("#hf-out-schema-meta");
+        const $payloadTemplate = $("#node-input-payloadTemplate");
+        const $payloadForm = $("#hf-out-payload-form");
+        const $resetDefaults = $("#hf-out-reset-defaults");
+
+        let currentSchemaDetails = null;
+        let currentPayloadObj = parseJson($payloadTemplate.val(), {});
+
+        function syncPayloadTemplate() {
+          $payloadTemplate.val(stringifyPretty(currentPayloadObj));
+        }
+
+        function setField(path, value) {
+          currentPayloadObj[path] = value;
+          syncPayloadTemplate();
+        }
+
+        function renderPayloadForm(payloadSchema) {
+          const props = (payloadSchema && payloadSchema.properties) || {};
+          const required = new Set((payloadSchema && payloadSchema.required) || []);
+
+          const keys = Object.keys(props);
+          if (keys.length === 0) {
+            $payloadForm.html('<div class="form-tips">No payload fields in schema. Use JSON template below.</div>');
+            return;
+          }
+
+          const rows = keys.map((key) => {
+            const s = props[key] || {};
+            const title = htmlEscape(s.description || "");
+            const req = required.has(key) ? "<span style='color:#c00'>*</span>" : "";
+            const constVal = s.const;
+            const enumVals = Array.isArray(s.enum) ? s.enum : null;
+
+            if (constVal !== undefined) {
+              currentPayloadObj[key] = constVal;
+              return `
+                <div class="form-row">
+                  <label>${htmlEscape(key)} ${req}</label>
+                  <input type="text" class="hf-out-field" data-key="${htmlEscape(key)}" value="${htmlEscape(String(constVal))}" disabled title="${title}">
+                </div>
+              `;
+            }
+
+            if (enumVals && enumVals.length > 0) {
+              const selected = currentPayloadObj[key] !== undefined ? String(currentPayloadObj[key]) : String(enumVals[0]);
+              const options = enumVals.map((v) => {
+                const str = String(v);
+                const selectedAttr = str === selected ? "selected" : "";
+                return `<option value="${htmlEscape(str)}" ${selectedAttr}>${htmlEscape(str)}</option>`;
+              }).join("");
+
+              return `
+                <div class="form-row">
+                  <label>${htmlEscape(key)} ${req}</label>
+                  <select class="hf-out-field" data-key="${htmlEscape(key)}" title="${title}">${options}</select>
+                </div>
+              `;
+            }
+
+            const t = Array.isArray(s.type) ? s.type.find((x) => x !== "null") : s.type;
+
+            if (t === "boolean") {
+              const checked = Boolean(currentPayloadObj[key]) ? "checked" : "";
+              return `
+                <div class="form-row">
+                  <label>${htmlEscape(key)} ${req}</label>
+                  <input type="checkbox" class="hf-out-field-bool" data-key="${htmlEscape(key)}" ${checked} title="${title}">
+                </div>
+              `;
+            }
+
+            if (t === "integer" || t === "number") {
+              const val = currentPayloadObj[key] !== undefined ? String(currentPayloadObj[key]) : "";
+              return `
+                <div class="form-row">
+                  <label>${htmlEscape(key)} ${req}</label>
+                  <input type="number" class="hf-out-field" data-key="${htmlEscape(key)}" value="${htmlEscape(val)}" title="${title}">
+                </div>
+              `;
+            }
+
+            if (t === "object" || t === "array") {
+              const val = currentPayloadObj[key] !== undefined ? stringifyPretty(currentPayloadObj[key]) : (t === "array" ? "[]" : "{}");
+              return `
+                <div class="form-row">
+                  <label>${htmlEscape(key)} ${req}</label>
+                  <textarea class="hf-out-field-json" data-key="${htmlEscape(key)}" rows="3" title="${title}">${htmlEscape(val)}</textarea>
+                </div>
+              `;
+            }
+
+            const val = currentPayloadObj[key] !== undefined ? String(currentPayloadObj[key]) : "";
+            return `
+              <div class="form-row">
+                <label>${htmlEscape(key)} ${req}</label>
+                <input type="text" class="hf-out-field" data-key="${htmlEscape(key)}" value="${htmlEscape(val)}" title="${title}">
+              </div>
+            `;
+          });
+
+          $payloadForm.html(rows.join(""));
+
+          $payloadForm.find(".hf-out-field").on("input change", function () {
+            const key = $(this).data("key");
+            setField(key, $(this).val());
+          });
+
+          $payloadForm.find(".hf-out-field-bool").on("change", function () {
+            const key = $(this).data("key");
+            setField(key, Boolean($(this).is(":checked")));
+          });
+
+          $payloadForm.find(".hf-out-field-json").on("change", function () {
+            const key = $(this).data("key");
+            const raw = $(this).val();
+            try {
+              setField(key, JSON.parse(raw));
+              $(this).css("border-color", "");
+            } catch {
+              $(this).css("border-color", "#c00");
+            }
+          });
+
+          syncPayloadTemplate();
+        }
+
+        function loadSchemaDetails(schemaPath) {
+          if (!schemaPath) {
+            currentSchemaDetails = null;
+            $schemaMeta.text("Select a schema");
+            $payloadForm.html("");
+            return;
+          }
+
+          $.getJSON("holyfields/schema", { path: schemaPath }, function (resp) {
+            if (!resp || !resp.ok || !resp.schema) {
+              $schemaMeta.text("Failed to load schema details");
+              return;
+            }
+
+            currentSchemaDetails = resp.schema;
+            $schemaMeta.html(
+              `<b>${htmlEscape(resp.schema.title)}</b><br>` +
+              `<span style="color:#666">${htmlEscape(resp.schema.eventType)} (${htmlEscape(resp.schema.kind)})</span>`
+            );
+
+            if (!currentPayloadObj || Object.keys(currentPayloadObj).length === 0) {
+              currentPayloadObj = resp.schema.defaultPayload || {};
+              syncPayloadTemplate();
+            }
+
+            renderPayloadForm(resp.schema.payloadSchema || {});
+          }).fail(function (err) {
+            $schemaMeta.text(`Schema fetch failed: ${err.status || "?"}`);
+          });
+        }
+
+        function loadCatalog() {
+          const mode = $catalogMode.val() || "vetted";
+          $.getJSON("holyfields/schemas", { mode: mode }, function (resp) {
+            const schemas = (resp && resp.schemas) || [];
+
+            $schemaPath.empty();
+            $schemaPath.append(`<option value="">-- Select schema --</option>`);
+
+            schemas.forEach((schema) => {
+              const label = `[${schema.kind}] ${schema.eventType} — ${schema.schemaPath}`;
+              const selected = schema.schemaPath === node.schemaPath ? "selected" : "";
+              $schemaPath.append(`<option value="${htmlEscape(schema.schemaPath)}" ${selected}>${htmlEscape(label)}</option>`);
+            });
+
+            const picked = $schemaPath.val() || node.schemaPath || "";
+            if (picked) $schemaPath.val(picked);
+            loadSchemaDetails($schemaPath.val());
+          }).fail(function (err) {
+            $schemaMeta.text(`Catalog fetch failed: ${err.status || "?"}`);
+          });
+        }
+
+        currentPayloadObj = parseJson($payloadTemplate.val(), {});
+        syncPayloadTemplate();
+
+        $catalogMode.on("change", loadCatalog);
+        $schemaPath.on("change", function () {
+          loadSchemaDetails($(this).val());
+        });
+
+        $resetDefaults.on("click", function (ev) {
+          ev.preventDefault();
+          if (!currentSchemaDetails) return;
+          currentPayloadObj = currentSchemaDetails.defaultPayload || {};
+          syncPayloadTemplate();
+          renderPayloadForm(currentSchemaDetails.payloadSchema || {});
+        });
+
+        loadCatalog();
+      },
+    });
+  })();
+</script>
+
+<script type="text/html" data-template-name="holyfields-out">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="holyfields out">
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-catalogMode"><i class="fa fa-filter"></i> Catalog</label>
+    <select id="node-input-catalogMode">
+      <option value="vetted">Vetted only</option>
+      <option value="all">All schemas</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-schemaPath"><i class="fa fa-book"></i> Schema</label>
+    <select id="node-input-schemaPath"></select>
+  </div>
+
+  <div class="form-row">
+    <div id="hf-out-schema-meta" class="form-tips">Loading schema catalog…</div>
+  </div>
+
+  <div class="form-row">
+    <label><i class="fa fa-list"></i> Payload form</label>
+    <div id="hf-out-payload-form" style="max-height:260px; overflow:auto; border:1px solid #ddd; padding:8px; border-radius:4px;"></div>
+    <div style="margin-top:6px;">
+      <a href="#" id="hf-out-reset-defaults">Reset payload to schema defaults</a>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-publishUrl"><i class="fa fa-link"></i> Publish URL</label>
+    <input type="text" id="node-input-publishUrl" placeholder="http://127.0.0.1:8682/events/custom">
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-timeoutMs"><i class="fa fa-clock-o"></i> Timeout (ms)</label>
+    <input type="number" id="node-input-timeoutMs" min="1000" step="500">
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-sourceHost"><i class="fa fa-desktop"></i> source.host</label>
+    <input type="text" id="node-input-sourceHost">
+  </div>
+  <div class="form-row">
+    <label for="node-input-sourceApp"><i class="fa fa-cube"></i> source.app</label>
+    <input type="text" id="node-input-sourceApp">
+  </div>
+  <div class="form-row">
+    <label for="node-input-sourceType"><i class="fa fa-bolt"></i> source.type</label>
+    <select id="node-input-sourceType">
+      <option value="manual">manual</option>
+      <option value="agent">agent</option>
+      <option value="scheduled">scheduled</option>
+      <option value="heartbeat">heartbeat</option>
+      <option value="file_watch">file_watch</option>
+      <option value="hook">hook</option>
+      <option value="webhook">webhook</option>
+      <option value="service">service</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-triggerType"><i class="fa fa-play"></i> source.trigger_type</label>
+    <select id="node-input-triggerType">
+      <option value="api">api</option>
+      <option value="event">event</option>
+      <option value="scheduled">scheduled</option>
+      <option value="webhook">webhook</option>
+      <option value="manual">manual</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-payloadTemplate"><i class="fa fa-code"></i> Payload JSON</label>
+    <textarea id="node-input-payloadTemplate" rows="6" style="width:100%; font-family:monospace;"></textarea>
+  </div>
+
+  <div class="form-tips">
+    Input message can override config: <code>msg.payload</code>, <code>msg.event_type</code>, <code>msg.source</code>,
+    <code>msg.correlation_ids</code>, <code>msg.publishUrl</code>.
+  </div>
+</script>
+
+<script type="text/html" data-help-name="holyfields-out">
+  <p><b>holyfields out</b> publishes schema-driven events/commands to Bloodbank.</p>
+
+  <h3>How it works</h3>
+  <ol>
+    <li>Pick a Holyfields schema from dropdown (vetted or all)</li>
+    <li>Fill payload using generated generic form</li>
+    <li>Node assembles envelope defaults and POSTs to Bloodbank</li>
+  </ol>
+
+  <h3>Command routing</h3>
+  <p>If schema is <code>command/envelope.v1.json</code>, the node automatically routes to:
+  <code>command.{target_agent}.{action}</code>.</p>
+
+  <h3>Output</h3>
+  <p>Passes through original msg and adds:</p>
+  <ul>
+    <li><code>msg.envelope</code> – published envelope</li>
+    <li><code>msg.event_type</code> / <code>msg.routing_key</code></li>
+    <li><code>msg.holyfields.responseStatus</code> / <code>responseBody</code></li>
+  </ul>
+</script>

@@ -1,0 +1,66 @@
+default:
+  enabled: true
+  mode: stream
+  extra_args: "--device cuda"
+  text_prefix: ""
+
+agents:
+  cack:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  grolf:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  lenoon:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  rererere:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  tonny:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  rar:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  momo:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  tongy:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  pepe:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""
+
+  lalathething:
+    enabled: true
+    model_path: ""
+    extra_args: ""
+    text_prefix: ""

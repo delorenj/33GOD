@@ -10,12 +10,6 @@
 [submodule "candystore"]
 	path = candystore
 	url = git@github.com:delorenj/candystore.git
-[submodule "degenerate"]
-	path = degenerate
-	url = git@github.com:delorenj/degenerate.git
-[submodule "flume"]
-	path = flume
-	url = git@github.com:delorenj/flume.git
 [submodule "holocene"]
 	path = holocene
 	url = git@github.com:delorenj/holocene.git
@@ -28,9 +22,6 @@
 [submodule "jelmore"]
 	path = jelmore
 	url = git@github.com:delorenj/jelmore.git
-[submodule "perth"]
-	path = perth
-	url = git@github.com:delorenj/perth.git
 [submodule "HeyMa"]
 	path = HeyMa
 	url = git@github.com:delorenj/HeyMa.git
@@ -40,9 +31,9 @@
 [submodule "theboardroom"]
 	path = theboardroom
 	url = git@github.com:delorenj/theboardroom.git
-[submodule "yi"]
-	path = yi
-	url = git@github.com:delorenj/yi.git
 [submodule "zellij-driver"]
 	path = zellij-driver
 	url = git@github.com:delorenj/zellij-driver.git
+[submodule "TonnyBox"]
+	path = TonnyBox
+	url = ./TonnyBox

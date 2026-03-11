@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+MSG_FILE="${1:-}"
+[ -z "$MSG_FILE" ] && exit 0
+
+if [ "${ALLOW_NO_TICKET:-0}" = "1" ]; then
+  echo -e "${GREEN}[TICKET]${NC} commit-msg guard bypassed (ALLOW_NO_TICKET=1)"
+  exit 0
+fi
+
+MSG=$(head -n 1 "$MSG_FILE")
+if ! echo "$MSG" | grep -Eq '([A-Z]{2,10}-[0-9]+|int-[0-9]+)'; then
+  echo -e "${RED}[TICKET]${NC} commit message is missing ticket reference."
+  echo "Example: feat(BB-142): add schema compatibility check"
+  exit 1
+fi
+
+echo -e "${GREEN}[TICKET]${NC} commit-msg guard passed"

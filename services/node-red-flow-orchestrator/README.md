@@ -44,6 +44,35 @@ Scripts require a Python venv with `aio-pika` and `boto3`:
 cd scripts && uv venv && uv pip install aio-pika boto3
 ```
 
+## Custom Node-RED Nodes (local contrib)
+
+This repo also ships local contrib packages in `nodes/`:
+
+- `node-red-contrib-split-silence`
+- `node-red-contrib-33god-holyfields`
+
+### `node-red-contrib-33god-holyfields`
+
+Provides two palette nodes:
+
+1. **holyfields out**
+   - Select Holyfields schema from dropdown (vetted/all)
+   - Fill payload with a generated generic form
+   - Publish envelope to Bloodbank (`/events/custom`)
+   - Auto-route command envelopes to `command.{agent}.{action}`
+
+2. **holyfields in**
+   - Subscribe to Bloodbank exchange/routing key via RabbitMQ
+   - Optional schema validation (`warn`, `strict`, `off`)
+   - Output envelope or payload mode
+
+Install/update local contrib packages into `~/.node-red`:
+
+```bash
+mise run install-custom-nodes
+pm2 restart node-red
+```
+
 ## Events Produced
 
 | Event | Description |

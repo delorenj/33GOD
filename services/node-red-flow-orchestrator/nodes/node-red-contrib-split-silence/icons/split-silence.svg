@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <!-- Waveform left half -->
+  <polyline points="2,20 5,12 8,20 10,8 12,20 14,14 16,20"
+    fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Silence gap (dotted) -->
+  <line x1="17" y1="20" x2="23" y2="20"
+    stroke="#999" stroke-width="1" stroke-dasharray="1.5,1.5"/>
+  <!-- Scissors / split indicator -->
+  <line x1="20" y1="6" x2="20" y2="34"
+    stroke="#d35400" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <!-- Waveform right half -->
+  <polyline points="24,20 26,14 28,20 30,8 32,20 35,12 38,20"
+    fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

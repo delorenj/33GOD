@@ -42,7 +42,7 @@
 
 ## Architecture Principles
 
-1. **Bloodbank Events are Everything**: State changes emit events, not synchronous calls. If it didn't emit an event, it didn't happen.
+1. **Bloodbank Events are Everything**: State changes emit events, not synchronous calls. If it didn't emit an event, it didn't happen. (See [GOD-14: Pure Event-Driven Pipeline](GOD-14.md))
 
 2. **Holyfields Defines the Law**: All event schemas are defined in Holyfields. No inline Pydantic models without corresponding schemas.
 
@@ -50,7 +50,7 @@
 
 4. **Candystore is the Memory**: All events persist in PostgreSQL. Query history from Candystore API; get real-time updates from WebSocket relay.
 
-5. **Heartbeats Drive Agents**: `system.heartbeat.tick` fires every 60s. Agents consume via `agent.{name}.inbox`. HeartbeatRouter processes and injects into agent sessions via OpenClaw hooks.
+5. **Heartbeats Drive Agents**: Local scheduler self-ticks every 60s (no global `system.heartbeat.tick` dependency — BB-3). HeartbeatRouter scans agent heartbeat.json files and injects overdue checks into agent sessions via OpenClaw hooks. Dispatch events published to Bloodbank for observability.
 
 6. **Holocene Provides Visibility**: Real-time dashboard fetches history from Candystore API and subscribes to live events via WS relay.
 
