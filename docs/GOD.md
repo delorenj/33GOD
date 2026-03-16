@@ -1,6 +1,6 @@
 # 33GOD System - GOD Document
 
-> **Guaranteed Organizational Document** - System-wide developer reference
+> **GOD Document** - System-wide developer reference
 >
 > **Last Updated**: 2026-02-22
 > **Architecture**: Event-Driven Microservices
@@ -14,28 +14,13 @@
 
 **The Event-Driven Architecture Flow:**
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  HOLYFIELDS          BLOODBANK           CANDYSTORE         HOLOCENE        │
-│  (Definition)   →    (Transport)    →    (Persistence) →    (Visibility)    │
-│       │                   │                   │                   │         │
-│       │                   │                   │                   ▼         │
-│       │                   │                   │            AGENT INBOX      │
-│       │                   │                   │                   │         │
-│       │                   │                   │                   ▼         │
-│       │                   │                   │           HEARTBEATROUTER   │
-│       │                   │                   │                   │         │
-│       │                   │                   │                   ▼         │
-│       │                   │                   │            AGENT ACTION     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
 **Core Value Proposition:**
+
 - **Bloodbank Events** — Immutable facts that drive the entire system
 - **Holyfields Contracts** — Schema-first event definitions (the law)
 - **Persistent History** — Every event stored in Candystore (PostgreSQL) forever
 - **Real-Time Visibility** — Holocene displays live and historical events
-- **Agent Heartbeats** — `system.heartbeat.tick` drives agent orchestration every 60s
+- **Agent Heartbeats** — Managed by each agent individually and scheduled through Syringe CLI
 - **Composable Architecture** — Components are small, focused, event-driven
 
 ---
@@ -50,17 +35,15 @@
 
 4. **Candystore is the Memory**: All events persist in PostgreSQL. Query history from Candystore API; get real-time updates from WebSocket relay.
 
-5. **Heartbeats Drive Agents**: Local scheduler self-ticks every 60s (no global `system.heartbeat.tick` dependency — BB-3). HeartbeatRouter scans agent heartbeat.json files and injects overdue checks into agent sessions via OpenClaw hooks. Dispatch events published to Bloodbank for observability.
+5. **Holocene Provides Visibility**: Real-time dashboard fetches history from Candystore API and subscribes to live events via WS relay.
 
-6. **Holocene Provides Visibility**: Real-time dashboard fetches history from Candystore API and subscribes to live events via WS relay.
+6. **Registry as Truth**: `services/registry.yaml` defines service topology
 
-7. **Registry as Truth**: `services/registry.yaml` defines service topology
+7. **Modular & Autonomous**: Components are small, focused, independently deployable
 
-8. **Modular & Autonomous**: Components are small, focused, independently deployable
+8. **Agent-Centric**: AI agents are first-class citizens with their own event domains
 
-9. **Agent-Centric**: AI agents are first-class citizens with their own event domains
-
-10. **Observable by Default**: All events flow through Bloodbank for tracing
+9. **Observable by Default**: All events flow through Bloodbank for tracing
 
 ---
 
@@ -100,7 +83,6 @@ graph TB
         HEY[HeyMa<br/>Voice Interface]
         TB[TheBoard<br/>Brainstorming]
         CB[Candybar<br/>Registry UI]
-        DG[Degenerate<br/>Doc Drift]
     end
 
     %% Flow: Holyfields → Bloodbank
@@ -133,6 +115,7 @@ graph TB
 ```
 
 **The Event Flow:**
+
 1. **Holyfields** defines all event schemas (the contract)
 2. **Bloodbank** transports events via RabbitMQ (the nervous system)
 3. **Candystore** persists all events to PostgreSQL (the memory)
@@ -143,25 +126,25 @@ graph TB
 
 ## Domain Reference
 
-| Domain | Purpose | Components | GOD Doc |
-|--------|---------|------------|---------|
-| **Infrastructure** | Event backbone, schemas, persistence | Bloodbank, Holyfields, Candystore, Candybar | [Infrastructure GOD](domains/infrastructure/GOD.md) |
-| **Agent Orchestration** | Agent lifecycle, teams, protocols | Flume, Yi, AgentForge, Holocene | [Agent Orchestration GOD](domains/agent-orchestration/GOD.md) |
-| **Workspace Management** | Git worktrees, sessions, terminals | ~~iMi (Retired)~~, ~~Jelmore (Retired)~~, Zellij-Driver, Perth | [Workspace Management GOD](domains/workspace-management/GOD.md) |
-| **Meeting & Collaboration** | Brainstorming, convergence, visualization | TheBoard, TheBoard Room | [Meeting & Collaboration GOD](domains/meeting-collaboration/GOD.md) |
-| **Dashboards & Voice** | UI, voice interface, monitoring | Holocene, HeyMa, Candybar | [Dashboards & Voice GOD](domains/dashboards-voice/GOD.md) |
-| **Development Tools** | Doc sync, methodology, coding sessions | Jelmore, Degenerate, BMAD | [Development Tools GOD](domains/development-tools/GOD.md) |
+| Domain                      | Purpose                                   | Components                                                     | GOD Doc                                                             |
+| --------------------------- | ----------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Infrastructure**          | Event backbone, schemas, persistence      | Bloodbank, Holyfields, Candystore, Candybar                    | [Infrastructure GOD](domains/infrastructure/GOD.md)                 |
+| **Agent Orchestration**     | Agent lifecycle, teams, protocols         | Flume, Yi, AgentForge, Holocene                                | [Agent Orchestration GOD](domains/agent-orchestration/GOD.md)       |
+| **Workspace Management**    | Git worktrees, sessions, terminals        | ~~iMi (Retired)~~, ~~Jelmore (Retired)~~, Zellij-Driver, Perth | [Workspace Management GOD](domains/workspace-management/GOD.md)     |
+| **Meeting & Collaboration** | Brainstorming, convergence, visualization | TheBoard, TheBoard Room                                        | [Meeting & Collaboration GOD](domains/meeting-collaboration/GOD.md) |
+| **Dashboards & Voice**      | UI, voice interface, monitoring           | Holocene, HeyMa, Candybar                                      | [Dashboards & Voice GOD](domains/dashboards-voice/GOD.md)           |
+| **Development Tools**       | Doc sync, methodology, coding sessions    | Jelmore, Degenerate, BMAD                                      | [Development Tools GOD](domains/development-tools/GOD.md)           |
 
 ### Infrastructure Domain Deep-Dive
 
 The **Infrastructure Domain** is the foundation of 33GOD's event-driven architecture:
 
-| Component | Role in Event Flow | Status | GOD Doc |
-|-----------|-------------------|--------|---------|
-| **Holyfields** | Defines all event schemas (Schema Registry) | Production | [holyfields/GOD.md](../holyfields/GOD.md) |
-| **Bloodbank** | Transports events via RabbitMQ (Event Bus) | Production | [bloodbank/GOD.md](../bloodbank/GOD.md) |
-| **Candystore** | Persists events to PostgreSQL (Event Store) | Development | [candystore/GOD.md](../candystore/GOD.md) |
-| **Candybar** | UI for service registry (Registry Dashboard) | Development | [candybar/GOD.md](../candybar/GOD.md) |
+| Component      | Role in Event Flow                           | Status      | GOD Doc                                   |
+| -------------- | -------------------------------------------- | ----------- | ----------------------------------------- |
+| **Holyfields** | Defines all event schemas (Schema Registry)  | Production  | [holyfields/GOD.md](../holyfields/GOD.md) |
+| **Bloodbank**  | Transports events via RabbitMQ (Event Bus)   | Production  | [bloodbank/GOD.md](../bloodbank/GOD.md)   |
+| **Candystore** | Persists events to PostgreSQL (Event Store)  | Development | [candystore/GOD.md](../candystore/GOD.md) |
+| **Candybar**   | UI for service registry (Registry Dashboard) | Development | [candybar/GOD.md](../candybar/GOD.md)     |
 
 ---
 
@@ -194,42 +177,24 @@ The **Infrastructure Domain** is the foundation of 33GOD's event-driven architec
 ### Critical Event Flows
 
 **Agent Task Execution:**
+
 ```
 agent.task.created → agent.task.claimed → agent.task.progress → agent.task.completed
 ```
 
-**Heartbeat-Driven Agent Orchestration:**
-```
-system.heartbeat.tick (every 60s)
-    ↓
 agent.{name}.inbox (consumed by agent)
-    ↓
+↓
 HeartbeatRouter.process_tick()
-    ↓
+↓
 Injected into agent session via OpenClaw hooks
+
 ```
 
 The **heartbeat system** is the pulse of 33GOD:
-- `system.heartbeat.tick` fires every 60 seconds from Bloodbank
 - Agents subscribe to `agent.{name}.inbox` routing key
 - HeartbeatRouter processes ticks and routes to appropriate agents
 - OpenClaw hooks inject heartbeat context into agent sessions
 - Agents consume heartbeats to trigger periodic tasks, health checks, and coordination
-
-**Git Worktree Lifecycle:**
-```
-worktree.created → session.started → commit.created → worktree.released
-```
-
-**Meeting Flow:**
-```
-meeting.started → discussion.round → convergence.detected → meeting.ended
-```
-
-**Transcript Processing:**
-```
-transcript.ready → transcript.processed → notes.generated → vault.updated
-```
 
 ### Event Schema Registry
 
@@ -254,63 +219,59 @@ All event schemas are defined in **Holyfields** and validated by Bloodbank.
 | **Bloodbank** | Infrastructure | Event Bus — transports all events | Production | [bloodbank/GOD.md](bloodbank/GOD.md) |
 | **Candystore** | Infrastructure | Event Store — persists to PostgreSQL | Development | [candystore/GOD.md](candystore/GOD.md) |
 | **Candybar** | Infrastructure | Registry UI — displays service topology | Development | [candybar/GOD.md](candybar/GOD.md) |
-| **Flume** | Agent Orchestration | Protocol | Development | _(To be created)_ |
-| **Yi** | Agent Orchestration | Adapter | Planning | _(To be created)_ |
 | **AgentForge** | Agent Orchestration | Team Builder | Planning | _(To be created)_ |
 | **Holocene** | Agent Orchestration / Dashboards | Mission Control — displays events | Development | [holocene/GOD.md](holocene/GOD.md) |
-| **iMi** | Workspace Management | CLI | **Retired** | [iMi/GOD.md](iMi/GOD.md) |
 | **Jelmore** | Workspace Management | API/CLI | **Retired** | [jelmore/GOD.md](jelmore/GOD.md) |
 | **Zellij-Driver** | Workspace Management | CLI | Development | _(To be created)_ |
-| **Perth** | Workspace Management | Distribution | Development | _(To be created)_ |
 | **TheBoard** | Meeting & Collaboration | Orchestrator | Planning | _(To be created)_ |
 | **TheBoard Room** | Meeting & Collaboration | UI | Planning | [theboardroom/GOD.md](theboardroom/GOD.md) |
 | **HeyMa** | Dashboards & Voice | Voice UI | Development | [HeyMa/GOD.md](HeyMa/GOD.md) |
-| **Degenerate** | Development Tools | Doc Sync | Planning | _(To be created)_ |
-| **BMAD** | Development Tools | Methodology | Production | _(To be created)_ |
 
 ### Infrastructure Components Explained
 
 **The Foundation of 33GOD's Event-Driven Architecture:**
 
 ```
+
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         INFRASTRUCTURE STACK                                 │
+│ INFRASTRUCTURE STACK │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│   HOLYFIELDS                                                                 │
-│   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │  Schema Registry (JSON Schemas)                                      │   │
-│   │  • Defines all event types                                           │   │
-│   │  • Generates Python Pydantic models                                  │   │
-│   │  • Generates TypeScript Zod schemas                                  │   │
-│   └─────────────────────────────────────────────────────────────────────┘   │
-│                              ↓                                               │
-│   BLOODBANK                                                                  │
-│   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │  RabbitMQ Event Bus                                                  │   │
-│   │  • Exchange: bloodbank.events.v1 (TOPIC)                             │   │
-│   │  • Routing keys: domain.resource.action                              │   │
-│   │  • Durable queues with retry + DLQ                                   │   │
-│   └─────────────────────────────────────────────────────────────────────┘   │
-│                              ↓                                               │
-│   CANDYSTORE                                                                 │
-│   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │  PostgreSQL Event Store                                              │   │
-│   │  • Persists ALL events (wildcard binding #)                          │   │
-│   │  • Query API for historical data                                     │   │
-│   │  • JSONB payload storage                                             │   │
-│   └─────────────────────────────────────────────────────────────────────┘   │
-│                              ↓                                               │
-│   HOLOCENE                                                                   │
-│   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │  Real-time Dashboard                                                 │   │
-│   │  • Candystore API for history                                        │   │
-│   │  • WebSocket relay for live events                                   │   │
-│   │  • Agent constellation visualization                                 │   │
-│   └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
+│ │
+│ HOLYFIELDS │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ Schema Registry (JSON Schemas) │ │
+│ │ • Defines all event types │ │
+│ │ • Generates Python Pydantic models │ │
+│ │ • Generates TypeScript Zod schemas │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+│ ↓ │
+│ BLOODBANK │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ RabbitMQ Event Bus │ │
+│ │ • Exchange: bloodbank.events.v1 (TOPIC) │ │
+│ │ • Routing keys: domain.resource.action │ │
+│ │ • Durable queues with retry + DLQ │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+│ ↓ │
+│ CANDYSTORE │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ PostgreSQL Event Store │ │
+│ │ • Persists ALL events (wildcard binding #) │ │
+│ │ • Query API for historical data │ │
+│ │ • JSONB payload storage │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+│ ↓ │
+│ HOLOCENE │
+│ ┌─────────────────────────────────────────────────────────────────────┐ │
+│ │ Real-time Dashboard │ │
+│ │ • Candystore API for history │ │
+│ │ • WebSocket relay for live events │ │
+│ │ • Agent constellation visualization │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+│ │
 └─────────────────────────────────────────────────────────────────────────────┘
-```
+
+````
 
 ---
 
@@ -327,13 +288,14 @@ graph LR
     AO -->|claims worktrees| WM
     MC -->|agent participants| AO
     DV -->|displays agent health| AO
-```
+````
 
 ---
 
 ## Infrastructure Requirements
 
 ### Holyfields (Schema Registry)
+
 - **Location**: `~/code/33GOD/holyfields/`
 - **Schemas**: `holyfields/schemas/`
 - **Python Bindings**: `holyfields/python/`
@@ -341,6 +303,7 @@ graph LR
 - **Generate**: `cd holyfields && make generate`
 
 ### Bloodbank (RabbitMQ)
+
 - **Connection**: `amqp://localhost:5673` (host-mapped from container 5672)
 - **Exchange**: `bloodbank.events.v1` (topic, durable)
 - **API**: `http://localhost:8682` (FastAPI publisher)
@@ -349,6 +312,7 @@ graph LR
 - **Credentials**: `~/code/33GOD/.env` (`RABBITMQ_USER` / `RABBITMQ_PASS`)
 
 ### Candystore (Event Persistence)
+
 - **API**: `http://localhost:8683` (FastAPI query interface)
 - **Database**: PostgreSQL (configurable, defaults to SQLite for dev)
 - **Purpose**: Stores ALL events via wildcard binding (`#`)
@@ -356,27 +320,25 @@ graph LR
 - **Metrics**: Prometheus on port 9090
 
 ### Holocene (Mission Control)
+
 - **URL**: `http://localhost:3000` (development)
 - **Production**: `https://holocene.delo.sh`
 - **Features**: Real-time event stream, agent constellation, project timeline
-- **Data Sources**: 
+- **Data Sources**:
   - Candystore API (historical events)
   - WebSocket relay (live events)
 
 ### Heartbeat System
-- **Event**: `system.heartbeat.tick` fires every 60 seconds
+
 - **Routing**: `agent.{name}.inbox` for agent-specific delivery
 - **Router**: HeartbeatRouter processes and routes ticks
 - **Injection**: OpenClaw hooks inject heartbeat context into agent sessions
 - **Purpose**: Drives agent orchestration, health checks, periodic tasks
 
 ### Services Registry
+
 - **Location**: `/home/delorenj/code/33GOD/services/registry.yaml`
 - **Purpose**: Single source of truth for service topology
-
-### Authentication
-- **iMi Identity**: `$IMI_IDENTITY_TOKEN` for workspace access
-- **Agent Tokens**: Per-agent authentication for Bloodbank
 
 ---
 
@@ -421,14 +383,17 @@ cd ../jelmore && uv sync
 ## Observability
 
 ### Event Monitoring
+
 - **Candybar**: Real-time event stream visualization
 - **RabbitMQ Management**: Queue depths, routing stats
 
 ### Service Health
+
 - **Registry**: Service status in `registry.yaml`
 - **Holocene**: Agent health dashboard
 
 ### Tracing
+
 - **Correlation IDs**: All events carry `correlation_id` for tracing
 - **Bloodbank**: Dead-letter queue for failed events
 
@@ -446,17 +411,20 @@ cd ../jelmore && uv sync
 ## Maintenance
 
 This GOD document is updated:
+
 - **Manually**: Via `/bmad-bmm-document-project` workflow
 - **Automatically**: Git hooks on component changes (`.githooks/pre-commit`)
 - **Frequency**: On component addition/removal, major architecture changes
 
 **Update Command:**
+
 ```bash
 # From 33GOD root
 /bmad-bmm-document-project
 ```
 
 **Documentation:**
+
 - **GOD System Guide**: `docs/GOD-SYSTEM-GUIDE.md`
 - **Templates**: `docs/templates/`
 - **Git Hooks**: `.githooks/`

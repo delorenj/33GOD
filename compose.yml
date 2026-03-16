@@ -22,9 +22,9 @@ services:
     container_name: 33god-redis
     hostname: 33god-redis
     ports:
-      - "6381:6379"     # Redis port (6381 on host; 6380 used by theboard-redis)
+      - "6381:6379" # Redis port (6381 on host; 6380 used by theboard-redis)
     volumes:
-      - redis-data:/data
+      - 33god-redis-data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -51,10 +51,10 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     ports:
-      - "5673:5672"       # AMQP (5673 on host)
-      - "15673:15672"     # Management UI
+      - "5673:5672" # AMQP (5673 on host)
+      - "15673:15672" # Management UI
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - 33god-rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
@@ -63,38 +63,48 @@ services:
     restart: unless-stopped
     networks:
       - 33god-network
+      - proxy
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.http.routers.rabbit.rule=Host(`rabbit.delo.sh`)"
+      - "traefik.http.routers.rabbit.entrypoints=websecure"
+      - "traefik.http.routers.rabbit.tls.certresolver=letsencrypt"
+      - "traefik.http.services.rabbit.loadbalancer.server.port=15672"
+      - "traefik.docker.network=proxy"
 
   # ============================================================================
   # PostgreSQL - 33GOD Platform Database
   # ============================================================================
-  postgres:
-    image: postgres:16-alpine
-    container_name: 33god-postgres
-    hostname: 33god-postgres
-    ports:
-      - "5434:5432"     # Postgres port (5434 on host; 5433 used by theboard)
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-delorenj}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-33god}
-      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-delorenj} -d ${POSTGRES_DB:-33god}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
-    networks:
-      - 33god-network
-    labels:
-      - "traefik.enable=false"
-      - "33god.service=postgres"
-      - "33god.description=Platform database for asset registry and shared tables"
+  #  postgres:
+  #    image: postgres:16-alpine
+  #    container_name: 33god-postgres
+  #    hostname: 33god-postgres
+  #    ports:
+  #      - "5434:5432" # Postgres port (5434 on host; 5433 used by theboard)
+  #    environment:
+  #      POSTGRES_USER: ${POSTGRES_USER:-delorenj}
+  #      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #      POSTGRES_DB: ${POSTGRES_DB:-33god}
+  #      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+  #    volumes:
+  #      - 33god-db-data:/var/lib/postgresql/data
+  #    healthcheck:
+  #      test:
+  #        [
+  #          "CMD-SHELL",
+  #          "pg_isready -U ${POSTGRES_USER:-delorenj} -d ${POSTGRES_DB:-33god}",
+  #        ]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 5
+  #      start_period: 30s
+  #    restart: unless-stopped
+  #    networks:
+  #      - 33god-network
+  #    labels:
+  #      - "traefik.enable=false"
+  #      - "33god.service=postgres"
+  #      - "33god.description=Platform database for asset registry and shared tables"
 
   # ============================================================================
   # Postgres NOTIFY Bridge - Forwards DB events to Bloodbank
@@ -106,12 +116,10 @@ services:
     container_name: 33god-postgres-notify-bridge
     hostname: postgres-notify-bridge
     environment:
-      POSTGRES_DSN: postgresql://${POSTGRES_USER:-delorenj}:${POSTGRES_PASSWORD}@33god-postgres:5432/33god
+      POSTGRES_DSN: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@192.168.1.12:5432/33god
       BLOODBANK_API_URL: http://bloodbank:8682
       NOTIFY_CHANNEL: bloodbank_events
     depends_on:
-      postgres:
-        condition: service_healthy
       bloodbank:
         condition: service_healthy
     restart: unless-stopped
@@ -132,31 +140,35 @@ services:
     container_name: 33god-bloodbank
     hostname: bloodbank
     ports:
-      - "8682:8682"     # FastAPI port
+      - "8682:8682" # FastAPI port
     environment:
       # RabbitMQ Connection
       RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      
+
       # Redis Connection
       REDIS_HOST: 33god-redis
       REDIS_PORT: "6379"
-      
+
       # Schema Validation
       HOLYFIELDS_SCHEMA_DIR: /schemas
       SCHEMA_VALIDATION_ENABLED: "true"
       SCHEMA_VALIDATION_STRICT: "true"
-      
+
       # Service Configuration
       BLOODBANK_PORT: "8682"
       BLOODBANK_HOST: "0.0.0.0"
-      
+
+      # Plane intake webhook bridge
+      PLANE_WEBHOOK_SECRET: ${PLANE_WEBHOOK_SECRET:-}
+      PLANE_INTAKE_PROJECT_ID: ${PLANE_INTAKE_PROJECT_ID:-f7572d0c-ae54-4d25-ae6c-d0d0fa1cc11f}
+
       # Observability
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_ENDPOINT:-}
       PROMETHEUS_PORT: "9090"
     volumes:
       - ./holyfields/schemas:/schemas:ro
-      - ./holyfields/src/holyfields:/app/holyfields:ro  # Generated Pydantic models
+      - ./holyfields/src/holyfields:/app/holyfields:ro # Generated Pydantic models
     depends_on:
       redis:
         condition: service_healthy
@@ -189,13 +201,13 @@ services:
     container_name: 33god-bloodbank-ws-relay
     hostname: bloodbank-ws-relay
     ports:
-      - "8683:8683"     # WebSocket port
+      - "8683:8683" # WebSocket port
     environment:
       # RabbitMQ Connection
       RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       ROUTING_KEY: ${RELAY_ROUTING_KEY:-#}
-      
+
       # WebSocket Server
       WS_HOST: "0.0.0.0"
       WS_PORT: "8683"
@@ -318,7 +330,7 @@ services:
     container_name: 33god-candystore
     hostname: candystore
     ports:
-      - "8684:8080"     # Event store API port
+      - "8684:8080" # Event store API port
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-delorenj}:${POSTGRES_PASSWORD}@33god-postgres:5432/${POSTGRES_DB:-33god}
       DATABASE_POOL_SIZE: "10"
@@ -339,7 +351,11 @@ services:
       bloodbank:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:8080/health'')" || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -366,12 +382,12 @@ services:
     container_name: 33god-holocene
     hostname: holocene
     ports:
-      - "11819:80"      # nginx serving built Vite app
+      - "11819:80" # nginx serving built Vite app
     environment:
       # Runtime configuration (nginx serves static files, but API proxy needs this)
       BLOODBANK_API_URL: http://bloodbank:8682
       BLOODBANK_WS_URL: ws://bloodbank-ws-relay:8683
-      
+
       # Plane API proxy configuration
       PLANE_33GOD_API_KEY: ${PLANE_33GOD_API_KEY:-}
       PROXY_PORT: "11820"
@@ -423,26 +439,26 @@ services:
       # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
       RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      
+
       # OpenClaw Hook Configuration
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
       # Point to hookd-bridge (MIG-1 CUTOVER)
       OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_DELIVER: ${OPENCLAW_HOOK_DELIVER:-false}
-      
+
       # Dispatch Rules (Ready Gate)
       INFRA_READY_STATES: ${INFRA_READY_STATES:-unstarted}
       INFRA_READY_LABELS: ${INFRA_READY_LABELS:-ready,automation:go}
       INFRA_COMPONENT_LABEL_PREFIX: ${INFRA_COMPONENT_LABEL_PREFIX:-comp:}
-      
+
       # State Persistence
       INFRA_DISPATCH_STATE_PATH: /tmp/infra-dispatch-state.json
-      
+
       # Health Check Configuration
       INFRA_RUN_CHECKS: ${INFRA_RUN_CHECKS:-true}
       INFRA_CHECK_TIMEOUT_SECONDS: ${INFRA_CHECK_TIMEOUT_SECONDS:-900}
       INFRA_COMPONENT_CHECKS_JSON: ${INFRA_COMPONENT_CHECKS_JSON:-}
-      
+
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
@@ -458,6 +474,45 @@ services:
       - "traefik.enable=false"
       - "33god.service=infra-dispatcher"
       - "33god.description=Plane webhook dispatcher to OpenClaw"
+
+  # ============================================================================
+  # Task Triage Dispatcher - task.inbox.issue.created -> OpenClaw TASK_EVENT
+  # ============================================================================
+  task-triage-dispatcher:
+    build:
+      context: .
+      dockerfile: bloodbank/Dockerfile
+    container_name: 33god-task-triage-dispatcher
+    hostname: task-triage-dispatcher
+    command: ["python", "-m", "event_producers.task_triage_dispatcher"]
+    environment:
+      # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789/18790)
+      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
+
+      # OpenClaw Hook Configuration
+      OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
+      OPENCLAW_HOOK_URL: http://127.0.0.1:18789/hooks/agent
+      OPENCLAW_HOOK_DELIVER: ${OPENCLAW_HOOK_DELIVER:-false}
+      TASK_TRIAGE_HOOK_MODEL: ${TASK_TRIAGE_HOOK_MODEL:-openai-codex/gpt-5.3-codex}
+
+      # De-duplication state
+      TASK_TRIAGE_STATE_PATH: /tmp/task-triage-dispatch-state.json
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=task-triage-dispatcher"
+      - "33god.description=Dispatches task.inbox.issue.created events to OpenClaw triage consumer"
 
   # ============================================================================
   # hookd Compatibility Bridge (GOD-4 / MIG-1)
@@ -520,7 +575,7 @@ services:
       OPENCLAW_HOOK_URL: ${OPENCLAW_HOOK_URL:-http://127.0.0.1:18789/hooks/agent}
 
       # Agent Roster (comma-separated, or "*" for all)
-      AGENT_ROSTER: ${AGENT_ROSTER:-cack,grolf,rererere,lenoon,tonny,tongy,rar,pepe,lalathing,momothecat,yi}
+      AGENT_ROSTER: ${AGENT_ROSTER:-*}
 
       # Timeouts
       HOOK_TIMEOUT_SECONDS: ${HOOK_TIMEOUT_SECONDS:-30}
@@ -546,11 +601,11 @@ services:
 # Volumes
 # ==============================================================================
 volumes:
-  redis-data:
+  33god-redis-data:
     driver: local
-  postgres-data:
+  33god-db-data:
     driver: local
-  rabbitmq-data:
+  33god-rabbitmq-data:
     driver: local
   # heartbeat-router-state: removed (BB-3) — local scheduler uses /tmp
 

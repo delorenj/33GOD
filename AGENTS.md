@@ -31,20 +31,6 @@ This document provides a comprehensive overview of the components, directories, 
 **Tech:** RabbitMQ, Python (FastStream/aio-pika)
 **Description:** The nervous system of 33GOD. Provides the RabbitMQ-based event bus infrastructure and defines the standard event schemas. Contains the core `rabbit.py` publisher/subscriber logic and deployment configs.
 
-### 🌊 Flume (Development On Hold)
-
-**Directory:** `flume/`
-**Role:** Agentic Protocol & Interfaces.
-**Tech:** TypeScript/Node.js.
-**Description:** "The Agentic Corporate Protocol". Defines the structural hierarchy (Manager, Contributor), communication interfaces, and role definitions for agents. Agnostic to the underlying intelligence (LLM/Framework).
-
-### 👔 Yi (Development On Hold)
-
-**Directory:** `yi/`
-**Role:** Agent Adapter
-**Tech:** TypeScript.
-**Description:** Abstracts agents to allow many agent frameworks to adhere and plug into the Flume tree in the 33GOD pipeline. Enforces 33GOD conventions on top of the Flume protocol. Wraps specific AI SDKs (Google ADK, Agno, Smolagents) into compliant Manager and Contributor nodes.
-
 ### 📜 Holyfields
 
 **Directory:** `holyfields/`
@@ -64,7 +50,8 @@ This document provides a comprehensive overview of the components, directories, 
 ### 🧠 Holocene
 
 **Directory:** `holocene/`
-**Role:** 33GOD Dashboard
+**Role:** 33GOD Mission Control Dashboard.
+**Tech:** Vite, React 18, TypeScript, pnpm, Tailwind, Zustand, React Query, XYFlow.
 **Description:** The GUI frontend to the 33GOD pipeline. Surfaces just the right data across a few high level views (Projects, Agents, Events, etc.)
 
 ## Applications
@@ -87,7 +74,7 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 
 **Directory:** `candybar/`
 **Role:** Cross-platform app to view and monitor Bloodbank events in realtime.
-**Tech:** Next.js + Tauri (Nextauri).
+**Tech:** Vite + React 19 + Tauri 2 (Rust backend), Tailwind, Framer Motion, Recharts.
 **Description:** The visual "Hub" for the 33GOD event bus activity
 
 ### CandyStore
@@ -113,13 +100,6 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 
 ## Development Tools
 
-### 🖥️ Perth (Development On Hold)
-
-**Directory:** `perth/`
-**Role:** Terminal Multiplexer Distribution.
-**Tech:** Rust (Zellij Fork/Distro).
-**Description:** A customized distribution of the Zellij terminal multiplexer, optimized for the 33GOD workflow.
-
 ### 🚗 Zellij Driver (zdrive)
 
 **Directory:** `zellij-driver/`
@@ -127,17 +107,38 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 **Tech:** Rust.
 **Description:** A CLI tool (`zdrive`) for managing context within Zellij sessions. Tracks intents, logs milestones, and maintains context across sessions using Redis.
 
+### 🪝 Hookd
+
+**Directory:** `hookd/`
+**Role:** Claude Code Hook → Bloodbank Publisher.
+**Tech:** Rust (tokio, lapin) + Bun/TypeScript build pipeline.
+**Description:** A daemon that intercepts Claude Code hook events, enriches them with repository context, and publishes structured events to the Bloodbank event bus. Local component (not a submodule).
+
+### 🔮 iMi
+
+**Directory:** `iMi/`
+**Role:** Intelligent Merge Interface.
+**Tech:** Rust.
+**Description:** Tooling for intelligent worktree and merge management. Provides CLI utilities for multi-branch development workflows.
+
 ## Services
 
 **Directory:** `services/`
 **Role:** Microservices Collection.
-**Description:** Contains various standalone bloodbank-driven microservices that register with the 33GOD pipeline through the Service Hub
+**Description:** Contains various standalone bloodbank-driven microservices registered via `services/registry.yaml`. Each service subscribes to Bloodbank events via the BaseSubscriber pattern.
 
-- **base**: Base service templates/classes.
+- **agent-feedback-router**: Routes agent quality feedback events.
+- **agent-voice-soprano**: Voice synthesis service for agent communication.
+- **base**: Base service templates/classes (`BaseSubscriber`).
+- **candystore**: Event persistence and audit trail (also in root as submodule).
 - **fireflies-transcript-processor**: Processes meeting transcripts from Fireflies.ai.
-- **node-red-flow-orchestrator**: Integration with Node-RED.
+- **mutation-ledger**: Tracks and records state mutations across the pipeline.
+- **node-red-flow-orchestrator**: Integration with Node-RED for visual workflow orchestration.
+- **postgres-notify-bridge**: Bridges PostgreSQL NOTIFY/LISTEN to Bloodbank events.
+- **rabbitmq**: RabbitMQ configuration and management.
 - **templates**: Service templates (e.g., `generic-consumer`).
 - **theboard-meeting-trigger**: Triggers TheBoard meetings from external events.
+- **tonny**: TonnyBox companion service.
 
 ---
 

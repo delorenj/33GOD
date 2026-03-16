@@ -6,7 +6,7 @@
 
 ---
 
-## TL;DR — What to Change Before `docker-compose up`
+## TL;DR — What to Change Before `compose up`
 
 Three things block you right now:
 
@@ -25,12 +25,13 @@ Traefik discovers containers via Docker labels, but **only on networks it's conn
 ### The Fix
 
 Services need to be on **both** networks:
+
 - `proxy` — so Traefik can reach them
 - `33god-network` — so they can talk to each other by service name (redis, rabbitmq, etc.)
 
 Only services with `traefik.enable=true` labels need the `proxy` network. Internal-only services (RabbitMQ, Redis, infra-dispatcher) stay on `33god-network` only.
 
-**Changes to `docker-compose.yml`:**
+**Changes to `compose.yml`:**
 
 ```yaml
 # At the bottom, replace the networks block:
@@ -39,21 +40,21 @@ networks:
     name: 33god-network
     driver: bridge
   proxy:
-    external: true    # Use Traefik's existing network
+    external: true # Use Traefik's existing network
 ```
 
 Then add `proxy` to `bloodbank` and `holocene` services:
 
 ```yaml
-  bloodbank:
-    networks:
-      - 33god-network
-      - proxy          # ← ADD THIS
+bloodbank:
+  networks:
+    - 33god-network
+    - proxy # ← ADD THIS
 
-  holocene:
-    networks:
-      - 33god-network
-      - proxy          # ← ADD THIS
+holocene:
+  networks:
+    - 33god-network
+    - proxy # ← ADD THIS
 ```
 
 Leave `rabbitmq`, `redis`, and `infra-dispatcher` on `33god-network` only.
@@ -64,10 +65,10 @@ Leave `rabbitmq`, `redis`, and `infra-dispatcher` on `33god-network` only.
 
 ### Current State
 
-| Container | Compose Project | Network | Host Ports |
-|-----------|----------------|---------|------------|
-| `theboard-rabbitmq` | `trunk-main` | `trunk-main_theboard-network` | 5673:5672, 15673:15672 |
-| `plane-rabbitmq` | `plane` | `proxy` | none |
+| Container           | Compose Project | Network                       | Host Ports             |
+| ------------------- | --------------- | ----------------------------- | ---------------------- |
+| `theboard-rabbitmq` | `trunk-main`    | `trunk-main_theboard-network` | 5673:5672, 15673:15672 |
+| `plane-rabbitmq`    | `plane`         | `proxy`                       | none                   |
 
 The 33GOD compose tries to create **another** `theboard-rabbitmq` → instant name conflict.
 
@@ -92,27 +93,28 @@ networks:
     external: true
   theboard-network:
     name: trunk-main_theboard-network
-    external: true      # Already exists from trunk-main
+    external: true # Already exists from trunk-main
 ```
 
 Then for `bloodbank` and `infra-dispatcher`:
 
 ```yaml
-  bloodbank:
-    networks:
-      - 33god-network
-      - proxy
-      - theboard-network   # ← to reach theboard-rabbitmq
-    # Remove depends_on: rabbitmq
+bloodbank:
+  networks:
+    - 33god-network
+    - proxy
+    - theboard-network # ← to reach theboard-rabbitmq
+  # Remove depends_on: rabbitmq
 
-  infra-dispatcher:
-    networks:
-      - 33god-network
-      - theboard-network   # ← to reach theboard-rabbitmq
-    # Remove depends_on: rabbitmq
+infra-dispatcher:
+  networks:
+    - 33god-network
+    - theboard-network # ← to reach theboard-rabbitmq
+  # Remove depends_on: rabbitmq
 ```
 
 Also remove:
+
 - The entire `rabbitmq:` service block
 - The `rabbitmq-data:` volume
 
@@ -135,6 +137,7 @@ Over time, RabbitMQ became the **system-wide event bus** (Bloodbank), not just T
 ### Should It Be Renamed?
 
 **Yes, eventually.** The correct name would be `33god-rabbitmq` or just `rabbitmq` (within the 33GOD compose context). But renaming means:
+
 - Updating `trunk-main` compose
 - Updating any hardcoded connection strings
 - Recreating the container (data persists in the volume)
@@ -153,7 +156,7 @@ docker ps | grep -E 'traefik|theboard-rabbitmq'
 # Both should be running
 ```
 
-### Step 1: Edit docker-compose.yml
+### Step 1: Edit compose.yml
 
 Apply these changes:
 
@@ -174,28 +177,28 @@ networks:
     external: true
 ```
 
-5. **Update service networks:**
+1. **Update service networks:**
 
 ```yaml
-  bloodbank:
-    networks:
-      - 33god-network
-      - proxy
-      - theboard-network
+bloodbank:
+  networks:
+    - 33god-network
+    - proxy
+    - theboard-network
 
-  holocene:
-    networks:
-      - 33god-network
-      - proxy
+holocene:
+  networks:
+    - 33god-network
+    - proxy
 
-  infra-dispatcher:
-    networks:
-      - 33god-network
-      - theboard-network
+infra-dispatcher:
+  networks:
+    - 33god-network
+    - theboard-network
 
-  redis:
-    networks:
-      - 33god-network    # (unchanged)
+redis:
+  networks:
+    - 33god-network # (unchanged)
 ```
 
 ### Step 2: Create .env file
@@ -206,12 +209,13 @@ cp .env.example .env  # if it exists, otherwise create:
 ```
 
 Required variables:
+
 ```env
 RABBITMQ_USER=delorenj
 RABBITMQ_PASS=<get from existing rabbitmq or 1Password>
 RABBITMQ_VHOST=/
 BLOODBANK_EXCHANGE=bloodbank.events.v1
-PLANE_33GOD_API_KEY=<from 1Password if needed>
+PLANE_API_KEY=<defined in ~/.config/zshyzsh/secrets.zsh>
 ```
 
 ### Step 3: Build and start
@@ -247,23 +251,23 @@ curl -s https://holocene.delo.sh/health
 
 ## 5. Other Issues to Watch
 
-| Issue | Detail | Severity |
-|-------|--------|----------|
-| **Redis port conflict** | Host port 6380 — check nothing else uses it: `ss -tlnp \| grep 6380` | Low |
-| **Bloodbank port 8682** | Exposed on host — fine for dev, but Traefik should be the entry point in prod | Low |
-| **Holocene port 11819** | Same as above | Low |
-| **`host.docker.internal`** | Used in infra-dispatcher's `OPENCLAW_HOOK_URL` — works on Docker Desktop, on Linux needs `extra_hosts: ["host.docker.internal:host-gateway"]` | **Medium** |
-| **Volume mounts** | `INFRA_DISPATCH_STATE_HOST_PATH` defaults to `~/.config/openclaw/infra-dispatch-state.json` — ensure file exists or Docker creates a directory instead | Low |
-| **Holyfields schemas** | `./holyfields/schemas` mounted into Bloodbank — confirm directory exists | Low |
+| Issue                      | Detail                                                                                                                                                 | Severity   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| **Redis port conflict**    | Host port 6380 — check nothing else uses it: `ss -tlnp \| grep 6380`                                                                                   | Low        |
+| **Bloodbank port 8682**    | Exposed on host — fine for dev, but Traefik should be the entry point in prod                                                                          | Low        |
+| **Holocene port 11819**    | Same as above                                                                                                                                          | Low        |
+| **`host.docker.internal`** | Used in infra-dispatcher's `OPENCLAW_HOOK_URL` — works on Docker Desktop, on Linux needs `extra_hosts: ["host.docker.internal:host-gateway"]`          | **Medium** |
+| **Volume mounts**          | `INFRA_DISPATCH_STATE_HOST_PATH` defaults to `~/.config/openclaw/infra-dispatch-state.json` — ensure file exists or Docker creates a directory instead | Low        |
+| **Holyfields schemas**     | `./holyfields/schemas` mounted into Bloodbank — confirm directory exists                                                                               | Low        |
 
 ### Linux `host.docker.internal` Fix
 
 Add to `infra-dispatcher`:
 
 ```yaml
-  infra-dispatcher:
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+infra-dispatcher:
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
 ```
 
 ---
