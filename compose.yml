@@ -48,8 +48,8 @@ services:
     container_name: 33god-rabbitmq
     hostname: rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_DEFAULT_USER: ${DEFAULT_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${DEFAULT_PASSWORD}
     ports:
       - "5673:5672" # AMQP (5673 on host)
       - "15673:15672" # Management UI
@@ -143,7 +143,7 @@ services:
       - "8682:8682" # FastAPI port
     environment:
       # RabbitMQ Connection
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      RABBIT_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
 
       # Redis Connection
@@ -204,7 +204,7 @@ services:
       - "8683:8683" # WebSocket port
     environment:
       # RabbitMQ Connection
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      RABBIT_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       ROUTING_KEY: ${RELAY_ROUTING_KEY:-#}
 
@@ -254,7 +254,7 @@ services:
     environment:
       # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
       # RabbitMQ is now OPTIONAL — used for publishing dispatch events only
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBITMQ_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       # Point to hookd-bridge (MIG-1 CUTOVER)
       OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
@@ -294,7 +294,7 @@ services:
     command: ["python", "-m", "context_monitor.monitor"]
     environment:
       # Use host RabbitMQ (like heartbeat-router)
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBITMQ_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       OPENCLAW_HOME: ${HOME}/.openclaw
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -332,9 +332,9 @@ services:
     ports:
       - "8684:8080" # Event store API port
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-delorenj}:${POSTGRES_PASSWORD}@33god-postgres:5432/${POSTGRES_DB:-33god}
+      DATABASE_URL: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@192.168.1.12:5432/${POSTGRES_DB:-33god}
       DATABASE_POOL_SIZE: "10"
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      RABBITMQ_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@rabbitmq:5672/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       EVENT_STORE_MANAGER_QUEUE: candystore_events
       EVENT_STORE_MANAGER_DLQ: candystore_events_dlq
@@ -346,8 +346,8 @@ services:
       LOG_FORMAT: json
       ENVIRONMENT: production
     depends_on:
-      postgres:
-        condition: service_healthy
+      #      postgres:
+      #        condition: service_healthy
       bloodbank:
         condition: service_healthy
     healthcheck:
@@ -437,7 +437,7 @@ services:
     command: ["python", "-m", "event_producers.infra_dispatcher"]
     environment:
       # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBIT_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
 
       # OpenClaw Hook Configuration
@@ -487,7 +487,7 @@ services:
     command: ["python", "-m", "event_producers.task_triage_dispatcher"]
     environment:
       # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789/18790)
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBIT_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
 
       # OpenClaw Hook Configuration
@@ -527,8 +527,8 @@ services:
     command: ["python", "-m", "hookd_bridge"]
     environment:
       # Host networking: use localhost ports
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBITMQ_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
+      RABBIT_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       BRIDGE_PORT: "18790"
       BRIDGE_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
@@ -565,8 +565,8 @@ services:
     command: ["python", "-m", "command_adapter"]
     environment:
       # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
-      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
-      RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
+      RABBITMQ_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
+      RABBIT_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@127.0.0.1:5673/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       REDIS_URL: redis://127.0.0.1:6379
 
@@ -618,4 +618,4 @@ networks:
     driver: bridge
   proxy:
     external: true
-  # theboard-network removed — RabbitMQ is now in 33god-network
+  # theboard-networ/postgresk removed — RabbitMQ is now in 33god-network
