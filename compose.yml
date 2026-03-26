@@ -280,6 +280,7 @@ services:
       HEARTBEAT_STATE: /tmp/heartbeat-local-state.json
       TICK_INTERVAL_S: "60"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      HEALTHZ_PORT: "18691"
     volumes:
       # Mount agent workspaces (read-only — only reads heartbeat.json)
       - ${HOME}/.openclaw:${HOME}/.openclaw:ro
@@ -290,7 +291,7 @@ services:
     # gateway.bind=loopback means it only listens on 127.0.0.1 -- Docker bridge can't reach it
     network_mode: host
     healthcheck:
-      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:18691/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -318,6 +319,7 @@ services:
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       OPENCLAW_HOME: ${HOME}/.openclaw
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      HEALTHZ_PORT: "18692"
     volumes:
       # Mount agent workspaces read-write (to truncate session files)
       - ${HOME}/.openclaw:${HOME}/.openclaw:rw
@@ -331,7 +333,7 @@ services:
         soft: 65536
         hard: 65536
     healthcheck:
-      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:18692/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -484,13 +486,14 @@ services:
 
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      HEALTHZ_PORT: "18693"
     depends_on:
       rabbitmq:
         condition: service_healthy
     # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
     network_mode: host
     healthcheck:
-      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:18693/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -527,12 +530,13 @@ services:
 
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      HEALTHZ_PORT: "18694"
     depends_on:
       rabbitmq:
         condition: service_healthy
     network_mode: host
     healthcheck:
-      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:18694/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -614,6 +618,7 @@ services:
 
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      HEALTHZ_PORT: "18695"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -621,7 +626,7 @@ services:
     # AND Redis on localhost
     network_mode: host
     healthcheck:
-      test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:18695/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
