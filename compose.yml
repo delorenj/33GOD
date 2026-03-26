@@ -31,7 +31,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: always
     networks:
       - 33god-network
     labels:
@@ -55,12 +59,18 @@ services:
       - "15673:15672" # Management UI
     volumes:
       - 33god-rabbitmq-data:/var/lib/rabbitmq
+      - ./services/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: always
     networks:
       - 33god-network
       - proxy
@@ -98,7 +108,7 @@ services:
   #      timeout: 5s
   #      retries: 5
   #      start_period: 30s
-  #    restart: unless-stopped
+  #    restart: always
   #    networks:
   #      - 33god-network
   #    labels:
@@ -122,7 +132,7 @@ services:
     depends_on:
       bloodbank:
         condition: service_healthy
-    restart: unless-stopped
+    restart: always
     networks:
       - 33god-network
     labels:
@@ -180,7 +190,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: always
     networks:
       - 33god-network
       - proxy
@@ -211,13 +225,16 @@ services:
       # WebSocket Server
       WS_HOST: "0.0.0.0"
       WS_PORT: "8683"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
       start_period: 15s
-    restart: unless-stopped
+    restart: always
     networks:
       - 33god-network
       - proxy
@@ -266,8 +283,11 @@ services:
     volumes:
       # Mount agent workspaces (read-only — only reads heartbeat.json)
       - ${HOME}/.openclaw:${HOME}/.openclaw:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
-    # gateway.bind=loopback means it only listens on 127.0.0.1 — Docker bridge can't reach it
+    # gateway.bind=loopback means it only listens on 127.0.0.1 -- Docker bridge can't reach it
     network_mode: host
     healthcheck:
       test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
@@ -275,7 +295,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    restart: unless-stopped
+    restart: always
     labels:
       - "traefik.enable=false"
       - "33god.service=heartbeat-router"
@@ -301,6 +321,9 @@ services:
     volumes:
       # Mount agent workspaces read-write (to truncate session files)
       - ${HOME}/.openclaw:${HOME}/.openclaw:rw
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     # Host networking to reach RabbitMQ on 5673 and see correct paths
     network_mode: host
     ulimits:
@@ -313,7 +336,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    restart: unless-stopped
+    restart: always
     labels:
       - "traefik.enable=false"
       - "33god.service=context-monitor"
@@ -360,7 +383,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    restart: unless-stopped
+    restart: always
     networks:
       - 33god-network
     labels:
@@ -405,7 +428,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     networks:
       - 33god-network
       - proxy
@@ -461,6 +484,9 @@ services:
 
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
     network_mode: host
     healthcheck:
@@ -469,7 +495,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     labels:
       - "traefik.enable=false"
       - "33god.service=infra-dispatcher"
@@ -501,6 +527,9 @@ services:
 
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     network_mode: host
     healthcheck:
       test: ["CMD-SHELL", "pidof python > /dev/null || exit 1"]
@@ -508,7 +537,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     labels:
       - "traefik.enable=false"
       - "33god.service=task-triage-dispatcher"
@@ -539,6 +568,9 @@ services:
       OUTBOX_MAX_BACKOFF_SECONDS: ${HOOKD_BRIDGE_OUTBOX_MAX_BACKOFF_SECONDS:-60}
     volumes:
       - ./.state/hookd-bridge:/var/lib/hookd-bridge
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     network_mode: host
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:18790/healthz || exit 1"]
@@ -546,7 +578,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    restart: unless-stopped
+    restart: always
     labels:
       - "traefik.enable=false"
       - "33god.service=hookd-bridge"
@@ -582,6 +614,9 @@ services:
 
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
     # AND Redis on localhost
     network_mode: host
@@ -591,7 +626,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
-    restart: unless-stopped
+    restart: always
     labels:
       - "traefik.enable=false"
       - "33god.service=command-adapter"
