@@ -69,6 +69,16 @@ HeyMa/samples/
 HeyMa/scripts/
 HeyMa/training/
 
+# Persistent consumer state (keep directories via .gitkeep, ignore contents)
+# Step 1: ignore everything under .state/
+.state/*
+# Step 2: but allow descending into subdirectories
+!.state/*/
+# Step 3: ignore contents of subdirectories
+.state/*/*
+# Step 4: except .gitkeep
+!.state/*/.gitkeep
+
 # Environment files
 .env
 .env.local
