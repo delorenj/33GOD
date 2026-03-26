@@ -69,6 +69,12 @@ HeyMa/samples/
 HeyMa/scripts/
 HeyMa/training/
 
+# Persistent consumer state (keep directories via .gitkeep, ignore contents)
+.state/*
+!.state/*/
+.state/*/*
+!.state/*/.gitkeep
+
 # Environment files
 .env
 .env.local

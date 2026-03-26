@@ -277,13 +277,15 @@ services:
       OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
       WORKSPACES_ROOT: ${HOME}/.openclaw
-      HEARTBEAT_STATE: /tmp/heartbeat-local-state.json
+      HEARTBEAT_STATE: /var/lib/heartbeat-router/state.json
       TICK_INTERVAL_S: "60"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       HEALTHZ_PORT: "18691"
     volumes:
       # Mount agent workspaces (read-only — only reads heartbeat.json)
       - ${HOME}/.openclaw:${HOME}/.openclaw:ro
+      # Persistent state across container restarts (GOD-26)
+      - ./.state/heartbeat-router:/var/lib/heartbeat-router
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -477,7 +479,7 @@ services:
       INFRA_COMPONENT_LABEL_PREFIX: ${INFRA_COMPONENT_LABEL_PREFIX:-comp:}
 
       # State Persistence
-      INFRA_DISPATCH_STATE_PATH: /tmp/infra-dispatch-state.json
+      INFRA_DISPATCH_STATE_PATH: /var/lib/infra-dispatcher/dispatch-state.json
 
       # Health Check Configuration
       INFRA_RUN_CHECKS: ${INFRA_RUN_CHECKS:-true}
@@ -487,6 +489,9 @@ services:
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       HEALTHZ_PORT: "18693"
+    volumes:
+      # Persistent state across container restarts (GOD-26)
+      - ./.state/infra-dispatcher:/var/lib/infra-dispatcher
     depends_on:
       rabbitmq:
         condition: service_healthy
