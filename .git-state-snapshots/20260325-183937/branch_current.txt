@@ -1,0 +1,3 @@
+# branch_current
+# command: git -C /home/delorenj/code/33GOD branch --show-current
+

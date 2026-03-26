@@ -1,0 +1,5 @@
+# remote_verbose
+# command: git -C /home/delorenj/code/33GOD remote -v
+
+origin	git@github.com:delorenj/33GOD.git (fetch)
+origin	git@github.com:delorenj/33GOD.git (push)

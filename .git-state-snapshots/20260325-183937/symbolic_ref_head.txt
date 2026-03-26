@@ -1,0 +1,3 @@
+# symbolic_ref_head
+# command: git -C /home/delorenj/code/33GOD symbolic-ref -q HEAD
+

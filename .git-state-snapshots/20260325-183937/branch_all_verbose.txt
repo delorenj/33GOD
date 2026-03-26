@@ -1,0 +1,28 @@
+# branch_all_verbose
+# command: git -C /home/delorenj/code/33GOD branch -vv --all
+
+* (no branch, rebasing GOD-20-agent-ctrl-checkpoint)                         47fd9c3 checkpoint: update submodule pointers 2026-03-25T22:38:03Z
+  BB-2-asset-registry-verification                                           e23f0b7 [origin/BB-2-asset-registry-verification] docs(BB-2): asset_registry schema ↔ migration verification report
+  BB-3-heartbeat-architecture-cutover                                        4a112ec [origin/BB-3-heartbeat-architecture-cutover] maint(BB-3): git maintenance - stage all pending changes
+  BB-4-dlq-triage                                                            f211cd5 [origin/BB-4-dlq-triage] ops(BB-4): DLQ triage — purged 2938 stale messages + 5 orphaned queues
+  GOD-11-crank-trigger-transport-fix                                         0a079c8 [origin/GOD-11-crank-trigger-transport-fix: gone] docs(GOD-11): add observability false-positive fix guide
+  GOD-12-family-capability-fix                                               f4547c1 [origin/GOD-12-family-capability-fix] docs(GOD-12): family agent capability fix - enable write/exec/sessions_send
+  GOD-13-owrls-35-map-export                                                 86f560f [origin/GOD-13-owrls-35-map-export] docs(GOD-14): CRANK_ENGINE pickup OWRLD-34 Stripe integration
+  GOD-20-agent-ctrl-checkpoint                                               3dfa02c [origin/GOD-20-agent-ctrl-checkpoint] checkpoint: 2026-03-25T22:38:01Z auto-commit
+  INFRA-2-plane-key-playbook                                                 9b5df12 [origin/INFRA-2-plane-key-playbook] docs(INFRA-2): Add Plane API key rotation playbook with owner/verify/rollback
+  feat/god-10-obs-1-conformance                                              e03e0fc [origin/feat/god-10-obs-1-conformance: ahead 4] Make agent-voice-soprano run.sh robust to missing uv in PATH
+  main                                                                       c2ff470 [origin/main: behind 1] chore: regular maintenance
+  reimagining                                                                90e62da tasks
+  remotes/origin/BB-2-asset-registry-verification                            e23f0b7 docs(BB-2): asset_registry schema ↔ migration verification report
+  remotes/origin/BB-3-heartbeat-architecture-cutover                         4a112ec maint(BB-3): git maintenance - stage all pending changes
+  remotes/origin/BB-4-dlq-triage                                             f211cd5 ops(BB-4): DLQ triage — purged 2938 stale messages + 5 orphaned queues
+  remotes/origin/GOD-12-family-capability-fix                                f4547c1 docs(GOD-12): family agent capability fix - enable write/exec/sessions_send
+  remotes/origin/GOD-13-owrls-35-map-export                                  86f560f docs(GOD-14): CRANK_ENGINE pickup OWRLD-34 Stripe integration
+  remotes/origin/GOD-20-agent-ctrl-checkpoint                                3dfa02c checkpoint: 2026-03-25T22:38:01Z auto-commit
+  remotes/origin/HEAD                                                        -> origin/main
+  remotes/origin/INFRA-2-plane-key-playbook                                  9b5df12 docs(INFRA-2): Add Plane API key rotation playbook with owner/verify/rollback
+  remotes/origin/feat/god-10-obs-1-conformance                               a640403 feat(node-red): add holyfields nodes and sync component refs
+  remotes/origin/jules-testing-improvement-3572191108761930843               a003930 🧪 Add tests for offline queue error handling
+  remotes/origin/main                                                        553955e GOD-11: Document crank trigger transport fix (#3)
+  remotes/origin/performance-optimize-n8n-webhook-client-3458232574292183806 d95c736 ⚡ [performance] Replace blocking synchronous HTTP requests with aiohttp
+  remotes/origin/reimagining                                                 90e62da tasks

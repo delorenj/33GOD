@@ -1,0 +1,8 @@
+# fsck
+# command: git -C /home/delorenj/code/33GOD fsck --full --no-reflogs
+
+dangling blob 4f6bc2f2dff46cb813ff2866a1bdf711183a5a72
+dangling blob d7cf8f3f06f3d1477ce0790d50020aad57ed2a7e
+dangling blob bf50735a1fe75d6e720b2ce88a6957ef84df984c
+dangling blob fbb5e64dc26472604482c67de1877ef51ca9dbd5
+dangling blob 9dbb5f7e16e2fa1dc29f64db26c5141d9d8d68d0

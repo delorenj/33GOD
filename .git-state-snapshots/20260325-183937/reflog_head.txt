@@ -1,0 +1,53 @@
+# reflog_head
+# command: git -C /home/delorenj/code/33GOD reflog --date=iso -n 50 HEAD
+
+47fd9c3 HEAD@{2026-03-25 18:38:03 -0400}: commit: checkpoint: update submodule pointers 2026-03-25T22:38:03Z
+553955e HEAD@{2026-03-25 18:38:02 -0400}: rebase (start): checkout origin/main
+3dfa02c HEAD@{2026-03-25 18:38:01 -0400}: commit: checkpoint: 2026-03-25T22:38:01Z auto-commit
+ce3943a HEAD@{2026-03-15 22:20:29 -0400}: commit: chore(GOD-20/BB-4): bump bloodbank submodule + sync branch state
+c9db1a8 HEAD@{2026-03-12 06:08:12 -0400}: commit: docs(GOD-20): AGENT-CTRL ingress compatibility map + adapter checkpoint
+9b5df12 HEAD@{2026-03-12 06:08:12 -0400}: checkout: moving from INFRA-2-plane-key-playbook to GOD-20-agent-ctrl-checkpoint
+9b5df12 HEAD@{2026-03-11 09:04:33 -0400}: checkout: moving from INFRA-2-plane-key-playbook to INFRA-2-plane-key-playbook
+9b5df12 HEAD@{2026-03-11 07:48:57 -0400}: commit: docs(INFRA-2): Add Plane API key rotation playbook with owner/verify/rollback
+f211cd5 HEAD@{2026-03-11 07:48:57 -0400}: checkout: moving from BB-4-dlq-triage to INFRA-2-plane-key-playbook
+f211cd5 HEAD@{2026-03-11 06:36:41 -0400}: commit: ops(BB-4): DLQ triage — purged 2938 stale messages + 5 orphaned queues
+e23f0b7 HEAD@{2026-03-11 06:36:41 -0400}: checkout: moving from BB-2-asset-registry-verification to BB-4-dlq-triage
+e23f0b7 HEAD@{2026-03-11 06:19:19 -0400}: commit: docs(BB-2): asset_registry schema ↔ migration verification report
+86f560f HEAD@{2026-03-11 06:19:19 -0400}: checkout: moving from GOD-13-owrls-35-map-export to BB-2-asset-registry-verification
+86f560f HEAD@{2026-03-11 00:47:42 -0400}: commit: docs(GOD-14): CRANK_ENGINE pickup OWRLD-34 Stripe integration
+d7de5c1 HEAD@{2026-03-11 00:01:19 -0400}: commit: docs(GOD-13): CRANK_ENGINE pickup OWRLD-35 map export
+f4547c1 HEAD@{2026-03-11 00:00:54 -0400}: checkout: moving from GOD-12-family-capability-fix to GOD-13-owrls-35-map-export
+f4547c1 HEAD@{2026-03-10 22:03:58 -0400}: commit: docs(GOD-12): family agent capability fix - enable write/exec/sessions_send
+0a079c8 HEAD@{2026-03-10 22:03:58 -0400}: checkout: moving from GOD-11-crank-trigger-transport-fix to GOD-12-family-capability-fix
+0a079c8 HEAD@{2026-03-10 21:47:31 -0400}: commit: docs(GOD-11): add observability false-positive fix guide
+1457264 HEAD@{2026-03-10 21:42:15 -0400}: commit: docs(GOD-11): document crank trigger transport fix
+884033e HEAD@{2026-03-10 21:42:01 -0400}: commit: docs(GOD-11): document crank trigger transport fix
+4a112ec HEAD@{2026-03-10 21:42:01 -0400}: checkout: moving from BB-3-heartbeat-architecture-cutover to GOD-11-crank-trigger-transport-fix
+4a112ec HEAD@{2026-03-08 15:51:41 -0400}: commit: maint(BB-3): git maintenance - stage all pending changes
+2581379 HEAD@{2026-03-07 19:19:24 -0500}: commit: ops(BB-3): One-shot cutover to decentralized local scheduler
+5290e4d HEAD@{2026-03-07 19:16:17 -0500}: commit: feat(heartbeat): BB-3 — replace centralized global tick with local scheduler
+e03e0fc HEAD@{2026-03-07 19:16:09 -0500}: reset: moving to HEAD
+e03e0fc HEAD@{2026-03-07 19:16:01 -0500}: checkout: moving from feat/god-10-obs-1-conformance to BB-3-heartbeat-architecture-cutover
+e03e0fc HEAD@{2026-03-05 07:08:49 -0500}: commit: Make agent-voice-soprano run.sh robust to missing uv in PATH
+847f055 HEAD@{2026-03-05 07:02:43 -0500}: commit: Voice consumer: default to message.sent and support sent/received toggles
+9a642e4 HEAD@{2026-03-05 06:36:09 -0500}: commit: Fix env quoting and default to CPU for agent-voice-soprano
+39e7bb6 HEAD@{2026-03-05 03:54:21 -0500}: commit: Add agent-voice-soprano Bloodbank consumer service with per-agent voice profiles
+a640403 HEAD@{2026-03-02 21:33:25 -0500}: commit: feat(node-red): add holyfields nodes and sync component refs
+5bb6fa0 HEAD@{2026-02-28 14:53:07 -0500}: commit: fix(node-red): buffer ready-event JSON chunks
+0238605 HEAD@{2026-02-28 09:33:18 -0500}: commit: fix(node-red): repair Bloodbank flow publishing and document findings
+cb07132 HEAD@{2026-02-26 21:03:44 -0500}: commit: Update bloodbank bridge for legacy message alias compatibility
+ba809d1 HEAD@{2026-02-26 20:34:33 -0500}: commit: fix(heartbeat): fix payload key mismatch breaking heartbeat dispatch
+d098b50 HEAD@{2026-02-26 19:30:09 -0500}: commit: GOD-14: close Phase A and add durable hookd outbox (Phase B)
+e24c27e HEAD@{2026-02-26 12:40:16 -0500}: commit: feat(god-14): phase A implementation - pure event pipeline
+01bae4b HEAD@{2026-02-26 01:11:00 -0500}: commit: proposal: context self-heal v1 with deterministic 80/90 compaction policy
+8f2bf32 HEAD@{2026-02-25 16:54:30 -0500}: commit: hardening: add deterministic routing policy and pipeline execution plan
+38867f2 HEAD@{2026-02-24 19:17:16 -0500}: commit: hookd: add run_git_maintenance action mapping
+b42bb42 HEAD@{2026-02-24 19:16:49 -0500}: commit: chore(submodule): bump holocene for git maintenance command docs
+5e03d8b HEAD@{2026-02-24 19:15:21 -0500}: commit: ops+obs: update rabbitmq refs, relax candystore source type, bump bloodbank/holocene
+df04e74 HEAD@{2026-02-24 18:03:25 -0500}: commit: feat: Overworld Holyfields schemas for OWRLD-19/20
+2e3bccd HEAD@{2026-02-24 11:00:22 -0500}: commit: chore(infra): update bloodbank submodule (message field fix)
+b974afd HEAD@{2026-02-24 10:59:53 -0500}: commit: feat(infra): point heartbeat/infra dispatchers to hookd-bridge (MIG-1 cutover)
+69afd12 HEAD@{2026-02-24 10:51:32 -0500}: commit: feat: GOD-6/CUTOVER-1 agent tier rollout plan
+8d8a2bc HEAD@{2026-02-24 10:50:31 -0500}: commit: feat: GOD-4/MIG-1 hookd-bridge compose service + Docker image
+2a39732 HEAD@{2026-02-24 10:50:11 -0500}: commit: feat: GOD-4/MIG-1 hookd compatibility bridge (code complete)
+2d895fd HEAD@{2026-02-24 10:47:23 -0500}: commit: fix: Docker build context for holyfields path dep + deploy command-adapter

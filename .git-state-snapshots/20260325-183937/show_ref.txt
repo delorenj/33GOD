@@ -1,0 +1,33 @@
+# show_ref
+# command: git -C /home/delorenj/code/33GOD show-ref --head
+
+47fd9c356e6ea5217073a314ec4de5d5fd2167d6 HEAD
+e23f0b7484fb32897b5693fa41b4eb4542a8078d refs/heads/BB-2-asset-registry-verification
+4a112ec0238e82b7f2642c94849d32059db6538d refs/heads/BB-3-heartbeat-architecture-cutover
+f211cd50dc26b870bfe7fcb5ef4c0a0f8e5d5508 refs/heads/BB-4-dlq-triage
+0a079c84f8c2a5f5384117760ce98d7d3b80fd73 refs/heads/GOD-11-crank-trigger-transport-fix
+f4547c19e2047896750dac08094ac734790d2f5c refs/heads/GOD-12-family-capability-fix
+86f560f084d7ee0710f360922a690eed7f999402 refs/heads/GOD-13-owrls-35-map-export
+3dfa02c6f941f6001824da5664c9a13a025256c2 refs/heads/GOD-20-agent-ctrl-checkpoint
+9b5df1225f49d44079b3f5e7d0ec97a92747f3e5 refs/heads/INFRA-2-plane-key-playbook
+e03e0fc62c53f99b57ecc647279025ca37290a7e refs/heads/feat/god-10-obs-1-conformance
+c2ff470b5449f0a3b23c8d70d3457153de2c687b refs/heads/main
+90e62dae91c8c094cbde16db16461733701fd6aa refs/heads/reimagining
+e23f0b7484fb32897b5693fa41b4eb4542a8078d refs/remotes/origin/BB-2-asset-registry-verification
+4a112ec0238e82b7f2642c94849d32059db6538d refs/remotes/origin/BB-3-heartbeat-architecture-cutover
+f211cd50dc26b870bfe7fcb5ef4c0a0f8e5d5508 refs/remotes/origin/BB-4-dlq-triage
+f4547c19e2047896750dac08094ac734790d2f5c refs/remotes/origin/GOD-12-family-capability-fix
+86f560f084d7ee0710f360922a690eed7f999402 refs/remotes/origin/GOD-13-owrls-35-map-export
+3dfa02c6f941f6001824da5664c9a13a025256c2 refs/remotes/origin/GOD-20-agent-ctrl-checkpoint
+553955e9343ad780fc64e9a0c54b5fb7327bb2a8 refs/remotes/origin/HEAD
+9b5df1225f49d44079b3f5e7d0ec97a92747f3e5 refs/remotes/origin/INFRA-2-plane-key-playbook
+a6404032bbdc06b436ade54a57eeee97a3186912 refs/remotes/origin/feat/god-10-obs-1-conformance
+a00393083c5a7fbff0a735b0c818232d579f7738 refs/remotes/origin/jules-testing-improvement-3572191108761930843
+553955e9343ad780fc64e9a0c54b5fb7327bb2a8 refs/remotes/origin/main
+d95c736a35ea977fbf9a8110d706d0efad2c43ae refs/remotes/origin/performance-optimize-n8n-webhook-client-3458232574292183806
+90e62dae91c8c094cbde16db16461733701fd6aa refs/remotes/origin/reimagining
+f7d95e71851b8fb8fbf6ed5542eedbf43ac15c27 refs/tags/33god-v2026.02.24-agent-command-cutover
+4bf9ca586b8474ef1234bb7d445b7c8d330bb158 refs/tags/33god-v2026.02.24-agent-command-cutover-r2
+0935dde4f92df81e4188de55b6c34b4c912a8588 refs/tags/33god-v2026.02.24-agent-command-cutover-r3
+c2ff470b5449f0a3b23c8d70d3457153de2c687b refs/tags/bloodbank-integrated
+3c9ad1575e73c187e8a2b3d81b8e28cfab677a31 refs/tags/v0.2.0-infra-pipeline

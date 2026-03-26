@@ -1,0 +1,5 @@
+snapshot_time=20260325-183937
+target=/home/delorenj/code/33GOD
+toplevel=/home/delorenj/code/33GOD
+git_dir=/home/delorenj/code/33GOD/.git
+git_version=git version 2.48.1

@@ -1,0 +1,7 @@
+# worktree_list
+# command: git -C /home/delorenj/code/33GOD worktree list --porcelain
+
+worktree /home/delorenj/code/33GOD
+HEAD 47fd9c356e6ea5217073a314ec4de5d5fd2167d6
+detached
+

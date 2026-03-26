@@ -1,0 +1,6 @@
+# status
+# command: git -C /home/delorenj/code/33GOD status --porcelain=v2 --branch
+
+# branch.oid 47fd9c356e6ea5217073a314ec4de5d5fd2167d6
+# branch.head (detached)
+? .git-state-snapshots/
