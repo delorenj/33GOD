@@ -1,0 +1,6 @@
+{
+  "WATCH_DIR": "/home/delorenj/audio/inbox",
+  "SCRIPTS_DIR": "/home/delorenj/code/33GOD/services/echobox/scripts",
+  "TRANSCRIPT_DIR": "/home/delorenj/d/Transcripts",
+  "LEDGER_API": "http://localhost:18697"
+}

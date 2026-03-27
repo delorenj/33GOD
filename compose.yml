@@ -426,6 +426,8 @@ services:
         condition: service_healthy
       candystore:
         condition: service_healthy
+      echobox-ledger:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
@@ -641,6 +643,37 @@ services:
       - "traefik.enable=false"
       - "33god.service=command-adapter"
       - "33god.description=Agent command adapter — FSM guards + OpenClaw dispatch"
+
+  # ============================================================================
+  # Echobox Ledger - Transcription Job Tracker (sidecar API)
+  # Provides REST API for Node-RED to check/create/update transcription jobs.
+  # ============================================================================
+  echobox-ledger:
+    build:
+      context: ./services/echobox/ledger
+      dockerfile: Dockerfile
+    container_name: 33god-echobox-ledger
+    hostname: echobox-ledger
+    environment:
+      DATABASE_URL: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@192.168.1.12:5432/echobox
+      HOST: "0.0.0.0"
+      PORT: "18697"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "18697:18697"
+    networks:
+      - 33god-network
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:18697/healthz')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: always
+    labels:
+      - "traefik.enable=false"
+      - "33god.service=echobox-ledger"
+      - "33god.description=Transcription job ledger API for Echobox"
 
 # ==============================================================================
 # Volumes

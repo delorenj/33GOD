@@ -1,0 +1,53 @@
+[env]
+NODE_RED_DIR = "~/.node-red"
+ECHOBOX_DIR = "{{config_root}}"
+
+[tasks.create-db]
+description = "Create the echobox database (one-time setup)"
+run = "psql -h 192.168.1.12 -U delorenj -d postgres -c 'CREATE DATABASE echobox OWNER delorenj;' 2>/dev/null || echo 'Database may already exist'"
+
+[tasks.migrate]
+description = "Run SQL migrations against the echobox database"
+run = ".mise/scripts/migrate.sh"
+
+[tasks.setup-scripts]
+description = "Set up Python venv for helper scripts"
+run = "cd scripts && uv venv && uv pip install aio-pika boto3"
+
+[tasks.deploy-flows]
+description = "Deploy flows to Node-RED runtime and restart"
+run = ".mise/scripts/deploy_flows.sh"
+
+[tasks.install-custom-nodes]
+description = "Install local Node-RED contrib packages into ~/.node-red"
+run = ".mise/scripts/install_custom_nodes.sh"
+
+[tasks.ledger-up]
+description = "Start the echobox-ledger sidecar container"
+run = "docker compose -f ~/code/33GOD/compose.yml up -d echobox-ledger"
+
+[tasks.ledger-logs]
+description = "Tail echobox-ledger logs"
+run = "docker logs -f 33god-echobox-ledger"
+
+[tasks.start]
+description = "Start all echobox components (ledger + Node-RED flows)"
+depends = ["ledger-up", "deploy-flows"]
+run = "echo 'Echobox started: ledger + Node-RED flows deployed.'"
+
+[tasks.stop]
+description = "Stop echobox components"
+run = "docker compose -f ~/code/33GOD/compose.yml stop echobox-ledger"
+
+[tasks.status]
+description = "Show echobox component status"
+run = """
+echo '=== Echobox Ledger ===' && \
+curl -sf http://localhost:18695/healthz | python3 -m json.tool 2>/dev/null || echo 'Ledger: DOWN' && \
+echo '' && echo '=== Node-RED ===' && \
+pm2 info node-red 2>/dev/null | grep -E '(status|pid|uptime)' | head -5 || echo 'Node-RED: DOWN'
+"""
+
+[tasks.logs]
+description = "Tail Node-RED logs"
+run = "pm2 logs node-red"

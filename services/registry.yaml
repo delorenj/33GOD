@@ -50,16 +50,55 @@ services:
   # Fireflies Transcript Processing Pipeline
   # ---------------------------------------------------------------------------
 
+  # ---------------------------------------------------------------------------
+  # Echobox - Transcription Service (unified pipeline)
+  # Replaces: node-red-flow-orchestrator (fireflies flows) +
+  #           fireflies-transcript-processor
+  # ---------------------------------------------------------------------------
+  echobox:
+    name: "echobox"
+    description: "Self-contained transcription service: file watch, MinIO staging, Fireflies transcription, ledger-backed dedup, CSV/MD output"
+    type: "event-producer"
+    queue_name: "services.echobox.orchestrator"
+    routing_keys:
+      - "fireflies.transcript.upload"
+      - "fireflies.transcript.ready"
+    produces:
+      - "fireflies.transcript.upload"
+      - "fireflies.transcript.ready"
+      - "fireflies.transcript.processed"
+      - "fireflies.transcript.failed"
+    status: "active"
+    owner: "33GOD"
+    tags:
+      - "transcription"
+      - "fireflies"
+      - "minio"
+      - "echobox"
+      - "ledger"
+    endpoints:
+      nodered_ui: "http://localhost:1880"
+      webhooks: "http://localhost:1880/webhooks/fireflies"
+      ledger_api: "http://localhost:18697"
+      health: "http://localhost:18697/healthz"
+    runtime:
+      type: "pm2+docker"
+      nodered:
+        config: "~/.node-red/ecosystem.config.js"
+        flows_source: "~/code/33GOD/services/echobox/flows"
+      ledger:
+        container: "33god-echobox-ledger"
+
   fireflies-transcript-processor:
     name: "fireflies-transcript-processor"
-    description: "Processes Fireflies transcript events, saves to DeLoDocs/Transcriptions, and publishes artifact.created events"
+    description: "DEPRECATED - migrated to echobox. Processes Fireflies transcript events."
     type: "event-consumer"
     queue_name: "services.fireflies.transcript_processor"
     routing_keys:
       - "fireflies.transcript.ready"
     produces:
       - "artifact.created"
-    status: "active"
+    status: "deprecated"
     owner: "33GOD"
     tags:
       - "transcript"
@@ -121,9 +160,9 @@ services:
 
   node-red-flow-orchestrator:
     name: "node-red-flow-orchestrator"
-    description: "Node-RED workflow orchestration - file watching, webhook handling, and event bridging"
+    description: "DEPRECATED - migrated to echobox. Node-RED workflow orchestration."
     type: "event-producer"
-    status: "active"
+    status: "deprecated"
     owner: "33GOD"
     tags:
       - "node-red"
@@ -571,7 +610,7 @@ topology:
 
   # Layer 4: Processors
   processors:
-    - "fireflies-transcript-processor"
+    - "echobox"
     - "fireflies-transcript-rag"
     - "agent-thread-analytics"
     - "llm-cost-calculator"
