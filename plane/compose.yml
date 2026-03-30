@@ -1,0 +1,213 @@
+services:
+  # ==========================================
+  # PLANE (Project Management)
+  # ==========================================
+  plane-rabbitmq:
+    container_name: plane-rabbitmq
+    image: rabbitmq:3.13.6-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+    volumes:
+      - ./plane-data/rabbitmq:/var/lib/rabbitmq
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  plane-minio:
+    container_name: plane-minio
+    image: minio/minio
+    command: server /data --console-address ":9090"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./plane-data/minio:/data
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      # MinIO subdomain route (for admin console)
+      - "traefik.http.routers.plane-minio.rule=Host(`minio.${DOMAIN_PLANE}`)"
+      - "traefik.http.routers.plane-minio.entrypoints=websecure"
+      - "traefik.http.routers.plane-minio.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.plane-minio.service=plane-minio-service"
+      # Public bucket route on main domain (for uploaded assets)
+      - "traefik.http.routers.plane-bucket.rule=Host(`${DOMAIN_PLANE}`) && PathPrefix(`/plane-bucket`)"
+      - "traefik.http.routers.plane-bucket.entrypoints=websecure"
+      - "traefik.http.routers.plane-bucket.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.plane-bucket.priority=90"
+      - "traefik.http.routers.plane-bucket.service=plane-minio-service"
+      # Service definition
+      - "traefik.http.services.plane-minio-service.loadbalancer.server.port=9000"
+
+  plane-create-bucket:
+    container_name: plane-create-bucket
+    image: minio/mc
+    depends_on:
+      - plane-minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://plane-minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb myminio/plane-bucket;
+      /usr/bin/mc anonymous set download myminio/plane-bucket;
+      exit 0;
+      "
+    networks:
+      - proxy
+
+  plane-migrator:
+    container_name: plane-migrator
+    image: makeplane/plane-backend:v1.2.1
+    command: >
+      sh -c "
+      python manage.py wait_for_db &&
+      python manage.py migrate
+      "
+    depends_on:
+      - plane-minio
+      - plane-rabbitmq
+    environment:
+      - DATABASE_URL=postgresql://${PLANE_DB_USER}:${PLANE_DB_PASS}@${DB_HOST}:5432/${PLANE_DB_NAME}
+      - REDIS_URL=redis://${REDIS_HOST}:6379/2
+      - SECRET_KEY=${PLANE_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_S3_ENDPOINT_URL=http://plane-minio:9000
+      - AWS_S3_BUCKET_NAME=plane-bucket
+      - USE_MINIO=1
+      - WEB_URL=https://${DOMAIN_PLANE}
+    networks:
+      - proxy
+    restart: "no"
+
+  plane-backend:
+    container_name: plane-backend
+    image: makeplane/plane-backend:v1.2.1
+    command: /usr/local/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker plane.asgi:application --bind 0.0.0.0:8000
+    depends_on:
+      plane-migrator:
+        condition: service_completed_successfully
+      plane-minio:
+        condition: service_started
+      plane-rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    environment:
+      - DATABASE_URL=postgresql://${PLANE_DB_USER}:${PLANE_DB_PASS}@${DB_HOST}:5432/${PLANE_DB_NAME}
+      - REDIS_URL=redis://${REDIS_HOST}:6379/2
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@plane-rabbitmq:5672/${RABBITMQ_VHOST}
+      - SECRET_KEY=${PLANE_SECRET_KEY}
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_S3_ENDPOINT_URL=http://plane-minio:9000
+      - AWS_S3_BUCKET_NAME=plane-bucket
+      - USE_MINIO=1
+      - WEB_URL=https://${DOMAIN_PLANE}
+      - CORS_ALLOWED_ORIGINS=https://${DOMAIN_PLANE}
+      - SENTRY_DSN=
+      - SENTRY_ENVIRONMENT=production
+      - DOCKERIZED=1
+      - EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      # API subdomain route
+      - "traefik.http.routers.plane-api.rule=Host(`api.${DOMAIN_PLANE}`)"
+      - "traefik.http.routers.plane-api.entrypoints=websecure"
+      - "traefik.http.routers.plane-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.plane-api.service=plane-api-service"
+      # Main domain API proxy route (for hardcoded frontend URLs)
+      - "traefik.http.routers.plane-api-fallback.rule=Host(`${DOMAIN_PLANE}`) && (PathPrefix(`/api/`) || PathPrefix(`/auth/`))"
+      - "traefik.http.routers.plane-api-fallback.entrypoints=websecure"
+      - "traefik.http.routers.plane-api-fallback.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.plane-api-fallback.priority=100"
+      - "traefik.http.routers.plane-api-fallback.service=plane-api-service"
+      # Service definition
+      - "traefik.http.services.plane-api-service.loadbalancer.server.port=8000"
+    restart: unless-stopped
+
+  plane-worker:
+    container_name: plane-worker
+    image: makeplane/plane-backend:v1.2.1
+    command: celery -A plane worker -l info
+    depends_on:
+      plane-backend:
+        condition: service_started
+      plane-rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    environment:
+      - DATABASE_URL=postgresql://${PLANE_DB_USER}:${PLANE_DB_PASS}@${DB_HOST}:5432/${PLANE_DB_NAME}
+      - REDIS_URL=redis://${REDIS_HOST}:6379/2
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@plane-rabbitmq:5672/${RABBITMQ_VHOST}
+      - SECRET_KEY=${PLANE_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_S3_ENDPOINT_URL=http://plane-minio:9000
+      - AWS_S3_BUCKET_NAME=plane-bucket
+      - USE_MINIO=1
+      - WEB_URL=https://${DOMAIN_PLANE}
+      - DOCKERIZED=1
+    networks:
+      - proxy
+    restart: unless-stopped
+
+  plane-beat-worker:
+    container_name: plane-beat-worker
+    image: makeplane/plane-backend:v1.2.1
+    command: celery -A plane beat -l info
+    depends_on:
+      plane-backend:
+        condition: service_started
+      plane-rabbitmq:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${PLANE_DB_USER}:${PLANE_DB_PASS}@${DB_HOST}:5432/${PLANE_DB_NAME}
+      - REDIS_URL=redis://${REDIS_HOST}:6379/2
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@plane-rabbitmq:5672/${RABBITMQ_VHOST}
+      - SECRET_KEY=${PLANE_SECRET_KEY}
+      - WEB_URL=https://${DOMAIN_PLANE}
+      - DOCKERIZED=1
+    networks:
+      - proxy
+    restart: unless-stopped
+
+  plane-frontend:
+    container_name: plane-frontend
+    image: makeplane/plane-frontend:v1.1.0 # v1.2.x images are broken (no node binary)
+    command: node apps/web/server.js web
+    depends_on:
+      - plane-backend
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=https://${DOMAIN_PLANE}/api
+      - NEXT_PUBLIC_DEPLOY_URL=https://${DOMAIN_PLANE}
+      - NEXT_PUBLIC_ENABLE_OAUTH=0
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plane-web.rule=Host(`${DOMAIN_PLANE}`)"
+      - "traefik.http.routers.plane-web.entrypoints=websecure"
+      - "traefik.http.routers.plane-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.plane-web.loadbalancer.server.port=3000"
+    restart: unless-stopped
+
+networks:
+  proxy:
+    external: true

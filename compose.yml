@@ -10,8 +10,13 @@
 # - Heartbeat Local Scheduler: Self-ticking agent heartbeat dispatch (BB-3)
 # - Infra Dispatcher: Plane webhook → OpenClaw dispatch
 # - Candystore: Event persistence layer
+# - Plane: Project management (included from plane/compose.yml)
 #
 # Traefik: Uses existing proxy network for routing.
+
+# Include Plane stack (separate compose file)
+include:
+  - path: ./plane/compose.yml
 
 services:
   # ============================================================================

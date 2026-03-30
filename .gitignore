@@ -75,6 +75,9 @@ HeyMa/training/
 .state/*/*
 !.state/*/.gitkeep
 
+# Plane runtime data
+plane/plane-data/
+
 # Environment files
 .env
 .env.local
