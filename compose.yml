@@ -43,6 +43,7 @@ services:
     restart: always
     networks:
       - 33god-network
+      - proxy
     labels:
       - "traefik.enable=false"
 
@@ -130,8 +131,10 @@ services:
       dockerfile: Dockerfile
     container_name: 33god-postgres-notify-bridge
     hostname: postgres-notify-bridge
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      POSTGRES_DSN: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@192.168.1.12:5432/33god
+      POSTGRES_DSN: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@host.docker.internal:5432/33god
       BLOODBANK_API_URL: http://bloodbank:8682
       NOTIFY_CHANNEL: bloodbank_events
     depends_on:
@@ -140,6 +143,7 @@ services:
     restart: always
     networks:
       - 33god-network
+      - proxy
     labels:
       - "traefik.enable=false"
       - "33god.service=postgres-notify-bridge"
@@ -361,10 +365,12 @@ services:
       dockerfile: Dockerfile
     container_name: 33god-candystore
     hostname: candystore
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8684:8080" # Event store API port
     environment:
-      DATABASE_URL: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@192.168.1.12:5432/${POSTGRES_DB:-33god}
+      DATABASE_URL: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB:-33god}
       DATABASE_POOL_SIZE: "10"
       RABBITMQ_URL: amqp://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@rabbitmq:5672/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
@@ -395,6 +401,7 @@ services:
     restart: always
     networks:
       - 33god-network
+      - proxy
     labels:
       - "traefik.enable=false"
       - "33god.service=candystore"
@@ -659,8 +666,10 @@ services:
       dockerfile: Dockerfile
     container_name: 33god-echobox-ledger
     hostname: echobox-ledger
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      DATABASE_URL: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@192.168.1.12:5432/echobox
+      DATABASE_URL: postgresql://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD}@host.docker.internal:5432/echobox
       HOST: "0.0.0.0"
       PORT: "18697"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -668,6 +677,7 @@ services:
       - "18697:18697"
     networks:
       - 33god-network
+      - proxy
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:18697/healthz')\""]
       interval: 30s

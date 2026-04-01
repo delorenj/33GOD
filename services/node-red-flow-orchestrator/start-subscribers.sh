@@ -5,7 +5,7 @@ set -e
 
 SCRIPTS_DIR="/home/delorenj/code/33GOD/services/node-red-flow-orchestrator/scripts"
 LOG_DIR="$HOME/.node-red/logs"
-export RABBIT_URL="amqp://guest:guest@localhost:5672/"
+export RABBIT_URL="amqp://${DEFAULT_USERNAME:-delorenj}:${DEFAULT_PASSWORD:-Ittr5eesol}@localhost:5673/"
 
 mkdir -p "$LOG_DIR"
 pkill -f "bloodbank_subscribe.py" || true
