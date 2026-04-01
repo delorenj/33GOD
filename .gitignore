@@ -74,3 +74,4 @@ HeyMa/training/
 .env.local
 .env.*.local
 .zed/
+**/plane-data
