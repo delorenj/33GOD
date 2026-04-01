@@ -89,6 +89,15 @@ async def update_job(content_hash: str, req: JobUpdateRequest) -> JobResponse:
     return JobResponse(**_row_to_dict(row))
 
 
+@router.get("/jobs", response_model=list[JobResponse])
+async def get_all_jobs() -> list[JobResponse]:
+    pool = get_pool()
+    rows = await pool.fetch(
+        "SELECT * FROM echobox_ledger ORDER BY created_at DESC LIMIT 200"
+    )
+    return [JobResponse(**_row_to_dict(r)) for r in rows]
+
+
 @router.get("/jobs/pending", response_model=list[JobResponse])
 async def get_pending_jobs() -> list[JobResponse]:
     pool = get_pool()
