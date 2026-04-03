@@ -5,7 +5,7 @@ const Ajv = require("ajv");
 const addFormats = require("ajv-formats");
 
 const DEFAULT_SCHEMAS_DIR =
-  process.env.HOLYFIELDS_SCHEMAS_DIR || "/home/delorenj/code/33GOD/holyfields/schemas";
+  process.env.HOLYFIELDS_SCHEMAS_DIR || "";
 
 const VETTED_SCHEMA_PATHS = new Set([
   "agent/heartbeat.v1.json",

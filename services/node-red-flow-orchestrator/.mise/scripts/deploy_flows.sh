@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NODE_RED_DIR="/home/delorenj/.node-red"
+NODE_RED_DIR="${NODE_RED_DIR:-$HOME/.node-red}"
 FLOWS_DIR="${FLOWS_DIR}"
 # SCRIPTS_DIR is provided by mise environment
 APPLY_CONFIG_SCRIPT="${SCRIPTS_DIR}/apply_config.py"
