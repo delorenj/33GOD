@@ -64,11 +64,9 @@ C4Dynamic
 | 2 | switch | Filter: only media extensions (mp3/wav/m4a/mp4/mov/mkv) | Non-media silently dropped |
 | 3 | switch | Filter: only `rename` events (debounce) | Duplicate events filtered |
 | 4 | delay | 2s settle time for large file writes | N/A |
-| 5 | exec | `extract_audio.py` - extract audio if video | ffmpeg not installed; timeout 60s |
-| 6 | split-silence | Detect silence gaps, split into activity chunks | ffprobe/ffmpeg failure |
-| 7 | exec | `minio_presign.py` - upload chunk + presign | Missing creds; MinIO down |
-| 8 | http request | POST to Fireflies upload API | API key invalid; rate limit |
-| 9 | holyfields-out | Publish `fireflies.transcript.upload` to Bloodbank | Bloodbank HTTP API down |
+| 5 | exec | `minio_presign.py` - upload chunk + presign | Missing creds; MinIO down |
+| 6 | http request | POST to Fireflies upload API | API key invalid; rate limit |
+| 7 | holyfields-out | Publish `fireflies.transcript.upload` to Bloodbank | Bloodbank HTTP API down |
 
 ### Webhook Return Path
 
