@@ -1,0 +1,30 @@
+{
+  "$id": "fireflies/transcript/upload.v1.json",
+  "title": "Fireflies Transcript Upload",
+  "description": "Media uploaded to MinIO, ready for Fireflies",
+  "type": "object",
+  "required": ["event_type", "event_id", "timestamp", "version", "source", "payload"],
+  "allOf": [
+    { "$ref": "../../_common/source.v1.json" },
+    {
+      "properties": {
+        "event_type": { "type": "string", "const": "fireflies.transcript.upload" },
+        "event_id": { "type": "string", "format": "uuid" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "version": { "type": "string", "default": "1.0.0" },
+        "source": { "$ref": "../../_common/source.v1.json" },
+        "correlation_ids": { "type": "array", "items": { "type": "string" } },
+        "payload": {
+          "type": "object",
+          "required": ["media_file", "title"],
+          "properties": {
+            "media_file": { "type": "string" },
+            "media_type": { "type": "string" },
+            "title": { "type": "string" },
+            "media_duration_seconds": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    }
+  ]
+}
