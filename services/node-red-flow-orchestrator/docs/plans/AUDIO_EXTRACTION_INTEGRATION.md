@@ -1,3 +1,5 @@
+> **Status: NOT YET IMPLEMENTED** - This is a planned integration, not current architecture.
+
 # Audio Extraction Integration for Node-RED Flow
 
 ## Overview

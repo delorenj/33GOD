@@ -12,7 +12,7 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     const node = this;
 
-    const rabbitUrl = (config.rabbitUrl || process.env.RABBIT_URL || "amqp://127.0.0.1:5673/").trim();
+    const rabbitUrl = (config.rabbitUrl || process.env.RABBIT_URL || "amqp://127.0.0.1:5672/").trim();
     const exchange = (config.exchange || "bloodbank.events.v1").trim();
     const routingKey = (config.routingKey || "#").trim();
     const queueName = (config.queueName || "").trim();

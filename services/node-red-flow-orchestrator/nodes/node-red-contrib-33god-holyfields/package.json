@@ -10,6 +10,10 @@
     "bloodbank",
     "rabbitmq"
   ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
@@ -24,5 +28,8 @@
       "holyfields-out": "holyfields-out.js",
       "holyfields-in": "holyfields-in.js"
     }
+  },
+  "devDependencies": {
+    "vitest": "^4.1.2"
   }
 }

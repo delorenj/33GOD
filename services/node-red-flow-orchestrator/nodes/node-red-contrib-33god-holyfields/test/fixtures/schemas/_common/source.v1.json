@@ -1,0 +1,12 @@
+{
+  "$id": "/_common/source.v1.json",
+  "title": "Event Source",
+  "type": "object",
+  "required": ["host", "app", "type", "trigger_type"],
+  "properties": {
+    "host": { "type": "string" },
+    "app": { "type": "string" },
+    "type": { "type": "string", "enum": ["manual", "agent", "scheduled", "heartbeat", "file_watch", "hook"] },
+    "trigger_type": { "type": "string", "enum": ["api", "event", "scheduled", "webhook", "manual"] }
+  }
+}

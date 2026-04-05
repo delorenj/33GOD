@@ -1,0 +1,26 @@
+{
+  "$id": "nullable/union.v1.json",
+  "title": "Nullable Union Test",
+  "type": "object",
+  "properties": {
+    "event_type": { "type": "string", "const": "nullable.union" },
+    "payload": {
+      "type": "object",
+      "required": ["value"],
+      "properties": {
+        "value": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "minLength": 1 }
+          ]
+        },
+        "optional_num": {
+          "anyOf": [
+            { "type": "null" },
+            { "type": "integer", "minimum": 0 }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -22,9 +22,9 @@ Schema-aware consumer:
 ## Configuration assumptions
 
 Defaults are tuned for current 33GOD runtime:
-- Holyfields schemas: `/home/delorenj/code/33GOD/holyfields/schemas`
+- Holyfields schemas: `$HOLYFIELDS_SCHEMAS_DIR` (required env var)
 - Bloodbank publish API: `http://127.0.0.1:8682/events/custom`
-- RabbitMQ: `amqp://127.0.0.1:5673/`
+- RabbitMQ: `amqp://127.0.0.1:5672/`
 - Exchange: `bloodbank.events.v1`
 
 Override schema root with env var:
