@@ -12,8 +12,8 @@
 **File:** `.env:1-2`
 
 ```
-MINIO_ACCESS_KEY=delorenj
-MINIO_SECRET_KEY=Ittr5eesol
+MINIO_ACCESS_KEY=<redacted>
+MINIO_SECRET_KEY=<redacted>
 ```
 
 There is no `.gitignore` at the project root. The only `.gitignore` in the entire service is inside `scripts/.venv/`. These credentials are committed to the repo and visible to anyone with read access.

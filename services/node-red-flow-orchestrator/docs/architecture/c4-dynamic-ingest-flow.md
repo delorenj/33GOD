@@ -1,6 +1,6 @@
 # C4 Dynamic Diagram - Media Ingest to Transcription Flow
 
-The primary workflow: a media file dropped into the inbox is processed through audio extraction, uploaded to MinIO, submitted to Fireflies for transcription, and the resulting transcript is published to Bloodbank.
+The primary workflow: a media file dropped into the inbox is uploaded to MinIO, submitted to Fireflies for transcription, and the resulting transcript is published to Bloodbank.
 
 ```mermaid
 C4Dynamic
@@ -9,8 +9,6 @@ C4Dynamic
   Person(user, "Jarad", "Drops media file")
   Container(inbox, "Watch Directory", "~/audio/inbox")
   Container(nodeRed, "Node-RED Runtime", "Node.js/PM2", "Flow engine")
-  Container(extractAudio, "extract_audio.py", "Python/ffmpeg", "Audio extraction")
-  Container(splitSilence, "split-silence", "Node-RED node", "Silence detection")
   Container(minioPresign, "minio_presign.py", "Python/boto3", "S3 upload")
   SystemDb(minio, "MinIO", "s3.delo.sh")
   System_Ext(fireflies, "Fireflies.ai", "Transcription API")
@@ -19,16 +17,12 @@ C4Dynamic
 
   Rel(user, inbox, "1. Drop media file (mp4/mp3/wav)")
   Rel(nodeRed, inbox, "2. Detect new file via fs.watch")
-  Rel(nodeRed, extractAudio, "3. Extract audio (if video)", "exec node")
-  Rel(nodeRed, splitSilence, "4. Split by silence regions", "Node-RED wire")
-  Rel(nodeRed, minioPresign, "5. Upload chunk + get presigned URL", "exec node")
-  Rel(minioPresign, minio, "6. PUT object to transcription-staging bucket", "S3 API")
-  Rel(nodeRed, fireflies, "7. Submit presigned URL for transcription", "REST API")
-  Rel(nodeRed, holyfieldsOut, "8. Publish fireflies.transcript.upload", "Node-RED wire")
-  Rel(holyfieldsOut, bloodbank, "9. POST envelope to Bloodbank", "HTTP")
+  Rel(nodeRed, minioPresign, "3. Upload file + get presigned URL", "exec node")
+  Rel(minioPresign, minio, "4. PUT object to transcription-staging bucket", "S3 API")
+  Rel(nodeRed, fireflies, "5. Submit presigned URL for transcription", "REST API")
+  Rel(nodeRed, holyfieldsOut, "6. Publish fireflies.transcript.upload", "Node-RED wire")
+  Rel(holyfieldsOut, bloodbank, "7. POST envelope to Bloodbank", "HTTP")
 
-  UpdateRelStyle(user, inbox, $textColor="blue", $offsetY="-10")
-  UpdateRelStyle(nodeRed, extractAudio, $textColor="blue", $offsetY="-10")
   UpdateRelStyle(minioPresign, minio, $textColor="green", $offsetY="-10")
   UpdateRelStyle(holyfieldsOut, bloodbank, $textColor="red", $offsetY="-10")
 ```
