@@ -16,9 +16,6 @@
 [submodule "holyfields"]
 	path = holyfields
 	url = git@github.com:delorenj/holyfields.git
-[submodule "iMi"]
-	path = iMi
-	url = git@github.com:delorenj/iMi.git
 [submodule "jelmore"]
 	path = jelmore
 	url = git@github.com:delorenj/jelmore.git

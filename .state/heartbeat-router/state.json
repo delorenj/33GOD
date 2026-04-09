@@ -1,31 +1,31 @@
 {
   "lala": {
-    "test_suite": 1775706181.003246,
-    "ticket_progress": 1775698979.7564132
+    "test_suite": 1775738588.941222,
+    "ticket_progress": 1775727785.9728284
   },
   "dumply": {
-    "content_pipeline": 1775706181.0103602,
-    "ticket_progress": 1775698979.7692122
+    "content_pipeline": 1775738588.9493384,
+    "ticket_progress": 1775727785.9882562
   },
   "lenoon": {
-    "schema-drift-check": 1775685657.607318,
-    "docker-stack-health": 1775691058.4834387,
-    "candystore-lag-check": 1775689258.2033515,
-    "overlord-auto-heal": 1775707981.3747249,
+    "schema-drift-check": 1775728806.2621865,
+    "docker-stack-health": 1775739609.2417176,
+    "candystore-lag-check": 1775739609.24865,
+    "overlord-auto-heal": 1775741289.6994414,
     "plane-board-hygiene": 1775656853.6666818
   },
   "pepe": {
-    "ticket_progress": 1775698979.7850718,
+    "ticket_progress": 1775727786.004643,
     "sales_pipeline": 1775655773.4962506
   },
   "rererere": {
-    "execution_check": 1775708041.4098475,
-    "pr_review": 1775707981.3831816,
-    "trunk_health": 1775706181.0336785
+    "execution_check": 1775741049.6263962,
+    "pr_review": 1775740389.4583595,
+    "trunk_health": 1775738588.9727516
   },
   "tongy": {
-    "build_health": 1775706181.0401838,
-    "ticket_progress": 1775698979.8099933
+    "build_health": 1775738588.9860363,
+    "ticket_progress": 1775727786.030324
   },
   "tonny": {
     "family_vibe": 1775655773.53135
