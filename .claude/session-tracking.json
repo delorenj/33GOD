@@ -1,8 +1,8 @@
 {
-  "session_id": "23f5cef6-417e-4cc8-b18a-4b473dcdc9ea",
-  "started_at": "2026-04-01T19:48:32Z",
+  "session_id": "a2f42423-0d98-40c6-a825-83a2cfb7ebed",
+  "started_at": "2026-04-18T17:36:17Z",
   "working_directory": "/home/delorenj/code/33GOD",
-  "git_branch": "main",
+  "git_branch": "GOD-38/amqp-reconnection-logic",
   "turn_number": 0,
   "tools_used": {}
 }

@@ -69,7 +69,7 @@ This document provides a comprehensive overview of the components, directories, 
 
 ## Applications
 
-### 🎯 TheBoard
+### 🎯 TheBoard (On Hold)
 
 **Directory:** `theboard/`
 **Role:** Multi-Agent Brainstorming Simulation.
@@ -78,12 +78,12 @@ This document provides a comprehensive overview of the components, directories, 
 
 - **TheBoardRoom** (`theboardroom/`): Frontend/UI for TheBoard.
 
-### TheBoardRoom
+### TheBoardRoom (On Hold)
 
 Directory: `theboardroom/`
 Role: Impressive videogame-like simulation of the underlying meetings being run in `TheBoard`
 
-### 🍬 Candybar
+### 🍬 Candybar (On Hold)
 
 **Directory:** `candybar/`
 **Role:** Cross-platform app to view and monitor Bloodbank events in realtime.
@@ -104,7 +104,7 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 **Tech:** Python (WhisperLiveKit), Raspberry Pi Zero + Wisconsin Protocol for Household satellite
 **Description:** A voice-to-text system allowing users to talk to their computer. Integrates WhisperLiveKit for transcription and ElevenLabs for TTS. Recently added Standard
 
-### 🐚 Jelmore
+### 🐚 Jelmore (On Hold)
 
 **Directory:** `jelmore/`
 **Role:** Invoke coding cli agents that spawn in long-lived zellij sessions and are controlled by external agents via bloodbank event communication
@@ -112,20 +112,6 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 **Description:** Manages long-lived, interactive sessions with Claude Code AI. Provides a REST API to control AI coding sessions programmatically.
 
 ## Development Tools
-
-### 🖥️ Perth (Development On Hold)
-
-**Directory:** `perth/`
-**Role:** Terminal Multiplexer Distribution.
-**Tech:** Rust (Zellij Fork/Distro).
-**Description:** A customized distribution of the Zellij terminal multiplexer, optimized for the 33GOD workflow.
-
-### 🚗 Zellij Driver (zdrive)
-
-**Directory:** `zellij-driver/`
-**Role:** Programmatically create, control, and manage zellij sessions
-**Tech:** Rust.
-**Description:** A CLI tool (`zdrive`) for managing context within Zellij sessions. Tracks intents, logs milestones, and maintains context across sessions using Redis.
 
 ## Services
 
@@ -138,16 +124,3 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 - **node-red-flow-orchestrator**: Integration with Node-RED.
 - **templates**: Service templates (e.g., `generic-consumer`).
 - **theboard-meeting-trigger**: Triggers TheBoard meetings from external events.
-
----
-
-## Active Architecture Pattern: Event-Driven Subscriber Microservices
-
-The system relies on a central event bus (**Bloodbank**) and a decentralized ecosystem of subscriber services.
-
-### Standard Service Interface
-
-- **Base Class:** `BaseSubscriber`
-- **Config:** Connects to `BLOODBANK_URL`.
-- **Queue Naming:** `services.<domain>.<service_name>`
-- **Behavior:** Durable subscriptions, dead-letter handling, idempotent processing.

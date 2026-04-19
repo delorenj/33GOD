@@ -1,6 +1,3 @@
-[submodule "agent-forge"]
-	path = agent-forge
-	url = git@github.com:delorenj/agent-forge.git
 [submodule "bloodbank"]
 	path = bloodbank
 	url = git@github.com:delorenj/bloodbank.git
