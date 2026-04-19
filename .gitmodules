@@ -1,6 +1,3 @@
-[submodule "agent-forge"]
-	path = agent-forge
-	url = git@github.com:delorenj/agent-forge.git
 [submodule "bloodbank"]
 	path = bloodbank
 	url = git@github.com:delorenj/bloodbank.git
@@ -10,30 +7,6 @@
 [submodule "candystore"]
 	path = candystore
 	url = git@github.com:delorenj/candystore.git
-[submodule "holocene"]
-	path = holocene
-	url = git@github.com:delorenj/holocene.git
 [submodule "holyfields"]
 	path = holyfields
 	url = git@github.com:delorenj/holyfields.git
-[submodule "iMi"]
-	path = iMi
-	url = git@github.com:delorenj/iMi.git
-[submodule "jelmore"]
-	path = jelmore
-	url = git@github.com:delorenj/jelmore.git
-[submodule "HeyMa"]
-	path = HeyMa
-	url = git@github.com:delorenj/HeyMa.git
-[submodule "theboard"]
-	path = theboard
-	url = git@github.com:delorenj/theboard.git
-[submodule "theboardroom"]
-	path = theboardroom
-	url = git@github.com:delorenj/theboardroom.git
-[submodule "zellij-driver"]
-	path = zellij-driver
-	url = git@github.com:delorenj/zellij-driver.git
-[submodule "TonnyBox"]
-	path = TonnyBox
-	url = ./TonnyBox

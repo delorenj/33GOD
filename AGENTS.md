@@ -52,36 +52,7 @@ This document provides a comprehensive overview of the components, directories, 
 **Tech:** JSON Schema, Pydantic, Zod.
 **Description:** A centralized event schema registry using JSON Schema as the source of truth for Bloodbank events. Facilitates async communication contracts between LLM coding agents and services.
 
-## Agent Frameworks & Platforms
-
-### ⚒️ AgentForge (Development On Hold)
-
-**Directory:** `agent-forge/`
-**Role:** Meta-Agent Team Builder.
-**Tech:** Python, Agno.
-**Description:** A system for building specialized agent teams. Uses a meta-team of agents (Engineering Manager, Systems Analyst, Talent Scout, Agent Developer, Integration Architect) to analyze goals and assemble optimal agent rosters.
-
-### 🧠 Holocene
-
-**Directory:** `holocene/`
-**Role:** 33GOD Dashboard
-**Description:** The GUI frontend to the 33GOD pipeline. Surfaces just the right data across a few high level views (Projects, Agents, Events, etc.)
-
 ## Applications
-
-### 🎯 TheBoard
-
-**Directory:** `theboard/`
-**Role:** Multi-Agent Brainstorming Simulation.
-**Tech:** Python, Typer, Rich, Agno, Letta, Postgres, Redis, Qdrant.
-**Description:** A sophisticated system for simulating brainstorming sessions with AI agents. Features intelligent comment extraction, context compression, and convergence detection.
-
-- **TheBoardRoom** (`theboardroom/`): Frontend/UI for TheBoard.
-
-### TheBoardRoom
-
-Directory: `theboardroom/`
-Role: Impressive videogame-like simulation of the underlying meetings being run in `TheBoard`
 
 ### 🍬 Candybar
 
@@ -97,36 +68,6 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 **Tech:** Postgres, FastAPI
 **Description:** Stores all events as they flow through the pipline. Enables filtering and search for auditing and replay.
 
-### 🗣️ HeyMa
-
-**Directory:** `HeyMa/`
-**Role:** Voice Interface.
-**Tech:** Python (WhisperLiveKit), Raspberry Pi Zero + Wisconsin Protocol for Household satellite
-**Description:** A voice-to-text system allowing users to talk to their computer. Integrates WhisperLiveKit for transcription and ElevenLabs for TTS. Recently added Standard
-
-### 🐚 Jelmore
-
-**Directory:** `jelmore/`
-**Role:** Invoke coding cli agents that spawn in long-lived zellij sessions and are controlled by external agents via bloodbank event communication
-**Tech:** FastAPI, zellij, zellij-driver, bloodbank, holyfields, RabbitMQ
-**Description:** Manages long-lived, interactive sessions with Claude Code AI. Provides a REST API to control AI coding sessions programmatically.
-
-## Development Tools
-
-### 🖥️ Perth (Development On Hold)
-
-**Directory:** `perth/`
-**Role:** Terminal Multiplexer Distribution.
-**Tech:** Rust (Zellij Fork/Distro).
-**Description:** A customized distribution of the Zellij terminal multiplexer, optimized for the 33GOD workflow.
-
-### 🚗 Zellij Driver (zdrive)
-
-**Directory:** `zellij-driver/`
-**Role:** Programmatically create, control, and manage zellij sessions
-**Tech:** Rust.
-**Description:** A CLI tool (`zdrive`) for managing context within Zellij sessions. Tracks intents, logs milestones, and maintains context across sessions using Redis.
-
 ## Services
 
 **Directory:** `services/`
@@ -137,7 +78,7 @@ Role: Impressive videogame-like simulation of the underlying meetings being run 
 - **fireflies-transcript-processor**: Processes meeting transcripts from Fireflies.ai.
 - **node-red-flow-orchestrator**: Integration with Node-RED.
 - **templates**: Service templates (e.g., `generic-consumer`).
-- **theboard-meeting-trigger**: Triggers TheBoard meetings from external events.
+- **theboard-meeting-trigger**: (dormant since 2026-04-19 slimdown) Triggers TheBoard meetings from external events; re-activates when TheBoard component is reintegrated.
 
 ---
 

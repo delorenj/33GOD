@@ -330,7 +330,7 @@ services:
       EVENT_STORE_MANAGER_HOST: "0.0.0.0"
       EVENT_STORE_MANAGER_PORT: "8080"
       API_PREFIX: /api/v1
-      API_CORS_ORIGINS: '["http://localhost:3000","http://localhost:3360","https://holocene.delo.sh"]'
+      API_CORS_ORIGINS: '["http://localhost:3000","http://localhost:3360"]'
       LOG_LEVEL: INFO
       LOG_FORMAT: json
       ENVIRONMENT: production
@@ -352,62 +352,6 @@ services:
       - "traefik.enable=false"
       - "33god.service=candystore"
       - "33god.description=Event persistence store - consumes and indexes all Bloodbank events"
-
-  # ============================================================================
-  # Holocene - Mission Control Dashboard
-  # ============================================================================
-  holocene:
-    build:
-      context: ./holocene
-      dockerfile: Dockerfile
-      args:
-        - VITE_BLOODBANK_API_URL=/api/bloodbank
-        - VITE_BLOODBANK_WS_URL=/ws
-        - VITE_BLOODBANK_WS_FALLBACK_URL=/ws
-    container_name: 33god-holocene
-    hostname: holocene
-    ports:
-      - "11819:80"      # nginx serving built Vite app
-    environment:
-      # Runtime configuration (nginx serves static files, but API proxy needs this)
-      BLOODBANK_API_URL: http://bloodbank:8682
-      BLOODBANK_WS_URL: ws://bloodbank-ws-relay:8683
-      
-      # Plane API proxy configuration
-      PLANE_33GOD_API_KEY: ${PLANE_33GOD_API_KEY:-}
-      PROXY_PORT: "11820"
-    volumes:
-      # Mount avatars for static serving
-      - ${OPENCLAW_AVATARS_PATH:-~/.openclaw/Avatars}:/usr/share/nginx/html/avatars:ro
-    depends_on:
-      bloodbank:
-        condition: service_healthy
-      candystore:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    networks:
-      - 33god-network
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      # Main router (HTML/JS/CSS) — behind Google Auth
-      - "traefik.http.routers.holocene.rule=Host(`holocene.delo.sh`)"
-      - "traefik.http.routers.holocene.entrypoints=websecure"
-      - "traefik.http.routers.holocene.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.holocene.middlewares=google-auth@file"
-      # WebSocket router — NO auth (WS can't do OAuth redirects)
-      - "traefik.http.routers.holocene-ws.rule=Host(`holocene.delo.sh`) && PathPrefix(`/ws`)"
-      - "traefik.http.routers.holocene-ws.entrypoints=websecure"
-      - "traefik.http.routers.holocene-ws.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.holocene-ws.priority=200"
-      # Shared service
-      - "traefik.http.services.holocene.loadbalancer.server.port=80"
 
   # ============================================================================
   # Infra Dispatcher - Bloodbank Consumer for Plane Webhook Dispatch

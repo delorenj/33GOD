@@ -24,7 +24,7 @@ run = """
 set -euo pipefail
 ROOT="{{ config_root }}"
 
-COMPONENTS=(bloodbank holocene hookd)
+COMPONENTS=(bloodbank hookd)
 
 echo "═══ 33GOD: Building all components ═══"
 FAILED=()
@@ -52,10 +52,6 @@ fi
 description = "Build infrastructure stack only (Bloodbank + relay)"
 run = "mise -C {{ config_root }}/bloodbank run build && mise -C {{ config_root }}/bloodbank run build:relay"
 
-[tasks."build:frontend"]
-description = "Build frontend stack only (Holocene)"
-run = "mise -C {{ config_root }}/holocene run build"
-
 # ─── Cascading Deploy ────────────────────────────────────────
 # Root `mise deploy` builds then deploys all Docker services.
 
@@ -66,7 +62,7 @@ run = """
 set -euo pipefail
 ROOT="{{ config_root }}"
 
-COMPONENTS=(bloodbank holocene)
+COMPONENTS=(bloodbank)
 
 echo "═══ 33GOD: Deploying all components ═══"
 for comp in "${COMPONENTS[@]}"; do
@@ -84,10 +80,6 @@ echo "═══ 33GOD: All components deployed ✅ ═══"
 [tasks."deploy:infra"]
 description = "Deploy infrastructure only (Bloodbank + relay)"
 run = "mise -C {{ config_root }}/bloodbank run deploy"
-
-[tasks."deploy:frontend"]
-description = "Deploy frontend only (Holocene)"
-run = "mise -C {{ config_root }}/holocene run deploy"
 
 # ─── Infrastructure Services ─────────────────────────────────
 
@@ -128,13 +120,10 @@ curl -sS http://127.0.0.1:8682/healthz 2>/dev/null || echo "  DOWN"
 echo ""
 
 echo "▸ RabbitMQ queues:"
-RABBIT=$(docker ps --format '{{.Names}}' | grep -E '^(33god-rabbitmq|theboard-rabbitmq)$' | head -1 || true)
+RABBIT=$(docker ps --format '{{.Names}}' | grep -E '^33god-rabbitmq$' | head -1 || true)
 [[ -n "${RABBIT:-}" ]] && docker exec "$RABBIT" rabbitmqctl list_queues name consumers messages -q 2>/dev/null || echo "  (unreachable)"
 echo ""
 
-echo "▸ Holocene:"
-curl -sS -o /dev/null -w "HTTP %{http_code}" http://127.0.0.1:11819/health 2>/dev/null || echo "  DOWN"
-echo ""
 """
 
 [tasks.status]
@@ -240,19 +229,6 @@ run = "mise -C {{ config_root }}/bloodbank run deploy"
 [tasks."bloodbank:health"]
 description = "Bloodbank health check"
 run = "mise -C {{ config_root }}/bloodbank run health"
-
-[tasks."holocene:build"]
-description = "Build Holocene"
-run = "mise -C {{ config_root }}/holocene run build"
-
-[tasks."holocene:deploy"]
-description = "Deploy Holocene"
-run = "mise -C {{ config_root }}/holocene run deploy"
-
-[tasks."holocene:dev"]
-description = "Holocene Vite dev server"
-run = "mise -C {{ config_root }}/holocene run dev"
-raw = true
 
 [tasks."hookd:build"]
 description = "Build hookd"
