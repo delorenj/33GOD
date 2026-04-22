@@ -1,5 +1,5 @@
 [env]
-NODE_RED_DIR = "~/.node-red"
+NODE_RED_DIR = "{{env.HOME}}/.node-red"
 FLOWS_DIR = "{{config_root}}/flows"
 SCRIPTS_DIR = "{{config_root}}/scripts"
 
