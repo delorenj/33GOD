@@ -27,23 +27,11 @@ while IFS= read -r file; do
         holyfields/*)
             COMPONENTS_CHANGED[holyfields]=1
             ;;
-        iMi/*)
-            COMPONENTS_CHANGED[iMi]=1
-            ;;
-        jelmore/*)
-            COMPONENTS_CHANGED[jelmore]=1
-            ;;
-        holocene/*)
-            COMPONENTS_CHANGED[holocene]=1
-            ;;
         candybar/*)
             COMPONENTS_CHANGED[candybar]=1
             ;;
-        HeyMa/*)
-            COMPONENTS_CHANGED[HeyMa]=1
-            ;;
-        theboardroom/*)
-            COMPONENTS_CHANGED[theboardroom]=1
+        candystore/*)
+            COMPONENTS_CHANGED[candystore]=1
             ;;
         docs/domains/*)
             # Domain doc changes should update domain GOD docs
