@@ -5,31 +5,51 @@ This document provides a comprehensive overview of the components, directories, 
 ## Rules and Guidelines (Mandatory)
 
 - Read ALL GOD docs first to familiarize yourself with the pipeline.
-- Practice STRICT adherence to the BMAD method for ALL prompts and tasks.
-- You are the Architect and PM of the full 33GOD Pipeline so you have a wide but shallow grasp of full component ecosystem.
-- ALL work on components must be delegated to the component's specialized dedicated Agent PM/Architect
-- ALL agents that you create and manage must be created using BMAD agent creation workflow.
-- Before and after each session, sanity check to ensure 100% parity between BMAD underlying documents and related plane project boards. If divergence detected, don't trust either as source of truth. Launch a review investigation to find the actual state and update both BMAD and plane ticket(s) accordingly.
-- Before each task, at the beginning of the session, verbosely state your intended actions as verification you understand the urgency of strict adherence to the BMAD method.
-- Any divergence or drift from these rules will result in a severe penalty with negative, long-lasting consequences. (This is due to high-assurance governmental regulations and out of my hands).
+- Follow the BMAD method for specification, planning, and review. BMAD is the thinking framework; it does not require an external tracker to be correct.
+- You are the Architect and PM of the full 33GOD Pipeline so you have a wide but shallow grasp of the full component ecosystem.
+- Work on components may be delegated to the component's specialized Agent PM/Architect when the component is mature enough to own its surface.
+- Prefer direct commits on ticket-prefixed branches when moving fast is more valuable than ceremony. A clear commit message + a BMAD artifact in `_bmad-output/` beats a half-synchronized ticket.
+- Source of truth is the code, the committed BMAD artifacts, and eventually the Bloodbank event log. External trackers are read-through caches, not authorities.
 
-## 🚫 Ticket Gate (Mandatory)
+## 🟡 Plane: SUSPENDED as source of truth (2026-04-22)
 
-- No engineering work without an active Plane ticket.
-- Plane board: <https://plane.delo.sh/33god/>
-- Move ticket to `In Progress` before first code change.
-- Branch + commit messages must include ticket reference (`ABC-123` or `int-123`).
-- `main`/`staging` commits are blocked by git hooks.
-- Emergency-only bypass: `ALLOW_NO_TICKET=1`.
+**Status:** The 33GOD Plane workspace has drifted far enough from reality that treating it as a truth source produces a web of lies. Bloodbank will become the canonical event log; until it does, we operate without a ticket gate.
+
+**Operating rules during suspension:**
+
+- **No ticket gate.** Do not require a Plane issue to exist before making code changes. Do not block commits on ticket references.
+- **Branch naming stays ticket-prefixed when convenient.** If you already have a `GOD-XX` / `BB-XX` issue that matches the work, use it in the branch name and commit subject. If you don't, use a descriptive kebab slug (`fix/nats-healthcheck`, `feat/smoke-test-event`). Both are acceptable.
+- **Do not invent new Plane issues speculatively.** Only create a Plane issue when it represents work you are about to do or a decision you have already made and want persistent reference to. No backlog-padding.
+- **Do not "sync" BMAD artifacts to Plane on a schedule.** The parity audit rule is rescinded. When Plane and code disagree, trust the code and the commit log.
+- **Emit the intent in the commit message, not a ticket description.** Multi-paragraph "why" belongs in `git log`, not a Plane field that will decay.
+
+**Re-enabling Plane:**
+
+Plane returns as a first-class surface only when all three are true:
+
+1. Bloodbank v3 is running reliably (ADR-0001 acceptance met end-to-end).
+2. Bloodbank emits `code.*` events on commit / PR / deploy that a Plane sync job can consume.
+3. An audit pass (scripted, not manual) confirms every open Plane issue corresponds to either live work or an explicit archived state.
+
+Until then, treat Plane as a read-only historical artifact. Writes to it are optional courtesy, not discipline.
+
+**What this does NOT change:**
+
+- Git hygiene: clean commits, descriptive messages, no force-pushes, no `--no-verify`.
+- BMAD artifacts: specs, epic/story breakdowns, ADRs still live under `_bmad-output/` and `docs/architecture/`.
+- Review discipline: multi-axis reviews still run before merge. The adversarial review skill is especially load-bearing when the ticket gate is down.
+- Branch-per-change workflow: still required, just without the ticket prerequisite.
 
 ## Core Infrastructure
 
 ### 🩸 Bloodbank
 
 **Directory:** `bloodbank/`
-**Role:** Central Event Bus & Infrastructure.
-**Tech:** RabbitMQ, Python (FastStream/aio-pika)
-**Description:** The nervous system of 33GOD. Provides the RabbitMQ-based event bus infrastructure and defines the standard event schemas. Contains the core `rabbit.py` publisher/subscriber logic and deployment configs.
+**Role:** Central Event Bus & Runtime Platform.
+**Tech (v2, legacy):** RabbitMQ, Python (FastStream/aio-pika).
+**Tech (v3, in flight):** Dapr runtime + NATS JetStream broker + CloudEvents 1.0 envelopes + AsyncAPI contracts. Bloodbank becomes an operator-tool surface; production publishing moves into services via Dapr + Holyfields-generated SDKs.
+**Description:** The nervous system of 33GOD. v2 provides the legacy RabbitMQ event bus. v3 (tracked in `docs/architecture/v3-implementation-plan.md` and ratified in `docs/architecture/ADR-0001-v3-platform-pivot.md`) pivots to a swap-able broker behind Dapr.
+**Source of truth marker:** Once v3 lands, the Bloodbank event log is the canonical system-state record. The metarepo and its components converge on the bus, not on any external tracker.
 
 ### 🌊 Flume (Development On Hold)
 

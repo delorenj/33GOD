@@ -84,22 +84,15 @@ case $choice in
         ;;
 esac
 
-# --- Plane ticket guard ----------------------------------------------------
-if [ "${ALLOW_NO_TICKET:-0}" != "1" ]; then
-    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+# --- Branch safety guard ---------------------------------------------------
+# Plane ticket gate is SUSPENDED (see AGENTS.md / CLAUDE.md, 2026-04-22).
+# We still block direct commits to protected branches.
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-    if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "staging" ]; then
-        echo -e "${RED}[TICKET]${NC} commits to '$BRANCH' are blocked. Use a ticket branch."
-        exit 1
-    fi
-
-    if ! echo "$BRANCH" | grep -Eq '(^|[/_-])[A-Z]{2,10}-[0-9]+($|[/_-])|(^|[/_-])int-[0-9]+($|[/_-])'; then
-        echo -e "${RED}[TICKET]${NC} branch '$BRANCH' is missing a ticket reference."
-        echo "Use a branch like: BB-142-short-title or feature/int-142-short-title"
-        echo "If this is an emergency, re-run with ALLOW_NO_TICKET=1"
-        exit 1
-    fi
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "staging" ]; then
+    echo -e "${RED}[BRANCH]${NC} commits to '$BRANCH' are blocked. Use a feature branch and open a PR."
+    exit 1
 fi
 
-echo -e "${GREEN}[TICKET]${NC} ticket guard passed"
+echo -e "${GREEN}[BRANCH]${NC} working on feature branch '$BRANCH'"
 exit 0
