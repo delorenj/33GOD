@@ -92,6 +92,19 @@ Locked by this ADR; do not reopen inside implementation tickets.
 | NATS command subject prefix | `command.` |
 | NATS reply subject prefix | `reply.` |
 
+### Topic-to-subject mapping (clarification added 2026-04-22)
+
+The Dapr `pubsub.jetstream` component maps a Dapr topic name directly to a
+NATS subject. Services that want their traffic to land in
+`BLOODBANK_V3_EVENTS` must name their Dapr topics with the `event.` prefix
+(for example, `event.artifact.created`). The Holyfields-generated SDK
+enforces this discipline: services do not hand-write topic names.
+
+There is no Dapr metadata key that prefixes or filters subjects for a
+pub/sub component. (An earlier draft of the scaffold used a fabricated
+`subjects` metadata key; it was removed on 2026-04-22 after verification
+against the Dapr component reference.)
+
 ## Consequences
 
 ### Positive
@@ -130,8 +143,12 @@ Locked by this ADR; do not reopen inside implementation tickets.
 - **Kubernetes.** Out of scope. Compose is the deployment surface until v3
   stabilizes.
 - **Multi-region / clustering.** Out of scope. Single-node JetStream for now.
-- **Dapr state store backend.** Default (Redis) acceptable for scaffold;
-  production backend is a later decision.
+- **Dapr state store backend.** Scaffold default is `state.in-memory` to
+  avoid introducing a Redis dependency before any service actually needs
+  durable state. Swap for `state.redis` (or another durable backend) via
+  component manifest the first time a service needs cross-restart state.
+  Production backend is a later decision; the swap is component-manifest
+  only and does not require code change.
 - **Replay semantics.** Documented in V3-007; actual tooling beyond docs is
   deferred until after scaffold wave.
 
