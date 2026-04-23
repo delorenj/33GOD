@@ -1,24 +1,29 @@
 # Claude Code Configuration - SPARC Development Environment
 
-## 🚫 NON-NEGOTIABLE: NO WORK WITHOUT AN ACTIVE PLANE TICKET
+## 🟡 PLANE GATE SUSPENDED (2026-04-22)
 
-**Plane board:** https://plane.delo.sh/33god/
+Plane has drifted too far from reality to serve as source of truth. The ticket
+gate is **suspended** until Bloodbank v3 is functional and can emit `code.*`
+events that a Plane sync job can consume. See `AGENTS.md` for the full
+operating rules during the suspension.
 
-1. Before writing/changing code, you must have an active Plane ticket.
-2. Move ticket to `In Progress` before first code change.
-3. Branch name must include ticket reference (`ABC-123` or `int-123`).
-4. Post progress updates on the ticket while you work.
-5. No ticket = no code changes, no commits, no PR.
-
-Enforcement: Git hooks (`pre-commit`, `commit-msg`) block non-ticket branches/commits.
-Emergency-only bypass: `ALLOW_NO_TICKET=1`.
+- **Work without a Plane ticket is allowed.** Descriptive branch names and
+  commit messages are the ticket during this period.
+- **Do not create Plane issues speculatively.** Only create one for work you
+  are actually about to do or for a decision you want a persistent reference
+  to.
+- **Bloodbank is the future source of truth.** Focus engineering energy on
+  getting v3 functional end-to-end.
+- **Git hygiene still applies.** Clean commits, no force-push, no
+  `--no-verify`. BMAD artifacts still live under `_bmad-output/` and
+  `docs/architecture/`.
 
 
 ## 🎯 UNIVERSAL 33GOD FACTS (ALWAYS TRUE)
 
 **Architecture Core Principles:**
 
-1. **Everything is an Event**: All state changes flow through Bloodbank (RabbitMQ)
+1. **Everything is an Event**: All state changes flow through Bloodbank. v2 = RabbitMQ (legacy); v3 = Dapr runtime + NATS JetStream + CloudEvents 1.0. See `docs/architecture/ADR-0001-v3-platform-pivot.md`.
 2. **Registry as Truth**: `services/registry.yaml` defines service topology
 3. **Event-Driven Communication**: Components NEVER call each other directly
 4. **6 Domains**: Infrastructure, Agent Orchestration, Workspace Management, Meeting & Collaboration, Dashboards & Voice, Development Tools
