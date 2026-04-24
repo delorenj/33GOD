@@ -72,9 +72,15 @@ We pivot to a v3 event platform with the following locked choices.
 - **Bloodbank CLI (`bb_v3`):** operator tool. It is not the primary production
   publish path; production traffic goes through Dapr publishers inside
   services. The CLI is for emission tests, trace walkthroughs, and replay.
-- **Holyfields:** contracts and generation only.
+- **Holyfields:** build-time schema source of truth and Pydantic/Zod
+  generation only. **Scope narrowed by [ADR-0002](./ADR-0002-holyfields-scope-refactor.md)
+  (2026-04-24)** — Holyfields does NOT own AsyncAPI authorship, EventCatalog
+  generation, or runtime schema registry duties. Apicurio is the runtime
+  registry; each service owns its own AsyncAPI; a separate CI aggregator feeds
+  EventCatalog.
 - **Services (producing and consuming):** own their business event/command
-  schemas. They publish via Dapr using Holyfields-generated SDKs. They do
+  schemas, AND own their own AsyncAPI document describing what they publish
+  and consume. They publish via Dapr using Holyfields-generated SDKs. They do
   not hand-roll envelopes.
 
 ## Naming invariants
