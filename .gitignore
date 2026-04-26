@@ -16,6 +16,10 @@ claude-flow.config.json
 .claude-flow/
 memory/
 coordination/
+
+# Bloodbank publisher hook runtime state (per-session only)
+.claude/session-tracking.json
+.claude/sessions/
 *.db
 *.db-journal
 *.db-wal

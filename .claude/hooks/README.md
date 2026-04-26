@@ -1,416 +1,112 @@
-# Claude Code Bloodbank Integration Hooks
+# Claude Code → Bloodbank v3 Publisher Hooks
 
-Comprehensive event publishing system that captures all Claude Code interactions and publishes them to Bloodbank for observability, analytics, and debugging.
-
-## Overview
-
-This hook system publishes detailed events to your Bloodbank event bus, enabling:
-
-- **Tool Usage Tracking**: Every tool call (Read, Write, Bash, etc.) with full metadata
-- **Session Lifecycle**: Start/end events with statistics and context
-- **Observability**: Real-time monitoring of Claude Code sessions
-- **Analytics**: Historical analysis of tool usage patterns
-- **Debugging**: Complete replay capability for troubleshooting
+Publishes Claude Code session and tool-use events to the v3 event bus
+(Dapr → NATS JetStream) as CloudEvents 1.0 envelopes.
 
 ## Architecture
 
 ```
-Claude Code CLI
-    ↓ (tool invoked)
-PostToolUse Hook
-    ↓ (JSON input via stdin)
-bloodbank-publisher.sh
-    ↓ (HTTP POST or bb CLI)
-Bloodbank Event Bus (RabbitMQ)
-    ↓ (routing key: session.thread.agent.action)
-Subscribers (analytics, logging, etc.)
+Claude Code
+    ↓ (PostToolUse / Stop / SessionStart)
+.claude/hooks/bloodbank-publisher.sh
+    ↓ (POST /v1.0/publish/<pubsub>/<topic>, application/cloudevents+json)
+daprd-heartbeat sidecar (host:3502 → container:3500)
+    ↓ (pubsub.jetstream component)
+NATS JetStream (BLOODBANK_V3_EVENTS stream, event.agent.* subjects)
+    ↓
+Subscribers (recorders, projections, dashboards)
 ```
 
-## Event Types Published
+The publisher is **best-effort by design**. If the Dapr sidecar is not
+reachable on the configured URL, the hook logs to
+`.claude/sessions/publish-errors.log` and exits 0 so Claude Code never
+blocks waiting on the event bus.
 
-### 1. `session.thread.agent.action`
-Published on **every tool use** (Read, Write, Bash, Grep, etc.)
+## Events Published
 
-**Payload**:
-```json
-{
-  "session_id": "uuid",
-  "tool_metadata": {
-    "tool_name": "Bash",
-    "tool_input": {"command": "git status"},
-    "success": true
-  },
-  "working_directory": "/home/user/project",
-  "git_branch": "main",
-  "git_status": "modified",
-  "turn_number": 5,
-  "model": "claude-sonnet-4-5"
-}
-```
+| Hook event       | CloudEvents `type`         | NATS subject                  |
+|------------------|----------------------------|-------------------------------|
+| `SessionStart`   | `agent.session.started`    | `event.agent.session.started` |
+| `PostToolUse`    | `agent.tool.invoked`       | `event.agent.tool.invoked`    |
+| `Stop`           | `agent.session.ended`      | `event.agent.session.ended`   |
 
-### 2. `session.thread.start`
-Published when Claude Code session begins
-
-**Payload**:
-```json
-{
-  "session_id": "uuid",
-  "working_directory": "/home/user/project",
-  "git_branch": "main",
-  "git_remote": "git@github.com:user/repo.git",
-  "model": "claude-sonnet-4-5",
-  "started_at": "2026-01-30T12:00:00Z"
-}
-```
-
-### 3. `session.thread.end`
-Published when session stops/ends
-
-**Payload**:
-```json
-{
-  "session_id": "uuid",
-  "end_reason": "user_stop",
-  "duration_seconds": 1200,
-  "total_turns": 15,
-  "tools_used": {
-    "Read": 8,
-    "Write": 3,
-    "Bash": 4
-  },
-  "files_modified": ["src/app.py", "tests/test_app.py"],
-  "git_commits": ["abc123", "def456"],
-  "final_status": "success",
-  "working_directory": "/home/user/project",
-  "git_branch": "main"
-}
-```
+Envelope shape follows
+`holyfields/schemas/_common/cloudevent_base.v1.json`. The data block of
+each type is documented inline in `bloodbank-publisher.sh`.
 
 ## Configuration
 
-### Environment Variables
+Set in `.claude/settings.json` under `env`:
 
-Set these in `.claude/settings.json` under `"env"`:
+| var                          | default                       | purpose |
+|------------------------------|-------------------------------|---------|
+| `BLOODBANK_ENABLED`          | `true`                        | `false` disables publishing entirely |
+| `BLOODBANK_DEBUG`            | `false`                       | `true` logs each publish to stderr |
+| `BLOODBANK_DAPR_URL`         | `http://localhost:3502`       | Dapr sidecar HTTP base URL |
+| `BLOODBANK_PUBSUB`           | `bloodbank-v3-pubsub`         | Dapr pubsub component name |
+| `BLOODBANK_PUBLISH_TIMEOUT`  | `2`                           | curl `--max-time` seconds |
 
-```json
-{
-  "env": {
-    "BLOODBANK_ENABLED": "true",
-    "BLOODBANK_DEBUG": "false",
-    "BLOODBANK_URL": "http://localhost:8682"
-  }
-}
-```
+## Bringing up the publish target
 
-**Variables**:
-- `BLOODBANK_ENABLED`: Set to `"false"` to disable event publishing
-- `BLOODBANK_DEBUG`: Set to `"true"` for verbose logging to stderr
-- `BLOODBANK_URL`: Bloodbank HTTP API endpoint (default: `http://localhost:8682`)
-- `RABBIT_URL`: Direct RabbitMQ connection (from bloodbank `.env`)
-
-### Hook Configuration
-
-The PostToolUse hook publishes events for **all tools** using a universal matcher:
-
-```json
-{
-  "PostToolUse": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "cat | .claude/hooks/bloodbank-publisher.sh tool-action"
-        }
-      ]
-    }
-  ]
-}
-```
-
-The Stop hook publishes session end events:
-
-```json
-{
-  "Stop": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "echo '{}' | .claude/hooks/bloodbank-publisher.sh session-end user_stop"
-        }
-      ]
-    }
-  ]
-}
-```
-
-## Session Tracking
-
-The hook system maintains session state in `.claude/session-tracking.json`:
-
-```json
-{
-  "session_id": "uuid",
-  "started_at": "2026-01-30T12:00:00Z",
-  "working_directory": "/home/user/project",
-  "git_branch": "main",
-  "turn_number": 5,
-  "tools_used": {
-    "Read": 3,
-    "Write": 1,
-    "Bash": 1
-  }
-}
-```
-
-Session archives are saved to `.claude/sessions/` on session end.
-
-## Bloodbank Setup
-
-### 1. Start Bloodbank Services
-
-Ensure Bloodbank is running with RabbitMQ:
+The hook expects a daprd sidecar on `localhost:3502`. The simplest way
+to satisfy that today is the `heartbeat` profile, which runs the
+`daprd-heartbeat` sidecar that exposes its HTTP API on host port 3502:
 
 ```bash
-cd bloodbank/trunk-main
-# Start RabbitMQ and Bloodbank HTTP API
-docker-compose up -d  # Or your preferred method
+docker compose --project-name bloodbank-v3 \
+  --profile heartbeat \
+  -f bloodbank/compose/v3/docker-compose.yml \
+  up -d nats nats-init dapr-placement heartbeat-recorder daprd-heartbeat
 ```
 
-### 2. Register Event Schemas
+A dedicated `claude-events` compose profile (with its own daprd sidecar
+plus a `claude-events-recorder` for query/inspection) is a planned
+follow-up. Until then, daprd-heartbeat does double duty for
+publish-only workloads (Dapr publish is generic and not bound to the
+sidecar's app-id).
 
-Add the Claude Code event domain to Bloodbank:
+## Verifying the round-trip
 
 ```bash
-# The events are already defined in:
-# bloodbank/trunk-main/event_producers/events/domains/claude_code.py
+# Hook fires session-start manually
+echo '{}' | .claude/hooks/bloodbank-publisher.sh session-start
 
-# Test event publishing
-echo '{"test": "data"}' | bb publish session.thread.agent.action --json -
+# Inspect what landed in the stream
+docker run --rm --network bloodbank-v3-network natsio/nats-box:0.14.5 \
+  nats --server nats://nats:4222 stream subjects BLOODBANK_V3_EVENTS
+
+# Pull the actual envelope
+docker run --rm -i --network bloodbank-v3-network natsio/nats-box:0.14.5 \
+  nats --server nats://nats:4222 sub 'event.agent.session.started' \
+  --count=1 --last-per-subject --raw
 ```
 
-### 3. Create Subscribers
+## Publish errors
 
-Example subscriber for Claude Code events:
+Errors are appended to `.claude/sessions/publish-errors.log` (rotated at
+~1 MB). Sample entry:
 
-```python
-from event_producers.rabbit import Consumer
-from event_producers.events import EventEnvelope
-from event_producers.events.domains.claude_code import SessionAgentToolAction
-
-consumer = Consumer()
-
-@consumer.subscribe("session.thread.#")
-async def handle_claude_events(envelope: EventEnvelope):
-    if envelope.event_type == "session.thread.agent.action":
-        action = SessionAgentToolAction(**envelope.payload)
-        print(f"Tool used: {action.tool_metadata.tool_name}")
-        print(f"Session: {action.session_id}")
-
-# Run consumer
-consumer.run()
+```
+2026-04-26T11:14:37Z [192681] publish failed http=000 topic=event.agent.tool.invoked url=http://localhost:3502/...
 ```
 
-## Debugging
+`http=000` means curl could not reach the sidecar (most likely v3 is
+not running). Other 4xx/5xx codes mean Dapr received the request but
+rejected it — most often a missing pubsub component or a NATS-side
+error. Check `docker logs bloodbank-v3-daprd-heartbeat` in that case.
 
-### Enable Debug Logging
+## Session tracking
 
-```bash
-# In .claude/settings.json
-"BLOODBANK_DEBUG": "true"
-```
+The hook keeps in-flight session state in `.claude/session-tracking.json`
+and archives it to `.claude/sessions/<session_id>.json` on
+`session-end`. This file is local-only state, not source-of-truth — the
+canonical record lives on the event stream.
 
-### View Published Events
+## Schema follow-up
 
-```bash
-# Watch all Claude Code events in real-time
-cd bloodbank/trunk-main
-python watch_events.py --pattern "session.thread.#"
-```
-
-### Test Hook Manually
-
-```bash
-# Simulate tool action
-echo '{
-  "tool_name": "Bash",
-  "tool_input": {"command": "echo test"}
-}' | .claude/hooks/bloodbank-publisher.sh tool-action
-
-# Check if event was published
-bb list-events --filter "session.thread"
-```
-
-### Check Session State
-
-```bash
-# View current session
-cat .claude/session-tracking.json | jq
-
-# View session archives
-ls -la .claude/sessions/
-cat .claude/sessions/<session-id>.json | jq
-```
-
-## Advanced Usage
-
-### Custom Event Publishing
-
-Extend the hook script to publish additional events:
-
-```bash
-# Add to bloodbank-publisher.sh
-handle_thinking_event() {
-    local thinking_text="$1"
-    local payload
-    payload=$(jq -n \
-        --arg session_id "$(get_session_id)" \
-        --arg thinking_text "$thinking_text" \
-        '{
-            session_id: $session_id,
-            thinking_text: $thinking_text
-        }')
-    publish_to_bloodbank "thinking" "$payload"
-}
-```
-
-### Filter Events by Tool
-
-Only publish specific tools:
-
-```json
-{
-  "PostToolUse": [
-    {
-      "matcher": "Bash|Write|Edit",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "cat | .claude/hooks/bloodbank-publisher.sh tool-action"
-        }
-      ]
-    }
-  ]
-}
-```
-
-### Batch Event Publishing
-
-The hook system publishes events individually. For batch publishing, modify to queue events and flush periodically.
-
-## Integration with 33GOD Pipeline
-
-The Bloodbank events integrate seamlessly with the 33GOD ecosystem:
-
-1. **iMi**: Worktree manager can subscribe to session events for context switching
-2. **Flume**: Session/task manager can track Claude Code sessions
-3. **Holocene**: Dagster pipelines can trigger on tool usage patterns
-4. **Analytics**: Aggregate tool usage across all developers
-
-### Example: Auto-trigger Tests on File Changes
-
-```python
-from event_producers.rabbit import Consumer
-from event_producers.events.domains.claude_code import SessionAgentToolAction
-
-consumer = Consumer()
-
-@consumer.subscribe("session.thread.agent.action")
-async def auto_test(envelope):
-    action = SessionAgentToolAction(**envelope.payload)
-
-    if action.tool_metadata.tool_name in ["Write", "Edit"]:
-        # File was modified, trigger tests
-        file_path = action.tool_metadata.tool_input.get("file_path")
-        if file_path and file_path.endswith(".py"):
-            print(f"Running tests for {file_path}...")
-            # Trigger test pipeline
-```
-
-## Troubleshooting
-
-### Events Not Publishing
-
-1. Check Bloodbank is running:
-   ```bash
-   curl http://localhost:8682/health
-   ```
-
-2. Verify RabbitMQ connection:
-   ```bash
-   # Check .env in bloodbank/trunk-main
-   cat bloodbank/trunk-main/.env
-   ```
-
-3. Test direct publishing:
-   ```bash
-   bb publish session.thread.agent.action --mock
-   ```
-
-### Permission Errors
-
-```bash
-chmod +x .claude/hooks/bloodbank-publisher.sh
-```
-
-### Missing Dependencies
-
-```bash
-# Ensure jq is installed
-sudo apt-get install jq  # or brew install jq
-
-# Ensure uuid tools
-sudo apt-get install uuid-runtime
-```
-
-## Monitoring and Analytics
-
-### Real-time Dashboard
-
-Build a real-time dashboard by subscribing to all session events:
-
-```python
-# dashboard.py
-import asyncio
-from collections import defaultdict
-from event_producers.rabbit import Consumer
-
-stats = defaultdict(int)
-
-@consumer.subscribe("session.thread.#")
-async def update_dashboard(envelope):
-    stats[envelope.event_type] += 1
-    print(f"Events: {dict(stats)}")
-```
-
-### Cost Tracking
-
-Track token usage and costs:
-
-```python
-@consumer.subscribe("session.thread.end")
-async def track_costs(envelope):
-    total_tokens = envelope.payload.get("total_tokens", 0)
-    cost_per_token = 0.000003  # Example rate
-    cost = total_tokens * cost_per_token
-    print(f"Session cost: ${cost:.4f}")
-```
-
-## Future Enhancements
-
-Potential extensions:
-
-1. **Thinking Events**: Capture reasoning/thinking tokens (requires Claude Code API extension)
-2. **Message Events**: Full conversation history publishing
-3. **Error Events**: Detailed error tracking with stack traces
-4. **Performance Metrics**: Tool execution times, latency tracking
-5. **Context Snapshots**: Periodic dumps of conversation context
-6. **Correlation Tracking**: Link related sessions across projects
-
-## Reference
-
-- [Bloodbank Documentation](../bloodbank/trunk-main/docs/)
-- [Claude Code Hooks](https://github.com/anthropics/claude-code/docs/hooks)
-- [Event Schema Definitions](../bloodbank/trunk-main/event_producers/events/domains/claude_code.py)
-- [33GOD Architecture](../docs/domains/event-infrastructure/)
+The `agent.session.{started,ended}` and `agent.tool.invoked` schemas
+that ship in Holyfields today are v2-shaped (extend the legacy
+`_common/base_event.v1.json`). The publisher emits v3-shaped envelopes
+that match `_common/cloudevent_base.v1.json` directly. Authoring v3
+versions of the agent schemas (and wiring strict validation in CI) is
+tracked separately as part of the broader Holyfields v3-base migration.
