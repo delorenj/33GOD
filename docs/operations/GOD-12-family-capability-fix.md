@@ -42,17 +42,22 @@ Moved `write`, `edit`, `exec` from deny to allow, added `sessions_send`:
 ## Verification
 **Test 1: Write capability**
 ```bash
-ls -lh ~/.openclaw/workspace-tonny/god-12-capability-test.txt
-# -rw-rw-r-- 1 delorenj delorenj 25 Mar 10 22:01 god-12-capability-test.txt
-cat ~/.openclaw/workspace-tonny/god-12-capability-test.txt
+ls -lh $HOME/.openclaw/workspace-tonny/god-12-capability-test.txt
+# -rw-rw-r-- 1 <user> <user> 25 Mar 10 22:01 god-12-capability-test.txt
+cat $HOME/.openclaw/workspace-tonny/god-12-capability-test.txt
 # Write capability verified
 ```
 
 **Test 2: Dream cycle artifacts**
+
+> **Note:** `<ARTIFACT_DIR>` is the date-stamped directory where dream-cycle artifacts are persisted.
+> On the reference machine this was `/home/delorenj/d/33GOD/2026-03-10/`; on your machine locate
+> it under `$HOME` or the path configured in your OpenClaw workspace settings.
+
 ```bash
-ls -lh /home/delorenj/d/33GOD/2026-03-10/dream-*family*
-# -rw-rw-r-- 1 delorenj delorenj  184 Mar 10 22:02 dream-ack-family.txt
-# -rw-rw-r-- 1 delorenj delorenj 1.6K Mar 10 22:02 dream-cycle-family.md
+ls -lh <ARTIFACT_DIR>/dream-*family*
+# -rw-rw-r-- 1 <user> <user>  184 Mar 10 22:02 dream-ack-family.txt
+# -rw-rw-r-- 1 <user> <user> 1.6K Mar 10 22:02 dream-cycle-family.md
 ```
 
 **Test 3: sessions_send**

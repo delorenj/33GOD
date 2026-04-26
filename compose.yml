@@ -127,8 +127,8 @@ services:
   # ============================================================================
   bloodbank:
     build:
-      context: .
-      dockerfile: bloodbank/Dockerfile
+      context: ./bloodbank
+      dockerfile: Dockerfile
     container_name: 33god-bloodbank
     hostname: bloodbank
     ports:
@@ -428,6 +428,8 @@ services:
       # OpenClaw Hook Configuration
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
       # Point to hookd-bridge (MIG-1 CUTOVER)
+      # Both infra-dispatcher and hookd-bridge use network_mode: host, so
+      # 127.0.0.1 correctly reaches hookd-bridge on the host loopback.
       OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_DELIVER: ${OPENCLAW_HOOK_DELIVER:-false}
       
@@ -466,8 +468,8 @@ services:
   # ============================================================================
   hookd-bridge:
     build:
-      context: .
-      dockerfile: bloodbank/Dockerfile
+      context: ./bloodbank
+      dockerfile: Dockerfile
     container_name: 33god-hookd-bridge
     hostname: hookd-bridge
     command: ["python", "-m", "hookd_bridge"]
@@ -487,7 +489,7 @@ services:
       - ./.state/hookd-bridge:/var/lib/hookd-bridge
     network_mode: host
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:18790/healthz || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request, sys; urllib.request.urlopen('http://localhost:18790/healthz'); sys.exit(0)\" || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
