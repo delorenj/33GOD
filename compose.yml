@@ -127,8 +127,8 @@ services:
   # ============================================================================
   bloodbank:
     build:
-      context: .
-      dockerfile: bloodbank/Dockerfile
+      context: ./bloodbank
+      dockerfile: Dockerfile
     container_name: 33god-bloodbank
     hostname: bloodbank
     ports:
