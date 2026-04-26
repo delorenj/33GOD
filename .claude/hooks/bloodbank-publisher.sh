@@ -1,354 +1,373 @@
 #!/usr/bin/env bash
 #
-# Bloodbank Event Publisher for Claude Code Hooks
+# Bloodbank v3 Event Publisher for Claude Code Hooks
 #
-# This script publishes Claude Code tool usage and session events to Bloodbank.
-# It reads hook input from stdin (JSON) and publishes structured events.
+# Reads a Claude Code hook payload from stdin, builds a CloudEvents 1.0
+# envelope matching holyfields/schemas/_common/cloudevent_base.v1.json, and
+# POSTs it to a local Dapr sidecar's publish endpoint. Best-effort by
+# design: if the sidecar is not reachable, the hook silently exits 0 so
+# Claude Code never blocks waiting on the event bus.
 #
-# Usage: cat hook_input.json | bloodbank-publisher.sh <event-type> [options]
+# Usage:
+#   cat hook_input.json | bloodbank-publisher.sh <event-type> [end-reason]
 #
-# Environment Variables:
-#   BLOODBANK_URL - Bloodbank HTTP API endpoint (default: http://localhost:8682)
-#   RABBIT_URL - Direct RabbitMQ connection (default: amqp://user:pass@localhost:5672/)
-#   BLOODBANK_ENABLED - Set to "false" to disable publishing (default: true)
-#   BLOODBANK_DEBUG - Set to "true" for verbose logging
+# Event types:
+#   tool-action     -> event.agent.tool.invoked
+#   session-start   -> event.agent.session.started
+#   session-end     -> event.agent.session.ended
 #
-# Event Types:
-#   tool-action - Tool was invoked (PostToolUse)
-#   session-start - Session started (init hook)
-#   session-end - Session ended (Stop hook)
-#   session-error - Error occurred
-#   thinking - Thinking/reasoning event
+# Environment:
+#   BLOODBANK_ENABLED       "false" disables publishing entirely (default: true)
+#   BLOODBANK_DEBUG         "true" logs to stderr + error log file
+#   BLOODBANK_DAPR_URL      Dapr sidecar HTTP base URL (default: http://localhost:3502)
+#   BLOODBANK_PUBSUB        Dapr pubsub component (default: bloodbank-v3-pubsub)
+#   BLOODBANK_PUBLISH_TIMEOUT  curl --max-time seconds (default: 2)
+#
+# Bring up the publish target (a daprd sidecar exposed on host:3502) via:
+#   docker compose --project-name bloodbank-v3 \
+#     --profile heartbeat -f bloodbank/compose/v3/docker-compose.yml up -d
+#
+# When the sidecar is down, errors are logged once to
+# .claude/sessions/publish-errors.log (rotated at ~1MB) and the hook
+# returns 0. This keeps a record without spamming the user terminal.
 
-set -euo pipefail
+set -uo pipefail
 
-# ============================================================================
-# Configuration
-# ============================================================================
-
-BLOODBANK_URL="${BLOODBANK_URL:-http://localhost:8682}"
 BLOODBANK_ENABLED="${BLOODBANK_ENABLED:-true}"
 BLOODBANK_DEBUG="${BLOODBANK_DEBUG:-false}"
+BLOODBANK_DAPR_URL="${BLOODBANK_DAPR_URL:-http://localhost:3502}"
+BLOODBANK_PUBSUB="${BLOODBANK_PUBSUB:-bloodbank-v3-pubsub}"
+BLOODBANK_PUBLISH_TIMEOUT="${BLOODBANK_PUBLISH_TIMEOUT:-2}"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Session tracking file
 SESSION_FILE="${PROJECT_ROOT}/.claude/session-tracking.json"
-STATS_FILE="${PROJECT_ROOT}/.claude/session-stats.json"
+SESSIONS_DIR="${PROJECT_ROOT}/.claude/sessions"
+ERROR_LOG="${SESSIONS_DIR}/publish-errors.log"
+ERROR_LOG_MAX_BYTES=1048576
 
-# ============================================================================
-# Utility Functions
-# ============================================================================
+mkdir -p "$SESSIONS_DIR" 2>/dev/null || true
 
 log_debug() {
-    if [[ "$BLOODBANK_DEBUG" == "true" ]]; then
-        echo "[bloodbank-publisher] $*" >&2
+    [[ "$BLOODBANK_DEBUG" == "true" ]] && echo "[bloodbank-publisher] $*" >&2
+}
+
+log_error_once() {
+    # Append to error log with size-based rotation. Never write to stderr in
+    # the non-debug path (Claude Code surfaces stderr as a hook error which
+    # was the original failure mode this rewrite eliminates).
+    local msg="$*"
+    if [[ -f "$ERROR_LOG" ]]; then
+        local size
+        size=$(stat -c%s "$ERROR_LOG" 2>/dev/null || echo 0)
+        if (( size > ERROR_LOG_MAX_BYTES )); then
+            mv "$ERROR_LOG" "${ERROR_LOG}.1" 2>/dev/null || true
+        fi
+    fi
+    printf '%s [%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$" "$msg" >> "$ERROR_LOG" 2>/dev/null || true
+    [[ "$BLOODBANK_DEBUG" == "true" ]] && echo "[bloodbank-publisher] $msg" >&2
+}
+
+now_iso() {
+    date -u +%Y-%m-%dT%H:%M:%SZ
+}
+
+new_uuid() {
+    if command -v uuidgen >/dev/null 2>&1; then
+        uuidgen | tr '[:upper:]' '[:lower:]'
+    else
+        # Fallback: extract from /proc/sys/kernel/random/uuid (Linux).
+        cat /proc/sys/kernel/random/uuid 2>/dev/null || \
+            echo "00000000-0000-0000-0000-$(printf '%012d' "$$$RANDOM")"
     fi
 }
 
-log_error() {
-    echo "[bloodbank-publisher ERROR] $*" >&2
+git_branch() {
+    git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
 }
 
-# Initialize session tracking
-init_session() {
-    local session_id="${1:-$(uuidgen)}"
-    local git_branch
-    git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+git_remote() {
+    git -C "$PROJECT_ROOT" remote get-url origin 2>/dev/null || echo ""
+}
 
+git_status_word() {
+    if git -C "$PROJECT_ROOT" status --porcelain 2>/dev/null | grep -q .; then
+        echo "modified"
+    else
+        echo "clean"
+    fi
+}
+
+# ---- Session state ---------------------------------------------------------
+
+init_session() {
+    local session_id="${1:-$(new_uuid)}"
+    local branch
+    branch=$(git_branch)
     cat > "$SESSION_FILE" <<EOF
 {
   "session_id": "$session_id",
-  "started_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "started_at": "$(now_iso)",
   "working_directory": "$PWD",
-  "git_branch": "$git_branch",
+  "git_branch": "$branch",
   "turn_number": 0,
   "tools_used": {}
 }
 EOF
-    log_debug "Session initialized: $session_id"
 }
 
-# Load session data
 load_session() {
-    if [[ -f "$SESSION_FILE" ]]; then
-        cat "$SESSION_FILE"
-    else
+    if [[ ! -f "$SESSION_FILE" ]]; then
         init_session
-        cat "$SESSION_FILE"
     fi
+    cat "$SESSION_FILE"
 }
 
-# Update session stats
-update_session_stats() {
+bump_session_stats() {
     local tool_name="$1"
-    local session_data
-    session_data=$(load_session)
-
-    # Increment tool count
-    local current_count
-    current_count=$(echo "$session_data" | jq -r ".tools_used[\"$tool_name\"] // 0")
-    local new_count=$((current_count + 1))
-
-    # Update turn number
+    local data
+    data=$(load_session)
+    local current
+    current=$(echo "$data" | jq -r --arg t "$tool_name" '.tools_used[$t] // 0')
     local turn
-    turn=$(echo "$session_data" | jq -r '.turn_number // 0')
-    local new_turn=$((turn + 1))
-
-    echo "$session_data" | jq \
-        ".tools_used[\"$tool_name\"] = $new_count | .turn_number = $new_turn" \
+    turn=$(echo "$data" | jq -r '.turn_number // 0')
+    echo "$data" | jq \
+        --arg t "$tool_name" \
+        --argjson c "$((current + 1))" \
+        --argjson n "$((turn + 1))" \
+        '.tools_used[$t] = $c | .turn_number = $n' \
         > "$SESSION_FILE"
 }
 
-# Get hostname
-get_hostname() {
-    hostname -f 2>/dev/null || hostname || echo "localhost"
+# ---- CloudEvents envelope --------------------------------------------------
+
+# Builds an envelope per holyfields/schemas/_common/cloudevent_base.v1.json
+# given a CloudEvents `type`, `subject`, and JSON `data` blob.
+build_envelope() {
+    local ce_type="$1"
+    local ce_subject="$2"
+    local data_json="$3"
+    local correlation_id="${4:-$(new_uuid)}"
+
+    jq -cn \
+        --arg id "$(new_uuid)" \
+        --arg type "$ce_type" \
+        --arg subject "$ce_subject" \
+        --arg time "$(now_iso)" \
+        --arg correlation "$correlation_id" \
+        --argjson data "$data_json" \
+        '{
+            specversion: "1.0",
+            id: $id,
+            source: "urn:33god:agent:claude-code",
+            type: $type,
+            subject: $subject,
+            time: $time,
+            datacontenttype: "application/json",
+            correlationid: $correlation,
+            causationid: null,
+            producer: "claude-code",
+            service: "claude-code",
+            domain: "agent",
+            schemaref: ($type + ".v1"),
+            traceparent: "00-00000000000000000000000000000000-0000000000000000-00",
+            data: $data
+        }'
 }
 
-# Get session ID
-get_session_id() {
-    if [[ -f "$SESSION_FILE" ]]; then
-        jq -r '.session_id' "$SESSION_FILE"
-    else
-        echo "unknown-session"
-    fi
-}
-
-# ============================================================================
-# Event Publishing Functions
-# ============================================================================
-
-publish_to_bloodbank() {
-    local event_type="$1"
-    local payload="$2"
+publish() {
+    local topic="$1"
+    local envelope="$2"
 
     if [[ "$BLOODBANK_ENABLED" != "true" ]]; then
-        log_debug "Publishing disabled, skipping event: $event_type"
+        log_debug "publishing disabled, skipping topic=$topic"
         return 0
     fi
 
-    log_debug "Publishing event: $event_type"
-    log_debug "Payload: $payload"
+    local url="${BLOODBANK_DAPR_URL}/v1.0/publish/${BLOODBANK_PUBSUB}/${topic}"
+    log_debug "POST $url"
 
-    # Try HTTP API first (faster)
-    if curl -f -s -X POST \
-        -H "Content-Type: application/json" \
-        -d "$payload" \
-        "${BLOODBANK_URL}/events/claude-code/${event_type}" \
-        > /dev/null 2>&1; then
-        log_debug "Event published successfully via HTTP"
+    local http_code
+    http_code=$(curl -sS -o /dev/null -w '%{http_code}' \
+        --max-time "$BLOODBANK_PUBLISH_TIMEOUT" \
+        -X POST \
+        -H "Content-Type: application/cloudevents+json" \
+        -d "$envelope" \
+        "$url" 2>/dev/null) || http_code="000"
+
+    if [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
+        log_debug "published ok (http=$http_code) topic=$topic"
         return 0
     fi
 
-    # Fallback to CLI (requires bloodbank package)
-    if command -v bb &> /dev/null; then
-        log_debug "HTTP failed, trying CLI fallback"
-        echo "$payload" | bb publish "$event_type" --json - 2>&1 | log_debug
-    else
-        log_error "Failed to publish event, bloodbank CLI not available"
-        return 1
-    fi
+    log_error_once "publish failed http=$http_code topic=$topic url=$url"
+    return 0  # never fail the hook
 }
 
-# ============================================================================
-# Event Handlers
-# ============================================================================
+# ---- Event handlers --------------------------------------------------------
+
+handle_session_start() {
+    local session_id
+    session_id=$(new_uuid)
+    init_session "$session_id"
+
+    local data
+    data=$(jq -cn \
+        --arg session_id "$session_id" \
+        --arg working_directory "$PWD" \
+        --arg git_branch "$(git_branch)" \
+        --arg git_remote "$(git_remote)" \
+        --arg started_at "$(now_iso)" \
+        '{
+            session_id: $session_id,
+            working_directory: $working_directory,
+            git_branch: $git_branch,
+            git_remote: $git_remote,
+            started_at: $started_at
+        }')
+
+    local envelope
+    envelope=$(build_envelope \
+        "agent.session.started" \
+        "agent/$session_id" \
+        "$data" \
+        "$session_id")
+    publish "event.agent.session.started" "$envelope"
+}
 
 handle_tool_action() {
     local input="$1"
     local session_data
     session_data=$(load_session)
-    local session_id
+
+    local session_id tool_name tool_input turn working_dir branch
     session_id=$(echo "$session_data" | jq -r '.session_id')
-    local turn_number
-    turn_number=$(echo "$session_data" | jq -r '.turn_number')
-    local working_dir
-    working_dir=$(echo "$session_data" | jq -r '.working_directory')
-    local git_branch
-    git_branch=$(echo "$session_data" | jq -r '.git_branch')
-
-    # Extract tool info from input
-    local tool_name
     tool_name=$(echo "$input" | jq -r '.tool_name // "unknown"')
-    local tool_input
     tool_input=$(echo "$input" | jq -c '.tool_input // {}')
+    turn=$(echo "$session_data" | jq -r '.turn_number // 0')
+    working_dir=$(echo "$session_data" | jq -r '.working_directory')
+    branch=$(echo "$session_data" | jq -r '.git_branch')
 
-    # Get git status
-    local git_status
-    if git status --porcelain 2>/dev/null | grep -q '^'; then
-        git_status="modified"
-    else
-        git_status="clean"
-    fi
-
-    # Build payload
-    local payload
-    payload=$(jq -n \
+    local data
+    data=$(jq -cn \
         --arg session_id "$session_id" \
         --arg tool_name "$tool_name" \
         --argjson tool_input "$tool_input" \
-        --arg working_dir "$working_dir" \
-        --arg git_branch "$git_branch" \
-        --arg git_status "$git_status" \
-        --arg turn_number "$turn_number" \
+        --arg working_directory "$working_dir" \
+        --arg git_branch "$branch" \
+        --arg git_status "$(git_status_word)" \
+        --argjson turn_number "$((turn + 1))" \
         '{
             session_id: $session_id,
-            tool_metadata: {
-                tool_name: $tool_name,
-                tool_input: $tool_input,
-                success: true
-            },
-            working_directory: $working_dir,
+            tool_name: $tool_name,
+            tool_input: $tool_input,
+            working_directory: $working_directory,
             git_branch: $git_branch,
             git_status: $git_status,
-            turn_number: ($turn_number | tonumber),
-            model: "claude-sonnet-4-5"
+            turn_number: $turn_number,
+            success: true
         }')
 
-    publish_to_bloodbank "tool-action" "$payload"
-    update_session_stats "$tool_name"
+    local envelope
+    envelope=$(build_envelope \
+        "agent.tool.invoked" \
+        "agent/$session_id/tool/$tool_name" \
+        "$data" \
+        "$session_id")
+    publish "event.agent.tool.invoked" "$envelope"
+    bump_session_stats "$tool_name"
 }
 
 handle_session_end() {
-    local input="$1"
-    local end_reason="${2:-user_stop}"
+    local end_reason="${1:-user_stop}"
 
     if [[ ! -f "$SESSION_FILE" ]]; then
-        log_debug "No active session to end"
+        log_debug "no active session to end"
         return 0
     fi
 
     local session_data
     session_data=$(load_session)
-    local session_id
+
+    local session_id started_at tools_used turn working_dir branch
     session_id=$(echo "$session_data" | jq -r '.session_id')
-    local started_at
     started_at=$(echo "$session_data" | jq -r '.started_at')
-    local tools_used
     tools_used=$(echo "$session_data" | jq -c '.tools_used')
-    local turn_number
-    turn_number=$(echo "$session_data" | jq -r '.turn_number')
-    local working_dir
+    turn=$(echo "$session_data" | jq -r '.turn_number // 0')
     working_dir=$(echo "$session_data" | jq -r '.working_directory')
-    local git_branch
-    git_branch=$(echo "$session_data" | jq -r '.git_branch')
+    branch=$(echo "$session_data" | jq -r '.git_branch')
 
-    # Calculate duration
-    local now
-    now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local duration_seconds
-    duration_seconds=$(( $(date -d "$now" +%s) - $(date -d "$started_at" +%s) ))
+    local now duration
+    now=$(now_iso)
+    duration=$(( $(date -d "$now" +%s) - $(date -d "$started_at" +%s) ))
 
-    # Get files modified in this session
-    local files_modified
-    files_modified=$(git diff --name-only 2>/dev/null | jq -R . | jq -s . || echo '[]')
+    local files_modified git_commits
+    files_modified=$(git -C "$PROJECT_ROOT" diff --name-only 2>/dev/null | jq -R . | jq -cs . || echo '[]')
+    git_commits=$(git -C "$PROJECT_ROOT" log --since="$started_at" --format='%H' 2>/dev/null | jq -R . | jq -cs . || echo '[]')
 
-    # Get commits created
-    local git_commits
-    git_commits=$(git log --since="$started_at" --format="%H" 2>/dev/null | jq -R . | jq -s . || echo '[]')
-
-    local payload
-    payload=$(jq -n \
+    local data
+    data=$(jq -cn \
         --arg session_id "$session_id" \
         --arg end_reason "$end_reason" \
-        --arg duration_seconds "$duration_seconds" \
-        --arg turn_number "$turn_number" \
+        --argjson duration_seconds "$duration" \
+        --argjson total_turns "$turn" \
         --argjson tools_used "$tools_used" \
         --argjson files_modified "$files_modified" \
         --argjson git_commits "$git_commits" \
-        --arg working_dir "$working_dir" \
-        --arg git_branch "$git_branch" \
+        --arg working_directory "$working_dir" \
+        --arg git_branch "$branch" \
         '{
             session_id: $session_id,
             end_reason: $end_reason,
-            duration_seconds: ($duration_seconds | tonumber),
-            total_turns: ($turn_number | tonumber),
+            duration_seconds: $duration_seconds,
+            total_turns: $total_turns,
             tools_used: $tools_used,
             files_modified: $files_modified,
             git_commits: $git_commits,
             final_status: "success",
-            working_directory: $working_dir,
+            working_directory: $working_directory,
             git_branch: $git_branch
         }')
 
-    publish_to_bloodbank "session-end" "$payload"
+    local envelope
+    envelope=$(build_envelope \
+        "agent.session.ended" \
+        "agent/$session_id" \
+        "$data" \
+        "$session_id")
+    publish "event.agent.session.ended" "$envelope"
 
-    # Archive session data
-    if [[ ! -d "${PROJECT_ROOT}/.claude/sessions" ]]; then
-        mkdir -p "${PROJECT_ROOT}/.claude/sessions"
-    fi
-    mv "$SESSION_FILE" "${PROJECT_ROOT}/.claude/sessions/${session_id}.json" 2>/dev/null || true
+    mv "$SESSION_FILE" "${SESSIONS_DIR}/${session_id}.json" 2>/dev/null || true
 }
-
-handle_session_start() {
-    local input="$1"
-    local session_id
-    session_id=$(uuidgen)
-
-    init_session "$session_id"
-
-    local session_data
-    session_data=$(load_session)
-    local working_dir
-    working_dir=$(echo "$session_data" | jq -r '.working_directory')
-    local git_branch
-    git_branch=$(echo "$session_data" | jq -r '.git_branch')
-
-    # Get git remote
-    local git_remote
-    git_remote=$(git remote get-url origin 2>/dev/null || echo "")
-
-    local payload
-    payload=$(jq -n \
-        --arg session_id "$session_id" \
-        --arg working_dir "$working_dir" \
-        --arg git_branch "$git_branch" \
-        --arg git_remote "$git_remote" \
-        '{
-            session_id: $session_id,
-            working_directory: $working_dir,
-            git_branch: $git_branch,
-            git_remote: $git_remote,
-            model: "claude-sonnet-4-5",
-            started_at: (now | todate)
-        }')
-
-    publish_to_bloodbank "session-start" "$payload"
-}
-
-# ============================================================================
-# Main
-# ============================================================================
 
 main() {
     local event_type="${1:-}"
-
     if [[ -z "$event_type" ]]; then
-        log_error "Usage: bloodbank-publisher.sh <event-type>"
-        exit 1
+        log_error_once "missing event-type argument"
+        exit 0
     fi
 
-    # Read input from stdin
-    local input
-    input=$(cat)
-
-    log_debug "Processing event type: $event_type"
+    local input=""
+    if [[ ! -t 0 ]]; then
+        input=$(cat || true)
+    fi
 
     case "$event_type" in
         tool-action)
             handle_tool_action "$input"
             ;;
-        session-end)
-            handle_session_end "$input" "${2:-user_stop}"
-            ;;
         session-start)
-            handle_session_start "$input"
+            handle_session_start
+            ;;
+        session-end)
+            handle_session_end "${2:-user_stop}"
             ;;
         *)
-            log_error "Unknown event type: $event_type"
-            exit 1
+            log_error_once "unknown event-type: $event_type"
             ;;
     esac
+    exit 0
 }
 
 main "$@"
