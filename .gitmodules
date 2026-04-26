@@ -36,4 +36,4 @@
 	url = git@github.com:delorenj/zellij-driver.git
 [submodule "TonnyBox"]
 	path = TonnyBox
-	url = ./TonnyBox
+	url = git@github.com:delorenj/TonnyBox.git
