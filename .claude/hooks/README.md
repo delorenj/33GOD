@@ -10,11 +10,13 @@ Claude Code
     ↓ (PostToolUse / Stop / SessionStart)
 .claude/hooks/bloodbank-publisher.sh
     ↓ (POST /v1.0/publish/<pubsub>/<topic>, application/cloudevents+json)
-daprd-heartbeat sidecar (host:3502 → container:3500)
+daprd-claude-events sidecar (host:3503 → container:3500)
     ↓ (pubsub.jetstream component)
 NATS JetStream (BLOODBANK_V3_EVENTS stream, event.agent.* subjects)
-    ↓
-Subscribers (recorders, projections, dashboards)
+    ↓ Dapr delivers to claude-events-recorder app
+        → /events/{session_started,session_ended,tool_invoked}
+        → in-memory buffer + per-session aggregate
+        → GET /inspect/recorded (host:3602)
 ```
 
 The publisher is **best-effort by design**. If the Dapr sidecar is not
@@ -42,28 +44,30 @@ Set in `.claude/settings.json` under `env`:
 |------------------------------|-------------------------------|---------|
 | `BLOODBANK_ENABLED`          | `true`                        | `false` disables publishing entirely |
 | `BLOODBANK_DEBUG`            | `false`                       | `true` logs each publish to stderr |
-| `BLOODBANK_DAPR_URL`         | `http://localhost:3502`       | Dapr sidecar HTTP base URL |
+| `BLOODBANK_DAPR_URL`         | `http://localhost:3503`       | Dapr sidecar HTTP base URL |
 | `BLOODBANK_PUBSUB`           | `bloodbank-v3-pubsub`         | Dapr pubsub component name |
 | `BLOODBANK_PUBLISH_TIMEOUT`  | `2`                           | curl `--max-time` seconds |
 
 ## Bringing up the publish target
 
-The hook expects a daprd sidecar on `localhost:3502`. The simplest way
-to satisfy that today is the `heartbeat` profile, which runs the
-`daprd-heartbeat` sidecar that exposes its HTTP API on host port 3502:
+The hook expects a daprd sidecar on `localhost:3503`. Bring up the
+dedicated `claude-events` compose profile, which runs
+`daprd-claude-events` (sidecar exposed on host:3503) and
+`claude-events-recorder` (subscriber that records all three agent.*
+event types and exposes `/inspect/recorded` on host:3602):
 
 ```bash
 docker compose --project-name bloodbank-v3 \
-  --profile heartbeat \
+  --profile claude-events \
   -f bloodbank/compose/v3/docker-compose.yml \
-  up -d nats nats-init dapr-placement heartbeat-recorder daprd-heartbeat
+  up -d nats nats-init dapr-placement claude-events-recorder daprd-claude-events
 ```
 
-A dedicated `claude-events` compose profile (with its own daprd sidecar
-plus a `claude-events-recorder` for query/inspection) is a planned
-follow-up. Until then, daprd-heartbeat does double duty for
-publish-only workloads (Dapr publish is generic and not bound to the
-sidecar's app-id).
+You can run the heartbeat profile alongside this one (different ports,
+different sidecars) without conflict. If you only want to publish and
+don't care about the recorder, pointing `BLOODBANK_DAPR_URL` at any
+Dapr sidecar with the `bloodbank-v3-pubsub` component loaded will work
+(Dapr publish is generic and not bound to the sidecar's app-id).
 
 ## Verifying the round-trip
 
@@ -71,11 +75,10 @@ sidecar's app-id).
 # Hook fires session-start manually
 echo '{}' | .claude/hooks/bloodbank-publisher.sh session-start
 
-# Inspect what landed in the stream
-docker run --rm --network bloodbank-v3-network natsio/nats-box:0.14.5 \
-  nats --server nats://nats:4222 stream subjects BLOODBANK_V3_EVENTS
+# Inspect what the recorder captured
+curl -sS http://127.0.0.1:3602/inspect/recorded | jq '.count_by_type, .sessions'
 
-# Pull the actual envelope
+# Or pull the raw envelope from the stream
 docker run --rm -i --network bloodbank-v3-network natsio/nats-box:0.14.5 \
   nats --server nats://nats:4222 sub 'event.agent.session.started' \
   --count=1 --last-per-subject --raw
