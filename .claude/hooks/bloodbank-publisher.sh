@@ -23,9 +23,10 @@
 #   BLOODBANK_PUBSUB        Dapr pubsub component (default: bloodbank-v3-pubsub)
 #   BLOODBANK_PUBLISH_TIMEOUT  curl --max-time seconds (default: 2)
 #
-# Bring up the publish target (a daprd sidecar exposed on host:3502) via:
+# Bring up the publish target (a daprd sidecar exposed on host:3503) via:
 #   docker compose --project-name bloodbank-v3 \
-#     --profile heartbeat -f bloodbank/compose/v3/docker-compose.yml up -d
+#     --profile claude-events -f bloodbank/compose/v3/docker-compose.yml \
+#     up -d nats nats-init dapr-placement claude-events-recorder daprd-claude-events
 #
 # When the sidecar is down, errors are logged once to
 # .claude/sessions/publish-errors.log (rotated at ~1MB) and the hook
@@ -35,7 +36,7 @@ set -uo pipefail
 
 BLOODBANK_ENABLED="${BLOODBANK_ENABLED:-true}"
 BLOODBANK_DEBUG="${BLOODBANK_DEBUG:-false}"
-BLOODBANK_DAPR_URL="${BLOODBANK_DAPR_URL:-http://localhost:3502}"
+BLOODBANK_DAPR_URL="${BLOODBANK_DAPR_URL:-http://localhost:3503}"
 BLOODBANK_PUBSUB="${BLOODBANK_PUBSUB:-bloodbank-v3-pubsub}"
 BLOODBANK_PUBLISH_TIMEOUT="${BLOODBANK_PUBLISH_TIMEOUT:-2}"
 

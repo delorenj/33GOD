@@ -2,7 +2,7 @@
   "env": {
     "BLOODBANK_ENABLED": "true",
     "BLOODBANK_DEBUG": "false",
-    "BLOODBANK_DAPR_URL": "http://localhost:3502",
+    "BLOODBANK_DAPR_URL": "http://localhost:3503",
     "BLOODBANK_PUBSUB": "bloodbank-v3-pubsub"
   },
   "hooks": {
