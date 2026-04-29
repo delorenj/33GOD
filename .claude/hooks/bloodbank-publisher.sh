@@ -12,9 +12,12 @@
 #   cat hook_input.json | bloodbank-publisher.sh <event-type> [end-reason]
 #
 # Event types:
-#   tool-action     -> event.agent.tool.invoked
-#   session-start   -> event.agent.session.started
-#   session-end     -> event.agent.session.ended
+#   tool-action       -> event.agent.tool.invoked
+#   tool-request      -> event.agent.tool.requested
+#   session-start     -> event.agent.session.started
+#   session-end       -> event.agent.session.ended
+#   prompt-submitted  -> event.agent.prompt.submitted
+#   subagent-stopped  -> event.agent.subagent.completed
 #
 # Environment:
 #   BLOODBANK_ENABLED       "false" disables publishing entirely (default: true)
@@ -280,6 +283,119 @@ handle_tool_action() {
     bump_session_stats "$tool_name"
 }
 
+handle_prompt_submitted() {
+    local input="$1"
+    local session_data
+    session_data=$(load_session)
+
+    local session_id prompt_text working_dir branch
+    session_id=$(echo "$session_data" | jq -r '.session_id')
+    # The Claude Code UserPromptSubmit hook sends the prompt text in the
+    # `prompt` field of the stdin JSON. Be defensive: empty if missing.
+    prompt_text=$(echo "$input" | jq -r '.prompt // ""')
+    working_dir=$(echo "$session_data" | jq -r '.working_directory')
+    branch=$(echo "$session_data" | jq -r '.git_branch')
+
+    local prompt_length
+    prompt_length=$(printf %s "$prompt_text" | wc -c | tr -d ' ')
+
+    local data
+    data=$(jq -cn \
+        --arg session_id "$session_id" \
+        --arg prompt_text "$prompt_text" \
+        --argjson prompt_length "$prompt_length" \
+        --arg working_directory "$working_dir" \
+        --arg git_branch "$branch" \
+        '{
+            session_id: $session_id,
+            prompt_text: $prompt_text,
+            prompt_length: $prompt_length,
+            working_directory: $working_directory,
+            git_branch: $git_branch
+        }')
+
+    local envelope
+    envelope=$(build_envelope \
+        "agent.prompt.submitted" \
+        "agent/$session_id" \
+        "$data" \
+        "$session_id")
+    publish "event.agent.prompt.submitted" "$envelope"
+}
+
+handle_tool_requested() {
+    local input="$1"
+    local session_data
+    session_data=$(load_session)
+
+    local session_id tool_name tool_input turn working_dir branch
+    session_id=$(echo "$session_data" | jq -r '.session_id')
+    tool_name=$(echo "$input" | jq -r '.tool_name // "unknown"')
+    tool_input=$(echo "$input" | jq -c '.tool_input // {}')
+    turn=$(echo "$session_data" | jq -r '.turn_number // 0')
+    working_dir=$(echo "$session_data" | jq -r '.working_directory')
+    branch=$(echo "$session_data" | jq -r '.git_branch')
+
+    # Don't bump_session_stats here; the matching tool.invoked event from
+    # PostToolUse will. Both events share turn_number (current+1) so the
+    # request/invoke pair correlates on it.
+    local data
+    data=$(jq -cn \
+        --arg session_id "$session_id" \
+        --arg tool_name "$tool_name" \
+        --argjson tool_input "$tool_input" \
+        --arg working_directory "$working_dir" \
+        --arg git_branch "$branch" \
+        --argjson turn_number "$((turn + 1))" \
+        '{
+            session_id: $session_id,
+            tool_name: $tool_name,
+            tool_input: $tool_input,
+            working_directory: $working_directory,
+            git_branch: $git_branch,
+            turn_number: $turn_number
+        }')
+
+    local envelope
+    envelope=$(build_envelope \
+        "agent.tool.requested" \
+        "agent/$session_id/tool/$tool_name" \
+        "$data" \
+        "$session_id")
+    publish "event.agent.tool.requested" "$envelope"
+}
+
+handle_subagent_completed() {
+    local input="$1"
+    local session_data
+    session_data=$(load_session)
+
+    local session_id working_dir
+    session_id=$(echo "$session_data" | jq -r '.session_id')
+    working_dir=$(echo "$session_data" | jq -r '.working_directory')
+
+    # Claude Code's SubagentStop hook does not surface a structured stop
+    # reason or agent type today; default to "completed" and leave
+    # agent_type unset. The schema permits both as optional.
+    local data
+    data=$(jq -cn \
+        --arg session_id "$session_id" \
+        --arg working_directory "$working_dir" \
+        '{
+            session_id: $session_id,
+            stop_reason: "completed",
+            working_directory: $working_directory
+        }')
+
+    local envelope
+    envelope=$(build_envelope \
+        "agent.subagent.completed" \
+        "agent/$session_id/subagent" \
+        "$data" \
+        "$session_id")
+    publish "event.agent.subagent.completed" "$envelope"
+}
+
 handle_session_end() {
     local end_reason="${1:-user_stop}"
 
@@ -358,11 +474,20 @@ main() {
         tool-action)
             handle_tool_action "$input"
             ;;
+        tool-request)
+            handle_tool_requested "$input"
+            ;;
         session-start)
             handle_session_start
             ;;
         session-end)
             handle_session_end "${2:-user_stop}"
+            ;;
+        prompt-submitted)
+            handle_prompt_submitted "$input"
+            ;;
+        subagent-stopped)
+            handle_subagent_completed "$input"
             ;;
         *)
             log_error_once "unknown event-type: $event_type"

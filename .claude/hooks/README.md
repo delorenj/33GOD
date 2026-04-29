@@ -26,15 +26,25 @@ blocks waiting on the event bus.
 
 ## Events Published
 
-| Hook event       | CloudEvents `type`         | NATS subject                  |
-|------------------|----------------------------|-------------------------------|
-| `SessionStart`   | `agent.session.started`    | `event.agent.session.started` |
-| `PostToolUse`    | `agent.tool.invoked`       | `event.agent.tool.invoked`    |
-| `Stop`           | `agent.session.ended`      | `event.agent.session.ended`   |
+| Hook event         | CloudEvents `type`           | NATS subject                       |
+|--------------------|------------------------------|------------------------------------|
+| `SessionStart`     | `agent.session.started`      | `event.agent.session.started`      |
+| `UserPromptSubmit` | `agent.prompt.submitted`     | `event.agent.prompt.submitted`     |
+| `PreToolUse`       | `agent.tool.requested`       | `event.agent.tool.requested`       |
+| `PostToolUse`      | `agent.tool.invoked`         | `event.agent.tool.invoked`         |
+| `SubagentStop`     | `agent.subagent.completed`   | `event.agent.subagent.completed`   |
+| `Stop`             | `agent.session.ended`        | `event.agent.session.ended`        |
 
 Envelope shape follows
 `holyfields/schemas/_common/cloudevent_base.v1.json`. The data block of
-each type is documented inline in `bloodbank-publisher.sh`.
+each type is constrained by the matching schema under
+`holyfields/schemas/agent/<type>.v1.json` and is documented inline in
+`bloodbank-publisher.sh`.
+
+`agent.tool.requested` and `agent.tool.invoked` share a `turn_number`
+within a session: the request fires from `PreToolUse` (intent), the
+invocation fires from `PostToolUse` (result). Same `correlationid`
+(session_id) + `turn_number` correlates them.
 
 ## Configuration
 

@@ -6,6 +6,29 @@
     "BLOODBANK_PUBSUB": "bloodbank-v3-pubsub"
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | .claude/hooks/bloodbank-publisher.sh prompt-submitted",
+            "description": "Publish user prompt submission to Bloodbank v3 (agent.prompt.submitted)"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | .claude/hooks/bloodbank-publisher.sh tool-request",
+            "description": "Publish tool-invocation intent to Bloodbank v3 (agent.tool.requested)"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": ".*",
@@ -13,7 +36,18 @@
           {
             "type": "command",
             "command": "cat | .claude/hooks/bloodbank-publisher.sh tool-action",
-            "description": "Publish all tool usage to Bloodbank v3 (Dapr/NATS) for observability"
+            "description": "Publish tool-invocation result to Bloodbank v3 (agent.tool.invoked)"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | .claude/hooks/bloodbank-publisher.sh subagent-stopped",
+            "description": "Publish subagent completion to Bloodbank v3 (agent.subagent.completed)"
           }
         ]
       }
