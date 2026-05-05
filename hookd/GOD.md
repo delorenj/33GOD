@@ -23,6 +23,18 @@ Think of hookd as the "git log for AI actions" - except instead of commits, it c
 
 ---
 
+## Architectural Boundary
+
+Settled in [ADR-0003](../docs/architecture/ADR-0003-hookd-boundary.md).
+
+- **hookd is a producer.** It belongs in the producer layer alongside `heartbeat-emitter`, `infra-dispatcher`, the OpenClaw bridge, and ad-hoc API clients.
+- **Bloodbank is transport.** It does not own or absorb hookd. The two have different toolchains (Rust vs Python), different deployment topologies (host daemon vs container), and different lifecycles.
+- **The seam is a contract, not a directory.** AMQP exchange `bloodbank.events.v1`, routing keys `tool.mutation.*`, payload schema `ToolMutationEvent`. There is no hookd-aware adapter inside Bloodbank, and there does not need to be one.
+- **The consumer is `services/mutation-ledger/`.** Not `bloodbank/`. Bloodbank is the bus; mutation-ledger is the consumer that enriches and embeds into Qdrant.
+- **`bloodbank/hookd_bridge/` is unrelated.** Despite the name-prefix overlap, that package is an OpenClaw HTTP-to-command shim and has no relationship to this daemon.
+
+---
+
 ## Architecture Position
 
 ```mermaid
