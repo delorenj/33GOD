@@ -1,9 +1,0 @@
-{
-  "$id": "circular/a.v1.json",
-  "title": "Circular A",
-  "type": "object",
-  "properties": {
-    "event_type": { "type": "string", "const": "circular.a" },
-    "nested": { "$ref": "b.v1.json" }
-  }
-}

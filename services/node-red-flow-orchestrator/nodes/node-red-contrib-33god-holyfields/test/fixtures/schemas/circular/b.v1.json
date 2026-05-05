@@ -1,9 +1,0 @@
-{
-  "$id": "circular/b.v1.json",
-  "title": "Circular B",
-  "type": "object",
-  "properties": {
-    "back_ref": { "$ref": "a.v1.json" },
-    "value": { "type": "string" }
-  }
-}

@@ -21,10 +21,8 @@ services:
     image: redis:7-alpine
     container_name: 33god-redis
     hostname: 33god-redis
-    ports:
-      - "6381:6379"     # Redis port (6381 on host; 6380 used by theboard-redis)
     volumes:
-      - redis-data:/data
+      - 33god-redis-data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -51,8 +49,8 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-delorenj}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     ports:
-      - "5673:5672"       # AMQP (5673 on host)
-      - "15673:15672"     # Management UI
+      - "5673:5672" # AMQP (5673 on host)
+      - "15673:15672" # Management UI
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
@@ -74,7 +72,7 @@ services:
     container_name: 33god-postgres
     hostname: 33god-postgres
     ports:
-      - "5434:5432"     # Postgres port (5434 on host; 5433 used by theboard)
+      - "5434:5432" # Postgres port (5434 on host; 5433 used by theboard)
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-delorenj}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -83,7 +81,11 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-delorenj} -d ${POSTGRES_DB:-33god}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-delorenj} -d ${POSTGRES_DB:-33god}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -132,31 +134,31 @@ services:
     container_name: 33god-bloodbank
     hostname: bloodbank
     ports:
-      - "8682:8682"     # FastAPI port
+      - "8682:8682" # FastAPI port
     environment:
       # RabbitMQ Connection
       RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      
+
       # Redis Connection
       REDIS_HOST: 33god-redis
       REDIS_PORT: "6379"
-      
+
       # Schema Validation
       HOLYFIELDS_SCHEMA_DIR: /schemas
       SCHEMA_VALIDATION_ENABLED: "true"
       SCHEMA_VALIDATION_STRICT: "true"
-      
+
       # Service Configuration
       BLOODBANK_PORT: "8682"
       BLOODBANK_HOST: "0.0.0.0"
-      
+
       # Observability
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_ENDPOINT:-}
       PROMETHEUS_PORT: "9090"
     volumes:
       - ./holyfields/schemas:/schemas:ro
-      - ./holyfields/src/holyfields:/app/holyfields:ro  # Generated Pydantic models
+      - ./holyfields/src/holyfields:/app/holyfields:ro # Generated Pydantic models
     depends_on:
       redis:
         condition: service_healthy
@@ -189,13 +191,13 @@ services:
     container_name: 33god-bloodbank-ws-relay
     hostname: bloodbank-ws-relay
     ports:
-      - "8683:8683"     # WebSocket port
+      - "8683:8683" # WebSocket port
     environment:
       # RabbitMQ Connection
       RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
       ROUTING_KEY: ${RELAY_ROUTING_KEY:-#}
-      
+
       # WebSocket Server
       WS_HOST: "0.0.0.0"
       WS_PORT: "8683"
@@ -319,7 +321,7 @@ services:
     container_name: 33god-candystore
     hostname: candystore
     ports:
-      - "8684:8080"     # Event store API port
+      - "8684:8080" # Event store API port
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-delorenj}:${POSTGRES_PASSWORD}@33god-postgres:5432/${POSTGRES_DB:-33god}
       DATABASE_POOL_SIZE: "10"
@@ -340,7 +342,11 @@ services:
       bloodbank:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:8080/health'')" || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -368,26 +374,26 @@ services:
       # Host networking: use localhost ports (RabbitMQ=5673, OpenClaw=18789)
       RABBIT_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
       EXCHANGE_NAME: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      
+
       # OpenClaw Hook Configuration
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
       # Point to hookd-bridge (MIG-1 CUTOVER)
       OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_DELIVER: ${OPENCLAW_HOOK_DELIVER:-false}
-      
+
       # Dispatch Rules (Ready Gate)
       INFRA_READY_STATES: ${INFRA_READY_STATES:-unstarted}
       INFRA_READY_LABELS: ${INFRA_READY_LABELS:-ready,automation:go}
       INFRA_COMPONENT_LABEL_PREFIX: ${INFRA_COMPONENT_LABEL_PREFIX:-comp:}
-      
+
       # State Persistence
       INFRA_DISPATCH_STATE_PATH: /tmp/infra-dispatch-state.json
-      
+
       # Health Check Configuration
       INFRA_RUN_CHECKS: ${INFRA_RUN_CHECKS:-true}
       INFRA_CHECK_TIMEOUT_SECONDS: ${INFRA_CHECK_TIMEOUT_SECONDS:-900}
       INFRA_COMPONENT_CHECKS_JSON: ${INFRA_COMPONENT_CHECKS_JSON:-}
-      
+
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     # Use host network so we can reach OpenClaw on loopback (127.0.0.1:18789)
