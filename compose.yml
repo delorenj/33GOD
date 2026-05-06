@@ -247,7 +247,7 @@ services:
       # RabbitMQ is now OPTIONAL — used for publishing dispatch events only
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@127.0.0.1:5673/
       BLOODBANK_EXCHANGE: ${BLOODBANK_EXCHANGE:-bloodbank.events.v1}
-      # Point to hookd-bridge (MIG-1 CUTOVER)
+      # Point to hookd-bridge (HTTP → command envelope shim; permanent per ADR-0003)
       OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
       WORKSPACES_ROOT: ${HOME}/.openclaw
@@ -377,7 +377,7 @@ services:
 
       # OpenClaw Hook Configuration
       OPENCLAW_HOOK_TOKEN: ${OPENCLAW_HOOK_TOKEN:-}
-      # Point to hookd-bridge (MIG-1 CUTOVER)
+      # Point to hookd-bridge (HTTP → command envelope shim; permanent per ADR-0003)
       OPENCLAW_HOOK_URL: http://127.0.0.1:18790/hooks/agent
       OPENCLAW_HOOK_DELIVER: ${OPENCLAW_HOOK_DELIVER:-false}
 
@@ -412,7 +412,8 @@ services:
 
   # ============================================================================
   # hookd Compatibility Bridge (GOD-4 / MIG-1)
-  # Translates legacy hook calls into Bloodbank command envelopes
+  # Translates HTTP hook calls into Bloodbank command envelopes.
+  # Permanent component. Unrelated to hookd/ (Rust). See ADR-0003.
   # ============================================================================
   hookd-bridge:
     build:
@@ -446,7 +447,7 @@ services:
     labels:
       - "traefik.enable=false"
       - "33god.service=hookd-bridge"
-      - "33god.description=Legacy hook → Bloodbank command bridge"
+      - "33god.description=HTTP hook → Bloodbank command bridge"
 
   # ============================================================================
   # Command Adapter (GOD-3 / AGENT-CTRL-1)
