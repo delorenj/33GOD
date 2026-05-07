@@ -1,1 +1,0 @@
-/home/delorenj/d/Projects/33GOD/service-registry-discussion.md
