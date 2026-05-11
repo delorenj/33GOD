@@ -1,6 +1,6 @@
-# Claude Code → Bloodbank v3 Publisher Hooks
+# Claude Code → Bloodbank Publisher Hooks
 
-Publishes Claude Code session and tool-use events to the v3 event bus
+Publishes Claude Code session and tool-use events to the event bus
 (Dapr → NATS JetStream) as CloudEvents 1.0 envelopes.
 
 ## Architecture
@@ -12,7 +12,7 @@ Claude Code
     ↓ (POST /v1.0/publish/<pubsub>/<topic>, application/cloudevents+json)
 daprd-claude-events sidecar (host:3503 → container:3500)
     ↓ (pubsub.jetstream component)
-NATS JetStream (BLOODBANK_V3_EVENTS stream, event.agent.* subjects)
+NATS JetStream (BLOODBANK_EVENTS stream, event.agent.* subjects)
     ↓ Dapr delivers to claude-events-recorder app
         → /events/{session_started,session_ended,tool_invoked}
         → in-memory buffer + per-session aggregate
@@ -55,7 +55,7 @@ Set in `.claude/settings.json` under `env`:
 | `BLOODBANK_ENABLED`          | `true`                        | `false` disables publishing entirely |
 | `BLOODBANK_DEBUG`            | `false`                       | `true` logs each publish to stderr |
 | `BLOODBANK_DAPR_URL`         | `http://localhost:3503`       | Dapr sidecar HTTP base URL |
-| `BLOODBANK_PUBSUB`           | `bloodbank-v3-pubsub`         | Dapr pubsub component name |
+| `BLOODBANK_PUBSUB`           | `bloodbank-pubsub`         | Dapr pubsub component name |
 | `BLOODBANK_PUBLISH_TIMEOUT`  | `2`                           | curl `--max-time` seconds |
 
 ## Bringing up the publish target
@@ -67,16 +67,16 @@ dedicated `claude-events` compose profile, which runs
 event types and exposes `/inspect/recorded` on host:3602):
 
 ```bash
-docker compose --project-name bloodbank-v3 \
+docker compose --project-name bloodbank \
   --profile claude-events \
-  -f bloodbank/compose/v3/docker-compose.yml \
+  -f bloodbank/compose/docker-compose.yml \
   up -d nats nats-init dapr-placement claude-events-recorder daprd-claude-events
 ```
 
 You can run the heartbeat profile alongside this one (different ports,
 different sidecars) without conflict. If you only want to publish and
 don't care about the recorder, pointing `BLOODBANK_DAPR_URL` at any
-Dapr sidecar with the `bloodbank-v3-pubsub` component loaded will work
+Dapr sidecar with the `bloodbank-pubsub` component loaded will work
 (Dapr publish is generic and not bound to the sidecar's app-id).
 
 ## Verifying the round-trip
@@ -89,7 +89,7 @@ echo '{}' | .claude/hooks/bloodbank-publisher.sh session-start
 curl -sS http://127.0.0.1:3602/inspect/recorded | jq '.count_by_type, .sessions'
 
 # Or pull the raw envelope from the stream
-docker run --rm -i --network bloodbank-v3-network natsio/nats-box:0.14.5 \
+docker run --rm -i --network bloodbank-network natsio/nats-box:0.14.5 \
   nats --server nats://nats:4222 sub 'event.agent.session.started' \
   --count=1 --last-per-subject --raw
 ```
@@ -103,10 +103,10 @@ Errors are appended to `.claude/sessions/publish-errors.log` (rotated at
 2026-04-26T11:14:37Z [192681] publish failed http=000 topic=event.agent.tool.invoked url=http://localhost:3502/...
 ```
 
-`http=000` means curl could not reach the sidecar (most likely v3 is
+`http=000` means curl could not reach the sidecar (most likely the sandbox is
 not running). Other 4xx/5xx codes mean Dapr received the request but
 rejected it — most often a missing pubsub component or a NATS-side
-error. Check `docker logs bloodbank-v3-daprd-heartbeat` in that case.
+error. Check `docker logs bloodbank-daprd-heartbeat` in that case.
 
 ## Session tracking
 
@@ -119,7 +119,7 @@ canonical record lives on the event stream.
 
 The `agent.session.{started,ended}` and `agent.tool.invoked` schemas
 that ship in Holyfields today are v2-shaped (extend the legacy
-`_common/base_event.v1.json`). The publisher emits v3-shaped envelopes
-that match `_common/cloudevent_base.v1.json` directly. Authoring v3
+`_common/base_event.v1.json`). The publisher emits envelopes
+that match `_common/cloudevent_base.v1.json` directly. Authoring
 versions of the agent schemas (and wiring strict validation in CI) is
-tracked separately as part of the broader Holyfields v3-base migration.
+tracked separately as part of the broader Holyfields base migration.

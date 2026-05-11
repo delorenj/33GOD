@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Bloodbank v3 Event Publisher for Claude Code Hooks
+# Bloodbank Event Publisher for Claude Code Hooks
 #
 # Reads a Claude Code hook payload from stdin, builds a CloudEvents 1.0
 # envelope matching holyfields/schemas/_common/cloudevent_base.v1.json, and
@@ -23,12 +23,12 @@
 #   BLOODBANK_ENABLED       "false" disables publishing entirely (default: true)
 #   BLOODBANK_DEBUG         "true" logs to stderr + error log file
 #   BLOODBANK_DAPR_URL      Dapr sidecar HTTP base URL (default: http://localhost:3502)
-#   BLOODBANK_PUBSUB        Dapr pubsub component (default: bloodbank-v3-pubsub)
+#   BLOODBANK_PUBSUB        Dapr pubsub component (default: bloodbank-pubsub)
 #   BLOODBANK_PUBLISH_TIMEOUT  curl --max-time seconds (default: 2)
 #
 # Bring up the publish target (a daprd sidecar exposed on host:3503) via:
-#   docker compose --project-name bloodbank-v3 \
-#     --profile claude-events -f bloodbank/compose/v3/docker-compose.yml \
+#   docker compose --project-name bloodbank \
+#     --profile claude-events -f bloodbank/compose/docker-compose.yml \
 #     up -d nats nats-init dapr-placement claude-events-recorder daprd-claude-events
 #
 # When the sidecar is down, errors are logged once to
@@ -40,7 +40,7 @@ set -uo pipefail
 BLOODBANK_ENABLED="${BLOODBANK_ENABLED:-true}"
 BLOODBANK_DEBUG="${BLOODBANK_DEBUG:-false}"
 BLOODBANK_DAPR_URL="${BLOODBANK_DAPR_URL:-http://localhost:3503}"
-BLOODBANK_PUBSUB="${BLOODBANK_PUBSUB:-bloodbank-v3-pubsub}"
+BLOODBANK_PUBSUB="${BLOODBANK_PUBSUB:-bloodbank-pubsub}"
 BLOODBANK_PUBLISH_TIMEOUT="${BLOODBANK_PUBLISH_TIMEOUT:-2}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
