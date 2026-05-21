@@ -43,6 +43,26 @@ REPO_PATH="$(project_repo_path)" || die "couldn't locate project repo root"
 log "    setting terminal.cwd = $REPO_PATH"
 env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config set terminal.cwd "$REPO_PATH"
 
+# Canonical shared-skill source of truth + local PM fallback sync.
+CANONICAL_SKILLS_DIR="${CANONICAL_SKILLS_DIR:-/home/delorenj/.agents/skills}"
+CANONICAL_PM_SKILL_SRC="$CANONICAL_SKILLS_DIR/subagent-driven-development"
+LOCAL_PM_SKILL_DST="$PROFILE_HOME/skills/software-development/subagent-driven-development"
+
+if [[ -d "$CANONICAL_SKILLS_DIR" ]]; then
+  log "    setting skills.external_dirs[0] = $CANONICAL_SKILLS_DIR"
+  env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config set skills.external_dirs.0 "$CANONICAL_SKILLS_DIR"
+else
+  warn "    canonical skills dir missing: $CANONICAL_SKILLS_DIR"
+fi
+
+if [[ -f "$CANONICAL_PM_SKILL_SRC/SKILL.md" ]]; then
+  log "    syncing canonical PM workflow skill -> $LOCAL_PM_SKILL_DST"
+  mkdir -p "$LOCAL_PM_SKILL_DST"
+  cp -f "$CANONICAL_PM_SKILL_SRC/SKILL.md" "$LOCAL_PM_SKILL_DST/SKILL.md"
+else
+  warn "    canonical PM skill missing: $CANONICAL_PM_SKILL_SRC/SKILL.md"
+fi
+
 # Install the project's SOUL.md into the profile so the agent loads it.
 if [[ -f "$ROLE_DIR/SOUL.md" ]]; then
   cp "$ROLE_DIR/SOUL.md" "$PROFILE_HOME/SOUL.md"

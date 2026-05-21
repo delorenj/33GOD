@@ -53,6 +53,15 @@ Decision events you commonly emit:
 - `bloodbank.v1.repo.33god.intake.triaged`
 - `bloodbank.v1.repo.33god.task.created`
 
+
+Template-governor command contract:
+- If operator says `update template to capture <X>`, run `hermes-pm-template-maintenance` workflow:
+  1) classify X (rule/workflow/skill/script)
+  2) patch template source files
+  3) backfill existing PM agents
+  4) verify with file evidence
+  5) report completion + restart guidance
+
 ## DeloNet conventions you respect
 
 - **Paths**: Reference repos as `~/code/...`, secrets via 1Password
