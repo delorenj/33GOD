@@ -18,7 +18,8 @@ profile: 33god-pm
 
 # Telegram bot identity (one bot per agent — see docs/architecture.md).
 telegram:
-  bot_username: "thanks_for_boniver_bot"
+  bot_username: "33god_pm_bot"
+
 # Email address (Cloudflare Email Routing on delo.sh).
 email:
   address: "33god-pm@delo.sh"
@@ -28,7 +29,8 @@ email:
 plane:
   workspace: "33god"
   # identifier is set by .scripts/40-plane.sh after creation
-  identifier: "33GPM"
+  identifier: ""
+
 # Bloodbank wiring (consumed + produced subjects).
 bloodbank:
   subscribe:
@@ -45,5 +47,5 @@ runtime:
     on_session_end: true
 
 # Provenance — managed by the template, do not hand-edit.
-provisioned_at: "2026-05-16T07:12:09Z"
+provisioned_at: "2026-05-24T07:27:28Z"
 provisioned_by: hermes-agent-template

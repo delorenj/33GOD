@@ -81,17 +81,38 @@ if [[ "$REMOTE_HAS_CONTENT" == "0" ]]; then
   )
 fi
 
-# 5. Submodule-add into the role dir (REMOVES the scratch dir first)
+# 5. Submodule-add into the role dir
 PROJECT_PATH="$(project_repo_path)" || die "no project git root"
 # Compute relative path from the ROLE dir (which exists), then append /runtime
 REL_ROLE_PATH="$(realpath --relative-to="$PROJECT_PATH" "$ROLE_DIR")"
 REL_SUBMODULE_PATH="${REL_ROLE_PATH}/runtime"
 log "    adding submodule at $REL_SUBMODULE_PATH"
-rm -rf "$RUNTIME_LOCAL"
-(
-  cd "$PROJECT_PATH"
-  git submodule add "$REMOTE_URL" "$REL_SUBMODULE_PATH" 2>&1 | tail -3
-)
+
+# Idempotent: if the submodule is already registered, just update it.
+# This handles re-runs where the .done marker was cleared or copier
+# --overwrite regenerated the scripts.
+SUBMODULE_ALREADY_REGISTERED=0
+if git -C "$PROJECT_PATH" submodule status "$REL_SUBMODULE_PATH" >/dev/null 2>&1; then
+  SUBMODULE_ALREADY_REGISTERED=1
+fi
+
+if [[ "$SUBMODULE_ALREADY_REGISTERED" == "1" ]]; then
+  log "    submodule already registered — updating"
+  (
+    cd "$PROJECT_PATH"
+    # If the local dir is missing (e.g. previous rm -rf), re-init it
+    if [[ ! -d "$REL_SUBMODULE_PATH/.git" ]]; then
+      git submodule update --init "$REL_SUBMODULE_PATH" 2>&1 | tail -3
+    fi
+  )
+else
+  # Clean any leftover untracked directory before adding
+  rm -rf "$RUNTIME_LOCAL"
+  (
+    cd "$PROJECT_PATH"
+    git submodule add "$REMOTE_URL" "$REL_SUBMODULE_PATH" 2>&1 | tail -3
+  )
+fi
 
 # 6. Symlink the runtime back into ~/.hermes/profiles/<name>/ so hermes finds it.
 # Actually we WANT HERMES_HOME = the runtime dir, not the cloned profile.

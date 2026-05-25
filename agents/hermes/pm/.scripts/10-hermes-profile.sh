@@ -51,6 +51,30 @@ LOCAL_PM_SKILL_DST="$PROFILE_HOME/skills/software-development/subagent-driven-de
 if [[ -d "$CANONICAL_SKILLS_DIR" ]]; then
   log "    setting skills.external_dirs[0] = $CANONICAL_SKILLS_DIR"
   env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config set skills.external_dirs.0 "$CANONICAL_SKILLS_DIR"
+
+  # Ensure key PM/local-ops skills are symlinked into runtime/profile skills root.
+  # This preserves canonical ownership and keeps updates instant across agents.
+  read -r -a SYMLINKED_RUNTIME_SKILLS <<< "${SYMLINKED_RUNTIME_SKILLS:-delonet-conventions delonet-dotenv hermes-pm-template-maintenance hindsight subagent-driven-development}"
+  mkdir -p "$PROFILE_HOME/skills"
+
+  for skill_name in "${SYMLINKED_RUNTIME_SKILLS[@]}"; do
+    src="$CANONICAL_SKILLS_DIR/$skill_name"
+    dst="$PROFILE_HOME/skills/$skill_name"
+
+    if [[ ! -f "$src/SKILL.md" ]]; then
+      warn "    skipping runtime skill symlink (missing SKILL.md): $src"
+      continue
+    fi
+
+    if [[ -L "$dst" && "$(readlink "$dst")" == "$src" ]]; then
+      log "    runtime skill symlink already set: $dst -> $src"
+      continue
+    fi
+
+    [[ -e "$dst" || -L "$dst" ]] && rm -rf "$dst"
+    ln -s "$src" "$dst"
+    log "    symlinked runtime skill: $dst -> $src"
+  done
 else
   warn "    canonical skills dir missing: $CANONICAL_SKILLS_DIR"
 fi
