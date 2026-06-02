@@ -1,11 +1,8 @@
 # 33GOD — mise.toml
 # ═══════════════════════════════════════════════════════════
 [env]
-_.path = [".mise/scripts"]
+_.path = [".mise/scripts", "agents/hermes/pm"]
 _.file = [".env"]
-
-CODEX_HOME = { value = ".codex", path = true }
-
 # TODO: Ensure this works for all levels of nesting.
 # i.e. All linked agent files MUST be siblings at
 # any given level of nesting.

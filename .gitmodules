@@ -10,3 +10,6 @@
 [submodule "holyfields"]
 	path = holyfields
 	url = git@github.com:delorenj/holyfields.git
+[submodule "agents/hermes/pm/runtime"]
+	path = agents/hermes/pm/runtime
+	url = git@github.com:delorenj/agent-hm-33god-pm.git
