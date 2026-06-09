@@ -1,0 +1,47 @@
+[project]
+name = "pipeline-mcp-hub"
+version = "0.1.0"
+description = "33GOD Pipeline MCP Hub — multi-domain MCP server with discovery + dispatcher tool gating"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [{name = "Jarad DeLorenzo", email = "jaradd@gmail.com"}]
+keywords = ["mcp", "fastmcp", "hub", "33god", "plane", "bloodbank"]
+
+dependencies = [
+    "fastmcp==2.14.4",
+    "uvicorn>=0.30",
+]
+
+# NOTE: the `plane` domain imports `plane_mcp`, which is installed from source
+# (NOT PyPI) — it is the local plane-mcp-server checkout:
+#   local dev:  uv pip install -e ../../plane-mcp-server
+#   docker:     installed from the `plane_mcp` build context (see Dockerfile)
+# A missing plane_mcp only disables the plane domain; the hub still starts.
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+pipeline-mcp-hub = "pipeline_hub.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pipeline_hub*"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
