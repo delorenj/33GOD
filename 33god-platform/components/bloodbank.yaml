@@ -1,0 +1,24 @@
+id: bloodbank
+name: Bloodbank
+role: event-backbone
+repo: ../bloodbank
+description: NATS JetStream and Dapr event backbone for all 33GOD inter-service traffic.
+compose:
+  files:
+    - ../bloodbank/compose/docker-compose.yml
+  profiles: [core]
+health:
+  commands:
+    - cd ../bloodbank && mise run validate:schemas
+    - cd ../bloodbank && mise run hooks:check
+source_of_truth:
+  - ../bloodbank/docs/event-naming.md
+  - ../bloodbank/schemas
+  - ../bloodbank/services/agent-hooks/hooks.master.json
+changelog:
+  topics: [events, schemas, hooks, dapr, nats]
+public_card:
+  title: Event Backbone
+  promise: CloudEvents over NATS/Dapr with canonical schemas and provider-neutral agent hooks.
+backfills:
+  - bloodbank-canonical-agent-publisher-v1

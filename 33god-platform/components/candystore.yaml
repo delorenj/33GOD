@@ -1,0 +1,22 @@
+id: candystore
+name: Candystore
+role: event-audit-trail
+repo: ../candystore
+description: Durable Bloodbank event history, query API, summaries, and UI.
+compose:
+  files:
+    - ../candystore/compose.yml
+  profiles: [audit]
+health:
+  commands:
+    - cd ../candystore && mise run test
+source_of_truth:
+  - ../candystore/migrations
+  - ../candystore/candystore
+  - ../candystore/web
+changelog:
+  topics: [event-storage, audit, postgres, dapr]
+public_card:
+  title: Event History
+  promise: Queryable event/session memory for the whole pipeline.
+backfills: []

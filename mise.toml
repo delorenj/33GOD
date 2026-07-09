@@ -16,3 +16,15 @@ task = "link-agentfiles"
 [tasks.link-agentfiles]
 description = "Symlink all agent files to AGENTS.md"
 run = "{{config_root}}/.mise/scripts/link-agentfiles.sh"
+
+[tasks."platform:validate"]
+description = "Validate the 33GOD product control-plane manifests and changelog"
+run = "python3 33god-platform/scripts/platform.py validate"
+
+[tasks."platform:components"]
+description = "List productized 33GOD platform components"
+run = "python3 33god-platform/scripts/platform.py components list"
+
+[tasks."platform:backfills:check"]
+description = "Read-only scan for known legacy 33GOD platform drift"
+run = "python3 33god-platform/scripts/platform.py backfills check"

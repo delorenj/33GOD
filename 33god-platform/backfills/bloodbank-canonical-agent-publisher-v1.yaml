@@ -1,0 +1,21 @@
+id: bloodbank-canonical-agent-publisher-v1
+title: Normalize agent lifecycle hooks to one Bloodbank publisher
+owner_component: bloodbank
+kind: check-only
+summary: Agent configs should call ~/.agents/hooks/bloodbank/publish.py --client <agent> --hook <event>.
+search_paths:
+  - ~/.codex/config.toml
+  - ~/.codex/hooks.json
+  - ~/.claude/settings.json
+  - ~/.copilot/hooks
+  - ~/.agents/hooks
+  - ~/.config/hermes
+forbidden_patterns:
+  - services/agent-hooks/claude/publish.py
+  - services/agent-hooks/codex/publish.py
+  - services/agent-hooks/copilot/publish.py
+  - services/agent-hooks/hermes/publish.py
+  - hooks/hindsight.old/codex-notify
+remediation: >
+  Run Bloodbank's hook fan-out installer and make live configs invoke the
+  canonical ~/.agents/hooks/bloodbank/publish.py entrypoint.

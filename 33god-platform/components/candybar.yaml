@@ -1,0 +1,20 @@
+id: candybar
+name: Candybar
+role: topology-visualization
+repo: ../candybar
+description: Desktop/web topology and Bloodbank event visualization surface.
+compose:
+  files: []
+  profiles: [optional]
+health:
+  commands:
+    - cd ../candybar && mise run lint
+source_of_truth:
+  - ../candybar/src
+  - ../candybar/src-tauri
+changelog:
+  topics: [visualization, topology, desktop]
+public_card:
+  title: Visual Topology
+  promise: Inspect services, event flow, and architecture as a live map.
+backfills: []

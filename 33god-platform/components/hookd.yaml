@@ -1,0 +1,20 @@
+id: hookd
+name: Hookd
+role: legacy-hook-bridge
+repo: ../hookd
+description: Legacy hook bridge/daemon surfaces retained for migration and compatibility.
+compose:
+  files: []
+  profiles: [integrations]
+health:
+  commands:
+    - cd ../hookd && cargo test
+source_of_truth:
+  - ../hookd/src
+  - ../hookd/config
+changelog:
+  topics: [hooks, bridge, legacy]
+public_card:
+  title: Hook Bridge
+  promise: Compatibility bridge while canonical hooks move to shared publishers.
+backfills: []

@@ -1,0 +1,21 @@
+id: skillex
+name: Skillex
+role: skill-distribution
+repo: ../../skillex
+description: CLI-agnostic skill package manager and 33GOD skill hub source.
+compose:
+  files: []
+  profiles: [skills]
+health:
+  commands:
+    - cd ../../skillex && python3 /home/delorenj/.codex/skills/.system/skill-creator/scripts/quick_validate.py all-skills/33god-ecosystem
+source_of_truth:
+  - ../../skillex/all-skills
+  - ../../skillex/packs
+changelog:
+  topics: [skills, packs, agent-capabilities]
+public_card:
+  title: Unified Agent Skills
+  promise: One capability catalog fanned out to every agent CLI.
+backfills:
+  - skillex-33god-hub-v1

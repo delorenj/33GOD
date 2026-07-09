@@ -1,0 +1,20 @@
+id: holyfields
+name: Holyfields
+role: schema-registry-legacy
+repo: ../holyfields
+description: Legacy schema registry and generated binding workspace while Bloodbank-local schemas remain canonical for v1 events.
+compose:
+  files: []
+  profiles: [integrations]
+health:
+  commands:
+    - cd ../holyfields && mise run validate:schemas
+source_of_truth:
+  - ../holyfields/schemas
+  - ../holyfields/packages
+changelog:
+  topics: [schemas, generated-bindings, registry]
+public_card:
+  title: Schema Registry
+  promise: Contract discovery and generated bindings as the registry layer matures.
+backfills: []

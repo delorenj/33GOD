@@ -6,6 +6,11 @@
 
 > _Everything is an event._ All significant state changes—Git commits, PRs, transcripts, agent decisions, meetings—are emitted as events, allowing autonomous agents to coordinate seamlessly.
 
+> **Product control plane:** the current productized-platform map lives in
+> [`33god-platform/`](33god-platform/). Use its component manifests,
+> pipeline changelog, and backfill checks before relying on older prose in this
+> README.
+
 ---
 
 ## Components

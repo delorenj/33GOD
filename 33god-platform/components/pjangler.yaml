@@ -1,0 +1,23 @@
+id: pjangler
+name: PJangler
+role: provisioning-control-plane
+repo: ../../pjangler
+description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects and agents.
+compose:
+  files: []
+  profiles: [provisioning]
+health:
+  commands:
+    - cd ../../pjangler && bun test
+source_of_truth:
+  - ../../pjangler/src
+  - ../../pjangler/templates/commonproject
+  - ../../pjangler/templates/hermes-agent
+  - ~/.config/pjangler
+  - ~/.config/hermes-agent-template
+changelog:
+  topics: [project-registry, provisioning, templates, mcp]
+public_card:
+  title: Project Factory
+  promise: Reproducible project and agent provisioning from one registry.
+backfills: []

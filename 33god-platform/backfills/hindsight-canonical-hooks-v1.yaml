@@ -1,0 +1,17 @@
+id: hindsight-canonical-hooks-v1
+title: Retire Hindsight old/per-agent hook paths
+owner_component: hindsight
+kind: check-only
+summary: Agent configs should invoke ~/.agents/hooks/hindsight scripts, not hindsight.old or per-agent hook copies.
+search_paths:
+  - ~/.codex/config.toml
+  - ~/.codex/hooks.json
+  - ~/.claude/settings.json
+  - ~/.agents/hooks
+  - ~/.agents/AGENT.md
+forbidden_patterns:
+  - hindsight.old
+  - ~/.claude/hooks/hindsight-
+remediation: >
+  Point each agent config at ~/.agents/hooks/hindsight/<script>.sh and keep
+  shared helpers under ~/.agents/hooks/lib.

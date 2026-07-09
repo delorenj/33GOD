@@ -1,0 +1,22 @@
+id: holocene
+name: Holocene
+role: control-plane-dashboard
+repo: ../holocene
+description: Live dashboard for fleet, tooling, hook health, and pipeline status.
+compose:
+  files:
+    - ../holocene/compose.yml
+  profiles: [control]
+health:
+  commands:
+    - cd ../holocene && pnpm test
+source_of_truth:
+  - ../holocene/apps
+  - ../holocene/packages
+  - ../holocene/docs
+changelog:
+  topics: [dashboard, status, live-data, tooling-health]
+public_card:
+  title: Mission Control
+  promise: Live operational view of agents, events, and platform health.
+backfills: []

@@ -1,0 +1,11 @@
+id: skillex-33god-hub-v1
+title: Activate unified 33GOD skill hub
+owner_component: skillex
+kind: planned
+summary: Agents should start with the unified 33god-hub skill and drill into component references from there.
+search_paths:
+  - ../../skillex/all-skills
+  - ./skills/33god-hub
+forbidden_patterns: []
+remediation: >
+  Publish this hub into Skillex once the control-plane scaffold stabilizes.

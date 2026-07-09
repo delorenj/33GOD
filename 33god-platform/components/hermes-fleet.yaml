@@ -1,0 +1,24 @@
+id: hermes-fleet
+name: Hermes Fleet
+role: agent-runtime-fleet
+repo: ../../hermes-agent-template
+description: Shared Hermes runtime, profiles, systemd units, and generated agent role scaffolds.
+compose:
+  files: []
+  profiles: [agents]
+health:
+  commands:
+    - test -f ~/.hermes/fleet.env
+    - test -f ~/.hermes/agents-registry.yaml
+source_of_truth:
+  - ~/.hermes/fleet.env
+  - ~/.hermes/config.yaml
+  - ~/.hermes/agents-registry.yaml
+  - ../../hermes-agent-template
+changelog:
+  topics: [agent-runtime, fleet-config, profiles, systemd]
+public_card:
+  title: Managed AI Worker Fleet
+  promise: Long-running agents with shared provider config and profile-local state.
+backfills:
+  - hermes-inherited-profile-config-v1

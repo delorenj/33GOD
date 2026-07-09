@@ -1,0 +1,12 @@
+id: hermes-inherited-profile-config-v1
+title: Ensure Hermes runtimes inherit fleet defaults
+owner_component: hermes-fleet
+kind: planned
+summary: Hermes runtime configs should inherit the default fleet profile and keep runtime/config.yaml override-only.
+search_paths:
+  - ../*/agents/hermes/*/runtime/profile.yaml
+forbidden_patterns:
+  - "save_mode: full"
+remediation: >
+  Route repairs through hermes-fleet-operations. Do not patch runtime configs
+  by hand for shared defaults.

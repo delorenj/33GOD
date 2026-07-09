@@ -1,0 +1,24 @@
+name: 33god-platform
+
+# This is the product-level compose target. It deliberately starts as a thin
+# control-plane wrapper while existing component compose files are normalized.
+# Use `python3 scripts/platform.py validate` as the first acceptance gate.
+
+x-33god-profiles:
+  default: [core, audit, control, skills]
+  full: [core, audit, control, provisioning, agents, skills, integrations, optional]
+  cloud: [core, audit, control, provisioning, agents, skills, integrations]
+
+services:
+  platform-ready:
+    image: alpine:3.20
+    profiles: ["tools"]
+    working_dir: /workspace/33god-platform
+    volumes:
+      - ./:/workspace/33god-platform:ro
+    command:
+      - sh
+      - -c
+      - |
+        echo "33GOD platform scaffold is present."
+        echo "Run on host: python3 scripts/platform.py validate"

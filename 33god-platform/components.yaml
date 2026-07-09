@@ -1,0 +1,56 @@
+version: 1
+product:
+  id: 33god
+  name: 33GOD Productized Development Environment
+  mode: local-first-cloud-ready
+  visibility: private-source
+  summary: >
+    Event-driven agentic development platform composed from independently
+    versioned repos and coordinated by this control plane.
+
+profiles:
+  default:
+    description: Local laptop baseline.
+    includes: [core, audit, control, skills]
+  full:
+    description: Everything useful for a personal 33GOD workstation.
+    includes: [core, audit, control, provisioning, agents, skills, integrations, optional]
+  cloud:
+    description: Hosted deployment shape; same component graph with cloud-grade secrets, storage, and auth.
+    includes: [core, audit, control, provisioning, agents, skills, integrations]
+
+component_files:
+  - components/bloodbank.yaml
+  - components/candystore.yaml
+  - components/holocene.yaml
+  - components/pjangler.yaml
+  - components/hermes-fleet.yaml
+  - components/skillex.yaml
+  - components/hindsight.yaml
+  - components/pipeline-mcp-hub.yaml
+  - components/candybar.yaml
+  - components/heyma.yaml
+  - components/holyfields.yaml
+  - components/hookd.yaml
+
+contract_paths:
+  - ../bloodbank/docs/event-naming.md
+  - ../bloodbank/schemas
+  - ../bloodbank/services/agent-hooks/hooks.master.json
+  - ../candystore/migrations
+  - ../holocene/docs
+  - ../pipeline-mcp-hub/README.md
+  - ../../pjangler/templates
+  - ../../skillex/all-skills
+  - ../../hermes-agent-template
+
+change_policy:
+  machine_log: changes/*.jsonl
+  human_log: CHANGELOG.pipeline.md
+  required_for:
+    - event schema or subject changes
+    - agent hook entrypoint or payload changes
+    - project template or provisioning changes
+    - Hermes fleet runtime/profile contract changes
+    - skill hub routing changes
+    - compose/network/port/secret boundary changes

@@ -1,0 +1,23 @@
+id: hindsight
+name: Hindsight
+role: persistent-memory
+repo: ~/.agents
+description: Persistent memory hooks and bank routing for agent sessions.
+compose:
+  files: []
+  profiles: [skills]
+health:
+  commands:
+    - test -x ~/.agents/hooks/hindsight/hindsight-recall.sh
+    - test -x ~/.agents/hooks/hindsight/hindsight-retain.sh
+source_of_truth:
+  - ~/.agents/hooks/hindsight
+  - ~/.agents/hooks/lib
+  - ~/.hindsight/config
+changelog:
+  topics: [memory, hooks, journals]
+public_card:
+  title: Persistent Memory
+  promise: Recall, retain, and journal agent work across sessions.
+backfills:
+  - hindsight-canonical-hooks-v1

@@ -1,0 +1,22 @@
+id: heyma
+name: HeyMa
+role: voice-interface
+repo: ../HeyMa
+description: Voice capture/transcription/TTS interface layer for 33GOD.
+compose:
+  files:
+    - ../HeyMa/compose.yml
+  profiles: [optional]
+health:
+  commands:
+    - cd ../HeyMa && mise run test
+source_of_truth:
+  - ../HeyMa/scripts
+  - ../HeyMa/chrome-extension
+  - ../HeyMa/TonnyTray
+changelog:
+  topics: [voice, transcription, tts]
+public_card:
+  title: Voice Interface
+  promise: Talk to the pipeline and capture meetings/transcripts as events.
+backfills: []
