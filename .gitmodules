@@ -13,3 +13,4 @@
 [submodule "agents/hermes/pm/runtime"]
 	path = agents/hermes/pm/runtime
 	url = git@github.com:delorenj/agent-hm-33god-pm.git
+	ignore = all
