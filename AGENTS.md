@@ -5,36 +5,42 @@
 
 ## OVERVIEW
 
-Event-driven agentic development pipeline. Multi-agent teams coordinate asynchronously via Bloodbank (RabbitMQ). Holyfields provides schema contracts; Candystore persists everything; Candybar visualizes the system. Everything is an event.
+Event-driven agentic development pipeline. Multi-agent teams coordinate asynchronously via Bloodbank (NATS/dapr). Candystore persists everything; Holocene as control plane and dashboard Everything is an event.
 
-## STRUCTURE
+## Components
 
 ```
 ./
-├── bloodbank/      # Event bus API + consumers (Python/FastAPI)
-├── holyfields/     # Schema registry → Pydantic + Zod generated code
-├── candystore/     # Event persistence + audit trail (Python/FastAPI)
-├── candybar/       # Desktop observability dashboard (React + Tauri/Rust)
-├── hookd/          # Claude Code hook → Bloodbank bridge (Rust)
-├── compose.yml     # Full-stack Docker deployment
-├── mise.toml       # Tool version manager config
-├── .agents/        # Agent skills + team definitions
-└── .github/skills/ # BMAD methodology skill implementations
+├── bloodbank/      # NATs Event bus / dapr
+├── candystore/     # Event persistence + audit trail
+├── holocene/       # Control plane
+├── pjangler/       # Project registry, management, and bootstrapping
+├── flume/          # Agent hierarchy, role assignment, and company org chart
+├── hermes-fleet/   # System-wide registry of project-scoped PM agents
+├── plane/          # Open Source ticketing platform and kanban task management
+├── n8n/            # Open Source node-based automation platform
+├── momo/           # Just a skill, but a core component of the pipeline. Defines the ticket lifecycle
+├── bmad/           # Open Source project planning and documentation framework.
+
+
+
+
+
 ```
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Publish/subscribe events | `bloodbank/` | RabbitMQ via aio-pika, topic exchange |
-| Define event schemas | `holyfields/schemas/` | JSON Schema source of truth |
-| Use typed events (Python) | `holyfields/packages/python/` | Generated Pydantic models |
-| Use typed events (TS) | `holyfields/packages/typescript/` | Generated Zod schemas |
-| Query historical events | `candystore/` | REST API + PostgreSQL |
-| Visualize event flows | `candybar/` | Real-time WebSocket dashboard |
-| Claude Code hooks → events | `hookd/` | Unix socket → RabbitMQ bridge |
-| Deploy full stack | `compose.yml` | `docker compose up -d` |
-| Agent definitions | `.agents/team/` | Agent configs for multi-agent orchestration |
+| Task                       | Location                          | Notes                                       |
+| -------------------------- | --------------------------------- | ------------------------------------------- |
+| Publish/subscribe events   | `bloodbank/`                      | RabbitMQ via aio-pika, topic exchange       |
+| Define event schemas       | `holyfields/schemas/`             | JSON Schema source of truth                 |
+| Use typed events (Python)  | `holyfields/packages/python/`     | Generated Pydantic models                   |
+| Use typed events (TS)      | `holyfields/packages/typescript/` | Generated Zod schemas                       |
+| Query historical events    | `candystore/`                     | REST API + PostgreSQL                       |
+| Visualize event flows      | `candybar/`                       | Real-time WebSocket dashboard               |
+| Claude Code hooks → events | `hookd/`                          | Unix socket → RabbitMQ bridge               |
+| Deploy full stack          | `compose.yml`                     | `docker compose up -d`                      |
+| Agent definitions          | `.agents/team/`                   | Agent configs for multi-agent orchestration |
 
 ## CONVENTIONS
 

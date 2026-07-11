@@ -1,0 +1,8 @@
+code: custom
+name: "Custom: Jarad's Custom Workflows and Agents"
+default_selected: true
+
+# Variables from Core Config inserted:
+## user_name
+## communication_language
+## output_folder

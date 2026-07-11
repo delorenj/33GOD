@@ -1,0 +1,39 @@
+# ticket-lifecycle workflow configuration
+# Edit these values via the edit mode (steps-e/)
+
+# AC Sufficiency Rubric Criteria
+ac_rubric:
+  require_non_empty: true
+  require_testable_assertions: true
+  require_enumerated_items: true
+  require_fr_coverage: true
+
+# QA Retry Limits
+qa:
+  max_retries: 3
+
+# Staleness Detection (durations in minutes)
+staleness:
+  triage: 10
+  refining: 30
+  in_progress: 120
+  review: 15
+  qa: 60
+
+# Bloodbank Event Configuration
+events:
+  topic_prefix: "ticket"
+  include_project_id: true
+  include_ticket_id: true
+
+# Plane State Mapping
+states:
+  backlog: "Backlog"
+  triage: "Triage"
+  refining: "Refining"
+  ready: "Ready"
+  in_progress: "In Progress"
+  review: "Review"
+  qa: "QA"
+  done: "Done"
+  blocked: "Blocked"

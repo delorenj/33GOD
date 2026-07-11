@@ -1,0 +1,20 @@
+{
+  "project_name": ".",
+  "project_description": "",
+  "project_slug": "project",
+  "repo_path": "/home/delorenj/code/33GOD",
+  "ticket_provider": {
+    "type": "plane",
+    "workspace": "33god",
+    "identifier": "PROJ",
+    "board_id": "",
+    "board_url": "",
+    "state": "planned"
+  },
+  "agents": {
+    "33god-pm": {
+      "role": "pm",
+      "role_dir": "agents/hermes/pm"
+    }
+  }
+}

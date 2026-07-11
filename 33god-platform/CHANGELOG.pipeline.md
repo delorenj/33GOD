@@ -3,6 +3,17 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-07-10
+
+### Component Registry Repair
+
+- Restored the Candybar, Holyfields, and Hookd component manifests referenced by
+  `components.yaml`.
+- Removed the incomplete Flume manifest from the active registry until the repo
+  path and platform contract are real.
+- Re-established `platform:validate` and `platform:components` as usable
+  control-plane gates for the next director handoff.
+
 ## 2026-07-08
 
 ### Platform Control Plane Bootstrap
