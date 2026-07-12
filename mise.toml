@@ -10,6 +10,7 @@ _.file = [".env"]
 enter = [
   "{{config_root}}/.mise/scripts/link-agentfiles.sh",
   "op inject -i .env.op > .env",
+  "codegraph sync",
 ]
 
 [tasks."platform:validate"]

@@ -91,8 +91,7 @@ Validation state as of this handoff:
 - `docker compose -f 33god-platform/compose.yaml --profile tools config`:
   passes.
 
-The registry drift found during the PRD handoff is repaired. Candybar,
-Holyfields, and Hookd are restored as registered component manifests. The
+The registry drift found during the PRD handoff is repaired. The
 incomplete Flume manifest was removed until its repo path and platform contract
 are real.
 
@@ -101,11 +100,11 @@ are real.
 The platform baseline checkpoint used for this handoff is
 `platform-baseline-2026-07-08`.
 
-| Component | Status | Baseline | Runtime mode | Notes |
-| --- | --- | --- | --- | --- |
-| Bloodbank | GO/YELLOW | Local annotated tag at `1d4fcbc` | `IGNORE_ALL_YELLOW` | `mise run doctor`, `mise run smoketest:schemas`, and `git diff --check` passed. Tag is local-only. PM runtime remains tracked as a submodule with `.gitmodules ignore = all`. |
-| Candystore | GO | Remote tag peels to `48e05c3` | `DELINKED_GREEN` | Runtime is delinked from Git. Remote tag exists. Existing `pjangler audit` exception is scoped to `hermes.pm-scaffold`. |
-| Holocene | GO/YELLOW | Local annotated tag at `800a604` | `IGNORE_ALL_YELLOW` | Focused runtime-drift verification only, not full suite green. PM runtime remains tracked as a submodule with `.gitmodules ignore = all`. Tag is local-only. |
+| Component  | Status    | Baseline                         | Runtime mode        | Notes                                                                                                                                                                         |
+| ---------- | --------- | -------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bloodbank  | GO/YELLOW | Local annotated tag at `1d4fcbc` | `IGNORE_ALL_YELLOW` | `mise run doctor`, `mise run smoketest:schemas`, and `git diff --check` passed. Tag is local-only. PM runtime remains tracked as a submodule with `.gitmodules ignore = all`. |
+| Candystore | GO        | Remote tag peels to `48e05c3`    | `DELINKED_GREEN`    | Runtime is delinked from Git. Remote tag exists. Existing `pjangler audit` exception is scoped to `hermes.pm-scaffold`.                                                       |
+| Holocene   | GO/YELLOW | Local annotated tag at `800a604` | `IGNORE_ALL_YELLOW` | Focused runtime-drift verification only, not full suite green. PM runtime remains tracked as a submodule with `.gitmodules ignore = all`. Tag is local-only.                  |
 
 The baseline is good enough to proceed with platform-stack planning, but it is
 not a clean release train yet. Bloodbank and Holocene still need runtime
@@ -233,7 +232,7 @@ Agent lifecycle events must use one canonical Bloodbank publisher.
 Acceptance criteria:
 
 - Agent clients call `~/.agents/hooks/bloodbank/publish.py --client <client>
-  --hook <native-hook>`.
+--hook <native-hook>`.
 - Client-specific payload preparation lives behind the publisher, not in
   separate per-agent publisher scripts.
 - Hook failures fail open and never block the host agent.
