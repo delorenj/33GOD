@@ -1,0 +1,7 @@
+# CORE Module Configuration
+# Root configuration for the 33GOD four-part brownfield knowledge base.
+user_name: Jarad
+project_name: 33GOD
+communication_language: English
+document_output_language: English
+output_folder: "{project-root}/_bmad-output"

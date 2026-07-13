@@ -25,6 +25,10 @@ run = "python3 33god-platform/scripts/platform.py components list"
 description = "Read-only scan for known legacy 33GOD platform drift"
 run = "python3 33god-platform/scripts/platform.py backfills check"
 
+[tasks."docs:drift"]
+description = "Read-only parity check for four-part BMAD docs and live contracts"
+run = "python3 scripts/check-doc-drift.py --source-root . --docs-root ."
+
 [[watch_files]]
 patterns = ["AGENTS.md"]
 task = "link-agentfiles"

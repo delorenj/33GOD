@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "project": "33GOD",
+  "repository_type": "monorepo",
+  "scope_policy": "exact",
+  "parts": [
+    {
+      "id": "bloodbank",
+      "name": "Bloodbank",
+      "root_path": "bloodbank",
+      "project_type_id": "backend",
+      "role": "event-contract-and-transport-backbone",
+      "languages": ["Python", "JSON Schema", "YAML", "Shell"]
+    },
+    {
+      "id": "candystore",
+      "name": "Candystore",
+      "root_path": "candystore",
+      "project_type_id": "web",
+      "role": "durable-event-history-and-read-api",
+      "languages": ["Python", "SQL", "JavaScript"]
+    },
+    {
+      "id": "holocene",
+      "name": "Holocene",
+      "root_path": "holocene",
+      "project_type_id": "web",
+      "role": "mission-control-and-host-control-plane",
+      "languages": ["TypeScript", "TSX"]
+    },
+    {
+      "id": "pjangler",
+      "name": "PJangler",
+      "root_path": "pjangler",
+      "project_type_id": "cli",
+      "role": "project-and-agent-provisioning-control-plane",
+      "languages": ["TypeScript", "Python", "Shell", "Jinja"]
+    }
+  ],
+  "integration_points": [
+    {"from": "pjangler", "to": "bloodbank", "type": "generated NATS consumers and event emitters", "status": "transitional"},
+    {"from": "bloodbank", "to": "candystore", "type": "Dapr JetStream subscription", "status": "implemented"},
+    {"from": "holocene", "to": "candystore", "type": "HTTP read-side query", "status": "implemented-but-misconfigured-by-default"},
+    {"from": "bloodbank", "to": "holocene", "type": "Redis hook-health projection and duplicated contract map", "status": "bypass-and-transitional"},
+    {"from": "pjangler", "to": "holocene", "type": "shared project and Hermes registry projections", "status": "indirect"}
+  ],
+  "authority": {
+    "root_docs": "component relationships and deployment contracts",
+    "component_docs": "component internals",
+    "precedence": ["live manifests", "live code", "tests and validation output", "root documentation", "component documentation", "historical planning prose"]
+  }
+}
