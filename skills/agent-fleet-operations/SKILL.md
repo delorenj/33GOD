@@ -1,7 +1,7 @@
 ---
-name: hermes-fleet-operations
+name: agent-fleet-operations
 description: |
-  Operate and maintain the Hermes agent fleet: shared install, ~/.hermes/fleet.env, ~/.hermes/config.yaml, ~/.hermes/agents-registry.yaml, hermes-agent-template, role profiles and inherited config, runtime repo provisioning, systemd user units, fleet self-checks, template defaults, and PM/template backfills. Use when updating Hermes core, changing fleet defaults, provisioning agents, debugging fleet-wide MCP failures, running a Hermes fleet self-check, or propagating template changes to existing PM agents. Triggers: Hermes fleet, hermes-agent-template, ~/.hermes/fleet.env, ~/.hermes/config.yaml, ~/.hermes/agents-registry.yaml, inherited profile, fleet self-check, systemd hermes-*, template backfill, runtime repo provisioning. Do NOT use for: project bootstrap decisions or repo-local agent requests (→ 33god-projects); Plane ticket operations (→ managing-tickets-and-tasks-in-plane); Bloodbank event contracts (→ bloodbank-integration); generic SSOT config fan-out mechanics (→ agent-config-fanout).
+  Operate and maintain the Hermes agent fleet: shared install, ~/.hermes/fleet.env, ~/.hermes/config.yaml, ~/.hermes/agents-registry.yaml, hermes-agent-template, role profiles and inherited config, runtime repo provisioning, systemd user units, fleet self-checks, template defaults, and PM/template backfills. Use when updating Hermes core, changing fleet defaults, provisioning agents, debugging fleet-wide MCP failures, running a Hermes fleet self-check, or propagating template changes to existing PM agents. Triggers: Hermes fleet, hermes-agent-template, ~/.hermes/fleet.env, ~/.hermes/config.yaml, ~/.hermes/agents-registry.yaml, inherited profile, fleet self-check, systemd hermes-*, template backfill, runtime repo provisioning. Do NOT use for: project bootstrap decisions or repo-local agent requests (→ 33god-projects); Plane ticket operations (→ project-lifecycle); Bloodbank event contracts (→ bloodbank-integration); generic SSOT config fan-out mechanics (→ agent-config-fanout).
 ---
 
 # Hermes Fleet Operations
@@ -37,6 +37,6 @@ Route here for anything that touches the shared Hermes fleet, the agent template
 ## Out of Scope
 
 - **Project bootstrap / repo-local agent requests** → `33god-projects`.
-- **Plane ticket lifecycle** → `managing-tickets-and-tasks-in-plane`.
+- **Plane ticket lifecycle** → `project-lifecycle`.
 - **Bloodbank event schemas or naming contract** → `bloodbank-integration`.
 - **Generic SSOT config fan-out engine mechanics** → `agent-config-fanout`.

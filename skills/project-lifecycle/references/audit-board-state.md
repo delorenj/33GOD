@@ -354,7 +354,7 @@ CWS-014 (Build Validation)
 
 **Trigger Next Audit:**
 ```bash
-claude skill managing-tickets-and-tasks-in-plane:audit-board-state --depth comprehensive
+claude skill project-lifecycle:audit-board-state --depth comprehensive
 ```
 ```
 
@@ -363,7 +363,7 @@ claude skill managing-tickets-and-tasks-in-plane:audit-board-state --depth compr
 **Pre-Sprint Planning:**
 ```bash
 # Run audit before planning meeting
-claude skill managing-tickets-and-tasks-in-plane:audit-board-state \
+claude skill project-lifecycle:audit-board-state \
   --depth standard \
   --output "docs/board-audit-$(date +%Y%m%d).md"
 ```
@@ -371,7 +371,7 @@ claude skill managing-tickets-and-tasks-in-plane:audit-board-state \
 **Weekly Retrospective:**
 ```bash
 # Include audit in retro
-claude skill managing-tickets-and-tasks-in-plane:audit-board-state \
+claude skill project-lifecycle:audit-board-state \
   --depth quick \
   --compare-with-last-week
 ```
@@ -379,7 +379,7 @@ claude skill managing-tickets-and-tasks-in-plane:audit-board-state \
 **On-Demand:**
 ```bash
 # User requests review
-claude skill managing-tickets-and-tasks-in-plane:audit-board-state
+claude skill project-lifecycle:audit-board-state
 ```
 
 ## Performance

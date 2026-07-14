@@ -291,10 +291,10 @@ This is a production incident requiring immediate attention.
 
 ```bash
 # Explicit request
-claude skill managing-tickets-and-tasks-in-plane:select-next-ticket
+claude skill project-lifecycle:select-next-ticket
 
 # With filters
-claude skill managing-tickets-and-tasks-in-plane:select-next-ticket \
+claude skill project-lifecycle:select-next-ticket \
   --sprint 2 \
   --quick-wins-only
 ```

@@ -1,6 +1,6 @@
 ---
 name: momo
-description: Momo — the manual, human-drivable project-manager ORCHESTRATOR for any pjangler CommonProject repo (has a .project.json at root). Use when you want to run the board — survey tickets and their state, triage and refine, decide what to work next, orchestrate implementation by delegating ALL code changes to subagents (never editing code itself), review to a high bar, and clear the board in a loop until idle or only backlog remains. Interactive counterpart to the autonomous Hermes PM; shares the same Plane board and hindsight bank per repo. Records consequential judgment calls as Bloodbank decision events against "pillars." Triggers — "be Momo", "act as PM / project manager", "work the board", "clear the board", "what's next", "triage tickets", "orchestrate this ticket", "manage the Plane/Trello board", "unblock the pipeline", "record a decision". Provider-agnostic: drives Plane/Linear (via the repo `tp` adapter) or Trello (via a bundled adapter + `.momo/config.json` lane map) — resolved from `.project.json`. Do NOT use for hands-on coding (delegate it), repos with no .project.json, or Hermes fleet/systemd provisioning (use hermes-fleet-operations).
+description: Momo — the manual, human-drivable project-manager ORCHESTRATOR for any pjangler CommonProject repo (has a .project.json at root). Use when you want to run the board — survey tickets and their state, triage and refine, decide what to work next, orchestrate implementation by delegating ALL code changes to subagents (never editing code itself), review to a high bar, and clear the board in a loop until idle or only backlog remains. Interactive counterpart to the autonomous Hermes PM; shares the same Plane board and hindsight bank per repo. Records consequential judgment calls as Bloodbank decision events against "pillars." Triggers — "be Momo", "act as PM / project manager", "work the board", "clear the board", "what's next", "triage tickets", "orchestrate this ticket", "manage the Plane/Trello board", "unblock the pipeline", "record a decision". Provider-agnostic: drives Plane/Linear (via the repo `tp` adapter) or Trello (via a bundled adapter + `.momo/config.json` lane map) — resolved from `.project.json`. Do NOT use for hands-on coding (delegate it), repos with no .project.json, or Hermes fleet/systemd provisioning (use agent-fleet-operations).
 ---
 
 # Momo — PM Orchestrator
@@ -60,7 +60,7 @@ anchored by **pillars** (your decision compass) and made auditable by emitting a
 | Orchestrate ONE ticket to done | `references/delegation.md`, `references/review-and-closure.md` | Run the per-ticket pipeline (below) |
 | "Clear the board" / run the loop | `references/board-clearing-loop.md` | Run the loop with its stop conditions + CI-wait timer |
 | Make a judgment call for the operator | `references/pillars.md`, `references/decisions.md` | Decide, then emit the decision event |
-| Rich Plane CRUD beyond the adapter | `managing-tickets-and-tasks-in-plane` skill | (adapter `tp` stays the SSOT for state transitions) |
+| Rich Plane CRUD beyond the adapter | `project-lifecycle` skill | (adapter `tp` stays the SSOT for state transitions) |
 | Pick the right coding agent for a task | `coding-strategy` skill | Delegate accordingly |
 
 ## The per-ticket pipeline (mirror of the BMAD `ticket-lifecycle` + sentinel protocol)

@@ -4,7 +4,7 @@ pipeline-status:
 ---
 # Hermes project agent request
 
-When a 33god project asks for a Hermes agent, the project side owns only the request and the repo-local projection. The actual fleet/runtime mechanics live in `hermes-fleet-operations`.
+When a 33god project asks for a Hermes agent, the project side owns only the request and the repo-local projection. The actual fleet/runtime mechanics live in `agent-fleet-operations`.
 
 ## What the project side provides
 
@@ -27,4 +27,4 @@ When a 33god project asks for a Hermes agent, the project side owns only the req
 - Backfill existing agents after a template change.
 - Repair systemd units or the shared Hermes checkout.
 
-For those, route to `hermes-fleet-operations`.
+For those, route to `agent-fleet-operations`.

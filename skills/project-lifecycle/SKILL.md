@@ -1,5 +1,5 @@
 ---
-name: managing-tickets-and-tasks-in-plane
+name: project-lifecycle
 description: |
   Multi-workspace Plane sprint board management with intelligent automation, ticket creation, and BMAD workflow integration.
 

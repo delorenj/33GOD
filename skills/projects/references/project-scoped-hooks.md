@@ -17,7 +17,7 @@ their machine. It is **committed to the repo** and driven by `mise enter/leave`.
 > engine these are built on lives in the **`agent-config-fanout`** skill
 > (`references/ssot-fanout-engine.md`, `references/ssot-fanout-reference.md`,
 > `references/ssot-fanout-gotchas.md`). Templatizing this layer into CommonProject/pjangler stays
-> in **`pjangler-dev`** only when the task requires editing pjangler implementation code.
+> in **`project-jangler`** only when the task requires editing pjangler implementation code.
 
 This is the per-dev, committed *fan-out* of the same Hindsight hooks described in
 [agent-hooks.md](agent-hooks.md) — that file covers the harness/global Hindsight+Bloodbank

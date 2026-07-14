@@ -25,7 +25,7 @@ Momo is repo-agnostic. Everything is resolved at runtime from the nearest ancest
 ## Reading the board — always through the adapter
 
 Do **not** call Plane/Linear/Trello directly, and do **not** use the
-`managing-tickets-and-tasks-in-plane` skill's `plane-workspaces.json` path for state
+`project-lifecycle` skill's `plane-workspaces.json` path for state
 transitions — it can resolve a different board and desync from Hermes. The `tp` adapter is
 the single source of truth and keeps you byte-identical to the sentinel. Use the wrapper:
 

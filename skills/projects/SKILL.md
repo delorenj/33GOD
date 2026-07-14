@@ -1,7 +1,7 @@
 ---
 name: 33god-projects
 description: |
-  Create, wire, and maintain 33god/DeLoNET projects. Covers pjangler/CommonProject bootstrap, repo-local `.project.json`, Hermes PM and scrum-master/Ticket Sentinel provisioning requests, mise/.env.op, BMAD, Hindsight/Bloodbank hook wiring, and project-scoped hook + skill fan-out adoption. Use when running `pjangler init`, `pjangler hermes-agent`, or `mise run init-project`; adding PM/sentinel agents; wiring mise/op inject; installing BMAD; configuring hooks; or adopting `.agents/local.json`, `defer_to_global`, and `hooks.master.json`. Do NOT use for developing pjangler (pjangler-dev), generic fan-out mechanics (agent-config-fanout), fleet updates/backfills (hermes-fleet-operations), live Plane issues, Bloodbank schemas, or host conventions.
+  Create, wire, and maintain 33god/DeLoNET projects. Covers pjangler/CommonProject bootstrap, repo-local `.project.json`, Hermes PM and scrum-master/Ticket Sentinel provisioning requests, mise/.env.op, BMAD, Hindsight/Bloodbank hook wiring, and project-scoped hook + skill fan-out adoption. Use when running `pjangler init`, `pjangler hermes-agent`, or `mise run init-project`; adding PM/sentinel agents; wiring mise/op inject; installing BMAD; configuring hooks; or adopting `.agents/local.json`, `defer_to_global`, and `hooks.master.json`. Do NOT use for developing pjangler (project-jangler), generic fan-out mechanics (agent-config-fanout), fleet updates/backfills (agent-fleet-operations), live Plane issues, Bloodbank schemas, or host conventions.
 ---
 
 # 33god Project Creation & Wiring
@@ -33,9 +33,9 @@ Every 33god/DeLoNET repo is assembled by **pjangler** out of two copier template
 | Wire an agent's Hindsight memory and Bloodbank emit/consume hooks (harness/global layer) | [references/agent-hooks.md](references/agent-hooks.md) |
 | Adopt the per-dev, committed project-scoped hook + skill fan-out layer (Claude/Codex/Hermes/Kimi, `.agents/local.json` opt-out, `hindsight-setup`) | [references/project-scoped-hooks.md](references/project-scoped-hooks.md) → [references/project-scoped-internals.md](references/project-scoped-internals.md) |
 | Understand what the project side asks Hermes to provision | [references/hermes-project-agent-request.md](references/hermes-project-agent-request.md) |
-| Update shared Hermes fleet defaults, run a fleet self-check, or backfill existing PM agents | → **hermes-fleet-operations** |
+| Update shared Hermes fleet defaults, run a fleet self-check, or backfill existing PM agents | → **agent-fleet-operations** |
 | Build or operate the generic master→multi-dialect fan-out engine | → **agent-config-fanout** |
-| Develop pjangler itself (Commands/Recipes/MCP) | → **pjangler-dev** |
+| Develop pjangler itself (Commands/Recipes/MCP) | → **project-jangler** |
 
 ## The standard lifecycle (at a glance)
 
@@ -55,10 +55,10 @@ Every 33god/DeLoNET repo is assembled by **pjangler** out of two copier template
 
 ## Out of Scope
 
-- **Developing pjangler itself** → `pjangler-dev`.
+- **Developing pjangler itself** → `project-jangler`.
 - **Generic agent-config fan-out engine** (master/lock/dialect renderers) → `agent-config-fanout`.
-- **Hermes fleet-wide updates, template backfills, fleet self-checks** → `hermes-fleet-operations`.
-- **Plane live issue operations** → `managing-tickets-and-tasks-in-plane`.
+- **Hermes fleet-wide updates, template backfills, fleet self-checks** → `agent-fleet-operations`.
+- **Plane live issue operations** → `project-lifecycle`.
 - **Bloodbank event schema naming / topology** → `bloodbank-integration`.
 - **General DeLoNET host conventions** → `delonet-conventions`.
 - **Hindsight API usage / bank routing mechanics beyond agent-hook wiring** → `hindsight`.

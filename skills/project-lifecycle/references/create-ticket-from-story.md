@@ -97,7 +97,7 @@ Run `/dev-story CWS-015` to begin implementation.
 **BMAD `/create-story`:**
 ```bash
 # After story document created
-claude skill managing-tickets-and-tasks-in-plane:create-ticket-from-story \
+claude skill project-lifecycle:create-ticket-from-story \
   --story-file "$STORY_FILE" \
   --sprint "$CURRENT_SPRINT"
 ```
@@ -105,11 +105,11 @@ claude skill managing-tickets-and-tasks-in-plane:create-ticket-from-story \
 **Manual usage:**
 ```bash
 # From story file
-claude skill managing-tickets-and-tasks-in-plane:create-ticket-from-story \
+claude skill project-lifecycle:create-ticket-from-story \
   --story-file "docs/stories/user-authentication.md"
 
 # From inline description
-claude skill managing-tickets-and-tasks-in-plane:create-ticket-from-story \
+claude skill project-lifecycle:create-ticket-from-story \
   --description "Fix the login page styling bug" \
   --priority "high" \
   --points 2
