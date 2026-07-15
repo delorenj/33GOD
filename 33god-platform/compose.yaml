@@ -1,24 +1,312 @@
 name: 33god-platform
 
-# This is the product-level compose target. It deliberately starts as a thin
-# control-plane wrapper while existing component compose files are normalized.
-# Use `python3 scripts/platform.py validate` as the first acceptance gate.
-
-x-33god-profiles:
-  default: [core, audit, control, skills]
-  full: [core, audit, control, provisioning, agents, skills, integrations, optional]
-  cloud: [core, audit, control, provisioning, agents, skills, integrations]
+# Component sources normally live beside 33god-platform in the populated
+# monorepo. Set GOD_SOURCE_ROOT when rendering this file from an isolated
+# worktree (for example, /home/delorenj/code/33GOD).
+x-33god-source-root: ${GOD_SOURCE_ROOT:-..}
+x-33god-model:
+  default: local
+  tools: local-one-shot
+  full: local-with-tools
+  cloud: unsupported-local-bind-model
 
 services:
-  platform-ready:
-    image: alpine:3.20
-    profiles: ["tools"]
-    working_dir: /workspace/33god-platform
+  bloodbank-nats:
+    image: nats:2.10-alpine
+    container_name: bloodbank-nats
+    command: ["-js", "-sd", "/data/jetstream", "-m", "8222", "-DV"]
+    environment:
+      BLOODBANK_NATS_URL: nats://nats:4222
+    ports:
+      - target: 4222
+        published: "${BLOODBANK_NATS_CLIENT_PORT:-4222}"
+        protocol: tcp
+      - target: 8222
+        published: "${BLOODBANK_NATS_MONITOR_PORT:-8222}"
+        protocol: tcp
     volumes:
-      - ./:/workspace/33god-platform:ro
+      - bloodbank-nats-data:/data/jetstream
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      bloodbank-network:
+        aliases: [nats]
+    restart: unless-stopped
+
+  nats-init:
+    image: natsio/nats-box:0.14.5
+    container_name: bloodbank-nats-init
+    depends_on:
+      bloodbank-nats:
+        condition: service_healthy
+    environment:
+      NATS_URL: nats://nats:4222
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/bloodbank/compose/nats/streams.json
+        target: /work/streams.json
+        read_only: true
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/bloodbank/compose/nats/init.sh
+        target: /work/init.sh
+        read_only: true
+    entrypoint: ["/bin/sh", "/work/init.sh"]
+    networks: [bloodbank-network]
+    restart: "no"
+
+  dapr-placement:
+    image: daprio/dapr:1.13.0
+    container_name: bloodbank-dapr-placement
+    command: ["./placement", "--port", "50005"]
+    ports:
+      - target: 50005
+        published: "${BLOODBANK_DAPR_PLACEMENT_PORT:-50005}"
+        protocol: tcp
+    networks:
+      bloodbank-network:
+        aliases: [dapr-placement]
+    restart: unless-stopped
+
+  candystore-postgres:
+    image: postgres:16-alpine
+    container_name: candystore-postgres
+    environment:
+      POSTGRES_USER: candystore
+      POSTGRES_PASSWORD: candystore
+      POSTGRES_DB: candystore
+    volumes:
+      - candystore-pgdata:/var/lib/postgresql/data
+    ports:
+      - target: 5432
+        published: "${CANDYSTORE_POSTGRES_PORT:-5434}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U candystore -d candystore"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      candystore-internal:
+        aliases: [postgres]
+    restart: unless-stopped
+
+  candystore:
+    build:
+      context: ${GOD_SOURCE_ROOT:-..}/candystore
+    image: candystore:local
+    container_name: candystore
+    environment:
+      APP_PORT: "3001"
+      APP_HOST: 0.0.0.0
+      DATABASE_URL: postgresql://candystore:candystore@postgres:5432/candystore
+      SUBSCRIBE_PUBSUB: bloodbank-pubsub
+      SUBSCRIBE_TOPIC: bloodbank.evt.v1.>
+      SUBSCRIBE_ROUTE: /events/all
+    ports:
+      - target: 3001
+        published: "${CANDYSTORE_PORT:-8683}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      candystore-postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/readyz', timeout=3)"
+      interval: 30s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      candystore-internal:
+        aliases: [candystore-app]
+      proxy:
+        aliases: [candystore]
+    restart: unless-stopped
+
+  candystore-daprd:
+    image: daprio/daprd:1.13.0
+    container_name: candystore-daprd
+    command:
+      - ./daprd
+      - --app-id=candystore
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --app-port=3001
+      - --app-channel-address=candystore-app
+      - --app-protocol=http
+      - --resources-path=/components
+      - --placement-host-address=dapr-placement:50005
+      - --log-level=info
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/candystore/dapr-components
+        target: /components
+        read_only: true
+    ports:
+      - target: 3500
+        published: "${CANDYSTORE_DAPR_HTTP_PORT:-3504}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      nats-init:
+        condition: service_completed_successfully
+      dapr-placement:
+        condition: service_started
+      candystore:
+        condition: service_healthy
+    networks: [candystore-internal, bloodbank-network]
+    restart: unless-stopped
+
+  holocene-api-preflight:
+    image: curlimages/curl:8.14.1
+    command: ["--fail", "--silent", "--show-error", "http://host.docker.internal:4000/health"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    depends_on:
+      candystore:
+        condition: service_healthy
+    networks: [candystore-internal]
+    restart: "no"
+
+  holocene-web:
+    image: node:22
+    container_name: holocene-web
+    working_dir: /app
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile --prod=false
+      && mkdir -p apps/web/.next
+      && find apps/web/.next -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+      && NODE_ENV=production pnpm --filter @holocene/org-model build
+      && NODE_ENV=production pnpm --filter @holocene/web build
+      && NODE_ENV=production pnpm --filter @holocene/web start"
+    env_file:
+      - path: ${GOD_SOURCE_ROOT:-..}/holocene/.env.holocene-web
+        required: false
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      HOLOCENE_API_INTERNAL_URL: http://host.docker.internal:4000
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/holocene
+        target: /app
+      - holocene-node-modules:/app/node_modules
+      - holocene-web-node-modules:/app/apps/web/node_modules
+      - holocene-web-next:/app/apps/web/.next
+    expose: ["3001"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+    depends_on:
+      holocene-api-preflight:
+        condition: service_completed_successfully
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.holocene-web.entrypoints: websecure
+      traefik.http.routers.holocene-web.rule: Host(`holocene.delo.sh`)
+      traefik.http.routers.holocene-web.priority: "300"
+      traefik.http.routers.holocene-web.middlewares: google-auth@file
+      traefik.http.services.holocene-web.loadbalancer.server.port: "3001"
+      traefik.http.routers.holocene-web.service: holocene-web
+      traefik.http.routers.holocene-web.tls: "true"
+      traefik.http.routers.holocene-web.tls.certresolver: letsencrypt
+      traefik.http.routers.holocene-hq.rule: Host(`holocene.delo.sh`) && PathPrefix(`/hq`)
+      traefik.http.routers.holocene-hq.priority: "350"
+      traefik.http.routers.holocene-hq.entrypoints: websecure
+      traefik.http.routers.holocene-hq.service: holocene-web
+      traefik.http.routers.holocene-hq.tls: "true"
+      traefik.http.routers.holocene-hq.tls.certresolver: letsencrypt
+      traefik.docker.network: proxy
+    networks:
+      proxy:
+        aliases: [holocene-web]
+    restart: unless-stopped
+
+  pjangler-cli:
+    image: node:22
+    profiles: [tools, full]
+    working_dir: /workspace
+    entrypoint: ["/opt/33god/pjangler-tool-entrypoint.sh"]
+    command: ["--help"]
+    environment:
+      PJANGLER_TOOL_MODE: cli
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/pjangler
+        target: /workspace
+        read_only: true
+      - /workspace/node_modules
+      - ./scripts/pjangler-tool-entrypoint.sh:/opt/33god/pjangler-tool-entrypoint.sh:ro
+    deploy:
+      replicas: 0
+    restart: "no"
+
+  pjangler-mcp:
+    image: node:22
+    profiles: [tools, full]
+    working_dir: /workspace
+    entrypoint: ["/opt/33god/pjangler-tool-entrypoint.sh"]
+    environment:
+      PJANGLER_TOOL_MODE: mcp
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/pjangler
+        target: /workspace
+        read_only: true
+      - /workspace/node_modules
+      - ./scripts/pjangler-tool-entrypoint.sh:/opt/33god/pjangler-tool-entrypoint.sh:ro
+    stdin_open: true
+    tty: false
+    deploy:
+      replicas: 0
+    restart: "no"
+
+  cloud-unsupported:
+    image: alpine:3.20
+    profiles: [cloud]
     command:
       - sh
+      - -eu
       - -c
-      - |
-        echo "33GOD platform scaffold is present."
-        echo "Run on host: python3 scripts/platform.py validate"
+      - echo '33god-platform is not cloud-production-ready; this model requires local bind mounts, host services, and external local networks.' >&2; exit 64
+    network_mode: none
+    restart: "no"
+
+networks:
+  bloodbank-network:
+    external: true
+    name: bloodbank-network
+  candystore-internal:
+    external: true
+    name: candystore-internal
+  proxy:
+    external: true
+    name: proxy
+
+volumes:
+  bloodbank-nats-data:
+    external: true
+    name: bloodbank_bloodbank-nats-data
+  candystore-pgdata:
+    external: true
+    name: candystore_pgdata
+  holocene-node-modules:
+    external: true
+    name: holocene_holocene_node_modules
+  holocene-web-node-modules:
+    external: true
+    name: holocene_holocene_web_node_modules
+  holocene-web-next:
+    external: true
+    name: holocene_holocene_web_next
