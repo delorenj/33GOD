@@ -1,78 +1,103 @@
-# BMAD Documentation Validation Report
+# Integrated Compose Documentation Validation Report
 
 **Validated:** 2026-07-15
-**Workflow:** Initial exhaustive four-part scan
-**Source checkout:** `/home/delorenj/code/33GOD`
-**Documentation checkout:** `/home/delorenj/code/33GOD`
+
+**Implementation HEAD:** `c4f78bb`
+
+**Candidate checkout:** `/home/delorenj/code/33GOD/worktrees/daedalus-syntaxsorcerer`
+
+**Read-only source root:** `/home/delorenj/code/33GOD`
 
 ## Outcome
 
-The root documentation remains complete, internally linked, and free of incomplete-document markers. The eight executable contradictions found by the initial scan have been repaired. The root drift gate now passes 20 checks with no warnings or failures, and the wider platform registry, backfill, component contract, and live Holocene API checks are green.
+The normalized integrated Compose candidate and its documentation/governance
+projection pass the complete read-only verification matrix. `ROOT-COMPOSE-01`
+is resolved by executable render and semantic evidence. This is not a live
+cutover: no lifecycle command ran, component repositories were not changed,
+existing component projects remain untouched, and the host
+`holocene-api.service` remains external.
 
-## BMAD Checklist Review
+Cloud remains blocked. Its successful render proves the unsupported local-bind
+model and rejection gate remain visible; no cloud lifecycle command is
+supported.
 
-| Checklist area | Result | Evidence |
-|---|---|---|
-| Scan level/resumability | Pass | Initial exhaustive mode and precise step state in `project-scan-report.json` |
-| Write-as-you-go/state | Pass | Step outputs and timestamps recorded; final outputs enumerated |
-| Exhaustive batching | Pass | Four complete worker audit packets consolidated as component batches; material claims rechecked live |
-| Detection/classification | Pass | Exact four-part declaration in `project-parts.json` |
-| Technology analysis | Pass | Versioned stack tables in overview and part architectures |
-| Conditional code analysis | Pass | Four API/protocol docs, four data-model docs, Holocene UI inventory |
-| Source tree | Pass | Annotated root and part trees, entrypoints, exclusions, integration paths |
-| Architecture quality | Pass | Four part-specific architecture documents with data/API/deploy/test/risk sections |
-| Development/operations | Pass | Four development guides and one cross-part deployment guide |
-| Multi-part integration | Pass | Integration architecture, metadata, ownership, and cross-part drift records |
-| Index/navigation | Pass | Every generated Markdown/JSON artifact reachable from the master index |
-| Content quality | Pass | No unresolved template substitutions or incomplete-document markers |
-| Brownfield readiness | Pass | Authority order, contracts, risks, change discipline, and AI retrieval guidance are explicit |
-| JSON | Pass | All generated JSON parsed; scan report validated against the supplied schema |
-| YAML | Pass | Root/platform and all four component BMAD core/BMM configs parse with resolved project identities |
-| Markdown links | Pass | All relative file links and referenced anchors resolve |
-| Final review | Pass for documentation | No critical documentation gap remains; implementation contradictions are recorded below |
+## Exact drift result
 
-Deep-dive-only checklist items are not applicable because this was a complete initial scan, not a Step 13 deep dive.
+Command:
 
-## Commands and Results
+```bash
+GOD_SOURCE_ROOT=/home/delorenj/code/33GOD mise run docs:drift
+```
 
-### Root and Platform
+Final summary:
 
-- `python3 33god-platform/scripts/platform.py validate` — passed.
-- `python3 33god-platform/scripts/platform.py components list` — passed; all ten active components resolve to live checkouts.
-- `python3 33god-platform/scripts/platform.py backfills check` — passed; four registered checks returned OK.
-- `docker compose -f 33god-platform/compose.yaml --profile tools config` — passed without starting services.
-- Bloodbank heartbeat Compose model rendering — passed; the repaired profile also passed its live two-envelope smoke test and was removed without deleting volumes or disturbing the core stack.
+```text
+SUMMARY PASS=21 WARN=0 FAIL=0
+```
 
-### Documentation and Configuration
+The 21 passes include all prior root/component parity checks plus:
 
-- `mise run docs:drift` — 20 PASS, 0 WARN, 0 FAIL.
-- Root BMAD YAML — parsed and matched `{project-root}/_bmad-output` and `{project-root}/docs` conventions.
-- Platform YAML manifests — all parsed.
-- Component BMAD configuration — all four core/BMM pairs parsed; Candystore's canonical TOML plus newer core/BMM/CIS/BMB configs resolve `project_name: candystore`.
-- Generated JSON — all parsed.
-- Markdown internal file links and anchors — all resolved.
-- Incomplete-document marker scan — no findings.
+```text
+PASS root-compose: compose semantic validation passed: default, tools, full, cloud
+PASS doc-markers: no forbidden incomplete markers in 27 Markdown files
+PASS doc-links: all Markdown file links resolve
+```
 
-### Focused Component Checks
+## Compose validator and tests
 
-- Bloodbank schema validation — 61 files and 61 schema IDs passed.
-- Bloodbank schema/contract consistency — 59 passed, 0 failed.
-- Bloodbank naming checks — 69/69 passed, including same-kind subject/type mismatch rejection.
-- Bloodbank hook source-of-truth and per-binding envelopes — 25 bindings passed, 0 failed.
-- PJangler Hermes consumer contract tests — seven passed, covering canonical wildcard subscriptions, data-field routing, scaffold parity, and identifier-bearing route rejection.
-- Holocene API typecheck/build — passed; `holocene-api.service` restarted active, loopback health returned 200, and the public route served through its expected auth redirect.
+- `python3 33god-platform/scripts/validate-compose.py --source-root
+  /home/delorenj/code/33GOD` — passed: default, `tools`, `full`, `cloud`.
+- `python3 -m unittest discover -s 33god-platform/tests -p 'test_*.py'
+  -v` — 3 tests passed. Coverage includes the populated live-source render,
+  actionable rejection of legacy/false-readiness services, and rejection of an
+  unpopulated source root.
+- `mise run platform:compose:validate` — passed.
+- `mise run platform:compose:test` — 3 tests passed.
 
-Candystore pytest was not run because its fixtures truncate live database tables. PJangler's mutation-capable full regression suite was not required for a template-only repair; focused Python contract tests and syntax compilation were used. Holocene's existing user changes were preserved; only the API was rebuilt/restarted because the accepted fallback change is API-owned.
+Rendered service sets:
 
-## Resolved Initial Failures
+| Model | Services | Result |
+|---|---:|---|
+| default | 8 | Bloodbank NATS/init/placement; one Candystore triplet; Holocene preflight/web |
+| `tools` | 10 | Default plus run-only PJangler CLI/MCP |
+| `full` | 10 | Same currently governed model as `tools` |
+| `cloud` | 9 | Default plus `cloud-unsupported`; render-only |
 
-1. Candystore BMAD component identity is valid across canonical TOML and core/BMM/CIS/BMB YAML.
-2. Holocene core/BMM identity is resolved.
-3. Platform PJangler resolves to the monorepo checkout.
-4. Platform PJangler health uses npm.
-5. Bloodbank runtime validation enforces semantic subject/type/kind equality.
-6. Bloodbank heartbeat Compose uses a tracked subscriber and passes live smoke verification.
-7. Holocene defaults to the standalone Candystore loopback URL and is deployed live.
-8. PJangler-generated consumers use canonical subjects and filter routing identifiers from envelope data.
+Every JSON render parsed through `jq`. The semantic validator also confirmed
+the exact ports, start dependencies, host API boundary, no PJangler listeners,
+three external networks, five adopted external volumes, source-root mounts, and
+absence of Bloodbank legacy Candystore.
 
-The remaining architecture/security risks are tracked separately in [Drift Governance](./drift-governance.md); they are not normalized into the now-green parity gate.
+## Platform governance
+
+- `python3 33god-platform/scripts/platform.py validate` — `33GOD platform
+  manifest OK` with explicit `GOD_SOURCE_ROOT`.
+- `python3 33god-platform/scripts/platform.py components list` — all ten active
+  component paths present; the four core manifests report profiles
+  `default`, `default`, `default`, and `tools,full`.
+- `python3 33god-platform/scripts/platform.py backfills check` — four checks
+  returned `OK`.
+- Changed structured artifacts parsed successfully: 5 YAML files, 2 root JSON
+  state/metadata files, and 4 platform JSONL logs.
+
+## Repository hygiene
+
+- `git diff --check` — passed.
+- Secret scan of added lines — no credential-like values found. Documentation
+  records key names and secret-source boundaries only.
+- Markdown incomplete-marker and internal-link checks — passed in the drift
+  gate.
+- No `docker compose up`, `down`, `stop`, volume removal, network removal,
+  systemd mutation, or component test with live-data mutation was executed.
+
+## Remaining blockers
+
+Before cutover, the operator still needs backup/restore evidence for NATS and
+Candystore, an approved stop/start window, exact external network/volume
+inventory, durable-consumer cardinality checks, route/health acceptance, and a
+tested rollback to the existing component projects without deleting volumes.
+
+Hosted deployment remains unsupported until local binds, external local
+networks, host systemd authority, listener/auth risks, local credentials,
+single-host storage, tenancy, and backup/restore are replaced by a cloud-owned
+design.

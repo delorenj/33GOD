@@ -2,78 +2,88 @@
 
 ## Ownership
 
-The 33GOD Director owns cross-component contract coherence and release gates. Component teams own internal correctness and current component documentation:
-
 | Area | Owner |
 |---|---|
-| Event names, schemas, subjects, NATS/Dapr topology | Bloodbank team |
-| Persistence, ingest outcome, query API, audit UI | Candystore team |
-| Fleet projections, host controls, dashboard/API deployment | Holocene team |
-| Registry, project projection, parity rules, templates, MCP/CLI | PJangler team |
-| Relationships, deployment contracts, drift register, release gate | 33GOD Director/root platform |
+| Event names, schemas, subjects, NATS/Dapr topology | Bloodbank |
+| Persistence, ingest, query API, audit UI | Candystore |
+| Fleet projections, host controls, dashboard/API deployment | Holocene |
+| Registry, projections, parity, templates, MCP/CLI | PJangler |
+| Normalized Compose projection, relationships, drift register, release gate | 33GOD root platform |
 
-## Authority and Overlap
+Root owns a normalized projection; it does not take ownership of component
+implementation. Live manifests/code/tests outrank prose. Historical plans are
+intent evidence, not current guarantees.
 
-- Root docs govern relationships and deployment contracts.
-- Component docs govern internals.
-- Live manifests, code, and tests outrank prose.
-- Historical plans are evidence of intent, not current guarantees.
-- Conflicts become explicit drift records with owner, evidence, severity, and gate impact.
+## Required gates
 
-## Cadence
+For a component or root change affecting schemas, hooks, public contracts,
+templates, ports, networks, secrets, storage, profiles, or runtime boundaries:
 
-### Component PR Contract Review
+1. Run focused component checks.
+2. Run platform manifest and backfill validation.
+3. Run the candidate semantic validator with an explicit `--source-root`.
+4. Run `GOD_SOURCE_ROOT=<populated-root> mise run docs:drift`; this retains the
+   prior parity checks and invokes the same candidate validator.
+5. Update both the machine change log and pipeline changelog.
+6. Update root integration/deployment documentation and obtain owner review.
 
-Every component PR that affects event schemas/subjects, hook entrypoints/payloads, public HTTP/MCP/CLI contracts, persistence schema, project manifests, templates, ports, networks, secrets, or cross-component runtime behavior must:
+All Compose renders in this gate are read-only. A successful render or semantic
+validation proves candidate structure, not live health or migration completion.
 
-1. Run the component’s focused contract checks.
-2. Run `python3 scripts/check-doc-drift.py` against live source and candidate docs.
-3. Update the platform machine log and human changelog when change-policy triggers apply.
-4. Update root integration/deployment docs or explicitly state why no root contract changes.
-5. Include review from the owning component team and the 33GOD Director.
+## Semantic projection contract
 
-### Weekly Scheduled Audit
+The validator guards:
 
-Run platform validation, component listing, backfill checks, root drift parity, Markdown-link validation, JSON/YAML parsing, and focused component contract tests. The Director triages new failures into component-owned drift records. Warnings must be reviewed; failures cannot be normalized merely because they are old.
+- exact service sets for default, `tools`, `full`, and `cloud`;
+- one and only one Candystore PostgreSQL/app/daprd deployment;
+- no Bloodbank legacy Candystore or Compose-owned Holocene API;
+- fixed dependency/readiness order and host API preflight;
+- exact ports and the absence of PJangler listeners;
+- three exact external networks and five exact external volumes;
+- component-source mounts resolved from the explicit source root;
+- zero-replica, run-only PJangler CLI and stdio MCP behavior; and
+- an explicit unsupported cloud gate while local binds remain.
 
-### Pre-Compose and Release Gate
-
-Before changing compose topology or releasing a coordinated baseline, render every relevant Compose model, validate all platform manifests, confirm network/port/secret boundaries, confirm Candystore deployment mutual exclusion, and require no unaccepted critical drift. Services need not be started to pass the configuration gate.
-
-## Drift Record Format
-
-Each record contains:
-
-- Stable ID and severity.
-- Owning component.
-- Executable evidence path and observed behavior.
-- Expected contract.
-- Impacted consumers.
-- Detection command.
-- Disposition: open, accepted-with-expiry, fixed, or superseded.
-- Required release gate and verification evidence.
-
-## Current Explicit Drift
+## Current explicit drift
 
 | ID | Severity | Owner | Contradiction | Gate impact |
 |---|---:|---|---|---|
 | CANDY-DUR-01 | Critical | Candystore | Dead-letter failure can still receive `DROP` acknowledgement | Blocks “never lose an event” claim |
 | HOLO-SEC-01 | Critical | Holocene | Host-control API binds all interfaces without app auth/authz | Blocks untrusted-network/cloud use |
-| HOLO-SECRET-01 | High | Holocene | Literal clock credential is tracked in documentation/history | Requires rotation and history remediation |
-| PJ-REPRO-01 | Critical | PJangler | Dirty template gitlinks plus `HEAD` resolution are unreproducible | Blocks reproducible provisioning claim |
+| HOLO-SECRET-01 | High | Holocene | Tracked credential history requires rotation/remediation | Blocks treating the integration as safe |
+| PJ-REPRO-01 | Critical | PJangler | Template gitlinks plus moving revision resolution are unreproducible | Blocks reproducible provisioning claim |
 | PJ-SAFE-01 | High | PJangler | Some MCP operations mutate by default; cancellation/result propagation is unreliable | Blocks broad safe-default claim |
-| ROOT-COMPOSE-01 | High | Root | Product Compose is a tools scaffold, not integrated orchestration | Blocks unified-stack claim |
+| ROOT-CLOUD-01 | Critical | Root/platform | Candidate retains local binds, external local networks, host systemd authority, local credentials, and single-host storage | Blocks cloud lifecycle use; render-only profile must remain explicitly unsupported |
 
-## Resolved Drift
+## Resolved drift
 
 | ID | Resolved | Evidence |
 |---|---|---|
-| BB-CONTRACT-01 | 2026-07-15 | `assert_contract` invokes exact subject matching; Bloodbank schema/naming gate passes |
-| BB-RUN-01 | 2026-07-15 | Heartbeat profile renders and passes the live heartbeat smoke test |
-| BB-PJ-01 | 2026-07-15 | PJangler templates use fixed subjects and envelope-data routing; seven focused tests pass |
-| CANDY-HOLO-01 | 2026-07-15 | Holocene fallback is `127.0.0.1:8683`; live API rebuilt, restarted, and healthy |
-| PJ-IDENTITY-01 | 2026-07-15 | Platform registry resolves monorepo PJangler and uses npm; validator passes |
+| ROOT-COMPOSE-01 | 2026-07-15 | `validate-compose.py` renders and semantically validates default, `tools`, `full`, and `cloud`; focused tests include adversarial legacy services and missing-source failure |
+| BB-CONTRACT-01 | 2026-07-15 | Runtime contract invokes exact subject matching; Bloodbank naming gate passes |
+| BB-RUN-01 | 2026-07-15 | Heartbeat profile renders and passed its focused smoke evidence |
+| BB-PJ-01 | 2026-07-15 | PJangler templates use fixed subjects and envelope-data routing |
+| CANDY-HOLO-01 | 2026-07-15 | Holocene fallback uses the standalone Candystore loopback boundary |
+| PJ-IDENTITY-01 | 2026-07-15 | Platform registry resolves monorepo PJangler and uses npm |
 
-## Acceptance Policy
+Resolving `ROOT-COMPOSE-01` means an integrated candidate exists. It does not
+close cutover acceptance or `ROOT-CLOUD-01`.
 
-Warnings describe risk or incomplete evidence without a direct executable contradiction. Failures represent missing required artifacts or a demonstrated mismatch between two authoritative declarations. The drift checker exits nonzero only for failures. An accepted failure requires a named owner, expiry, and release-scope exception; documentation alone does not repair the implementation.
+## Data-safety policy
+
+Before cutover, back up and restore-test adopted NATS/Candystore data, inspect
+the five external volume names, and inventory consumers of all three external
+networks. Bloodbank's legacy Candystore services remain forbidden. Detached
+legacy volumes remain preserved and unmounted.
+
+Never use `docker compose down -v`, remove adopted/legacy volumes, or remove
+shared external networks in a platform migration. Rollback reuses the preserved
+component projects and identities.
+
+## Acceptance policy
+
+Warnings are incomplete evidence without a demonstrated contradiction.
+Failures are missing required artifacts or executable conflicts. An accepted
+failure needs an owner, expiry, and release-scope exception; documentation alone
+does not repair implementation. Cloud-blocked drift cannot be waived into a
+lifecycle command.

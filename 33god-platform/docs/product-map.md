@@ -1,8 +1,10 @@
 # 33GOD Product Map
 
-33GOD is a private, local-first, cloud-ready development environment. The
-current implementation remains split across repos; this control plane turns
-those repos into one product surface.
+33GOD is a private, local-first development environment. Component
+implementations remain split across repos; this control plane provides one
+root-owned, normalized Compose target and one product-governance surface. The
+target is statically validated but has not replaced the existing component
+projects on the host.
 
 | Product card | Component | What subscribers get |
 |---|---|---|
@@ -27,6 +29,13 @@ those repos into one product surface.
 
 ## Local-first rule
 
-The laptop product must work before the hosted product exists. Hosted deployment
-uses the same component graph with stricter auth, tenant/workspace IDs, managed
-storage, and cloud secret stores.
+The laptop product must work before the hosted product exists. The current
+default target covers Bloodbank core, one standalone Candystore, Holocene API
+preflight, and Holocene web. PJangler remains run-only CLI/stdio MCP tooling in
+`tools` and `full`; it has no service port or daemon contract.
+
+`cloud` renders only to expose remaining local binds, external networks, host
+systemd authority, local credentials, and storage assumptions. It is
+unsupported and must never be started with `docker compose up`. Hosted
+deployment requires separate auth, tenancy, managed storage, backup/restore,
+network, and secret-provider design.

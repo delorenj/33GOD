@@ -1,13 +1,14 @@
 # Integrated Compose topology audit
 
-**Status:** Evidence-backed implementation recommendation
+**Status:** Validated implementation target; live cutover pending
 
 **Snapshot:** 2026-07-15 01:22-01:25 EDT
 
 **Scope:** Bloodbank, Candystore, Holocene, and PJangler
 
-**Constraint:** This audit is read-only. It does not change component repositories,
-runtime state, or `33god-platform/compose.yaml`.
+**Constraint:** The evidence capture was read-only. The implemented outcome
+changes only the root-owned platform projection and governance artifacts; it
+does not change component repositories or runtime state.
 
 ## Decision
 
@@ -30,6 +31,51 @@ should be represented as a fake HTTP container.
 Optional Bloodbank catalog and smoke services should remain opt-in profiles.
 The legacy Bloodbank-owned Candystore profile must not be carried into the
 integrated target.
+
+## Implemented outcome
+
+Implementation HEAD `c4f78bb` replaced `platform-ready` with a root-owned,
+normalized projection in `33god-platform/compose.yaml`. Component Compose files
+were not edited or included verbatim. The candidate is validated against an
+explicit populated `GOD_SOURCE_ROOT`, which lets an isolated worktree test the
+projection against the read-only component sources.
+
+The candidate implements:
+
+- default Bloodbank services `bloodbank-nats`, `nats-init`, and
+  `dapr-placement`;
+- exactly one default Candystore deployment named `candystore-postgres`,
+  `candystore`, and `candystore-daprd`;
+- `holocene-api-preflight` against the existing host API followed by
+  `holocene-web`; there is no Compose-owned Holocene API service;
+- zero-replica `pjangler-cli` and `pjangler-mcp` definitions in `tools` and
+  `full`, intended only for explicit `docker compose run`; MCP remains stdio
+  and neither tool has ports, healthchecks, or a restart loop; and
+- a render-only `cloud` profile whose rejection service makes the unsupported
+  local-bind model explicit. It is not a deployment command surface.
+
+The root projection preserves all audited ports, exact external networks
+`bloodbank-network`, `candystore-internal`, and `proxy`, and the five adopted
+external volume identities. Bloodbank's legacy Candystore services are absent;
+its detached legacy PostgreSQL volumes remain outside the projection and must
+remain preserved.
+
+Executable evidence for `ROOT-COMPOSE-01` is the candidate semantic gate:
+
+```bash
+GOD_SOURCE_ROOT=/home/delorenj/code/33GOD \
+  python3 33god-platform/scripts/validate-compose.py \
+  --source-root /home/delorenj/code/33GOD
+GOD_SOURCE_ROOT=/home/delorenj/code/33GOD \
+  python3 -m unittest discover -s 33god-platform/tests -p 'test_*.py' -v
+```
+
+The validator renders default, `tools`, `full`, and `cloud` and rejects service
+cardinality, dependency, port, network, volume, mount, host-boundary, run-only,
+or cloud-blocker drift. This resolves the missing integrated model. It does not
+prove a cutover: no lifecycle command was run, existing component projects and
+the host `holocene-api.service` remain untouched, and the live acceptance list
+below is still required before migration.
 
 ## Non-negotiable topology invariants
 
@@ -362,17 +408,14 @@ Recommended cutover order:
 
 | Target profile | Contents | Notes |
 | --- | --- | --- |
-| No profile | NATS, NATS init, Dapr placement, canonical Candystore PostgreSQL/app/sidecar, Holocene web | Local product baseline. Holocene host API and external `proxy` are preconditions. |
-| `full` | No-profile baseline plus `catalog` and optional observability integrations | Must not imply cloud readiness. |
-| `catalog` | Apicurio and EventCatalog | Blocked until Apicurio host-port routing is resolved. |
-| `observability` | Bloodbank event toaster if ownership is intentionally moved into the platform stack | Leave its current separate project alone during the first cutover. |
-| `smoke` | Dapr publish/subscribe and heartbeat reference services | Never part of normal product startup. Preserve current test port overrides. |
-| `tools` | Validation and, later, an explicitly one-shot PJangler tool image | A tools profile must not create a long-running PJangler HTTP service. Until an image contract exists, use the host binaries. |
-| `cloud` | No implementation recommendation yet | Blocked by local secret store, unauthenticated services, host-systemd Holocene authority, local bind mounts, single-replica storage, and missing backup/restore contract. |
+| No profile | NATS, NATS init, Dapr placement, canonical Candystore PostgreSQL/app/sidecar, Holocene API preflight, Holocene web | Validated local target. Host API, three external networks, and five external volumes are prerequisites. |
+| `tools` | No-profile target plus zero-replica PJangler CLI and stdio MCP definitions | Run-only. No ports, healthcheck, daemon, or `up` contract. |
+| `full` | Current no-profile target plus the same run-only PJangler definitions | Deliberately identical to `tools` until optional services receive explicit governance. |
+| `cloud` | Local target plus an explicit unsupported-model rejection service | Render-only evidence with no supported lifecycle surface; hosted use remains blocked by local binds, external networks, host systemd authority, auth, secrets, storage, and backup gaps. |
 
-Compose profiles are opt-in, so the current platform metadata names
-`default/full/cloud` should be mapped to actual Compose behavior rather than
-left as inert `x-33god-profiles` metadata.
+Catalog, observability, and smoke services remain component-owned and outside
+the implemented projection. Their absence prevents accidental port collisions
+and keeps test/reference services out of the product default.
 
 ## Secrets and environment
 
@@ -476,13 +519,19 @@ names require the old projects to be stopped before the new project starts.
    volume handoff?
 8. Should the first platform implementation pin PJangler 1.2.17 to match the
    installed tool or deploy 1.2.18 to match source?
-9. Is a one-shot PJangler tools container actually valuable given its need for
-   host files, Copier, systemd, provider credentials, and user authority? The
-   default recommendation is to keep it host-native.
+9. **Resolved for the candidate:** PJangler is represented only by narrow,
+   read-only-source, zero-replica CLI and stdio MCP definitions. Operators must
+   invoke them with `docker compose run`; host-native tooling remains valid for
+   workflows requiring host authority or provider access.
 10. Which services, if any, are allowed to retain broad host binds after the
     local migration? This must be answered before a cloud profile exists.
 
-## Concrete implementation recommendation
+## Historical implementation recommendation
+
+The following recommendation was the basis for `c4f78bb`. The implementation
+kept the same topology but placed the normalized projection at the root because
+component repositories were read-only for this slice. A future component-owned
+fragment refactor must preserve the semantic validator's contract.
 
 ### 1. Normalize component-owned fragments
 
@@ -561,9 +610,12 @@ python3 33god-platform/scripts/platform.py validate
 python3 33god-platform/scripts/platform.py components list
 python3 33god-platform/scripts/platform.py backfills check
 docker compose -f 33god-platform/compose.yaml config --quiet
+docker compose -f 33god-platform/compose.yaml --profile tools config --quiet
 docker compose -f 33god-platform/compose.yaml --profile full config --quiet
-docker compose -f 33god-platform/compose.yaml --profile smoke config --quiet
-mise run docs:drift
+docker compose -f 33god-platform/compose.yaml --profile cloud config --quiet
+python3 33god-platform/scripts/validate-compose.py --source-root "$GOD_SOURCE_ROOT"
+python3 -m unittest discover -s 33god-platform/tests -p 'test_*.py' -v
+GOD_SOURCE_ROOT=/home/delorenj/code/33GOD mise run docs:drift
 ```
 
 Cutover acceptance must then prove:
@@ -583,10 +635,11 @@ Cutover acceptance must then prove:
 
 ## Recommendation summary
 
-Proceed with an integrated Compose implementation only after the component
-fragments, backup/restore gate, and volume/network ownership plan exist. The
-safe first product stack is Bloodbank core plus one canonical Candystore plus
-Holocene web, with Holocene API and PJangler declared as host prerequisites.
+Use the implemented projection as a validated migration candidate only. Before
+cutover, complete backup/restore evidence and the volume/network ownership plan.
+The safe first product stack remains Bloodbank core plus one canonical
+Candystore plus Holocene web, with the Holocene API as a host prerequisite and
+PJangler as explicit run-only CLI/stdio MCP tooling.
 
 The two strongest prohibitions are simple:
 

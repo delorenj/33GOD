@@ -1,23 +1,23 @@
 # 33GOD productized development environment PRD
 
-Status: Draft handoff
+Status: Integrated Compose target validated; live cutover pending
 Owner: 33GOD Director
-Last updated: July 10, 2026
+Last updated: July 15, 2026
 
 ## Summary
 
-33GOD is a private, local-first, cloud-ready development environment made from
+33GOD is a private, local-first development environment made from
 multiple active repositories that already behave like one pipeline. The current
 problem is coordination: Bloodbank, Candystore, Holocene, PJangler, Hermes
 Fleet, Skillex, Hindsight, Pipeline MCP Hub, and related tools change
 independently, but their contracts affect one another.
 
-The goal is to productize these pieces into one cohesive platform that a
-developer can run locally with `docker compose up` and eventually deploy as a
-hosted subscription service. The new `33god-platform/` directory is the first
-control-plane slice for that product: it indexes components, records
-cross-component changes, defines backfill checks, and starts the path toward a
-single compose stack.
+The goal is to productize these pieces into one cohesive platform with one
+governed local deployment entrypoint and, later, a separately designed hosted
+subscription service. `33god-platform/` indexes components, records
+cross-component changes, defines backfill checks, and now owns a normalized
+integrated Compose target. That target is statically validated but has not been
+cut over on the host.
 
 ## Situation
 
@@ -62,8 +62,11 @@ boundaries, managed storage, cloud secrets, and subscription packaging.
 
 ## Current control-plane state
 
-`33god-platform/` now exists as the product control-plane directory. It is not
-the full compose stack yet. It is a local-first registry and coordination layer.
+`33god-platform/` is the product control-plane directory and root-owned
+cross-component projection. Implementation HEAD `c4f78bb` replaced the former
+readiness scaffold with a validated local Compose target. Component
+repositories, existing component Compose projects, and the host Holocene API
+remain untouched; this is not a live cutover.
 
 Current artifacts include:
 
@@ -77,23 +80,33 @@ Current artifacts include:
 - `33god-platform/docs/product-map.md`: product card map for the future platform.
 - `33god-platform/docs/backfills.md`: backfill program overview.
 - `33god-platform/skills/33god-hub/`: unified skill entrypoint for agents.
-- `33god-platform/compose.yaml`: thin product-level compose wrapper.
+- `33god-platform/compose.yaml`: normalized local target for Bloodbank core,
+  exactly one Candystore, Holocene API preflight/web, and run-only PJangler
+  tools.
+- `33god-platform/scripts/validate-compose.py`: semantic validator for default,
+  `tools`, `full`, and render-only unsupported `cloud`.
 - Root `mise.toml` tasks:
   - `platform:validate`
   - `platform:components`
   - `platform:backfills:check`
+  - `platform:compose:validate`
+  - `platform:compose:test`
+  - `docs:drift`
 
 Validation state as of this handoff:
 
 - `python3 33god-platform/scripts/platform.py validate`: passes.
 - `python3 33god-platform/scripts/platform.py components list`: passes.
 - `python3 33god-platform/scripts/platform.py backfills check`: passes.
-- `docker compose -f 33god-platform/compose.yaml --profile tools config`:
-  passes.
+- Candidate default, `tools`, `full`, and `cloud` renders pass.
+- Candidate semantic validation and three focused tests pass against the
+  populated source root.
+- The root documentation drift gate invokes the candidate validator with
+  explicit `GOD_SOURCE_ROOT` while preserving all previous parity checks.
 
-The registry drift found during the PRD handoff is repaired. The
-incomplete Flume manifest was removed until its repo path and platform contract
-are real.
+Cloud remains blocked. Its profile exists only to render the unsupported
+local-bind model and rejection gate; it must never be used with `docker compose
+up`. The registry drift found during the original handoff remains repaired.
 
 ## Baseline status
 
@@ -167,20 +180,27 @@ Acceptance criteria:
 
 ### FR3. Unified compose stack
 
-The product must provide a single compose stack with profiles for local,
-full-workstation, and cloud deployment shapes.
+The product must provide a single governed local Compose target while making
+unsupported deployment shapes impossible to mistake for production readiness.
 
 Acceptance criteria:
 
 - `docker compose -f 33god-platform/compose.yaml --profile tools config` stays
   green.
-- The stack evolves from the current thin wrapper into service definitions or
-  includes for Bloodbank, Candystore, Holocene, and required infrastructure.
+- The root owns a normalized projection while components retain internal
+  implementation ownership.
+- The default contains Bloodbank NATS/init/placement, exactly one standalone
+  Candystore PostgreSQL/app/daprd, Holocene API preflight, and Holocene web.
+- The Holocene API remains host systemd; Compose must not publish port 4000.
+- PJangler CLI and stdio MCP are zero-replica, run-only tools with no ports,
+  HTTP health, or daemon lifecycle.
 - Profiles match the control-plane definitions:
-  - `default`: core, audit, control, and skills.
-  - `full`: default plus provisioning, agents, integrations, and optional
-    surfaces.
-  - `cloud`: full deployment shape without local-only assumptions.
+  - `default`: the local core/audit/control target.
+  - `tools` and `full`: default plus run-only PJangler definitions.
+  - `cloud`: render-only unsupported evidence with an explicit rejection gate.
+- The semantic validator enforces ports, start order, three external networks,
+  five adopted external volumes, and the exclusion of Bloodbank legacy
+  Candystore.
 
 ### FR4. Runtime state isolation
 
@@ -296,14 +316,16 @@ Acceptance criteria:
   subscriber-facing landing page.
 - Cloud deployment has explicit auth, tenant, storage, secret, and backup
   requirements.
-- Local-only assumptions are isolated from cloud profiles.
+- Local-only assumptions remain visible in the render-only cloud model until a
+  separate hosted architecture removes them.
 
 ## Non-functional requirements
 
 - **Private source:** The platform is not designed as open source by default.
 - **Local-first:** The laptop deployment must work before cloud deployment.
-- **Cloud-ready:** The component graph must map cleanly to managed cloud
-  storage, network, auth, and secrets.
+- **Cloud-blocked until proven:** No hosted lifecycle command is supported until
+  managed storage, network, auth, secrets, tenancy, and backup/restore replace
+  the local assumptions.
 - **Idempotent operations:** Backfills, validation, setup, and backups must be
   safe to rerun.
 - **Fail-open hooks:** Agent hooks must not break interactive agent sessions.
@@ -331,8 +353,9 @@ These issues are the first things the director must triage.
 
 4. Define the `forever-ago` backup wrapper or enhancement for tiered retention.
 
-5. Convert `33god-platform/compose.yaml` from a thin scaffold into a real stack
-   plan.
+5. **Resolved as a static target 2026-07-15:** the root projection and semantic
+   validator now model the integrated local stack. Live cutover, backup/restore
+   evidence, and runtime acceptance remain open operations work.
 
 6. Reconcile root repo dirt before treating `33GOD` itself as a release branch.
 
@@ -359,12 +382,14 @@ Remove the biggest sources of daily drift.
 
 ### Phase 3. Build the local compose stack
 
-Turn the control plane into a usable local product.
+The normalized candidate and static gates are implemented. Complete the safe
+host cutover before calling the local product live.
 
-- Compose Bloodbank, Candystore, Holocene, and required infrastructure.
-- Mount config and runtime volumes explicitly.
-- Add health gates and smoke-test tasks.
-- Make one command bring up the useful local baseline.
+- Preserve exact adopted volumes and external networks through the handoff.
+- Back up and restore-test NATS and Candystore data before lifecycle work.
+- Stop old component projects without `-v`, start the target in dependency
+  order, and verify exactly one durable Candystore consumer.
+- Preserve detached legacy volumes and prove rollback to prior projects.
 
 ### Phase 4. Add director-grade operations
 
@@ -377,7 +402,8 @@ Make the platform operable by agents and humans.
 
 ### Phase 5. Prepare hosted deployment
 
-Package the same graph for cloud deployment.
+Design a hosted graph that removes the local assumptions; do not promote the
+current render-only cloud profile.
 
 - Define tenant, auth, billing, storage, and backup boundaries.
 - Add deployment profiles and cloud secret handling.
@@ -391,6 +417,8 @@ cross-component contract changes. If a change affects event schemas, hook
 entrypoints, runtime state, project templates, skills, compose, ports, secrets,
 or storage, it belongs in the platform changelog and may require a backfill.
 
-The immediate recommendation is to move to runtime delinking and backup
-strategy, then expand `compose.yaml` into the real local stack. Keep the
-platform registry green before and after each step.
+The immediate recommendation is to complete backup/restore and an approved
+stop/start/rollback plan, then cut over the validated target without deleting
+volumes. Keep the platform registry, semantic validator, and documentation drift
+gate green before and after each step. Cloud remains a separate blocked design
+phase.

@@ -5,7 +5,13 @@ repo: ../pjangler
 description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects and agents.
 compose:
   files: []
-  profiles: [provisioning]
+  platform_projection: ../compose.yaml
+  services: [pjangler-cli, pjangler-mcp]
+  profiles: [tools, full]
+  state: validated-target-not-live-cutover
+  ownership: Root owns the narrow tool projection; PJangler owns CLI and stdio MCP behavior.
+  execution: run-only-zero-replicas
+  listeners: none
 health:
   commands:
     - cd ../pjangler && npm test

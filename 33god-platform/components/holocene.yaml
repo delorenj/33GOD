@@ -6,7 +6,12 @@ description: Live dashboard for fleet, tooling, hook health, and pipeline status
 compose:
   files:
     - ../holocene/compose.yml
-  profiles: [control]
+  platform_projection: ../compose.yaml
+  services: [holocene-api-preflight, holocene-web]
+  profiles: [default]
+  state: validated-target-not-live-cutover
+  ownership: Root owns the normalized web projection and preflight; Holocene owns web behavior and the host API unit.
+  external_prerequisite: holocene-api.service on host port 4000
 health:
   commands:
     - cd ../holocene && pnpm test

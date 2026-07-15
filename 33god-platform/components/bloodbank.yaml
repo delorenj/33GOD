@@ -6,7 +6,12 @@ description: NATS JetStream and Dapr event backbone for all 33GOD inter-service 
 compose:
   files:
     - ../bloodbank/compose/docker-compose.yml
-  profiles: [core]
+  platform_projection: ../compose.yaml
+  services: [bloodbank-nats, nats-init, dapr-placement]
+  profiles: [default]
+  state: validated-target-not-live-cutover
+  ownership: Root owns the normalized projection; Bloodbank owns NATS, stream, and Dapr contracts.
+  excluded: [legacy-candystore-postgres, legacy-candystore-app, legacy-candystore-daprd]
 health:
   commands:
     - cd ../bloodbank && mise run validate:schemas

@@ -1,66 +1,120 @@
 # 33GOD Deployment Guide
 
-## Current Deployment Truth
+## Deployment truth
 
-There is no integrated four-component Docker Compose stack. `33god-platform/compose.yaml` is a read-only tools scaffold that prints validation guidance. Do not present `docker compose up` at the root as a product deployment.
+`33god-platform/compose.yaml` is a validated local target. It has not been cut
+over on the host. Existing Bloodbank, Candystore, and Holocene Compose projects
+and `holocene-api.service` remain untouched. Static validation must not be
+reported as runtime health.
 
-## Runtime Topology
+The target's default set is Bloodbank NATS/init/placement, exactly one
+standalone Candystore PostgreSQL/app/daprd, Holocene API preflight, and Holocene
+web. PJangler CLI and stdio MCP are zero-replica run-only tools in `tools` and
+`full`. Cloud is render-only, unsupported, and has no lifecycle command
+surface.
 
-| Part | Current runtime | External dependencies | Material caveat |
-|---|---|---|---|
-| Bloodbank | Component Compose with default and optional profiles | Docker, external ports, local volumes | Heartbeat profile references a missing build context; NATS is unauthenticated |
-| Candystore | Standalone Compose | Existing `bloodbank-network` and `proxy`; Bloodbank NATS/placement | Never run with Bloodbank’s legacy Candystore profile |
-| Holocene | Web in Compose; API in external user systemd | Host systemd, Hermes registry, Redis, bgls, Traefik, Candystore | API is not application-authenticated and binds `0.0.0.0:4000` |
-| PJangler | Host CLI and stdio MCP | Node/npm, Copier, optional external providers/systemd | No container boundary; templates execute trusted host code |
+## Read-only validation
 
-## Safe Preflight
-
-From the repository root:
+From the candidate checkout:
 
 ```bash
-python3 33god-platform/scripts/platform.py validate
-python3 33god-platform/scripts/platform.py components list
-python3 33god-platform/scripts/platform.py backfills check
-docker compose -f 33god-platform/compose.yaml --profile tools config
-python3 scripts/check-doc-drift.py --source-root . --docs-root .
+export GOD_SOURCE_ROOT=/home/delorenj/code/33GOD
+mise run platform:validate
+mise run platform:components
+mise run platform:backfills:check
+mise run platform:compose:validate
+mise run platform:compose:test
+mise run docs:drift
 ```
 
-The drift check may report known live contradictions. A nonzero result means a missing required artifact or evidence-backed contract conflict, not that the checker itself failed.
+The render tasks for default, `tools`, `full`, and `cloud` are also read-only.
+None of these commands starts a service.
 
-## Bloodbank
+## Prerequisites
 
-Use Bloodbank’s component Compose and documented profiles. Default services establish NATS, stream initialization, Dapr placement, Apicurio, and EventCatalog. `mise run up` is narrower than the Compose default and starts only NATS plus stream initialization; read the component guide before selecting a command. Avoid the broken heartbeat profile until its missing recorder context is restored or removed.
+Before approving a cutover:
 
-Before relying on event durability, distinguish a successful core NATS `PUB`/PING from a JetStream publish acknowledgement. The current hook publisher proves connectivity, not persisted stream acknowledgement.
+1. Record current component project/container state and owners.
+2. Back up and restore-test the adopted NATS and Candystore data volumes.
+3. Confirm external networks and every attached adjacent consumer.
+4. Inspect the candidate render for the exact five adopted volume names.
+5. Confirm `holocene-api.service` is active and its `/health` endpoint succeeds.
+6. Confirm the host API's `CANDYSTORE_API_URL` uses the approved loopback
+   Candystore boundary.
+7. Confirm the existing NATS streams and exactly one `candystore-events` durable
+   consumer before the handoff.
+8. Reconcile PJangler source/install parity if the run-only definitions will be
+   used.
+9. Approve an operator-specific stop/start window; fixed container names make
+   parallel old/new operation unsafe.
 
-## Candystore
+## Ports
 
-Bring up Bloodbank’s NATS/placement dependencies and required external Docker networks first. Then use `candystore/compose.yml`. The app exposes loopback `8683`, PostgreSQL loopback `5434`, and Dapr loopback `3504` by default. The app migrates the database at startup.
+| Published/bound endpoint | Owner | Rule |
+|---|---|---|
+| `4222/tcp` | Bloodbank NATS client | Preserve current broad bind for first cutover |
+| `8222/tcp` | Bloodbank NATS monitor | Preserve; do not route publicly |
+| `50005/tcp` | Dapr placement | Preserve for sidecars |
+| `127.0.0.1:5434 -> 5432` | Candystore PostgreSQL | Preserve loopback bind |
+| `127.0.0.1:8683 -> 3001` | Candystore API/UI | Preserve for host API reads |
+| `127.0.0.1:3504 -> 3500` | Candystore daprd HTTP | Preserve for operator checks |
+| container `3001` only | Holocene web | Reach through `proxy`/Traefik; no host publish |
+| host `4000` | Holocene API systemd unit | Never publish or claim from Compose |
+| none | PJangler CLI/MCP | MCP is stdio; no listener or health endpoint |
 
-Never enable Bloodbank’s `candystore` profile at the same time. Both deployments share durable `candystore-events` and queue `candystore`, which distributes messages across two databases.
+## Networks and volumes
 
-Backups, point-in-time recovery, retention, and operator replay are not implemented. Treat the single PostgreSQL volume as a development durability boundary, not an enterprise audit archive.
+All three networks are external: `bloodbank-network`,
+`candystore-internal`, and `proxy`.
 
-## Holocene
+All five adopted volumes are external and must resolve exactly:
 
-The web container and API service deploy separately. Build/typecheck the API, restart the external user service, and verify `127.0.0.1:4000/health`. Rebuild/recreate the web container separately. Configure `CANDYSTORE_API_URL=http://127.0.0.1:8683` for the host API unless the topology is deliberately changed.
+| Compose key | Existing volume identity |
+|---|---|
+| `bloodbank-nats-data` | `bloodbank_bloodbank-nats-data` |
+| `candystore-pgdata` | `candystore_pgdata` |
+| `holocene-node-modules` | `holocene_holocene_node_modules` |
+| `holocene-web-node-modules` | `holocene_holocene_web_node_modules` |
+| `holocene-web-next` | `holocene_holocene_web_next` |
 
-Do not expose port 4000 beyond a trusted host boundary until application authentication/authorization exists. Traefik protection of browser routes does not protect direct listeners. Rotate and purge the tracked clock credential before treating the clock integration as safe.
+`bloodbank_bloodbank-postgres-data`, `bloodbank_data`, and any other legacy
+volumes are not target inputs. Keep them detached and preserved until a separate
+data-disposition review.
 
-## PJangler
+## Configuration keys and sources
 
-PJangler runs as the host user. CLI, MCP, Copier `--trust`, recipes, user systemd operations, and external provider wiring are privileged actions. Use dry-run modes where available and inspect template sources. Current vendored template gitlinks are dirty and Hermes uses `HEAD`, so provisioning is not reproducible from the parent PJangler commit alone.
+Document names and sources only; never record secret values.
 
-## Release Gate
+| Boundary | Keys | Source/owner |
+|---|---|---|
+| Bloodbank ports | `BLOODBANK_NATS_CLIENT_PORT`, `BLOODBANK_NATS_MONITOR_PORT`, `BLOODBANK_DAPR_PLACEMENT_PORT` | Operator environment/platform defaults |
+| Candystore ports | `CANDYSTORE_POSTGRES_PORT`, `CANDYSTORE_PORT`, `CANDYSTORE_DAPR_HTTP_PORT` | Operator environment/platform defaults |
+| Candystore database | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `DATABASE_URL` | Candidate has local-development settings; move secrets to ignored env/secret provider before hosted use |
+| Holocene web/API | `HOLOCENE_API_INTERNAL_URL`, `CANDYSTORE_API_URL`, Telegram/HQ keys | Component ignored env, 1Password-reference workflow, and host user unit |
+| PJangler | `PJ_PROJECT_REGISTRY`, `PJ_SOURCE_SKILL_ROOTS`, `PJ_REGISTRY_PG`, `PJ_AGENT_HOOKS_LAYER`, `PJANGLER_*` overrides | Host user configuration; do not forward the complete host environment |
 
-Before a compose-affecting or cross-component release:
+## Dependency order and health
 
-1. Run component contract/config tests.
-2. Run root platform validation and backfill checks.
-3. Run the root drift checker with live sources and candidate docs.
-4. Render Compose configuration without starting services.
-5. Confirm mutual-exclusion rules and external networks.
-6. Record known failures in `docs/drift-governance.md` and the platform change logs.
-7. Obtain component-owner review for every changed contract.
+1. NATS becomes healthy.
+2. NATS initialization completes; placement is started and externally ready.
+3. Candystore PostgreSQL becomes healthy.
+4. Candystore `/readyz` succeeds.
+5. Exactly one Candystore daprd starts and becomes healthy.
+6. The host Holocene API reads Candystore and passes `/health`.
+7. The preflight completes, then Holocene web becomes internally healthy and
+   Traefik routes retain expected auth behavior.
+8. PJangler remains outside service startup; validate/run it separately.
 
-Starting services is intentionally outside this documentation workflow.
+## Cutover and rollback safety
+
+Cutover must be an approved stop/start handoff from component-owned projects to
+the target. Stop old containers without deleting volumes, verify the rendered
+identities again, start in dependency order, and block producers until stream
+state and one-consumer cardinality are verified.
+
+Rollback means stopping the target without deleting volumes and restarting the
+previous component projects against the preserved volume/network identities.
+Never use `docker compose down -v`. Never remove adopted volumes, detached
+legacy volumes, or shared external networks as part of cutover or rollback.
+
+No lifecycle command was run while producing or validating this guide.

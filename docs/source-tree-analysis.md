@@ -1,86 +1,67 @@
 # 33GOD Source Tree Analysis
 
-**Date:** 2026-07-13
+**Date:** 2026-07-15
 
 ## Overview
 
-The root checkout is a coordination workspace containing independently versioned component repositories. This analysis intentionally documents exactly four product parts and the root coordination layer. Other sibling projects may appear in platform manifests, but are outside this scan boundary.
-
-## Annotated Structure
+The root is a coordination workspace for four independently versioned component
+repositories. Root files own cross-component governance and a normalized
+deployment projection. The component repositories remain the implementation
+sources and are not generated from the root projection.
 
 ```text
 33GOD/
-├── _bmad/                         # Root BMAD configuration for this knowledge base
-├── _bmad-output/                  # Root planning/implementation artifact target
-├── docs/                          # Root cross-component knowledge and scan state
+├── _bmad/                              # Root BMAD configuration
+├── docs/                               # Cross-component knowledge and validation record
 ├── scripts/
-│   └── check-doc-drift.py         # Read-only contract/document parity check
-├── 33god-platform/                # Component registry, change policy, backfills, compose scaffold
-│   ├── components.yaml            # Platform inventory; broader than this four-part scan
-│   ├── components/*.yaml          # Per-component repo/health/source declarations
-│   ├── changes/*.jsonl            # Machine-readable cross-component changes
-│   ├── backfills/*.yaml           # Read-only drift definitions
-│   ├── scripts/platform.py        # Registry validation/list/backfill CLI
-│   └── compose.yaml               # Tools-only validation scaffold
-├── bloodbank/                     # Part: Bloodbank
-│   ├── schemas/                   # Canonical JSON Schema contracts
-│   ├── docs/event-naming.md        # Locked type/subject naming contract
-│   ├── compose/                   # NATS, Dapr, registry, catalog, reference services
-│   ├── services/agent-hooks/      # Canonical hook envelope builder and publisher
-│   ├── services/lifecycle-controller/ # Tested but undeployed lifecycle worker
-│   ├── cli/bb.py                  # Operator CLI
-│   └── ops/                       # Smoke, trace, replay, health workflows
-├── candystore/                    # Part: Candystore
-│   ├── candystore/                # HTTP, ingestion, persistence, queries, summaries
-│   ├── migrations/               # PostgreSQL event/dead-letter schema
-│   ├── dapr-components/           # JetStream subscription definition
-│   ├── web/                       # React/Vite source
-│   ├── static/                    # Prebuilt UI copied into image
-│   ├── tests/                     # Python and migration checks
-│   └── compose.yml                # Canonical standalone audit deployment
-├── holocene/                      # Part: Holocene
-│   ├── apps/api/                  # Fastify host-control and projection API
-│   ├── apps/web/                  # Next.js mission-control UI and HQ routes
-│   ├── packages/                  # Org model and mostly dormant module abstractions
-│   ├── docs/                      # Current design/spec and historical plan material
-│   └── compose.yml                # Web-only production container
-└── pjangler/                      # Part: PJangler
-    ├── src/index.ts               # Commander CLI
-    ├── src/mcp-server.ts          # stdio MCP server
-    ├── src/project/               # Registry/projection/bootstrap planning
-    ├── src/parity/                # Audit and migration rules
-    ├── src/recipes/               # Mise, Docker, Node, Hermes, hook recipes
-    ├── templates/commonproject/   # CommonProject Copier template gitlink
-    ├── templates/hermes-agent/    # Hermes agent template gitlink
-    └── tests/                     # Filesystem-mutating Node regression scripts
+│   └── check-doc-drift.py              # Parity gate plus candidate validator invocation
+├── 33god-platform/
+│   ├── components.yaml                 # Product/profile/projection policy
+│   ├── components/{bloodbank,candystore,holocene,pjangler}.yaml
+│   │                                   # Component ownership and projection declarations
+│   ├── compose.yaml                    # Root-owned normalized candidate
+│   ├── scripts/validate-compose.py     # Four-model semantic validator
+│   ├── scripts/pjangler-tool-entrypoint.sh
+│   │                                   # Run-only CLI/MCP selector
+│   ├── tests/                          # Positive and adversarial validator tests
+│   ├── changes/*.jsonl                 # Machine-readable platform changes
+│   └── docs/integrated-compose-topology-audit.md
+│                                       # Evidence, decision, implemented outcome
+├── bloodbank/                          # Event contracts, NATS/Dapr source
+├── candystore/                         # PostgreSQL event history, app/UI, Dapr component
+├── holocene/                           # Next.js web and host Fastify API source
+└── pjangler/                           # Node CLI, stdio MCP, registry/templates
 ```
 
-## Entry Points
+## Projection boundaries
 
-| Part | Runtime or operator entrypoint | Bootstrap behavior |
+| Root artifact | Reads from component source | Does not own |
 |---|---|---|
-| Bloodbank | `services/agent-hooks/publish.py`, `cli/bb.py`, component Compose | NATS stream initialization plus optional profile services |
-| Candystore | `python -m candystore.main` | Applies all SQL migrations, then binds HTTP; Dapr discovers subscriptions |
-| Holocene | `apps/api/dist/server.js`, Next.js `next start` | API runs through external user systemd; web runs in Compose |
-| PJangler | `dist/index.js`, `dist/mcp-server.js` | Host-user CLI/MCP; recipes and templates may mutate repos and user profile |
+| `compose.yaml` | Bloodbank stream init, Candystore build/Dapr components, Holocene source/env, PJangler dist/source | Component implementation or runtime state |
+| `validate-compose.py` | Required paths beneath explicit `--source-root` | Component correctness beyond the projected contract |
+| `check-doc-drift.py` | Component BMAD/config/contracts and root candidate validator | Lifecycle state or destructive remediation |
+| Component manifests | Native Compose/source paths and root projection metadata | Component-local release decisions |
 
-## File Organization Patterns
+`GOD_SOURCE_ROOT` separates the candidate checkout from the populated source
+checkout. It defaults to `.` in root mise tasks and to `..` inside Compose, but
+must be set explicitly when this worktree validates against
+`/home/delorenj/code/33GOD`.
 
-- Bloodbank is contract-first: schemas and naming rules sit beside multiple reference/runtime implementations.
-- Candystore is a compact vertical slice: HTTP routing, ingestion, database, queries, summaries, and a separately built UI.
-- Holocene is a pnpm workspace; live behavior resides mainly in `apps/*`, while several packages model a future modular event architecture.
-- PJangler is host automation: typed plans, parity rules, recipes, and executable Copier templates.
+## Runtime entrypoints
 
-## Configuration Boundaries
+| Part | Entrypoint | Candidate behavior |
+|---|---|---|
+| Bloodbank | NATS image plus tracked `compose/nats/init.sh` | Default service/one-shot/placement trio |
+| Candystore | `python -m candystore.main` plus daprd | Default standalone triplet; app migrates on startup |
+| Holocene | Next.js `start`; API `apps/api/dist/server.js` | Web in candidate, API in existing user systemd |
+| PJangler | `dist/index.js`, `dist/mcp-server.js` | Explicit `run` only; read-only source mount, ephemeral dependencies |
 
-- Root `_bmad` files use `{project-root}` tokens and must not inherit malformed component substitutions.
-- `33god-platform/components.yaml` is the broader product registry; `docs/project-parts.json` is the exact scan declaration.
-- Component `.env`, systemd, user registries, runtime directories, and external Docker networks are operational dependencies, not source-controlled root configuration.
+## Configuration boundaries
 
-## Exclusions
-
-The exhaustive evidence packets excluded Git metadata, dependency/vendor trees, build output, caches, runtime databases, generated framework packages, and large generated frontend artifacts unless needed to establish deployment behavior. Those exclusions prevent generated state from being mistaken for maintained architecture.
-
----
-
-_Generated using the BMAD Method `document-project` workflow._
+- Root `_bmad` files use root-relative tokens.
+- Component env files, 1Password references, host systemd configuration,
+  registries, and provider credentials remain outside root ownership.
+- Three networks and five adopted volumes are declared external so Compose
+  cannot silently create replacement identities.
+- Detached Bloodbank legacy PostgreSQL volumes are intentionally absent from
+  the candidate and must not be removed during migration.

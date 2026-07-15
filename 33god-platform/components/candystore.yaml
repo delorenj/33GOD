@@ -6,7 +6,12 @@ description: Durable Bloodbank event history, query API, summaries, and UI.
 compose:
   files:
     - ../candystore/compose.yml
-  profiles: [audit]
+  platform_projection: ../compose.yaml
+  services: [candystore-postgres, candystore, candystore-daprd]
+  profiles: [default]
+  state: validated-target-not-live-cutover
+  ownership: Root owns the normalized projection; Candystore owns its image, migrations, API, and durable Dapr component.
+  cardinality: exactly-one-postgres-app-daprd
 health:
   commands:
     - cd ../candystore && mise run test

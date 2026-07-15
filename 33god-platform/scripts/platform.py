@@ -19,6 +19,8 @@ except ImportError as exc:  # pragma: no cover - environment guard
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = Path(os.environ.get("GOD_SOURCE_ROOT", ROOT.parent)).expanduser().resolve()
+SOURCE_PLATFORM_ROOT = SOURCE_ROOT / "33god-platform"
 MAX_SCAN_FILE_BYTES = 1_000_000
 
 
@@ -34,6 +36,8 @@ def resolve_path(value: str | Path, base: Path = ROOT) -> Path:
     raw = os.path.expandvars(os.path.expanduser(str(value)))
     path = Path(raw)
     if not path.is_absolute():
+        if str(path).startswith(".."):
+            base = SOURCE_PLATFORM_ROOT
         path = base / path
     return path.resolve()
 

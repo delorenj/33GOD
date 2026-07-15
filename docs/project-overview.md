@@ -1,78 +1,86 @@
 # 33GOD Project Overview
 
-**Date:** 2026-07-13
+**Date:** 2026-07-15
+
 **Type:** Four-part monorepo knowledge boundary
-**Architecture:** Event-driven pipeline with local control-plane and read-side integrations
 
-## Executive Summary
+**Deployment maturity:** Validated integrated local target; live cutover pending
 
-33GOD is a private, local-first agentic development environment. The documented product boundary contains four active repositories: Bloodbank, Candystore, Holocene, and PJangler. They form a pipeline, but they are not one deployable stack today. Bloodbank is contract-complete and runtime-partial; Candystore is a compact durable event-history service; Holocene is an operational single-user dashboard with host-control powers; PJangler is a local provisioning and parity control plane.
+## Executive summary
 
-The central design is asynchronous CloudEvents over NATS JetStream. Current implementation also has intentional or transitional exceptions: Holocene reads Candystore over HTTP, hook health reaches Holocene through Redis, and PJangler exchanges local registry and runtime projections. These exceptions must be documented rather than hidden behind an “all traffic uses Bloodbank” claim.
+33GOD is a private, local-first agentic development environment made from four
+independently owned components: Bloodbank, Candystore, Holocene, and PJangler.
+They exchange CloudEvents over NATS/Dapr, persist an audit read model, expose a
+local mission-control UI/API, and provision projects and agents.
 
-## Project Classification
+Implementation HEAD `c4f78bb` turns the former root readiness scaffold into a
+normalized Compose target. The root owns this projection and its semantic
+validator; component sources remain authoritative and were not modified. The
+candidate has been rendered and validated, but existing component Compose
+projects and the host Holocene API have not been replaced.
 
-- **Repository type:** Multi-part monorepo workspace
-- **In-scope parts:** Bloodbank, Candystore, Holocene, PJangler
-- **Primary languages:** Python, TypeScript, SQL, JSON Schema, YAML, Shell
-- **Operating model:** Independently versioned components coordinated by `33god-platform/`
-- **Deployment maturity:** Local development topology; product Compose remains a validation scaffold
+## Component and runtime model
 
-## Multi-Part Structure
+| Part | Purpose | Candidate boundary |
+|---|---|---|
+| Bloodbank | Event names, schemas, NATS streams, Dapr transport | Default NATS JetStream, one-shot stream init, Dapr placement |
+| Candystore | Durable event history, query/session APIs, audit UI | Exactly one default PostgreSQL/app/daprd deployment |
+| Holocene | Fleet observation and privileged host control | Default web plus preflight; API remains `holocene-api.service` on host port 4000 |
+| PJangler | Registry, parity, recipes, templates, CLI/MCP | Zero-replica CLI and stdio MCP definitions for explicit `run` in `tools`/`full` |
 
-| Part | Classification | Purpose | Core stack |
-|---|---|---|---|
-| Bloodbank | Backend/infrastructure | Own event names, schemas, NATS streams, Dapr pub/sub, hook publication | Python, JSON Schema, NATS 2.10, Dapr 1.13 |
-| Candystore | Web/backend | Persist events, expose query/session/summary APIs, serve audit UI | Python 3.11, PostgreSQL 16, React 19, Dapr 1.13 |
-| Holocene | Web/control plane | Observe and mutate Hermes fleet, host services, containers, hooks, and clock workflows | TypeScript, Fastify 5, Next.js 15, pnpm/Turbo |
-| PJangler | CLI/provisioning | Maintain project registry/projections, parity rules, recipes, templates, and MCP automation | TypeScript, Node 20+, Commander, MCP SDK, Copier |
+The target preserves the existing port contract, three external Docker
+networks, and five adopted volume identities. It excludes Bloodbank's legacy
+Candystore profile, so the canonical `candystore-events` durable consumer cannot
+be duplicated by the projection.
 
-## Architecture Highlights
+## Profile truth
 
-- Bloodbank-local JSON Schemas and the locked event-naming document are canonical for event identity.
-- Candystore is the durable read model, but enforces a weaker envelope contract than Bloodbank and has no operator replay feature.
-- Holocene’s live Bloodbank client package is a stub; the running API combines host state, Redis projections, and Candystore HTTP reads.
-- PJangler’s central registry is the project catalog/bootstrap authority; `.project.json` is the repository-local runtime projection.
-- Root documentation governs interfaces and deployment relationships. Component docs govern internals.
-- The precedence rule is live manifests/code/tests, then current docs, then historical planning artifacts.
+- No profile: the local Bloodbank/Candystore/Holocene-web target.
+- `tools`: default plus run-only PJangler CLI and MCP definitions.
+- `full`: currently the same governed model as `tools`.
+- `cloud`: a render-only unsupported local-bind model with an explicit rejection
+  service. It is not a hosted deployment profile and must never be started.
 
-## Current Guarantees
+## Architecture highlights
 
-The following are demonstrated by live source or focused verification:
+- Bloodbank-local schemas and naming rules own event identity.
+- Candystore is the durable read model; Holocene reads it over the host API's
+  loopback boundary.
+- Holocene web and API remain separate trust zones. Compose preflights the host
+  API but does not claim or containerize its system authority.
+- PJangler is operational tooling, not an HTTP service. MCP uses stdio.
+- Direct Redis/host integrations remain documented exceptions to the event
+  backbone.
+- Root docs and validator govern relationships; component docs govern internals.
 
-- Bloodbank contains 61 valid JSON Schema documents and a locked five-token type/six-token subject convention.
-- Candystore deduplicates by event UUID, persists accepted events in PostgreSQL, and exposes event/session/aggregate reads.
-- Holocene has live web and API entrypoints, but no substantive application test suite.
-- PJangler typechecking and built CLI loading succeed; its package version is 1.2.18.
-- `33god-platform/compose.yaml` validates as a Compose model but starts only a `platform-ready` tools scaffold.
+## Demonstrated guarantees
 
-## Known Contract Drift
+- Default, `tools`, `full`, and `cloud` render as Compose JSON.
+- The semantic validator enforces exact service sets, one Candystore triplet,
+  start dependencies, fixed ports, host boundaries, source mounts, three
+  external networks, and five external volumes.
+- Focused tests prove a known-invalid legacy model is rejected and a missing
+  source root fails clearly.
+- The documentation drift gate executes that validator against the caller's
+  explicit source root while retaining the previous parity checks.
 
-High-risk live contradictions include:
+These are static guarantees. Runtime health, volume contents, durable-consumer
+cardinality, route behavior, and rollback readiness still require the cutover
+acceptance procedure.
 
-- Bloodbank’s runtime validator does not enforce semantic equality between CloudEvents `type` and NATS `subject`.
-- Bloodbank’s heartbeat Compose/CI references a missing service directory.
-- Candystore acknowledges poison input even if dead-letter persistence fails.
-- Holocene defaults to the wrong Candystore URL and silently converts failure into empty history.
-- Holocene’s host-control API binds all interfaces without application authentication.
-- PJangler generates Bloodbank subscriptions that violate the canonical six-token routing rule.
-- The platform registry resolves PJangler to `/home/delorenj/code/pjangler`, not the in-scope repository.
-- PJangler package and lockfile versions disagree, and vendored template state is not reproducible from the parent commit.
+## Open product risks
 
-See [Drift Governance](./drift-governance.md) for ownership and gates.
+Cloud use remains blocked by local bind mounts, external local networks,
+host-systemd authority, unauthenticated/broad listeners, local-development
+credentials, single-host storage, and missing backup/restore acceptance.
+Candystore poison-message durability, Holocene API authorization, and PJangler
+reproducibility/safe-default risks remain tracked in
+[Drift Governance](./drift-governance.md).
 
-## Development Overview
-
-Each component retains its package manager and runtime. Do not run root `mise` shell-entry hooks merely to inspect the repository: they may link agent files, inject secrets, or sync codegraph state. Prefer the explicit commands in the four [development guides](./index.md#part-documentation).
-
-## Documentation Map
+## Documentation map
 
 - [Documentation Index](./index.md)
-- [Source Tree Analysis](./source-tree-analysis.md)
 - [Integration Architecture](./integration-architecture.md)
 - [Deployment Guide](./deployment-guide.md)
 - [Drift Governance](./drift-governance.md)
-
----
-
-_Generated using the BMAD Method `document-project` workflow._
+- [Validation Report](./validation-report.md)

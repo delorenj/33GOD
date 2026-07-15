@@ -51,7 +51,7 @@ run = "python3 -m unittest discover -s 33god-platform/tests -p 'test_*.py' -v"
 
 [tasks."docs:drift"]
 description = "Read-only parity check for four-part BMAD docs and live contracts"
-run = "python3 scripts/check-doc-drift.py --source-root . --docs-root ."
+run = "python3 scripts/check-doc-drift.py --source-root \"${GOD_SOURCE_ROOT:-.}\" --docs-root ."
 
 [[watch_files]]
 patterns = ["AGENTS.md"]

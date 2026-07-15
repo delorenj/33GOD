@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -249,6 +250,31 @@ def check_high_risk_contracts(source: Path, report: Reporter) -> None:
         report.passed("pjangler-bloodbank-routing", "generated subjects follow fixed six-token routing")
 
 
+def check_compose_candidate(source: Path, docs_checkout: Path, report: Reporter) -> None:
+    validator = docs_checkout / "33god-platform/scripts/validate-compose.py"
+    compose = docs_checkout / "33god-platform/compose.yaml"
+    if not validator.is_file() or not compose.is_file():
+        report.fail("root-compose", "candidate Compose validator or model is missing")
+        return
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(validator),
+            "--compose-file",
+            str(compose),
+            "--source-root",
+            str(source),
+        ],
+        text=True,
+        capture_output=True,
+    )
+    detail = (result.stdout or result.stderr).strip().replace("\n", "; ")
+    if result.returncode:
+        report.fail("root-compose", detail or f"candidate validator exited {result.returncode}")
+    else:
+        report.passed("root-compose", detail)
+
+
 def check_docs(docs: Path, report: Reporter) -> None:
     markdown = sorted(docs.glob("*.md"))
     marker_hits = []
@@ -294,6 +320,7 @@ def main() -> int:
     check_component_bmad(source, docs, report)
     check_platform_manifest(source, report)
     check_high_risk_contracts(source, report)
+    check_compose_candidate(source, docs_checkout, report)
     check_docs(docs, report)
     print(f"SUMMARY PASS={report.passes} WARN={report.warnings} FAIL={report.failures}")
     return 1 if report.failures else 0
