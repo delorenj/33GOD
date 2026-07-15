@@ -1,6 +1,7 @@
 ---
 name: hindsight
 description: Persistent agent memory via self-hosted Hindsight. Retain knowledge, recall context, reflect on patterns. Includes multi-bank routing architecture for agent orgs.
+pipeline-status: new
 ---
 
 # Hindsight Memory (Self-Hosted)

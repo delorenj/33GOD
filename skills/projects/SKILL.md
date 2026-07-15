@@ -2,6 +2,7 @@
 name: 33god-projects
 description: |
   Create, wire, and maintain 33god/DeLoNET projects. Covers pjangler/CommonProject bootstrap, repo-local `.project.json`, Hermes PM and scrum-master/Ticket Sentinel provisioning requests, mise/.env.op, BMAD, Hindsight/Bloodbank hook wiring, and project-scoped hook + skill fan-out adoption. Use when running `pjangler init`, `pjangler hermes-agent`, or `mise run init-project`; adding PM/sentinel agents; wiring mise/op inject; installing BMAD; configuring hooks; or adopting `.agents/local.json`, `defer_to_global`, and `hooks.master.json`. Do NOT use for developing pjangler (project-jangler), generic fan-out mechanics (agent-config-fanout), fleet updates/backfills (agent-fleet-operations), live Plane issues, Bloodbank schemas, or host conventions.
+pipeline-status: new
 ---
 
 # 33god Project Creation & Wiring

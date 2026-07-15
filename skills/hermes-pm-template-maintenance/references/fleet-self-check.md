@@ -1,6 +1,5 @@
 ---
-pipeline-status:
-  - deprecated
+pipeline-status: new
 ---
 # Fleet self-check workflow moved
 
