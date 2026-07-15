@@ -80,19 +80,15 @@ configuration/render inspection model.
 | CANDY-HOLO-01 | 2026-07-15 | Holocene fallback uses the standalone Candystore loopback boundary |
 | PJ-IDENTITY-01 | 2026-07-15 | Platform registry resolves monorepo PJangler and uses npm |
 
-Resolving `ROOT-COMPOSE-01` means an integrated candidate exists. It does not
-close cutover acceptance or `ROOT-CLOUD-01`.
+Resolving `ROOT-COMPOSE-01` means an integrated local stack exists.
+`ROOT-CLOUD-01` remains a separate hosted-design concern.
 
-## Data-safety policy
+## Runtime ownership policy
 
-Before cutover, back up and restore-test adopted NATS/Candystore data, inspect
-the five external volume names, and inventory consumers of all three external
-networks. Bloodbank's legacy Candystore services remain forbidden. Detached
-legacy volumes remain preserved and unmounted.
-
-Never use `docker compose down -v`, remove adopted/legacy volumes, or remove
-shared external networks in a platform migration. Rollback reuses the preserved
-component projects and identities.
+The root Compose project is the sole owner of Bloodbank, Candystore, and
+Holocene web lifecycle. Bloodbank's legacy Candystore services remain forbidden.
+The five adopted volumes and three external networks retain their existing
+identities across root-stack restarts.
 
 ## Acceptance policy
 

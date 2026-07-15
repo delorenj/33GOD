@@ -363,9 +363,8 @@ These issues are the first things the director must triage.
 
 4. Define the `forever-ago` backup wrapper or enhancement for tiered retention.
 
-5. **Resolved as a static target 2026-07-15:** the root projection and semantic
-   validator now model the integrated local stack. Live cutover, backup/restore
-   evidence, and runtime acceptance remain open operations work.
+5. **Resolved 2026-07-15:** the root projection and semantic validator model the
+   integrated local stack; root Compose owns its lifecycle.
 
 6. Reconcile root repo dirt before treating `33GOD` itself as a release branch.
 
@@ -392,14 +391,12 @@ Remove the biggest sources of daily drift.
 
 ### Phase 3. Build the local compose stack
 
-The normalized candidate and static gates are implemented. Complete the safe
-host cutover before calling the local product live.
+The normalized candidate and static gates are implemented. Make root Compose
+the sole lifecycle owner of the local product.
 
 - Preserve exact adopted volumes and external networks through the handoff.
-- Back up and restore-test NATS and Candystore data before lifecycle work.
-- Stop old component projects without `-v`, start the target in dependency
-  order, and verify exactly one durable Candystore consumer.
-- Preserve detached legacy volumes and prove rollback to prior projects.
+- Stop old component projects, start the root target in dependency order, and
+  verify exactly one durable Candystore consumer.
 
 ### Phase 4. Add director-grade operations
 
@@ -427,8 +424,6 @@ cross-component contract changes. If a change affects event schemas, hook
 entrypoints, runtime state, project templates, skills, compose, ports, secrets,
 or storage, it belongs in the platform changelog and may require a backfill.
 
-The immediate recommendation is to complete backup/restore and an approved
-stop/start/rollback plan, then cut over the validated target without deleting
-volumes. Keep the platform registry, semantic validator, and documentation drift
-gate green before and after each step. Cloud remains a separate blocked design
-phase.
+Operate the local product through root Compose. Keep the platform registry,
+semantic validator, and documentation drift gate green after component or
+topology changes. Cloud remains a separate design phase.

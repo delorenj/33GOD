@@ -7,6 +7,12 @@
 [submodule "candystore"]
 	path = candystore
 	url = git@github.com:delorenj/candystore.git
+[submodule "holocene"]
+	path = holocene
+	url = git@github.com:delorenj/holocene.git
+[submodule "pjangler"]
+	path = pjangler
+	url = git@github.com:delorenj/pjangler.git
 [submodule "holyfields"]
 	path = holyfields
 	url = git@github.com:delorenj/holyfields.git

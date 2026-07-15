@@ -64,9 +64,8 @@ be duplicated by the projection.
 - The documentation drift gate executes that validator against the caller's
   explicit source root while retaining the previous parity checks.
 
-These are static guarantees. Runtime health, volume contents, durable-consumer
-cardinality, route behavior, and rollback readiness still require the cutover
-acceptance procedure.
+Runtime acceptance additionally verifies health, volume attachment,
+durable-consumer cardinality, and route behavior against the live root stack.
 
 ## Open product risks
 

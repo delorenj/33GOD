@@ -39,23 +39,9 @@ commands starts a service.
 
 ## Prerequisites
 
-Before approving a cutover:
-
-1. Record current component project/container state and owners.
-2. Back up and restore-test the adopted NATS and Candystore data volumes.
-3. Confirm external networks and every attached adjacent consumer.
-4. Inspect the candidate render for the exact five adopted volume names.
-5. Confirm `holocene-api.service` is active and its `/health` endpoint succeeds.
-6. Confirm the host API's `CANDYSTORE_API_URL` uses the approved loopback
-   Candystore boundary.
-7. Confirm the existing NATS streams and exactly one `candystore-events` durable
-   consumer before the handoff.
-8. Reconcile PJangler source/install parity if the run-only definitions will be
-   used.
-9. Approve an operator-specific stop/start window; fixed container names make
-   parallel old/new operation unsafe.
-10. Verify every component source is clean and at the gitlink commit selected by
-    the integrated candidate.
+The root stack consumes four clean component checkouts pinned by root gitlinks.
+The three external networks, five adopted volumes, Holocene host API, and
+Holocene web environment file must exist before startup.
 
 Static gates may use `/home/delorenj/code/33GOD` as an authoritative dirty
 source read-only. This is intentional so protected user work, including current
@@ -132,16 +118,20 @@ Document names and sources only; never record secret values.
    Traefik routes retain expected auth behavior.
 8. PJangler remains outside service startup; validate/run it separately.
 
-## Cutover and rollback safety
+## Direct cutover
 
-Cutover must be an approved stop/start handoff from component-owned projects to
-the target. Stop old containers without deleting volumes, verify the rendered
-identities again, start in dependency order, and block producers until stream
-state and one-consumer cardinality are verified.
+Stop the Bloodbank, Candystore, and Holocene component-owned Compose projects,
+then start the root stack:
 
-Rollback means stopping the target without deleting volumes and restarting the
-previous component projects against the preserved volume/network identities.
-Never use `docker compose down -v`. Never remove adopted volumes, detached
-legacy volumes, or shared external networks as part of cutover or rollback.
+```bash
+docker compose -f bloodbank/compose/docker-compose.yml down
+docker compose -f candystore/compose.yml down
+docker compose -f holocene/compose.yml down
+GOD_SOURCE_ROOT="$PWD" docker compose -f 33god-platform/compose.yaml up -d --build
+```
+
+The root project becomes the sole Compose owner of the adopted services. Verify
+container health, NATS stream state, one `candystore-events` durable consumer,
+Candystore readiness, Holocene API health, and the routed web surface.
 
 No lifecycle command was run while producing or validating this guide.
