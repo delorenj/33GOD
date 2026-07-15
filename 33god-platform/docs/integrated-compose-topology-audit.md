@@ -15,9 +15,11 @@ does not change component repositories or runtime state.
 Replace the platform readiness scaffold with an integrated local stack, but do
 not include the current component Compose files verbatim.
 
-The first implementation should use component-owned, normalized Compose
-fragments with namespaced service keys, then include those fragments from
-`33god-platform/compose.yaml`. The no-profile local stack should manage:
+The implemented first slice uses a root-owned normalized projection in
+`33god-platform/compose.yaml` because component repositories were read-only for
+this task. Component-owned fragments remain a possible later ownership refactor,
+but only if they preserve the executable semantic contract. The no-profile local
+stack manages:
 
 1. Bloodbank NATS JetStream, stream initialization, and Dapr placement.
 2. Exactly one Candystore deployment: PostgreSQL, application, and one Dapr
@@ -34,7 +36,7 @@ integrated target.
 
 ## Implemented outcome
 
-Implementation HEAD `c4f78bb` replaced `platform-ready` with a root-owned,
+Implementation base `c4f78bb` replaced `platform-ready` with a root-owned,
 normalized projection in `33god-platform/compose.yaml`. Component Compose files
 were not edited or included verbatim. The candidate is validated against an
 explicit populated `GOD_SOURCE_ROOT`, which lets an isolated worktree test the
@@ -104,8 +106,11 @@ Evidence was weighted in this order:
 4. Platform and component prose.
 
 The component source checkouts under `/home/delorenj/code/33GOD` were treated
-as authoritative and read-only. Recent timestamps were used as a staleness
-signal, not as proof of correctness.
+as authoritative and read-only for static validation. Static inspection may use
+dirty source without failing merely because protected user work exists. A
+lifecycle cutover has a stronger boundary: every component source must be clean
+and pinned to the candidate's intended gitlink. Recent timestamps were used as a
+staleness signal, not as proof of correctness.
 
 ### Source snapshot
 
@@ -113,7 +118,7 @@ signal, not as proof of correctness.
 | --- | --- | --- |
 | Bloodbank | `d4327b5` | Compose modified 2026-07-15 00:49 EDT; live NATS, placement, and legacy PostgreSQL hashes matched the current render. |
 | Candystore | `c206f43` | Compose modified 2026-07-10 15:33 EDT; live PostgreSQL and Dapr hashes matched, but the app hash differed from the current render. |
-| Holocene | `a0a3bdf` | Compose modified and dirty; the live web hash differed from the current render. The dirty change expands the unauthenticated HQ router to `/_next/static`. |
+| Holocene | `a0a3bdf` | Compose modified and dirty; the live web hash differed from the current render. The dirty `/_next/static` router expansion is protected user work and is explicitly excluded from this candidate. Committed HEAD, with the HQ exception limited to `/hq`, is the preserved baseline. |
 | PJangler | `0034df3` | Source package is `1.2.18`; globally installed CLI/MCP is `1.2.17`. |
 
 Relevant evidence timestamps included:
@@ -136,19 +141,19 @@ only environment key names and secret-source boundaries were retained.
 ### Compose rendering
 
 ```bash
-docker compose -f 33god-platform/compose.yaml --profile tools config --quiet
+docker compose -f 33god-platform/compose.yaml --profile tools config --no-env-resolution --quiet
 docker compose --project-name bloodbank \
   -f /home/delorenj/code/33GOD/bloodbank/compose/docker-compose.yml \
-  config --quiet
+  config --no-env-resolution --quiet
 docker compose --project-name bloodbank \
   -f /home/delorenj/code/33GOD/bloodbank/compose/docker-compose.yml \
-  --profile '*' config --quiet
+  --profile '*' config --no-env-resolution --quiet
 docker compose --project-name candystore \
   -f /home/delorenj/code/33GOD/candystore/compose.yml \
-  config --quiet
+  config --no-env-resolution --quiet
 docker compose --project-name holocene \
   -f /home/delorenj/code/33GOD/holocene/compose.yml \
-  config --quiet
+  config --no-env-resolution --quiet
 ```
 
 All five renders passed with Docker Compose `v5.0.2`.
@@ -294,7 +299,7 @@ metadata maps `pjangler` and `pj` to `dist/index.js`, and `pjangler-mcp` to
 | Bloodbank | Legacy `postgres`, `candystore`, `daprd-candystore` | Profile can create a second database and competing durable consumer. Only its PostgreSQL container is live now. | Exclude all three. Preserve the legacy volume offline until its contents are reviewed; never start its app/sidecar alongside canonical Candystore. |
 | Candystore | PostgreSQL | Live `postgres:16-alpine`, healthy, volume `candystore_pgdata` | Default audit service; preserve loopback 5434, volume identity, database name, and healthcheck. |
 | Candystore | App/API/UI | Live image `candystore:local`, healthy, loopback 8683, Traefik network | Default audit service built from `../candystore`; preserve image name for the first cutover. Change dependency readiness to `/readyz`. |
-| Candystore | Dapr sidecar | Live `daprio/daprd:1.13.0`, durable `candystore-events`, loopback 3504 | Exactly one default sidecar. Depend on NATS initialization, placement start/readiness, and Candystore readiness. |
+| Candystore | Dapr sidecar | Live `daprio/daprd:1.13.0`, durable `candystore-events`, loopback 3504 | Exactly one default sidecar. Depend on NATS initialization, placement start, and Candystore readiness. The distroless daprd image intentionally has no Compose healthcheck; probe its published loopback health endpoint externally. |
 | Holocene | Web | Live `node:22` Compose service on `proxy`; source bind mount and three named volumes; no host port or healthcheck | Default control UI; preserve internal port 3001, bind/volume layout, `host.docker.internal`, Traefik labels, and OIDC/HQ router behavior for the first cutover. Add internal web health. |
 | Holocene | API | Host user service, active on `0.0.0.0:4000`; broad host-system authority | Keep external to Compose in the local profile. Make its unit health a preflight requirement. Do not containerize by mounting the systemd socket or broad host paths. |
 | PJangler | CLI | Globally installed npm binary with host-user authority | Host prerequisite and operator command, not an `up` service. Pin source/install parity before the platform cutover. |
@@ -358,7 +363,7 @@ drift and should not be the durable design.
 | Dapr placement | Running, no healthcheck | External TCP/gRPC-aware readiness probe; do not add `CMD-SHELL` to a distroless image. |
 | Candystore PostgreSQL | `pg_isready`; live healthy | `service_healthy`. |
 | Candystore app | Container checks `/healthz`; live `/healthz` and `/readyz` both 204 | Use `/readyz` for dependent startup so database readiness is included. Keep `/healthz` for liveness. |
-| Candystore Dapr | No container healthcheck; live `/v1.0/healthz` returned 204 | External HTTP readiness probe or a tiny platform probe container. |
+| Candystore Dapr | Distroless `daprio/daprd`; intentionally no container healthcheck; live published loopback `/v1.0/healthz` returned 204 | External readiness at `http://127.0.0.1:3504/v1.0/healthz`. Do not claim or depend on Compose `service_healthy` for daprd. |
 | Holocene host API | systemd active; `/health` HTTP 200 | Required host preflight before Holocene web is declared ready. |
 | Holocene web | Running; no container healthcheck; public route returns OIDC 307 | Add an internal HTTP healthcheck against port 3001. Public 307 proves routing/auth, not application readiness. |
 | PJangler | `pjangler --version`; npm install metadata | Validation command, not service health. Require installed/source version parity. |
@@ -417,6 +422,11 @@ Catalog, observability, and smoke services remain component-owned and outside
 the implemented projection. Their absence prevents accidental port collisions
 and keeps test/reference services out of the product default.
 
+`docker compose --profile cloud up` is not a safe rejection test. Compose also
+selects every unprofiled local service, so NATS, PostgreSQL, Candystore, and
+Holocene may start and mutate before `cloud-unsupported` exits. Cloud is
+configuration/render inspection only; no lifecycle task is provided.
+
 ## Secrets and environment
 
 No secret values belong in the integrated Compose file or this audit.
@@ -462,8 +472,9 @@ Traefik behavior to preserve:
 - Holocene uses Docker labels, `traefik.docker.network=proxy`, internal port
   3001, TLS with `letsencrypt`, and the shared `google-auth@file` middleware
   for the main router.
-- The higher-priority Holocene HQ router bypasses Google auth for `/hq` and,
-  in the current source, `/_next/static`. HQ data remains guarded by Telegram
+- The higher-priority Holocene HQ router bypasses Google auth for `/hq` only,
+  matching committed Holocene HEAD. The dirty source expansion to
+  `/_next/static` is explicitly excluded; HQ data remains guarded by Telegram
   init-data validation.
 - Candystore has no container labels. A file-provider definition routes
   `candystore.delo.sh` to `http://candystore:3001`, applies `google-auth`, and
@@ -510,21 +521,20 @@ names require the old projects to be stopped before the new project starts.
 4. Is the legacy `bloodbank_bloodbank-postgres-data` volume disposable,
    archival, or a migration source? No deletion should occur without an
    evidence-backed answer.
-5. Which Holocene Compose state is the cutover baseline: the currently running
-   container or the newer dirty source/router configuration?
-6. Should the Holocene API continue binding all interfaces after the Compose
+5. Should the Holocene API continue binding all interfaces after the Compose
    cutover, or can it move to loopback without breaking web/container access?
    A loopback-only API would require a deliberate bridge/proxy mechanism.
-7. What backup tool and restore acceptance test gate the NATS and Candystore
+6. What backup tool and restore acceptance test gate the NATS and Candystore
    volume handoff?
-8. Should the first platform implementation pin PJangler 1.2.17 to match the
+7. Should the first platform implementation pin PJangler 1.2.17 to match the
    installed tool or deploy 1.2.18 to match source?
-9. **Resolved for the candidate:** PJangler is represented only by narrow,
-   read-only-source, zero-replica CLI and stdio MCP definitions. Operators must
-   invoke them with `docker compose run`; host-native tooling remains valid for
-   workflows requiring host authority or provider access.
-10. Which services, if any, are allowed to retain broad host binds after the
-    local migration? This must be answered before a cloud profile exists.
+8. Which services, if any, are allowed to retain broad host binds after the
+   local migration? This must be answered before a cloud profile exists.
+
+Resolved candidate decisions are no longer recommendations: committed Holocene
+HEAD is the baseline, the dirty `/_next/static` router change is excluded, and
+PJangler remains narrow, read-only-source, zero-replica CLI/stdio MCP tooling
+invoked only with explicit `docker compose run`.
 
 ## Historical implementation recommendation
 
@@ -609,10 +619,10 @@ Static candidate gates:
 python3 33god-platform/scripts/platform.py validate
 python3 33god-platform/scripts/platform.py components list
 python3 33god-platform/scripts/platform.py backfills check
-docker compose -f 33god-platform/compose.yaml config --quiet
-docker compose -f 33god-platform/compose.yaml --profile tools config --quiet
-docker compose -f 33god-platform/compose.yaml --profile full config --quiet
-docker compose -f 33god-platform/compose.yaml --profile cloud config --quiet
+docker compose -f 33god-platform/compose.yaml config --no-env-resolution --quiet
+docker compose -f 33god-platform/compose.yaml --profile tools config --no-env-resolution --quiet
+docker compose -f 33god-platform/compose.yaml --profile full config --no-env-resolution --quiet
+docker compose -f 33god-platform/compose.yaml --profile cloud config --no-env-resolution --quiet
 python3 33god-platform/scripts/validate-compose.py --source-root "$GOD_SOURCE_ROOT"
 python3 -m unittest discover -s 33god-platform/tests -p 'test_*.py' -v
 GOD_SOURCE_ROOT=/home/delorenj/code/33GOD mise run docs:drift
@@ -632,6 +642,21 @@ Cutover acceptance must then prove:
   its deliberate route exception and application-level Telegram validation.
 - PJangler CLI and MCP binaries match the chosen source/package version.
 - Legacy Bloodbank PostgreSQL volumes remain detached and preserved.
+
+Static gates may use the authoritative primary component sources read-only even
+when they contain protected work. Before any lifecycle command, verify clean,
+pinned sources without printing file contents:
+
+```bash
+candidate_root=$(git rev-parse --show-toplevel)
+for component in bloodbank candystore holocene pjangler; do
+  expected=$(git -C "$candidate_root" ls-tree HEAD "$component" | awk '{print $3}')
+  actual=$(git -C "$GOD_SOURCE_ROOT/$component" rev-parse HEAD)
+  test "$actual" = "$expected"
+  git -C "$GOD_SOURCE_ROOT/$component" diff --quiet
+  git -C "$GOD_SOURCE_ROOT/$component" diff --cached --quiet
+done
+```
 
 ## Recommendation summary
 

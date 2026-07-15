@@ -13,7 +13,7 @@ independently owned components: Bloodbank, Candystore, Holocene, and PJangler.
 They exchange CloudEvents over NATS/Dapr, persist an audit read model, expose a
 local mission-control UI/API, and provision projects and agents.
 
-Implementation HEAD `c4f78bb` turns the former root readiness scaffold into a
+Implementation base `c4f78bb` turns the former root readiness scaffold into a
 normalized Compose target. The root owns this projection and its semantic
 validator; component sources remain authoritative and were not modified. The
 candidate has been rendered and validated, but existing component Compose

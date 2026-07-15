@@ -13,6 +13,11 @@ web. PJangler CLI and stdio MCP are zero-replica run-only tools in `tools` and
 `full`. Cloud is render-only, unsupported, and has no lifecycle command
 surface.
 
+Never run `docker compose --profile cloud up`. Compose includes all unprofiled
+local services when a profile is selected, so stateful NATS, PostgreSQL, and
+Candystore services may start and mutate before `cloud-unsupported` exits.
+Cloud is configuration/render inspection only; no lifecycle task exists.
+
 ## Read-only validation
 
 From the candidate checkout:
@@ -28,7 +33,9 @@ mise run docs:drift
 ```
 
 The render tasks for default, `tools`, `full`, and `cloud` are also read-only.
-None of these commands starts a service.
+They use `--no-env-resolution`, so Holocene's component env file remains an
+unresolved path reference rather than entering rendered JSON. None of these
+commands starts a service.
 
 ## Prerequisites
 
@@ -47,6 +54,25 @@ Before approving a cutover:
    used.
 9. Approve an operator-specific stop/start window; fixed container names make
    parallel old/new operation unsafe.
+10. Verify every component source is clean and at the gitlink commit selected by
+    the integrated candidate.
+
+Static gates may use `/home/delorenj/code/33GOD` as an authoritative dirty
+source read-only. This is intentional so protected user work, including current
+Holocene work, does not make the static gate fail. Lifecycle cutover is stricter:
+all component inputs must be clean and pinned. These checks print no file
+contents:
+
+```bash
+candidate_root=$(git rev-parse --show-toplevel)
+for component in bloodbank candystore holocene pjangler; do
+  expected=$(git -C "$candidate_root" ls-tree HEAD "$component" | awk '{print $3}')
+  actual=$(git -C "$GOD_SOURCE_ROOT/$component" rev-parse HEAD)
+  test "$actual" = "$expected"
+  git -C "$GOD_SOURCE_ROOT/$component" diff --quiet
+  git -C "$GOD_SOURCE_ROOT/$component" diff --cached --quiet
+done
+```
 
 ## Ports
 
@@ -99,7 +125,9 @@ Document names and sources only; never record secret values.
 2. NATS initialization completes; placement is started and externally ready.
 3. Candystore PostgreSQL becomes healthy.
 4. Candystore `/readyz` succeeds.
-5. Exactly one Candystore daprd starts and becomes healthy.
+5. Exactly one Candystore daprd starts. `daprio/daprd` is distroless and
+   intentionally has no container healthcheck; confirm readiness externally at
+   the published loopback endpoint `http://127.0.0.1:3504/v1.0/healthz`.
 6. The host Holocene API reads Candystore and passes `/health`.
 7. The preflight completes, then Holocene web becomes internally healthy and
    Traefik routes retain expected auth behavior.

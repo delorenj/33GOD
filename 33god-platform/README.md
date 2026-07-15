@@ -24,6 +24,12 @@ The `cloud` profile is render-only and deliberately unsupported. It retains the
 local bind/external-network model plus a rejection service so drift remains
 visible. The cloud profile has no supported lifecycle surface.
 
+> **Do not run `docker compose --profile cloud up`.** Compose selects every
+> unprofiled local service as well as `cloud-unsupported`, so NATS, PostgreSQL,
+> Candystore, and Holocene may start and mutate state before the rejection
+> container exits. Cloud is configuration/render inspection only, and this repo
+> intentionally defines no cloud lifecycle task.
+
 ## Ownership and source roots
 
 `33god-platform/compose.yaml` is the root-owned normalized projection. It does
@@ -67,8 +73,12 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 From the repository root, `mise run platform:compose:validate`,
 `mise run platform:compose:test`, and `mise run docs:drift` wrap the same gates.
 The semantic validator renders default, `tools`, `full`, and `cloud`, then
-asserts service cardinality, ports, dependencies, host boundaries, mounts,
-three external networks, and five adopted external volumes.
+asserts service cardinality, environment-selected ports, the exact Bloodbank to
+Candystore Dapr subscription path, dependencies, host boundaries, mounts, exact
+per-service network isolation, Traefik auth/routing, three external networks,
+and five adopted external volumes. Every checked-in JSON render uses Compose
+`--no-env-resolution`, so the optional Holocene component env file remains a
+path reference and its values do not enter captured output.
 
 ## Cutover prerequisites
 
@@ -83,6 +93,25 @@ Before any lifecycle command, an operator must:
 5. Reconcile PJangler source/install parity if the run-only tools will be used.
 6. Plan a stop/start handoff from the existing component projects; fixed
    container names prevent old and target projects from running concurrently.
+7. Use clean Bloodbank, Candystore, Holocene, and PJangler sources whose HEADs
+   match the candidate's intended gitlink commits.
+
+Static validation may point `GOD_SOURCE_ROOT` at the authoritative primary
+checkout even when it contains protected user work; the source is read-only and
+Holocene env-file values are not resolved. That allowance does not extend to a
+lifecycle cutover. Verify clean, pinned component inputs without displaying file
+contents:
+
+```bash
+candidate_root=$(git rev-parse --show-toplevel)
+for component in bloodbank candystore holocene pjangler; do
+  expected=$(git -C "$candidate_root" ls-tree HEAD "$component" | awk '{print $3}')
+  actual=$(git -C "$GOD_SOURCE_ROOT/$component" rev-parse HEAD)
+  test "$actual" = "$expected"
+  git -C "$GOD_SOURCE_ROOT/$component" diff --quiet
+  git -C "$GOD_SOURCE_ROOT/$component" diff --cached --quiet
+done
+```
 
 The safe dependency order is NATS, NATS initialization and placement,
 Candystore PostgreSQL, Candystore app, exactly one Candystore sidecar, Holocene

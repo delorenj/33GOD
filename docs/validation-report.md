@@ -2,9 +2,20 @@
 
 **Validated:** 2026-07-15
 
-**Implementation HEAD:** `c4f78bb`
+**Implementation base:** `c4f78bbe383a9c1d5ee12e2e81472f6a179b97ad`
 
-**Candidate checkout:** `/home/delorenj/code/33GOD/worktrees/daedalus-syntaxsorcerer`
+**Documentation commit:** `bdbd441a203891bacba55bd3d72cc279264079ac`
+
+**Remediation evidence commit:** the commit containing this report with subject
+`fix(platform): harden integrated compose gates`. After integration, resolve its
+hash without embedding an impossible self-reference:
+
+```bash
+git log -1 --format=%H --fixed-strings \
+  --grep='fix(platform): harden integrated compose gates'
+```
+
+**Final team checkout:** `/home/delorenj/code/33GOD/worktrees/team-daedalus`
 
 **Read-only source root:** `/home/delorenj/code/33GOD`
 
@@ -48,11 +59,13 @@ PASS doc-links: all Markdown file links resolve
 - `python3 33god-platform/scripts/validate-compose.py --source-root
   /home/delorenj/code/33GOD` — passed: default, `tools`, `full`, `cloud`.
 - `python3 -m unittest discover -s 33god-platform/tests -p 'test_*.py'
-  -v` — 3 tests passed. Coverage includes the populated live-source render,
-  actionable rejection of legacy/false-readiness services, and rejection of an
-  unpopulated source root.
+  -v` — 11 tests passed. Coverage includes the populated source render,
+  actionable rejection of legacy/false-readiness services, subscription and
+  daprd path mutations, Traefik auth/Host attacks, PostgreSQL proxy attachment,
+  caller-selected port drift, secret-safe env-file rendering/error handling,
+  and rejection of an unpopulated source root.
 - `mise run platform:compose:validate` — passed.
-- `mise run platform:compose:test` — 3 tests passed.
+- `mise run platform:compose:test` — 11 tests passed.
 
 Rendered service sets:
 
@@ -63,10 +76,13 @@ Rendered service sets:
 | `full` | 10 | Same currently governed model as `tools` |
 | `cloud` | 9 | Default plus `cloud-unsupported`; render-only |
 
-Every JSON render parsed through `jq`. The semantic validator also confirmed
-the exact ports, start dependencies, host API boundary, no PJangler listeners,
-three external networks, five adopted external volumes, source-root mounts, and
-absence of Bloodbank legacy Candystore.
+Every JSON render uses `--no-env-resolution`. The semantic validator confirmed
+the exact environment-selected ports, Bloodbank/Candystore subscription and
+daprd path, start dependencies, host API boundary, no PJangler listeners, exact
+service network memberships, Traefik Host/auth/proxy labels, five adopted
+external volumes, source-root mounts, and absence of Bloodbank legacy
+Candystore. The safe test asserts that sensitive Holocene env-file keys and
+values are absent without printing either.
 
 ## Platform governance
 
@@ -78,13 +94,19 @@ absence of Bloodbank legacy Candystore.
 - `python3 33god-platform/scripts/platform.py backfills check` — four checks
   returned `OK`.
 - Changed structured artifacts parsed successfully: 5 YAML files, 2 root JSON
-  state/metadata files, and 4 platform JSONL logs.
+  state/metadata files, and 5 platform JSONL logs.
 
 ## Repository hygiene
 
 - `git diff --check` — passed.
-- Secret scan of added lines — no credential-like values found. Documentation
-  records key names and secret-source boundaries only.
+- Secret scan of added lines found the intentionally inherited Candystore
+  username/password and `DATABASE_URL` used by the local-development topology.
+  Those fixed development-only values were already part of the adopted
+  component model; no real operator, hosted, Telegram, provider, or production
+  secret value was added. Holocene's ignored env-file values are not rendered.
+- The implementation phase recorded one isolated Candystore image build. It was
+  buildability evidence only: no container was started, and it is not runtime
+  health or cutover evidence. This remediation did not repeat the build.
 - Markdown incomplete-marker and internal-link checks — passed in the drift
   gate.
 - No `docker compose up`, `down`, `stop`, volume removal, network removal,

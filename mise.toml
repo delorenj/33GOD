@@ -27,19 +27,19 @@ run = "python3 33god-platform/scripts/platform.py backfills check"
 
 [tasks."platform:compose:render"]
 description = "Render the default integrated local Compose model as JSON"
-run = "docker compose -f 33god-platform/compose.yaml config --format json"
+run = "docker compose -f 33god-platform/compose.yaml config --no-env-resolution --format json"
 
 [tasks."platform:compose:render:tools"]
 description = "Render the local model with one-shot PJangler tools as JSON"
-run = "docker compose -f 33god-platform/compose.yaml --profile tools config --format json"
+run = "docker compose -f 33god-platform/compose.yaml --profile tools config --no-env-resolution --format json"
 
 [tasks."platform:compose:render:full"]
 description = "Render the full local model as JSON"
-run = "docker compose -f 33god-platform/compose.yaml --profile full config --format json"
+run = "docker compose -f 33god-platform/compose.yaml --profile full config --no-env-resolution --format json"
 
 [tasks."platform:compose:render:cloud"]
 description = "Render the explicitly unsupported cloud model as JSON"
-run = "docker compose -f 33god-platform/compose.yaml --profile cloud config --format json"
+run = "docker compose -f 33god-platform/compose.yaml --profile cloud config --no-env-resolution --format json"
 
 [tasks."platform:compose:validate"]
 description = "Render and semantically validate default, tools, full, and cloud Compose models"

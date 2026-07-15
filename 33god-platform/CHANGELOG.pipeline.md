@@ -18,6 +18,13 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
   services or existing component projects were changed.
 - Extended the documentation drift gate to validate the candidate against an
   explicit source root. Cloud deployment remains blocked.
+- Hardened every checked-in render task with `--no-env-resolution`, preserved
+  caller-selected port overrides for validation, and suppressed captured
+  Compose errors that could otherwise disclose component env-file values.
+- Expanded semantic/adversarial gates for the canonical Candystore subscription
+  and daprd placement path, exact Traefik Host/auth/proxy behavior, and exact
+  per-service network isolation. The committed Holocene `/hq` router remains the
+  baseline; dirty `/_next/static` work is excluded.
 
 ### Registry Truth Reconciliation
 

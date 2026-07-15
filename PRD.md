@@ -63,7 +63,7 @@ boundaries, managed storage, cloud secrets, and subscription packaging.
 ## Current control-plane state
 
 `33god-platform/` is the product control-plane directory and root-owned
-cross-component projection. Implementation HEAD `c4f78bb` replaced the former
+cross-component projection. Implementation base `c4f78bb` replaced the former
 readiness scaffold with a validated local Compose target. Component
 repositories, existing component Compose projects, and the host Holocene API
 remain untouched; this is not a live cutover.
@@ -106,7 +106,10 @@ Validation state as of this handoff:
 
 Cloud remains blocked. Its profile exists only to render the unsupported
 local-bind model and rejection gate; it must never be used with `docker compose
-up`. The registry drift found during the original handoff remains repaired.
+up`. Selecting `--profile cloud` also selects every unprofiled local service, so
+stateful services may start and mutate before the rejection container exits.
+Cloud therefore has no lifecycle task and is configuration/render inspection
+only. The registry drift found during the original handoff remains repaired.
 
 ## Baseline status
 
@@ -185,8 +188,8 @@ unsupported deployment shapes impossible to mistake for production readiness.
 
 Acceptance criteria:
 
-- `docker compose -f 33god-platform/compose.yaml --profile tools config` stays
-  green.
+- `docker compose -f 33god-platform/compose.yaml --profile tools config --no-env-resolution`
+  stays green.
 - The root owns a normalized projection while components retain internal
   implementation ownership.
 - The default contains Bloodbank NATS/init/placement, exactly one standalone
@@ -199,8 +202,15 @@ Acceptance criteria:
   - `tools` and `full`: default plus run-only PJangler definitions.
   - `cloud`: render-only unsupported evidence with an explicit rejection gate.
 - The semantic validator enforces ports, start order, three external networks,
-  five adopted external volumes, and the exclusion of Bloodbank legacy
-  Candystore.
+  exact service memberships, five adopted external volumes, the canonical
+  Candystore Dapr subscription path, exact Holocene Host/auth/proxy labels,
+  unresolved Holocene env-file references, and the exclusion of Bloodbank
+  legacy Candystore.
+- Checked-in render tasks use `--no-env-resolution`; caller-selected port
+  overrides are validated rather than masked.
+- Static validation may use the authoritative dirty primary source read-only,
+  but lifecycle cutover requires clean component sources pinned to the intended
+  gitlink commits.
 
 ### FR4. Runtime state isolation
 

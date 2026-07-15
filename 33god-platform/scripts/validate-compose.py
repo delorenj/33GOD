@@ -81,6 +81,58 @@ EXPECTED_VOLUMES = {
 
 EXPECTED_NETWORKS = {"bloodbank-network", "candystore-internal", "proxy"}
 
+EXPECTED_SERVICE_NETWORKS = {
+    "bloodbank-nats": {"bloodbank-network"},
+    "nats-init": {"bloodbank-network"},
+    "dapr-placement": {"bloodbank-network"},
+    "candystore-postgres": {"candystore-internal"},
+    "candystore": {"candystore-internal", "proxy"},
+    "candystore-daprd": {"candystore-internal", "bloodbank-network"},
+    "holocene-api-preflight": {"candystore-internal"},
+    "holocene-web": {"proxy"},
+    "pjangler-cli": {"default"},
+    "pjangler-mcp": {"default"},
+    "cloud-unsupported": set(),
+}
+
+EXPECTED_CANDYSTORE_EVENT_ENV = {
+    "SUBSCRIBE_PUBSUB": "bloodbank-pubsub",
+    "SUBSCRIBE_TOPIC": "bloodbank.evt.v1.>",
+    "SUBSCRIBE_ROUTE": "/events/all",
+}
+
+EXPECTED_CANDYSTORE_DAPRD_COMMAND = [
+    "./daprd",
+    "--app-id=candystore",
+    "--dapr-http-port=3500",
+    "--dapr-grpc-port=50001",
+    "--app-port=3001",
+    "--app-channel-address=candystore-app",
+    "--app-protocol=http",
+    "--resources-path=/components",
+    "--placement-host-address=dapr-placement:50005",
+    "--log-level=info",
+]
+
+EXPECTED_HOLOCENE_LABELS = {
+    "traefik.enable": "true",
+    "traefik.http.routers.holocene-web.entrypoints": "websecure",
+    "traefik.http.routers.holocene-web.rule": "Host(`holocene.delo.sh`)",
+    "traefik.http.routers.holocene-web.priority": "300",
+    "traefik.http.routers.holocene-web.middlewares": "google-auth@file",
+    "traefik.http.services.holocene-web.loadbalancer.server.port": "3001",
+    "traefik.http.routers.holocene-web.service": "holocene-web",
+    "traefik.http.routers.holocene-web.tls": "true",
+    "traefik.http.routers.holocene-web.tls.certresolver": "letsencrypt",
+    "traefik.http.routers.holocene-hq.rule": "Host(`holocene.delo.sh`) && PathPrefix(`/hq`)",
+    "traefik.http.routers.holocene-hq.priority": "350",
+    "traefik.http.routers.holocene-hq.entrypoints": "websecure",
+    "traefik.http.routers.holocene-hq.service": "holocene-web",
+    "traefik.http.routers.holocene-hq.tls": "true",
+    "traefik.http.routers.holocene-hq.tls.certresolver": "letsencrypt",
+    "traefik.docker.network": "proxy",
+}
+
 
 def _service(model: dict[str, Any], name: str) -> dict[str, Any]:
     return model.get("services", {}).get(name, {})
@@ -145,6 +197,15 @@ def validate_model(model_name: str, model: dict[str, Any], source_root: Path) ->
         require(network.get("name") == name, f"network {name} must retain exact external name")
         require(network.get("external") is True, f"network {name} must be external")
 
+    for name, service in services.items():
+        actual_memberships = set(service.get("networks", {}))
+        expected_memberships = EXPECTED_SERVICE_NETWORKS.get(name)
+        if expected_memberships is not None:
+            require(
+                actual_memberships == expected_memberships,
+                f"service {name} network memberships must be exactly {sorted(expected_memberships)}",
+            )
+
     volumes = model.get("volumes", {})
     require(set(volumes) == set(EXPECTED_VOLUMES), "only the five adopted named volumes may be declared")
     for key, name in EXPECTED_VOLUMES.items():
@@ -152,9 +213,10 @@ def validate_model(model_name: str, model: dict[str, Any], source_root: Path) ->
         require(volume.get("name") == name, f"volume {key} must resolve to {name}")
         require(volume.get("external") is True, f"volume {key} must be external to prevent empty replacement data")
 
+    nats_ports = _published_ports(_service(model, "bloodbank-nats"))
     require(
-        _published_ports(_service(model, "bloodbank-nats")) == {(4222, 4222, ""), (8222, 8222, "")},
-        "NATS must publish exactly 4222 and 8222",
+        nats_ports == {(4222, 4222, ""), (8222, 8222, "")},
+        f"NATS must publish exactly 4222 and 8222; rendered {sorted(nats_ports)}",
     )
     require(
         _published_ports(_service(model, "dapr-placement")) == {(50005, 50005, "")},
@@ -191,8 +253,15 @@ def validate_model(model_name: str, model: dict[str, Any], source_root: Path) ->
             f"nats-init must read-only mount Bloodbank {relative}",
         )
     require(set(init.get("entrypoint", [])) == {"/bin/sh", "/work/init.sh"}, "nats-init must execute Bloodbank's tracked initializer")
+    require(init.get("environment", {}).get("NATS_URL") == "nats://nats:4222", "nats-init must target canonical NATS DNS and port")
+    require(
+        _service(model, "bloodbank-nats").get("environment", {}).get("BLOODBANK_NATS_URL") == "nats://nats:4222",
+        "Bloodbank NATS service metadata must retain canonical NATS DNS and port",
+    )
     require(_aliases(_service(model, "bloodbank-nats"), "bloodbank-network") >= {"nats"}, "NATS must retain the nats DNS alias")
-    require(_aliases(_service(model, "dapr-placement"), "bloodbank-network") >= {"dapr-placement"}, "placement must retain the dapr-placement DNS alias")
+    placement = _service(model, "dapr-placement")
+    require(_aliases(placement, "bloodbank-network") >= {"dapr-placement"}, "placement must retain the dapr-placement DNS alias")
+    require(placement.get("command", []) == ["./placement", "--port", "50005"], "placement must listen on canonical port 50005")
 
     postgres = _service(model, "candystore-postgres")
     app = _service(model, "candystore")
@@ -200,6 +269,11 @@ def validate_model(model_name: str, model: dict[str, Any], source_root: Path) ->
     require(_aliases(postgres, "candystore-internal") >= {"postgres"}, "Candystore PostgreSQL must retain postgres DNS")
     require(_aliases(app, "candystore-internal") >= {"candystore-app"}, "Candystore app must retain candystore-app DNS")
     require(_aliases(app, "proxy") >= {"candystore"}, "Candystore must retain its proxy DNS alias")
+    for key, expected in EXPECTED_CANDYSTORE_EVENT_ENV.items():
+        require(
+            app.get("environment", {}).get(key) == expected,
+            f"Candystore {key} must remain {expected!r} for the canonical Bloodbank event path",
+        )
     require(_dependency(app, "candystore-postgres") == "service_healthy", "Candystore app must wait for healthy PostgreSQL")
     require("/readyz" in " ".join(app.get("healthcheck", {}).get("test", [])), "Candystore dependency health must use /readyz")
     require(_dependency(daprd, "nats-init") == "service_completed_successfully", "Candystore daprd must wait for stream initialization")
@@ -212,7 +286,11 @@ def validate_model(model_name: str, model: dict[str, Any], source_root: Path) ->
         and daprd_mount.get("read_only") is True,
         "Candystore daprd must exclusively mount Candystore's durable component contract read-only",
     )
-    require("--app-id=candystore" in daprd.get("command", []), "Candystore daprd must use app-id candystore")
+    require(len(daprd.get("volumes", [])) == 1, "Candystore daprd must have only the canonical /components mount")
+    require(
+        daprd.get("command", []) == EXPECTED_CANDYSTORE_DAPRD_COMMAND,
+        "Candystore daprd command must retain the canonical app, component, and placement event path",
+    )
 
     preflight = _service(model, "holocene-api-preflight")
     require(_dependency(preflight, "candystore") == "service_healthy", "Holocene host API preflight must follow Candystore readiness")
@@ -234,11 +312,20 @@ def validate_model(model_name: str, model: dict[str, Any], source_root: Path) ->
         holocene_mount is not None and holocene_mount.get("source") == str((source_root / "holocene").resolve()),
         "Holocene web must bind the selected committed source root",
     )
+    expected_env_file = str((source_root / "holocene" / ".env.holocene-web").resolve())
+    require(
+        holocene.get("env_file") == [{"path": expected_env_file, "required": False}],
+        "Holocene web must retain its unresolved optional component env-file reference",
+    )
+    require(
+        set(holocene.get("environment", {})) == {"NEXT_TELEMETRY_DISABLED", "HOLOCENE_API_INTERNAL_URL"},
+        "Holocene rendered environment must contain only explicit non-secret Compose keys",
+    )
     labels = holocene.get("labels", {})
-    require(labels.get("traefik.docker.network") == "proxy", "Holocene Traefik must use proxy")
-    require(labels.get("traefik.http.services.holocene-web.loadbalancer.server.port") == "3001", "Traefik must target Holocene 3001")
-    hq_rule = labels.get("traefik.http.routers.holocene-hq.rule", "")
-    require("PathPrefix(`/hq`)" in hq_rule and "_next/static" not in hq_rule, "Holocene HQ router must match committed HEAD, not dirty source")
+    require(
+        labels == EXPECTED_HOLOCENE_LABELS,
+        "Holocene Traefik labels must exactly preserve the committed Host, auth, HQ, proxy, and port contract",
+    )
 
     if model_name in {"tools", "full"}:
         for name, mode in (("pjangler-cli", "cli"), ("pjangler-mcp", "mcp")):
@@ -288,26 +375,19 @@ def render_models(compose_file: Path, source_root: Path) -> dict[str, dict[str, 
         raise RuntimeError(f"source root is not a populated 33GOD monorepo; missing: {', '.join(missing)}")
 
     env = os.environ.copy()
-    env.update(
-        {
-            "GOD_SOURCE_ROOT": str(source_root.resolve()),
-            "BLOODBANK_NATS_CLIENT_PORT": "4222",
-            "BLOODBANK_NATS_MONITOR_PORT": "8222",
-            "BLOODBANK_DAPR_PLACEMENT_PORT": "50005",
-            "CANDYSTORE_POSTGRES_PORT": "5434",
-            "CANDYSTORE_PORT": "8683",
-            "CANDYSTORE_DAPR_HTTP_PORT": "3504",
-        }
-    )
+    env["GOD_SOURCE_ROOT"] = str(source_root.resolve())
     models: dict[str, dict[str, Any]] = {}
     for model_name in PROFILE_SERVICES:
         command = ["docker", "compose", "-f", str(compose_file)]
         if model_name != "default":
             command.extend(["--profile", model_name])
-        command.extend(["config", "--format", "json"])
+        command.extend(["config", "--no-env-resolution", "--format", "json"])
         result = subprocess.run(command, cwd=compose_file.parent, env=env, text=True, capture_output=True)
         if result.returncode:
-            raise RuntimeError(f"{model_name} render failed: {result.stderr.strip()}")
+            raise RuntimeError(
+                f"{model_name} render failed (docker compose exited {result.returncode}; "
+                "captured output suppressed to protect component env-file values)"
+            )
         models[model_name] = json.loads(result.stdout)
     return models
 

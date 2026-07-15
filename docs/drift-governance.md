@@ -27,8 +27,12 @@ templates, ports, networks, secrets, storage, profiles, or runtime boundaries:
 5. Update both the machine change log and pipeline changelog.
 6. Update root integration/deployment documentation and obtain owner review.
 
-All Compose renders in this gate are read-only. A successful render or semantic
-validation proves candidate structure, not live health or migration completion.
+All Compose renders in this gate are read-only and use
+`--no-env-resolution`. A successful render or semantic validation proves
+candidate structure, not live health or migration completion. Static validation
+may read an authoritative dirty component checkout without modifying it;
+lifecycle cutover requires clean component sources pinned to the candidate's
+gitlinks.
 
 ## Semantic projection contract
 
@@ -38,8 +42,13 @@ The validator guards:
 - one and only one Candystore PostgreSQL/app/daprd deployment;
 - no Bloodbank legacy Candystore or Compose-owned Holocene API;
 - fixed dependency/readiness order and host API preflight;
-- exact ports and the absence of PJangler listeners;
-- three exact external networks and five exact external volumes;
+- exact environment-selected ports and the absence of PJangler listeners;
+- exact Candystore subscription variables, daprd component/placement command,
+  and canonical Bloodbank event path;
+- three exact external networks, exact service memberships, and five exact
+  external volumes;
+- exact Holocene main Host/auth/proxy target and committed HQ routing labels;
+- unresolved Holocene env-file references with no component values in renders;
 - component-source mounts resolved from the explicit source root;
 - zero-replica, run-only PJangler CLI and stdio MCP behavior; and
 - an explicit unsupported cloud gate while local binds remain.
@@ -54,6 +63,11 @@ The validator guards:
 | PJ-REPRO-01 | Critical | PJangler | Template gitlinks plus moving revision resolution are unreproducible | Blocks reproducible provisioning claim |
 | PJ-SAFE-01 | High | PJangler | Some MCP operations mutate by default; cancellation/result propagation is unreliable | Blocks broad safe-default claim |
 | ROOT-CLOUD-01 | Critical | Root/platform | Candidate retains local binds, external local networks, host systemd authority, local credentials, and single-host storage | Blocks cloud lifecycle use; render-only profile must remain explicitly unsupported |
+
+`docker compose --profile cloud up` is specifically prohibited: Compose also
+selects every unprofiled local service, so stateful services may start and mutate
+before the rejection container exits. Cloud has no lifecycle task and is only a
+configuration/render inspection model.
 
 ## Resolved drift
 
