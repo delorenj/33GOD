@@ -653,8 +653,7 @@ for component in bloodbank candystore holocene pjangler; do
   expected=$(git -C "$candidate_root" ls-tree HEAD "$component" | awk '{print $3}')
   actual=$(git -C "$GOD_SOURCE_ROOT/$component" rev-parse HEAD)
   test "$actual" = "$expected"
-  git -C "$GOD_SOURCE_ROOT/$component" diff --quiet
-  git -C "$GOD_SOURCE_ROOT/$component" diff --cached --quiet
+  test -z "$(git -C "$GOD_SOURCE_ROOT/$component" status --porcelain)"
 done
 ```
 

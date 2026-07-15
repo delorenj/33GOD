@@ -1,5 +1,12 @@
 # 33GOD Orchestration Tasks
 
+- [x] Replace `33god-platform/compose.yaml` with a validated integrated Bloodbank, Candystore, Holocene, and PJangler stack; update topology governance, documentation, changelogs, validation, and executable gates. **COMPLETED by Taskforce Daedalus (Session: team-daedalus; Branch: epic/integrated-compose-stack)**
+  - [x] Audit authoritative component and live-runtime topology for the integrated Compose design. **COMPLETED by Professor Fiddlesticks (Session: daedalus-prof-fiddlesticks; Integrated commit: bc7f387)**
+  - [x] Implement the integrated Compose model, semantic validator, focused tests, and safe mise gates. **COMPLETED by Bartholomew the Builder (Session: daedalus-bartholomew; Integrated commit: c4f78bb)**
+  - [x] Reconcile platform manifests, BMAD deployment/integration docs, drift governance, changelogs, and validation evidence. **COMPLETED by SyntaxSorcerer (Session: daedalus-syntaxsorcerer; Integrated commit: bdbd441)**
+  - [x] Perform an independent adversarial review of the integrated stack and its recorded validation evidence. **COMPLETED by Doctor Von Code (Session: daedalus-doctor-von-code; Reviewed: bdbd441; Result: remediation required)**
+  - [x] Remediate adversarial findings for secret-safe rendering, canonical wiring, cloud warnings, Traefik isolation, port overrides, and final evidence. **COMPLETED by Sir Fix-a-Lot (Session: daedalus-sir-fix-a-lot; Integrated commit: 7801be4)**
+  - [x] Re-run the integrated acceptance matrix: 11 focused tests, four Compose models, secret/port adversaries, platform gates, and BMAD drift at 21 PASS / 0 WARN / 0 FAIL. **COMPLETED by Taskforce Daedalus (Session: team-daedalus)**
 - [x] Exhaustively document the brownfield monorepo at root level, covering Bloodbank, Candystore, Holocene, and PJangler; initialize root BMAD; reconcile root direction with component BMAD docs; define periodic drift checks. **COMPLETED by Taskforce Atlas (Sessions: taskforce-atlas, taskforce-atlas-synthesis)**
 - [x] Repair Bloodbank subject validation binding and heartbeat Compose profile. **COMPLETED by Agent Buttercup (Session: agent-buttercup)**
 - [x] Repair PJangler-generated Bloodbank subjects and regression coverage. **COMPLETED by Doctor Von Code (Session: doctor-von-code)**
