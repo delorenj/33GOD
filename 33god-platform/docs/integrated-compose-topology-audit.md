@@ -1,6 +1,6 @@
 # Integrated Compose topology audit
 
-**Status:** Validated implementation target; live cutover pending
+**Status:** Validated integrated local stack; live under root Compose
 
 **Snapshot:** 2026-07-15 01:22-01:25 EDT
 
@@ -118,7 +118,7 @@ staleness signal, not as proof of correctness.
 | --- | --- | --- |
 | Bloodbank | `d4327b5` | Compose modified 2026-07-15 00:49 EDT; live NATS, placement, and legacy PostgreSQL hashes matched the current render. |
 | Candystore | `c206f43` | Compose modified 2026-07-10 15:33 EDT; live PostgreSQL and Dapr hashes matched, but the app hash differed from the current render. |
-| Holocene | `a0a3bdf` | Compose modified and dirty; the live web hash differed from the current render. The dirty `/_next/static` router expansion is protected user work and is explicitly excluded from this candidate. Committed HEAD, with the HQ exception limited to `/hq`, is the preserved baseline. |
+| Holocene | `edaf31b` | Clean and published; the `/hq` and `/_next/static` router expansion is pinned by the root candidate. |
 | PJangler | `0034df3` | Source package is `1.2.18`; globally installed CLI/MCP is `1.2.17`. |
 
 Relevant evidence timestamps included:
@@ -472,10 +472,9 @@ Traefik behavior to preserve:
 - Holocene uses Docker labels, `traefik.docker.network=proxy`, internal port
   3001, TLS with `letsencrypt`, and the shared `google-auth@file` middleware
   for the main router.
-- The higher-priority Holocene HQ router bypasses Google auth for `/hq` only,
-  matching committed Holocene HEAD. The dirty source expansion to
-  `/_next/static` is explicitly excluded; HQ data remains guarded by Telegram
-  init-data validation.
+- The higher-priority Holocene HQ router bypasses Google auth for `/hq` and its
+  `/_next/static` assets, matching committed Holocene HEAD. HQ data remains
+  guarded by Telegram init-data validation.
 - Candystore has no container labels. A file-provider definition routes
   `candystore.delo.sh` to `http://candystore:3001`, applies `google-auth`, and
   checks `/healthz`.
@@ -532,8 +531,8 @@ names require the old projects to be stopped before the new project starts.
    local migration? This must be answered before a cloud profile exists.
 
 Resolved candidate decisions are no longer recommendations: committed Holocene
-HEAD is the baseline, the dirty `/_next/static` router change is excluded, and
-PJangler remains narrow, read-only-source, zero-replica CLI/stdio MCP tooling
+HEAD, including `/_next/static`, is the baseline, and PJangler remains narrow,
+read-only-source, zero-replica CLI/stdio MCP tooling
 invoked only with explicit `docker compose run`.
 
 ## Historical implementation recommendation
@@ -657,13 +656,11 @@ for component in bloodbank candystore holocene pjangler; do
 done
 ```
 
-## Recommendation summary
+## Runtime summary
 
-Use the implemented projection as a validated migration candidate only. Before
-cutover, complete backup/restore evidence and the volume/network ownership plan.
-The safe first product stack remains Bloodbank core plus one canonical
-Candystore plus Holocene web, with the Holocene API as a host prerequisite and
-PJangler as explicit run-only CLI/stdio MCP tooling.
+The implemented projection is the live local lifecycle authority: Bloodbank
+core plus one canonical Candystore plus Holocene web, with the Holocene API as a
+host prerequisite and PJangler as explicit run-only CLI/stdio MCP tooling.
 
 The two strongest prohibitions are simple:
 

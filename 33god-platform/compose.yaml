@@ -221,7 +221,7 @@ services:
       traefik.http.routers.holocene-web.service: holocene-web
       traefik.http.routers.holocene-web.tls: "true"
       traefik.http.routers.holocene-web.tls.certresolver: letsencrypt
-      traefik.http.routers.holocene-hq.rule: Host(`holocene.delo.sh`) && PathPrefix(`/hq`)
+      traefik.http.routers.holocene-hq.rule: Host(`holocene.delo.sh`) && (PathPrefix(`/hq`) || PathPrefix(`/_next/static`))
       traefik.http.routers.holocene-hq.priority: "350"
       traefik.http.routers.holocene-hq.entrypoints: websecure
       traefik.http.routers.holocene-hq.service: holocene-web

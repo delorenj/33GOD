@@ -80,27 +80,14 @@ and five adopted external volumes. Every checked-in JSON render uses Compose
 `--no-env-resolution`, so the optional Holocene component env file remains a
 path reference and its values do not enter captured output.
 
-## Cutover prerequisites
+## Runtime inputs
 
-Before any lifecycle command, an operator must:
+The root stack uses external networks `bloodbank-network`,
+`candystore-internal`, and `proxy`, plus the five adopted external volumes.
+`holocene-api.service` remains the host API authority. Bloodbank, Candystore,
+Holocene, and PJangler sources must be clean and match the root gitlinks.
 
-1. Back up and restore-test the adopted NATS and Candystore data volumes.
-2. Confirm external networks `bloodbank-network`, `candystore-internal`, and
-   `proxy` exist and identify every attached external consumer.
-3. Confirm all five adopted external volume names in the rendered model.
-4. Confirm `holocene-api.service` is healthy and configured to read Candystore
-   at the approved loopback boundary.
-5. Reconcile PJangler source/install parity if the run-only tools will be used.
-6. Plan a stop/start handoff from the existing component projects; fixed
-   container names prevent old and target projects from running concurrently.
-7. Use clean Bloodbank, Candystore, Holocene, and PJangler sources whose HEADs
-   match the candidate's intended gitlink commits.
-
-Static validation may point `GOD_SOURCE_ROOT` at the authoritative primary
-checkout even when it contains protected user work; the source is read-only and
-Holocene env-file values are not resolved. That allowance does not extend to a
-lifecycle cutover. Verify clean, pinned component inputs without displaying file
-contents:
+Verify clean, pinned component inputs without displaying file contents:
 
 ```bash
 candidate_root=$(git rev-parse --show-toplevel)
@@ -112,15 +99,10 @@ for component in bloodbank candystore holocene pjangler; do
 done
 ```
 
-The safe dependency order is NATS, NATS initialization and placement,
+The dependency order is NATS, NATS initialization and placement,
 Candystore PostgreSQL, Candystore app, exactly one Candystore sidecar, Holocene
 API preflight, then Holocene web. Verify the durable `candystore-events`
-consumer cardinality before producers resume.
-
-Rollback means stopping the target without deleting volumes and restarting the
-previous component projects against their preserved identities. Never use
-`docker compose down -v`, never remove an adopted volume, and never delete the
-detached legacy Bloodbank PostgreSQL volumes as part of this migration.
+consumer cardinality after startup.
 
 See [the topology audit](./docs/integrated-compose-topology-audit.md) for the
 evidence, port table, health signals, ownership, and cutover acceptance checks.

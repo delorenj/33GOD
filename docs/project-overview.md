@@ -4,7 +4,7 @@
 
 **Type:** Four-part monorepo knowledge boundary
 
-**Deployment maturity:** Validated integrated local target; live cutover pending
+**Deployment maturity:** Integrated local stack live under root Compose
 
 ## Executive summary
 
@@ -14,10 +14,10 @@ They exchange CloudEvents over NATS/Dapr, persist an audit read model, expose a
 local mission-control UI/API, and provision projects and agents.
 
 Implementation base `c4f78bb` turns the former root readiness scaffold into a
-normalized Compose target. The root owns this projection and its semantic
-validator; component sources remain authoritative and were not modified. The
-candidate has been rendered and validated, but existing component Compose
-projects and the host Holocene API have not been replaced.
+normalized Compose target. The root owns this projection, its semantic
+validator, and the live Bloodbank/Candystore/Holocene-web lifecycle. Component
+sources remain authoritative and are pinned by root gitlinks. The Holocene API
+remains an active host service by design.
 
 ## Component and runtime model
 

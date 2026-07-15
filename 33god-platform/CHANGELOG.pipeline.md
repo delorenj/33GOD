@@ -5,6 +5,16 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 
 ## 2026-07-15
 
+### Root Compose Cutover
+
+- Published Holocene `edaf31b`, pinned all four component gitlinks, and added
+  formal Holocene and PJangler submodule mappings at the monorepo root.
+- Replaced the three component-owned Compose lifecycles with the root project.
+  Bloodbank core, one Candystore triplet, and Holocene web are live under
+  `33god-platform`; PJangler remains clean, pinned, and run-only.
+- Adopted the Holocene `/hq` plus `/_next/static` routing contract and removed
+  the excluded legacy Bloodbank PostgreSQL container.
+
 ### Integrated Compose Target
 
 - Replaced the readiness scaffold with a root-owned normalized projection for
@@ -14,8 +24,7 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
   volume identities; excluded Bloodbank's legacy Candystore services and kept
   detached legacy volumes outside the target.
 - Added a semantic validator and focused tests for default, `tools`, `full`,
-  and render-only unsupported `cloud` models. This validates a target only; no
-  services or existing component projects were changed.
+  and render-only unsupported `cloud` models.
 - Extended the documentation drift gate to validate the candidate against an
   explicit source root. Cloud deployment remains blocked.
 - Hardened every checked-in render task with `--no-env-resolution`, preserved
@@ -23,8 +32,8 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
   Compose errors that could otherwise disclose component env-file values.
 - Expanded semantic/adversarial gates for the canonical Candystore subscription
   and daprd placement path, exact Traefik Host/auth/proxy behavior, and exact
-  per-service network isolation. The committed Holocene `/hq` router remains the
-  baseline; dirty `/_next/static` work is excluded.
+  per-service network isolation. The committed Holocene `/hq` router and its
+  `/_next/static` asset path are the pinned baseline.
 
 ### Registry Truth Reconciliation
 

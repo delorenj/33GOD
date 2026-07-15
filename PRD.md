@@ -1,6 +1,6 @@
 # 33GOD productized development environment PRD
 
-Status: Integrated Compose target validated; live cutover pending
+Status: Integrated local Compose stack live
 Owner: 33GOD Director
 Last updated: July 15, 2026
 
@@ -15,9 +15,8 @@ independently, but their contracts affect one another.
 The goal is to productize these pieces into one cohesive platform with one
 governed local deployment entrypoint and, later, a separately designed hosted
 subscription service. `33god-platform/` indexes components, records
-cross-component changes, defines backfill checks, and now owns a normalized
-integrated Compose target. That target is statically validated but has not been
-cut over on the host.
+cross-component changes, defines backfill checks, and owns the live normalized
+integrated Compose stack.
 
 ## Situation
 
@@ -64,9 +63,9 @@ boundaries, managed storage, cloud secrets, and subscription packaging.
 
 `33god-platform/` is the product control-plane directory and root-owned
 cross-component projection. Implementation base `c4f78bb` replaced the former
-readiness scaffold with a validated local Compose target. Component
-repositories, existing component Compose projects, and the host Holocene API
-remain untouched; this is not a live cutover.
+readiness scaffold with a validated local Compose target. Root Compose now owns
+Bloodbank core, the canonical Candystore deployment, and Holocene web; the
+Holocene API remains a healthy host service by design.
 
 Current artifacts include:
 

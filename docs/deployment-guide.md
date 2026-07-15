@@ -2,10 +2,10 @@
 
 ## Deployment truth
 
-`33god-platform/compose.yaml` is a validated local target. It has not been cut
-over on the host. Existing Bloodbank, Candystore, and Holocene Compose projects
-and `holocene-api.service` remain untouched. Static validation must not be
-reported as runtime health.
+`33god-platform/compose.yaml` is the live local lifecycle authority for
+Bloodbank core, Candystore, and Holocene web. `holocene-api.service` remains a
+host prerequisite by design. Static validation and live health are recorded as
+separate evidence.
 
 The target's default set is Bloodbank NATS/init/placement, exactly one
 standalone Candystore PostgreSQL/app/daprd, Holocene API preflight, and Holocene
@@ -134,4 +134,6 @@ The root project becomes the sole Compose owner of the adopted services. Verify
 container health, NATS stream state, one `candystore-events` durable consumer,
 Candystore readiness, Holocene API health, and the routed web surface.
 
-No lifecycle command was run while producing or validating this guide.
+The direct cutover was executed on 2026-07-15. Root Compose adopted the existing
+volumes, removed the excluded legacy Bloodbank PostgreSQL container, and passed
+the documented runtime checks.

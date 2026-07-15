@@ -21,12 +21,11 @@ git log -1 --format=%H --fixed-strings \
 
 ## Outcome
 
-The normalized integrated Compose candidate and its documentation/governance
-projection pass the complete read-only verification matrix. `ROOT-COMPOSE-01`
-is resolved by executable render and semantic evidence. This is not a live
-cutover: no lifecycle command ran, component repositories were not changed,
-existing component projects remain untouched, and the host
-`holocene-api.service` remains external.
+The normalized integrated Compose stack and its documentation/governance
+projection pass the complete verification matrix. `ROOT-COMPOSE-01` is resolved
+by executable render, semantic evidence, and live runtime evidence. Root Compose
+owns Bloodbank core, Candystore, and Holocene web. The healthy
+`holocene-api.service` remains external by design.
 
 Cloud remains blocked. Its successful render proves the unsupported local-bind
 model and rejection gate remain visible; no cloud lifecycle command is
@@ -104,20 +103,22 @@ values are absent without printing either.
   Those fixed development-only values were already part of the adopted
   component model; no real operator, hosted, Telegram, provider, or production
   secret value was added. Holocene's ignored env-file values are not rendered.
-- The implementation phase recorded one isolated Candystore image build. It was
-  buildability evidence only: no container was started, and it is not runtime
-  health or cutover evidence. This remediation did not repeat the build.
+- Candystore built successfully from the pinned source during root startup.
 - Markdown incomplete-marker and internal-link checks — passed in the drift
   gate.
-- No `docker compose up`, `down`, `stop`, volume removal, network removal,
-  systemd mutation, or component test with live-data mutation was executed.
+- Component-owned projects were stopped and the root project was started. No
+  volume was deleted and the host systemd service was not mutated.
 
-## Remaining blockers
+## Runtime result
 
-Before cutover, the operator still needs backup/restore evidence for NATS and
-Candystore, an approved stop/start window, exact external network/volume
-inventory, durable-consumer cardinality checks, route/health acceptance, and a
-tested rollback to the existing component projects without deleting volumes.
+- Bloodbank NATS, Dapr placement, Candystore PostgreSQL/app/daprd, and Holocene
+  web are running under Compose project `33god-platform`.
+- NATS reports `BLOODBANK_COMMANDS` and `BLOODBANK_EVENTS` with exactly one
+  `candystore-events` consumer and no pending or unacknowledged messages.
+- NATS, Candystore health/readiness, Candystore daprd, Holocene host API, and
+  Holocene web health checks pass.
+- The excluded legacy Bloodbank PostgreSQL container was removed; the separate
+  event-toaster consumer remains attached.
 
 Hosted deployment remains unsupported until local binds, external local
 networks, host systemd authority, listener/auth risks, local credentials,
