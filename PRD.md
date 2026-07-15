@@ -322,8 +322,9 @@ These issues are the first things the director must triage.
    Add it only after the repo exists and the manifest has real health,
    source-of-truth, and changelog fields.
 
-2. Decide whether Candybar, Holyfields, and Hookd are active product cards,
-   legacy components, or replaced capabilities.
+2. **Resolved 2026-07-15:** Candybar remains active. Holyfields and Hookd are
+   legacy definitions and are excluded from the active component list until
+   their repositories and contracts are deliberately restored.
 
 3. Migrate Bloodbank and Holocene PM runtimes from `IGNORE_ALL_YELLOW` to
    `DELINKED_GREEN`.
@@ -343,8 +344,8 @@ Keep the current registry valid and trustworthy as components move.
 
 - Maintain `platform:validate`, `platform:components`, and
   `platform:backfills:check` as passing gates.
-- Decide active versus legacy component status for Candybar, Holyfields, Hookd,
-  and any future Flume manifest.
+- Preserve the active/legacy decision for Candybar, Holyfields, Hookd, and any
+  future Flume manifest as live repositories change.
 - Record each registry change in `CHANGELOG.pipeline.md` and `changes/*.jsonl`.
 
 ### Phase 2. Normalize runtime and hooks

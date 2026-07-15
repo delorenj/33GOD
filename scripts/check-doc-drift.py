@@ -7,6 +7,7 @@ import argparse
 import json
 import re
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -152,6 +153,17 @@ def check_component_bmad(source: Path, docs: Path, report: Reporter) -> None:
                 problems.append(f"project_knowledge={bmm.get('project_knowledge')!r}")
             if problems:
                 report.fail(f"component-{part}", "malformed or unresolved BMAD config: " + ", ".join(problems))
+            elif (config_toml := root / "_bmad/config.toml").is_file():
+                with config_toml.open("rb") as handle:
+                    canonical = tomllib.load(handle)
+                canonical_name = canonical.get("core", {}).get("project_name")
+                if canonical_name != core.get("project_name"):
+                    report.fail(
+                        f"component-{part}",
+                        f"canonical config project_name={canonical_name!r}; core YAML={core.get('project_name')!r}",
+                    )
+                else:
+                    report.passed(f"component-{part}", "BMAD configs parse and root architecture/development docs exist")
             else:
                 report.passed(f"component-{part}", "BMAD configs parse and root architecture/development docs exist")
         except Exception as exc:
@@ -226,7 +238,11 @@ def check_high_risk_contracts(source: Path, report: Reporter) -> None:
 
     consumer = source / "pjangler/templates/hermes-agent/runtime-scaffold/bloodbank-consumer.py"
     consumer_text = consumer.read_text(encoding="utf-8") if consumer.is_file() else ""
-    noncanonical = ("bloodbank.evt.v1.repo." in consumer_text or "bloodbank.cmd.v1.agent." in consumer_text)
+    noncanonical = re.search(
+        r"bloodbank\.(?:evt\.v1\.repo|cmd\.v1\.agent)\."
+        r"(?:\{(?:REPO|AGENT_ID)\}|\{\{[^}]+\}\}|<(?:repo|agent_id)>)",
+        consumer_text,
+    )
     if noncanonical:
         report.fail("pjangler-bloodbank-routing", "generated subjects embed repo/agent routing identifiers")
     else:

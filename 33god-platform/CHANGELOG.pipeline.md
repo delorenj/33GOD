@@ -3,6 +3,18 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-07-15
+
+### Registry Truth Reconciliation
+
+- Corrected PJangler, Hermes Fleet, and HeyMa paths to their live checkouts and
+  restored PJangler's canonical npm health command.
+- Removed Holyfields and Hookd from the active component list because neither
+  repository is present in the current platform checkout. Their manifest files
+  remain as historical definitions until those components are deliberately
+  restored.
+- Re-established the platform manifest validator as a live-truth gate.
+
 ## 2026-07-10
 
 ### Component Registry Repair

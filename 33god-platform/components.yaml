@@ -30,8 +30,6 @@ component_files:
   - components/pipeline-mcp-hub.yaml
   - components/candybar.yaml
   - components/heyma.yaml
-  - components/holyfields.yaml
-  - components/hookd.yaml
 
 contract_paths:
   - ../bloodbank/docs/event-naming.md
@@ -40,9 +38,9 @@ contract_paths:
   - ../candystore/migrations
   - ../holocene/docs
   - ../pipeline-mcp-hub/README.md
-  - ../../pjangler/templates
+  - ../pjangler/templates
   - ../../skillex/all-skills
-  - ../../hermes-agent-template
+  - ../hermes-agent-template
 
 change_policy:
   machine_log: changes/*.jsonl

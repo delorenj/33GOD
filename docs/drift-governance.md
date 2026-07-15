@@ -57,17 +57,22 @@ Each record contains:
 
 | ID | Severity | Owner | Contradiction | Gate impact |
 |---|---:|---|---|---|
-| BB-CONTRACT-01 | Critical | Bloodbank | Runtime validation omits semantic type/subject equality | Blocks contract-complete runtime claim |
-| BB-RUN-01 | Critical | Bloodbank | Heartbeat Compose/CI references missing recorder directory | Blocks heartbeat profile/CI |
-| BB-PJ-01 | Critical | PJangler/Bloodbank | Generated repo/agent subject routing violates six-token contract | Blocks canonical agent command claim |
 | CANDY-DUR-01 | Critical | Candystore | Dead-letter failure can still receive `DROP` acknowledgement | Blocks “never lose an event” claim |
-| CANDY-HOLO-01 | High | Holocene/Candystore | Default Candystore URL/port/network is wrong and failure is silent | Blocks reliable history claim |
 | HOLO-SEC-01 | Critical | Holocene | Host-control API binds all interfaces without app auth/authz | Blocks untrusted-network/cloud use |
 | HOLO-SECRET-01 | High | Holocene | Literal clock credential is tracked in documentation/history | Requires rotation and history remediation |
-| PJ-IDENTITY-01 | Critical | Root/PJangler | Platform manifest resolves another PJangler checkout | Blocks authoritative component listing |
 | PJ-REPRO-01 | Critical | PJangler | Dirty template gitlinks plus `HEAD` resolution are unreproducible | Blocks reproducible provisioning claim |
 | PJ-SAFE-01 | High | PJangler | Some MCP operations mutate by default; cancellation/result propagation is unreliable | Blocks broad safe-default claim |
 | ROOT-COMPOSE-01 | High | Root | Product Compose is a tools scaffold, not integrated orchestration | Blocks unified-stack claim |
+
+## Resolved Drift
+
+| ID | Resolved | Evidence |
+|---|---|---|
+| BB-CONTRACT-01 | 2026-07-15 | `assert_contract` invokes exact subject matching; Bloodbank schema/naming gate passes |
+| BB-RUN-01 | 2026-07-15 | Heartbeat profile renders and passes the live heartbeat smoke test |
+| BB-PJ-01 | 2026-07-15 | PJangler templates use fixed subjects and envelope-data routing; seven focused tests pass |
+| CANDY-HOLO-01 | 2026-07-15 | Holocene fallback is `127.0.0.1:8683`; live API rebuilt, restarted, and healthy |
+| PJ-IDENTITY-01 | 2026-07-15 | Platform registry resolves monorepo PJangler and uses npm; validator passes |
 
 ## Acceptance Policy
 

@@ -1,7 +1,7 @@
 id: hermes-fleet
 name: Hermes Fleet
 role: agent-runtime-fleet
-repo: ../../hermes-agent-template
+repo: ../hermes-agent-template
 description: Shared Hermes runtime, profiles, systemd units, and generated agent role scaffolds.
 compose:
   files: []
@@ -14,7 +14,7 @@ source_of_truth:
   - ~/.hermes/fleet.env
   - ~/.hermes/config.yaml
   - ~/.hermes/agents-registry.yaml
-  - ../../hermes-agent-template
+  - ../hermes-agent-template
 changelog:
   topics: [agent-runtime, fleet-config, profiles, systemd]
 public_card:

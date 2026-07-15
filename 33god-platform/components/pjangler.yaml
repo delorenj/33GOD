@@ -1,18 +1,18 @@
 id: pjangler
 name: PJangler
 role: provisioning-control-plane
-repo: ../../pjangler
+repo: ../pjangler
 description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects and agents.
 compose:
   files: []
   profiles: [provisioning]
 health:
   commands:
-    - cd ../../pjangler && bun test
+    - cd ../pjangler && npm test
 source_of_truth:
-  - ../../pjangler/src
-  - ../../pjangler/templates/commonproject
-  - ../../pjangler/templates/hermes-agent
+  - ../pjangler/src
+  - ../pjangler/templates/commonproject
+  - ../pjangler/templates/hermes-agent
   - ~/.config/pjangler
   - ~/.config/hermes-agent-template
 changelog:
