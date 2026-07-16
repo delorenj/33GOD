@@ -10,8 +10,8 @@ purpose: "Company-wide evidence gathering, freshness-aware daily reporting, and 
 
 # Inference target (empty = inherit from global ~/.hermes/config.yaml)
 model:
-  provider: ""
-  name: ""
+  provider: "openai-codex"
+  name: "gpt-5.4"
 
 # Hermes profile name. Profile dir is symlinked into ./runtime/.
 profile: delonet-company-reporter
