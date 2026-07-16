@@ -133,6 +133,15 @@ def main() -> int:
         critical.append({"code": "missing_managed_jobs", "detail": ",".join(missing)})
     if unexpected:
         warnings.append({"code": "unexpected_managed_jobs", "detail": ",".join(unexpected)})
+    paused = sorted(
+        job.get("name")
+        for job in jobs
+        if isinstance(job, dict)
+        and job.get("name") in EXPECTED_JOBS
+        and not job.get("enabled", False)
+    )
+    if paused:
+        warnings.append({"code": "managed_jobs_paused", "detail": ",".join(paused)})
 
     tick_lock = PROFILE / "cron" / ".tick.lock"
     tick_age = None
@@ -153,17 +162,18 @@ def main() -> int:
     except (OSError, json.JSONDecodeError):
         config = {}
         critical.append({"code": "config_unreadable", "detail": str(CONFIG)})
+    daily_config = (
+        config.get("daily", {}) if isinstance(config, dict) and isinstance(config.get("daily"), dict) else {}
+    )
     deliver = (
-        config.get("daily", {}).get("deliver")
-        if isinstance(config, dict) and isinstance(config.get("daily"), dict)
-        else None
+        daily_config.get("deliver")
     )
     if deliver != "telegram":
         warnings.append({"code": "telegram_delivery_not_activated", "detail": str(deliver)})
 
     archive_dir = Path(config.get("archive_dir", "")) if isinstance(config, dict) else Path()
     current = archive_dir / eastern.strftime("%Y/%m/%Y-%m-%d/current.json")
-    if (eastern.hour, eastern.minute) >= (8, 15) and not current.is_file():
+    if daily_config.get("enabled") and (eastern.hour, eastern.minute) >= (8, 15) and not current.is_file():
         critical.append({"code": "daily_report_missed", "detail": str(current)})
 
     homes = gateway_homes()
