@@ -17,9 +17,9 @@ The default render contains twelve processes:
 - Holocene host-API preflight and web.
 
 Lifecycle uses exactly
-`ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`.
+`ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`.
 There is no Lifecycle `build` key or local-image fallback. Its OCI revision is
-`c78b0e81e7e29898bb06f86eec60dcee9af1191a`.
+`eefc35388125a016dc2b2c905950fd8a2981322d`.
 
 Startup fails closed:
 

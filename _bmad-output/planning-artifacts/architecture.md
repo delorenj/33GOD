@@ -467,9 +467,9 @@ contract or competing reconciler is permitted.
 
 ### Current state
 
-- Lifecycle runtime source `c78b0e81e7e29898bb06f86eec60dcee9af1191a`
+- Lifecycle runtime source `eefc35388125a016dc2b2c905950fd8a2981322d`
   is exercised only as
-  `ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`.
+  `ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`.
 - Bloodbank is pinned at
   `155f2d774964d1c73694ce2c576fe5f50b91eefb`; its canonical v2 snapshot
   capability version and completion-evidence contracts define the exact wire

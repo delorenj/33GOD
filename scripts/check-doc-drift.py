@@ -35,11 +35,11 @@ FORBIDDEN_MARKERS = re.compile(
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76"
+    "sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf"
 )
 COMPONENT_REVISIONS = {
     "bloodbank": "155f2d774964d1c73694ce2c576fe5f50b91eefb",
-    "lifecycle": "c78b0e81e7e29898bb06f86eec60dcee9af1191a",
+    "lifecycle": "eefc35388125a016dc2b2c905950fd8a2981322d",
     "candystore": "12c25237b4242764bf630fba6ecc00804b19f9f2",
     "momo": "33dfd7a85798ebdfddd904be3646492af63635bc",
     "holocene": "ed3630457b21062b5b02225571c51070b3028fcf",

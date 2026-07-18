@@ -3,9 +3,9 @@ name: Lifecycle
 role: project-lifecycle-authority
 repo: ../lifecycle
 description: Sole deterministic lifecycle specification, state, reconcile, frontier, obligation, grant, and write authority.
-gitlink_revision: c78b0e81e7e29898bb06f86eec60dcee9af1191a
-image_source_revision: c78b0e81e7e29898bb06f86eec60dcee9af1191a
-image: ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76
+gitlink_revision: eefc35388125a016dc2b2c905950fd8a2981322d
+image_source_revision: eefc35388125a016dc2b2c905950fd8a2981322d
+image: ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
 compose:
   files: []
   platform_projection: ../compose.yaml

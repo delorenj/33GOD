@@ -13,7 +13,7 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 - Published and pinned Bloodbank `155f2d7…` as the canonical schema/NATS/Dapr
   authority, adding snapshot capability versions and exact completion-evidence
   schema while retaining the tracked JetStream initializer.
-- Published and pinned Lifecycle `c78b0e8…`, Candystore `12c2523…`, Momo
+- Published and pinned Lifecycle `eefc353…`, Candystore `12c2523…`, Momo
   `33dfd7a…`, and Holocene `ed36304…` for guarded obligation truth,
   canonical duplicate projection, exact actor evidence, and complete
   authoritative client semantics.

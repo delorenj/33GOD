@@ -29,7 +29,7 @@ SOURCE_ROOT = PLATFORM_ROOT.parent
 COMPOSE_FILE = PLATFORM_ROOT / "compose.yaml"
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76"
+    "sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf"
 )
 NATS_BOX_IMAGE = (
     "natsio/nats-box@"

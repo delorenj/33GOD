@@ -101,7 +101,7 @@ Current artifacts include:
   - `docs:drift`
 
 The integrated model pins Lifecycle to
-`ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`
+`ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`
 with no build key. Bloodbank is pinned at
 `155f2d774964d1c73694ce2c576fe5f50b91eefb`; clients reuse its canonical
 versioned capability and completion-evidence contracts instead of defining a
