@@ -1,138 +1,122 @@
-# Planned Lifecycle Architecture
+# Lifecycle Architecture
 
 **Decision date:** 2026-07-18
 
-**Status:** Approved target; standalone repository/service not implemented
+**Implementation state:** Current local vertical slice, verified against the
+immutable runtime image
 
-## Purpose
+## Runtime pin
 
-`lifecycle` is the headless authority for deterministic project lifecycle
-semantics. It owns the versioned lifecycle specification, operational state,
-reconciliation, legal frontier, obligations, blockers, gates, checkpoints, and
-capability validation. Every state-changing client submits intent; Lifecycle
-decides whether that intent is legal and commits the resulting state.
+- Runtime image:
+  `ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`
+- Image source revision:
+  `715ab2ea62bcece488c8d6029869af8d3651c39a`
+- Integration-document gitlink revision:
+  `434a1674d35b15aafb38d2d7a022d996ca3ad805`
+- Bloodbank contract revision:
+  `cce08181ed9f6de8dd24f058b93d0dd9cda9f2bf`
 
-## Current Evidence
+Root Compose references only the immutable digest. It never rebuilds Lifecycle
+and has no Lifecycle build or local-image substitution.
 
-The starting implementation exists inside Bloodbank at pinned revision
-`03415705a39d77f1e6d73c8a9c92ee177320df7e` under
-`services/lifecycle-controller/`.
+## Sole authority
 
-Implemented and tested there:
+Lifecycle alone owns the versioned specification, operational state,
+deterministic reconcile, legal transitions and guards, modes, frontier,
+obligations, blockers and gates, actor capabilities, idempotency,
+`expected_state_version`, deterministic fingerprints, and all state-changing
+writes.
 
-- pure lifecycle evaluation and deterministic state fingerprinting;
-- state/health verdicts for active, waiting, blocked, stalled, and degraded;
-- observation aggregation, blockers, gates, and checkpoints;
-- leased dirty reconcile queue plus periodic sweeper;
-- atomic current-state, append-only history, and outbox writes;
-- an outbox retry loop and a repeatable Drumjangler dogfood fixture; and
-- 21 passing focused tests plus passing Ruff checks.
-
-This is an embryo, not the complete target. Current gaps include:
-
-- no standalone repository, package, image, service, or root Compose entry;
-- no configured Bloodbank NATS/Dapr outbox publisher;
-- no registered `bloodbank.v1.lifecycle.blocker.detected` schema;
-- `status.updated` creation can stage empty `repo` and null `previous` values
-  that conflict with its schema;
-- no versioned lifecycle spec or command surface;
-- no computed legal frontier, obligations, or capability grants; and
-- operational tables currently live in the PostgreSQL instance used by the
-  Bloodbank/Candystore demo path.
-
-## Authority Boundary
+The surrounding ownership split is:
 
 | Concern | Owner |
 |---|---|
 | Project/bootstrap identity and binding inputs | PJangler |
-| Lifecycle spec, state, reconciliation, frontier, obligations, capability validation | Lifecycle |
+| Lifecycle semantics and operational writes | Lifecycle |
 | Canonical command/event schemas and NATS/Dapr transport | Bloodbank |
-| Durable event history and query/read projections | Candystore |
-| Business prioritization, delegation, and review process | Momo |
-| Dashboard rendering and high-level commands | Holocene |
-| Integrated process deployment and release gates | 33GOD root platform |
+| Append-only event history and read projections | Candystore |
+| Legal-work ranking, delegation, evidence, and invocation intent | Momo |
+| Read rendering and high-level command initiation | Holocene |
+| Process topology, immutable pins, profiles, and gates | 33GOD root |
 
-Physical database co-location during migration does not transfer semantic
-ownership. Candystore may store lifecycle events and read projections, but only
-Lifecycle writes operational lifecycle state.
+Database location never transfers semantic ownership. Lifecycle has an isolated
+PostgreSQL authority database; Candystore has separate storage and credentials.
 
-## Read Model
+## Process topology
 
-An authoritative snapshot must carry at least:
+Root Compose starts a healthy dedicated PostgreSQL service, runs
+`python -m main migrate` once, runs deterministic `python -m main bootstrap`
+once, then runs `python -m main serve`. Migration or bootstrap failure prevents
+serve. Serve also waits for healthy NATS and successful canonical JetStream
+initialization. Readiness checks database and Bloodbank connectivity; liveness
+remains available during a broker outage.
+
+Lifecycle commits state, append-only history, and outbox rows transactionally.
+Publication retries after transport recovery without undoing the committed
+transition or duplicating its effect.
+
+## Read contract
+
+Candystore's durable JetStream consumer projects canonical lifecycle events
+idempotently and in version order. The read model retains:
 
 - lifecycle and project identity;
-- lifecycle `spec_version` and `state_version`;
-- current status, health, phase, and deterministic fingerprint;
-- last reconcile time plus observation source/freshness;
-- current blockers and gates;
-- legal frontier with reason codes;
-- outstanding and satisfied obligations; and
-- capability grants relevant to the requesting actor.
+- `spec_version`, `state_version`, status, health, phase, and fingerprint;
+- provenance/source observation and observation as-of/freshness;
+- legal frontier and obligations;
+- blockers and gates; and
+- stable command verdicts.
 
-Consumers must render missing/stale inputs as unknown or degraded. An empty
-projection is not evidence of healthy zero work.
+Missing or stale observations are represented as unknown/degraded, never as an
+empty healthy state. Candystore exposes no operational lifecycle mutation
+endpoint.
 
-## Command Model
+## Command contract
 
-Every state-changing command includes:
+Every state-changing command carries:
 
 - lifecycle ID and actor identity;
-- requested intent;
-- expected `state_version`;
+- capability/grant context;
 - idempotency key;
-- asserted capability/grant context; and
-- correlation/causation metadata required by Bloodbank.
+- `expected_state_version`;
+- correlation and causation identifiers; and
+- the canonical Bloodbank envelope and subject.
 
-Lifecycle returns a stable accepted/rejected/already-applied verdict. It rejects
-illegal frontier choices, stale versions, missing capability, and malformed
-commands without mutating state.
+Lifecycle returns stable applied, stale, unauthorized, illegal, or duplicate
+verdicts. A stale version or invalid capability is rejected without mutation.
 
-Accepted commands commit state, append-only history, and the outbox record in
-one transaction. Publication can retry independently; a transport failure
-cannot erase the committed transition.
+Momo reads only the authoritative projection, filters and ranks the legal
+frontier, resolves an obligation's canonical skill reference, emits decision
+rationale separately from invocation/command intent, and publishes through
+Bloodbank. Holocene reads the Candystore projection and publishes high-level
+commands through Bloodbank. Neither client derives, persists, or optimistically
+mutates lifecycle truth.
 
-## Client Rules
+## Executed failure matrix
 
-- **Momo** reads the legal frontier and obligations, applies the operator's
-  business pillars to rank legal candidates, submits intent, and delegates
-  implementation/review. Its decision events record reasoning only.
-- **Holocene** renders the authoritative snapshot and submits high-level
-  commands. It does not derive state from board columns, colors, local files,
-  or button clicks.
-- **PJangler** supplies stable project/bootstrap identity. Registry status is a
-  projection when sourced from Lifecycle.
-- **Bloodbank** validates and transports contracts without interpreting domain
-  state.
-- **Candystore** persists events and serves read projections without becoming a
-  write path.
+The isolated gate in
+`33god-platform/scripts/verify-lifecycle-live.py` exercises the exact digest
+with unique ports, networks, and volumes. It proves:
 
-## Extraction and Cutover
+1. Holocene offline does not halt Lifecycle transitions.
+2. Momo offline does not corrupt or rewrite truth.
+3. Lifecycle restart catches up committed observations/outbox work without a
+   duplicate transition effect.
+4. Stale `expected_state_version` is rejected without mutation.
+5. Missing or invalid capability is rejected without mutation.
+6. NATS outage preserves committed state and per-lifecycle outbox order;
+   recovery eventually publishes all rows.
+7. The dedicated PostgreSQL volume survives Lifecycle and PostgreSQL process
+   restarts.
 
-1. Freeze lifecycle vocabulary, IDs, versions, commands, events, frontier,
-   obligations, and capability semantics.
-2. Create the standalone repository from the Bloodbank controller path while
-   preserving commit provenance.
-3. Register and validate every lifecycle command/event in Bloodbank; configure
-   the outbox publisher.
-4. Add deterministic frontier, obligation, capability, and idempotent command
-   behavior with golden parity tests for the existing evaluator.
-5. Back up current operational tables and record counts, keys, fingerprints,
-   history ordering, and outbox publication state.
-6. Migrate data, prove one writer, compare the migrated evidence, and retain a
-   rollback checkpoint.
-7. Wire Candystore projections, then Momo and Holocene clients.
-8. Add exactly one Lifecycle service to root Compose only after image, health,
-   migration, replay, contract, and rollback gates pass.
+The same run exercises durable Candystore replay/read-only behavior, Momo's
+legal obligation-to-skill seam, Holocene read/command fidelity, and responsive
+desktop/mobile rendering. Cleanup addresses only the unique resources allocated
+by the run.
 
-## Acceptance
+## Current versus future
 
-- Exactly one component can write lifecycle state.
-- Same ordered inputs and spec version produce the same state fingerprint,
-  frontier, obligations, and command verdict.
-- Every emitted contract is registered and validates as a complete Bloodbank
-  envelope.
-- Existing state/history survives extraction with verified evidence.
-- Failed event publication remains retryable and observable.
-- Momo cannot select work outside the authoritative frontier.
-- Holocene renders provenance/freshness and cannot write state directly.
-- Root deployment proves one healthy instance and no legacy dual writer.
+Current: the local authority topology, three client seams, immutable image pin,
+semantic gates, and isolated failure matrix are implemented. Future: a separate
+hosted/cloud design, production rollout decision, release promotion, and any
+additional lifecycle domains. The cloud profile is intentionally unsupported.

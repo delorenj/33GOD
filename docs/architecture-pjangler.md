@@ -32,7 +32,7 @@ Host automation and provisioning pipeline. Typed plans separate some preview fro
 
 TypeScript interfaces and runtime validation, rather than JSON Schema, define the registry and `.project.json`. The central registry is catalog/bootstrap authority; `.project.json` is the repository-local runtime projection. See [PJangler Data Models](./data-models-pjangler.md).
 
-The planned Lifecycle component binds its versioned specification to this stable
+Lifecycle binds its versioned specification to this stable
 project identity. Registry `lifecycle status`, provider board state, and local
 automation fields remain bootstrap/catalog metadata and observations; they may
 not override the authoritative Lifecycle state version.

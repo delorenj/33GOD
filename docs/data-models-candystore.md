@@ -25,3 +25,13 @@ UUID conflict means duplicate regardless of payload. Count/page queries are sepa
 Lifecycle rows in `events` are immutable history/read-model inputs, not the
 operational lifecycle store. A Candystore projection may lag, be rebuilt, or be
 unavailable without transferring single-writer authority from Lifecycle.
+
+## Lifecycle projection
+
+Migration `003_lifecycle_projection.sql` adds replay receipts, a current
+versioned snapshot, and stable command-verdict storage. Updates are idempotent
+and ignore older state versions. Snapshot data retains identity, versions,
+authority state/fingerprint, provenance/freshness, legal frontier, obligations,
+blockers/gates, and read-side verdicts. Missing or stale snapshots are returned
+as unknown/degraded. These tables are read projections, never operational
+Lifecycle state.

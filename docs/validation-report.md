@@ -1,5 +1,9 @@
 # Integrated Compose Documentation Validation Report
 
+> **Historical report:** this file captures the 2026-07-15 four-component
+> baseline. The 2026-07-18 Lifecycle topology and failure matrix supersede its
+> lifecycle gap statements; see [Lifecycle Architecture](./architecture-lifecycle.md).
+
 **Validated:** 2026-07-15
 
 **Implementation base:** `c4f78bbe383a9c1d5ee12e2e81472f6a179b97ad`

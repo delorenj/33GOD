@@ -5,7 +5,7 @@
 | Area | Owner |
 |---|---|
 | Event names, schemas, subjects, NATS/Dapr topology | Bloodbank |
-| Lifecycle spec/state/reconcile/frontier/obligations/capability validation | Lifecycle (planned; no standalone service yet) |
+| Lifecycle spec/state/reconcile/frontier/obligations/capability validation and all state-changing writes | Lifecycle |
 | Event persistence, ingest, query/read models, audit UI | Candystore |
 | Fleet/lifecycle rendering, host controls, high-level command UI | Holocene |
 | Registry, project/bootstrap identity, parity, templates, MCP/CLI | PJangler |
@@ -36,9 +36,11 @@ may read an authoritative dirty component checkout without modifying it;
 deployment cutover requires clean component sources pinned to the candidate's
 gitlinks.
 
-The current semantic validator covers the four checked-out baseline components.
-It does not validate the planned Lifecycle repository, migration, single-writer
-cutover, clients, or deployment because those artifacts do not exist yet.
+The semantic validator covers the integrated local topology, including the
+exact Lifecycle digest/no-build rule, dedicated authority storage, fail-closed
+migrate/bootstrap/serve ordering, service health/dependencies, and profile
+semantics. The isolated live gate covers the client seams and seven failure
+invariants.
 
 ## Semantic projection contract
 
@@ -51,8 +53,10 @@ The validator guards:
 - exact environment-selected ports and the absence of PJangler listeners;
 - exact Candystore subscription variables, daprd component/placement command,
   and canonical Bloodbank event path;
-- three exact external networks, exact service memberships, and five exact
+- four exact external networks, exact service memberships, and six exact
   external volumes;
+- the exact immutable Lifecycle image, absence of a build key, dedicated
+  secret/storage, and private database network;
 - exact Holocene main Host/auth/proxy target and committed HQ routing labels;
 - unresolved Holocene env-file references with no component values in renders;
 - component-source mounts resolved from the explicit source root;
@@ -69,9 +73,6 @@ The validator guards:
 | PJ-REPRO-01 | Critical | PJangler | Template gitlinks plus moving revision resolution are unreproducible | Blocks reproducible provisioning claim |
 | PJ-SAFE-01 | High | PJangler | Some MCP operations mutate by default; cancellation/result propagation is unreliable | Blocks broad safe-default claim |
 | ROOT-CLOUD-01 | Critical | Root/platform | Candidate retains local binds, external local networks, host systemd authority, local credentials, and single-host storage | Blocks cloud lifecycle use; render-only profile must remain explicitly unsupported |
-| LIFE-BOUNDARY-01 | Critical | Lifecycle/root | Standalone Lifecycle repository/service and single-writer client boundary are approved but unimplemented | Blocks target lifecycle claims and Momo/Holocene autonomy cutover |
-| LIFE-OUTBOX-01 | Critical | Lifecycle/Bloodbank | Controller default outbox publisher raises `outbox publisher is not configured` | Blocks observable/retry-proven production transitions |
-| LIFE-SCHEMA-01 | Critical | Bloodbank/Lifecycle | `blocker.detected` is unregistered; initial `status.updated` can stage schema-invalid `repo`/`previous` values | Blocks contract-complete publication |
 
 `docker compose --profile cloud up` is specifically prohibited: Compose also
 selects every unprofiled local service, so stateful services may start and mutate
@@ -88,19 +89,23 @@ configuration/render inspection model.
 | BB-PJ-01 | 2026-07-15 | PJangler templates use fixed subjects and envelope-data routing |
 | CANDY-HOLO-01 | 2026-07-15 | Holocene fallback uses the standalone Candystore loopback boundary |
 | PJ-IDENTITY-01 | 2026-07-15 | Platform registry resolves monorepo PJangler and uses npm |
+| LIFE-BOUNDARY-01 | 2026-07-18 | Standalone Lifecycle is the only operational writer; Momo and Holocene use bounded Bloodbank command clients |
+| LIFE-OUTBOX-01 | 2026-07-18 | Exact immutable image passed NATS outage/recovery with committed state, ordered outbox, zero pending rows, and eventual publication |
+| LIFE-SCHEMA-01 | 2026-07-18 | Locked Bloodbank validation passed at `cce0818…`; real client command envelopes and Lifecycle replies were exercised |
 
 Resolving `ROOT-COMPOSE-01` means an integrated local stack exists.
 `ROOT-CLOUD-01` remains a separate hosted-design concern.
 
 ## Runtime ownership policy
 
-The root Compose project is the sole **process owner** of Bloodbank, Candystore,
-and Holocene web. This does not grant it project-lifecycle semantic authority.
+The root Compose project is the **process/topology owner** of Bloodbank,
+Lifecycle, Candystore, and Holocene web. This does not grant root
+project-lifecycle semantic authority.
 Bloodbank's legacy Candystore services remain forbidden.
-The five adopted volumes and three external networks retain their existing
-identities across root-stack restarts.
+The six volumes and four external networks retain operator-selected identities
+across root-stack restarts.
 
-After implementation, Lifecycle must be the sole project-lifecycle writer.
+Lifecycle is the sole project-lifecycle writer.
 Bloodbank transports its contracts, Candystore stores history/read models,
 PJangler supplies identity, Momo submits legal-work intent, and Holocene renders
 and commands. Direct provider/database writes from those clients are drift.

@@ -37,13 +37,13 @@ The Fastify API exposes health, clock mutation, fleet snapshot/stream/control, o
 
 ## Integration Architecture
 
-The live Bloodbank client is a stub. Fleet history comes from Candystore HTTP, but the default URL is wrong and failures become empty arrays. Hook health comes through Redis. PJangler integration is through shared `.project.json`/Hermes projections and older generated agent scaffolding.
-
-The standalone Lifecycle service and its Holocene client are not implemented.
-The target UI reads authoritative lifecycle snapshots with identity, spec/state
-versions, provenance, and freshness, then submits idempotent commands through
-Bloodbank. Candystore remains history, not a fallback writer or proof that a
-current snapshot is healthy.
+Fleet history, hook health, and PJangler integration retain their existing
+boundaries. The implemented Lifecycle surface is separate: it reads
+Candystore's authoritative projection, preserves identity, spec/state versions,
+provenance, observation freshness, frontier, obligations, blockers, gates, and
+stable verdicts, and publishes high-level commands through Bloodbank. Missing
+or stale projections render unknown/degraded. It never writes provider,
+Candystore, or Lifecycle state directly.
 
 ## Deployment Architecture
 
@@ -51,11 +51,17 @@ Next.js runs in `holocene-web`; the Fastify API is an external, untracked user s
 
 ## Testing Strategy
 
-There are no application tests. Package tests and lint commands are no-op stubs; CI calls nonexistent scripts. Typecheck/build commands are the only substantive local quality gates until tests exist.
+The Lifecycle client, command builder, API routes, and UI have focused tests.
+Typecheck and production build remain the broad workspace gates. Legacy
+host-control modules still have uneven test coverage.
 
 ## Principal Risks
 
-Unauthenticated host-control API, tracked n8n credential, silent history outage, expensive per-client SSE snapshots, inconsistent Node versions, missing test coverage, misleading “ticket velocity” labeling, legacy generated PJangler/BMAD contracts, and UI controls that could imply lifecycle authority before the command seam exists.
+Unauthenticated host-control API, tracked n8n credential, silent legacy fleet
+history outage, expensive per-client SSE snapshots, inconsistent Node versions,
+misleading “ticket velocity” labeling, and legacy generated PJangler/BMAD
+contracts. The Lifecycle surface avoids silent-empty state and optimistic
+mutation but does not repair unrelated host-control risks.
 
 ## Development Workflow
 

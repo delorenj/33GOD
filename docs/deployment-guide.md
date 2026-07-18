@@ -1,33 +1,25 @@
 # 33GOD Deployment Guide
 
-## Deployment truth
+## Current deployment truth
 
-`33god-platform/compose.yaml` is the live local **process owner** for
-Bloodbank core, Candystore, and Holocene web. `holocene-api.service` remains a
-host prerequisite by design. Static validation and live health are recorded as
-separate evidence.
+`33god-platform/compose.yaml` is the normalized local process topology for
+Bloodbank, Lifecycle, Candystore, and Holocene web. Process ownership does not
+grant Lifecycle semantic ownership to root. Lifecycle remains the only
+project-lifecycle writer.
 
-The target's default set is Bloodbank NATS/init/placement, exactly one
-standalone Candystore PostgreSQL/app/daprd, Holocene API preflight, and Holocene
-web. PJangler CLI and stdio MCP are zero-replica run-only tools in `tools` and
-`full`. Cloud is render-only, unsupported, and has no lifecycle command
-surface.
+The exact Lifecycle runtime is:
 
-There is no standalone Lifecycle service in this topology. The approved
-project-lifecycle component remains an extraction target, and the tested
-Bloodbank controller embryo is not started by Bloodbank Compose or root Compose.
+`ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`
 
-Never run `docker compose --profile cloud up`. Compose includes all unprofiled
-local services when a profile is selected, so stateful NATS, PostgreSQL, and
-Candystore services may start and mutate before `cloud-unsupported` exits.
-Cloud is configuration/render inspection only; no lifecycle task exists.
+Compose has no Lifecycle build key. The cloud profile is render-only and
+unsupported; never run `docker compose --profile cloud up`.
 
-## Read-only validation
+## Static gates
 
-From the candidate checkout:
+From the root checkout:
 
 ```bash
-export GOD_SOURCE_ROOT=/home/delorenj/code/33GOD
+export GOD_SOURCE_ROOT="$PWD"
 mise run platform:validate
 mise run platform:components
 mise run platform:backfills:check
@@ -36,132 +28,86 @@ mise run platform:compose:test
 mise run docs:drift
 ```
 
-The render tasks for default, `tools`, `full`, and `cloud` are also read-only.
-They use `--no-env-resolution`, so Holocene's component env file remains an
-unresolved path reference rather than entering rendered JSON. None of these
-commands starts a service.
+These commands render with `--no-env-resolution` and do not start services or
+print secret values.
 
-## Prerequisites
+## Default dependency order
 
-The root stack consumes four clean component checkouts pinned by root gitlinks.
-The three external networks, five adopted volumes, Holocene host API, and
-Holocene web environment file must exist before startup.
+1. Dedicated Lifecycle PostgreSQL becomes healthy.
+2. `lifecycle-migrate` completes successfully.
+3. Deterministic `lifecycle-bootstrap` completes successfully.
+4. Bloodbank NATS becomes healthy and `nats-init` initializes canonical
+   JetStream streams.
+5. Lifecycle serve starts and its `/readyz` gate verifies PostgreSQL and
+   Bloodbank connectivity.
+6. Candystore PostgreSQL/app become healthy and the durable Dapr sidecar joins
+   Bloodbank.
+7. The host Holocene API preflight completes, then Holocene web starts.
 
-Static gates may use `/home/delorenj/code/33GOD` as an authoritative dirty
-source read-only. This is intentional so protected user work, including current
-Holocene work, does not make the static gate fail. Deployment cutover is stricter:
-all component inputs must be clean and pinned. These checks print no file
-contents:
-
-```bash
-candidate_root=$(git rev-parse --show-toplevel)
-for component in bloodbank candystore holocene pjangler; do
-  expected=$(git -C "$candidate_root" ls-tree HEAD "$component" | awk '{print $3}')
-  actual=$(git -C "$GOD_SOURCE_ROOT/$component" rev-parse HEAD)
-  test "$actual" = "$expected"
-  test -z "$(git -C "$GOD_SOURCE_ROOT/$component" status --porcelain)"
-done
-```
+A failed migration/bootstrap or unhealthy database/broker prevents Lifecycle
+readiness.
 
 ## Ports
 
-| Published/bound endpoint | Owner | Rule |
-|---|---|---|
-| `4222/tcp` | Bloodbank NATS client | Preserve current broad bind for first cutover |
-| `8222/tcp` | Bloodbank NATS monitor | Preserve; do not route publicly |
-| `50005/tcp` | Dapr placement | Preserve for sidecars |
-| `127.0.0.1:5434 -> 5432` | Candystore PostgreSQL | Preserve loopback bind |
-| `127.0.0.1:8683 -> 3001` | Candystore API/UI | Preserve for host API reads |
-| `127.0.0.1:3504 -> 3500` | Candystore daprd HTTP | Preserve for operator checks |
-| container `3001` only | Holocene web | Reach through `proxy`/Traefik; no host publish |
-| host `4000` | Holocene API systemd unit | Never publish or claim from Compose |
-| none | PJangler CLI/MCP | MCP is stdio; no listener or health endpoint |
+All Compose-published development ports bind to loopback and can be overridden:
 
-## Networks and volumes
+| Environment key | Default | Owner |
+|---|---:|---|
+| `BLOODBANK_NATS_CLIENT_PORT` | 4222 | Bloodbank |
+| `BLOODBANK_NATS_MONITOR_PORT` | 8222 | Bloodbank |
+| `BLOODBANK_DAPR_PLACEMENT_PORT` | 50005 | Bloodbank/Dapr |
+| `LIFECYCLE_PORT` | 8088 | Lifecycle |
+| `CANDYSTORE_POSTGRES_PORT` | 5434 | Candystore |
+| `CANDYSTORE_PORT` | 8683 | Candystore |
+| `CANDYSTORE_DAPR_HTTP_PORT` | 3504 | Candystore/Dapr |
 
-All three networks are external: `bloodbank-network`,
-`candystore-internal`, and `proxy`.
+Holocene web is exposed to the `proxy` network on container port 3001. The
+host `holocene-api.service` owns port 4000; Compose does not publish it.
 
-All five adopted volumes are external and must resolve exactly:
+## Networks, volumes, and secret
 
-| Compose key | Existing volume identity |
-|---|---|
-| `bloodbank-nats-data` | `bloodbank_bloodbank-nats-data` |
-| `candystore-pgdata` | `candystore_pgdata` |
-| `holocene-node-modules` | `holocene_holocene_node_modules` |
-| `holocene-web-node-modules` | `holocene_holocene_web_node_modules` |
-| `holocene-web-next` | `holocene_holocene_web_next` |
+The default external names are:
 
-`bloodbank_bloodbank-postgres-data`, `bloodbank_data`, and any other legacy
-volumes are not target inputs. Keep them detached and preserved until a separate
-data-disposition review.
+- networks: `bloodbank-network`, `lifecycle-internal`,
+  `candystore-internal`, and `proxy`;
+- volumes: `bloodbank_bloodbank-nats-data`, `lifecycle_pgdata`,
+  `candystore_pgdata`, and the three `holocene_*_node_modules/.next`
+  volumes; and
+- secret input: `LIFECYCLE_POSTGRES_PASSWORD`.
 
-## Configuration keys and sources
+Lifecycle PostgreSQL joins only `lifecycle-internal`. Lifecycle serve joins
+`lifecycle-internal` and `bloodbank-network`. It never mounts Candystore
+storage or credentials.
 
-Document names and sources only; never record secret values.
+All network and volume names are caller-overridable. This is required for
+isolated acceptance and safe coexistence with unrelated projects.
 
-| Boundary | Keys | Source/owner |
-|---|---|---|
-| Bloodbank ports | `BLOODBANK_NATS_CLIENT_PORT`, `BLOODBANK_NATS_MONITOR_PORT`, `BLOODBANK_DAPR_PLACEMENT_PORT` | Operator environment/platform defaults |
-| Candystore ports | `CANDYSTORE_POSTGRES_PORT`, `CANDYSTORE_PORT`, `CANDYSTORE_DAPR_HTTP_PORT` | Operator environment/platform defaults |
-| Candystore database | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `DATABASE_URL` | Candidate has local-development settings; move secrets to ignored env/secret provider before hosted use |
-| Holocene web/API | `HOLOCENE_API_INTERNAL_URL`, `CANDYSTORE_API_URL`, Telegram/HQ keys | Component ignored env, 1Password-reference workflow, and host user unit |
-| PJangler | `PJ_PROJECT_REGISTRY`, `PJ_SOURCE_SKILL_ROOTS`, `PJ_REGISTRY_PG`, `PJ_AGENT_HOOKS_LAYER`, `PJANGLER_*` overrides | Host user configuration; do not forward the complete host environment |
-
-## Dependency order and health
-
-1. NATS becomes healthy.
-2. NATS initialization completes; placement is started and externally ready.
-3. Candystore PostgreSQL becomes healthy.
-4. Candystore `/readyz` succeeds.
-5. Exactly one Candystore daprd starts. `daprio/daprd` is distroless and
-   intentionally has no container healthcheck; confirm readiness externally at
-   the published loopback endpoint `http://127.0.0.1:3504/v1.0/healthz`.
-6. The host Holocene API reads Candystore and passes `/health`.
-7. The preflight completes, then Holocene web becomes internally healthy and
-   Traefik routes retain expected auth behavior.
-8. PJangler remains outside service startup; validate/run it separately.
-
-## Planned Lifecycle service gate
-
-Do not add or start a Lifecycle service from this guide yet. Before root Compose
-can own that process, the implementation handoff must prove all of the following:
-
-1. A standalone repository/image exists with preserved Bloodbank controller
-   provenance and evaluator parity.
-2. Current lifecycle tables are backed up and migrated with verified row counts,
-   primary keys, fingerprints, history ordering, and outbox state.
-3. Exactly one operational lifecycle writer exists and the legacy writer is
-   disabled or read-only.
-4. Every lifecycle command/event is registered in Bloodbank and real emitted
-   envelopes validate.
-5. The outbox publishes successfully through Bloodbank and failures remain
-   retryable/observable.
-6. Candystore persists canonical lifecycle events/read projections.
-7. Health/readiness, replay, migration rollback, and state-version/idempotency
-   checks pass.
-8. Momo and Holocene use lifecycle reads/commands rather than direct state writes.
-
-Only then should the platform manifest, Compose model, semantic validator,
-ports, storage, secrets, dependency order, and runtime acceptance list be
-expanded for exactly one Lifecycle instance.
-
-## Direct cutover
-
-Stop the Bloodbank, Candystore, and Holocene component-owned Compose projects,
-then start the root stack:
+## Isolated live acceptance
 
 ```bash
-docker compose -f bloodbank/compose/docker-compose.yml down
-docker compose -f candystore/compose.yml down
-docker compose -f holocene/compose.yml down
-GOD_SOURCE_ROOT="$PWD" docker compose -f 33god-platform/compose.yaml up -d --build
+python3 33god-platform/scripts/verify-lifecycle-live.py \
+  --screenshots-dir /tmp/33god-lifecycle-proof
 ```
 
-The root project becomes the sole Compose process owner of the adopted services. Verify
-container health, NATS stream state, one `candystore-events` durable consumer,
-Candystore readiness, Holocene API health, and the routed web surface.
+Before `up`, the gate renders the model and rejects any Lifecycle digest
+mismatch or build key. It allocates a unique Compose project, free ports,
+networks, volumes, and local Candystore image. It then proves:
 
-The direct cutover was executed on 2026-07-15. Root Compose adopted the existing
-volumes, removed the excluded legacy Bloodbank PostgreSQL container, and passed
-the documented runtime checks.
+1. Holocene-offline independence.
+2. Momo-offline safety.
+3. deterministic restart catch-up without duplicate effects.
+4. stale-version rejection without mutation.
+5. capability rejection without mutation.
+6. NATS outage/recovery with committed-state preservation, ordered outbox, and
+   eventual publication.
+7. dedicated PostgreSQL persistence across Lifecycle and database restarts.
+
+The run also exercises Candystore replay/read-only behavior, Momo's legal
+obligation-to-skill seam, and Holocene's read/command/UI surface. Cleanup uses
+the unique resource names and never prunes Docker.
+
+## Promotion boundary
+
+This implemented slice is locally verified. Production/cloud rollout, root
+integration publication, and a release tag require a separate owner decision.
+No cloud lifecycle command is supported by this guide.

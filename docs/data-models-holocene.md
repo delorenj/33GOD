@@ -4,8 +4,8 @@
 
 Holocene owns no application database. Its models are transient projections over external sources and browser state.
 
-Target lifecycle views are also projections. Every lifecycle card and control
-must retain lifecycle ID, spec/state version, provenance, freshness, legal
+Lifecycle views are projections. Every lifecycle card and control retains
+lifecycle ID, spec/state version, provenance, freshness, legal
 frontier, obligations, and command result. Local React state must never become
 the source of a lifecycle transition.
 
@@ -29,6 +29,7 @@ React client state stores selected tabs, snapshots, loading/error state, and mut
 
 Candystore errors collapse into an empty event array, so absence and outage are indistinguishable. “Ticket velocity” is derived from heartbeat/invocation counts. Historical and current segments are not always combined consistently.
 
-No Lifecycle projection exists in the current application. Until it does,
-Holocene must label lifecycle-oriented views as unavailable or historical rather
-than infer current state from Candystore events, board columns, or agent status.
+The current Lifecycle surface reads Candystore's dedicated projection and
+labels missing/stale data unknown/degraded. It does not infer current state from
+raw Candystore events, board columns, provider colors, local files, button
+clicks, or agent status.

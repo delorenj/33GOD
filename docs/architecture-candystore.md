@@ -5,8 +5,9 @@
 Candystore is Bloodbank’s durable history/read model: a Python HTTP server, PostgreSQL event store, Dapr JetStream subscriber, and React audit UI. It is compact and understandable, but it is not yet an enterprise audit-of-record because poison preservation, replay, backup, auth, and migration controls are incomplete.
 
 Candystore never owns operational project-lifecycle truth. It durably records
-canonical lifecycle events and may build query projections; in the approved
-target, the planned Lifecycle component is the only lifecycle-state writer.
+canonical lifecycle events and maintains the smallest replay-safe,
+version-ordered projection used by Holocene. Lifecycle remains the only
+lifecycle-state writer.
 
 ## Technology Stack
 
@@ -44,7 +45,10 @@ The image copies prebuilt `static/` rather than building the frontend, so UI sou
 
 ## Testing Strategy
 
-The repository contains 21 Python tests and a migration shell test. DB-backed tests can skip, and the suite lacks full contract, dead-letter failure, replay, concurrency, migration-ledger, backup, frontend, and live Dapr/NATS coverage.
+The focused Lifecycle slice adds DB-backed replay, idempotency,
+ordering/version, provenance/freshness, unknown/degraded, stable-verdict, and
+read-only ownership tests. Broader dead-letter, backup, auth, and frontend risks
+remain outside this slice.
 
 ## Principal Risks
 
