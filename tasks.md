@@ -1,5 +1,12 @@
 # 33GOD Orchestration Tasks
 
+- [ ] Extract lifecycle truth into a separately versioned `lifecycle` authority; reconcile BMAD boundaries; integrate schema-first with Bloodbank, Momo, Holocene, Candystore, PJangler, and the Docker Compose stack; publish remotely fetchable component/root pins; pass independent AC-gated review. **CLAIMED by Team Moirai (Session: team-moirai; Branch: epic/lifecycle-component)**
+  - [ ] Produce and apply the BMAD course-correction proposal: Holocene renders, Momo chooses, `lifecycle` determines truth.
+  - [ ] Bootstrap and publish the standalone `lifecycle` component, preserving the tested Bloodbank controller lineage.
+  - [ ] Implement deterministic state/spec/reconcile, frontier/obligations, capability and optimistic-version command gates, persistence/migrations/outbox, and Bloodbank contracts.
+  - [ ] Add the image/Dockerfile and registry-backed Compose integration with health, readiness, and migration behavior.
+  - [ ] Prove one observation, Momo execution, and Holocene rendering vertical slice plus offline/restart/stale-command failure invariants.
+  - [ ] Complete independent specification and quality reviews, remediate findings, validate remote fetchability, and publish exact evidence.
 - [x] Replace `33god-platform/compose.yaml` with a validated integrated Bloodbank, Candystore, Holocene, and PJangler stack; update topology governance, documentation, changelogs, validation, and executable gates. **COMPLETED by Taskforce Daedalus (Session: team-daedalus; Branch: epic/integrated-compose-stack)**
   - [x] Audit authoritative component and live-runtime topology for the integrated Compose design. **COMPLETED by Professor Fiddlesticks (Session: daedalus-prof-fiddlesticks; Integrated commit: bc7f387)**
   - [x] Implement the integrated Compose model, semantic validator, focused tests, and safe mise gates. **COMPLETED by Bartholomew the Builder (Session: daedalus-bartholomew; Integrated commit: c4f78bb)**

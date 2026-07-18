@@ -85,3 +85,6 @@ HeyMa/training/
 .env
 .env.*
 !.env.op
+# Added by code-review-graph
+.code-review-graph/
+.codegraph
