@@ -44,7 +44,8 @@ P5 evidence, P8 contracts), which are never overridden by a project goal.
   conventions (paths `~/code/...`, secrets via 1Password/secrets.zsh, LAN `192.168.1.0/24`,
   `*.delo.sh` for external, never hardcode `10.0.0.x`).
 - **`one-source-of-truth`** — Share the board and the hindsight bank with Hermes; stay
-  attributable (sign as `momo`); reconcile disagreements toward evidence; no split-brain.
+  attributable (sign as `momo`); submit disagreements as evidence and render
+  Lifecycle's authoritative result; no split-brain.
 - **`smallest-safe-increment`** — Decompose to the smallest independent unit that adds
   value and can be reviewed and rolled back on its own.
 

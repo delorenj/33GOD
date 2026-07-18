@@ -1,0 +1,31 @@
+id: lifecycle
+name: Lifecycle
+role: project-lifecycle-authority
+repo: ../lifecycle
+description: Sole deterministic lifecycle specification, state, reconcile, frontier, obligation, grant, and write authority.
+gitlink_revision: 434a1674d35b15aafb38d2d7a022d996ca3ad805
+image_source_revision: 715ab2ea62bcece488c8d6029869af8d3651c39a
+image: ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526
+compose:
+  files: []
+  platform_projection: ../compose.yaml
+  services: [lifecycle-postgres, lifecycle-migrate, lifecycle-bootstrap, lifecycle]
+  profiles: [default]
+  state: validated-local-and-isolated-live
+  ownership: Root owns process topology and the immutable pin; Lifecycle owns semantics, operational storage, migrations, and every lifecycle write.
+  cardinality: exactly-one-authority-database-and-service
+health:
+  commands:
+    - cd ../lifecycle && mise run check
+    - cd ../lifecycle && mise run test:integration
+    - cd ../lifecycle && mise run contracts:verify
+source_of_truth:
+  - ../lifecycle/src
+  - ../lifecycle/migrations
+  - ../lifecycle/docs
+changelog:
+  topics: [lifecycle, state-machine, reconcile, frontier, obligations, capabilities, outbox]
+public_card:
+  title: Lifecycle Authority
+  promise: Deterministic, versioned project truth with legal work and guarded commands.
+backfills: []

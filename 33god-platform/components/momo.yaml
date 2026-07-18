@@ -1,0 +1,26 @@
+id: momo
+name: Momo
+role: lifecycle-policy-client
+repo: ../momo
+description: Process manager that ranks Lifecycle-legal work and emits canonical skill invocation, evidence, and command intent through Bloodbank.
+source_revision: aae900f37de3a15bb4b69c48e61cc87d286526ea
+compose:
+  files: []
+  platform_projection: ../compose.yaml
+  services: []
+  profiles: [tools, full]
+  state: validated-client-seam
+  ownership: Momo owns business rationale, ranking, delegation, and review; it never calculates or writes lifecycle truth.
+health:
+  commands:
+    - cd ../momo && mise run test
+    - cd ../momo && mise run lint
+source_of_truth:
+  - ../momo/skill
+  - ../momo/docs
+changelog:
+  topics: [policy, lifecycle-client, frontier, obligations, skill-invocation]
+public_card:
+  title: Process Manager
+  promise: Business judgment over authoritative legal work without a competing state machine.
+backfills: []

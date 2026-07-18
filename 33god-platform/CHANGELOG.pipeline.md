@@ -3,6 +3,23 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-07-18
+
+### Lifecycle authority vertical slice
+
+- Added the exact-digest Lifecycle authority topology with dedicated
+  PostgreSQL, secret, volume, private network, one-shot migration,
+  deterministic bootstrap, serve readiness, and no Compose build path.
+- Kept Bloodbank unchanged at `cce0818…` as canonical schema/NATS/Dapr
+  authority and retained the tracked JetStream initializer.
+- Published and pinned Candystore `a54389f…` for durable replay-safe
+  projections, Momo `aae900f…` for legal obligation-to-skill intent, Holocene
+  `e1a8141…` for the read/command surface, and Lifecycle docs `434a167…`.
+- Added semantic/adversarial tests and the isolated live seven-invariant
+  failure matrix with unique Docker resources and exact cleanup.
+- Preserved the six-way semantic ownership boundary and kept cloud render-only;
+  no root release or cloud promotion is implied.
+
 ## 2026-07-15
 
 ### Root Compose Cutover

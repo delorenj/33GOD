@@ -1,10 +1,14 @@
 # Review and closure
 
-Clearing the review lane is the **normal per-pass path**, not an escape hatch. Momo runs an
+Servicing review obligations is the normal per-pass path, not an escape hatch. Momo runs an
 independent adversarial review against the operator's locked intent and acts on the verdict
 autonomously — it does not wait for the operator's first right of refusal. The operator's QA
 is *deferred* to an end-of-product sweep over the review lane, backed by a queryable decision
 trail; a downstream regression rollback is the safety valve.
+
+The verdict is evidence for Lifecycle, not a state transition by Momo. Submit it
+with lifecycle ID, expected state version, command ID/idempotency key, and the
+caller's capability context. Refetch and render the authoritative result.
 
 These scripts live in the repo's `<role_dir>/.scripts/sentinel/bin/` and are provider-
 agnostic. A manual session calls them directly.
@@ -36,7 +40,8 @@ fails neither gate, but then independence is unproven, so write it.
 
 ```bash
 <role_dir>/.scripts/sentinel/bin/issue-autonomous-review.sh <ISSUE> <ISSUE>.review.md
-# exit 0 = accepted, 3 = held (or disabled), 2 = missing inputs, 1 = adapter transition failed (--close only)
+# current legacy script: exit 0 = accepted, 3 = held/disabled, 2 = missing inputs,
+# 1 = direct adapter close failed; target workflows never use --close
 ```
 
 It chains, accumulating HOLD reasons: report structure → **reviewer independence** (reviewer
@@ -58,28 +63,25 @@ Run WITHOUT `--close`.
 
 ## 3. Act on the verdict (autonomously — no grace wait)
 
-- **accepted** (exit 0): treat the ticket as **done for dependents and flow**, but **leave
-  it in the review lane** — that lane is the operator's deferred-QA queue. Do NOT
-  auto-transition to `completed` (`--close` is an optional operator QA-sweep flag the loop
-  omits). Post ONE ticket comment stating the autonomous acceptance with a pointer to the
-  report — never a "waiting on you" comment. Record a Momo decision event
-  (`record-decision.py`, basis `evidence-over-status`, `bias-to-reversible-action`). A
-  dependent blocked only on this feature is now unblocked.
-- **held** (exit 3 with a real finding): move the ticket back to active (`started` if a
-  worker takes it now, else `unstarted`); record the hold reasons; emit the decision event.
-  When in doubt, hold.
+- **accepted** (exit 0): submit the review report/evidence and acceptance intent.
+  Treat the ticket as done for dependents only after Lifecycle returns the
+  authoritative result. Post one signed projection comment and record Momo's
+  reasoning; do not call a provider transition.
+- **held** (exit 3 with a real finding): submit the hold finding/evidence and any
+  repair intent, record the reasons, and refetch. Lifecycle decides the resulting
+  obligations/state. When in doubt, hold the recommendation.
 - Distinguish **held-by-finding** from **disabled-by-config**: a run disabled via
   `reconcile.auto_review=false` / `RECONCILE_AUTO_REVIEW=off` also exits 3 but emits NO
   decision event — read the stderr message.
 
 ## 4. Downstream regression rollback (the safety valve)
 
-If a later dependent proves a review-accepted feature is ACTUALLY BROKEN: move the accepted
-ticket back to active as a **prerequisite** of the dependent (`tp transition`); comment
-naming the dependent + symptom; emit
+If a later dependent proves a review-accepted feature is actually broken,
+submit a rollback observation/intent naming the dependent and symptom; emit
 `bloodbank.v1.repo.<repo>.issue.review_rollback.recorded` `{issue, surfaced_by, reason}` (via
 the sentinel `emit-event.py`) plus a Momo decision event. This is expected and healthy — the
-trade for deferring operator QA, not a failure.
+trade for deferring operator QA, not a failure. Never transition the provider
+directly; wait for Lifecycle's versioned result.
 
 ## Out-of-scope blockers (review does NOT clear these)
 
@@ -89,6 +91,7 @@ on another open, unblocked issue.
 
 ## Anti-stall (repeat, because it matters)
 
-For any review-lane ticket there are exactly three legitimate outcomes: **accepted** (move
-on), **held** (back to active), or a genuine **out-of-scope blocker** (recorded + waited on).
+For any review obligation there are exactly three legitimate recommendations:
+**accepted**, **held**, or a genuine **out-of-scope blocker**. Lifecycle owns the
+resulting state and legal next actions.
 There is no fourth "waiting for the operator's sign-off" state.
