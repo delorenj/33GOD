@@ -14,6 +14,36 @@ The exact Lifecycle runtime is:
 Compose has no Lifecycle build key. The cloud profile is render-only and
 unsupported; never run `docker compose --profile cloud up`.
 
+### Anonymous registry consumption
+
+On 2026-07-18, the exact digest above passed an empty-credential Docker pull.
+The gate created a unique `DOCKER_CONFIG` directory containing zero credential
+files, ran `docker pull` by digest, confirmed the returned repository digest,
+and removed only that temporary directory. The observed result was:
+
+```bash
+ghcr_anon_dir="$(mktemp -d /tmp/33god-ghcr-anon.XXXXXX)"
+case "$ghcr_anon_dir" in /tmp/33god-ghcr-anon.*) ;; *) exit 1 ;; esac
+trap 'find "$ghcr_anon_dir" -depth -delete' EXIT
+test "$(find "$ghcr_anon_dir" -mindepth 1 -type f | wc -l)" -eq 0
+DOCKER_CONFIG="$ghcr_anon_dir" docker pull \
+  ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
+test "$(find "$ghcr_anon_dir" -mindepth 1 -type f | wc -l)" -eq 0
+```
+
+```text
+Digest: sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
+Status: Image is up to date for ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
+credential_files_before=0
+credential_files_after=0
+temporary_docker_config_removed=yes
+```
+
+A bare manifest request returning HTTP 401 is the registry's normal Bearer
+authentication challenge; by itself, it is not evidence that anonymous image
+consumption is unavailable. The authoritative consumption gate is the
+successful digest-pinned `docker pull` with an empty credential directory.
+
 ## Static gates
 
 From the root checkout:

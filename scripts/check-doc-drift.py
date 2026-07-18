@@ -47,6 +47,17 @@ COMPONENT_REVISIONS = {
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
     r"ghcr\.io/delorenj/lifecycle@sha256:[0-9a-f]{64}"
 )
+ECOSYSTEM_AUTHORITY_CONTRACT = (
+    "Plane ticket/work-item and board/lane operations "
+    "(project-lifecycle, never Lifecycle authority)",
+    "standalone Lifecycle component is the sole deterministic 33GOD lifecycle authority",
+    "Plane owns ticket/work-item records and board/lane state only",
+    "`project-lifecycle` routes only Plane ticket/work-item and board/lane mutations",
+    "Momo chooses and ranks what legal work to attempt and publishes evidence",
+    "Holocene renders authoritative Lifecycle data and invokes high-level actions",
+    "Bloodbank owns canonical inter-service contracts and NATS/Dapr transport",
+    "Candystore owns append-only audit history and Lifecycle read projections",
+)
 
 
 class Reporter:
@@ -288,6 +299,38 @@ def function_block(text: str, name: str) -> str:
     return match.group(0) if match else ""
 
 
+def ecosystem_authority_errors(ecosystem_text: str) -> list[str]:
+    errors: list[str] = []
+    if not ecosystem_text:
+        return ["skills/ecosystem/SKILL.md is missing"]
+
+    for statement in ECOSYSTEM_AUTHORITY_CONTRACT:
+        if statement not in ecosystem_text:
+            errors.append(
+                "skills/ecosystem/SKILL.md is missing ownership statement: "
+                + statement
+            )
+    if re.search(
+        r"(?im)^\|\s*Ticket lifecycle\s*\|\s*`project-lifecycle`",
+        ecosystem_text,
+    ):
+        errors.append(
+            "skills/ecosystem/SKILL.md ambiguously maps Ticket lifecycle to project-lifecycle"
+        )
+    for line_number, line in enumerate(ecosystem_text.splitlines(), start=1):
+        if "project-lifecycle" not in line:
+            continue
+        if not re.search(
+            r"(?i)(?:\bPlane\b|\btickets?\b|\bwork-items?\b|\bboard(?:/lane)?\b)",
+            line,
+        ):
+            errors.append(
+                "skills/ecosystem/SKILL.md line "
+                f"{line_number} routes project-lifecycle without Plane ticket/board scope"
+            )
+    return errors
+
+
 def check_high_risk_contracts(source: Path, report: Reporter) -> None:
     validator = source / "bloodbank/services/agent-hooks/core/validate.py"
     text = validator.read_text(encoding="utf-8") if validator.is_file() else ""
@@ -452,6 +495,7 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         *sorted(platform.rglob("*.md")),
         *sorted(platform.rglob("*.yaml")),
         *sorted(platform.rglob("*.jsonl")),
+        docs_checkout / "skills/ecosystem/SKILL.md",
         *sorted((docs_checkout / "skills/momo").rglob("*.md")),
         *sorted((docs_checkout / "skills/momo").rglob("*.py")),
     ]
@@ -467,6 +511,10 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         ),
         "Candystore lifecycle writes": re.compile(
             r"(?i)\bCandystore\s+(?:owns|performs|accepts)\s+(?:operational\s+)?lifecycle\s+writes"
+        ),
+        "Plane lifecycle authority": re.compile(
+            r"(?i)\bPlane\s+(?:owns|evaluates|writes|calculates|persists|drives)\s+"
+            r"(?:(?:the|deterministic|operational)\s+)?(?:project[- ]?)?lifecycle"
         ),
         "forward-plan bureaucracy": re.compile(
             r"(?i)\b(?:rollback plan|safety valve|safety procedure|stakeholder gate|approval[- ]gate)\b"
@@ -489,6 +537,12 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         for label, pattern in ownership_patterns.items():
             if pattern.search(text):
                 errors.append(f"{path.relative_to(docs_checkout)} contains {label}")
+
+    ecosystem_path = docs_checkout / "skills/ecosystem/SKILL.md"
+    ecosystem_text = (
+        ecosystem_path.read_text(encoding="utf-8") if ecosystem_path.is_file() else ""
+    )
+    errors.extend(ecosystem_authority_errors(ecosystem_text))
 
     promoted = docs_checkout / "skills/momo"
     canonical = source / "momo/skill"
