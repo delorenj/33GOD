@@ -674,9 +674,12 @@ done
 
 ## Runtime summary
 
-The implemented projection is the live local lifecycle authority: Bloodbank
-core plus one canonical Candystore plus Holocene web, with the Holocene API as a
-host prerequisite and PJangler as explicit run-only CLI/stdio MCP tooling.
+The implemented projection is the live local four-part runtime integration:
+Bloodbank core plus one canonical Candystore plus Holocene web, with the
+Holocene API as a host prerequisite and PJangler as explicit run-only CLI/stdio
+MCP tooling. It is not a project-lifecycle authority. The approved standalone
+Lifecycle service, single-writer cutover, and Momo/Holocene clients remain
+unimplemented.
 
 The two strongest prohibitions are simple:
 
