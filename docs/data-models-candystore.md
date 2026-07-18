@@ -21,3 +21,7 @@ Every SQL file runs lexically on each startup in one transaction. Current files 
 ## Consistency Limits
 
 UUID conflict means duplicate regardless of payload. Count/page queries are separate statements. Raw JSON is parsed and serialized, so exact input bytes are retained only in dead letter for rejected/sanitized cases.
+
+Lifecycle rows in `events` are immutable history/read-model inputs, not the
+operational lifecycle store. A Candystore projection may lag, be rebuilt, or be
+unavailable without transferring single-writer authority from Lifecycle.

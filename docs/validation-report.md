@@ -31,6 +31,12 @@ Cloud remains blocked. Its successful render proves the unsupported local-bind
 model and rejection gate remain visible; no cloud lifecycle command is
 supported.
 
+This report predates the 2026-07-18 lifecycle-component boundary correction.
+Its green matrix proves only the existing four-part integrated Compose stack.
+It is not evidence that a standalone Lifecycle repository/service, history
+migration, configured outbox, schema-complete command/event surface, Momo client,
+Holocene client, or single-writer cutover exists.
+
 ## Exact drift result
 
 Command:
@@ -124,3 +130,9 @@ Hosted deployment remains unsupported until local binds, external local
 networks, host systemd authority, listener/auth risks, local credentials,
 single-host storage, tenancy, and backup/restore are replaced by a cloud-owned
 design.
+
+The next lifecycle-specific validation report must be additive. It must retain
+this Compose evidence while proving extraction provenance, evaluator parity,
+data-history preservation, registered/envelope-valid contracts, working outbox
+publication, deterministic frontier/obligations/capability verdicts, idempotent
+state-versioned commands, client boundaries, exactly one writer, and rollback.

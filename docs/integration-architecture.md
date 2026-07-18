@@ -8,6 +8,11 @@ implementation. Authority order is executable manifests/runtime configuration,
 code, tests/validation, root integration docs, component docs, then historical
 plans.
 
+For project lifecycle semantics the approved authority is the planned headless
+Lifecycle component. Root Compose process ownership, Bloodbank transport,
+Candystore history, Momo judgment, Holocene rendering, and PJangler identity are
+separate concerns.
+
 ## Validated target
 
 ```text
@@ -25,11 +30,29 @@ Candystore PostgreSQL --healthy--> app --ready--> one Candystore daprd
 
 PJangler CLI / stdio MCP: tools/full, zero replicas, explicit run only
 Cloud: render-only unsupported local-bind model
+
+Lifecycle: approved extraction target, absent from this deployed topology
 ```
 
 The candidate is statically validated, not deployed. Fixed container names mean
 the target cannot coexist with current component-managed containers during a
 cutover.
+
+The later lifecycle vertical slice is a separate target interaction:
+
+```text
+PJangler project identity ---> Lifecycle spec/binding
+observations + evidence -----> deterministic reconcile
+                               state/frontier/obligations/grants
+                                           |
+                          canonical Bloodbank commands/events
+                                           |
+                                  Candystore history/read models
+                                   /                         \
+                     Momo selects legal work       Holocene renders/commands
+                                   \                         /
+                                    intent ---> Lifecycle validates
+```
 
 ## Contract matrix
 
@@ -39,6 +62,8 @@ cutover.
 | Durable event history | Candystore | One PostgreSQL/app/daprd; durable component is Candystore-owned |
 | Mission control | Holocene | Web is default; privileged API remains host systemd and is preflighted |
 | Project tooling | PJangler | CLI and MCP are run-only; MCP is stdio; no ports/health/daemon |
+| Project lifecycle truth (planned) | Lifecycle | No current service; future single writer for spec/state/reconcile/frontier/obligations/capabilities |
+| Business process management | Momo | Read frontier, choose legal work, delegate/review, submit intent; no lifecycle writes |
 | Networks | Bloodbank/Candystore/host proxy owners | Exact external names are preserved |
 | Persistent data | Component/runtime owners | Five adopted volumes are external; legacy volumes remain detached |
 | Cross-component projection | 33god-platform | Root normalizes names/dependencies without editing component sources |
@@ -57,10 +82,28 @@ no ports.
 - Candystore readiness includes PostgreSQL; app liveness alone is insufficient.
 - The host API preflight establishes reachability, not application auth safety.
 - Holocene history remains a direct HTTP read-side exception to Bloodbank.
+- Holocene lifecycle UI must render authoritative version/provenance/freshness
+  and submit commands; it cannot compute transitions or write provider state.
+- Momo's current direct `tp`/Trello transitions are legacy behavior until the
+  lifecycle command seam exists. They are not target lifecycle truth.
 - PJangler recipes requiring host files, systemd, or provider credentials remain
   host-authority operations even though narrow container definitions exist.
 - A successful cloud render is evidence of honest unsupported assumptions, not
   cloud readiness.
+
+## Lifecycle extraction boundary
+
+The tested Bloodbank controller is the extraction embryo. Its pure evaluator,
+leased queue, transactional state/history/outbox persistence, and 21 passing
+focused tests are current evidence. The default publisher is unconfigured,
+`blocker.detected` lacks a schema, and initial `status.updated` staging can
+conflict with the registered schema. No standalone repository/service or root
+Compose entry exists.
+
+Extraction must preserve repository provenance and current database history.
+The target adds a versioned spec, legal frontier, obligations, capability
+validation, idempotent commands, and optimistic state-version checks. Exactly
+one writer is a cutover gate.
 
 ## Data and network safety
 

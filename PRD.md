@@ -18,6 +18,14 @@ subscription service. `33god-platform/` indexes components, records
 cross-component changes, defines backfill checks, and owns the live normalized
 integrated Compose stack.
 
+The approved product boundary also introduces a separate, headless
+`lifecycle` component. It is the sole target authority for versioned lifecycle
+specification, operational state, deterministic reconciliation, legal frontier,
+obligations, and capability validation. This boundary is approved but not yet
+implemented or deployed. The tested controller under
+`bloodbank/services/lifecycle-controller/` is the extraction embryo whose
+history must be preserved.
+
 ## Situation
 
 The 33GOD system grew organically across several repos and host-level config
@@ -44,10 +52,11 @@ Several examples drove this PRD:
 33GOD becomes a productized development environment for agentic software
 delivery.
 
-The local product gives one operator the whole pipeline on a laptop:
+The target local product gives one operator the whole pipeline on a laptop:
 
 - Event backbone and schemas.
 - Durable event history and audit trail.
+- Deterministic project lifecycle state and legal-work frontier.
 - Mission-control dashboard.
 - Project and agent provisioning.
 - Managed long-running PM and worker agents.
@@ -91,6 +100,12 @@ Current artifacts include:
   - `platform:compose:validate`
   - `platform:compose:test`
   - `docs:drift`
+
+The current integrated stack does **not** contain a standalone lifecycle
+service. Bloodbank still contains the tested controller embryo, its default
+outbox publisher is unconfigured, and its emitted lifecycle contracts have
+known schema drift. Those facts describe the current state; they do not change
+the approved target ownership.
 
 Validation state as of this handoff:
 
@@ -139,6 +154,7 @@ The product must make the whole 33GOD pipeline feel like one maintained system.
 6. Make cross-component changes visible through a pipeline changelog.
 7. Give agents one skill hub for 33GOD routing and reference lookup.
 8. Preserve a path to hosted, private, subscription-based deployment.
+9. Establish one headless lifecycle authority that clients cannot bypass.
 
 ## Non-goals
 
@@ -150,6 +166,10 @@ source with optional hosted subscription access.
 
 This PRD does not require replacing every legacy workflow in the first slice.
 Legacy projects can be backfilled in stages.
+
+This planning correction does not claim that the standalone lifecycle
+repository, service, data migration, command surface, or deployment wiring
+already exists.
 
 ## Functional requirements
 
@@ -208,7 +228,7 @@ Acceptance criteria:
 - Checked-in render tasks use `--no-env-resolution`; caller-selected port
   overrides are validated rather than masked.
 - Static validation may use the authoritative dirty primary source read-only,
-  but lifecycle cutover requires clean component sources pinned to the intended
+  but Compose cutover requires clean component sources pinned to the intended
   gitlink commits.
 
 ### FR4. Runtime state isolation
@@ -328,6 +348,33 @@ Acceptance criteria:
 - Local-only assumptions remain visible in the render-only cloud model until a
   separate hosted architecture removes them.
 
+### FR13. Headless lifecycle authority
+
+The platform must have exactly one component that owns lifecycle semantics and
+state. Its clients may supply observations, evidence, and intent, but may not
+calculate or persist lifecycle truth.
+
+Acceptance criteria:
+
+- The `lifecycle` component owns the versioned lifecycle spec, materialized
+  state, deterministic reconcile function, legal frontier, obligations,
+  blockers/gates/checkpoints, and capability validation.
+- PJangler supplies stable project/bootstrap identity and lifecycle binding
+  inputs; its registry is not lifecycle state.
+- Momo reads authoritative state/frontier/obligations, applies business judgment
+  to choose among legal work, and submits idempotent intent. It never writes
+  lifecycle truth.
+- Holocene renders authoritative read models and exposes high-level commands;
+  it never infers or writes the resulting state.
+- Bloodbank owns canonical lifecycle command/event schemas and transport.
+- Candystore owns durable event history and lifecycle read projections, not the
+  operational lifecycle writer.
+- The Bloodbank controller embryo is extracted with commit and data-history
+  preservation rather than rewritten as a greenfield service.
+- The vertical slice is not complete until outbox publication is configured,
+  every emitted type is registered, emitted envelopes validate, and exactly one
+  lifecycle writer is proven in deployment.
+
 ## Non-functional requirements
 
 - **Private source:** The platform is not designed as open source by default.
@@ -344,6 +391,10 @@ Acceptance criteria:
   repos.
 - **Observable gates:** Validation output must be concrete enough for agents to
   route follow-up work.
+- **Single lifecycle writer:** Momo, Holocene, Bloodbank, Candystore, PJangler,
+  and provider adapters cannot bypass the lifecycle command boundary.
+- **Deterministic authority:** Identical ordered inputs and spec version produce
+  identical state fingerprint, frontier, obligations, and command verdicts.
 
 ## Open issues
 
@@ -367,6 +418,10 @@ These issues are the first things the director must triage.
 
 6. Reconcile root repo dirt before treating `33GOD` itself as a release branch.
 
+7. Extract the lifecycle controller embryo into the standalone component,
+   close the outbox/schema gaps, preserve operational history, and gate all
+   clients on the new command/read contract.
+
 ## MVP plan
 
 ### Phase 1. Repair the control plane
@@ -388,10 +443,27 @@ Remove the biggest sources of daily drift.
 - Move Hermes PM runtimes into mounted volumes.
 - Add runtime backup and restore docs.
 
+### Phase 2a. Establish lifecycle authority
+
+Build the prerequisite vertical slice before Momo autonomy or Holocene
+lifecycle commands are treated as target behavior.
+
+- Freeze lifecycle identity, spec/state versions, frontier, obligations,
+  capability grants, commands, and Bloodbank contracts.
+- Extract the tested Bloodbank controller with repository history preserved.
+- Add the missing frontier/obligation/capability and command semantics.
+- Migrate current lifecycle tables with backup, row/fingerprint/history checks,
+  a single-writer cutover, and a verified rollback point.
+- Wire the transactional outbox to Bloodbank and persist canonical lifecycle
+  events/read models through Candystore.
+- Move Momo and Holocene to lifecycle read/command clients before retiring
+  their legacy direct-board paths.
+
 ### Phase 3. Build the local compose stack
 
 The normalized candidate and static gates are implemented. Make root Compose
-the sole lifecycle owner of the local product.
+the sole **process owner** of the adopted local services. This deployment term
+does not grant project-lifecycle semantic authority.
 
 - Preserve exact adopted volumes and external networks through the handoff.
 - Stop old component projects, start the root target in dependency order, and
@@ -426,3 +498,9 @@ or storage, it belongs in the platform changelog and may require a backfill.
 Operate the local product through root Compose. Keep the platform registry,
 semantic validator, and documentation drift gate green after component or
 topology changes. Cloud remains a separate design phase.
+
+For project lifecycle, route all state-changing intent through the standalone
+`lifecycle` component after its vertical slice is implemented. Preserve the
+Bloodbank controller's code and data history during extraction; do not describe
+Momo business judgment, Holocene display state, Candystore history, or PJangler
+identity as lifecycle truth.

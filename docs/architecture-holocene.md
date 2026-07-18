@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Holocene is a production-first, single-operator mission-control dashboard. Its live architecture combines a Next.js web container with an external Fastify host API that reads Hermes/systemd/runtime files, Redis hook health, Prometheus, Traefik state, and Candystore history. It is an operational prototype with broad host authority, not an enterprise multi-user control plane.
+Holocene is a production-first, single-operator mission-control dashboard. Its live architecture combines a Next.js web container with an external Fastify host API that reads Hermes/systemd/runtime files, Redis hook health, Prometheus, Traefik state, and Candystore history. It is an operational prototype with broad host authority, not an enterprise multi-user control plane. For project lifecycle it is only a renderer and high-level command surface; it never calculates or writes lifecycle truth.
 
 ## Technology Stack
 
@@ -39,6 +39,12 @@ The Fastify API exposes health, clock mutation, fleet snapshot/stream/control, o
 
 The live Bloodbank client is a stub. Fleet history comes from Candystore HTTP, but the default URL is wrong and failures become empty arrays. Hook health comes through Redis. PJangler integration is through shared `.project.json`/Hermes projections and older generated agent scaffolding.
 
+The standalone Lifecycle service and its Holocene client are not implemented.
+The target UI reads authoritative lifecycle snapshots with identity, spec/state
+versions, provenance, and freshness, then submits idempotent commands through
+Bloodbank. Candystore remains history, not a fallback writer or proof that a
+current snapshot is healthy.
+
 ## Deployment Architecture
 
 Next.js runs in `holocene-web`; the Fastify API is an external, untracked user service with hard-coded host paths. Browser routes may be protected by Traefik/OIDC, but the direct API listener is separate. `/hq` uses Telegram validation and has its own auth behavior.
@@ -49,7 +55,7 @@ There are no application tests. Package tests and lint commands are no-op stubs;
 
 ## Principal Risks
 
-Unauthenticated host-control API, tracked n8n credential, silent history outage, expensive per-client SSE snapshots, inconsistent Node versions, missing test coverage, misleading “ticket velocity” labeling, and legacy generated PJangler/BMAD contracts.
+Unauthenticated host-control API, tracked n8n credential, silent history outage, expensive per-client SSE snapshots, inconsistent Node versions, missing test coverage, misleading “ticket velocity” labeling, legacy generated PJangler/BMAD contracts, and UI controls that could imply lifecycle authority before the command seam exists.
 
 ## Development Workflow
 

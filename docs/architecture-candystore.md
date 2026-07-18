@@ -4,6 +4,10 @@
 
 Candystore is Bloodbank’s durable history/read model: a Python HTTP server, PostgreSQL event store, Dapr JetStream subscriber, and React audit UI. It is compact and understandable, but it is not yet an enterprise audit-of-record because poison preservation, replay, backup, auth, and migration controls are incomplete.
 
+Candystore never owns operational project-lifecycle truth. It durably records
+canonical lifecycle events and may build query projections; in the approved
+target, the planned Lifecycle component is the only lifecycle-state writer.
+
 ## Technology Stack
 
 | Category | Technology | Version/evidence |
@@ -48,4 +52,4 @@ Best-effort poison durability, weaker-than-canonical validation, no replay/backu
 
 ## Development Workflow
 
-Use [Candystore Development Guide](./development-guide-candystore.md). Any ingest outcome or schema change requires Bloodbank contract review and Holocene read-client verification.
+Use [Candystore Development Guide](./development-guide-candystore.md). Any ingest outcome or schema change requires Bloodbank contract review, Lifecycle replay/projection verification, and Holocene read-client verification.

@@ -2,6 +2,7 @@
 stepsCompleted: [1, 2, 3]
 inputDocuments:
   - PRD.md
+  - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-18.md
   - README.md
   - docs/index.md
   - docs/project-overview.md
@@ -50,8 +51,21 @@ inputDocuments:
   - pjangler/docs/product-brief-pjangler-2026-02-01.md
   - momo/PILLARS.md
   - momo/BRAINDUMP.md
+  - momo/_bmad-output/planning-artifacts/PRD.md
+  - momo/_bmad-output/planning-artifacts/epics.md
+  - momo/_bmad-output/planning-artifacts/product-brief.md
+  - momo/docs/architecture.md
   - momo/.project.json
   - momo/mise.toml
+  - holocene/.stitch/DESIGN.md
+  - holocene/_bmad/custom/workflows/ticket-lifecycle/workflow.md
+  - holocene/_bmad/custom/workflows/ticket-lifecycle/workflow-plan-ticket-lifecycle.md
+  - bloodbank/services/lifecycle-controller/src/reconciler.py
+  - bloodbank/services/lifecycle-controller/src/db/repository.py
+  - bloodbank/services/lifecycle-controller/src/db/schema.sql
+  - bloodbank/services/lifecycle-controller/src/outbox_publisher.py
+  - bloodbank/services/lifecycle-controller/tests/test_reconciler.py
+  - bloodbank/services/lifecycle-controller/tests/test_runtime_blockers.py
   - /home/delorenj/code/CommonProject/README.md
   - /home/delorenj/code/CommonProject/copier.yml
   - /home/delorenj/code/CommonProject/mise.toml
@@ -81,7 +95,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 **Functional Requirements:**
 
-The current root PRD defines twelve functional requirement groups:
+The current root PRD defines thirteen functional requirement groups:
 
 1. Machine-readable platform component registry.
 2. Cross-component human and machine changelog.
@@ -95,12 +109,20 @@ The current root PRD defines twelve functional requirement groups:
 10. Unified agent capability routing.
 11. Idempotent legacy-project backfills.
 12. A separately designed hosted-product path.
+13. A single headless lifecycle authority with deterministic state, legal
+    frontier, obligations, and capability validation.
 
-The architecture must extend this four-component baseline to cover the following
-additional product boundaries:
+The architecture must extend this four-component deployed baseline to cover the
+following additional product boundaries:
 
-- **Momo:** PM/EM orchestration agent, heartbeat-driven decision system, ticket
-  abstraction, delegation workflows, and Hindsight-backed project memory.
+- **Lifecycle:** planned headless component that exclusively owns lifecycle
+  specification/state/reconciliation, legal frontier, obligations, and
+  capability validation. It is not implemented as a standalone repository or
+  deployed service yet.
+- **Momo:** PM/EM process manager, heartbeat-driven business decision system,
+  ticket abstraction, delegation workflows, and Hindsight-backed project
+  memory. It selects among lifecycle-legal work but never computes or writes
+  lifecycle truth.
 - **Toad:** on-demand Project Custodian agent that composes PJangler operations;
   it is not itself a runtime service or competing MCP implementation.
 - **Hermes Template/Fleet:** versioned agent-generation contract, runtime
@@ -144,9 +166,10 @@ Additional implications from the expanded scope are:
 - GPU-backed Voxxy engines require capability-aware placement and cannot be
   assumed available on every 33GOD host.
 - CommonProject and Voxxy must preserve standalone consumption outside 33GOD.
-- Momo and Toad must have distinct ownership boundaries: Momo governs ongoing
-  project execution; Toad governs project creation, adoption, and portfolio
-  custody.
+- Lifecycle, Momo, and Toad must have distinct ownership boundaries: Lifecycle
+  governs deterministic project state and legal transitions; Momo governs
+  business prioritization and execution process; Toad governs project creation,
+  adoption, and portfolio custody.
 - Skillex must be separated into two questions: whether 33GOD consumes skills,
   and whether the Skillex product itself belongs in the deployed stack.
 
@@ -171,16 +194,23 @@ does not need to assume a regulated multi-tenant enterprise environment.
 
 ### Technical Constraints & Dependencies
 
-- Bloodbank remains the event-contract and event-transport authority.
-- Candystore remains the canonical durable event-history projection.
-- Holocene remains the operator-facing control plane.
-- PJangler remains the deterministic project and fleet provisioning authority.
+- Lifecycle is the sole target authority for lifecycle spec, operational state,
+  reconciliation, frontier, obligations, and capability validation.
+- Bloodbank remains the event-contract and event-transport authority; hosting
+  the current controller embryo does not make Bloodbank the target domain owner.
+- Candystore remains the canonical durable event-history and read-model
+  projection, not the operational lifecycle writer.
+- Holocene remains the operator-facing renderer and high-level command surface;
+  command results come from Lifecycle.
+- PJangler remains the deterministic project and fleet provisioning/identity
+  authority; lifecycle-looking status in its registry is a projection.
 - CommonProject is the mandatory base project-scaffold convention consumed by
   PJangler, not a competing bootstrap mechanism.
 - Hermes Template owns generated agent-role structure; mutable runtime state must
   remain outside immutable template artifacts.
-- Toad delegates deterministic lifecycle work to PJangler.
-- Momo must not duplicate ticket-provider, fleet, or project-registry truth.
+- Toad delegates deterministic project/bootstrap work to PJangler.
+- Momo must not duplicate lifecycle, ticket-provider, fleet, or project-registry
+  truth. It may choose only from the lifecycle-provided legal frontier.
 - Voxxy already owns Dockerfiles for its CPU core and GPU engines and already
   supports independent Compose deployment.
 - Current root Compose still builds Candystore locally and bind-mounts/builds
@@ -201,17 +231,19 @@ does not need to assume a regulated multi-tenant enterprise environment.
    different lifecycle contracts.
 2. **Version provenance:** every consumed artifact needs an immutable version,
    source commit, publication identity, and root pin.
-3. **Runtime ownership:** exactly one lifecycle owner must exist for every
-   process, volume, scheduler, registry, and mutable state directory.
+3. **Authority taxonomy:** root Compose owns adopted process lifecycles;
+   Lifecycle alone owns project-lifecycle truth; component owners retain their
+   volumes, schedulers, registries, and mutable state directories.
 4. **Acceptance-gated progression:** every integration stage needs static,
    startup, contract, feature, and observability checks.
-5. **Dependency ordering:** project scaffolding precedes agent provisioning;
-   provisioning precedes Toad workflows; fleet contracts precede Momo's
-   autonomous orchestration.
-6. **Event consistency:** cross-component lifecycle and decision events must use
-   Bloodbank contracts and remain queryable through Candystore.
-7. **Control-plane visibility:** Holocene must surface component version,
-   readiness, functional-gate status, and degraded optional capabilities.
+5. **Dependency ordering:** project scaffolding/identity precedes lifecycle
+   binding; lifecycle contract and vertical slice precede agent provisioning
+   that can mutate project flow; fleet contracts then precede Momo autonomy.
+6. **Event consistency:** lifecycle commands/events and Momo decision events use
+   distinct Bloodbank contracts and remain queryable through Candystore.
+7. **Control-plane visibility:** Holocene renders lifecycle state version,
+   provenance, observation freshness, frontier, obligations, blockers/gates,
+   command result, component version, and readiness without recomputing truth.
 8. **Standalone compatibility:** CommonProject and Voxxy releases cannot depend
    on the 33GOD monorepo checkout.
 9. **Configuration and secrets:** images must consume narrow runtime
@@ -328,6 +360,9 @@ This rule applies to runtime units, not every conceptual component:
 - Holocene web: required.
 - Voxxy core and each independently scheduled engine: required.
 - Momo runtime/heartbeat adapter: required if deployed as a container.
+- Lifecycle service: required after the extraction vertical slice passes
+  contract, storage-migration, outbox, replay, health, and rollback gates. It is
+  absent from the current validated Compose set.
 - PJangler: optional run-only tool image, not a daemon.
 - Bloodbank: upstream service images plus component-owned initialization and
   configuration artifacts; custom runtime code requires its own image.
@@ -364,6 +399,10 @@ runtime configuration names, and component-local paths. Root owns:
 - shared infrastructure identities;
 - acceptance gates;
 - integrated lifecycle commands.
+
+Here "integrated lifecycle commands" means deployment/process commands. Project
+lifecycle commands target the standalone Lifecycle component and must not be
+implemented as direct Momo, Holocene, provider, or database writes.
 
 The current duplicated root projection remains valid during migration and is
 replaced incrementally only after each component fragment passes equivalence
@@ -413,3 +452,89 @@ Define and enforce an artifact manifest schema for every registered component:
 This contract must land before additional components are added to the live
 stack, because it determines what "pinned" means for services, tools, templates,
 and agent bundles.
+
+## Approved Lifecycle Authority Correction (2026-07-18)
+
+### Decision
+
+Create a separate headless component named `lifecycle`. Extract the tested
+controller embryo from Bloodbank with commit and data-history preservation, then
+extend it to the complete target contract. Do not build a second greenfield
+reconciler and do not leave lifecycle semantics in Bloodbank merely because the
+embryo was incubated there.
+
+### Current state
+
+- Bloodbank pin `03415705a39d77f1e6d73c8a9c92ee177320df7e` contains the
+  evaluator, leased reconcile queue, transactional state/history/outbox writes,
+  worker, sweeper, SQL, runbook, and 21 passing focused tests.
+- The default outbox publisher raises `outbox publisher is not configured`.
+- `bloodbank.v1.lifecycle.blocker.detected` has no registered schema.
+- `status.updated` staging can violate its schema with empty `repo` and null
+  `previous` on initial reconciliation.
+- The controller is not in Bloodbank Compose or the root integrated Compose.
+- It does not yet implement the target legal frontier, obligations, capability
+  grants, or a versioned/idempotent command surface.
+- Momo and Holocene contain planning/workflow prose that directly computes or
+  writes ticket state. Those are legacy client paths, not target authority.
+
+### Target authority matrix
+
+| Concern | Sole owner | Allowed client behavior |
+|---|---|---|
+| Project/bootstrap identity | PJangler | Lifecycle consumes stable identity and binding inputs |
+| Lifecycle spec/state/reconcile | Lifecycle | Clients submit observations/evidence and read versioned snapshots |
+| Legal frontier/obligations | Lifecycle | Momo ranks only returned legal candidates; Holocene renders them |
+| Capability validation | Lifecycle | Commands carry actor/capability/idempotency/state-version context |
+| Commands/events/schema/transport | Bloodbank | Lifecycle publishes/consumes only registered canonical contracts |
+| Durable event history/read models | Candystore | Clients query projections; Candystore never writes lifecycle state |
+| Business prioritization/delegation | Momo | Submit intent; never calculate or persist lifecycle truth |
+| UI/operations | Holocene | Render snapshots and submit high-level commands; never infer results |
+| Integrated deployment process | 33GOD root | Run exactly one lifecycle service after all cutover gates pass |
+
+### Target interaction
+
+```text
+PJangler identity -----> Lifecycle binding/spec
+                              |
+observations/evidence ------> | deterministic reconcile
+                              | -> state + frontier + obligations + grants
+                              v
+                  canonical Bloodbank events/commands
+                              |
+                              v
+                   Candystore history/read models
+                         |                 |
+                         v                 v
+                  Momo reads          Holocene renders
+                  frontier, picks     state/provenance
+                  legal work          and sends command
+                         \                 /
+                          -- intent/command --> Lifecycle validates
+```
+
+### Command invariants
+
+- Every mutation has an idempotency key and expected `state_version`.
+- Lifecycle validates actor capability and transition legality before a write.
+- Illegal, stale-version, duplicate, or unauthorized commands return a stable
+  verdict without state mutation.
+- The state row, append-only history, and outbox event commit atomically.
+- Bloodbank transports the contract; Candystore persists the event; neither
+  becomes the state authority.
+- Momo decision events explain why it selected a legal action. They do not enact
+  that action.
+
+### History-preserving extraction
+
+1. Create the new repository from the Bloodbank controller path while retaining
+   commit provenance.
+2. Freeze and register lifecycle command/event contracts in Bloodbank.
+3. Back up operational tables and record row counts, primary keys, fingerprints,
+   status-history ordering, and outbox publication state.
+4. Run parity/golden tests against the extracted evaluator before extending it.
+5. Add frontier, obligations, capability validation, and command handling.
+6. Cut over one writer only; compare migrated data and retain a rollback point.
+7. Wire Momo, Holocene, and Candystore clients before removing legacy paths.
+8. Add the service to root Compose only after health, migration, replay, schema,
+   single-writer, and rollback gates pass.

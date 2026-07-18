@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Bloodbank is the canonical 33GOD event-contract authority and a partial local event runtime. Its strongest layer is schema and naming enforcement; its deployment layer contains reference services and operational gaps. Treat it as contract-complete and runtime-partial.
+Bloodbank is the canonical 33GOD event-contract and transport authority and a partial local event runtime. Its strongest layer is schema and naming enforcement; its deployment layer contains reference services and operational gaps. The lifecycle controller currently incubated here is the tested embryo for a separate component, not Bloodbank's target domain authority.
 
 ## Technology Stack
 
@@ -33,12 +33,18 @@ The live `assert_contract()` validates type shape, tense, kind, required fields,
 - Dapr: event pub/sub component only; command/reply has no equivalent component.
 - Agent hooks: canonical mapper/builder plus raw core-NATS publisher; fail-open unless strict mode is set.
 - Heartbeat producer: Dapr publisher; Compose points to a missing heartbeat recorder.
-- Lifecycle controller: tested reconciliation/outbox design, absent from Compose with an unconfigured publisher.
+- Lifecycle controller embryo: pure evaluator, leased queue, atomic state/history/outbox persistence, worker/sweeper, and 21 passing focused tests. It is absent from Compose, its publisher is unconfigured, and it must be extracted with history preservation into the standalone Lifecycle component.
 - Apicurio and EventCatalog: deployed scaffolds without proven source synchronization.
 
 ## Data Architecture
 
 Canonical event schemas live in `schemas/`. The common JSON Schema and hook runtime validator disagree on required metadata, subject semantics, and null causation behavior. JSON Schema validity alone is therefore insufficient. See [Bloodbank Data Models](./data-models-bloodbank.md).
+
+Lifecycle-specific drift is also concrete: the reconciler emits unregistered
+`bloodbank.v1.lifecycle.blocker.detected`, while initial `status.updated`
+staging can supply empty `repo` and null `previous` values rejected by its
+registered schema. Bloodbank owns closing those contracts; Lifecycle owns the
+resulting domain behavior.
 
 ## API and Protocol Design
 
@@ -54,8 +60,8 @@ Focused evidence at the audit snapshot: 61 schema documents valid, 59 domain con
 
 ## Principal Risks
 
-Semantic subject mismatch acceptance, missing heartbeat build context, no JetStream acknowledgement in hook publication, lifecycle outbox unable to publish, weak stream reconciliation, no broker DLQ/capacity limits, unauthenticated local infrastructure, and sensitive hook payload retention.
+Semantic subject mismatch acceptance, missing heartbeat build context, no JetStream acknowledgement in hook publication, lifecycle outbox unable to publish, lifecycle schema drift, accidental retention of lifecycle semantic ownership during extraction, weak stream reconciliation, no broker DLQ/capacity limits, unauthenticated local infrastructure, and sensitive hook payload retention.
 
 ## Development Workflow
 
-Use [Bloodbank Development Guide](./development-guide-bloodbank.md). Contract changes require downstream Candystore, Holocene, and PJangler review plus root drift-governance evidence.
+Use [Bloodbank Development Guide](./development-guide-bloodbank.md). Contract changes require downstream Lifecycle, Candystore, Momo, Holocene, and PJangler review plus root drift-governance evidence. Bloodbank controller code is read-only extraction evidence in this correction; no application refactor is claimed here.

@@ -2,7 +2,7 @@
 
 ## Deployment truth
 
-`33god-platform/compose.yaml` is the live local lifecycle authority for
+`33god-platform/compose.yaml` is the live local **process owner** for
 Bloodbank core, Candystore, and Holocene web. `holocene-api.service` remains a
 host prerequisite by design. Static validation and live health are recorded as
 separate evidence.
@@ -12,6 +12,10 @@ standalone Candystore PostgreSQL/app/daprd, Holocene API preflight, and Holocene
 web. PJangler CLI and stdio MCP are zero-replica run-only tools in `tools` and
 `full`. Cloud is render-only, unsupported, and has no lifecycle command
 surface.
+
+There is no standalone Lifecycle service in this topology. The approved
+project-lifecycle component remains an extraction target, and the tested
+Bloodbank controller embryo is not started by Bloodbank Compose or root Compose.
 
 Never run `docker compose --profile cloud up`. Compose includes all unprofiled
 local services when a profile is selected, so stateful NATS, PostgreSQL, and
@@ -45,7 +49,7 @@ Holocene web environment file must exist before startup.
 
 Static gates may use `/home/delorenj/code/33GOD` as an authoritative dirty
 source read-only. This is intentional so protected user work, including current
-Holocene work, does not make the static gate fail. Lifecycle cutover is stricter:
+Holocene work, does not make the static gate fail. Deployment cutover is stricter:
 all component inputs must be clean and pinned. These checks print no file
 contents:
 
@@ -118,6 +122,30 @@ Document names and sources only; never record secret values.
    Traefik routes retain expected auth behavior.
 8. PJangler remains outside service startup; validate/run it separately.
 
+## Planned Lifecycle service gate
+
+Do not add or start a Lifecycle service from this guide yet. Before root Compose
+can own that process, the implementation handoff must prove all of the following:
+
+1. A standalone repository/image exists with preserved Bloodbank controller
+   provenance and evaluator parity.
+2. Current lifecycle tables are backed up and migrated with verified row counts,
+   primary keys, fingerprints, history ordering, and outbox state.
+3. Exactly one operational lifecycle writer exists and the legacy writer is
+   disabled or read-only.
+4. Every lifecycle command/event is registered in Bloodbank and real emitted
+   envelopes validate.
+5. The outbox publishes successfully through Bloodbank and failures remain
+   retryable/observable.
+6. Candystore persists canonical lifecycle events/read projections.
+7. Health/readiness, replay, migration rollback, and state-version/idempotency
+   checks pass.
+8. Momo and Holocene use lifecycle reads/commands rather than direct state writes.
+
+Only then should the platform manifest, Compose model, semantic validator,
+ports, storage, secrets, dependency order, and runtime acceptance list be
+expanded for exactly one Lifecycle instance.
+
 ## Direct cutover
 
 Stop the Bloodbank, Candystore, and Holocene component-owned Compose projects,
@@ -130,7 +158,7 @@ docker compose -f holocene/compose.yml down
 GOD_SOURCE_ROOT="$PWD" docker compose -f 33god-platform/compose.yaml up -d --build
 ```
 
-The root project becomes the sole Compose owner of the adopted services. Verify
+The root project becomes the sole Compose process owner of the adopted services. Verify
 container health, NATS stream state, one `candystore-events` durable consumer,
 Candystore readiness, Holocene API health, and the routed web surface.
 

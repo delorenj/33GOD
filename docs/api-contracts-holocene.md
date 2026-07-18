@@ -37,3 +37,12 @@ Next.js provides browser proxies and HQ Telegram Mini App routes. `/api/modules/
 ## Availability Contract
 
 SSE is snapshot polling per connection, not Bloodbank consumption. Each fleet client can trigger serial systemd work. Candystore failure is currently silent; callers must not equate an empty history with a healthy zero-event state.
+
+## Planned Lifecycle Client Contract
+
+There is no deployed lifecycle API or Holocene adapter today. The target
+Holocene surface may read versioned authoritative snapshots and submit
+idempotent high-level intent commands through Bloodbank. It must expose pending,
+accepted, rejected, stale, and unavailable outcomes without optimistically
+writing local state. Lifecycle performs capability validation and reconciliation;
+Holocene only renders the result.

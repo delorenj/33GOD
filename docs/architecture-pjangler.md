@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-PJangler is a host-local provisioning control plane with a Commander CLI and stdio MCP server. Its reliable core is registry/project projection, parity detection/migration, CommonProject rendering, and recipe orchestration. Several “live” and safe-default claims exceed implementation behavior, and generated Bloodbank integration is transitional.
+PJangler is a host-local provisioning control plane with a Commander CLI and stdio MCP server. Its reliable core is registry/project projection, parity detection/migration, CommonProject rendering, and recipe orchestration. Several “live” and safe-default claims exceed implementation behavior, and generated Bloodbank integration is transitional. PJangler owns project/bootstrap identity inputs, not operational lifecycle truth.
 
 ## Technology Stack
 
@@ -31,6 +31,11 @@ Host automation and provisioning pipeline. Typed plans separate some preview fro
 ## Data Architecture
 
 TypeScript interfaces and runtime validation, rather than JSON Schema, define the registry and `.project.json`. The central registry is catalog/bootstrap authority; `.project.json` is the repository-local runtime projection. See [PJangler Data Models](./data-models-pjangler.md).
+
+The planned Lifecycle component binds its versioned specification to this stable
+project identity. Registry `lifecycle status`, provider board state, and local
+automation fields remain bootstrap/catalog metadata and observations; they may
+not override the authoritative Lifecycle state version.
 
 ## API Design
 

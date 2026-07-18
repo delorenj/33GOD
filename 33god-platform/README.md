@@ -20,6 +20,12 @@ definitions. Both have zero service replicas and are intended only for explicit
 `docker compose run` use. PJangler MCP is stdio; neither definition has a port,
 HTTP healthcheck, restart loop, or daemon contract.
 
+The approved headless Lifecycle component is not present in this projection or
+deployed on the host. The current Bloodbank controller is only its extraction
+embryo. A future default service must pass schema/outbox, history migration,
+single-writer, replay, rollback, and client-cutover gates before it is added;
+documentation approval alone is not deployment evidence.
+
 The `cloud` profile is render-only and deliberately unsupported. It retains the
 local bind/external-network model plus a rejection service so drift remains
 visible. The cloud profile has no supported lifecycle surface.
@@ -103,6 +109,11 @@ The dependency order is NATS, NATS initialization and placement,
 Candystore PostgreSQL, Candystore app, exactly one Candystore sidecar, Holocene
 API preflight, then Holocene web. Verify the durable `candystore-events`
 consumer cardinality after startup.
+
+After the Lifecycle implementation gate, its runtime dependency order is
+project identity from PJangler, Bloodbank transport/contracts, Lifecycle
+reconciliation, Candystore history/projections, then Momo and Holocene clients.
+That target is deliberately absent from the current validated render.
 
 See [the topology audit](./docs/integrated-compose-topology-audit.md) for the
 evidence, port table, health signals, ownership, and cutover acceptance checks.

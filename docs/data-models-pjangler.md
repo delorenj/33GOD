@@ -13,7 +13,13 @@ Writes use temporary-file rename, preventing partial files but not lost concurre
 Authority split:
 
 - Central registry: catalog and bootstrap authority.
-- `.project.json`: repository-local runtime and board projection.
+- `.project.json`: repository-local bootstrap, provider, and automation
+  projection.
+
+The registry's `lifecycle status` field is catalog metadata in the current
+model, not target operational lifecycle truth. Lifecycle consumes stable project
+identity/binding inputs and owns its own versioned spec and state. PJangler does
+not calculate legal frontier, obligations, capabilities, or transitions.
 
 ## Initialization Plan
 
