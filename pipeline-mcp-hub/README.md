@@ -10,11 +10,11 @@ Served at **`https://mcp.delo.sh/mcp`** (header-PAT auth).
 
 The hub exposes only three tools to clients:
 
-| Tool | Purpose |
-| --- | --- |
-| `list_domains()` | List available domains (name, description, tool_count). **Start here.** |
-| `list_domain_tools(domain)` | Load + list one domain's tools, each with its `input_schema`. This is the "load a domain's toolset" step — schemas enter context only now. |
-| `call_domain_tool(domain, tool, arguments)` | Invoke a specific domain tool; `arguments` must match its `input_schema`. |
+| Tool                                        | Purpose                                                                                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `list_domains()`                            | List available domains (name, description, tool_count). **Start here.**                                                                    |
+| `list_domain_tools(domain)`                 | Load + list one domain's tools, each with its `input_schema`. This is the "load a domain's toolset" step — schemas enter context only now. |
+| `call_domain_tool(domain, tool, arguments)` | Invoke a specific domain tool; `arguments` must match its `input_schema`.                                                                  |
 
 Underlying domain tools are held in an internal registry and are **never advertised
 directly**, so the per-request tool-schema cost stays tiny and constant. This works on
@@ -29,8 +29,8 @@ any MCP client regardless of `notifications/tools/list_changed` support.
 
 - **plane** — reuses `plane-mcp-server`'s tools in-process (work items, projects, cycles,
   epics, etc.). Auth + Plane API calls use the caller's PAT from the request context.
-- **bloodbank** *(Phase 1)* — publish/trace events on the BloodBank NATS bus.
-- **lifecycle** *(Phase 2)* — opinionated ticket state machine (pull → triage → … → done).
+- **bloodbank** _(Phase 1)_ — publish/trace events on the BloodBank NATS bus.
+- **lifecycle** _(Phase 2)_ — opinionated ticket state machine (pull → triage → … → done).
 
 ## Auth
 
@@ -49,7 +49,7 @@ uv pip install -e ../../plane-mcp-server
 # stdio (no auth; Plane tools use env fallback)
 PLANE_API_KEY=... PLANE_WORKSPACE_SLUG=... python -m pipeline_hub stdio
 
-# http (header-PAT auth) on :8080 at /mcp
+# http (header-PAT auth) on :8998 at /mcp
 PLANE_INTERNAL_BASE_URL=http://localhost:8000 python -m pipeline_hub http
 ```
 
@@ -69,10 +69,10 @@ Requires Docker Compose ≥ v2.17 (for `build.additional_contexts`).
 
 ### Key env
 
-| Var | Default | Purpose |
-| --- | --- | --- |
-| `HUB_PORT` | `8080` | Listen port inside the container |
-| `PLANE_INTERNAL_BASE_URL` | — | Server-to-server Plane API base; set to `http://plane-backend:8000` (SDK appends `/api/v1`) |
-| `PLANE_BASE_URL` | `https://api.plane.so` | Fallback Plane API base |
+| Var                       | Default                | Purpose                                                                                     |
+| ------------------------- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `HUB_PORT`                | `8998`                 | Listen port inside the container                                                            |
+| `PLANE_INTERNAL_BASE_URL` | —                      | Server-to-server Plane API base; set to `http://plane-backend:8000` (SDK appends `/api/v1`) |
+| `PLANE_BASE_URL`          | `https://api.plane.so` | Fallback Plane API base                                                                     |
 
 Phase 0 needs **no secrets** — the Plane PAT arrives per-request in the client's headers.
