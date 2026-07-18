@@ -17,9 +17,9 @@ The default render contains twelve processes:
 - Holocene host-API preflight and web.
 
 Lifecycle uses exactly
-`ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`.
+`ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`.
 There is no Lifecycle `build` key or local-image fallback. Its OCI revision is
-`715ab2ea62bcece488c8d6029869af8d3651c39a`.
+`c78b0e81e7e29898bb06f86eec60dcee9af1191a`.
 
 Startup fails closed:
 
@@ -73,7 +73,10 @@ caller-overridable:
 - `CANDYSTORE_PORT` (default `8683`)
 - `CANDYSTORE_DAPR_HTTP_PORT` (default `3504`)
 
-`LIFECYCLE_POSTGRES_PASSWORD` supplies the Compose secret. Narrow bootstrap
+`LIFECYCLE_POSTGRES_PASSWORD_FILE` points to a caller-created read-only file in
+an owner-only directory. The file must be readable by the non-root Lifecycle
+and PostgreSQL container users; the isolated verifier uses mode 0444 inside a
+mode-0700 ephemeral directory and removes it after teardown. Narrow bootstrap
 identity, actor, capability, timestamp, and mode values have explicit
 `LIFECYCLE_BOOTSTRAP_*` inputs. Network and volume names are also
 caller-overridable, which lets the live gate coexist with unrelated projects.
@@ -105,9 +108,11 @@ python3 scripts/verify-lifecycle-live.py --screenshots-dir /tmp/33god-lifecycle-
 
 That gate allocates a unique Compose project, ports, networks, volumes, and
 Candystore image; verifies the exact rendered Lifecycle digest before `up`;
-tests all seven offline/restart/outage/persistence invariants plus Candystore,
-Momo, and Holocene seams; and removes only the resources it created. It does
-not prune Docker or touch another Compose project.
+tests all seven offline/restart/outage/persistence invariants plus true
+late-subscriber replay, pending-obligation rejection and completion unlock,
+authoritative capability versions, conflicting-duplicate integrity, and the
+Candystore/Momo/Holocene seams; and removes only the resources it created. It
+does not prune Docker or touch another Compose project.
 
 ## Current deployment label
 

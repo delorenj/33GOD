@@ -59,7 +59,7 @@ that applies:
 3. A legal unstarted candidate that is a clear value-add, unambiguous, and has
    enough data to start without guessing.
    Recording this pull as a decision event (basis `keep-the-pipeline-unblocked`,
-   `smallest-safe-increment`) is **mandatory** — it is you spending the operator's trust.
+   `smallest-reviewable-increment`) is **mandatory** — it is you spending the operator's trust.
 4. A small, high-priority backlog candidate only if Lifecycle exposes a legal
    acquisition action and Momo's judgment says it is valuable and ready.
 

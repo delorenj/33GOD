@@ -9,7 +9,7 @@ project-lifecycle writer.
 
 The exact Lifecycle runtime is:
 
-`ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`
+`ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`
 
 Compose has no Lifecycle build key. The cloud profile is render-only and
 unsupported; never run `docker compose --profile cloud up`.
@@ -73,7 +73,9 @@ The default external names are:
 - volumes: `bloodbank_bloodbank-nats-data`, `lifecycle_pgdata`,
   `candystore_pgdata`, and the three `holocene_*_node_modules/.next`
   volumes; and
-- secret input: `LIFECYCLE_POSTGRES_PASSWORD`.
+- secret input: `LIFECYCLE_POSTGRES_PASSWORD_FILE`, pointing to a read-only file
+  inside a caller-owned private directory; it must be readable by the non-root
+  Lifecycle and PostgreSQL container users.
 
 Lifecycle PostgreSQL joins only `lifecycle-internal`. Lifecycle serve joins
 `lifecycle-internal` and `bloodbank-network`. It never mounts Candystore
@@ -102,9 +104,12 @@ networks, volumes, and local Candystore image. It then proves:
    eventual publication.
 7. dedicated PostgreSQL persistence across Lifecycle and database restarts.
 
-The run also exercises Candystore replay/read-only behavior, Momo's legal
-obligation-to-skill seam, and Holocene's read/command/UI surface. Cleanup uses
-the unique resource names and never prunes Docker.
+The run starts Candystore after the baseline authority snapshot and verdict
+already exist, verifies durable replay before post-start traffic, and proves a
+conflicting duplicate cannot spoof the stored row or projection. It also
+exercises pending-obligation rejection, Momo's exact completion-evidence path,
+authoritative capability-version flow, and Holocene's read/command surface.
+Cleanup uses the unique resource names and never prunes Docker.
 
 ## Promotion boundary
 

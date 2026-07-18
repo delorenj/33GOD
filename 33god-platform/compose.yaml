@@ -9,7 +9,7 @@ x-33god-model:
   tools: local-one-shot
   full: local-with-tools
   cloud: unsupported-local-bind-model
-x-lifecycle-image: &lifecycle-image ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526
+x-lifecycle-image: &lifecycle-image ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76
 
 services:
   bloodbank-nats:
@@ -421,4 +421,4 @@ volumes:
 
 secrets:
   lifecycle-postgres-password:
-    environment: LIFECYCLE_POSTGRES_PASSWORD
+    file: ${LIFECYCLE_POSTGRES_PASSWORD_FILE:-/run/secrets/33god-lifecycle-postgres-password}

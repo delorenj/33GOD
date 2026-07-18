@@ -46,7 +46,16 @@ stale. The web surface preserves identity, spec/state versions, provenance,
 freshness, status/health/phase/fingerprint, frontier, obligations,
 blockers/gates, and stable verdicts.
 
-High-level actions build canonical Bloodbank commands with actor, capability,
-idempotency, `expected_state_version`, correlation, and causation context.
-The API reports a queued transport result without optimistically updating local
-state; the subsequent authoritative projection/verdict is rendered as truth.
+High-level actions accept the selected authority frontier, expected state
+version, actor, capability ID, and intent parameters. Capability version and
+all semantic IDs are derived from the authoritative projection and full
+immutable request; caller-supplied substitutes are rejected. Missing, wrong, or
+`allowed=false` frontier items publish nothing. Gate resolution also publishes
+nothing unless `parameters.resolution` is present.
+
+The publisher requires its subject argument to equal `envelope.subject`. Its
+core NATS TCP write plus PING/PONG receipt is reported as broker processing,
+with `durable_jetstream_acknowledged: false` and `authority_accepted: false`;
+it is not described as queueing or durable acceptance. Holocene does not
+optimistically update local state, and renders only the later authoritative
+projection/verdict as truth.

@@ -467,22 +467,28 @@ contract or competing reconciler is permitted.
 
 ### Current state
 
-- Lifecycle runtime source `715ab2ea62bcece488c8d6029869af8d3651c39a`
+- Lifecycle runtime source `c78b0e81e7e29898bb06f86eec60dcee9af1191a`
   is exercised only as
-  `ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`.
-- Bloodbank stays pinned at
-  `cce08181ed9f6de8dd24f058b93d0dd9cda9f2bf`; its locked contracts and
-  NATS/JetStream path validate without modification.
+  `ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`.
+- Bloodbank is pinned at
+  `155f2d774964d1c73694ce2c576fe5f50b91eefb`; its canonical v2 snapshot
+  capability version and completion-evidence contracts define the exact wire
+  path used by authority and clients.
 - Root Compose runs dedicated Lifecycle PostgreSQL, one-shot migration,
   deterministic bootstrap, and serve with fail-closed dependencies.
 - Candystore consumes canonical lifecycle events durably and serves a replay-safe,
-  version-ordered, visibly stale/unknown read projection.
-- Momo selects only authoritative frontier work, resolves canonical skill
-  references, and separates rationale from Bloodbank invocation/command intent.
+  version-ordered, visibly stale/unknown read projection; duplicate IDs always
+  re-project the canonical stored envelope rather than a conflicting delivery.
+- Momo ranks only authoritative legal frontier commands, services canonical
+  pending obligations as directly correlated actor work, resolves canonical
+  skill references, and separates rationale from invocation/evidence/command
+  intent.
 - Holocene renders the Candystore projection and submits complete high-level
   commands through Bloodbank without local lifecycle mutation.
 - The isolated live matrix passes all seven offline, restart, stale-version,
-  capability, NATS recovery/order, and PostgreSQL persistence invariants.
+  capability, NATS recovery/order, and PostgreSQL persistence invariants plus
+  pending-obligation evidence, versioned grants, pre-start replay, and
+  conflicting-duplicate integrity.
 
 ### Current authority matrix
 

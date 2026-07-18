@@ -8,13 +8,11 @@ immutable runtime image
 ## Runtime pin
 
 - Runtime image:
-  `ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`
-- Image source revision:
-  `715ab2ea62bcece488c8d6029869af8d3651c39a`
-- Integration-document gitlink revision:
-  `434a1674d35b15aafb38d2d7a022d996ca3ad805`
+  `ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`
+- Image source and gitlink revision:
+  `c78b0e81e7e29898bb06f86eec60dcee9af1191a`
 - Bloodbank contract revision:
-  `cce08181ed9f6de8dd24f058b93d0dd9cda9f2bf`
+  `155f2d774964d1c73694ce2c576fe5f50b91eefb`
 
 Root Compose references only the immutable digest. It never rebuilds Lifecycle
 and has no Lifecycle build or local-image substitution.
@@ -83,7 +81,16 @@ Every state-changing command carries:
 - the canonical Bloodbank envelope and subject.
 
 Lifecycle returns stable applied, stale, unauthorized, illegal, or duplicate
-verdicts. A stale version or invalid capability is rejected without mutation.
+verdicts. A stale version, invalid versioned capability, or transition blocked
+by a pending obligation is rejected without mutation. Snapshot v2 carries each
+grant's required `capability_version`; clients consume that authoritative value.
+
+In `waiting`, the independent-review obligation is computed before the legal
+frontier. `waiting -> active` is disallowed while that obligation is pending.
+An invocation or review request is not satisfaction: only the canonical
+Bloodbank completion-evidence event with matching lifecycle, obligation,
+target actor, skill reference, and completed artifact evidence can satisfy it.
+Lifecycle records that observation and alone performs the resulting reconcile.
 
 Momo reads only the authoritative projection, filters and ranks the legal
 frontier, resolves an obligation's canonical skill reference, emits decision
@@ -109,10 +116,12 @@ with unique ports, networks, and volumes. It proves:
 7. The dedicated PostgreSQL volume survives Lifecycle and PostgreSQL process
    restarts.
 
-The same run exercises durable Candystore replay/read-only behavior, Momo's
-legal obligation-to-skill seam, Holocene read/command fidelity, and responsive
-desktop/mobile rendering. Cleanup addresses only the unique resources allocated
-by the run.
+The same run starts Candystore only after authority snapshot and verdict events
+exist, proves their durable replay, attempts a conflicting duplicate ID and
+proves projection from the canonical stored envelope, exercises pending
+obligation rejection and exact completion-evidence unlock, verifies versioned
+capabilities, and checks Momo/Holocene client fidelity. Cleanup addresses only
+the unique resources allocated by the run.
 
 ## Current versus future
 

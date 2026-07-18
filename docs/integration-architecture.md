@@ -65,7 +65,7 @@ does not join the Lifecycle authority network.
 |---|---|---|
 | Identity/binding inputs | PJangler | Deterministic input to bootstrap/spec |
 | Lifecycle state/reconcile/frontier/obligations/grants | Lifecycle | Exact digest, dedicated PostgreSQL, sole writer |
-| Commands/events/transport | Bloodbank | Locked `cce0818…` schemas and initialized JetStream |
+| Commands/events/transport | Bloodbank | Pinned `155f2d7…` schemas and initialized JetStream |
 | Event history/read projections | Candystore | Durable consumer, replay-safe current snapshot/verdict API |
 | Prioritization/delegation | Momo | Legal frontier only, canonical skill resolution, separated rationale/intent |
 | Mission control | Holocene | Candystore-backed read surface and Bloodbank command publication |
@@ -79,6 +79,11 @@ does not join the Lifecycle authority network.
   liveness remain intact.
 - Transactional outbox order and eventual publication survive NATS recovery.
 - Stale versions and invalid grants yield stable non-mutating verdicts.
+- Pending obligations make the corresponding frontier transition illegal;
+  only exact canonical completion evidence can unlock authority progression.
+- A late-starting Candystore replays pre-existing snapshots and verdicts, and
+  duplicate IDs always project the immutable stored event rather than a
+  conflicting delivery.
 - Restarting Lifecycle or its PostgreSQL process preserves the dedicated
   authority volume and does not duplicate transition effects.
 - The cloud profile is a render-only rejection model, not a deployment target.

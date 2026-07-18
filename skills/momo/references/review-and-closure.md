@@ -4,7 +4,7 @@ Servicing review obligations is the normal per-pass path, not an escape hatch. M
 independent adversarial review against the operator's locked intent and acts on the verdict
 autonomously — it does not wait for the operator's first right of refusal. The operator's QA
 is *deferred* to an end-of-product sweep over the review lane, backed by a queryable decision
-trail; a downstream regression rollback is the safety valve.
+trail. Findings always move forward as new evidence and repair work.
 
 The verdict is evidence for Lifecycle, not a state transition by Momo. Submit it
 with lifecycle ID, expected state version, command ID/idempotency key, and the
@@ -73,15 +73,6 @@ Run WITHOUT `--close`.
 - Distinguish **held-by-finding** from **disabled-by-config**: a run disabled via
   `reconcile.auto_review=false` / `RECONCILE_AUTO_REVIEW=off` also exits 3 but emits NO
   decision event — read the stderr message.
-
-## 4. Downstream regression rollback (the safety valve)
-
-If a later dependent proves a review-accepted feature is actually broken,
-submit a rollback observation/intent naming the dependent and symptom; emit
-`bloodbank.v1.repo.<repo>.issue.review_rollback.recorded` `{issue, surfaced_by, reason}` (via
-the sentinel `emit-event.py`) plus a Momo decision event. This is expected and healthy — the
-trade for deferring operator QA, not a failure. Never transition the provider
-directly; wait for Lifecycle's versioned result.
 
 ## Out-of-scope blockers (review does NOT clear these)
 

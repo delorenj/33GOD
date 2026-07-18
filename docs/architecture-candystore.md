@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Candystore is Bloodbank’s durable history/read model: a Python HTTP server, PostgreSQL event store, Dapr JetStream subscriber, and React audit UI. It is compact and understandable, but it is not yet an enterprise audit-of-record because poison preservation, replay, backup, auth, and migration controls are incomplete.
+Candystore is Bloodbank’s durable history/read model: a Python HTTP server, PostgreSQL event store, Dapr JetStream subscriber, and React audit UI. It is compact and understandable, but it is not yet an enterprise audit-of-record because poison preservation, operator-triggered general replay, backup, auth, and migration controls are incomplete.
 
 Candystore never owns operational project-lifecycle truth. It durably records
 canonical lifecycle events and maintains the smallest replay-safe,
@@ -25,7 +25,14 @@ Vertical full-stack read model. One Python process applies migrations, receives 
 
 ## Ingestion Flow
 
-The Dapr sidecar subscribes to `bloodbank.evt.v1.>` using durable `candystore-events` and queue group `candystore`. Accepted events are deduplicated by UUID and projected into indexed columns plus JSONB. Permanent failures return 200 `DROP`; transient failures return 500 `RETRY`.
+The Dapr sidecar subscribes to `bloodbank.evt.v1.>` using durable
+`candystore-events` and queue group `candystore`. Event insertion and Lifecycle
+projection share one PostgreSQL transaction. On UUID conflict, Candystore
+loads `events.raw` for that ID under `FOR SHARE` and projects that immutable
+stored envelope, never the conflicting delivery. A projection failure aborts
+the event insert and receipt together; the callback returns 500 so durable
+redelivery retries the same operation. Permanent malformed/data failures
+return 200 `DROP`.
 
 Candystore validates eight truthy fields plus UUID/time parsing, weaker than Bloodbank’s canonical contract. It does not enforce canonical type/subject equality, actor/order/schema metadata, or full domain/action rules.
 
@@ -52,7 +59,10 @@ remain outside this slice.
 
 ## Principal Risks
 
-Best-effort poison durability, weaker-than-canonical validation, no replay/backup, dual-deployment message splitting, liveness used instead of readiness, no app auth, unbounded threaded request handling, mutable build inputs, and miswired Holocene dependency.
+Best-effort poison durability, weaker-than-canonical validation, no
+operator-triggered general replay or backup, dual-deployment message splitting,
+liveness used instead of readiness, no app auth, unbounded threaded request
+handling, mutable build inputs, and miswired non-Lifecycle Holocene dependency.
 
 ## Development Workflow
 

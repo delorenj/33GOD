@@ -20,7 +20,13 @@ Every SQL file runs lexically on each startup in one transaction. Current files 
 
 ## Consistency Limits
 
-UUID conflict means duplicate regardless of payload. Count/page queries are separate statements. Raw JSON is parsed and serialized, so exact input bytes are retained only in dead letter for rejected/sanitized cases.
+UUID conflict means duplicate regardless of payload. The incoming body cannot
+affect the Lifecycle projection: insertion and projection use one transaction,
+and the projection input is the canonical `events.raw` row selected under
+`FOR SHARE`. Projection failure rolls back a new audit row and receipt; for an
+existing row it commits no receipt, allowing durable retry. Count/page queries
+are separate statements. Raw JSON is parsed and serialized, so exact input
+bytes are retained only in dead letter for rejected/sanitized cases.
 
 Lifecycle rows in `events` are immutable history/read-model inputs, not the
 operational lifecycle store. A Candystore projection may lag, be rebuilt, or be

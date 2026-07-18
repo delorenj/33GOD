@@ -12,7 +12,7 @@ Lifecycle, Candystore, Holocene, and run-only PJangler tooling. The Lifecycle
 path is implemented and locally verified with:
 
 - immutable image
-  `ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`;
+  `ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`;
 - dedicated PostgreSQL, secret, volume, and private network;
 - fail-closed migration, deterministic bootstrap, then serve ordering;
 - canonical Bloodbank contracts and JetStream;
@@ -21,8 +21,10 @@ path is implemented and locally verified with:
 - a Candystore-backed Holocene read/command surface.
 
 The isolated acceptance gate proves the seven offline, restart, stale-version,
-capability, broker-recovery, ordering, and persistence invariants. The cloud
-profile remains render-only and unsupported.
+capability, broker-recovery, ordering, and persistence invariants plus
+pending-obligation evidence, versioned grants, pre-start durable replay, and
+canonical conflicting-duplicate integrity. The cloud profile remains
+render-only and unsupported.
 
 ## Ownership
 

@@ -44,13 +44,13 @@ Lifecycle do not drive the same reconcile loop.
 ### Runtime and contracts
 
 - Lifecycle runtime source:
-  `715ab2ea62bcece488c8d6029869af8d3651c39a`
+  `c78b0e81e7e29898bb06f86eec60dcee9af1191a`
 - Lifecycle runtime image:
-  `ghcr.io/delorenj/lifecycle@sha256:e391a8aab13ca582e2026846a268a6a228c7b63c25e5d469255572e4b2988526`
+  `ghcr.io/delorenj/lifecycle@sha256:20a6d4e7c37ceee9867e05e922d46f3fa682ccf597dff4bb733e3f5649850a76`
 - Bloodbank contract/transport revision:
-  `cce08181ed9f6de8dd24f058b93d0dd9cda9f2bf`
-- Lifecycle integration-document revision:
-  `434a1674d35b15aafb38d2d7a022d996ca3ad805`
+  `155f2d774964d1c73694ce2c576fe5f50b91eefb`
+- Lifecycle authority/integration revision:
+  `c78b0e81e7e29898bb06f86eec60dcee9af1191a`
 
 Root Compose references the immutable image digest and contains no Lifecycle
 build key. A dedicated PostgreSQL database, secret, volume, and private network
@@ -61,10 +61,11 @@ must succeed before serve.
 ### Candystore read model
 
 Candystore revision
-`a54389f121c2ee24052f94fb14bc0ecc811b1dce` adds:
+`12c25237b4242764bf630fba6ecc00804b19f9f2` provides:
 
 - an operationally durable lifecycle consumer;
-- replay receipts and idempotent/version-ordered projection updates;
+- replay receipts and idempotent/version-ordered projection updates, including
+  canonical persisted-row replay when a duplicate ID conflicts with its input;
 - lifecycle/project identity, spec/state versions, authority state,
   fingerprint, provenance, freshness/as-of, frontier, obligations,
   blockers/gates, and stable verdicts; and
@@ -75,15 +76,16 @@ Candystore exposes no operational Lifecycle mutation endpoint.
 ### Momo obligation-to-skill seam
 
 Momo revision
-`aae900f37de3a15bb4b69c48e61cc87d286526ea`:
+`33dfd7a85798ebdfddd904be3646492af63635bc`:
 
 - consumes authoritative snapshots/frontier/obligations;
-- rejects non-frontier or otherwise illegal work;
+- ranks only legal frontier commands while servicing pending obligations as
+  directly correlated actor work rather than borrowing unrelated transitions;
 - resolves obligation skill references through the canonical Momo skill
   contract;
 - emits decision rationale separately from state-changing intent; and
-- publishes canonical agent invocation plus Lifecycle command/evidence through
-  Bloodbank.
+- publishes canonical agent invocation, exact completion evidence, and
+  Lifecycle commands through Bloodbank.
 
 Every state-changing command carries actor, capability/grant, idempotency,
 `expected_state_version`, correlation, and causation context. Momo has no
@@ -92,14 +94,15 @@ direct Lifecycle, Candystore, provider, or local-truth write path.
 ### Holocene client surface
 
 Holocene revision
-`c47358d57773409807dcff373cb426ee4b787df3`:
+`ed3630457b21062b5b02225571c51070b3028fcf`:
 
 - reads Candystore's Lifecycle projection;
 - renders identity, versions, provenance/freshness, status/health/phase/
   fingerprint, frontier, obligations, blockers/gates, and stable verdicts;
 - renders missing/stale inputs unknown/degraded; and
-- publishes complete high-level Lifecycle commands through Bloodbank without
-  optimistic local mutation.
+- publishes schema-exact high-level Lifecycle commands through Bloodbank
+  without optimistic local mutation; invalid/missing frontier actions and
+  incomplete gate resolutions fail before publication.
 
 The surface follows existing API/web conventions and has focused API, client,
 command-envelope, and responsive UI tests.
@@ -121,9 +124,12 @@ networks/volumes. It proves:
 7. Dedicated PostgreSQL persistence survives Lifecycle and database process
    restarts.
 
-The same run proves durable Candystore replay/read-only behavior, canonical
-Momo skill invocation, Holocene render/command fidelity, and desktop/mobile
-rendering. Cleanup targets only resources created by that unique run.
+The same run proves authoritative events and baseline verdicts replay to a
+late-starting Candystore, conflicting duplicate IDs project only the canonical
+stored row, pending obligations reject progression until exact completion
+evidence arrives, versioned grants flow authority-to-client, Momo skill
+invocation/completion, and Holocene render/command fidelity. Cleanup targets
+only resources created by that unique run.
 
 ## 4. Publication record
 
@@ -131,10 +137,11 @@ Component feature refs are published before the root gitlink update:
 
 | Component | Branch | Revision |
 |---|---|---|
-| Candystore | `feature/moirai-lifecycle-projection-20260718` | `a54389f121c2ee24052f94fb14bc0ecc811b1dce` |
-| Momo | `feature/moirai-lifecycle-client-20260718` | `aae900f37de3a15bb4b69c48e61cc87d286526ea` |
-| Holocene | `feature/moirai-lifecycle-surface-20260718` | `c47358d57773409807dcff373cb426ee4b787df3` |
-| Lifecycle docs | `feature/moirai-lifecycle-integration-docs-20260718` | `434a1674d35b15aafb38d2d7a022d996ca3ad805` |
+| Bloodbank | `feature/moirai-lifecycle-capability-contract-20260718` | `155f2d774964d1c73694ce2c576fe5f50b91eefb` |
+| Lifecycle | `feature/moirai-lifecycle-integration-docs-20260718` | `c78b0e81e7e29898bb06f86eec60dcee9af1191a` |
+| Candystore | `feature/moirai-lifecycle-projection-20260718` | `12c25237b4242764bf630fba6ecc00804b19f9f2` |
+| Momo | `feature/moirai-lifecycle-client-20260718` | `33dfd7a85798ebdfddd904be3646492af63635bc` |
+| Holocene | `feature/moirai-lifecycle-surface-20260718` | `ed3630457b21062b5b02225571c51070b3028fcf` |
 
 Each ref was fetched and checked out from anonymous credential-disabled HTTPS,
 matched its exact revision, and contained its approved component base.

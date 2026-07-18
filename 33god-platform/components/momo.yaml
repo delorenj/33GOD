@@ -3,7 +3,7 @@ name: Momo
 role: lifecycle-policy-client
 repo: ../momo
 description: Process manager that ranks Lifecycle-legal work and emits canonical skill invocation, evidence, and command intent through Bloodbank.
-source_revision: aae900f37de3a15bb4b69c48e61cc87d286526ea
+source_revision: 33dfd7a85798ebdfddd904be3646492af63635bc
 compose:
   files: []
   platform_projection: ../compose.yaml

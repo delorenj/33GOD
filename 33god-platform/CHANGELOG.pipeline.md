@@ -10,14 +10,17 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 - Added the exact-digest Lifecycle authority topology with dedicated
   PostgreSQL, secret, volume, private network, one-shot migration,
   deterministic bootstrap, serve readiness, and no Compose build path.
-- Kept Bloodbank unchanged at `cce0818…` as canonical schema/NATS/Dapr
-  authority and retained the tracked JetStream initializer.
-- Published and pinned Candystore `a54389f…` for durable replay-safe
-  projections, Momo `aae900f…` for legal obligation-to-skill intent, Holocene
-  `c47358d…` for the read/command surface and clean-tree typecheck ordering,
-  and Lifecycle docs `434a167…`.
+- Published and pinned Bloodbank `155f2d7…` as the canonical schema/NATS/Dapr
+  authority, adding snapshot capability versions and exact completion-evidence
+  schema while retaining the tracked JetStream initializer.
+- Published and pinned Lifecycle `c78b0e8…`, Candystore `12c2523…`, Momo
+  `33dfd7a…`, and Holocene `ed36304…` for guarded obligation truth,
+  canonical duplicate projection, exact actor evidence, and complete
+  authoritative client semantics.
 - Added semantic/adversarial tests and the isolated live seven-invariant
-  failure matrix with unique Docker resources and exact cleanup.
+  failure matrix with pre-start durable replay, pending-obligation rejection,
+  canonical satisfaction unlock, versioned grants, conflicting-duplicate
+  integrity, unique Docker resources, and exact cleanup.
 - Preserved the six-way semantic ownership boundary and kept cloud render-only;
   no root release or cloud promotion is implied.
 
