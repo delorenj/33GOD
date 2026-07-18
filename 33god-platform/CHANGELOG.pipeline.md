@@ -14,7 +14,8 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
   authority and retained the tracked JetStream initializer.
 - Published and pinned Candystore `a54389f…` for durable replay-safe
   projections, Momo `aae900f…` for legal obligation-to-skill intent, Holocene
-  `e1a8141…` for the read/command surface, and Lifecycle docs `434a167…`.
+  `c47358d…` for the read/command surface and clean-tree typecheck ordering,
+  and Lifecycle docs `434a167…`.
 - Added semantic/adversarial tests and the isolated live seven-invariant
   failure matrix with unique Docker resources and exact cleanup.
 - Preserved the six-way semantic ownership boundary and kept cloud render-only;

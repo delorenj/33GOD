@@ -92,7 +92,7 @@ direct Lifecycle, Candystore, provider, or local-truth write path.
 ### Holocene client surface
 
 Holocene revision
-`e1a8141a4f100745512b3bcfdd2e36ad9e9937ea`:
+`c47358d57773409807dcff373cb426ee4b787df3`:
 
 - reads Candystore's Lifecycle projection;
 - renders identity, versions, provenance/freshness, status/health/phase/
@@ -133,7 +133,7 @@ Component feature refs are published before the root gitlink update:
 |---|---|---|
 | Candystore | `feature/moirai-lifecycle-projection-20260718` | `a54389f121c2ee24052f94fb14bc0ecc811b1dce` |
 | Momo | `feature/moirai-lifecycle-client-20260718` | `aae900f37de3a15bb4b69c48e61cc87d286526ea` |
-| Holocene | `feature/moirai-lifecycle-surface-20260718` | `e1a8141a4f100745512b3bcfdd2e36ad9e9937ea` |
+| Holocene | `feature/moirai-lifecycle-surface-20260718` | `c47358d57773409807dcff373cb426ee4b787df3` |
 | Lifecycle docs | `feature/moirai-lifecycle-integration-docs-20260718` | `434a1674d35b15aafb38d2d7a022d996ca3ad805` |
 
 Each ref was fetched and checked out from anonymous credential-disabled HTTPS,
