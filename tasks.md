@@ -2,13 +2,14 @@
 
 - [ ] Extract and unify deterministic lifecycle authority as a separately versioned `lifecycle` component, preserving Bloodbank contracts and controller history while wiring non-authoritative Momo and Holocene clients end-to-end. **CLAIMED by Team Moirai (Session: team-moirai; Branch: epic/lifecycle-component)**
   - [x] Execute BMAD Correct Course in batch mode and reconcile root, Momo, and Holocene planning artifacts with the approved lifecycle boundary. **COMPLETED by Codemaster Zigzag (Session: moirai-codemaster-zigzag; Integrated commits: 3d9a127, 0cc589f; Component commits: Momo 6439ee5, Holocene ae93537)**
-  - [ ] Bootstrap and publish the standalone `lifecycle` repository through PJangler/CommonProject conventions; add a valid, remotely fetchable root submodule mapping and pin.
-  - [ ] Extract the tested Bloodbank lifecycle-controller embryo with history preservation and reframe/remove the embedded reference implementation without breaking schema validation.
-  - [ ] Implement the deterministic authority slice: versioned spec/status, transitions/guards, modes, frontier/obligations, capability and `expected_state_version` validation, reconcile, migrations, and atomic outbox.
-  - [ ] Add/repair Bloodbank versioned lifecycle event, command, reply, and blocker schemas with naming and compatibility validation.
-  - [ ] Add the lifecycle production image contract, health/readiness, migrations, and immutable/pinnable `33god-platform` Compose service.
-  - [ ] Wire one real Bloodbank observation source, one Momo obligation-to-skill execution seam, and one Holocene lifecycle read/render surface without transferring authority.
-  - [ ] Prove offline/restart/stale-version/invalid-capability failure invariants with proportional unit, integration, and Compose validation.
+  - [ ] Deliver the standalone lifecycle authority vertical slice, schema-first integrations, production topology, and failure proofs. **CLAIMED by Team Chronos (Session: team-chronos; Branch: epic/moirai-lifecycle-vertical-slice)**
+    - [ ] Bootstrap and publish the standalone `lifecycle` repository through PJangler/CommonProject conventions; add a valid, remotely fetchable root submodule mapping and pin.
+    - [ ] Extract the tested Bloodbank lifecycle-controller embryo with history preservation and reframe/remove the embedded reference implementation without breaking schema validation.
+    - [ ] Implement the deterministic authority slice: versioned spec/status, transitions/guards, modes, frontier/obligations, capability and `expected_state_version` validation, reconcile, migrations, and atomic outbox.
+    - [ ] Add/repair Bloodbank versioned lifecycle event, command, reply, and blocker schemas with naming and compatibility validation.
+    - [ ] Add the lifecycle production image contract, health/readiness, migrations, and immutable/pinnable `33god-platform` Compose service.
+    - [ ] Wire one real Bloodbank observation source, one Momo obligation-to-skill execution seam, and one Holocene lifecycle read/render surface without transferring authority.
+    - [ ] Prove offline/restart/stale-version/invalid-capability failure invariants with proportional unit, integration, and Compose validation.
   - [ ] Commission fresh independent specification-compliance and code-quality reviews; remediate every material finding and re-review.
   - [ ] Integrate and publish component commits and `epic/lifecycle-component`; report remotely fetchable SHAs, refs, tests, and genuine blockers.
 - [x] Replace `33god-platform/compose.yaml` with a validated integrated Bloodbank, Candystore, Holocene, and PJangler stack; update topology governance, documentation, changelogs, validation, and executable gates. **COMPLETED by Taskforce Daedalus (Session: team-daedalus; Branch: epic/integrated-compose-stack)**
