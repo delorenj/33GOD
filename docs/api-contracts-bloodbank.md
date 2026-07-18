@@ -39,4 +39,14 @@ No broker-level DLQ or capacity ceiling is configured. Replay metadata exists as
 
 ## Consumers
 
-Candystore subscribes to event wildcard and enforces only a subset. Holocene has no functioning direct Bloodbank client. PJangler generators contain noncanonical subject patterns. These mismatches are governed in [Drift Governance](./drift-governance.md).
+Candystore subscribes to the event wildcard and enforces only a subset.
+Holocene has no functioning direct Bloodbank client. PJangler generators contain
+noncanonical subject patterns. These mismatches are governed in
+[Drift Governance](./drift-governance.md).
+
+The approved target adds Lifecycle as a command consumer and canonical event
+producer. Momo and Holocene are lifecycle clients: they submit idempotent intent
+commands and consume authoritative projections; neither publishes a state
+transition as domain truth. The command/event/reply schemas, including version,
+capability, and rejection fields, must be registered here before that target is
+called operational.

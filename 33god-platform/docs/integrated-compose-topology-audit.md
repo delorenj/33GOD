@@ -10,6 +10,18 @@
 changes only the root-owned platform projection and governance artifacts; it
 does not change component repositories or runtime state.
 
+## 2026-07-18 lifecycle-boundary addendum
+
+This audit remains authoritative for the four-component deployment snapshot it
+captured. It does not include or prove a standalone project-lifecycle service.
+The approved target adds a headless Lifecycle component as the sole owner of
+versioned spec/state, reconciliation, frontier, obligations, and capability
+validation. Bloodbank remains transport/schema authority, Candystore remains
+durable history/read models, PJangler remains project/bootstrap identity, Momo
+remains the PM/EM intent client, and Holocene remains a renderer/command client.
+The tested Bloodbank controller is the extraction embryo; no extraction,
+migration, Compose wiring, or client cutover is claimed by this addendum.
+
 ## Decision
 
 Replace the platform readiness scaffold with an integrated local stack, but do
@@ -90,6 +102,10 @@ below is still required before migration.
   Docker service; the API is currently a privileged user systemd service.
 - PJangler is an npm-installed CLI plus MCP stdio server. It has no HTTP
   listener, health endpoint, or long-running Compose service.
+- The current projection has no Lifecycle service. Adding one requires the
+  approved extraction/migration gates and must preserve exactly one operational
+  lifecycle writer; database co-location does not transfer ownership to
+  Bloodbank or Candystore.
 - Existing host ports, Docker volume identities, Docker network identities,
   and Traefik/OIDC behavior must survive the cutover unless a separately
   approved migration explicitly changes them.

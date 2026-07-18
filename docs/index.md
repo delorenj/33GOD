@@ -1,6 +1,6 @@
 # 33GOD Documentation Index
 
-**Type:** Four-part monorepo knowledge boundary
+**Type:** Four-part current integration boundary plus one approved planned component
 
 **Architecture:** Event-driven local-first platform with a validated integrated Compose target
 
@@ -19,6 +19,13 @@ Candystore PostgreSQL/app/Dapr sidecar, a Holocene host-API preflight, and
 Holocene web. PJangler appears only as zero-replica, run-only CLI and stdio MCP
 definitions under `tools`/`full`. `cloud` is render-only and unsupported.
 
+The approved target adds a separate headless `lifecycle` component. It is the
+sole owner of lifecycle spec/state/reconciliation, legal frontier, obligations,
+and capability validation. It has no standalone repository, gitlink, service,
+or Compose entry in this snapshot. The tested
+`bloodbank/services/lifecycle-controller/` directory is the extraction embryo,
+not proof that the target component is deployed.
+
 ## Authority and scope
 
 Live manifests, code, and tests outrank prose. Root documentation governs
@@ -32,6 +39,7 @@ recorded in [Drift Governance](./drift-governance.md).
 | Candystore | Durable history and read API | `candystore/` | Exactly one default PostgreSQL/app/daprd |
 | Holocene | Mission control and host control | `holocene/` | Default web; API stays host systemd |
 | PJangler | Provisioning control plane | `pjangler/` | Explicit run-only CLI and stdio MCP |
+| Lifecycle (planned) | Deterministic project lifecycle authority | No root/gitlink yet | Extract controller embryo; deploy exactly one service only after migration gates |
 
 ## Core documentation
 
@@ -44,6 +52,7 @@ recorded in [Drift Governance](./drift-governance.md).
 - [Project Parts Metadata](./project-parts.json)
 - [Project Scan Report](./project-scan-report.json)
 - [Integrated Compose Topology Audit](../33god-platform/docs/integrated-compose-topology-audit.md)
+- [Planned Lifecycle Architecture](./architecture-lifecycle.md)
 
 ## Part documentation
 
@@ -66,3 +75,5 @@ GOD_SOURCE_ROOT=/home/delorenj/code/33GOD mise run docs:drift
 The gate retains all component/document checks and also renders and
 semantically validates default, `tools`, `full`, and `cloud`. A green result
 proves candidate consistency, not runtime health or cutover completion.
+It still validates the current four checked-out component roots; it does not
+prove the planned lifecycle repository, migration, service, or client wiring.
