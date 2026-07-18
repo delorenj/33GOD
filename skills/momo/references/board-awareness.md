@@ -28,14 +28,14 @@ snapshot: lifecycle ID, spec/state versions, legal frontier, obligations,
 blockers, and capability grants. Use `scripts/lifecycle_client.py fetch` and
 follow `lifecycle-client.md` for the implemented fail-closed read/command path.
 
-## Authoritative lifecycle and provider projection
+## Authoritative lifecycle versus ticket/board records
 
 Lifecycle is the single source of project-lifecycle truth. It alone calculates
 state, legal frontier, obligations, and capability validity. Momo submits
 idempotent intent with the expected state version and renders the returned
 accepted/rejected/stale/unavailable result.
 
-The current adapter remains useful to read and compare provider projections:
+The current adapter remains useful for provider-owned ticket and board records:
 
 ```bash
 bash <skill_dir>/scripts/momo-board.sh list_issues        # [{id,key,title,state,state_type,...}]
@@ -117,8 +117,9 @@ beyond a binding repair still goes through a delegated worker.
 
 - `<role_dir>/runtime/continuous-ticket-sentinel-state.json` — machine-readable feed:
   `status` (idle|checking|active|blocked|stalled|error), `active_issue`, `session`,
-  `worktree`, `last_heartbeat_at`. **May be absent** when reconcile is disabled
-  (`role.yaml` has no `reconcile: {enabled: true}` block) — then Hermes only checkpoints.
+  `worktree`, `last_heartbeat_at`. **May be absent** when Hermes actor-work polling
+  is disabled (the historical `role.yaml` field is named `reconcile`) — then
+  Hermes only checkpoints. This poller never reconciles Lifecycle truth.
 - Tail `<role_dir>/runtime/logs/heartbeat.log` and read `<role_dir>/runtime/memories/MEMORY.md`
   ("Recent context") for Hermes' mental model.
 - Honor **WIP=1**: if Hermes shows an active worker, do not start a second. If you take a

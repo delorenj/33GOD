@@ -91,7 +91,7 @@ configuration/render inspection model.
 | PJ-IDENTITY-01 | 2026-07-15 | Platform registry resolves monorepo PJangler and uses npm |
 | LIFE-BOUNDARY-01 | 2026-07-18 | Standalone Lifecycle is the only operational writer; Momo and Holocene use bounded Bloodbank command clients |
 | LIFE-OUTBOX-01 | 2026-07-18 | Exact immutable image passed NATS outage/recovery with committed state, ordered outbox, zero pending rows, and eventual publication |
-| LIFE-SCHEMA-01 | 2026-07-18 | Bloodbank validation passed at `155f2d7…`; exact versioned grants, completion evidence, client command envelopes, snapshots, and Lifecycle replies were exercised |
+| LIFE-SCHEMA-01 | 2026-07-18 | Bloodbank validation passed at `48031ee…`; exact versioned grants, occurrence-bound completion evidence, client command envelopes, snapshot v3, and Lifecycle replies were exercised |
 
 Resolving `ROOT-COMPOSE-01` means an integrated local stack exists.
 `ROOT-CLOUD-01` remains a separate hosted-design concern.

@@ -9,7 +9,7 @@ project-lifecycle writer.
 
 The exact Lifecycle runtime is:
 
-`ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`
+`ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67`
 
 Compose has no Lifecycle build key. The cloud profile is render-only and
 unsupported; never run `docker compose --profile cloud up`.
@@ -27,13 +27,13 @@ case "$ghcr_anon_dir" in /tmp/33god-ghcr-anon.*) ;; *) exit 1 ;; esac
 trap 'find "$ghcr_anon_dir" -depth -delete' EXIT
 test "$(find "$ghcr_anon_dir" -mindepth 1 -type f | wc -l)" -eq 0
 DOCKER_CONFIG="$ghcr_anon_dir" docker pull \
-  ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
+  ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67
 test "$(find "$ghcr_anon_dir" -mindepth 1 -type f | wc -l)" -eq 0
 ```
 
 ```text
-Digest: sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
-Status: Image is up to date for ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
+Digest: sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67
+Status: Image is up to date for ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67
 credential_files_before=0
 credential_files_after=0
 temporary_docker_config_removed=yes
@@ -130,15 +130,19 @@ networks, volumes, and local Candystore image. It then proves:
 3. deterministic restart catch-up without duplicate effects.
 4. stale-version rejection without mutation.
 5. capability rejection without mutation.
-6. NATS outage/recovery with committed-state preservation, ordered outbox, and
-   eventual publication.
+6. a canonical authority transaction during NATS outage, committed state and
+   exact ordered pending outbox rows, followed by exact-ID publication and
+   drain after recovery without a duplicate transition effect.
 7. dedicated PostgreSQL persistence across Lifecycle and database restarts.
 
 The run starts Candystore after the baseline authority snapshot and verdict
 already exist, verifies durable replay before post-start traffic, and proves a
 conflicting duplicate cannot spoof the stored row or projection. It also
-exercises pending-obligation rejection, Momo's exact completion-evidence path,
-authoritative capability-version flow, and Holocene's read/command surface.
+audits but excludes non-authority snapshot/reply candidates, rejects
+pre-activation and prior-occurrence evidence, proves active-occurrence unlock
+and repeated-occurrence isolation, preserves real causal IDs, exercises
+authoritative capability-version flow, and covers Momo's and Holocene's client
+surfaces.
 Cleanup uses the unique resource names and never prunes Docker.
 
 ## Promotion boundary

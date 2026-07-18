@@ -467,13 +467,13 @@ contract or competing reconciler is permitted.
 
 ### Current state
 
-- Lifecycle runtime source `eefc35388125a016dc2b2c905950fd8a2981322d`
+- Lifecycle runtime source `797fcf4e0cba45a86720f7af4b94ed73be921d38`
   is exercised only as
-  `ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`.
+  `ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67`.
 - Bloodbank is pinned at
-  `155f2d774964d1c73694ce2c576fe5f50b91eefb`; its canonical v2 snapshot
-  capability version and completion-evidence contracts define the exact wire
-  path used by authority and clients.
+  `48031ee39c238b9d4715b81b74076635235f96d5`; its canonical snapshot v3
+  capability/obligation-occurrence contract and completion-evidence v2 define
+  the exact wire path used by authority and clients.
 - Root Compose runs dedicated Lifecycle PostgreSQL, one-shot migration,
   deterministic bootstrap, and serve with fail-closed dependencies.
 - Candystore consumes canonical lifecycle events durably and serves a replay-safe,
@@ -486,9 +486,10 @@ contract or competing reconciler is permitted.
 - Holocene renders the Candystore projection and submits complete high-level
   commands through Bloodbank without local lifecycle mutation.
 - The isolated live matrix passes all seven offline, restart, stale-version,
-  capability, NATS recovery/order, and PostgreSQL persistence invariants plus
-  pending-obligation evidence, versioned grants, pre-start replay, and
-  conflicting-duplicate integrity.
+  capability, during-outage commit/outbox recovery/order, and PostgreSQL
+  persistence invariants plus occurrence-isolated obligation evidence,
+  authority-spoof rejection, versioned grants, real causal IDs, pre-start
+  replay, and conflicting-duplicate integrity.
 
 ### Current authority matrix
 

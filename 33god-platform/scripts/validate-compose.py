@@ -123,7 +123,7 @@ EXPECTED_SERVICE_NETWORKS = {
 
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf"
+    "sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67"
 )
 
 EXPECTED_PINNED_IMAGES = {
@@ -157,6 +157,7 @@ EXPECTED_CANDYSTORE_EVENT_ENV = {
     "SUBSCRIBE_PUBSUB": "bloodbank-pubsub",
     "SUBSCRIBE_TOPIC": "bloodbank.evt.v1.>",
     "SUBSCRIBE_ROUTE": "/events/all",
+    "BLOODBANK_SCHEMAS_DIR": "/bloodbank-schemas",
 }
 
 EXPECTED_CANDYSTORE_DAPRD_COMMAND = [
@@ -641,6 +642,18 @@ def validate_model(
             app.get("environment", {}).get(key) == expected,
             f"Candystore {key} must remain {expected!r} for the canonical Bloodbank event path",
         )
+    schema_mount = _mount(app, "/bloodbank-schemas")
+    require(
+        schema_mount is not None
+        and schema_mount.get("source")
+        == str((source_root / "bloodbank" / "schemas").resolve())
+        and schema_mount.get("read_only") is True,
+        "Candystore must read-only mount the exact checked-out Bloodbank schema registry",
+    )
+    require(
+        len(app.get("volumes", [])) == 1,
+        "Candystore app must have only the canonical Bloodbank schema mount",
+    )
     require(
         _dependency(app, "candystore-postgres") == "service_healthy",
         "Candystore app must wait for healthy PostgreSQL",
@@ -808,6 +821,13 @@ def render_models(compose_file: Path, source_root: Path) -> dict[str, dict[str, 
     required_sources = (
         source_root / "bloodbank" / "compose" / "nats" / "init.sh",
         source_root / "bloodbank" / "compose" / "nats" / "streams.json",
+        source_root
+        / "bloodbank"
+        / "schemas"
+        / "bloodbank"
+        / "v1"
+        / "lifecycle"
+        / "snapshot.updated.v3.json",
         source_root / "candystore" / "dapr-components",
         source_root / "candystore" / "dapr-components" / "lifecycle-replies.yaml",
         source_root / "candystore" / "Dockerfile",

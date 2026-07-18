@@ -36,6 +36,11 @@ EVIDENCE_SUBJECT = "bloodbank.evt.v1.lifecycle.obligation_evidence.submitted"
 AUTHORITY_SOURCE = "urn:33god:service:lifecycle"
 AUTHORITY_PRODUCER = "delorenj/lifecycle"
 AUTHORITY_SERVICE = "lifecycle"
+AUTHORITY_ACTOR_ID = "delorenj.lifecycle"
+SNAPSHOT_TYPE = "bloodbank.v1.lifecycle.snapshot.updated"
+SNAPSHOT_SUBJECT = "bloodbank.evt.v1.lifecycle.snapshot.updated"
+SNAPSHOT_SCHEMA_REF = "bloodbank.v1.lifecycle.snapshot.updated.v3"
+SNAPSHOT_DATA_SCHEMA = "apicurio://holyfields/bloodbank.v1.lifecycle.snapshot.updated/versions/3"
 MOMO_SOURCE = "urn:33god:service:momo"
 CAPABILITY_ACTION = "lifecycle.intent.submit"
 SKILL_NAME = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
@@ -48,8 +53,8 @@ SCHEMA_PATH_BY_REF = {
     "bloodbank.v1.lifecycle.intent.submit.reply.v1": (
         "bloodbank/v1/lifecycle/intent.submit.reply.v1.json"
     ),
-    "bloodbank.v1.lifecycle.obligation_evidence.submitted.v1": (
-        "bloodbank/v1/lifecycle/obligation_evidence.submitted.v1.json"
+    "bloodbank.v1.lifecycle.obligation_evidence.submitted.v2": (
+        "bloodbank/v1/lifecycle/obligation_evidence.submitted.v2.json"
     ),
 }
 
@@ -99,6 +104,8 @@ def pending_obligations(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
     ]
     for obligation in pending:
         _required_text(obligation, "id")
+        _uuid(obligation.get("obligation_instance_id"), "obligation_instance_id")
+        _timestamp(obligation.get("activated_at"), "activated_at")
         _required_text(obligation, "kind")
         _required_text(obligation, "owner_id")
         resolve_skill_ref(obligation)
@@ -148,7 +155,13 @@ def build_obligation_invocation(
     lifecycle_id = _required_text(snapshot, "lifecycle_id")
     repo = _required_text(snapshot, "repo")
     actor = _actor(actor)
-    source_event_id, source_event_time = _projection_source(snapshot)
+    source = _projection_source(snapshot)
+    source_event_id = source["event_id"]
+    source_event_time = source["event_time"]
+    obligation_instance_id = _uuid(
+        obligation.get("obligation_instance_id"), "obligation_instance_id"
+    )
+    activated_at = _timestamp(obligation.get("activated_at"), "activated_at")
     parameters = _object(parameters or {}, "parameters")
     semantics = {
         "contract": "momo.lifecycle.obligation_invocation.v1",
@@ -156,6 +169,7 @@ def build_obligation_invocation(
         "repo": repo,
         "state_version": state_version,
         "authority_snapshot_event_id": source_event_id,
+        "authority_snapshot_correlation_id": source["correlation_id"],
         "actor": actor,
         "obligation": obligation,
         "target_agent_id": target_agent_id,
@@ -165,8 +179,6 @@ def build_obligation_invocation(
     identity = _semantic_digest(semantics)
     event_id = _semantic_uuid("invocation-event", identity)
     command_id = _semantic_uuid("invocation-command", identity)
-    correlation_id = _semantic_uuid("invocation-correlation", identity)
-    causation_id = _semantic_uuid("invocation-causation", identity)
     idempotency_key = f"agent.invocation.start:semantic:{identity}"
     command = {
         "specversion": "1.0",
@@ -177,8 +189,8 @@ def build_obligation_invocation(
         "time": source_event_time,
         "datacontenttype": "application/json",
         "dataschema": "apicurio://holyfields/bloodbank.v1.agent.invocation.start/versions/1",
-        "correlationid": correlation_id,
-        "causationid": causation_id,
+        "correlationid": source["correlation_id"],
+        "causationid": source_event_id,
         "producer": "momo",
         "service": "momo",
         "domain": "agent",
@@ -205,6 +217,7 @@ def build_obligation_invocation(
                 "repo": repo,
                 "expected_state_version": state_version,
                 "authority_snapshot_event_id": source_event_id,
+                "authority_snapshot_correlation_id": source["correlation_id"],
                 "obligation": obligation,
                 "skill_ref": skill_ref,
                 "parameters": parameters,
@@ -212,6 +225,8 @@ def build_obligation_invocation(
                     "type": EVIDENCE_TYPE,
                     "subject": EVIDENCE_SUBJECT,
                     "obligation_id": obligation["id"],
+                    "obligation_instance_id": obligation_instance_id,
+                    "activated_at": activated_at,
                     "obligation_kind": obligation["kind"],
                     "target_actor_id": target_agent_id,
                     "invocation_id": event_id,
@@ -225,9 +240,12 @@ def build_obligation_invocation(
             "lifecycle_id": lifecycle_id,
             "state_version": state_version,
             "obligation_id": obligation["id"],
+            "obligation_instance_id": obligation_instance_id,
+            "activated_at": activated_at,
             "target_actor_id": target_agent_id,
             "skill_ref": skill_ref,
             "authority_snapshot_event_id": source_event_id,
+            "authority_snapshot_correlation_id": source["correlation_id"],
         },
         "decision_rationale": rationale or {},
         "invocation_command": command,
@@ -246,12 +264,15 @@ def build_obligation_completion_evidence(
     if selection.get("kind") != "obligation":
         raise LifecycleClientError("completion requires an obligation invocation plan")
     command = _object(invocation_plan.get("invocation_command"), "invocation_command")
+    validate_bloodbank_envelope(command)
     if command.get("type") != INVOCATION_TYPE or command.get("subject") != INVOCATION_SUBJECT:
         raise LifecycleClientError("completion invocation command identity is not canonical")
     context = _object(_object(command.get("data"), "invocation data").get("context"), "context")
     contract = _object(context.get("completion_evidence_contract"), "completion contract")
     checks = {
         "obligation_id": selection.get("obligation_id"),
+        "obligation_instance_id": selection.get("obligation_instance_id"),
+        "activated_at": selection.get("activated_at"),
         "target_actor_id": selection.get("target_actor_id"),
         "invocation_id": command.get("id"),
     }
@@ -259,16 +280,22 @@ def build_obligation_completion_evidence(
         if contract.get(key) != expected:
             raise LifecycleClientError(f"completion contract {key} does not match invocation")
     completed_at = _timestamp(completed_at, "completed_at")
+    activated_at = _timestamp(contract.get("activated_at"), "obligation activated_at")
+    if _timestamp_value(completed_at) < _timestamp_value(activated_at):
+        raise LifecycleClientError("completion cannot predate the active obligation occurrence")
     evidence = _completion_evidence(evidence)
     # The invocation actor identifies who requested the work. Completion evidence
-    # is a distinct Momo-produced authority observation and therefore carries the
+    # is a distinct Momo-produced authority input and therefore carries the
     # canonical service identity required by the Lifecycle consumer contract.
     actor = {"type": "service", "agent_id": "momo"}
     data = {
-        "contract_version": 1,
+        "contract_version": 2,
         "lifecycle_id": _required_text(selection, "lifecycle_id"),
         "repo": _required_text(context, "repo"),
         "obligation_id": _required_text(contract, "obligation_id"),
+        "obligation_instance_id": _uuid(
+            contract.get("obligation_instance_id"), "obligation_instance_id"
+        ),
         "obligation_kind": _required_text(contract, "obligation_kind"),
         "target_actor_id": _required_text(contract, "target_actor_id"),
         "invocation_id": _uuid(_required_text(contract, "invocation_id"), "invocation_id"),
@@ -278,7 +305,7 @@ def build_obligation_completion_evidence(
     }
     identity = _semantic_digest(
         {
-            "contract": "momo.lifecycle.obligation_completion.v1",
+            "contract": "momo.lifecycle.obligation_completion.v2",
             "invocation_event_id": command["id"],
             "completed_at": completed_at,
             "data": data,
@@ -294,14 +321,14 @@ def build_obligation_completion_evidence(
         "time": completed_at,
         "datacontenttype": "application/json",
         "dataschema": (
-            "apicurio://holyfields/bloodbank.v1.lifecycle.obligation_evidence.submitted/versions/1"
+            "apicurio://holyfields/bloodbank.v1.lifecycle.obligation_evidence.submitted/versions/2"
         ),
         "correlationid": _uuid(command.get("correlationid"), "invocation correlationid"),
         "causationid": _uuid(command.get("id"), "invocation event id"),
         "producer": "momo",
         "service": "momo",
         "domain": "lifecycle",
-        "schemaref": "bloodbank.v1.lifecycle.obligation_evidence.submitted.v1",
+        "schemaref": "bloodbank.v1.lifecycle.obligation_evidence.submitted.v2",
         "kind": "event",
         "actor": actor,
         "ordering_key": f"lifecycle:{data['lifecycle_id']}",
@@ -342,13 +369,16 @@ def build_lifecycle_intent(
     intent_name, intent_target = _frontier_intent(frontier)
     intent_parameters = _object(parameters or {}, "parameters")
     intent_parameters.update({"selected_frontier_id": frontier["id"], "evidence": evidence})
-    source_event_id, source_event_time = _projection_source(snapshot)
+    source = _projection_source(snapshot)
+    source_event_id = source["event_id"]
+    source_event_time = source["event_time"]
     semantics = {
         "contract": "momo.lifecycle.intent.v1",
         "lifecycle_id": lifecycle_id,
         "repo": repo,
         "expected_state_version": state_version,
         "authority_snapshot_event_id": source_event_id,
+        "authority_snapshot_correlation_id": source["correlation_id"],
         "selected_frontier": frontier,
         "actor": actor,
         "capability": capability,
@@ -361,8 +391,6 @@ def build_lifecycle_intent(
     identity = _semantic_digest(semantics)
     event_id = _semantic_uuid("intent-event", identity)
     command_id = _semantic_uuid("intent-command", identity)
-    correlation_id = _semantic_uuid("intent-correlation", identity)
-    causation_id = _semantic_uuid("intent-causation", identity)
     idempotency_key = f"lifecycle.intent.submit:semantic:{identity}"
     command = {
         "specversion": "1.0",
@@ -373,8 +401,8 @@ def build_lifecycle_intent(
         "time": source_event_time,
         "datacontenttype": "application/json",
         "dataschema": "apicurio://holyfields/bloodbank.v1.lifecycle.intent.submit.command/versions/1",
-        "correlationid": correlation_id,
-        "causationid": causation_id,
+        "correlationid": source["correlation_id"],
+        "causationid": source_event_id,
         "producer": "momo",
         "service": "momo",
         "domain": "lifecycle",
@@ -572,11 +600,47 @@ def _current_state_version(snapshot: dict[str, Any]) -> int:
     return version
 
 
-def _projection_source(snapshot: dict[str, Any]) -> tuple[str, str]:
+def _projection_source(snapshot: dict[str, Any]) -> dict[str, Any]:
+    lifecycle_id = _required_text(snapshot, "lifecycle_id")
     source = _object(snapshot.get("source"), "authoritative projection source")
     event_id = _uuid(source.get("event_id"), "authority snapshot event_id")
     event_time = _timestamp(source.get("event_time"), "authority snapshot event_time")
-    return event_id, event_time
+    expected = {
+        "event_type": SNAPSHOT_TYPE,
+        "subject": SNAPSHOT_SUBJECT,
+        "authority_source": AUTHORITY_SOURCE,
+        "producer": AUTHORITY_PRODUCER,
+        "service": AUTHORITY_SERVICE,
+        "kind": "event",
+        "domain": "lifecycle",
+        "schema_ref": SNAPSHOT_SCHEMA_REF,
+        "data_schema": SNAPSHOT_DATA_SCHEMA,
+        "ordering_key": f"lifecycle:{lifecycle_id}",
+    }
+    for field, value in expected.items():
+        if source.get(field) != value:
+            raise LifecycleClientError(f"authoritative projection source {field} is invalid")
+    actor = _object(source.get("actor"), "authoritative projection source actor")
+    if actor.get("type") != "service" or actor.get("agent_id") != AUTHORITY_ACTOR_ID:
+        raise LifecycleClientError("authoritative projection source actor is invalid")
+    authority_instance = _required_text(actor, "instance")
+    provenance = _object(snapshot.get("provenance"), "authoritative projection provenance")
+    if provenance.get("authority") != AUTHORITY_PRODUCER:
+        raise LifecycleClientError("authoritative projection provenance is invalid")
+    if _required_text(provenance, "authority_instance") != authority_instance:
+        raise LifecycleClientError("authoritative projection authority instance is inconsistent")
+    correlation_id = _uuid(source.get("correlation_id"), "authority snapshot correlation_id")
+    if "causation_id" not in source:
+        raise LifecycleClientError("authoritative projection source causation_id is missing")
+    causation_id = source.get("causation_id")
+    if causation_id is not None:
+        causation_id = _uuid(causation_id, "authority snapshot causation_id")
+    return {
+        "event_id": event_id,
+        "event_time": event_time,
+        "correlation_id": correlation_id,
+        "causation_id": causation_id,
+    }
 
 
 def _capability_context(
@@ -716,6 +780,10 @@ def _timestamp(value: Any, name: str) -> str:
     if parsed.tzinfo is None:
         raise LifecycleClientError(f"{name} must include an offset")
     return parsed.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def _timestamp_value(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
 
 
 def _uuid(value: Any, name: str) -> str:

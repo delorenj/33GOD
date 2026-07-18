@@ -9,7 +9,7 @@ x-33god-model:
   tools: local-one-shot
   full: local-with-tools
   cloud: unsupported-local-bind-model
-x-lifecycle-image: &lifecycle-image ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf
+x-lifecycle-image: &lifecycle-image ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67
 
 services:
   bloodbank-nats:
@@ -212,6 +212,12 @@ services:
       SUBSCRIBE_PUBSUB: bloodbank-pubsub
       SUBSCRIBE_TOPIC: bloodbank.evt.v1.>
       SUBSCRIBE_ROUTE: /events/all
+      BLOODBANK_SCHEMAS_DIR: /bloodbank-schemas
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/bloodbank/schemas
+        target: /bloodbank-schemas
+        read_only: true
     ports:
       - target: 3001
         published: "${CANDYSTORE_PORT:-8683}"

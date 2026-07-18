@@ -35,14 +35,14 @@ FORBIDDEN_MARKERS = re.compile(
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf"
+    "sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67"
 )
 COMPONENT_REVISIONS = {
-    "bloodbank": "155f2d774964d1c73694ce2c576fe5f50b91eefb",
-    "lifecycle": "eefc35388125a016dc2b2c905950fd8a2981322d",
-    "candystore": "12c25237b4242764bf630fba6ecc00804b19f9f2",
-    "momo": "33dfd7a85798ebdfddd904be3646492af63635bc",
-    "holocene": "ed3630457b21062b5b02225571c51070b3028fcf",
+    "bloodbank": "48031ee39c238b9d4715b81b74076635235f96d5",
+    "lifecycle": "797fcf4e0cba45a86720f7af4b94ed73be921d38",
+    "candystore": "b3b4d829b1e7ff52ea4f36f8124a4b80a6435d07",
+    "momo": "4c41a998ccfd34afa47d86326c90b958b05fc1a8",
+    "holocene": "e8cecb983d4f4f210a729d9ddfd2330e9d98e729",
 }
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
     r"ghcr\.io/delorenj/lifecycle@sha256:[0-9a-f]{64}"
@@ -58,6 +58,44 @@ ECOSYSTEM_AUTHORITY_CONTRACT = (
     "Bloodbank owns canonical inter-service contracts and NATS/Dapr transport",
     "Candystore owns append-only audit history and Lifecycle read projections",
 )
+BLOODBANK_API_CURRENT_CONTRACT = (
+    "`assert_contract()` invokes `assert_subject_matches()`",
+    "registered contracts include snapshot v3",
+    "Holocene has an implemented Bloodbank command client",
+    "PJangler's generators use fixed six-token canonical subjects",
+    "Root Compose runs the standalone Lifecycle authority",
+    "schemas above are registered and operational",
+)
+BLOODBANK_API_STALE_PATTERNS = {
+    "missing subject/type binding": re.compile(
+        r"(?i)assert_contract.{0,80}(?:does not|doesn't|fails to|omits).{0,40}"
+        r"assert_subject_matches"
+    ),
+    "absent Holocene Bloodbank client": re.compile(
+        r"(?i)Holocene.{0,80}(?:lacks|has no|without|does not have|no functioning)"
+        r".{0,50}Bloodbank(?: command)? client"
+    ),
+    "noncanonical PJangler routing": re.compile(
+        r"(?i)PJangler.{0,80}\bnon-?canonical\b"
+    ),
+    "planned or absent Lifecycle topology": re.compile(
+        r"(?i)Lifecycle.{0,80}(?:still needs to be added|needs to be added|"
+        r"will be added|absent from|not present in).{0,60}(?:Compose|topology)?"
+    ),
+    "unregistered Lifecycle schemas": re.compile(
+        r"(?i)(?:Lifecycle )?schemas?.{0,80}(?:not operational|unregistered|"
+        r"not registered|not wired)"
+    ),
+    "shared reconcile authority": re.compile(
+        r"(?i)(?:Momo(?:/Hermes)?|Hermes)\s+(?:and|with)\s+Lifecycle\s+"
+        r"(?:share|drive|own).{0,40}reconcile loop"
+    ),
+    "client lifecycle authority overclaim": re.compile(
+        r"(?i)\b(?:Plane|Momo|Holocene)\b.{0,35}"
+        r"(?:owns|evaluates|writes|persists|drives).{0,35}"
+        r"(?:Lifecycle truth|Lifecycle state|Lifecycle authority)"
+    ),
+}
 
 
 class Reporter:
@@ -307,8 +345,7 @@ def ecosystem_authority_errors(ecosystem_text: str) -> list[str]:
     for statement in ECOSYSTEM_AUTHORITY_CONTRACT:
         if statement not in ecosystem_text:
             errors.append(
-                "skills/ecosystem/SKILL.md is missing ownership statement: "
-                + statement
+                "skills/ecosystem/SKILL.md is missing ownership statement: " + statement
             )
     if re.search(
         r"(?im)^\|\s*Ticket lifecycle\s*\|\s*`project-lifecycle`",
@@ -328,6 +365,23 @@ def ecosystem_authority_errors(ecosystem_text: str) -> list[str]:
                 "skills/ecosystem/SKILL.md line "
                 f"{line_number} routes project-lifecycle without Plane ticket/board scope"
             )
+    return errors
+
+
+def bloodbank_api_contract_errors(api_text: str) -> list[str]:
+    """Reject stale current-truth claims in the root Bloodbank API surface."""
+
+    if not api_text:
+        return ["docs/api-contracts-bloodbank.md is missing"]
+    normalized = re.sub(r"\s+", " ", api_text)
+    errors = [
+        "docs/api-contracts-bloodbank.md is missing current statement: " + statement
+        for statement in BLOODBANK_API_CURRENT_CONTRACT
+        if statement not in normalized
+    ]
+    for label, pattern in BLOODBANK_API_STALE_PATTERNS.items():
+        if pattern.search(normalized):
+            errors.append(f"docs/api-contracts-bloodbank.md contains {label}")
     return errors
 
 
@@ -543,6 +597,14 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         ecosystem_path.read_text(encoding="utf-8") if ecosystem_path.is_file() else ""
     )
     errors.extend(ecosystem_authority_errors(ecosystem_text))
+
+    bloodbank_api_path = docs_checkout / "docs/api-contracts-bloodbank.md"
+    bloodbank_api_text = (
+        bloodbank_api_path.read_text(encoding="utf-8")
+        if bloodbank_api_path.is_file()
+        else ""
+    )
+    errors.extend(bloodbank_api_contract_errors(bloodbank_api_text))
 
     promoted = docs_checkout / "skills/momo"
     canonical = source / "momo/skill"

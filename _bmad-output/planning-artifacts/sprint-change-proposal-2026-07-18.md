@@ -44,13 +44,13 @@ Lifecycle do not drive the same reconcile loop.
 ### Runtime and contracts
 
 - Lifecycle runtime source:
-  `eefc35388125a016dc2b2c905950fd8a2981322d`
+  `797fcf4e0cba45a86720f7af4b94ed73be921d38`
 - Lifecycle runtime image:
-  `ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`
+  `ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67`
 - Bloodbank contract/transport revision:
-  `155f2d774964d1c73694ce2c576fe5f50b91eefb`
+  `48031ee39c238b9d4715b81b74076635235f96d5`
 - Lifecycle authority/integration revision:
-  `eefc35388125a016dc2b2c905950fd8a2981322d`
+  `797fcf4e0cba45a86720f7af4b94ed73be921d38`
 
 Root Compose references the immutable image digest and contains no Lifecycle
 build key. A dedicated PostgreSQL database, secret, volume, and private network
@@ -61,7 +61,7 @@ must succeed before serve.
 ### Candystore read model
 
 Candystore revision
-`12c25237b4242764bf630fba6ecc00804b19f9f2` provides:
+`b3b4d829b1e7ff52ea4f36f8124a4b80a6435d07` provides:
 
 - an operationally durable lifecycle consumer;
 - replay receipts and idempotent/version-ordered projection updates, including
@@ -76,7 +76,7 @@ Candystore exposes no operational Lifecycle mutation endpoint.
 ### Momo obligation-to-skill seam
 
 Momo revision
-`33dfd7a85798ebdfddd904be3646492af63635bc`:
+`4c41a998ccfd34afa47d86326c90b958b05fc1a8`:
 
 - consumes authoritative snapshots/frontier/obligations;
 - ranks only legal frontier commands while servicing pending obligations as
@@ -94,7 +94,7 @@ direct Lifecycle, Candystore, provider, or local-truth write path.
 ### Holocene client surface
 
 Holocene revision
-`ed3630457b21062b5b02225571c51070b3028fcf`:
+`e8cecb983d4f4f210a729d9ddfd2330e9d98e729`:
 
 - reads Candystore's Lifecycle projection;
 - renders identity, versions, provenance/freshness, status/health/phase/
@@ -119,17 +119,20 @@ networks/volumes. It proves:
    deterministically without duplicate transition effects.
 4. Stale `expected_state_version` is rejected without mutation.
 5. Missing/invalid capability is rejected without mutation.
-6. NATS outage/recovery preserves committed state, per-lifecycle publication
-   order, and eventual publication.
+6. A canonical authority transaction commits state and exact ordered outbox
+   rows during NATS outage; recovery publishes those IDs in order and drains
+   them without a duplicate transition effect.
 7. Dedicated PostgreSQL persistence survives Lifecycle and database process
    restarts.
 
 The same run proves authoritative events and baseline verdicts replay to a
 late-starting Candystore, conflicting duplicate IDs project only the canonical
-stored row, pending obligations reject progression until exact completion
-evidence arrives, versioned grants flow authority-to-client, Momo skill
-invocation/completion, and Holocene render/command fidelity. Cleanup targets
-only resources created by that unique run.
+stored row, and spoofed authority candidates remain auditable but excluded.
+Pending obligations reject pre-activation and prior-occurrence evidence until
+exact active-occurrence completion arrives; repeated occurrences stay
+isolated. Versioned grants and real causal lineage flow authority-to-client
+through Momo invocation/completion and Holocene render/command seams. Cleanup
+targets only resources created by that unique run.
 
 ## 4. Publication record
 
@@ -137,11 +140,11 @@ Component feature refs are published before the root gitlink update:
 
 | Component | Branch | Revision |
 |---|---|---|
-| Bloodbank | `feature/moirai-lifecycle-capability-contract-20260718` | `155f2d774964d1c73694ce2c576fe5f50b91eefb` |
-| Lifecycle | `feature/moirai-lifecycle-integration-docs-20260718` | `eefc35388125a016dc2b2c905950fd8a2981322d` |
-| Candystore | `feature/moirai-lifecycle-projection-20260718` | `12c25237b4242764bf630fba6ecc00804b19f9f2` |
-| Momo | `feature/moirai-lifecycle-client-20260718` | `33dfd7a85798ebdfddd904be3646492af63635bc` |
-| Holocene | `feature/moirai-lifecycle-surface-20260718` | `ed3630457b21062b5b02225571c51070b3028fcf` |
+| Bloodbank | `feature/moirai-lifecycle-capability-contract-20260718` | `48031ee39c238b9d4715b81b74076635235f96d5` |
+| Lifecycle | `feature/moirai-lifecycle-integration-docs-20260718` | `797fcf4e0cba45a86720f7af4b94ed73be921d38` |
+| Candystore | `feature/moirai-lifecycle-projection-20260718` | `b3b4d829b1e7ff52ea4f36f8124a4b80a6435d07` |
+| Momo | `feature/moirai-lifecycle-client-20260718` | `4c41a998ccfd34afa47d86326c90b958b05fc1a8` |
+| Holocene | `feature/moirai-lifecycle-surface-20260718` | `e8cecb983d4f4f210a729d9ddfd2330e9d98e729` |
 
 Each ref was fetched and checked out from anonymous credential-disabled HTTPS,
 matched its exact revision, and contained its approved component base.

@@ -3,7 +3,7 @@
 ## Current integration role
 
 Bloodbank at
-`155f2d774964d1c73694ce2c576fe5f50b91eefb` is the canonical
+`48031ee39c238b9d4715b81b74076635235f96d5` is the canonical
 inter-service contract and transport authority. It owns Lifecycle
 command/event/reply schemas, subject naming, NATS JetStream topology, Dapr
 transport components, and stream initialization. It does not own deterministic
@@ -15,10 +15,11 @@ CloudEvents type is `bloodbank.v1.<domain>.<entity>.<action>`. NATS subjects
 are `bloodbank.<evt|cmd|rpy>.v1.<domain>.<entity>.<action>`. Target IDs remain
 inside envelope data rather than creating routing-specific subject variants.
 
-Lifecycle clients reuse the locked schemas at this revision. Snapshot v2
-requires authoritative `capability_version` on every grant, while the canonical
-completion-evidence event distinguishes completed skill work from invocation or
-review requests. Commands carry
+Lifecycle clients reuse the locked schemas at this revision. Snapshot v3
+requires authoritative `capability_version` on every grant and an
+authority-owned occurrence identity/activation time on every obligation.
+Completion-evidence v2 identifies that exact occurrence and distinguishes
+completed skill work from invocation or review requests. Commands carry
 actor, capability/grant context, idempotency, expected state version,
 correlation, and causation metadata. No component in this slice creates a
 parallel contract.

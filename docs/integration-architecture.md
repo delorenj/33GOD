@@ -65,7 +65,7 @@ does not join the Lifecycle authority network.
 |---|---|---|
 | Identity/binding inputs | PJangler | Deterministic input to bootstrap/spec |
 | Lifecycle state/reconcile/frontier/obligations/grants | Lifecycle | Exact digest, dedicated PostgreSQL, sole writer |
-| Commands/events/transport | Bloodbank | Pinned `155f2d7…` schemas and initialized JetStream |
+| Commands/events/transport | Bloodbank | Pinned `48031ee…` schemas and initialized JetStream |
 | Event history/read projections | Candystore | Durable consumer, replay-safe current snapshot/verdict API |
 | Prioritization/delegation | Momo | Legal frontier only, canonical skill resolution, separated rationale/intent |
 | Mission control | Holocene | Candystore-backed read surface and Bloodbank command publication |

@@ -101,11 +101,11 @@ Current artifacts include:
   - `docs:drift`
 
 The integrated model pins Lifecycle to
-`ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`
+`ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67`
 with no build key. Bloodbank is pinned at
-`155f2d774964d1c73694ce2c576fe5f50b91eefb`; clients reuse its canonical
-versioned capability and completion-evidence contracts instead of defining a
-competing contract.
+`48031ee39c238b9d4715b81b74076635235f96d5`; clients reuse its canonical
+snapshot-v3 capability/obligation-occurrence and completion-evidence-v2
+contracts instead of defining a competing contract.
 
 Validation state as of this handoff:
 
@@ -118,9 +118,11 @@ Validation state as of this handoff:
 - The root documentation drift gate invokes the candidate validator with
   explicit `GOD_SOURCE_ROOT` while preserving all previous parity checks.
 - The isolated live gate passes all seven Lifecycle offline/restart/outage/
-  persistence invariants plus pending-obligation rejection/satisfaction,
-  versioned capability flow, true late-subscriber replay, canonical duplicate
-  integrity, and the Candystore, Momo, and Holocene seams.
+  persistence invariants, including a real authority commit and ordered outbox
+  drain during NATS loss, plus occurrence-isolated obligation evidence,
+  authority-spoof rejection, versioned capability and causal-lineage flow,
+  true late-subscriber replay, canonical duplicate integrity, and the
+  Candystore, Momo, and Holocene seams.
 
 Cloud remains blocked. Its profile exists only to render the unsupported
 local-bind model and rejection gate; it must never be used with `docker compose

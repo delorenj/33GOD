@@ -3,7 +3,7 @@ name: Bloodbank
 role: event-backbone
 repo: ../bloodbank
 description: NATS JetStream and Dapr event backbone for all 33GOD inter-service traffic.
-source_revision: 155f2d774964d1c73694ce2c576fe5f50b91eefb
+source_revision: 48031ee39c238b9d4715b81b74076635235f96d5
 compose:
   files:
     - ../bloodbank/compose/docker-compose.yml

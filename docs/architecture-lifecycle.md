@@ -8,11 +8,11 @@ immutable runtime image
 ## Runtime pin
 
 - Runtime image:
-  `ghcr.io/delorenj/lifecycle@sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf`
+  `ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67`
 - Image source and gitlink revision:
-  `eefc35388125a016dc2b2c905950fd8a2981322d`
+  `797fcf4e0cba45a86720f7af4b94ed73be921d38`
 - Bloodbank contract revision:
-  `155f2d774964d1c73694ce2c576fe5f50b91eefb`
+  `48031ee39c238b9d4715b81b74076635235f96d5`
 
 Root Compose references only the immutable digest. It never rebuilds Lifecycle
 and has no Lifecycle build or local-image substitution.
@@ -82,15 +82,19 @@ Every state-changing command carries:
 
 Lifecycle returns stable applied, stale, unauthorized, illegal, or duplicate
 verdicts. A stale version, invalid versioned capability, or transition blocked
-by a pending obligation is rejected without mutation. Snapshot v2 carries each
-grant's required `capability_version`; clients consume that authoritative value.
+by a pending obligation is rejected without mutation. Snapshot v3 carries each
+grant's required `capability_version` and every pending obligation's
+authority-owned `obligation_instance_id` and `activated_at`; clients consume
+those authoritative values.
 
 In `waiting`, the independent-review obligation is computed before the legal
 frontier. `waiting -> active` is disallowed while that obligation is pending.
 An invocation or review request is not satisfaction: only the canonical
-Bloodbank completion-evidence event with matching lifecycle, obligation,
-target actor, skill reference, and completed artifact evidence can satisfy it.
-Lifecycle records that observation and alone performs the resulting reconcile.
+Bloodbank completion-evidence v2 event with matching lifecycle, exact active
+obligation occurrence, target actor, skill reference, activation time, and
+completed artifact evidence can satisfy it. Evidence predating activation or
+targeting a prior occurrence cannot satisfy the current obligation. Lifecycle
+records that observation and alone performs the resulting reconcile.
 
 Momo reads only the authoritative projection, filters and ranks the legal
 frontier, resolves an obligation's canonical skill reference, emits decision
@@ -111,17 +115,20 @@ with unique ports, networks, and volumes. It proves:
    duplicate transition effect.
 4. Stale `expected_state_version` is rejected without mutation.
 5. Missing or invalid capability is rejected without mutation.
-6. NATS outage preserves committed state and per-lifecycle outbox order;
-   recovery eventually publishes all rows.
+6. A canonical authority command commits state and ordered outbox rows while
+   NATS is unavailable; recovery publishes those exact event IDs in sequence
+   without duplicating the transition effect.
 7. The dedicated PostgreSQL volume survives Lifecycle and PostgreSQL process
    restarts.
 
 The same run starts Candystore only after authority snapshot and verdict events
 exist, proves their durable replay, attempts a conflicting duplicate ID and
-proves projection from the canonical stored envelope, exercises pending
-obligation rejection and exact completion-evidence unlock, verifies versioned
-capabilities, and checks Momo/Holocene client fidelity. Cleanup addresses only
-the unique resources allocated by the run.
+proves projection from the canonical stored envelope, and audits but excludes
+spoofed authority candidates. It exercises pre-activation and prior-occurrence
+rejection, exact active-occurrence completion unlock, repeated occurrence
+isolation, versioned capabilities, real causal lineage, and Momo/Holocene
+client fidelity. Cleanup addresses only the unique resources allocated by the
+run.
 
 ## Current versus future
 

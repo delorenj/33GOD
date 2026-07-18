@@ -32,7 +32,7 @@ action, satisfy an obligation, validate a capability, or advance state.
 ## One loop pass
 
 1. **Awareness:** resolve PJangler identity; fetch the authoritative Lifecycle
-   snapshot/frontier/obligations/grants; then inspect provider projection, Hermes
+   snapshot/frontier/obligations/grants; then inspect provider-owned ticket/board records, Hermes
    client state, evidence, event trail, and live workers.
 2. **Is a worker already active and healthy?** (yours or Hermes'). Yes → monitor it, record
    state, and go to step 6. WIP=1.
@@ -106,6 +106,6 @@ polling something that changes faster, lengthen if you are genuinely idle.
 ## End-of-run report
 
 When you stop, report: Lifecycle ID/spec/state version and frontier summary,
-provider projection, tickets touched, evidence
+provider ticket/board records, tickets touched, evidence
 touched, the active worker/blocker (if any), the decision events you emitted, the stop
 condition that fired, and the single next recommended action.

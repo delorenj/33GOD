@@ -3,8 +3,9 @@
 `scripts/lifecycle_client.py` is Momo's implemented policy-client seam. It reads
 Candystore's Lifecycle projection with `GET`, selects only current
 authority-returned frontier items and pending obligations, preserves canonical
-`skill_ref` and `capability_version` values, and publishes commands/events
-through Bloodbank. It has no
+`skill_ref`, `obligation_instance_id`, activation time, and
+`capability_version` values, and publishes commands/events through Bloodbank.
+It has no
 Lifecycle, Candystore, provider, database, or local-state write path.
 
 ## Read the current projection
@@ -17,7 +18,10 @@ python3 <skill_dir>/scripts/lifecycle_client.py fetch \
 
 The client fails closed unless `projection_status` is `current` and frontier
 items carry the same `expected_state_version` as the snapshot. Missing and stale
-projections are never treated as empty legal work.
+projections are never treated as empty legal work. The projection's immutable
+source event, Lifecycle source/producer/service/actor/provenance, v3 schema
+identity, and correlation lineage must also be complete and canonical; malformed
+or non-authority projection data cannot authorize a publish.
 
 ## Service an obligation
 
@@ -32,11 +36,12 @@ python3 <skill_dir>/scripts/lifecycle_client.py publish \
   --envelope invocation-command.json
 ```
 
-The obligation itself is the legal actor-work contract; an unrelated frontier
-transition is never treated as authorization. Lifecycle supplies the target
-actor in `owner_id` and the exact `skill_ref`. The invocation context describes
-the separate completion-evidence contract. The invocation/request is not
-satisfaction and cannot unlock Lifecycle progression.
+The exact pending obligation occurrence is the legal actor-work contract; an
+unrelated frontier transition is never treated as authorization. Lifecycle
+supplies its stable `obligation_instance_id`, activation time, target actor in
+`owner_id`, and exact `skill_ref`. The invocation context describes the separate
+v2 completion-evidence contract for that occurrence. The invocation/request is
+not satisfaction and cannot unlock Lifecycle progression.
 
 After the target actor produces a concrete completion artifact, build and
 publish the canonical completion event:
@@ -53,8 +58,10 @@ python3 <skill_dir>/scripts/lifecycle_client.py publish \
 ```
 
 Completion evidence requires `kind=skill_completion`, `outcome=completed`, an
-artifact identity, lowercase SHA-256, and a concise summary. Lifecycle alone
-evaluates that observation and decides whether the obligation is satisfied.
+artifact identity, lowercase SHA-256, a concise summary, and the exact active
+`obligation_instance_id`. Evidence predating activation or naming another
+occurrence fails closed. Lifecycle alone evaluates that observation and decides
+whether the obligation is satisfied.
 
 ## Submit a legal Lifecycle intent after evidence
 
@@ -85,11 +92,15 @@ consistent verdict fields. Only `applied` or `idempotent` passes. Never update
 provider or local lifecycle state in response to a plan, publish acknowledgment,
 or decision event.
 
-Invocation and intent IDs, command IDs, correlation/causation IDs, and
-idempotency keys are derived from canonical immutable request semantics. The
-authoritative projection event time is preserved as the command timestamp, so
-an identical retry reproduces the exact envelope while any material payload
-change produces a new identity.
+Invocation and intent event IDs, command IDs, and idempotency keys are derived
+from canonical immutable request semantics, including the obligation occurrence
+when applicable. Correlation and causation are real graph identities: commands
+preserve the authoritative snapshot's `correlationid` and name that snapshot
+event ID as `causationid`; completion evidence preserves the correlation and
+names the published invocation event as its direct cause. The authoritative
+projection event time is preserved as the command timestamp, so an identical
+retry reproduces the exact envelope while any material payload change produces
+a new semantic identity without fabricating a causal parent.
 
 ## Keep judgment separate
 

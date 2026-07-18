@@ -8,6 +8,7 @@ Registry images are exercised only by immutable digest.
 from __future__ import annotations
 
 import argparse
+import base64
 from datetime import UTC, datetime, timedelta
 import json
 import os
@@ -29,7 +30,7 @@ SOURCE_ROOT = PLATFORM_ROOT.parent
 COMPOSE_FILE = PLATFORM_ROOT / "compose.yaml"
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:f15d5934d1007f83fe46348a059c59ade8262dbd3b067f629633d28693843abf"
+    "sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67"
 )
 NATS_BOX_IMAGE = (
     "natsio/nats-box@"
@@ -241,7 +242,7 @@ class Harness:
             "project": self.project,
             "lifecycle_id": self.lifecycle_id,
             "image": LIFECYCLE_IMAGE,
-            "bloodbank_commit": "155f2d774964d1c73694ce2c576fe5f50b91eefb",
+            "bloodbank_commit": "48031ee39c238b9d4715b81b74076635235f96d5",
             "invariants": {},
             "seams": {},
         }
@@ -453,6 +454,14 @@ class Harness:
         )
         return {key: int(value) for key, value in json.loads(raw).items()}
 
+    def reconcile_queue_depth(self) -> int:
+        return int(
+            self.psql(
+                "SELECT COUNT(*) FROM lifecycle_reconcile_queue "
+                f"WHERE lifecycle_id = {sql_literal(self.lifecycle_id)}"
+            )
+        )
+
     def command_result(self, event_id: str) -> dict[str, Any] | None:
         raw = self.psql(
             """
@@ -461,7 +470,13 @@ class Harness:
               'expected_state_version', expected_state_version,
               'observed_state_version', observed_state_version,
               'resulting_state_version', resulting_state_version,
-              'command_id', command_id, 'idempotency_key', idempotency_key
+              'command_event_id', command_event_id, 'command_id', command_id,
+              'idempotency_key', idempotency_key,
+              'capability_id', capability_id, 'applied_event_id', applied_event_id,
+              'reply_event_id', reply_envelope->>'id',
+              'reply_subject', reply_envelope->>'subject',
+              'reply_correlation_id', reply_envelope->>'correlationid',
+              'reply_causation_id', reply_envelope->>'causationid'
             )::text
             FROM lifecycle_command_results WHERE command_event_id = %s::uuid
             """
@@ -474,8 +489,9 @@ class Harness:
             """
             SELECT COALESCE(json_agg(row_to_json(items)), '[]'::json)::text
             FROM (
-              SELECT event_sequence, event_id::text, subject,
-                     published_at IS NOT NULL AS published, published_at
+              SELECT id, event_sequence, event_id::text, event_type, subject,
+                     aggregate_version, published_at IS NOT NULL AS published,
+                     published_at, publish_attempts, next_attempt_at, error
               FROM lifecycle_event_outbox WHERE lifecycle_id = %s
               ORDER BY event_sequence
             ) AS items
@@ -511,6 +527,118 @@ class Harness:
             "info",
             name,
             "--json",
+        )
+        return json.loads(result.stdout)
+
+    def stream_messages_since(
+        self, name: str, *, after_sequence: int
+    ) -> list[dict[str, Any]]:
+        """Read exact persisted JetStream envelopes after one stream sequence."""
+
+        info = self.stream_info(name)
+        last_sequence = int(info["state"].get("last_seq", 0))
+        messages: list[dict[str, Any]] = []
+        for sequence in range(after_sequence + 1, last_sequence + 1):
+            raw = self.docker(
+                "run",
+                "--rm",
+                "--network",
+                self.networks["bloodbank"],
+                NATS_BOX_IMAGE,
+                "nats",
+                "--server=nats://nats:4222",
+                "stream",
+                "get",
+                name,
+                str(sequence),
+                "--json",
+            ).stdout
+            record = json.loads(raw)
+            encoded = record.get("data")
+            if not isinstance(encoded, str):
+                raise LiveProofError(
+                    f"JetStream {name} sequence {sequence} omitted encoded data"
+                )
+            try:
+                envelope = json.loads(base64.b64decode(encoded, validate=True))
+            except (ValueError, json.JSONDecodeError) as exc:
+                raise LiveProofError(
+                    f"JetStream {name} sequence {sequence} is not a JSON envelope"
+                ) from exc
+            messages.append(
+                {
+                    "stream": name,
+                    "stream_sequence": int(record.get("seq", sequence)),
+                    "subject": record.get("subject"),
+                    "event_id": envelope.get("id"),
+                    "event_type": envelope.get("type"),
+                    "kind": envelope.get("kind"),
+                }
+            )
+        return messages
+
+    def apply_internal_command(self, envelope: dict[str, Any]) -> dict[str, Any]:
+        """Exercise Lifecycle's canonical command transaction without transport ingress."""
+
+        program = """
+import asyncio
+import json
+import os
+from pathlib import Path
+from urllib.parse import quote
+
+import asyncpg
+
+from authority import LifecycleAuthority
+from db.repository import LifecycleRepository
+
+
+async def main():
+    password = Path('/run/secrets/lifecycle-postgres-password').read_text().strip()
+    database_url = (
+        'postgresql://lifecycle:' + quote(password, safe='')
+        + '@lifecycle-postgres:5432/lifecycle'
+    )
+    pool = await asyncpg.create_pool(database_url, min_size=1, max_size=2)
+    try:
+        handled = await LifecycleAuthority(
+            LifecycleRepository(pool),
+            authority_instance='aion-live-outage',
+        ).handle_command_envelope(json.loads(os.environ['LIFECYCLE_INTERNAL_COMMAND']))
+        result = handled.result
+        print(json.dumps({
+            'verdict': result.verdict.value,
+            'mutated': result.mutated,
+            'observed_state_version': result.observed_state_version,
+            'resulting_state_version': result.resulting_state_version,
+            'applied_event_id': result.applied_event_id,
+            'reason_code': result.reason_code,
+            'reply_event_id': handled.reply_envelope['id'],
+        }, sort_keys=True))
+    finally:
+        await pool.close()
+
+
+asyncio.run(main())
+"""
+        result = self.docker(
+            "run",
+            "--rm",
+            "--network",
+            self.networks["lifecycle"],
+            "--mount",
+            (
+                f"type=bind,source={self.secret_file},"
+                "target=/run/secrets/lifecycle-postgres-password,readonly"
+            ),
+            "--env",
+            "LIFECYCLE_INTERNAL_COMMAND="
+            + json.dumps(envelope, sort_keys=True, separators=(",", ":")),
+            "--entrypoint",
+            "python",
+            LIFECYCLE_IMAGE,
+            "-c",
+            program,
         )
         return json.loads(result.stdout)
 
@@ -574,11 +702,19 @@ class Harness:
         actor_id: str = ACTOR_ID,
         capability_id: str = CAPABILITY_ID,
         capability_version: int | None = None,
+        correlation_id: str | None = None,
         causation_id: str | None = None,
+        intent_name: str = "transition",
+        parameters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         requested_at = wire_time()
         if capability_version is None:
             capability_version = self.capability_version()
+        command_id = stable_uuid(f"{self.suffix}:command:{label}")
+        if causation_id is not None and correlation_id is None:
+            raise LiveProofError("derived commands must inherit parent correlation_id")
+        if correlation_id is None:
+            correlation_id = command_id
         return {
             "specversion": "1.0",
             "id": stable_uuid(f"{self.suffix}:event:{label}"),
@@ -591,7 +727,7 @@ class Harness:
                 "apicurio://holyfields/"
                 "bloodbank.v1.lifecycle.intent.submit.command/versions/1"
             ),
-            "correlationid": stable_uuid(f"{self.suffix}:correlation:{label}"),
+            "correlationid": correlation_id,
             "causationid": causation_id,
             "producer": "lifecycle-live-matrix",
             "service": "lifecycle-live-matrix",
@@ -599,7 +735,7 @@ class Harness:
             "schemaref": "bloodbank.v1.lifecycle.intent.submit.command.v1",
             "kind": "command",
             "actor": {"type": "agent_api", "agent_id": actor_id},
-            "command_id": stable_uuid(f"{self.suffix}:command:{label}"),
+            "command_id": command_id,
             "idempotency_key": f"lifecycle-live-matrix:{self.suffix}:{label}",
             "delivery": "single_consumer",
             "data": {
@@ -607,7 +743,11 @@ class Harness:
                 "lifecycle_id": self.lifecycle_id,
                 "repo": REPO,
                 "expected_state_version": expected_state_version,
-                "intent": {"name": "transition", "target": target, "parameters": {}},
+                "intent": {
+                    "name": intent_name,
+                    "target": target,
+                    "parameters": parameters or {},
+                },
                 "capability": {
                     "capability_id": capability_id,
                     "capability_version": capability_version,
@@ -764,6 +904,7 @@ class Harness:
             "pending-obligation-reject",
             expected_state_version=progressed["state_version"],
             target="active",
+            correlation_id=first["correlationid"],
             causation_id=first["id"],
         )
         self.publish(premature)
@@ -878,9 +1019,30 @@ class Harness:
         )
         outage_before_state = self.state()
         outage_before_counts = self.counts()
-        events_before = int(self.stream_info("BLOODBANK_EVENTS")["state"]["messages"])
-        commands_before = int(
-            self.stream_info("BLOODBANK_COMMANDS")["state"]["messages"]
+        if outage_before_counts["outbox_pending"] != 0:
+            raise LiveProofError("outage proof requires an initially drained outbox")
+        outage_before_rows = self.outbox_rows()
+        before_event_ids = {item["event_id"] for item in outage_before_rows}
+        event_stream_before = self.stream_info("BLOODBANK_EVENTS")["state"]
+        command_stream_before = self.stream_info("BLOODBANK_COMMANDS")["state"]
+        event_last_before = int(event_stream_before.get("last_seq", 0))
+        command_last_before = int(command_stream_before.get("last_seq", 0))
+        mode_frontier = next(
+            (
+                item
+                for item in outage_before_state["legal_frontier"]
+                if item["id"] == "mode:manual" and item["allowed"]
+            ),
+            None,
+        )
+        if mode_frontier is None:
+            raise LiveProofError("authority exposed no legal set_mode transaction")
+        target_mode = mode_frontier["id"].split(":", 1)[1]
+        outage_command = self.command(
+            "nats-outage-authority-commit",
+            expected_state_version=outage_before_state["state_version"],
+            target=target_mode,
+            intent_name="set_mode",
         )
         self.compose("stop", "bloodbank-nats")
         degraded = self.wait_health("/readyz", 503)
@@ -890,90 +1052,227 @@ class Harness:
             raise LiveProofError("NATS outage rewrote committed Lifecycle state")
         if self.counts()["history"] != outage_before_counts["history"]:
             raise LiveProofError("NATS outage changed transition history")
+
+        outage_result = self.apply_internal_command(outage_command)
+        outage_committed_state = self.state()
+        outage_committed_counts = self.counts()
+        if (
+            outage_result["verdict"] != "applied"
+            or outage_result["mutated"] is not True
+            or outage_committed_state["state_version"]
+            != outage_before_state["state_version"] + 1
+            or outage_committed_state["mode"] != target_mode
+            or outage_committed_state["status"] != "waiting"
+            or outage_committed_counts["history"] != outage_before_counts["history"] + 1
+            or outage_committed_counts["commands"]
+            != outage_before_counts["commands"] + 1
+        ):
+            raise LiveProofError(
+                "canonical authority transaction did not commit during NATS outage"
+            )
+        before_obligation = next(
+            item
+            for item in outage_before_state["obligations"]
+            if item["id"] == "independent-review"
+        )
+        committed_obligation = next(
+            item
+            for item in outage_committed_state["obligations"]
+            if item["id"] == "independent-review"
+        )
+        if (
+            committed_obligation["obligation_instance_id"]
+            != before_obligation["obligation_instance_id"]
+            or committed_obligation["activated_at"] != before_obligation["activated_at"]
+        ):
+            raise LiveProofError(
+                "unrelated outage transaction changed the active obligation occurrence"
+            )
+
+        outage_retry_result = self.apply_internal_command(outage_command)
+        outage_retry_state = self.state()
+        outage_retry_counts = self.counts()
+        if (
+            outage_retry_result["verdict"] != "idempotent"
+            or outage_retry_result["mutated"] is not False
+            or outage_retry_state != outage_committed_state
+            or outage_retry_counts["history"] != outage_committed_counts["history"]
+            or outage_retry_counts["commands"] != outage_committed_counts["commands"]
+        ):
+            raise LiveProofError(
+                "retry during NATS outage duplicated the committed authority effect"
+            )
+
+        outage_rows_during = [
+            item
+            for item in self.outbox_rows()
+            if item["event_id"] not in before_event_ids
+        ]
+        outage_event_ids = [item["event_id"] for item in outage_rows_during]
+        outage_sequences = [int(item["event_sequence"]) for item in outage_rows_during]
+        if (
+            len(outage_rows_during) < 2
+            or outage_result["applied_event_id"] not in outage_event_ids
+            or outage_result["reply_event_id"] not in outage_event_ids
+            or any(item["published"] for item in outage_rows_during)
+            or outage_sequences != sorted(set(outage_sequences))
+            or outage_retry_counts["outbox_pending"] != len(outage_rows_during)
+        ):
+            raise LiveProofError(
+                "authority transaction did not retain exact ordered pending outbox rows"
+            )
+
         self.compose("start", "bloodbank-nats")
         self.wait_container_health("bloodbank-nats")
         recovered = self.wait_health("/readyz", 200, timeout=90)
-        current = self.state()
-        if current["status"] != "waiting":
-            raise LiveProofError(
-                f"expected guarded waiting state before recovery command: {current}"
-            )
-        recovery_observation = self.observation("nats-recovery")
-        self.publish(recovery_observation)
-        wait_for(
-            "post-recovery observation commit and outbox publication",
+        outage_rows_after = wait_for(
+            "exact outage outbox rows to publish",
             lambda: (
-                value
-                if (value := self.counts())["observations"]
-                == outage_before_counts["observations"] + 1
-                and value["outbox_pending"] == 0
+                matching
+                if len(
+                    matching := [
+                        item
+                        for item in self.outbox_rows()
+                        if item["event_id"] in set(outage_event_ids)
+                        and item["published"]
+                    ]
+                )
+                == len(outage_event_ids)
                 else None
             ),
-            timeout=90,
+            timeout=120,
         )
-        observation_state = self.wait_state_version(
-            current["state_version"] + 1, "waiting"
+        if self.counts()["outbox_pending"] != 0:
+            raise LiveProofError(
+                "recovered publisher left committed outbox rows pending"
+            )
+
+        event_messages = self.stream_messages_since(
+            "BLOODBANK_EVENTS", after_sequence=event_last_before
         )
-        guarded = next(
-            item
-            for item in observation_state["legal_frontier"]
-            if item["id"] == "transition:waiting:active"
+        command_messages = self.stream_messages_since(
+            "BLOODBANK_COMMANDS", after_sequence=command_last_before
         )
+        recovered_messages = [*event_messages, *command_messages]
+        exact_stream_rows = [
+            message
+            for message in recovered_messages
+            if message["event_id"] in set(outage_event_ids)
+        ]
+        stream_counts = {
+            event_id: sum(
+                message["event_id"] == event_id for message in exact_stream_rows
+            )
+            for event_id in outage_event_ids
+        }
+        if any(count != 1 for count in stream_counts.values()):
+            raise LiveProofError(
+                f"recovered JetStream did not persist exact outbox IDs once: {stream_counts}"
+            )
+
+        recovered_by_id = {item["event_id"]: item for item in outage_rows_after}
+        published_times = [
+            recovered_by_id[event_id]["published_at"] for event_id in outage_event_ids
+        ]
+        if published_times != sorted(published_times):
+            raise LiveProofError(
+                "per-lifecycle outage outbox rows published out of sequence"
+            )
+        for stream_name in ("BLOODBANK_EVENTS", "BLOODBANK_COMMANDS"):
+            stream_rows = sorted(
+                (
+                    message
+                    for message in exact_stream_rows
+                    if message["stream"] == stream_name
+                ),
+                key=lambda item: item["stream_sequence"],
+            )
+            stream_outbox_sequences = [
+                int(recovered_by_id[item["event_id"]]["event_sequence"])
+                for item in stream_rows
+            ]
+            if stream_outbox_sequences != sorted(stream_outbox_sequences):
+                raise LiveProofError(
+                    f"{stream_name} reordered per-lifecycle outage publications"
+                )
+
+        time.sleep(1)
         if (
-            guarded["allowed"] is not False
-            or guarded["reason_code"] != "PENDING_OBLIGATIONS"
+            self.state() != outage_committed_state
+            or self.counts()["history"] != outage_committed_counts["history"]
+            or self.counts()["commands"] != outage_committed_counts["commands"]
         ):
             raise LiveProofError(
-                "post-recovery reconcile bypassed the pending obligation"
+                "recovery/replay duplicated the during-outage authority effect"
             )
-        current = observation_state
-        recovery_command = self.command(
-            "nats-recovery",
-            expected_state_version=current["state_version"],
-            target="active",
-        )
-        self.publish(recovery_command)
-        recovery_result = self.wait_command(recovery_command["id"], "illegal")
-        waiting = self.state()
-        if waiting != current or recovery_result["mutated"]:
-            raise LiveProofError("post-outage guarded command mutated authority state")
-        wait_for("empty committed outbox", lambda: self.counts()["outbox_pending"] == 0)
+
         rows = self.outbox_rows()
         sequences = [int(item["event_sequence"]) for item in rows]
-        published_times = [item["published_at"] for item in rows]
         if sequences != sorted(set(sequences)) or not all(
             item["published"] for item in rows
         ):
             raise LiveProofError(
                 "outbox ordering/uniqueness/eventual publication failed"
             )
-        if published_times != sorted(published_times):
-            raise LiveProofError(
-                "per-lifecycle publication timestamps are out of sequence"
-            )
         events_after = int(self.stream_info("BLOODBANK_EVENTS")["state"]["messages"])
         commands_after = int(
             self.stream_info("BLOODBANK_COMMANDS")["state"]["messages"]
         )
-        if events_after <= events_before:
-            raise LiveProofError(
-                "recovered NATS received no eventual Lifecycle publication"
-            )
         self.summary["invariants"]["6_nats_outage_recovery"] = {
             "ready_during_outage": degraded,
             "live_during_outage": still_live,
             "ready_after_recovery": recovered,
             "committed_state_before": outage_before_state,
-            "result": recovery_result,
-            "recovery_observation_event_id": recovery_observation["id"],
-            "state_after": waiting,
-            "event_messages_before": events_before,
+            "authority_command_event_id": outage_command["id"],
+            "authority_command_id": outage_command["command_id"],
+            "result_during_outage": outage_result,
+            "retry_during_outage": outage_retry_result,
+            "state_during_outage": outage_committed_state,
+            "counts_before": outage_before_counts,
+            "counts_during_outage": outage_retry_counts,
+            "pending_outbox_during_outage": outage_rows_during,
+            "recovered_outbox_rows": outage_rows_after,
+            "recovered_stream_messages": exact_stream_rows,
+            "stream_id_counts": stream_counts,
+            "event_messages_before": int(event_stream_before["messages"]),
             "event_messages_after": events_after,
-            "command_reply_messages_before": commands_before,
+            "command_reply_messages_before": int(command_stream_before["messages"]),
             "command_reply_messages_after": commands_after,
             "outbox_sequences": sequences,
             "outbox_pending": 0,
         }
+
+        print("[live] settling the post-command deterministic reconcile", flush=True)
+        self.compose("restart", "lifecycle")
+        self.wait_health("/readyz", 200)
+        settled_state = self.wait_state_version(
+            outage_committed_state["state_version"] + 1, "waiting"
+        )
+        wait_for(
+            "settled post-command reconcile queue/outbox",
+            lambda: (
+                True
+                if self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+        )
+        settled_obligation = next(
+            item
+            for item in settled_state["obligations"]
+            if item["id"] == "independent-review"
+        )
+        if (
+            settled_state["mode"] != "manual"
+            or settled_obligation["status"] != "pending"
+            or settled_obligation["obligation_instance_id"]
+            != committed_obligation["obligation_instance_id"]
+            or settled_obligation["activated_at"]
+            != committed_obligation["activated_at"]
+        ):
+            raise LiveProofError(
+                "deterministic post-command reconcile changed the obligation occurrence"
+            )
 
         print(
             "[live] proving dedicated PostgreSQL volume/process persistence", flush=True
@@ -995,6 +1294,16 @@ class Harness:
         self.wait_container_health("lifecycle-postgres")
         self.compose("start", "lifecycle")
         self.wait_health("/readyz", 200)
+        wait_for(
+            "empty persistence-restart reconcile queue/outbox",
+            lambda: (
+                True
+                if self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+        )
+        time.sleep(1)
         volume_after = self.docker(
             "inspect", "--format", mount_format, postgres_container
         ).stdout.strip()
@@ -1002,16 +1311,173 @@ class Harness:
             raise LiveProofError(
                 "Lifecycle PostgreSQL did not retain its dedicated volume"
             )
-        if self.state() != persistent_state or self.counts() != persistent_counts:
+        persisted_state_after = self.state()
+        persisted_counts_after = self.counts()
+        if (
+            persisted_state_after != persistent_state
+            or persisted_counts_after != persistent_counts
+        ):
             raise LiveProofError(
-                "state did not survive service/PostgreSQL process restart"
+                "state did not survive service/PostgreSQL process restart: "
+                f"state_before={persistent_state!r} state_after={persisted_state_after!r} "
+                f"counts_before={persistent_counts!r} counts_after={persisted_counts_after!r}"
             )
         self.summary["invariants"]["7_postgres_persistence"] = {
             "volume": volume_after,
             "state": persistent_state,
             "counts": persistent_counts,
+            "settled_from_state_version": outage_committed_state["state_version"],
         }
 
+        print(
+            "[live] enabling autonomous progression for completion evidence",
+            flush=True,
+        )
+        wait_for(
+            "settled autonomous-mode command frontier",
+            lambda: (
+                True
+                if self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+        )
+        autonomous_before = self.state()
+        autonomous_frontier = next(
+            (
+                item
+                for item in autonomous_before["legal_frontier"]
+                if item["id"] == "mode:autonomous" and item["allowed"]
+            ),
+            None,
+        )
+        if (
+            autonomous_frontier is None
+            or autonomous_frontier["expected_state_version"]
+            != autonomous_before["state_version"]
+        ):
+            raise LiveProofError(
+                "authority exposed no current legal autonomous-mode frontier"
+            )
+        autonomous_command = self.command(
+            "autonomous-after-persistence",
+            expected_state_version=autonomous_frontier["expected_state_version"],
+            target="autonomous",
+            intent_name="set_mode",
+        )
+        self.publish(autonomous_command)
+        autonomous_result = self.wait_command(autonomous_command["id"], "applied")
+        if (
+            autonomous_result["mutated"] is not True
+            or autonomous_result["command_event_id"] != autonomous_command["id"]
+            or autonomous_result["command_id"] != autonomous_command["command_id"]
+            or autonomous_result["reply_subject"]
+            != "bloodbank.rpy.v1.lifecycle.intent.submit"
+            or autonomous_result["reply_correlation_id"]
+            != autonomous_command["correlationid"]
+            or autonomous_result["reply_causation_id"] != autonomous_command["id"]
+        ):
+            raise LiveProofError(
+                "Bloodbank autonomous-mode transaction lost authority identity: "
+                f"result={autonomous_result!r} state={self.state()!r}"
+            )
+        autonomous_state = self.wait_state_version(
+            autonomous_before["state_version"] + 1, "waiting"
+        )
+        persistent_obligation = next(
+            item
+            for item in autonomous_before["obligations"]
+            if item["id"] == "independent-review"
+        )
+        autonomous_obligation = next(
+            item
+            for item in autonomous_state["obligations"]
+            if item["id"] == "independent-review"
+        )
+        if (
+            autonomous_state["mode"] != "autonomous"
+            or autonomous_obligation["status"] != "pending"
+            or autonomous_obligation["obligation_instance_id"]
+            != persistent_obligation["obligation_instance_id"]
+            or autonomous_obligation["activated_at"]
+            != persistent_obligation["activated_at"]
+        ):
+            raise LiveProofError(
+                "mode change altered the guarded obligation occurrence"
+            )
+        wait_for(
+            "drained autonomous-mode outbox",
+            lambda: self.counts()["outbox_pending"] == 0,
+        )
+        self.summary["invariants"]["authority_progression_mode"] = {
+            "command_event_id": autonomous_command["id"],
+            "command_id": autonomous_command["command_id"],
+            "command_subject": autonomous_command["subject"],
+            "command_correlation_id": autonomous_command["correlationid"],
+            "command_causation_id": autonomous_command["causationid"],
+            "reply_event_id": autonomous_result["reply_event_id"],
+            "reply_subject": autonomous_result["reply_subject"],
+            "reply_correlation_id": autonomous_result["reply_correlation_id"],
+            "reply_causation_id": autonomous_result["reply_causation_id"],
+            "result": autonomous_result,
+            "state": autonomous_state,
+        }
+
+        self.prestart_verdict_command_id = premature["command_id"]
+
+    def run_clients(self) -> None:
+        print(
+            "[live] creating the stopped late-subscriber topology",
+            flush=True,
+        )
+        self.compose(
+            "create",
+            "--build",
+            "candystore-postgres",
+            "dapr-placement",
+            "candystore",
+            "candystore-daprd",
+            timeout=300,
+        )
+        candystore_containers = {
+            service: self.compose("ps", "-q", "--all", service).stdout.strip()
+            for service in (
+                "candystore-postgres",
+                "dapr-placement",
+                "candystore",
+                "candystore-daprd",
+            )
+        }
+        if any(not container for container in candystore_containers.values()):
+            raise LiveProofError(
+                "Candystore late-subscriber containers were not created exactly: "
+                f"{candystore_containers!r}"
+            )
+        created_statuses = {
+            service: self.docker(
+                "inspect", "--format", "{{.State.Status}}", container
+            ).stdout.strip()
+            for service, container in candystore_containers.items()
+        }
+        if any(
+            status not in {"created", "exited"} for status in created_statuses.values()
+        ):
+            raise LiveProofError(
+                "Candystore durable subscriber started before the replay cutoff: "
+                f"{created_statuses!r}"
+            )
+
+        self.wait_health("/readyz", 200)
+        wait_for(
+            "drained pre-Candystore authority reconcile/outbox",
+            lambda: (
+                True
+                if self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+        )
+        authority = self.state()
         snapshots = [
             item
             for item in self.outbox_rows()
@@ -1020,21 +1486,30 @@ class Harness:
         if not snapshots:
             raise LiveProofError("authority emitted no pre-Candystore snapshot")
         self.prestart_snapshot_event_id = snapshots[-1]["event_id"]
-        self.prestart_verdict_command_id = premature["command_id"]
-
-    def run_clients(self) -> None:
-        print("[live] starting durable Candystore projection", flush=True)
-        self.compose(
-            "up",
-            "-d",
-            "--build",
-            "--wait",
-            "--wait-timeout",
-            "180",
-            "candystore-daprd",
-            timeout=300,
+        self.compose("stop", "lifecycle")
+        running = set(
+            self.compose("ps", "--services", "--status", "running").stdout.split()
         )
-        authority = self.state()
+        if "lifecycle" in running:
+            raise LiveProofError("Lifecycle did not stop at the replay cutoff")
+
+        print("[live] starting durable Candystore projection", flush=True)
+        self.docker(
+            "start",
+            candystore_containers["candystore-postgres"],
+            candystore_containers["dapr-placement"],
+        )
+        self.wait_container_health("candystore-postgres")
+        self.docker("start", candystore_containers["candystore"])
+        self.wait_container_health("candystore", timeout=180)
+        self.docker("start", candystore_containers["candystore-daprd"])
+        running = set(
+            self.compose("ps", "--services", "--status", "running").stdout.split()
+        )
+        if "lifecycle" in running:
+            raise LiveProofError(
+                "late-subscriber setup restarted Lifecycle before replay proof"
+            )
         if authority["status"] != "waiting":
             raise LiveProofError(
                 "late-subscriber proof requires the guarded pre-existing waiting state; "
@@ -1056,7 +1531,37 @@ class Harness:
         ):
             raise LiveProofError(
                 "late-starting Candystore did not replay the exact pre-existing "
-                "authority snapshot"
+                "authority snapshot: "
+                f"expected={self.prestart_snapshot_event_id!r} "
+                f"actual={projection.get('source', {}).get('event_id')!r}"
+            )
+        projection_source = projection["source"]
+        expected_source_identity = {
+            "event_type": "bloodbank.v1.lifecycle.snapshot.updated",
+            "subject": "bloodbank.evt.v1.lifecycle.snapshot.updated",
+            "authority_source": "urn:33god:service:lifecycle",
+            "producer": "delorenj/lifecycle",
+            "service": "lifecycle",
+            "kind": "event",
+            "domain": "lifecycle",
+            "schema_ref": "bloodbank.v1.lifecycle.snapshot.updated.v3",
+            "data_schema": (
+                "apicurio://holyfields/"
+                "bloodbank.v1.lifecycle.snapshot.updated/versions/3"
+            ),
+        }
+        if (
+            any(
+                projection_source.get(key) != value
+                for key, value in expected_source_identity.items()
+            )
+            or projection_source.get("actor", {}).get("agent_id")
+            != "delorenj.lifecycle"
+            or not projection_source.get("correlation_id")
+            or not projection_source.get("causation_id")
+        ):
+            raise LiveProofError(
+                "Candystore replay lost exact Lifecycle authority/causal metadata"
             )
         replay_verdict = next(
             item
@@ -1118,6 +1623,12 @@ class Harness:
             "projection_version": projection["state_version"],
             "projection_status": projection["projection_status"],
             "source_event_id": projection["source"]["event_id"],
+            "source_identity": {
+                **expected_source_identity,
+                "actor": projection_source["actor"],
+                "correlation_id": projection_source["correlation_id"],
+                "causation_id": projection_source["causation_id"],
+            },
             "prestart_snapshot_event_id": self.prestart_snapshot_event_id,
             "prestart_verdict_command_id": self.prestart_verdict_command_id,
             "prestart_verdict": replay_verdict,
@@ -1207,6 +1718,116 @@ class Harness:
         }
 
         print(
+            "[live] proving spoofed authority candidates stay audit-only",
+            flush=True,
+        )
+        spoof_snapshot = json.loads(json.dumps(canonical_raw))
+        spoof_snapshot["id"] = stable_uuid(f"{self.suffix}:spoof:snapshot")
+        spoof_snapshot["source"] = "urn:attacker"
+        spoof_snapshot["subject"] = "evil.subject"
+        spoof_snapshot["producer"] = "attacker"
+        spoof_snapshot["service"] = "attacker"
+        spoof_snapshot["actor"] = {"type": "service", "agent_id": "attacker"}
+        spoof_snapshot["data"]["provenance"]["authority"] = "attacker"
+        spoof_snapshot["data"]["state_version"] = authority["state_version"] + 200
+        spoof_snapshot["data"]["previous_state_version"] = (
+            authority["state_version"] + 199
+        )
+        spoof_snapshot["data"]["publication"]["aggregate_version"] = (
+            authority["state_version"] + 200
+        )
+        spoof_snapshot["data"]["publication"]["event_sequence"] = 999998
+        spoof_snapshot["data"]["state"]["status"] = "completed"
+        spoof_snapshot_status, spoof_snapshot_result = http_json(
+            f"http://127.0.0.1:{self.ports['candystore']}/events/all",
+            method="POST",
+            body=spoof_snapshot,
+        )
+
+        canonical_reply_raw = json.loads(
+            self.candystore_psql(
+                "SELECT raw::text FROM events WHERE kind = 'reply' "
+                "AND data->>'command_id' = "
+                f"{sql_literal(self.prestart_verdict_command_id)} "
+                "ORDER BY time DESC LIMIT 1"
+            )
+        )
+        spoof_reply = json.loads(json.dumps(canonical_reply_raw))
+        spoof_reply["id"] = stable_uuid(f"{self.suffix}:spoof:reply")
+        spoof_reply["source"] = "urn:attacker"
+        spoof_reply["subject"] = "evil.subject"
+        spoof_reply["producer"] = "attacker"
+        spoof_reply["service"] = "attacker"
+        spoof_reply["actor"] = {"type": "service", "agent_id": "attacker"}
+        spoof_reply["data"]["verdict"] = "stale"
+        spoof_reply["data"]["reason_code"] = "EXPECTED_STATE_VERSION_MISMATCH"
+        spoof_reply_status, spoof_reply_result = http_json(
+            f"http://127.0.0.1:{self.ports['candystore']}/events/all",
+            method="POST",
+            body=spoof_reply,
+        )
+        projection_after_spoofs = self.projection()
+        verdict_after_spoof = next(
+            item
+            for item in projection_after_spoofs["command_verdicts"]
+            if item["command_id"] == self.prestart_verdict_command_id
+        )
+        spoof_audit_rows = {
+            "snapshot": int(
+                self.candystore_psql(
+                    "SELECT COUNT(*) FROM events WHERE id = "
+                    f"{sql_literal(spoof_snapshot['id'])}::uuid"
+                )
+            ),
+            "reply": int(
+                self.candystore_psql(
+                    "SELECT COUNT(*) FROM events WHERE id = "
+                    f"{sql_literal(spoof_reply['id'])}::uuid"
+                )
+            ),
+        }
+        spoof_receipts = {
+            "snapshot": int(
+                self.candystore_psql(
+                    "SELECT COUNT(*) FROM lifecycle_projection_receipts WHERE event_id = "
+                    f"{sql_literal(spoof_snapshot['id'])}::uuid"
+                )
+            ),
+            "reply": int(
+                self.candystore_psql(
+                    "SELECT COUNT(*) FROM lifecycle_projection_receipts WHERE event_id = "
+                    f"{sql_literal(spoof_reply['id'])}::uuid"
+                )
+            ),
+        }
+        if (
+            spoof_snapshot_status != 200
+            or spoof_snapshot_result != {"status": "SUCCESS", "inserted": True}
+            or spoof_reply_status != 200
+            or spoof_reply_result != {"status": "SUCCESS", "inserted": True}
+            or spoof_audit_rows != {"snapshot": 1, "reply": 1}
+            or spoof_receipts != {"snapshot": 0, "reply": 0}
+            or projection_after_spoofs["source"] != projection["source"]
+            or projection_after_spoofs["state_version"] != projection["state_version"]
+            or verdict_after_spoof["verdict"] != "illegal"
+            or verdict_after_spoof["mutated"] is not False
+        ):
+            raise LiveProofError(
+                "spoofed Lifecycle authority candidate mutated projection or verdict"
+            )
+        self.summary["seams"]["candystore"]["authority_spoof_rejection"] = {
+            "spoof_snapshot_event_id": spoof_snapshot["id"],
+            "spoof_reply_event_id": spoof_reply["id"],
+            "audit_rows": spoof_audit_rows,
+            "projection_receipts": spoof_receipts,
+            "canonical_source_event_id": projection_after_spoofs["source"]["event_id"],
+            "canonical_verdict": verdict_after_spoof,
+        }
+
+        self.compose("start", "lifecycle")
+        self.wait_health("/readyz", 200)
+
+        print(
             "[live] exercising Momo obligation invocation and completion evidence",
             flush=True,
         )
@@ -1217,6 +1838,8 @@ class Harness:
             evidence_path = temp_dir / "evidence.json"
             invocation_plan_path = temp_dir / "invocation-plan.json"
             invocation_path = temp_dir / "invocation.json"
+            preactivation_path = temp_dir / "preactivation-evidence.json"
+            wrong_occurrence_path = temp_dir / "wrong-occurrence-evidence.json"
             completion_path = temp_dir / "completion.json"
             fetched = run(
                 [
@@ -1245,6 +1868,7 @@ class Harness:
                 raise LiveProofError(
                     "Momo received a falsely legal pending-obligation frontier"
                 )
+            projection_source = snapshot["source"]
             invocation = json.loads(
                 run(
                     [
@@ -1271,6 +1895,19 @@ class Harness:
             ):
                 raise LiveProofError(
                     "Momo changed the authoritative obligation target actor"
+                )
+            if (
+                invocation["selection"]["obligation_instance_id"]
+                != pending_obligation["obligation_instance_id"]
+                or invocation["selection"]["activated_at"]
+                != pending_obligation["activated_at"]
+                or invocation["invocation_command"]["correlationid"]
+                != projection_source["correlation_id"]
+                or invocation["invocation_command"]["causationid"]
+                != projection_source["event_id"]
+            ):
+                raise LiveProofError(
+                    "Momo invocation lost authoritative occurrence or causal lineage"
                 )
             invocation_plan_path.write_text(json.dumps(invocation), encoding="utf-8")
             invocation_path.write_text(
@@ -1331,15 +1968,139 @@ class Harness:
             completion_event = completion["completion_evidence"]
             if (
                 completion_event["data"]["obligation_id"] != pending_obligation["id"]
+                or completion_event["data"]["obligation_instance_id"]
+                != pending_obligation["obligation_instance_id"]
                 or completion_event["data"]["target_actor_id"]
                 != pending_obligation["owner_id"]
                 or completion_event["causationid"]
                 != invocation["invocation_command"]["id"]
+                or completion_event["correlationid"]
+                != invocation["invocation_command"]["correlationid"]
                 or completion_event["data"]["evidence"]["outcome"] != "completed"
             ):
                 raise LiveProofError(
                     "Momo completion evidence lost obligation identity"
                 )
+
+            activated_at = datetime.fromisoformat(
+                pending_obligation["activated_at"].replace("Z", "+00:00")
+            )
+            preactivation_time = (
+                (activated_at - timedelta(seconds=1))
+                .isoformat(timespec="milliseconds")
+                .replace("+00:00", "Z")
+            )
+            preactivation_event = json.loads(json.dumps(completion_event))
+            preactivation_event["id"] = stable_uuid(
+                f"{self.suffix}:evidence:preactivation"
+            )
+            preactivation_event["time"] = preactivation_time
+            preactivation_event["data"]["completed_at"] = preactivation_time
+            preactivation_event["data"]["evidence"]["artifact_id"] = (
+                f"historical-review:{self.suffix}"
+            )
+            preactivation_event["data"]["evidence"]["artifact_sha256"] = "b" * 64
+            preactivation_path.write_text(
+                json.dumps(preactivation_event), encoding="utf-8"
+            )
+            preactivation_publish = run(
+                [
+                    sys.executable,
+                    str(momo_script),
+                    "publish",
+                    "--envelope",
+                    str(preactivation_path),
+                ],
+                env=publish_env,
+            )
+            preactivation_state = wait_for(
+                "pre-activation evidence rejection",
+                lambda: (
+                    current
+                    if (current := self.state())["state_version"]
+                    > snapshot["state_version"]
+                    and current["status"] == "waiting"
+                    and next(
+                        item
+                        for item in current["obligations"]
+                        if item["id"] == "independent-review"
+                    )["status"]
+                    == "pending"
+                    else None
+                ),
+                timeout=90,
+            )
+            preactivation_obligation = next(
+                item
+                for item in preactivation_state["obligations"]
+                if item["id"] == "independent-review"
+            )
+            if (
+                preactivation_obligation["obligation_instance_id"]
+                != pending_obligation["obligation_instance_id"]
+                or preactivation_obligation["activated_at"]
+                != pending_obligation["activated_at"]
+                or preactivation_obligation["status"] != "pending"
+            ):
+                raise LiveProofError(
+                    "pre-activation evidence changed the active obligation occurrence"
+                )
+
+            wrong_occurrence_event = json.loads(json.dumps(completion_event))
+            wrong_occurrence_event["id"] = stable_uuid(
+                f"{self.suffix}:evidence:wrong-occurrence"
+            )
+            wrong_occurrence_event["data"]["obligation_instance_id"] = stable_uuid(
+                f"{self.suffix}:prior-obligation-occurrence"
+            )
+            wrong_occurrence_event["data"]["evidence"]["artifact_id"] = (
+                f"prior-occurrence-review:{self.suffix}"
+            )
+            wrong_occurrence_event["data"]["evidence"]["artifact_sha256"] = "c" * 64
+            wrong_occurrence_path.write_text(
+                json.dumps(wrong_occurrence_event), encoding="utf-8"
+            )
+            wrong_occurrence_publish = run(
+                [
+                    sys.executable,
+                    str(momo_script),
+                    "publish",
+                    "--envelope",
+                    str(wrong_occurrence_path),
+                ],
+                env=publish_env,
+            )
+            wrong_occurrence_state = wait_for(
+                "wrong-occurrence evidence rejection",
+                lambda: (
+                    current
+                    if (current := self.state())["state_version"]
+                    > preactivation_state["state_version"]
+                    and current["status"] == "waiting"
+                    and next(
+                        item
+                        for item in current["obligations"]
+                        if item["id"] == "independent-review"
+                    )["status"]
+                    == "pending"
+                    else None
+                ),
+                timeout=90,
+            )
+            wrong_occurrence_obligation = next(
+                item
+                for item in wrong_occurrence_state["obligations"]
+                if item["id"] == "independent-review"
+            )
+            if (
+                wrong_occurrence_obligation["obligation_instance_id"]
+                != pending_obligation["obligation_instance_id"]
+                or wrong_occurrence_obligation["status"] != "pending"
+            ):
+                raise LiveProofError(
+                    "prior-occurrence evidence satisfied the active occurrence"
+                )
+
             completion_path.write_text(json.dumps(completion_event), encoding="utf-8")
             completion_publish = run(
                 [
@@ -1352,7 +2113,7 @@ class Harness:
                 env=publish_env,
             )
             momo_state = self.wait_state_version(
-                snapshot["state_version"] + 1, "active"
+                wrong_occurrence_state["state_version"] + 1, "active"
             )
             momo_projection = self.wait_projection(
                 minimum_version=momo_state["state_version"],
@@ -1385,7 +2146,27 @@ class Harness:
             "invocation_subject": invocation["invocation_command"]["subject"],
             "invocation_event_id": invocation["invocation_command"]["id"],
             "target_actor_id": invocation["selection"]["target_actor_id"],
+            "obligation_instance_id": pending_obligation["obligation_instance_id"],
+            "activated_at": pending_obligation["activated_at"],
+            "authority_snapshot_event_id": projection_source["event_id"],
+            "correlation_id": projection_source["correlation_id"],
             "blocked_frontier": blocked_frontier,
+            "preactivation_evidence": {
+                "event_id": preactivation_event["id"],
+                "completed_at": preactivation_time,
+                "publish": preactivation_publish.stdout.strip(),
+                "state_version": preactivation_state["state_version"],
+                "status": preactivation_obligation["status"],
+            },
+            "wrong_occurrence_evidence": {
+                "event_id": wrong_occurrence_event["id"],
+                "submitted_obligation_instance_id": wrong_occurrence_event["data"][
+                    "obligation_instance_id"
+                ],
+                "publish": wrong_occurrence_publish.stdout.strip(),
+                "state_version": wrong_occurrence_state["state_version"],
+                "status": wrong_occurrence_obligation["status"],
+            },
             "completion_subject": completion_event["subject"],
             "completion_event_id": completion_event["id"],
             "completion_publish": completion_publish.stdout.strip(),
@@ -1464,6 +2245,9 @@ class Harness:
             or queued.get("broker_processed") is not True
             or queued.get("durable_jetstream_acknowledged") is not False
             or queued.get("authority_accepted") is not False
+            or queued.get("correlation_id")
+            != api_projection["source"]["correlation_id"]
+            or queued.get("causation_id") != api_projection["source"]["event_id"]
         ):
             raise LiveProofError(f"Holocene action was not non-authoritative: {queued}")
         holocene_result = self.wait_command(queued["command_event_id"], "applied")
@@ -1475,6 +2259,166 @@ class Harness:
             status="waiting",
             command_id=queued["command_id"],
         )
+        repeated_obligation = next(
+            item
+            for item in rendered["obligations"]
+            if item["id"] == "independent-review"
+        )
+        repeated_frontier = next(
+            item
+            for item in rendered["legal_frontier"]
+            if item["id"] == "transition:waiting:active"
+        )
+        if (
+            repeated_obligation["status"] != "pending"
+            or repeated_obligation["obligation_instance_id"]
+            == pending_obligation["obligation_instance_id"]
+            or repeated_frontier["allowed"] is not False
+            or repeated_frontier["reason_code"] != "PENDING_OBLIGATIONS"
+            or rendered["source"]["correlation_id"] != queued["correlation_id"]
+            or rendered["source"]["causation_id"] != queued["command_event_id"]
+        ):
+            raise LiveProofError(
+                "repeated WAITING occurrence reused prior evidence or lost causality"
+            )
+
+        wait_for(
+            "drained repeated-occurrence outbox",
+            lambda: self.counts()["outbox_pending"] == 0,
+        )
+        quiesce_authority = self.state()
+        quiesce_projection = self.wait_projection(
+            minimum_version=quiesce_authority["state_version"],
+            status="waiting",
+            command_id=queued["command_id"],
+        )
+        manual_frontier = next(
+            (
+                item
+                for item in quiesce_authority["legal_frontier"]
+                if item["id"] == "mode:manual" and item["allowed"]
+            ),
+            None,
+        )
+        if (
+            quiesce_projection["state_version"] != quiesce_authority["state_version"]
+            or manual_frontier is None
+            or manual_frontier["expected_state_version"]
+            != quiesce_authority["state_version"]
+        ):
+            raise LiveProofError(
+                "authority/projection did not expose a synchronized manual-mode frontier"
+            )
+        quiesce_command = self.command(
+            "manual-before-repeated-restart",
+            expected_state_version=manual_frontier["expected_state_version"],
+            target="manual",
+            correlation_id=quiesce_projection["source"]["correlation_id"],
+            causation_id=quiesce_projection["source"]["event_id"],
+            intent_name="set_mode",
+        )
+        self.publish(quiesce_command)
+        quiesce_result = self.wait_command(quiesce_command["id"], "applied")
+        if (
+            quiesce_result["mutated"] is not True
+            or quiesce_result["command_event_id"] != quiesce_command["id"]
+            or quiesce_result["command_id"] != quiesce_command["command_id"]
+            or quiesce_result["reply_subject"]
+            != "bloodbank.rpy.v1.lifecycle.intent.submit"
+            or quiesce_result["reply_correlation_id"]
+            != quiesce_command["correlationid"]
+            or quiesce_result["reply_causation_id"] != quiesce_command["id"]
+        ):
+            raise LiveProofError(
+                "Bloodbank restart-quiesce transaction lost authority identity"
+            )
+        quiesced_state = self.wait_state_version(
+            quiesce_authority["state_version"] + 1, "waiting"
+        )
+        quiesced_obligation = next(
+            item
+            for item in quiesced_state["obligations"]
+            if item["id"] == "independent-review"
+        )
+        if (
+            quiesced_state["mode"] != "manual"
+            or quiesced_obligation["status"] != "pending"
+            or quiesced_obligation["obligation_instance_id"]
+            != repeated_obligation["obligation_instance_id"]
+            or quiesced_obligation["activated_at"]
+            != repeated_obligation["activated_at"]
+        ):
+            raise LiveProofError(
+                "restart quiesce changed the repeated obligation occurrence"
+            )
+        wait_for(
+            "drained restart-quiesce outbox",
+            lambda: self.counts()["outbox_pending"] == 0,
+        )
+        self.compose("restart", "lifecycle")
+        self.wait_health("/readyz", 200)
+        repeated_state_before_restart = self.wait_state_version(
+            quiesced_state["state_version"] + 1, "waiting"
+        )
+        wait_for(
+            "settled repeated-occurrence reconcile queue/outbox",
+            lambda: (
+                True
+                if self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+        )
+        settled_repeated_obligation = next(
+            item
+            for item in repeated_state_before_restart["obligations"]
+            if item["id"] == "independent-review"
+        )
+        if (
+            repeated_state_before_restart["mode"] != "manual"
+            or settled_repeated_obligation["status"] != "pending"
+            or settled_repeated_obligation["obligation_instance_id"]
+            != repeated_obligation["obligation_instance_id"]
+            or settled_repeated_obligation["activated_at"]
+            != repeated_obligation["activated_at"]
+        ):
+            raise LiveProofError(
+                "post-quiesce reconcile changed the repeated obligation occurrence"
+            )
+        repeated_counts_before_restart = self.counts()
+        self.compose("restart", "lifecycle")
+        self.wait_health("/readyz", 200)
+        wait_for(
+            "empty repeated-occurrence restart queue/outbox",
+            lambda: (
+                True
+                if self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+        )
+        time.sleep(1)
+        repeated_state_after_restart = self.state()
+        repeated_counts_after_restart = self.counts()
+        repeated_after_restart = next(
+            item
+            for item in repeated_state_after_restart["obligations"]
+            if item["id"] == "independent-review"
+        )
+        if (
+            repeated_state_after_restart != repeated_state_before_restart
+            or repeated_counts_after_restart != repeated_counts_before_restart
+            or repeated_after_restart["obligation_instance_id"]
+            != repeated_obligation["obligation_instance_id"]
+            or repeated_after_restart["status"] != "pending"
+        ):
+            raise LiveProofError(
+                "restart changed or duplicated the repeated obligation occurrence: "
+                f"state_before={repeated_state_before_restart!r} "
+                f"state_after={repeated_state_after_restart!r} "
+                f"counts_before={repeated_counts_before_restart!r} "
+                f"counts_after={repeated_counts_after_restart!r}"
+            )
         self.summary["seams"]["holocene"] = {
             "read_state_version": api_projection["state_version"],
             "publish_receipt": queued,
@@ -1483,6 +2427,35 @@ class Harness:
             "rendered_state_version": rendered["state_version"],
             "rendered_status": rendered["status"],
             "verdict_count": len(rendered["command_verdicts"]),
+            "correlation_id": queued["correlation_id"],
+            "causation_id": queued["causation_id"],
+            "repeated_occurrence": {
+                "prior_obligation_instance_id": pending_obligation[
+                    "obligation_instance_id"
+                ],
+                "active_obligation_instance_id": repeated_obligation[
+                    "obligation_instance_id"
+                ],
+                "activated_at": repeated_obligation["activated_at"],
+                "frontier": repeated_frontier,
+                "state_version": repeated_state_after_restart["state_version"],
+                "restart_quiesce": {
+                    "command_event_id": quiesce_command["id"],
+                    "command_id": quiesce_command["command_id"],
+                    "command_subject": quiesce_command["subject"],
+                    "correlation_id": quiesce_command["correlationid"],
+                    "causation_id": quiesce_command["causationid"],
+                    "reply_event_id": quiesce_result["reply_event_id"],
+                    "reply_subject": quiesce_result["reply_subject"],
+                    "reply_correlation_id": quiesce_result["reply_correlation_id"],
+                    "reply_causation_id": quiesce_result["reply_causation_id"],
+                    "result": quiesce_result,
+                    "settled_state_version": repeated_state_before_restart[
+                        "state_version"
+                    ],
+                },
+                "restart_counts": repeated_counts_after_restart,
+            },
         }
 
         if self.screenshots_dir is not None:
