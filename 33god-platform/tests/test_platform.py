@@ -80,6 +80,60 @@ class PlatformRegistryContractTests(unittest.TestCase):
 
 
 class PlatformPathResolutionTests(unittest.TestCase):
+    def test_nested_worktree_prefers_selected_component_and_external_sibling(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            code_root = Path(temporary) / "code"
+            primary_checkout = code_root / "33GOD"
+            primary_platform = primary_checkout / "33god-platform"
+            primary_component = primary_checkout / "lifecycle"
+            external_component = code_root / "skillex"
+            nested_checkout = (
+                primary_checkout
+                / "worktrees/team-prometheus/worktrees/worktree-prof-fiddlesticks"
+            )
+            nested_platform = nested_checkout / "33god-platform"
+            nested_component = nested_checkout / "lifecycle"
+            linked_git_dir = primary_checkout / ".git/worktrees/prof-fiddlesticks"
+
+            for path in (
+                primary_platform,
+                primary_component,
+                external_component,
+                nested_platform,
+                nested_component,
+                linked_git_dir,
+            ):
+                path.mkdir(parents=True)
+            (nested_checkout / ".git").write_text(
+                f"gitdir: {linked_git_dir}\n", encoding="utf-8"
+            )
+            (linked_git_dir / "commondir").write_text("../..\n", encoding="utf-8")
+            (primary_component / "compose.yml").touch()
+
+            source_root = platform.discover_primary_checkout_root(nested_checkout)
+            self.assertEqual(source_root, primary_checkout)
+            with (
+                patch.object(
+                    platform,
+                    "SOURCE_PLATFORM_ROOT",
+                    source_root / "33god-platform",
+                ),
+                patch.object(platform, "SOURCE_ROOT_IS_EXPLICIT", False),
+                patch.object(platform, "ROOT", nested_platform),
+            ):
+                self.assertEqual(
+                    platform.resolve_path("../lifecycle"), nested_component
+                )
+                self.assertEqual(
+                    platform.resolve_path("../lifecycle/compose.yml"),
+                    primary_component / "compose.yml",
+                )
+                self.assertEqual(
+                    platform.resolve_path("../../skillex"), external_component
+                )
+
     def test_explicit_source_root_has_precedence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -90,14 +144,15 @@ class PlatformPathResolutionTests(unittest.TestCase):
             for path in (
                 source_platform,
                 checkout_platform,
-                source_repo,
                 checkout_repo,
             ):
                 path.mkdir(parents=True)
             with (
                 patch.object(platform, "SOURCE_PLATFORM_ROOT", source_platform),
+                patch.object(platform, "SOURCE_ROOT_IS_EXPLICIT", True),
                 patch.object(platform, "ROOT", checkout_platform),
             ):
+                self.assertFalse(source_repo.exists())
                 self.assertEqual(platform.resolve_path("../lifecycle"), source_repo)
 
     def test_worker_checkout_fallback_handles_new_selected_component(self) -> None:
@@ -110,6 +165,7 @@ class PlatformPathResolutionTests(unittest.TestCase):
                 path.mkdir(parents=True)
             with (
                 patch.object(platform, "SOURCE_PLATFORM_ROOT", source_platform),
+                patch.object(platform, "SOURCE_ROOT_IS_EXPLICIT", False),
                 patch.object(platform, "ROOT", checkout_platform),
             ):
                 self.assertEqual(platform.resolve_path("../lifecycle"), checkout_repo)
