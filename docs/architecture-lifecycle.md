@@ -135,8 +135,14 @@ rejection, exact active-occurrence completion unlock through the real Momo
 durable actor, report-byte hash verification, completion-PubAck-before-command-
 ACK ordering, exact stored completion message ID, non-duplicate clean PubAck,
 repeated occurrence isolation, versioned capabilities, real
-causal lineage, and Momo/Holocene client fidelity. Cleanup addresses only the
-unique resources allocated by the run.
+causal lineage, and Momo/Holocene client fidelity. Holocene's successful seam is
+driven through its rendered browser control: the proof validates the matching
+confirmation and actual browser POST/202 body, observes the explicitly
+non-authoritative broker receipt, and waits for the authority-owned
+state/version plus Candystore causality/verdict to render before capturing
+desktop and mobile images. The harness independently checks that receipt and
+does not submit the successful action. Cleanup addresses only the unique
+resources allocated by the run.
 
 ## Current versus future
 

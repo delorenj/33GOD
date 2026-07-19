@@ -59,3 +59,17 @@ with `durable_jetstream_acknowledged: false` and `authority_accepted: false`;
 it is not described as queueing or durable acceptance. Holocene does not
 optimistically update local state, and renders only the later authoritative
 projection/verdict as truth.
+
+## Lifecycle Browser Proof Contract
+
+`scripts/prove-lifecycle-browser.mjs` opens `/lifecycle/<id>` in Chromium and
+derives its request exclusively from the rendered current projection. Its JSON
+receipt records the exact DOM frontier/actor/grant/version, confirmation text
+and acceptance, actual clicked control, browser-originated request body, raw and
+parsed HTTP 202 body, non-authoritative command identities, initial/final
+rendered state and source causality, matching command verdict, and desktop/
+mobile screenshot paths plus hashes. It neither intercepts network routes nor
+predicts a transition. The context blocks service workers and requires the 202
+response to belong to the exact captured browser request. Completion requires
+the later Lifecycle-owned outcome to appear through the Candystore-backed
+projection.

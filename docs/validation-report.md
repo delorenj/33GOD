@@ -41,6 +41,11 @@ It is not evidence that a standalone Lifecycle repository/service, history
 migration, configured outbox, schema-complete command/event surface, Momo client,
 Holocene client, or single-writer cutover exists.
 
+That sentence is a historical evidence boundary, not a current-state claim.
+The current standalone Lifecycle and Holocene real-browser action seam are
+implemented and governed by [Lifecycle Architecture](./architecture-lifecycle.md)
+and the current isolated live gate.
+
 ## Exact drift result
 
 Command:

@@ -601,6 +601,129 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         self.assertLess(puback, ack)
         self.assertLess(ack, ack_recorded)
 
+    def test_live_matrix_requires_real_holocene_browser_action(self) -> None:
+        harness = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
+            encoding="utf-8"
+        )
+        start = harness.index(
+            'print("[live] exercising Holocene read/action and browser surfaces", flush=True)'
+        )
+        end = harness.index("    def execute(self)", start)
+        holocene = harness[start:end]
+
+        for forbidden in (
+            'method="POST"',
+            "/actions\"",
+            '"playwright",\n                "screenshot"',
+            '"wait-for-selector"',
+            '"viewport-size"',
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, holocene)
+
+        for required in (
+            'browser_proof_script = holocene / "scripts" / "prove-lifecycle-browser.mjs"',
+            'self.web_process = subprocess.Popen(',
+            'wait_for("Holocene web page", page_ready)',
+            '"node",\n                str(browser_proof_script)',
+            'browser_receipt_path = self.proof_dir / "holocene-browser-receipt.json"',
+            'request_receipt.get("browser_originated") is not True',
+            'dialog.get("accepted") is not True',
+            'click.get("clicked") is not True',
+            'response_receipt.get("status") != 202',
+            'json.loads(response_receipt.get("raw_body", "null"))',
+            'browser_response.get("authority_accepted") is not False',
+            'ui_success.get("visible") is not True',
+            'browser_command_result = self.wait_command(',
+            'browser_authority_state = self.wait_state_version(',
+            'browser_candystore_projection = self.wait_projection(',
+            'final_rendered.get("status") != "canceled"',
+            'rendered_verdict.get("verdict") != "applied"',
+            'image_bytes.startswith(b"\\x89PNG\\r\\n\\x1a\\n")',
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, holocene)
+
+        web_started = holocene.index("self.web_process = subprocess.Popen(")
+        browser_invoked = holocene.index('"node",\n                str(browser_proof_script)')
+        receipt_parsed = holocene.index("browser_receipt = json.loads(", browser_invoked)
+        authority_observed = holocene.index(
+            "browser_command_result = self.wait_command(", receipt_parsed
+        )
+        self.assertLess(web_started, browser_invoked)
+        self.assertLess(browser_invoked, receipt_parsed)
+        self.assertLess(receipt_parsed, authority_observed)
+
+    def test_holocene_browser_script_rejects_passive_or_synthetic_proof(self) -> None:
+        source = (
+            PLATFORM_ROOT.parent
+            / "holocene"
+            / "scripts"
+            / "prove-lifecycle-browser.mjs"
+        ).read_text(encoding="utf-8")
+
+        for forbidden in (
+            "page.route(",
+            "context.route(",
+            "route.fulfill(",
+            "route.continue(",
+            "page.routeFromHAR(",
+            "context.routeFromHAR(",
+            "page.addInitScript(",
+            "context.addInitScript(",
+            "window.fetch =",
+            "globalThis.fetch =",
+            "page.setContent(",
+            "playwright screenshot",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, source)
+
+        for required in (
+            "chromium.launch({ headless: true })",
+            'serviceWorkers: "block"',
+            "await page.goto(pageUrl",
+            'page.once("dialog"',
+            'assert.equal(observed.type, "confirm"',
+            "assert.equal(observed.message, expectedDialogMessage",
+            "await dialog.accept()",
+            "page.waitForRequest(",
+            "page.waitForResponse(",
+            "await actionButton.click(",
+            "request.postData()",
+            'assert.equal(requestReceipt.resource_type, "fetch")',
+            "const responseRawBody = await response.text()",
+            'assert.equal(response.request(), request, "HTTP 202 did not belong to the captured browser POST")',
+            'assert.equal(response.fromServiceWorker(), false',
+            'assert.equal(response.status(), 202',
+            "assert.equal(responseBody.broker_processed, true)",
+            "assert.equal(responseBody.authority_accepted, false)",
+            "lifecycle-command-success",
+            "lifecycle-command-verdict",
+            'verdict.getAttribute("data-verdict") === "applied"',
+            'root.getAttribute("data-source-causation-id") === commandEventId',
+            "assert.notEqual(finalState.status, initialState.status",
+            "await page.screenshot({ path: desktopPath, fullPage: true })",
+            "await page.screenshot({ path: mobilePath, fullPage: true })",
+            'contract_version: "holocene-lifecycle-browser-proof/v1"',
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, source)
+
+        dialog = source.index('page.once("dialog"')
+        click = source.index("await actionButton.click(", dialog)
+        response_body = source.index(
+            "const responseRawBody = await response.text()", click
+        )
+        rendered_outcome = source.index("const finalState = await renderedState", response_body)
+        desktop = source.index("await page.screenshot({ path: desktopPath", rendered_outcome)
+        mobile = source.index("await page.screenshot({ path: mobilePath", desktop)
+        self.assertLess(dialog, click)
+        self.assertLess(click, response_body)
+        self.assertLess(response_body, rendered_outcome)
+        self.assertLess(rendered_outcome, desktop)
+        self.assertLess(desktop, mobile)
+
     def test_stored_nats_headers_require_unambiguous_canonical_message_id(
         self,
     ) -> None:

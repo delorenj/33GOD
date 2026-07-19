@@ -120,6 +120,16 @@ versions, conflicting-duplicate
 integrity, and the Candystore/Momo/Holocene seams; and removes only the resources
 it created. It does not prune Docker or touch another Compose project.
 
+The Holocene phase starts the API and web before the successful action, opens
+the Lifecycle page in Chromium, reads the exact enabled frontier/actor/grant/
+expected version from semantic DOM state, accepts the matching confirmation,
+and clicks the rendered control. The browser proof records its actual POST and
+HTTP 202 bodies, verifies that the broker receipt is explicitly
+non-authoritative, then waits for Lifecycle's state/version and Candystore's
+source causality/verdict to render before writing desktop and mobile images.
+The Python harness does not submit that successful action; it independently
+checks the machine-readable browser receipt against Lifecycle and Candystore.
+
 The NATS-outage phase has one authority writer: the already deployed Compose
 Lifecycle service. The harness holds its target PostgreSQL row, publishes the
 real command to `BLOODBANK_COMMANDS`, requires the

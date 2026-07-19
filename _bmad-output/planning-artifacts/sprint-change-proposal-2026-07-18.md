@@ -98,7 +98,7 @@ direct Lifecycle, Candystore, provider, or local-truth write path.
 ### Holocene client surface
 
 Holocene revision
-`544ca73f4cc75ef98956873b11085216af12a297`:
+`80d9cc8be81eebe4476304a4b186da445731a5ab`:
 
 - reads Candystore's Lifecycle projection;
 - renders identity, versions, provenance/freshness, status/health/phase/
@@ -106,7 +106,12 @@ Holocene revision
 - renders missing/stale inputs unknown/degraded; and
 - publishes schema-exact high-level Lifecycle commands through Bloodbank
   without optimistic local mutation; invalid/missing frontier actions and
-  incomplete gate resolutions fail before publication.
+  incomplete gate resolutions fail before publication; and
+- owns a reusable Chromium proof that reads the exact frontier, actor, grant,
+  and expected version from the DOM, accepts the identity-bearing confirmation,
+  clicks the enabled action, records the actual browser POST/202 bodies, then
+  waits for the rendered authoritative state/version/causality/verdict and
+  desktop/mobile screenshots.
 
 The surface follows existing API/web conventions and has focused API, client,
 command-envelope, and responsive UI tests.
@@ -150,7 +155,7 @@ Component feature refs are published before the root gitlink update:
 | Lifecycle | `fix/trusted-command-publication-time-20260719` | `cda59658bef6d586c8aa01cacd88bc4e3ee867e0` |
 | Candystore | `feature/moirai-lifecycle-projection-20260718` | `b1f6fda3739d095535b326cc89b9a6c7823f63d8` |
 | Momo | `fix/real-obligation-worker-20260719` | `4c59f10460798f1ba8853b4f0b59b56ce31bacbd` |
-| Holocene | `feature/moirai-lifecycle-surface-20260718` | `544ca73f4cc75ef98956873b11085216af12a297` |
+| Holocene | `fix/real-browser-lifecycle-action-20260719` | `80d9cc8be81eebe4476304a4b186da445731a5ab` |
 
 Each ref was fetched and checked out from anonymous credential-disabled HTTPS,
 matched its exact revision, and contained its approved component base.

@@ -3248,10 +3248,20 @@ asyncio.run(main())
         holocene = SOURCE_ROOT / "holocene"
         api_entry = holocene / "apps" / "api" / "dist" / "server.js"
         web_entry = holocene / "apps" / "web" / ".next" / "BUILD_ID"
-        if not api_entry.is_file() or not web_entry.is_file():
+        browser_proof_script = holocene / "scripts" / "prove-lifecycle-browser.mjs"
+        if (
+            not api_entry.is_file()
+            or not web_entry.is_file()
+            or not browser_proof_script.is_file()
+        ):
             raise LiveProofError(
                 "run pnpm build in holocene before the live client gate"
             )
+        if self.proof_dir is None or self.screenshots_dir is None:
+            raise LiveProofError(
+                "Holocene browser proof requires --proof-dir and --screenshots-dir"
+            )
+        self.screenshots_dir.mkdir(parents=True, exist_ok=True)
         api_env = os.environ.copy()
         api_env.update(
             {
@@ -3274,6 +3284,33 @@ asyncio.run(main())
             return body if status == 200 and body.get("ok") is True else None
 
         wait_for("Holocene API health", api_health)
+        web_env = os.environ.copy()
+        web_env.update(
+            {
+                "HOLOCENE_WEB_PORT": str(self.ports["web"]),
+                "HOLOCENE_API_INTERNAL_URL": f"http://127.0.0.1:{self.ports['api']}",
+                "NEXT_TELEMETRY_DISABLED": "1",
+            }
+        )
+        self.web_process = subprocess.Popen(
+            ["pnpm", "--filter", "@holocene/web", "start"],
+            cwd=holocene,
+            env=web_env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        page_url = (
+            f"http://127.0.0.1:{self.ports['web']}/lifecycle/{self.lifecycle_id}"
+        )
+
+        def page_ready():
+            try:
+                with urlopen(page_url, timeout=3) as response:
+                    return response.status == 200
+            except OSError:
+                return False
+
+        wait_for("Holocene web page", page_ready)
         api_status, api_projection = http_json(
             f"http://127.0.0.1:{self.ports['api']}/api/modules/lifecycle/{self.lifecycle_id}"
         )
@@ -3282,7 +3319,7 @@ asyncio.run(main())
             or api_projection["state_version"] != momo_state["state_version"]
         ):
             raise LiveProofError("Holocene did not render Candystore faithfully")
-        holocene_frontier = next(
+        repeated_setup_frontier = next(
             item
             for item in api_projection["legal_frontier"]
             if item["id"] == "transition:active:waiting" and item["allowed"]
@@ -3292,39 +3329,40 @@ asyncio.run(main())
             for item in api_projection["capabilities"]
             if item["actor_id"] == ACTOR_ID
         )
-        action_body = {
-            "frontier_id": holocene_frontier["id"],
-            "expected_state_version": api_projection["state_version"],
-            "actor": {"type": "operator", "agent_id": ACTOR_ID},
-            "capability_id": grant["capability_id"],
-            "parameters": {},
-        }
-        action_status, queued = http_json(
-            (
-                f"http://127.0.0.1:{self.ports['api']}/api/modules/lifecycle/"
-                f"{self.lifecycle_id}/actions"
-            ),
-            method="POST",
-            body=action_body,
+        repeated_setup_command = self.command(
+            "repeated-waiting-before-browser",
+            expected_state_version=repeated_setup_frontier[
+                "expected_state_version"
+            ],
+            target="waiting",
+            correlation_id=api_projection["source"]["correlation_id"],
+            causation_id=api_projection["source"]["event_id"],
+        )
+        self.publish(repeated_setup_command)
+        repeated_setup_result = self.wait_command(
+            repeated_setup_command["id"], "applied"
         )
         if (
-            action_status != 202
-            or queued.get("broker_processed") is not True
-            or queued.get("durable_jetstream_acknowledged") is not False
-            or queued.get("authority_accepted") is not False
-            or queued.get("correlation_id")
-            != api_projection["source"]["correlation_id"]
-            or queued.get("causation_id") != api_projection["source"]["event_id"]
+            repeated_setup_result["mutated"] is not True
+            or repeated_setup_result["command_event_id"]
+            != repeated_setup_command["id"]
+            or repeated_setup_result["command_id"]
+            != repeated_setup_command["command_id"]
+            or repeated_setup_result["reply_correlation_id"]
+            != repeated_setup_command["correlationid"]
+            or repeated_setup_result["reply_causation_id"]
+            != repeated_setup_command["id"]
         ):
-            raise LiveProofError(f"Holocene action was not non-authoritative: {queued}")
-        holocene_result = self.wait_command(queued["command_event_id"], "applied")
+            raise LiveProofError(
+                "repeated-occurrence Bloodbank setup lost authority identity"
+            )
         holocene_state = self.wait_state_version(
             api_projection["state_version"] + 1, "waiting"
         )
         rendered = self.wait_projection(
             minimum_version=holocene_state["state_version"],
             status="waiting",
-            command_id=queued["command_id"],
+            command_id=repeated_setup_command["command_id"],
         )
         repeated_obligation = next(
             item
@@ -3342,8 +3380,10 @@ asyncio.run(main())
             == pending_obligation["obligation_instance_id"]
             or repeated_frontier["allowed"] is not False
             or repeated_frontier["reason_code"] != "PENDING_OBLIGATIONS"
-            or rendered["source"]["correlation_id"] != queued["correlation_id"]
-            or rendered["source"]["causation_id"] != queued["command_event_id"]
+            or rendered["source"]["correlation_id"]
+            != repeated_setup_command["correlationid"]
+            or rendered["source"]["causation_id"]
+            != repeated_setup_command["id"]
         ):
             raise LiveProofError(
                 "repeated WAITING occurrence reused prior evidence or lost causality"
@@ -3357,7 +3397,7 @@ asyncio.run(main())
         quiesce_projection = self.wait_projection(
             minimum_version=quiesce_authority["state_version"],
             status="waiting",
-            command_id=queued["command_id"],
+            command_id=repeated_setup_command["command_id"],
         )
         manual_frontier = next(
             (
@@ -3486,17 +3526,367 @@ asyncio.run(main())
                 f"counts_before={repeated_counts_before_restart!r} "
                 f"counts_after={repeated_counts_after_restart!r}"
             )
+        browser_projection_before = self.wait_projection(
+            minimum_version=repeated_state_after_restart["state_version"],
+            status="waiting",
+            command_id=repeated_setup_command["command_id"],
+        )
+        browser_api_status, browser_api_projection = http_json(
+            f"http://127.0.0.1:{self.ports['api']}/api/modules/lifecycle/{self.lifecycle_id}"
+        )
+        if (
+            browser_api_status != 200
+            or browser_api_projection["state_version"]
+            != repeated_state_after_restart["state_version"]
+            or browser_api_projection["source"]
+            != browser_projection_before["source"]
+        ):
+            raise LiveProofError(
+                "Holocene browser did not begin from the current Candystore projection"
+            )
+        browser_frontier = next(
+            (
+                item
+                for item in browser_api_projection["legal_frontier"]
+                if item["id"] == "transition:waiting:canceled"
+                and item["allowed"]
+                and item["reason_code"] == "LEGAL_REQUIRES_CONFIRMATION"
+            ),
+            None,
+        )
+        browser_grant = next(
+            (
+                item
+                for item in browser_api_projection["capabilities"]
+                if item["actor_id"] == ACTOR_ID
+                and item["capability_id"] == CAPABILITY_ID
+            ),
+            None,
+        )
+        if (
+            browser_frontier is None
+            or browser_frontier["expected_state_version"]
+            != browser_api_projection["state_version"]
+            or browser_grant is None
+            or browser_grant["state_version"]
+            != browser_api_projection["state_version"]
+            or browser_grant["capability_version"] != self.capability_version()
+        ):
+            raise LiveProofError(
+                "Holocene browser precondition omitted the exact frontier or capability grant"
+            )
+
+        browser_receipt_path = self.proof_dir / "holocene-browser-receipt.json"
+        run(
+            [
+                "node",
+                str(browser_proof_script),
+                "--base-url",
+                f"http://127.0.0.1:{self.ports['web']}",
+                "--lifecycle-id",
+                self.lifecycle_id,
+                "--frontier-id",
+                browser_frontier["id"],
+                "--output",
+                str(browser_receipt_path),
+                "--screenshots-dir",
+                str(self.screenshots_dir),
+                "--timeout-ms",
+                "120000",
+            ],
+            cwd=holocene,
+            timeout=180,
+        )
+        if not browser_receipt_path.is_file():
+            raise LiveProofError("Holocene browser proof omitted its JSON receipt")
+        browser_receipt = json.loads(
+            browser_receipt_path.read_text(encoding="utf-8")
+        )
+        initial_rendered = browser_receipt.get("initial_rendered_state", {})
+        final_rendered = browser_receipt.get("final_rendered_state", {})
+        dialog = browser_receipt.get("dialog", {})
+        click = browser_receipt.get("click", {})
+        request_receipt = browser_receipt.get("request", {})
+        response_receipt = browser_receipt.get("response", {})
+        browser_response = response_receipt.get("body", {})
+        ui_success = browser_receipt.get("ui_success", {})
+        expected_request_body = {
+            "frontier_id": browser_frontier["id"],
+            "expected_state_version": browser_api_projection["state_version"],
+            "actor": {"type": "operator", "agent_id": ACTOR_ID},
+            "capability_id": browser_grant["capability_id"],
+            "parameters": {"confirmed": True},
+        }
+        selected_grant = initial_rendered.get("capability_grant", {})
+        expected_dialog = (
+            "Submit confirmed Lifecycle action "
+            f"{browser_frontier['action']} for frontier {browser_frontier['id']}?"
+        )
+        if (
+            browser_receipt.get("contract_version")
+            != "holocene-lifecycle-browser-proof/v1"
+            or browser_receipt.get("lifecycle_id") != self.lifecycle_id
+            or browser_receipt.get("page_url") != page_url
+            or initial_rendered.get("lifecycle_id") != self.lifecycle_id
+            or initial_rendered.get("projection_status") != "current"
+            or initial_rendered.get("status") != "waiting"
+            or initial_rendered.get("state_version")
+            != browser_api_projection["state_version"]
+            or initial_rendered.get("source", {}).get("event_id")
+            != browser_api_projection["source"]["event_id"]
+            or initial_rendered.get("source", {}).get("correlation_id")
+            != browser_api_projection["source"]["correlation_id"]
+            or (initial_rendered.get("source", {}).get("causation_id") or None)
+            != (browser_api_projection["source"].get("causation_id") or None)
+            or initial_rendered.get("actor_id") != ACTOR_ID
+            or initial_rendered.get("frontier") != browser_frontier
+            or selected_grant.get("actor_id") != ACTOR_ID
+            or selected_grant.get("capability_id") != CAPABILITY_ID
+            or selected_grant.get("capability_version")
+            != browser_grant["capability_version"]
+            or selected_grant.get("state_version")
+            != browser_api_projection["state_version"]
+        ):
+            raise LiveProofError(
+                f"browser receipt initial render identity mismatch: {initial_rendered!r}"
+            )
+        if (
+            dialog.get("seen") is not True
+            or dialog.get("type") != "confirm"
+            or dialog.get("message") != expected_dialog
+            or dialog.get("expected_message") != expected_dialog
+            or dialog.get("frontier_id") != browser_frontier["id"]
+            or dialog.get("action") != browser_frontier["action"]
+            or dialog.get("accepted") is not True
+            or click.get("clicked") is not True
+            or click.get("enabled_before_click") is not True
+            or click.get("frontier_id") != browser_frontier["id"]
+            or click.get("action") != browser_frontier["action"]
+        ):
+            raise LiveProofError(
+                f"browser receipt did not prove confirmation and click: {dialog!r} {click!r}"
+            )
+        if (
+            request_receipt.get("browser_originated") is not True
+            or request_receipt.get("method") != "POST"
+            or request_receipt.get("resource_type") != "fetch"
+            or request_receipt.get("url")
+            != f"http://127.0.0.1:{self.ports['web']}/api/lifecycle/{self.lifecycle_id}"
+            or request_receipt.get("content_type") != "application/json"
+            or request_receipt.get("body") != expected_request_body
+            or json.loads(request_receipt.get("raw_body", "null"))
+            != expected_request_body
+        ):
+            raise LiveProofError(
+                f"browser receipt request mismatch: {request_receipt!r}"
+            )
+        if (
+            response_receipt.get("status") != 202
+            or response_receipt.get("ok") is not True
+            or response_receipt.get("from_service_worker") is not False
+            or response_receipt.get("url")
+            != f"http://127.0.0.1:{self.ports['web']}/api/lifecycle/{self.lifecycle_id}"
+            or json.loads(response_receipt.get("raw_body", "null"))
+            != browser_response
+            or browser_response.get("broker_processed") is not True
+            or browser_response.get("transport") != "core_nats"
+            or browser_response.get("durable_jetstream_acknowledged") is not False
+            or browser_response.get("authority_accepted") is not False
+            or browser_response.get("lifecycle_id") != self.lifecycle_id
+            or browser_response.get("expected_state_version")
+            != browser_api_projection["state_version"]
+            or browser_response.get("correlation_id")
+            != browser_api_projection["source"]["correlation_id"]
+            or browser_response.get("causation_id")
+            != browser_api_projection["source"]["event_id"]
+        ):
+            raise LiveProofError(
+                f"Holocene browser 202 receipt was not non-authoritative: {response_receipt!r}"
+            )
+        for identity in (
+            "command_event_id",
+            "command_id",
+            "idempotency_key",
+            "correlation_id",
+            "causation_id",
+        ):
+            if not isinstance(browser_response.get(identity), str) or not browser_response[
+                identity
+            ]:
+                raise LiveProofError(f"browser response omitted {identity}")
+        if (
+            ui_success.get("visible") is not True
+            or ui_success.get("command_id") != browser_response["command_id"]
+            or ui_success.get("command_event_id")
+            != browser_response["command_event_id"]
+            or ui_success.get("correlation_id")
+            != browser_response["correlation_id"]
+            or ui_success.get("causation_id") != browser_response["causation_id"]
+            or ui_success.get("broker_processed") is not True
+            or ui_success.get("authority_accepted") is not False
+        ):
+            raise LiveProofError(
+                f"Holocene did not render the browser command receipt: {ui_success!r}"
+            )
+
+        browser_command_result = self.wait_command(
+            browser_response["command_event_id"], "applied"
+        )
+        browser_authority_state = self.wait_state_version(
+            browser_api_projection["state_version"] + 1, "canceled"
+        )
+        browser_candystore_projection = self.wait_projection(
+            minimum_version=browser_authority_state["state_version"],
+            status="canceled",
+            command_id=browser_response["command_id"],
+        )
+        candystore_verdict = next(
+            item
+            for item in browser_candystore_projection["command_verdicts"]
+            if item["command_id"] == browser_response["command_id"]
+        )
+        if (
+            browser_command_result["mutated"] is not True
+            or browser_command_result["command_event_id"]
+            != browser_response["command_event_id"]
+            or browser_command_result["command_id"]
+            != browser_response["command_id"]
+            or browser_command_result["idempotency_key"]
+            != browser_response["idempotency_key"]
+            or browser_command_result["expected_state_version"]
+            != browser_api_projection["state_version"]
+            or browser_command_result["observed_state_version"]
+            != browser_api_projection["state_version"]
+            or browser_command_result["resulting_state_version"]
+            != browser_authority_state["state_version"]
+            or browser_command_result["capability_id"] != CAPABILITY_ID
+            or browser_command_result["reply_correlation_id"]
+            != browser_response["correlation_id"]
+            or browser_command_result["reply_causation_id"]
+            != browser_response["command_event_id"]
+            or candystore_verdict["command_event_id"]
+            != browser_response["command_event_id"]
+            or candystore_verdict["reply_event_id"]
+            != browser_command_result["reply_event_id"]
+            or candystore_verdict["verdict"] != "applied"
+            or candystore_verdict["mutated"] is not True
+            or candystore_verdict["expected_state_version"]
+            != browser_api_projection["state_version"]
+            or candystore_verdict["observed_state_version"]
+            != browser_api_projection["state_version"]
+            or candystore_verdict["resulting_state_version"]
+            != browser_authority_state["state_version"]
+            or candystore_verdict["applied_event_id"]
+            != browser_command_result["applied_event_id"]
+            or candystore_verdict["capability_id"] != CAPABILITY_ID
+            or candystore_verdict["reason_code"]
+            != browser_command_result["reason_code"]
+            or candystore_verdict["correlation_id"]
+            != browser_response["correlation_id"]
+            or candystore_verdict["causation_id"]
+            != browser_response["command_event_id"]
+            or browser_candystore_projection["source"]["correlation_id"]
+            != browser_response["correlation_id"]
+            or browser_candystore_projection["source"]["causation_id"]
+            != browser_response["command_event_id"]
+        ):
+            raise LiveProofError(
+                "browser command authority/Candystore identity or causality mismatch"
+            )
+        rendered_verdict = final_rendered.get("command_verdict", {})
+        if (
+            final_rendered.get("lifecycle_id") != self.lifecycle_id
+            or final_rendered.get("projection_status") != "current"
+            or final_rendered.get("status") != "canceled"
+            or final_rendered.get("state_version")
+            != browser_authority_state["state_version"]
+            or final_rendered.get("source")
+            != {
+                "event_id": browser_candystore_projection["source"]["event_id"],
+                "correlation_id": browser_response["correlation_id"],
+                "causation_id": browser_response["command_event_id"],
+            }
+            or rendered_verdict.get("command_event_id")
+            != browser_response["command_event_id"]
+            or rendered_verdict.get("command_id") != browser_response["command_id"]
+            or rendered_verdict.get("reply_event_id")
+            != candystore_verdict["reply_event_id"]
+            or rendered_verdict.get("verdict") != "applied"
+            or rendered_verdict.get("mutated") is not True
+            or rendered_verdict.get("expected_state_version")
+            != candystore_verdict["expected_state_version"]
+            or rendered_verdict.get("observed_state_version")
+            != candystore_verdict["observed_state_version"]
+            or rendered_verdict.get("resulting_state_version")
+            != browser_authority_state["state_version"]
+            or rendered_verdict.get("applied_event_id")
+            != candystore_verdict["applied_event_id"]
+            or rendered_verdict.get("capability_id")
+            != candystore_verdict["capability_id"]
+            or rendered_verdict.get("reason_code")
+            != candystore_verdict["reason_code"]
+            or rendered_verdict.get("correlation_id")
+            != browser_response["correlation_id"]
+            or rendered_verdict.get("causation_id")
+            != browser_response["command_event_id"]
+        ):
+            raise LiveProofError(
+                f"browser did not render the authoritative outcome: {final_rendered!r}"
+            )
+
+        screenshots: list[str] = []
+        expected_viewports = {
+            "desktop": {"width": 1440, "height": 1000},
+            "mobile": {"width": 412, "height": 915},
+        }
+        for label, viewport in expected_viewports.items():
+            image_receipt = browser_receipt.get("screenshots", {}).get(label, {})
+            image_path = Path(str(image_receipt.get("path", ""))).resolve()
+            if (
+                image_path.parent != self.screenshots_dir.resolve()
+                or not image_path.is_file()
+                or image_receipt.get("viewport") != viewport
+            ):
+                raise LiveProofError(
+                    f"browser omitted the {label} screenshot: {image_receipt!r}"
+                )
+            image_bytes = image_path.read_bytes()
+            if (
+                not image_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+                or len(image_bytes) <= 1000
+                or image_receipt.get("size_bytes") != len(image_bytes)
+                or image_receipt.get("sha256")
+                != hashlib.sha256(image_bytes).hexdigest()
+            ):
+                raise LiveProofError(
+                    f"browser {label} screenshot receipt does not match the PNG"
+                )
+            screenshots.append(str(image_path))
+
         self.summary["seams"]["holocene"] = {
-            "read_state_version": api_projection["state_version"],
-            "publish_receipt": queued,
-            "authoritative_capability_version": grant["capability_version"],
-            "command_result": holocene_result,
-            "rendered_state_version": rendered["state_version"],
-            "rendered_status": rendered["status"],
-            "verdict_count": len(rendered["command_verdicts"]),
-            "correlation_id": queued["correlation_id"],
-            "causation_id": queued["causation_id"],
+            "browser_receipt_path": str(browser_receipt_path),
+            "browser_receipt": browser_receipt,
+            "read_state_version": browser_api_projection["state_version"],
+            "frontier": browser_frontier,
+            "actor_id": ACTOR_ID,
+            "capability_id": CAPABILITY_ID,
+            "authoritative_capability_version": browser_grant[
+                "capability_version"
+            ],
+            "publish_receipt": browser_response,
+            "command_result": browser_command_result,
+            "rendered_state_version": browser_candystore_projection[
+                "state_version"
+            ],
+            "rendered_status": browser_candystore_projection["status"],
+            "command_verdict": candystore_verdict,
+            "correlation_id": browser_response["correlation_id"],
+            "causation_id": browser_response["causation_id"],
+            "screenshots": screenshots,
             "repeated_occurrence": {
+                "setup_command_event_id": repeated_setup_command["id"],
+                "setup_command_id": repeated_setup_command["command_id"],
+                "setup_result": repeated_setup_result,
                 "prior_obligation_instance_id": pending_obligation[
                     "obligation_instance_id"
                 ],
@@ -3514,8 +3904,12 @@ asyncio.run(main())
                     "causation_id": quiesce_command["causationid"],
                     "reply_event_id": quiesce_result["reply_event_id"],
                     "reply_subject": quiesce_result["reply_subject"],
-                    "reply_correlation_id": quiesce_result["reply_correlation_id"],
-                    "reply_causation_id": quiesce_result["reply_causation_id"],
+                    "reply_correlation_id": quiesce_result[
+                        "reply_correlation_id"
+                    ],
+                    "reply_causation_id": quiesce_result[
+                        "reply_causation_id"
+                    ],
                     "result": quiesce_result,
                     "settled_state_version": repeated_state_before_restart[
                         "state_version"
@@ -3524,71 +3918,6 @@ asyncio.run(main())
                 "restart_counts": repeated_counts_after_restart,
             },
         }
-
-        if self.screenshots_dir is not None:
-            self.screenshots_dir.mkdir(parents=True, exist_ok=True)
-            web_env = os.environ.copy()
-            web_env.update(
-                {
-                    "HOLOCENE_WEB_PORT": str(self.ports["web"]),
-                    "HOLOCENE_API_INTERNAL_URL": f"http://127.0.0.1:{self.ports['api']}",
-                    "NEXT_TELEMETRY_DISABLED": "1",
-                }
-            )
-            self.web_process = subprocess.Popen(
-                ["pnpm", "--filter", "@holocene/web", "start"],
-                cwd=holocene,
-                env=web_env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            page_url = (
-                f"http://127.0.0.1:{self.ports['web']}/lifecycle/{self.lifecycle_id}"
-            )
-
-            def page_ready():
-                try:
-                    with urlopen(page_url, timeout=3) as response:
-                        return response.status == 200
-                except OSError:
-                    return False
-
-            wait_for("Holocene web page", page_ready)
-            desktop = self.screenshots_dir / f"{self.project}-desktop.png"
-            mobile = self.screenshots_dir / f"{self.project}-mobile.png"
-            base = [
-                "pnpm",
-                "exec",
-                "playwright",
-                "screenshot",
-                "--wait-for-selector",
-                "main.lifecycle-shell",
-                "--wait-for-timeout",
-                "2000",
-                "--full-page",
-            ]
-            run(
-                [*base, "--viewport-size", "1440,1000", page_url, str(desktop)],
-                cwd=holocene,
-                timeout=90,
-            )
-            run(
-                [
-                    *base,
-                    "--browser",
-                    "chromium",
-                    "--device",
-                    "Pixel 7",
-                    page_url,
-                    str(mobile),
-                ],
-                cwd=holocene,
-                timeout=90,
-            )
-            self.summary["seams"]["holocene"]["screenshots"] = [
-                str(desktop),
-                str(mobile),
-            ]
 
     def execute(self) -> dict[str, Any]:
         self.preflight()

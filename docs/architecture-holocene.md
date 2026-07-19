@@ -45,13 +45,24 @@ stable verdicts, and publishes high-level commands through Bloodbank. Missing
 or stale projections render unknown/degraded. It never writes provider,
 Candystore, or Lifecycle state directly.
 
+The Lifecycle page exposes stable semantic identity for the current state,
+source causality, selected actor, capability grant, legal frontier, action
+control, success/error receipt, and command verdict. Holocene's reusable
+Playwright proof drives that real page: it validates and accepts the
+identity-bearing confirmation, clicks the enabled control, records the actual
+browser POST and HTTP 202 response, and waits for the later authoritative
+state/version/causality/verdict to render. The 202 receipt is explicitly broker
+processing only, never Lifecycle acceptance.
+
 ## Deployment Architecture
 
 Next.js runs in `holocene-web`; the Fastify API is an external, untracked user service with hard-coded host paths. Browser routes may be protected by Traefik/OIDC, but the direct API listener is separate. `/hq` uses Telegram validation and has its own auth behavior.
 
 ## Testing Strategy
 
-The Lifecycle client, command builder, API routes, and UI have focused tests.
+The Lifecycle client, command builder, API routes, proof-contract helpers, and
+actionable/disabled/success/error UI states have focused tests. The reusable
+browser script is additionally constrained by root anti-synthetic gates.
 Typecheck and production build remain the broad workspace gates. Legacy
 host-control modules still have uneven test coverage.
 

@@ -5,6 +5,23 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 
 ## 2026-07-19
 
+### Real Holocene browser action proof
+
+- Published and pinned Holocene `80d9cc8…` with semantic Lifecycle DOM
+  identity, confirmation-bound controls, and a reusable Chromium proof that
+  records the actual click, browser POST body, HTTP 202 response body, and
+  explicitly non-authoritative broker receipt.
+- Replaced the live harness's successful direct API submission and passive
+  screenshots with the Holocene-owned browser proof, independent
+  authority/Candystore verification, rendered state/version/causality/verdict
+  assertions, and desktop/mobile image receipts.
+- Added focused component/contract tests and root anti-synthetic gates that
+  reject mocked routes, screenshot-only evidence, missing confirmation or
+  response capture, harness-authored success POSTs, and missing rendered
+  authority outcomes.
+- Kept Lifecycle as the sole truth and write authority; Holocene only renders
+  the Candystore projection and invokes a high-level Bloodbank command.
+
 ### Real Momo obligation execution
 
 - Published and pinned Momo `4c59f10…` with a named durable JetStream actor for
