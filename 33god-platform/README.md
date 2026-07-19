@@ -80,8 +80,15 @@ mode-0700 ephemeral directory and removes it after teardown. Narrow bootstrap
 identity, actor, capability, timestamp, and mode values have explicit
 `LIFECYCLE_BOOTSTRAP_*` inputs. Network and volume names are also
 caller-overridable, which gives every live-gate run exact independent resources.
-`GOD_SOURCE_ROOT` defaults to the parent directory and selects the checked-out
-component sources used by Candystore and Holocene.
+When set, `GOD_SOURCE_ROOT` explicitly selects the checked-out component
+sources used by Candystore and Holocene.
+
+For platform manifest commands, a non-empty `GOD_SOURCE_ROOT` is authoritative.
+When it is unset in a linked worktree, each existing target resolves from the
+active checkout first; missing targets fall back through the primary checkout's
+Git common directory. This keeps selected components local while resolving
+external siblings such as `../../skillex` and `../../HeyMa` beside the primary
+checkout.
 
 ## Validation
 

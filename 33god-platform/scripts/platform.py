@@ -19,8 +19,47 @@ except ImportError as exc:  # pragma: no cover - environment guard
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def discover_primary_checkout_root(checkout_root: Path) -> Path:
+    """Return the primary checkout that owns a linked worktree's common Git dir."""
+    checkout_root = checkout_root.expanduser().resolve()
+    git_entry = checkout_root / ".git"
+    if git_entry.is_dir():
+        return checkout_root
+    try:
+        gitdir_line = git_entry.read_text(encoding="utf-8").strip()
+    except OSError:
+        return checkout_root
+    if not gitdir_line.startswith("gitdir:"):
+        return checkout_root
+
+    linked_git_dir = Path(gitdir_line.removeprefix("gitdir:").strip())
+    if not linked_git_dir.is_absolute():
+        linked_git_dir = checkout_root / linked_git_dir
+    linked_git_dir = linked_git_dir.resolve()
+    try:
+        common_dir_value = (linked_git_dir / "commondir").read_text(
+            encoding="utf-8"
+        ).strip()
+    except OSError:
+        return checkout_root
+
+    common_git_dir = Path(common_dir_value)
+    if not common_git_dir.is_absolute():
+        common_git_dir = linked_git_dir / common_git_dir
+    common_git_dir = common_git_dir.resolve()
+    if common_git_dir.name != ".git":
+        return checkout_root
+    return common_git_dir.parent
+
+
+_EXPLICIT_SOURCE_ROOT = os.environ.get("GOD_SOURCE_ROOT")
+SOURCE_ROOT_IS_EXPLICIT = bool(_EXPLICIT_SOURCE_ROOT)
 SOURCE_ROOT = (
-    Path(os.environ.get("GOD_SOURCE_ROOT", ROOT.parent)).expanduser().resolve()
+    Path(_EXPLICIT_SOURCE_ROOT).expanduser().resolve()
+    if _EXPLICIT_SOURCE_ROOT
+    else discover_primary_checkout_root(ROOT.parent)
 )
 SOURCE_PLATFORM_ROOT = SOURCE_ROOT / "33god-platform"
 MAX_SCAN_FILE_BYTES = 1_000_000
@@ -41,14 +80,15 @@ def resolve_path(value: str | Path, base: Path = ROOT) -> Path:
         if str(path).startswith(".."):
             source_candidate = (SOURCE_PLATFORM_ROOT / path).resolve()
             checkout_candidate = (ROOT / path).resolve()
-            # A worker checkout can contain newly selected components that are
-            # absent from the canonical source root while external sibling
-            # repos resolve only from that canonical root. Prefer the explicit
-            # source root, then fall back to this read-only manifest checkout.
+            if SOURCE_ROOT_IS_EXPLICIT:
+                return source_candidate
+            # Keep selected components and files in the active worktree. A
+            # missing target can still live in the primary checkout (including
+            # external siblings such as ../../skillex and ../../HeyMa).
             return (
-                source_candidate
-                if source_candidate.exists() or not checkout_candidate.exists()
-                else checkout_candidate
+                checkout_candidate
+                if checkout_candidate.exists()
+                else source_candidate
             )
         path = base / path
     return path.resolve()
