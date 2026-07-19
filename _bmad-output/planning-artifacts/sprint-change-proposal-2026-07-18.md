@@ -44,13 +44,13 @@ Lifecycle do not drive the same reconcile loop.
 ### Runtime and contracts
 
 - Lifecycle runtime source:
-  `797fcf4e0cba45a86720f7af4b94ed73be921d38`
+  `b74b2d5297f7c3b6a0a2d24b499b89e3646ad689`
 - Lifecycle runtime image:
-  `ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67`
+  `ghcr.io/delorenj/lifecycle@sha256:9569564aa143c1118f6e3c9a67fd1e2b4eb1fdf26cba16365a508455df7b4775`
 - Bloodbank contract/transport revision:
   `48031ee39c238b9d4715b81b74076635235f96d5`
 - Lifecycle authority/integration revision:
-  `797fcf4e0cba45a86720f7af4b94ed73be921d38`
+  `b74b2d5297f7c3b6a0a2d24b499b89e3646ad689`
 
 Root Compose references the immutable image digest and contains no Lifecycle
 build key. A dedicated PostgreSQL database, secret, volume, and private network
@@ -61,7 +61,7 @@ must succeed before serve.
 ### Candystore read model
 
 Candystore revision
-`b3b4d829b1e7ff52ea4f36f8124a4b80a6435d07` provides:
+`b1f6fda3739d095535b326cc89b9a6c7823f63d8` provides:
 
 - an operationally durable lifecycle consumer;
 - replay receipts and idempotent/version-ordered projection updates, including
@@ -76,7 +76,7 @@ Candystore exposes no operational Lifecycle mutation endpoint.
 ### Momo obligation-to-skill seam
 
 Momo revision
-`4c41a998ccfd34afa47d86326c90b958b05fc1a8`:
+`9e3a67a36b3dfe09b4061029d7b52eab39f4d011`:
 
 - consumes authoritative snapshots/frontier/obligations;
 - ranks only legal frontier commands while servicing pending obligations as
@@ -94,7 +94,7 @@ direct Lifecycle, Candystore, provider, or local-truth write path.
 ### Holocene client surface
 
 Holocene revision
-`e8cecb983d4f4f210a729d9ddfd2330e9d98e729`:
+`544ca73f4cc75ef98956873b11085216af12a297`:
 
 - reads Candystore's Lifecycle projection;
 - renders identity, versions, provenance/freshness, status/health/phase/
@@ -141,10 +141,10 @@ Component feature refs are published before the root gitlink update:
 | Component | Branch | Revision |
 |---|---|---|
 | Bloodbank | `feature/moirai-lifecycle-capability-contract-20260718` | `48031ee39c238b9d4715b81b74076635235f96d5` |
-| Lifecycle | `feature/moirai-lifecycle-integration-docs-20260718` | `797fcf4e0cba45a86720f7af4b94ed73be921d38` |
-| Candystore | `feature/moirai-lifecycle-projection-20260718` | `b3b4d829b1e7ff52ea4f36f8124a4b80a6435d07` |
-| Momo | `feature/moirai-lifecycle-client-20260718` | `4c41a998ccfd34afa47d86326c90b958b05fc1a8` |
-| Holocene | `feature/moirai-lifecycle-surface-20260718` | `e8cecb983d4f4f210a729d9ddfd2330e9d98e729` |
+| Lifecycle | `feature/moirai-lifecycle-integration-docs-20260718` | `b74b2d5297f7c3b6a0a2d24b499b89e3646ad689` |
+| Candystore | `feature/moirai-lifecycle-projection-20260718` | `b1f6fda3739d095535b326cc89b9a6c7823f63d8` |
+| Momo | `feature/moirai-lifecycle-client-20260718` | `9e3a67a36b3dfe09b4061029d7b52eab39f4d011` |
+| Holocene | `feature/moirai-lifecycle-surface-20260718` | `544ca73f4cc75ef98956873b11085216af12a297` |
 
 Each ref was fetched and checked out from anonymous credential-disabled HTTPS,
 matched its exact revision, and contained its approved component base.

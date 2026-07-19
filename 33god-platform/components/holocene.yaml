@@ -3,7 +3,7 @@ name: Holocene
 role: control-plane-dashboard
 repo: ../holocene
 description: Mission-control dashboard plus Candystore-backed Lifecycle read/command surface.
-source_revision: e8cecb983d4f4f210a729d9ddfd2330e9d98e729
+source_revision: 544ca73f4cc75ef98956873b11085216af12a297
 compose:
   files:
     - ../holocene/compose.yml

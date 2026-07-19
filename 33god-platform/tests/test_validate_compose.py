@@ -481,6 +481,78 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         )
         self.assertNotIn("apply_internal_command", quiesce)
 
+    def test_live_matrix_proves_true_prepublication_replay_and_final_health(
+        self,
+    ) -> None:
+        source = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
+            encoding="utf-8"
+        )
+        evidence_publish = source.index("prepublished_ack = self.publish_jetstream")
+        stream_storage = source.index(
+            "prepublished_stream_row = next(", evidence_publish
+        )
+        trusted_publication = source.index(
+            "trusted_publication = datetime.fromisoformat", stream_storage
+        )
+        observation_wait = source.index(
+            "persisted_prepublication = wait_for(", trusted_publication
+        )
+        preactivation = source.index("preactivation = wait_for(", observation_wait)
+        activation = source.index("activation = wire_time()", preactivation)
+        waiting_command = source.index("first = self.command(", activation)
+        waiting_publish = source.index("self.publish(first)", waiting_command)
+        waiting_reply = source.index(
+            'self.wait_command(first["id"], "applied")', waiting_publish
+        )
+        first_waiting = source.index(
+            "first_waiting = self.wait_state_version", waiting_reply
+        )
+        first_waiting_assertion = source.index(
+            '"first WAITING authority snapshot did not expose the pending "',
+            first_waiting,
+        )
+        replay_assertion = source.index(
+            '"prepublished evidence replay rejection"', first_waiting_assertion
+        )
+        self.assertNotIn("set_evidence_consumer_pause", source)
+        self.assertIn("'duplicate': bool(ack.duplicate)", source)
+        self.assertLess(evidence_publish, stream_storage)
+        self.assertLess(stream_storage, trusted_publication)
+        self.assertLess(trusted_publication, observation_wait)
+        self.assertLess(observation_wait, preactivation)
+        self.assertLess(preactivation, activation)
+        self.assertLess(activation, waiting_command)
+        self.assertLess(waiting_command, waiting_publish)
+        self.assertLess(waiting_publish, waiting_reply)
+        self.assertLess(waiting_reply, first_waiting)
+        self.assertLess(first_waiting, first_waiting_assertion)
+        self.assertLess(first_waiting_assertion, replay_assertion)
+        self.assertIn(
+            'expected_state_version=preactivation["state_version"]',
+            source[waiting_command:waiting_publish],
+        )
+        self.assertIn(
+            '== first_waiting["state_version"]',
+            source[replay_assertion : replay_assertion + 1000],
+        )
+        self.assertIn(
+            '"causationid": prepublished_invocation_id',
+            source[evidence_publish - 5000 : waiting_command],
+        )
+        self.assertIn(
+            '"ordering_key": f"lifecycle:{self.lifecycle_id}"',
+            source[evidence_publish - 5000 : waiting_command],
+        )
+
+        final_health = source.index(
+            'self.wait_container_health("lifecycle", timeout=120)'
+        )
+        final_ps = source.index(
+            'raw_ps = self.compose("ps", "-a", "--format", "json")',
+            final_health,
+        )
+        self.assertLess(final_health, final_ps)
+
     def test_fixed_container_names_and_cross_authority_networks_are_rejected(
         self,
     ) -> None:

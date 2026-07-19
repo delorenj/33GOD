@@ -35,14 +35,14 @@ FORBIDDEN_MARKERS = re.compile(
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67"
+    "sha256:9569564aa143c1118f6e3c9a67fd1e2b4eb1fdf26cba16365a508455df7b4775"
 )
 COMPONENT_REVISIONS = {
     "bloodbank": "48031ee39c238b9d4715b81b74076635235f96d5",
-    "lifecycle": "797fcf4e0cba45a86720f7af4b94ed73be921d38",
-    "candystore": "b3b4d829b1e7ff52ea4f36f8124a4b80a6435d07",
-    "momo": "4c41a998ccfd34afa47d86326c90b958b05fc1a8",
-    "holocene": "e8cecb983d4f4f210a729d9ddfd2330e9d98e729",
+    "lifecycle": "b74b2d5297f7c3b6a0a2d24b499b89e3646ad689",
+    "candystore": "b1f6fda3739d095535b326cc89b9a6c7823f63d8",
+    "momo": "9e3a67a36b3dfe09b4061029d7b52eab39f4d011",
+    "holocene": "544ca73f4cc75ef98956873b11085216af12a297",
 }
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
     r"ghcr\.io/delorenj/lifecycle@sha256:[0-9a-f]{64}"

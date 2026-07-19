@@ -30,7 +30,7 @@ SOURCE_ROOT = PLATFORM_ROOT.parent
 COMPOSE_FILE = PLATFORM_ROOT / "compose.yaml"
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67"
+    "sha256:9569564aa143c1118f6e3c9a67fd1e2b4eb1fdf26cba16365a508455df7b4775"
 )
 NATS_BOX_IMAGE = (
     "natsio/nats-box@"
@@ -514,6 +514,55 @@ class Harness:
             json.dumps(envelope, sort_keys=True, separators=(",", ":")),
         )
 
+    def publish_jetstream(self, envelope: dict[str, Any]) -> dict[str, Any]:
+        """Publish one canonical envelope and require the owning stream's ack."""
+
+        program = """
+import asyncio
+import json
+import os
+
+import nats
+
+
+async def main():
+    envelope = json.loads(os.environ['BLOODBANK_ENVELOPE'])
+    client = await nats.connect('nats://nats:4222')
+    try:
+        ack = await client.jetstream().publish(
+            envelope['subject'],
+            json.dumps(envelope, sort_keys=True, separators=(',', ':')).encode(),
+            headers={'Nats-Msg-Id': envelope['id']},
+        )
+        print(json.dumps({
+            'duplicate': bool(ack.duplicate),
+            'event_id': envelope['id'],
+            'stream': ack.stream,
+            'stream_sequence': ack.seq,
+            'subject': envelope['subject'],
+        }, sort_keys=True))
+    finally:
+        await client.drain()
+
+
+asyncio.run(main())
+"""
+        result = self.docker(
+            "run",
+            "--rm",
+            "--network",
+            self.networks["bloodbank"],
+            "--env",
+            "BLOODBANK_ENVELOPE="
+            + json.dumps(envelope, sort_keys=True, separators=(",", ":")),
+            "--entrypoint",
+            "python",
+            LIFECYCLE_IMAGE,
+            "-c",
+            program,
+        )
+        return json.loads(result.stdout)
+
     def stream_info(self, name: str) -> dict[str, Any]:
         result = self.docker(
             "run",
@@ -573,6 +622,7 @@ class Harness:
                     "event_id": envelope.get("id"),
                     "event_type": envelope.get("type"),
                     "kind": envelope.get("kind"),
+                    "stored_at": record.get("time"),
                 }
             )
         return messages
@@ -669,15 +719,15 @@ asyncio.run(main())
         return wait_for(f"{service} container health", probe, timeout=timeout)
 
     def wait_command(self, event_id: str, verdict: str) -> dict[str, Any]:
-        return wait_for(
-            f"command {event_id} verdict {verdict}",
-            lambda: (
-                value
-                if (value := self.command_result(event_id))
-                and value.get("verdict") == verdict
-                else None
-            ),
+        result = wait_for(
+            f"command {event_id} result",
+            lambda: self.command_result(event_id),
         )
+        if result.get("verdict") != verdict:
+            raise LiveProofError(
+                f"command {event_id} expected verdict {verdict!r}, got {result!r}"
+            )
+        return result
 
     def wait_state_version(
         self, minimum: int, status: str | None = None
@@ -706,8 +756,9 @@ asyncio.run(main())
         causation_id: str | None = None,
         intent_name: str = "transition",
         parameters: dict[str, Any] | None = None,
+        requested_at: str | None = None,
     ) -> dict[str, Any]:
-        requested_at = wire_time()
+        requested_at = requested_at or wire_time()
         if capability_version is None:
             capability_version = self.capability_version()
         command_id = stable_uuid(f"{self.suffix}:command:{label}")
@@ -853,17 +904,170 @@ asyncio.run(main())
         ):
             raise LiveProofError("Holocene/Momo must be offline for independence proof")
 
-        print("[live] proving Holocene/Momo offline authority progression", flush=True)
+        print(
+            "[live] proving trusted pre-publication replay and offline progression",
+            flush=True,
+        )
+        target_waiting_version = initial["state_version"] + 2
+        occurrence_id = str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                "lifecycle-obligation-occurrence:"
+                f"{self.lifecycle_id}:independent-review:waiting:"
+                f"{target_waiting_version}",
+            )
+        )
+        claimed_completion = wire_time(120)
+        prepublished_invocation_id = stable_uuid(
+            f"{self.suffix}:prepublished-invocation"
+        )
+        prepublished_evidence = {
+            "specversion": "1.0",
+            "id": stable_uuid(f"{self.suffix}:evidence:prepublished"),
+            "source": "urn:33god:service:momo",
+            "type": "bloodbank.v1.lifecycle.obligation_evidence.submitted",
+            "subject": "bloodbank.evt.v1.lifecycle.obligation_evidence.submitted",
+            "time": claimed_completion,
+            "datacontenttype": "application/json",
+            "dataschema": (
+                "apicurio://holyfields/"
+                "bloodbank.v1.lifecycle.obligation_evidence.submitted/versions/2"
+            ),
+            "correlationid": stable_uuid(f"{self.suffix}:prepublished-correlation"),
+            "causationid": prepublished_invocation_id,
+            "producer": "momo",
+            "service": "momo",
+            "domain": "lifecycle",
+            "schemaref": ("bloodbank.v1.lifecycle.obligation_evidence.submitted.v2"),
+            "kind": "event",
+            "actor": {"type": "service", "agent_id": "momo"},
+            "ordering_key": f"lifecycle:{self.lifecycle_id}",
+            "data": {
+                "contract_version": 2,
+                "lifecycle_id": self.lifecycle_id,
+                "repo": REPO,
+                "obligation_id": "independent-review",
+                "obligation_instance_id": occurrence_id,
+                "obligation_kind": "independent_review",
+                "target_actor_id": "agent:independent-reviewer",
+                "invocation_id": prepublished_invocation_id,
+                "skill_ref": {"name": "bmad-code-review", "selector": "6.10.2"},
+                "completed_at": claimed_completion,
+                "evidence": {
+                    "kind": "skill_completion",
+                    "outcome": "completed",
+                    "artifact_id": f"future-review:{self.suffix}",
+                    "artifact_sha256": "f" * 64,
+                    "summary": (
+                        "Forged future completion published before activation."
+                    ),
+                },
+            },
+        }
+        prepublished_ack = self.publish_jetstream(prepublished_evidence)
+        if (
+            prepublished_ack.get("stream") != "BLOODBANK_EVENTS"
+            or prepublished_ack.get("event_id") != prepublished_evidence["id"]
+            or prepublished_ack.get("subject") != prepublished_evidence["subject"]
+            or not isinstance(prepublished_ack.get("stream_sequence"), int)
+            or prepublished_ack["stream_sequence"] <= 0
+            or prepublished_ack.get("duplicate") is not False
+        ):
+            raise LiveProofError(
+                f"prepublished evidence lacked an exact JetStream ack: {prepublished_ack!r}"
+            )
+        prepublished_stream_row = next(
+            (
+                item
+                for item in self.stream_messages_since(
+                    "BLOODBANK_EVENTS",
+                    after_sequence=int(prepublished_ack["stream_sequence"]) - 1,
+                )
+                if item["event_id"] == prepublished_evidence["id"]
+            ),
+            None,
+        )
+        if (
+            prepublished_stream_row is None
+            or prepublished_stream_row.get("stream") != prepublished_ack["stream"]
+            or prepublished_stream_row.get("stream_sequence")
+            != prepublished_ack["stream_sequence"]
+            or prepublished_stream_row.get("subject")
+            != prepublished_evidence["subject"]
+            or not isinstance(prepublished_stream_row.get("stored_at"), str)
+        ):
+            raise LiveProofError(
+                "prepublished evidence has no immutable JetStream storage timestamp"
+            )
+        trusted_publication = datetime.fromisoformat(
+            prepublished_stream_row["stored_at"].replace("Z", "+00:00")
+        )
+        claimed_completion_value = datetime.fromisoformat(
+            claimed_completion.replace("Z", "+00:00")
+        )
+
+        def prepublished_observation_row() -> dict[str, Any] | None:
+            raw = self.psql(
+                "SELECT json_build_object("
+                "'received_at', received_at, 'observed_at', observed_at, "
+                "'source_event_id', source_event_id::text)::text "
+                "FROM lifecycle_observations "
+                f"WHERE source_event_id = {sql_literal(prepublished_evidence['id'])}::uuid"
+            )
+            return json.loads(raw) if raw else None
+
+        persisted_prepublication = wait_for(
+            "canonical pre-WAITING observation persistence",
+            prepublished_observation_row,
+            timeout=90,
+        )
+        persisted_received_at = datetime.fromisoformat(
+            persisted_prepublication["received_at"].replace("Z", "+00:00")
+        )
+        persisted_observed_at = datetime.fromisoformat(
+            persisted_prepublication["observed_at"].replace("Z", "+00:00")
+        )
+        preactivation = wait_for(
+            "pre-WAITING evidence reconciliation",
+            lambda: (
+                current
+                if (current := self.state())["state_version"]
+                == initial["state_version"] + 1
+                and current["status"] == "active"
+                and self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+            timeout=120,
+        )
+        activation = wire_time()
+        activation_value = datetime.fromisoformat(activation.replace("Z", "+00:00"))
+        if (
+            persisted_prepublication["source_event_id"] != prepublished_evidence["id"]
+            or persisted_observed_at != claimed_completion_value
+            or not (
+                trusted_publication < activation_value < claimed_completion_value
+                and persisted_received_at < activation_value
+            )
+        ):
+            raise LiveProofError(
+                "prepublication chronology was not immutable storage <= canonical "
+                "receipt < activation < claimed completion"
+            )
+
         first = self.command(
-            "clients-offline", expected_state_version=1, target="waiting"
+            "clients-offline",
+            expected_state_version=preactivation["state_version"],
+            target="waiting",
+            requested_at=activation,
         )
         self.publish(first)
         first_result = self.wait_command(first["id"], "applied")
-        progressed = self.wait_state_version(2, "waiting")
+        first_waiting = self.wait_state_version(target_waiting_version, "waiting")
         obligation = next(
             (
                 item
-                for item in progressed.get("obligations", [])
+                for item in first_waiting.get("obligations", [])
                 if item.get("id") == "independent-review"
             ),
             None,
@@ -871,13 +1075,14 @@ asyncio.run(main())
         waiting_frontier = next(
             (
                 item
-                for item in progressed.get("legal_frontier", [])
+                for item in first_waiting.get("legal_frontier", [])
                 if item.get("id") == "transition:waiting:active"
             ),
             None,
         )
         if (
-            obligation is None
+            first_waiting.get("state_version") != target_waiting_version
+            or obligation is None
             or obligation.get("status") != "pending"
             or waiting_frontier is None
             or waiting_frontier.get("allowed") is not False
@@ -886,6 +1091,52 @@ asyncio.run(main())
             raise LiveProofError(
                 "first WAITING authority snapshot did not expose the pending "
                 "obligation and disallowed frontier"
+            )
+        progressed = wait_for(
+            "prepublished evidence replay rejection",
+            lambda: (
+                current
+                if (current := self.state())["state_version"]
+                == first_waiting["state_version"]
+                and current["status"] == "waiting"
+                and next(
+                    item
+                    for item in current["obligations"]
+                    if item["id"] == "independent-review"
+                )["status"]
+                == "pending"
+                and self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+            timeout=120,
+        )
+        obligation = next(
+            item
+            for item in progressed["obligations"]
+            if item["id"] == "independent-review"
+        )
+        waiting_frontier = next(
+            item
+            for item in progressed["legal_frontier"]
+            if item["id"] == "transition:waiting:active"
+        )
+        occurrence_activation = datetime.fromisoformat(
+            obligation["activated_at"].replace("Z", "+00:00")
+        )
+        if (
+            persisted_prepublication["source_event_id"] != prepublished_evidence["id"]
+            or obligation["obligation_instance_id"] != occurrence_id
+            or obligation["status"] != "pending"
+            or waiting_frontier["allowed"] is not False
+            or waiting_frontier["reason_code"] != "PENDING_OBLIGATIONS"
+            or not (
+                trusted_publication < occurrence_activation < claimed_completion_value
+                and persisted_received_at < occurrence_activation
+            )
+        ):
+            raise LiveProofError(
+                "trusted prepublication replay satisfied or changed the active occurrence"
             )
         self.summary["invariants"]["1_holocene_offline"] = {
             "running_services": sorted(running),
@@ -896,6 +1147,26 @@ asyncio.run(main())
             "running_services": sorted(running),
             "state_version": progressed["state_version"],
             "status": progressed["status"],
+        }
+        self.summary["invariants"]["trusted_prepublication_replay"] = {
+            "event_id": prepublished_evidence["id"],
+            "invocation_id": prepublished_invocation_id,
+            "causation_id": prepublished_evidence["causationid"],
+            "correlation_id": prepublished_evidence["correlationid"],
+            "ordering_key": prepublished_evidence["ordering_key"],
+            "jetstream_ack": prepublished_ack,
+            "stream_record": prepublished_stream_row,
+            "trusted_publication_at": prepublished_stream_row["stored_at"],
+            "observation_received_at": persisted_prepublication["received_at"],
+            "observation_observed_at": persisted_prepublication["observed_at"],
+            "observation_existed_before_waiting": True,
+            "occurrence_activated_at": obligation["activated_at"],
+            "claimed_completed_at": claimed_completion,
+            "obligation_instance_id": occurrence_id,
+            "preactivation_state_version": preactivation["state_version"],
+            "first_waiting_state_version": first_waiting["state_version"],
+            "post_activation_state_version": progressed["state_version"],
+            "status_after_replay": obligation["status"],
         }
 
         print("[live] proving pending-obligation progression rejection", flush=True)
@@ -935,7 +1206,10 @@ asyncio.run(main())
         self.publish(stale)
         stale_result = self.wait_command(stale["id"], "stale")
         after_stale = self.state()
-        if stale_result["mutated"] or after_stale["state_version"] != 2:
+        if (
+            stale_result["mutated"]
+            or after_stale["state_version"] != progressed["state_version"]
+        ):
             raise LiveProofError("stale expected_state_version mutated authority state")
         if self.counts()["history"] != stale_before["history"]:
             raise LiveProofError(
@@ -951,7 +1225,7 @@ asyncio.run(main())
         unauthorized_before = self.counts()
         unauthorized = self.command(
             "unauthorized",
-            expected_state_version=2,
+            expected_state_version=progressed["state_version"],
             target="active",
             actor_id="agent:intruder",
             capability_id="cap:missing",
@@ -960,7 +1234,10 @@ asyncio.run(main())
         self.publish(unauthorized)
         unauthorized_result = self.wait_command(unauthorized["id"], "unauthorized")
         after_unauthorized = self.state()
-        if unauthorized_result["mutated"] or after_unauthorized["state_version"] != 2:
+        if (
+            unauthorized_result["mutated"]
+            or after_unauthorized["state_version"] != progressed["state_version"]
+        ):
             raise LiveProofError("invalid capability mutated authority state")
         if self.counts()["history"] != unauthorized_before["history"]:
             raise LiveProofError("invalid capability appended transition history")
@@ -2528,6 +2805,7 @@ asyncio.run(main())
         self.create_resources()
         self.run_core_matrix()
         self.run_clients()
+        self.wait_container_health("lifecycle", timeout=120)
         raw_ps = self.compose("ps", "-a", "--format", "json").stdout.strip()
         try:
             parsed_ps = json.loads(raw_ps)

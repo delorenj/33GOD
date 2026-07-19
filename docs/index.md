@@ -12,7 +12,7 @@ Lifecycle, Candystore, Holocene, and run-only PJangler tooling. The Lifecycle
 path is implemented and locally verified with:
 
 - immutable image
-  `ghcr.io/delorenj/lifecycle@sha256:982a25126a292dba8a6af43c38a4b4c136726c054a0076ba56a8d2055974ec67`;
+  `ghcr.io/delorenj/lifecycle@sha256:9569564aa143c1118f6e3c9a67fd1e2b4eb1fdf26cba16365a508455df7b4775`;
 - dedicated PostgreSQL, secret, volume, and private network;
 - fail-closed migration, deterministic bootstrap, then serve ordering;
 - canonical Bloodbank contracts and JetStream;
