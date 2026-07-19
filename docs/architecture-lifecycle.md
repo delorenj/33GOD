@@ -8,9 +8,9 @@ immutable runtime image
 ## Runtime pin
 
 - Runtime image:
-  `ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311`
+  `ghcr.io/delorenj/lifecycle@sha256:75879a0eda1179a806dca55f189b4e53796034a8a0d70d6aa1a78569015793f5`
 - Image source and gitlink revision:
-  `719e6af0f06f1bdb30937326380ac67581e8dbb8`
+  `4513d520c8e8719245b7aa70e5486857e2472439`
 - Bloodbank contract revision:
   `48031ee39c238b9d4715b81b74076635235f96d5`
 

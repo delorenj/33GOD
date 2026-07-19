@@ -35,17 +35,22 @@ FORBIDDEN_MARKERS = re.compile(
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311"
+    "sha256:75879a0eda1179a806dca55f189b4e53796034a8a0d70d6aa1a78569015793f5"
 )
+LIFECYCLE_SOURCE_REF = "feature/moirai-lifecycle-integration-docs-20260718"
+LIFECYCLE_REVISION = "4513d520c8e8719245b7aa70e5486857e2472439"
 COMPONENT_REVISIONS = {
     "bloodbank": "48031ee39c238b9d4715b81b74076635235f96d5",
-    "lifecycle": "719e6af0f06f1bdb30937326380ac67581e8dbb8",
+    "lifecycle": LIFECYCLE_REVISION,
     "candystore": "b1f6fda3739d095535b326cc89b9a6c7823f63d8",
     "momo": "9e3a67a36b3dfe09b4061029d7b52eab39f4d011",
     "holocene": "544ca73f4cc75ef98956873b11085216af12a297",
 }
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
     r"ghcr\.io/delorenj/lifecycle@sha256:[0-9a-f]{64}"
+)
+LIFECYCLE_PUBLICATION_ROW = re.compile(
+    r"(?im)^\|\s*Lifecycle\s*\|\s*`([^`]+)`\s*\|\s*`([0-9a-f]{40})`\s*\|"
 )
 ECOSYSTEM_AUTHORITY_CONTRACT = (
     "Plane ticket/work-item and board/lane operations "
@@ -510,6 +515,25 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         errors.append(
             "Compose must define exactly one exact-digest Lifecycle image anchor"
         )
+    lifecycle_manifest_path = platform / "components/lifecycle.yaml"
+    try:
+        lifecycle_manifest = load_yaml(lifecycle_manifest_path)
+    except (OSError, RuntimeError, ValueError) as exc:
+        errors.append(f"Lifecycle manifest parity could not be checked: {exc}")
+    else:
+        expected_lifecycle_manifest = {
+            "source_ref": LIFECYCLE_SOURCE_REF,
+            "source_revision": LIFECYCLE_REVISION,
+            "gitlink_revision": LIFECYCLE_REVISION,
+            "image_source_revision": LIFECYCLE_REVISION,
+            "image": LIFECYCLE_IMAGE,
+        }
+        for field, expected in expected_lifecycle_manifest.items():
+            actual = lifecycle_manifest.get(field)
+            if actual != expected:
+                errors.append(
+                    f"Lifecycle manifest {field}={actual!r} expected={expected!r}"
+                )
     for service in ("lifecycle-migrate", "lifecycle-bootstrap", "lifecycle"):
         block = re.search(
             rf"(?ms)^  {re.escape(service)}:\n(?P<body>.*?)(?=^  [A-Za-z0-9_-]+:\n|\Z)",
@@ -587,6 +611,12 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             if image != LIFECYCLE_IMAGE:
                 errors.append(
                     f"{path.relative_to(docs_checkout)} retains non-current Lifecycle digest"
+                )
+        for source_ref, revision in LIFECYCLE_PUBLICATION_ROW.findall(text):
+            if source_ref != LIFECYCLE_SOURCE_REF or revision != LIFECYCLE_REVISION:
+                errors.append(
+                    f"{path.relative_to(docs_checkout)} contradicts the published "
+                    "Lifecycle ref/revision"
                 )
         for label, pattern in ownership_patterns.items():
             if pattern.search(text):

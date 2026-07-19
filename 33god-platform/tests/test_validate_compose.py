@@ -19,6 +19,13 @@ SPEC = importlib.util.spec_from_file_location("validate_compose", SCRIPT)
 assert SPEC and SPEC.loader
 VALIDATOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VALIDATOR)
+DOC_DRIFT_SCRIPT = PLATFORM_ROOT.parent / "scripts" / "check-doc-drift.py"
+DOC_DRIFT_SPEC = importlib.util.spec_from_file_location(
+    "check_doc_drift", DOC_DRIFT_SCRIPT
+)
+assert DOC_DRIFT_SPEC and DOC_DRIFT_SPEC.loader
+DOC_DRIFT = importlib.util.module_from_spec(DOC_DRIFT_SPEC)
+DOC_DRIFT_SPEC.loader.exec_module(DOC_DRIFT)
 
 PORT_OVERRIDE_KEYS = (
     "BLOODBANK_NATS_CLIENT_PORT",
@@ -362,7 +369,6 @@ class ComposeSemanticValidationTests(unittest.TestCase):
                 model["services"][name]["image"], VALIDATOR.LIFECYCLE_IMAGE
             )
             self.assertNotIn("build", model["services"][name])
-
         model["services"]["lifecycle"]["image"] = (
             f"ghcr.io/delorenj/lifecycle@sha256:{'0' * 64}"
         )
@@ -374,6 +380,32 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         self.assertTrue(
             any("must never contain a Compose build" in error for error in errors)
         )
+
+    def test_lifecycle_manifest_ref_revision_and_digest_drift_is_rejected(
+        self,
+    ) -> None:
+        manifest_path = PLATFORM_ROOT / "components" / "lifecycle.yaml"
+        manifest = DOC_DRIFT.load_yaml(manifest_path)
+        contradictions = {
+            "source_ref": "fix/noncanonical-lifecycle-ref",
+            "source_revision": "0" * 40,
+            "gitlink_revision": "1" * 40,
+            "image_source_revision": "2" * 40,
+            "image": "ghcr.io/delorenj/lifecycle@sha256:" + ("3" * 64),
+        }
+        for field, value in contradictions.items():
+            with self.subTest(field=field):
+                changed = copy.deepcopy(manifest)
+                changed[field] = value
+                with mock.patch.object(DOC_DRIFT, "load_yaml", return_value=changed):
+                    errors = DOC_DRIFT.lifecycle_current_truth_errors(
+                        self.source_root,
+                        PLATFORM_ROOT.parent,
+                    )
+                self.assertTrue(
+                    any(f"Lifecycle manifest {field}=" in error for error in errors),
+                    errors,
+                )
 
     def test_every_exercised_registry_image_is_digest_pinned(self) -> None:
         model = self.canonical_model()
@@ -487,6 +519,9 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         source = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
             encoding="utf-8"
         )
+        target_waiting_version = source.index(
+            'target_waiting_version = initial["state_version"] + 1'
+        )
         evidence_publish = source.index("prepublished_ack = self.publish_jetstream")
         stream_storage = source.index(
             "prepublished_stream_row = next(", evidence_publish
@@ -516,6 +551,7 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         )
         self.assertNotIn("set_evidence_consumer_pause", source)
         self.assertIn("'duplicate': bool(ack.duplicate)", source)
+        self.assertLess(target_waiting_version, evidence_publish)
         self.assertLess(evidence_publish, stream_storage)
         self.assertLess(stream_storage, trusted_publication)
         self.assertLess(trusted_publication, observation_wait)
@@ -527,6 +563,22 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         self.assertLess(waiting_reply, first_waiting)
         self.assertLess(first_waiting, first_waiting_assertion)
         self.assertLess(first_waiting_assertion, replay_assertion)
+        self.assertIn(
+            "persisted_received_at != trusted_publication",
+            source[preactivation:waiting_command],
+        )
+        self.assertIn(
+            "preactivation_reconciled_at != initial_reconciled_at",
+            source[preactivation:waiting_command],
+        )
+        self.assertIn(
+            "first_waiting_reconciled_at != activation_value",
+            source[first_waiting:first_waiting_assertion],
+        )
+        self.assertIn(
+            "replayed_reconciled_at != activation_value",
+            source[replay_assertion : replay_assertion + 3000],
+        )
         self.assertIn(
             'expected_state_version=preactivation["state_version"]',
             source[waiting_command:waiting_publish],
