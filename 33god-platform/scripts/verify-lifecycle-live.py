@@ -39,6 +39,8 @@ NATS_BOX_IMAGE = (
 ACTOR_ID = "operator:33god-bootstrap"
 CAPABILITY_ID = "cap:33god-platform:lifecycle-command"
 REPO = "delorenj/33GOD"
+COMMAND_STREAM = "BLOODBANK_COMMANDS"
+COMMAND_CONSUMER = "lifecycle-authority-commands-v1"
 PROTECTED_BASELINE_CONTAINERS = (
     "bloodbank-nats",
     "bloodbank-dapr-placement",
@@ -233,6 +235,13 @@ class Harness:
         )
         self.api_process: subprocess.Popen[bytes] | None = None
         self.web_process: subprocess.Popen[bytes] | None = None
+        self.lifecycle_lock_holder: subprocess.Popen[bytes] | None = None
+        self.lifecycle_lock_application = f"lifecycle-outage-lock-{self.suffix}"
+        self.lifecycle_lock_backend_pid: int | None = None
+        self.lifecycle_recovery_guard: subprocess.Popen[bytes] | None = None
+        self.lifecycle_recovery_application = (
+            f"lifecycle-outage-recovery-{self.suffix}"
+        )
         self.created_resources = False
         self.cleaned = False
         self.prestart_snapshot_event_id: str | None = None
@@ -247,17 +256,20 @@ class Harness:
             "seams": {},
         }
 
+    def compose_command(self, *args: str) -> list[str]:
+        return [
+            "docker",
+            "compose",
+            "--project-name",
+            self.project,
+            "--file",
+            str(COMPOSE_FILE),
+            *args,
+        ]
+
     def compose(self, *args: str, check: bool = True, timeout: float = 180):
         return run(
-            [
-                "docker",
-                "compose",
-                "--project-name",
-                self.project,
-                "--file",
-                str(COMPOSE_FILE),
-                *args,
-            ],
+            self.compose_command(*args),
             env=self.env,
             check=check,
             timeout=timeout,
@@ -312,6 +324,8 @@ class Harness:
     def cleanup(self) -> None:
         if self.cleaned:
             return
+        self.release_lifecycle_recovery_guard(check=False)
+        self.release_lifecycle_row_lock(check=False)
         terminate(self.web_process)
         terminate(self.api_process)
         self.compose("down", "--remove-orphans", "--timeout", "10", check=False)
@@ -367,7 +381,13 @@ class Harness:
             "lifecycle_has_build": False,
         }
 
-    def psql(self, sql: str) -> str:
+    def psql(
+        self,
+        sql: str,
+        *,
+        check: bool = True,
+        timeout: float = 180,
+    ) -> str:
         return self.compose(
             "exec",
             "-T",
@@ -381,7 +401,257 @@ class Harness:
             "lifecycle",
             "-c",
             sql,
+            check=check,
+            timeout=timeout,
         ).stdout.strip()
+
+    def start_lifecycle_row_lock(self) -> subprocess.Popen[bytes]:
+        """Hold the target authority row in one visible PostgreSQL session."""
+
+        if (
+            self.lifecycle_lock_holder is not None
+            and self.lifecycle_lock_holder.poll() is None
+        ):
+            raise LiveProofError("Lifecycle row-lock holder is already running")
+        sql = f"""
+BEGIN;
+SELECT lifecycle_id
+FROM lifecycle_state
+WHERE lifecycle_id = {sql_literal(self.lifecycle_id)}
+FOR UPDATE;
+SELECT pg_sleep(300);
+ROLLBACK;
+"""
+        self.lifecycle_lock_holder = subprocess.Popen(
+            self.compose_command(
+                "exec",
+                "-T",
+                "--env",
+                f"PGAPPNAME={self.lifecycle_lock_application}",
+                "lifecycle-postgres",
+                "psql",
+                "-X",
+                "-qAt",
+                "-v",
+                "ON_ERROR_STOP=1",
+                "-U",
+                "lifecycle",
+                "-d",
+                "lifecycle",
+                "-c",
+                sql,
+            ),
+            cwd=SOURCE_ROOT,
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return self.lifecycle_lock_holder
+
+    def wait_lifecycle_row_lock(self) -> dict[str, Any]:
+        """Require pg_stat_activity proof that the lock transaction is active."""
+
+        def probe() -> dict[str, Any] | None:
+            process = self.lifecycle_lock_holder
+            if process is None:
+                raise LiveProofError("Lifecycle row-lock holder was not started")
+            if process.poll() is not None:
+                stdout, stderr = process.communicate()
+                detail = (stderr or stdout).decode(errors="replace").strip()
+                raise LiveProofError(
+                    "Lifecycle row-lock holder exited before becoming active: "
+                    + detail[-2000:]
+                )
+            raw = self.psql(
+                """
+                SELECT json_build_object(
+                  'pid', pid, 'application_name', application_name,
+                  'state', state, 'wait_event_type', wait_event_type,
+                  'wait_event', wait_event
+                )::text
+                FROM pg_stat_activity
+                WHERE application_name = %s
+                  AND state = 'active'
+                  AND query LIKE '%%FOR UPDATE%%'
+                  AND query LIKE '%%pg_sleep(300)%%'
+                ORDER BY pid
+                LIMIT 1
+                """
+                % sql_literal(self.lifecycle_lock_application)
+            )
+            return json.loads(raw) if raw else None
+
+        activity = wait_for(
+            "active Lifecycle row-lock holder in pg_stat_activity",
+            probe,
+            timeout=30,
+        )
+        self.lifecycle_lock_backend_pid = int(activity["pid"])
+        return activity
+
+    def wait_blocked_lifecycle_writer(self) -> dict[str, Any]:
+        """Prove a deployed service backend is waiting behind the row holder."""
+
+        if self.lifecycle_lock_backend_pid is None:
+            raise LiveProofError("Lifecycle row-lock holder has no PostgreSQL pid")
+        holder_pid = self.lifecycle_lock_backend_pid
+
+        def probe() -> dict[str, Any] | None:
+            raw = self.psql(
+                f"""
+                SELECT json_build_object(
+                  'pid', pid, 'application_name', application_name,
+                  'state', state, 'wait_event_type', wait_event_type,
+                  'wait_event', wait_event,
+                  'blocking_pids', pg_blocking_pids(pid)
+                )::text
+                FROM pg_stat_activity
+                WHERE pid <> {holder_pid}
+                  AND {holder_pid} = ANY(pg_blocking_pids(pid))
+                  AND wait_event_type = 'Lock'
+                ORDER BY pid
+                LIMIT 1
+                """
+            )
+            return json.loads(raw) if raw else None
+
+        return wait_for(
+            "deployed Lifecycle PostgreSQL writer blocked by row lock",
+            probe,
+            timeout=30,
+        )
+
+    def release_lifecycle_row_lock(self, *, check: bool = True) -> None:
+        """Terminate the unique PostgreSQL holder and its attached client."""
+
+        process = self.lifecycle_lock_holder
+        if process is None and self.lifecycle_lock_backend_pid is None:
+            return
+        terminated = self.psql(
+            """
+            SELECT COUNT(*)
+            FROM (
+              SELECT pg_terminate_backend(pid) AS terminated
+              FROM pg_stat_activity
+              WHERE application_name = %s
+                AND pid <> pg_backend_pid()
+            ) AS holders
+            WHERE terminated
+            """
+            % sql_literal(self.lifecycle_lock_application),
+            check=check,
+            timeout=15,
+        )
+        terminate(process)
+        self.lifecycle_lock_holder = None
+        self.lifecycle_lock_backend_pid = None
+        if check and terminated != "1":
+            raise LiveProofError(
+                f"expected one Lifecycle row-lock backend to terminate, got {terminated!r}"
+            )
+
+    def start_lifecycle_recovery_guard(self) -> subprocess.Popen[bytes]:
+        """Keep restart-time sweeping separate from the redelivery assertion."""
+
+        if (
+            self.lifecycle_recovery_guard is not None
+            and self.lifecycle_recovery_guard.poll() is None
+        ):
+            raise LiveProofError("Lifecycle recovery guard is already running")
+        sql = """
+BEGIN;
+LOCK TABLE lifecycle_reconcile_queue IN ACCESS EXCLUSIVE MODE;
+SELECT pg_sleep(300);
+ROLLBACK;
+"""
+        self.lifecycle_recovery_guard = subprocess.Popen(
+            self.compose_command(
+                "exec",
+                "-T",
+                "--env",
+                f"PGAPPNAME={self.lifecycle_recovery_application}",
+                "lifecycle-postgres",
+                "psql",
+                "-X",
+                "-qAt",
+                "-v",
+                "ON_ERROR_STOP=1",
+                "-U",
+                "lifecycle",
+                "-d",
+                "lifecycle",
+                "-c",
+                sql,
+            ),
+            cwd=SOURCE_ROOT,
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return self.lifecycle_recovery_guard
+
+    def wait_lifecycle_recovery_guard(self) -> dict[str, Any]:
+        def probe() -> dict[str, Any] | None:
+            process = self.lifecycle_recovery_guard
+            if process is None:
+                raise LiveProofError("Lifecycle recovery guard was not started")
+            if process.poll() is not None:
+                stdout, stderr = process.communicate()
+                detail = (stderr or stdout).decode(errors="replace").strip()
+                raise LiveProofError(
+                    "Lifecycle recovery guard exited before becoming active: "
+                    + detail[-2000:]
+                )
+            raw = self.psql(
+                """
+                SELECT json_build_object(
+                  'pid', pid, 'application_name', application_name,
+                  'state', state, 'wait_event_type', wait_event_type,
+                  'wait_event', wait_event
+                )::text
+                FROM pg_stat_activity
+                WHERE application_name = %s
+                  AND state = 'active'
+                  AND query LIKE '%%LOCK TABLE lifecycle_reconcile_queue%%'
+                  AND query LIKE '%%pg_sleep(300)%%'
+                ORDER BY pid
+                LIMIT 1
+                """
+                % sql_literal(self.lifecycle_recovery_application)
+            )
+            return json.loads(raw) if raw else None
+
+        return wait_for(
+            "active restart-time reconcile isolation guard",
+            probe,
+            timeout=30,
+        )
+
+    def release_lifecycle_recovery_guard(self, *, check: bool = True) -> None:
+        process = self.lifecycle_recovery_guard
+        if process is None:
+            return
+        terminated = self.psql(
+            """
+            SELECT COUNT(*)
+            FROM (
+              SELECT pg_terminate_backend(pid) AS terminated
+              FROM pg_stat_activity
+              WHERE application_name = %s
+                AND pid <> pg_backend_pid()
+            ) AS guards
+            WHERE terminated
+            """
+            % sql_literal(self.lifecycle_recovery_application),
+            check=check,
+            timeout=15,
+        )
+        terminate(process)
+        self.lifecycle_recovery_guard = None
+        if check and terminated != "1":
+            raise LiveProofError(
+                f"expected one Lifecycle recovery guard to terminate, got {terminated!r}"
+            )
 
     def candystore_psql(self, sql: str) -> str:
         return self.compose(
@@ -492,6 +762,8 @@ class Harness:
             FROM (
               SELECT id, event_sequence, event_id::text, event_type, subject,
                      aggregate_version, published_at IS NOT NULL AS published,
+                     envelope->>'causationid' AS causation_id,
+                     envelope->'data'->>'verdict' AS verdict,
                      published_at, publish_attempts, next_attempt_at, error
               FROM lifecycle_event_outbox WHERE lifecycle_id = %s
               ORDER BY event_sequence
@@ -580,6 +852,31 @@ asyncio.run(main())
         )
         return json.loads(result.stdout)
 
+    def consumer_info(self, stream: str, consumer: str) -> dict[str, Any]:
+        result = self.docker(
+            "run",
+            "--rm",
+            "--network",
+            self.networks["bloodbank"],
+            NATS_BOX_IMAGE,
+            "nats",
+            "--server=nats://nats:4222",
+            "consumer",
+            "info",
+            stream,
+            consumer,
+            "--json",
+        )
+        return json.loads(result.stdout)
+
+    def container_status(self, service: str) -> str:
+        container = self.compose("ps", "-a", "-q", service).stdout.strip()
+        if not container:
+            return "missing"
+        return self.docker(
+            "inspect", "--format", "{{.State.Status}}", container
+        ).stdout.strip()
+
     def stream_messages_since(
         self, name: str, *, after_sequence: int
     ) -> list[dict[str, Any]]:
@@ -589,109 +886,63 @@ asyncio.run(main())
         last_sequence = int(info["state"].get("last_seq", 0))
         messages: list[dict[str, Any]] = []
         for sequence in range(after_sequence + 1, last_sequence + 1):
-            raw = self.docker(
-                "run",
-                "--rm",
-                "--network",
-                self.networks["bloodbank"],
-                NATS_BOX_IMAGE,
-                "nats",
-                "--server=nats://nats:4222",
-                "stream",
-                "get",
-                name,
-                str(sequence),
-                "--json",
-            ).stdout
-            record = json.loads(raw)
-            encoded = record.get("data")
-            if not isinstance(encoded, str):
-                raise LiveProofError(
-                    f"JetStream {name} sequence {sequence} omitted encoded data"
-                )
-            try:
-                envelope = json.loads(base64.b64decode(encoded, validate=True))
-            except (ValueError, json.JSONDecodeError) as exc:
-                raise LiveProofError(
-                    f"JetStream {name} sequence {sequence} is not a JSON envelope"
-                ) from exc
-            messages.append(
-                {
-                    "stream": name,
-                    "stream_sequence": int(record.get("seq", sequence)),
-                    "subject": record.get("subject"),
-                    "event_id": envelope.get("id"),
-                    "event_type": envelope.get("type"),
-                    "kind": envelope.get("kind"),
-                    "stored_at": record.get("time"),
-                }
-            )
+            message = self.stream_message(name, sequence, missing_ok=True)
+            if message is not None:
+                messages.append(message)
         return messages
 
-    def apply_internal_command(self, envelope: dict[str, Any]) -> dict[str, Any]:
-        """Exercise Lifecycle's canonical command transaction without transport ingress."""
+    def stream_message(
+        self,
+        name: str,
+        sequence: int,
+        *,
+        missing_ok: bool = False,
+    ) -> dict[str, Any] | None:
+        """Read one stream sequence, allowing WorkQueue-retention gaps."""
 
-        program = """
-import asyncio
-import json
-import os
-from pathlib import Path
-from urllib.parse import quote
-
-import asyncpg
-
-from authority import LifecycleAuthority
-from db.repository import LifecycleRepository
-
-
-async def main():
-    password = Path('/run/secrets/lifecycle-postgres-password').read_text().strip()
-    database_url = (
-        'postgresql://lifecycle:' + quote(password, safe='')
-        + '@lifecycle-postgres:5432/lifecycle'
-    )
-    pool = await asyncpg.create_pool(database_url, min_size=1, max_size=2)
-    try:
-        handled = await LifecycleAuthority(
-            LifecycleRepository(pool),
-            authority_instance='aion-live-outage',
-        ).handle_command_envelope(json.loads(os.environ['LIFECYCLE_INTERNAL_COMMAND']))
-        result = handled.result
-        print(json.dumps({
-            'verdict': result.verdict.value,
-            'mutated': result.mutated,
-            'observed_state_version': result.observed_state_version,
-            'resulting_state_version': result.resulting_state_version,
-            'applied_event_id': result.applied_event_id,
-            'reason_code': result.reason_code,
-            'reply_event_id': handled.reply_envelope['id'],
-        }, sort_keys=True))
-    finally:
-        await pool.close()
-
-
-asyncio.run(main())
-"""
         result = self.docker(
             "run",
             "--rm",
             "--network",
-            self.networks["lifecycle"],
-            "--mount",
-            (
-                f"type=bind,source={self.secret_file},"
-                "target=/run/secrets/lifecycle-postgres-password,readonly"
-            ),
-            "--env",
-            "LIFECYCLE_INTERNAL_COMMAND="
-            + json.dumps(envelope, sort_keys=True, separators=(",", ":")),
-            "--entrypoint",
-            "python",
-            LIFECYCLE_IMAGE,
-            "-c",
-            program,
+            self.networks["bloodbank"],
+            NATS_BOX_IMAGE,
+            "nats",
+            "--server=nats://nats:4222",
+            "stream",
+            "get",
+            name,
+            str(sequence),
+            "--json",
+            check=False,
         )
-        return json.loads(result.stdout)
+        if result.returncode:
+            detail = (result.stderr or result.stdout).strip()
+            if missing_ok and "no message found (10037)" in detail:
+                return None
+            raise LiveProofError(
+                f"could not read JetStream {name} sequence {sequence}: {detail[-2000:]}"
+            )
+        record = json.loads(result.stdout)
+        encoded = record.get("data")
+        if not isinstance(encoded, str):
+            raise LiveProofError(
+                f"JetStream {name} sequence {sequence} omitted encoded data"
+            )
+        try:
+            envelope = json.loads(base64.b64decode(encoded, validate=True))
+        except (ValueError, json.JSONDecodeError) as exc:
+            raise LiveProofError(
+                f"JetStream {name} sequence {sequence} is not a JSON envelope"
+            ) from exc
+        return {
+            "stream": name,
+            "stream_sequence": int(record.get("seq", sequence)),
+            "subject": record.get("subject"),
+            "event_id": envelope.get("id"),
+            "event_type": envelope.get("type"),
+            "kind": envelope.get("kind"),
+            "stored_at": record.get("time"),
+        }
 
     def wait_health(
         self, path: str, status: int, timeout: float = 60
@@ -731,7 +982,11 @@ asyncio.run(main())
         return result
 
     def wait_state_version(
-        self, minimum: int, status: str | None = None
+        self,
+        minimum: int,
+        status: str | None = None,
+        *,
+        timeout: float = 60,
     ) -> dict[str, Any]:
         return wait_for(
             f"Lifecycle state version >= {minimum}"
@@ -742,6 +997,7 @@ asyncio.run(main())
                 and (status is None or value["status"] == status)
                 else None
             ),
+            timeout=timeout,
         )
 
     def command(
@@ -1299,7 +1555,7 @@ asyncio.run(main())
         }
 
         print(
-            "[live] proving NATS outage/recovery and ordered eventual publication",
+            "[live] proving real single-writer NATS outage commit and redelivery",
             flush=True,
         )
         outage_before_state = self.state()
@@ -1309,9 +1565,15 @@ asyncio.run(main())
         outage_before_rows = self.outbox_rows()
         before_event_ids = {item["event_id"] for item in outage_before_rows}
         event_stream_before = self.stream_info("BLOODBANK_EVENTS")["state"]
-        command_stream_before = self.stream_info("BLOODBANK_COMMANDS")["state"]
+        command_stream_before = self.stream_info(COMMAND_STREAM)["state"]
+        command_consumer_before = self.consumer_info(
+            COMMAND_STREAM, COMMAND_CONSUMER
+        )
         event_last_before = int(event_stream_before.get("last_seq", 0))
         command_last_before = int(command_stream_before.get("last_seq", 0))
+        deployed_lifecycle_container = self.compose("ps", "-q", "lifecycle").stdout.strip()
+        if not deployed_lifecycle_container:
+            raise LiveProofError("deployed Lifecycle Compose container is missing")
         mode_frontier = next(
             (
                 item
@@ -1329,16 +1591,84 @@ asyncio.run(main())
             target=target_mode,
             intent_name="set_mode",
         )
-        self.compose("stop", "bloodbank-nats")
-        degraded = self.wait_health("/readyz", 503)
-        still_live = self.wait_health("/livez", 200)
-        time.sleep(1)
-        if self.state() != outage_before_state:
-            raise LiveProofError("NATS outage rewrote committed Lifecycle state")
-        if self.counts()["history"] != outage_before_counts["history"]:
-            raise LiveProofError("NATS outage changed transition history")
 
-        outage_result = self.apply_internal_command(outage_command)
+        lock_holder_activity: dict[str, Any]
+        blocked_writer_activity: dict[str, Any]
+        blocked_consumer_info: dict[str, Any]
+        outage_publish_ack: dict[str, Any]
+        nats_down_status: str
+        lifecycle_stopped_status: str
+        try:
+            self.start_lifecycle_row_lock()
+            lock_holder_activity = self.wait_lifecycle_row_lock()
+            outage_publish_ack = self.publish_jetstream(outage_command)
+            if (
+                outage_publish_ack.get("stream") != COMMAND_STREAM
+                or outage_publish_ack.get("subject") != outage_command["subject"]
+                or outage_publish_ack.get("event_id") != outage_command["id"]
+                or outage_publish_ack.get("duplicate") is not False
+            ):
+                raise LiveProofError(
+                    f"canonical outage command publish was not unique: {outage_publish_ack}"
+                )
+            blocked_consumer_info = wait_for(
+                f"{COMMAND_CONSUMER} ack-pending delivery",
+                lambda: (
+                    value
+                    if int(
+                        (value := self.consumer_info(
+                            COMMAND_STREAM, COMMAND_CONSUMER
+                        )).get("num_ack_pending", 0)
+                    )
+                    >= 1
+                    and int(value.get("delivered", {}).get("stream_seq", 0))
+                    >= int(outage_publish_ack["stream_sequence"])
+                    else None
+                ),
+                timeout=30,
+            )
+            blocked_writer_activity = self.wait_blocked_lifecycle_writer()
+
+            self.compose("stop", "bloodbank-nats")
+            nats_down_status = wait_for(
+                "isolated NATS container to stop",
+                lambda: (
+                    status
+                    if (status := self.container_status("bloodbank-nats"))
+                    == "exited"
+                    else None
+                ),
+                timeout=30,
+            )
+            degraded = self.wait_health("/readyz", 503)
+            still_live = self.wait_health("/livez", 200)
+            if self.state() != outage_before_state:
+                raise LiveProofError(
+                    "blocked deployed writer changed Lifecycle state before lock release"
+                )
+            if self.counts()["history"] != outage_before_counts["history"]:
+                raise LiveProofError(
+                    "blocked deployed writer appended history before lock release"
+                )
+
+            self.release_lifecycle_row_lock()
+            outage_result = self.wait_command(outage_command["id"], "applied")
+
+            # Discard the disconnected client's buffered ACK. Starting this same
+            # Compose container after NATS recovery forces durable redelivery.
+            self.compose("stop", "--timeout", "5", "lifecycle")
+            lifecycle_stopped_status = wait_for(
+                "deployed Lifecycle container to stop after its database commit",
+                lambda: (
+                    status
+                    if (status := self.container_status("lifecycle")) == "exited"
+                    else None
+                ),
+                timeout=30,
+            )
+        finally:
+            self.release_lifecycle_row_lock(check=False)
+
         outage_committed_state = self.state()
         outage_committed_counts = self.counts()
         if (
@@ -1348,12 +1678,13 @@ asyncio.run(main())
             != outage_before_state["state_version"] + 1
             or outage_committed_state["mode"] != target_mode
             or outage_committed_state["status"] != "waiting"
-            or outage_committed_counts["history"] != outage_before_counts["history"] + 1
+            or outage_committed_counts["history"]
+            != outage_before_counts["history"] + 1
             or outage_committed_counts["commands"]
             != outage_before_counts["commands"] + 1
         ):
             raise LiveProofError(
-                "canonical authority transaction did not commit during NATS outage"
+                "deployed Lifecycle transaction did not commit exactly once while NATS was down"
             )
         before_obligation = next(
             item
@@ -1374,164 +1705,290 @@ asyncio.run(main())
                 "unrelated outage transaction changed the active obligation occurrence"
             )
 
-        outage_retry_result = self.apply_internal_command(outage_command)
-        outage_retry_state = self.state()
-        outage_retry_counts = self.counts()
-        if (
-            outage_retry_result["verdict"] != "idempotent"
-            or outage_retry_result["mutated"] is not False
-            or outage_retry_state != outage_committed_state
-            or outage_retry_counts["history"] != outage_committed_counts["history"]
-            or outage_retry_counts["commands"] != outage_committed_counts["commands"]
-        ):
-            raise LiveProofError(
-                "retry during NATS outage duplicated the committed authority effect"
-            )
-
         outage_rows_during = [
             item
             for item in self.outbox_rows()
             if item["event_id"] not in before_event_ids
         ]
-        outage_event_ids = [item["event_id"] for item in outage_rows_during]
-        outage_sequences = [int(item["event_sequence"]) for item in outage_rows_during]
+        pending_event_ids = [item["event_id"] for item in outage_rows_during]
+        pending_sequences = [
+            int(item["event_sequence"]) for item in outage_rows_during
+        ]
         if (
             len(outage_rows_during) < 2
-            or outage_result["applied_event_id"] not in outage_event_ids
-            or outage_result["reply_event_id"] not in outage_event_ids
+            or outage_result["applied_event_id"] not in pending_event_ids
+            or outage_result["reply_event_id"] not in pending_event_ids
             or any(item["published"] for item in outage_rows_during)
-            or outage_sequences != sorted(set(outage_sequences))
-            or outage_retry_counts["outbox_pending"] != len(outage_rows_during)
+            or pending_sequences != sorted(set(pending_sequences))
+            or outage_committed_counts["outbox"]
+            != outage_before_counts["outbox"] + len(outage_rows_during)
+            or outage_committed_counts["outbox_pending"] != len(outage_rows_during)
         ):
             raise LiveProofError(
-                "authority transaction did not retain exact ordered pending outbox rows"
+                "database commit while NATS was down did not retain exact ordered pending outbox rows"
             )
 
-        self.compose("start", "bloodbank-nats")
-        self.wait_container_health("bloodbank-nats")
-        recovered = self.wait_health("/readyz", 200, timeout=90)
-        outage_rows_after = wait_for(
-            "exact outage outbox rows to publish",
-            lambda: (
-                matching
-                if len(
-                    matching := [
-                        item
-                        for item in self.outbox_rows()
-                        if item["event_id"] in set(outage_event_ids)
-                        and item["published"]
-                    ]
-                )
-                == len(outage_event_ids)
-                else None
-            ),
-            timeout=120,
-        )
-        if self.counts()["outbox_pending"] != 0:
-            raise LiveProofError(
-                "recovered publisher left committed outbox rows pending"
-            )
+        recovery_guard_activity: dict[str, Any]
+        nats_restarted_consumer: dict[str, Any]
+        recovered_consumer_info: dict[str, Any]
+        try:
+            # A non-mutating table lock keeps the service's immediate startup
+            # sweep from changing state while redelivery idempotency is measured.
+            self.start_lifecycle_recovery_guard()
+            recovery_guard_activity = self.wait_lifecycle_recovery_guard()
 
-        event_messages = self.stream_messages_since(
-            "BLOODBANK_EVENTS", after_sequence=event_last_before
-        )
-        command_messages = self.stream_messages_since(
-            "BLOODBANK_COMMANDS", after_sequence=command_last_before
-        )
-        recovered_messages = [*event_messages, *command_messages]
-        exact_stream_rows = [
-            message
-            for message in recovered_messages
-            if message["event_id"] in set(outage_event_ids)
-        ]
-        stream_counts = {
-            event_id: sum(
-                message["event_id"] == event_id for message in exact_stream_rows
-            )
-            for event_id in outage_event_ids
-        }
-        if any(count != 1 for count in stream_counts.values()):
-            raise LiveProofError(
-                f"recovered JetStream did not persist exact outbox IDs once: {stream_counts}"
-            )
-
-        recovered_by_id = {item["event_id"]: item for item in outage_rows_after}
-        published_times = [
-            recovered_by_id[event_id]["published_at"] for event_id in outage_event_ids
-        ]
-        if published_times != sorted(published_times):
-            raise LiveProofError(
-                "per-lifecycle outage outbox rows published out of sequence"
-            )
-        for stream_name in ("BLOODBANK_EVENTS", "BLOODBANK_COMMANDS"):
-            stream_rows = sorted(
-                (
-                    message
-                    for message in exact_stream_rows
-                    if message["stream"] == stream_name
+            self.compose("start", "bloodbank-nats")
+            self.wait_container_health("bloodbank-nats")
+            nats_restarted_consumer = wait_for(
+                "persisted ack-pending delivery after NATS restart",
+                lambda: (
+                    value
+                    if int(
+                        (value := self.consumer_info(
+                            COMMAND_STREAM, COMMAND_CONSUMER
+                        )).get("num_ack_pending", 0)
+                    )
+                    >= 1
+                    else None
                 ),
-                key=lambda item: item["stream_sequence"],
+                timeout=30,
             )
-            stream_outbox_sequences = [
-                int(recovered_by_id[item["event_id"]]["event_sequence"])
-                for item in stream_rows
+            event_stream_before_recovery = self.stream_info("BLOODBANK_EVENTS")[
+                "state"
             ]
-            if stream_outbox_sequences != sorted(stream_outbox_sequences):
+            command_stream_before_recovery = self.stream_info(COMMAND_STREAM)[
+                "state"
+            ]
+            if (
+                int(event_stream_before_recovery["messages"])
+                != int(event_stream_before["messages"])
+                or int(command_stream_before_recovery["messages"])
+                != int(command_stream_before["messages"]) + 1
+            ):
                 raise LiveProofError(
-                    f"{stream_name} reordered per-lifecycle outage publications"
+                    "outbox publication occurred before the deployed Lifecycle service recovered"
+                )
+            persisted_outage_command = self.stream_message(
+                COMMAND_STREAM, int(outage_publish_ack["stream_sequence"])
+            )
+            if (
+                persisted_outage_command is None
+                or persisted_outage_command["event_id"] != outage_command["id"]
+                or persisted_outage_command["subject"] != outage_command["subject"]
+            ):
+                raise LiveProofError(
+                    "canonical outage command was not persisted at its acknowledged sequence"
                 )
 
-        time.sleep(1)
-        if (
-            self.state() != outage_committed_state
-            or self.counts()["history"] != outage_committed_counts["history"]
-            or self.counts()["commands"] != outage_committed_counts["commands"]
-        ):
-            raise LiveProofError(
-                "recovery/replay duplicated the during-outage authority effect"
+            self.compose("start", "lifecycle")
+            recovered_lifecycle_container = self.compose(
+                "ps", "-q", "lifecycle"
+            ).stdout.strip()
+            if recovered_lifecycle_container != deployed_lifecycle_container:
+                raise LiveProofError(
+                    "Lifecycle recovery replaced the deployed Compose container"
+                )
+            recovered = self.wait_health("/readyz", 200, timeout=90)
+            blocked_delivery_sequence = int(
+                blocked_consumer_info.get("delivered", {}).get("consumer_seq", 0)
+            )
+            recovered_consumer_info = wait_for(
+                f"{COMMAND_CONSUMER} durable redelivery acknowledgement",
+                lambda: (
+                    value
+                    if int(
+                        (value := self.consumer_info(
+                            COMMAND_STREAM, COMMAND_CONSUMER
+                        )).get("num_ack_pending", 0)
+                    )
+                    == 0
+                    and int(value.get("delivered", {}).get("consumer_seq", 0))
+                    > blocked_delivery_sequence
+                    else None
+                ),
+                timeout=120,
+            )
+            command_removed_after_ack = wait_for(
+                "acked outage command WorkQueue retention",
+                lambda: (
+                    True
+                    if self.stream_message(
+                        COMMAND_STREAM,
+                        int(outage_publish_ack["stream_sequence"]),
+                        missing_ok=True,
+                    )
+                    is None
+                    else None
+                ),
+                timeout=30,
             )
 
-        rows = self.outbox_rows()
-        sequences = [int(item["event_sequence"]) for item in rows]
-        if sequences != sorted(set(sequences)) or not all(
-            item["published"] for item in rows
-        ):
-            raise LiveProofError(
-                "outbox ordering/uniqueness/eventual publication failed"
+            def recovered_outage_rows() -> list[dict[str, Any]] | None:
+                matching = [
+                    item
+                    for item in self.outbox_rows()
+                    if item["event_id"] not in before_event_ids
+                ]
+                idempotent = [
+                    item
+                    for item in matching
+                    if item["verdict"] == "idempotent"
+                    and item["causation_id"] == outage_command["id"]
+                ]
+                if (
+                    len(matching) == len(outage_rows_during) + 1
+                    and len(idempotent) == 1
+                    and all(item["published"] for item in matching)
+                ):
+                    return matching
+                return None
+
+            outage_rows_after = wait_for(
+                "outage outbox drain plus one idempotent redelivery reply",
+                recovered_outage_rows,
+                timeout=120,
             )
-        events_after = int(self.stream_info("BLOODBANK_EVENTS")["state"]["messages"])
-        commands_after = int(
-            self.stream_info("BLOODBANK_COMMANDS")["state"]["messages"]
-        )
-        self.summary["invariants"]["6_nats_outage_recovery"] = {
-            "ready_during_outage": degraded,
-            "live_during_outage": still_live,
-            "ready_after_recovery": recovered,
-            "committed_state_before": outage_before_state,
-            "authority_command_event_id": outage_command["id"],
-            "authority_command_id": outage_command["command_id"],
-            "result_during_outage": outage_result,
-            "retry_during_outage": outage_retry_result,
-            "state_during_outage": outage_committed_state,
-            "counts_before": outage_before_counts,
-            "counts_during_outage": outage_retry_counts,
-            "pending_outbox_during_outage": outage_rows_during,
-            "recovered_outbox_rows": outage_rows_after,
-            "recovered_stream_messages": exact_stream_rows,
-            "stream_id_counts": stream_counts,
-            "event_messages_before": int(event_stream_before["messages"]),
-            "event_messages_after": events_after,
-            "command_reply_messages_before": int(command_stream_before["messages"]),
-            "command_reply_messages_after": commands_after,
-            "outbox_sequences": sequences,
-            "outbox_pending": 0,
-        }
+            recovered_state = self.state()
+            recovered_counts = self.counts()
+            recovered_result = self.command_result(outage_command["id"])
+            if (
+                recovered_state != outage_committed_state
+                or recovered_counts["history"]
+                != outage_committed_counts["history"]
+                or recovered_counts["commands"]
+                != outage_committed_counts["commands"]
+                or recovered_counts["observations"]
+                != outage_committed_counts["observations"]
+                or recovered_counts["outbox"]
+                != outage_committed_counts["outbox"] + 1
+                or recovered_counts["outbox_pending"] != 0
+                or recovered_result != outage_result
+            ):
+                raise LiveProofError(
+                    "durable command redelivery duplicated authoritative state, history, or command results"
+                )
+
+            outage_event_ids = [item["event_id"] for item in outage_rows_after]
+            event_messages = self.stream_messages_since(
+                "BLOODBANK_EVENTS", after_sequence=event_last_before
+            )
+            command_messages = self.stream_messages_since(
+                COMMAND_STREAM, after_sequence=command_last_before
+            )
+            recovered_messages = [*event_messages, *command_messages]
+            exact_stream_rows = [
+                message
+                for message in recovered_messages
+                if message["event_id"] in set(outage_event_ids)
+            ]
+            stream_counts = {
+                event_id: sum(
+                    message["event_id"] == event_id for message in exact_stream_rows
+                )
+                for event_id in outage_event_ids
+            }
+            if any(count != 1 for count in stream_counts.values()):
+                raise LiveProofError(
+                    f"recovered JetStream did not persist exact outbox IDs once: {stream_counts}"
+                )
+
+            recovered_by_id = {item["event_id"]: item for item in outage_rows_after}
+            published_times = [
+                recovered_by_id[event_id]["published_at"]
+                for event_id in outage_event_ids
+            ]
+            if published_times != sorted(published_times):
+                raise LiveProofError(
+                    "per-lifecycle outage outbox rows published out of sequence"
+                )
+            for stream_name in ("BLOODBANK_EVENTS", COMMAND_STREAM):
+                stream_rows = sorted(
+                    (
+                        message
+                        for message in exact_stream_rows
+                        if message["stream"] == stream_name
+                    ),
+                    key=lambda item: item["stream_sequence"],
+                )
+                stream_outbox_sequences = [
+                    int(recovered_by_id[item["event_id"]]["event_sequence"])
+                    for item in stream_rows
+                ]
+                if stream_outbox_sequences != sorted(stream_outbox_sequences):
+                    raise LiveProofError(
+                        f"{stream_name} reordered per-lifecycle outage publications"
+                    )
+
+            rows = self.outbox_rows()
+            sequences = [int(item["event_sequence"]) for item in rows]
+            if sequences != sorted(set(sequences)) or not all(
+                item["published"] for item in rows
+            ):
+                raise LiveProofError(
+                    "outbox ordering/uniqueness/eventual publication failed"
+                )
+            events_after = int(
+                self.stream_info("BLOODBANK_EVENTS")["state"]["messages"]
+            )
+            commands_after = int(
+                self.stream_info(COMMAND_STREAM)["state"]["messages"]
+            )
+            self.summary["invariants"]["6_nats_outage_recovery"] = {
+                "deployed_lifecycle_container": deployed_lifecycle_container,
+                "lock_holder": lock_holder_activity,
+                "blocked_writer": blocked_writer_activity,
+                "consumer_before": command_consumer_before,
+                "consumer_blocked": blocked_consumer_info,
+                "consumer_after_nats_restart": nats_restarted_consumer,
+                "consumer_after_redelivery": recovered_consumer_info,
+                "command_publish_ack": outage_publish_ack,
+                "persisted_command_before_redelivery": persisted_outage_command,
+                "command_removed_after_ack": command_removed_after_ack,
+                "nats_status_during_outage": nats_down_status,
+                "lifecycle_status_after_commit": lifecycle_stopped_status,
+                "recovery_guard": recovery_guard_activity,
+                "ready_during_outage": degraded,
+                "live_during_outage": still_live,
+                "ready_after_recovery": recovered,
+                "committed_state_before": outage_before_state,
+                "authority_command_event_id": outage_command["id"],
+                "authority_command_id": outage_command["command_id"],
+                "result_during_outage": outage_result,
+                "state_during_outage": outage_committed_state,
+                "counts_before": outage_before_counts,
+                "counts_during_outage": outage_committed_counts,
+                "counts_after_redelivery": recovered_counts,
+                "pending_outbox_during_outage": outage_rows_during,
+                "recovered_outbox_rows": outage_rows_after,
+                "recovered_stream_messages": exact_stream_rows,
+                "stream_id_counts": stream_counts,
+                "event_messages_before": int(event_stream_before["messages"]),
+                "event_messages_before_recovery": int(
+                    event_stream_before_recovery["messages"]
+                ),
+                "event_messages_after": events_after,
+                "command_reply_messages_before": int(
+                    command_stream_before["messages"]
+                ),
+                "command_reply_messages_before_recovery": int(
+                    command_stream_before_recovery["messages"]
+                ),
+                "command_reply_messages_after": commands_after,
+                "outbox_sequences": sequences,
+                "outbox_pending": 0,
+            }
+        finally:
+            self.release_lifecycle_recovery_guard(check=False)
 
         print("[live] settling the post-command deterministic reconcile", flush=True)
-        self.compose("restart", "lifecycle")
+        # The same deployed container was already restarted for durable
+        # redelivery. Releasing the recovery guard unblocks its startup sweep;
+        # another restart here could strand a just-claimed reconcile lease.
         self.wait_health("/readyz", 200)
         settled_state = self.wait_state_version(
-            outage_committed_state["state_version"] + 1, "waiting"
+            outage_committed_state["state_version"] + 1,
+            "waiting",
+            timeout=120,
         )
         wait_for(
             "settled post-command reconcile queue/outbox",
@@ -1541,6 +1998,7 @@ asyncio.run(main())
                 and self.counts()["outbox_pending"] == 0
                 else None
             ),
+            timeout=120,
         )
         settled_obligation = next(
             item
