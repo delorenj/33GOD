@@ -13,9 +13,17 @@ The three body tokens must match between type and subject. Event actions are pas
 
 ## Required Runtime Envelope
 
-Base runtime fields: `specversion`, `id`, `source`, `type`, `time`, `correlationid`, `producer`, `service`, `domain`, `kind`, and `data`. Events additionally require `actor` and `ordering_key`. Commands additionally require `actor`, `command_id`, `idempotency_key`, and `delivery=single_consumer`. Replies require `actor`.
+Canonical runtime fields include `specversion`, `id`, `source`, `type`,
+`subject`, `time`, `correlationid`, `causationid`, `producer`, `service`,
+`domain`, `kind`, `actor`, and `data`. Events additionally require
+`ordering_key`. Commands additionally require `command_id`, `idempotency_key`,
+and `delivery=single_consumer`. Registered lifecycle schemas also bind the exact
+`datacontenttype`, `dataschema`, and `schemaref` values.
 
-The builder also emits subject, schema references, trace context, and nonempty causation. JSON Schema required fields are currently weaker, so consumers needing canonical validity must apply runtime contract rules as well.
+A root-issued command sets `correlationid=command_id` and may use null
+`causationid`. A command derived from an authoritative projection inherits the
+snapshot's correlation lineage and sets `causationid` to that exact snapshot
+CloudEvent ID. Trace context remains optional.
 
 ## Streams
 
@@ -33,20 +41,36 @@ No broker-level DLQ or capacity ceiling is configured. Replay metadata exists as
 - Raw NATS core `PUB`: used by hooks; connection/PING does not prove JetStream persistence.
 - `bb verify-envelope`: implemented local validation.
 
-## Known Contract Failure
+## Runtime Contract Binding
 
-`assert_contract()` checks subject regex and kind marker but does not call `assert_subject_matches()`. A semantically different subject with the correct kind can pass. Downstream systems must not assume live validation proves type/topic equality until fixed and covered by a negative test.
+`assert_contract()` invokes `assert_subject_matches()`, so runtime validation
+binds CloudEvent type, NATS/Dapr subject, and envelope kind rather than accepting
+a structural lookalike. Bloodbank's schema, naming, compatibility, producer, and
+consumer suites include negative subject/type/const/version cases.
 
 ## Consumers
 
-Candystore subscribes to the event wildcard and enforces only a subset.
-Holocene has no functioning direct Bloodbank client. PJangler generators contain
-noncanonical subject patterns. These mismatches are governed in
-[Drift Governance](./drift-governance.md).
+Lifecycle is the active command consumer and canonical lifecycle event/reply
+producer. Bloodbank's registered contracts include snapshot v3 with required
+`capability_version` and authority-owned `obligation_instance_id`, obligation
+completion evidence v2, and the versioned command/reply schemas.
 
-The approved target adds Lifecycle as a command consumer and canonical event
-producer. Momo and Holocene are lifecycle clients: they submit idempotent intent
-commands and consume authoritative projections; neither publishes a state
-transition as domain truth. The command/event/reply schemas, including version,
-capability, and rejection fields, must be registered here before that target is
-called operational.
+Candystore durably consumes the canonical event/reply streams, validates exact
+schema plus Lifecycle authority identity, retains append-only audit rows, and
+projects only accepted authority envelopes. Holocene has an implemented
+Bloodbank command client: it reads Candystore's projection, inherits the exact
+snapshot correlation lineage and causation event, and publishes high-level
+commands through the canonical subject. Its current core-NATS PING/PONG receipt
+means broker protocol processing, not durable JetStream acceptance. Momo uses
+the same contracts for legal actor-work selection, skill invocation, completion
+evidence, and Lifecycle command intent. PJangler's generators use fixed
+six-token canonical subjects; routing identity stays in payload/subscription
+scope rather than extra subject tokens.
+
+Root Compose runs the standalone Lifecycle authority, its dedicated
+PostgreSQL database, and the existing Bloodbank NATS/JetStream topology. The
+schemas above are registered and operational in the exercised runtime path.
+
+Bloodbank owns these canonical schemas and transport. Lifecycle alone evaluates
+and writes lifecycle truth; Candystore is audit/read-only, Momo chooses actor
+work, and Holocene renders authoritative data and invokes high-level actions.

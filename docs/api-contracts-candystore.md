@@ -7,11 +7,16 @@
 | Outcome | HTTP | Dapr status | Meaning |
 |---|---:|---|---|
 | New event | 200 | `SUCCESS` | Inserted |
-| Existing UUID | 200 | `SUCCESS` | Deduplicated without content comparison |
+| Existing UUID | 200 | `SUCCESS` | Incoming body discarded; canonical stored `events.raw` is projected in the same transaction |
 | Invalid JSON/envelope/time or permanent DB rejection | 200 | `DROP` | Dead-letter attempted |
 | Other/transient exception | 500 | `RETRY` | Delivery retried |
 
 Candystore requires truthy `id`, `source`, `type`, `time`, `producer`, `service`, `domain`, and `kind`, plus UUID/time parsing. This is not full Bloodbank validation.
+
+If insertion or projection raises a transient exception, neither the audit row
+nor projection receipt commits and Dapr retries. Duplicate delivery can safely
+complete a projection that was absent before migration because the retry reads
+the already-persisted canonical row under a PostgreSQL share lock.
 
 ## Health
 

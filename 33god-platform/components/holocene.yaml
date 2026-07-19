@@ -2,14 +2,15 @@ id: holocene
 name: Holocene
 role: control-plane-dashboard
 repo: ../holocene
-description: Live dashboard for fleet, tooling, hook health, and pipeline status.
+description: Mission-control dashboard plus Candystore-backed Lifecycle read/command surface.
+source_revision: 544ca73f4cc75ef98956873b11085216af12a297
 compose:
   files:
     - ../holocene/compose.yml
   platform_projection: ../compose.yaml
   services: [holocene-api-preflight, holocene-web]
   profiles: [default]
-  state: validated-target-not-live-cutover
+  state: validated-local-and-isolated-live
   ownership: Root owns the normalized web projection and preflight; Holocene owns web behavior and the host API unit.
   external_prerequisite: holocene-api.service on host port 4000
 health:
@@ -20,7 +21,7 @@ source_of_truth:
   - ../holocene/packages
   - ../holocene/docs
 changelog:
-  topics: [dashboard, status, live-data, tooling-health]
+  topics: [dashboard, status, live-data, tooling-health, lifecycle-client]
 public_card:
   title: Mission Control
   promise: Live operational view of agents, events, and platform health.

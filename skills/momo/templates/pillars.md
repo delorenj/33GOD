@@ -26,7 +26,7 @@
 
 ## Taste / product
 
-- **`<slug>`** — <e.g. "prefer boring, observable, reversible over clever">
+- **`<slug>`** — <e.g. "prefer boring, observable, forward repair over clever">
 
 ---
 
@@ -36,5 +36,6 @@
   picks the one(s) that decide it, and records:
   `record-decision.py --decision "…" --basis "<slug>" --reasoning "…"`.
 - If a per-repo product/scope pillar conflicts with a universal *process* pillar, the
-  product pillar wins — EXCEPT the safety pillars (no-code-mutation, reviewer-independence,
-  evidence, respect-the-contracts), which are never overridden by a project goal.
+  product pillar wins — EXCEPT ownership and evidence pillars (no-code-mutation,
+  reviewer-independence, evidence, respect-the-contracts), which are never
+  overridden by a project goal.

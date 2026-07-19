@@ -10,6 +10,12 @@
 [submodule "holocene"]
 	path = holocene
 	url = git@github.com:delorenj/holocene.git
+[submodule "lifecycle"]
+	path = lifecycle
+	url = git@github.com:delorenj/lifecycle.git
+[submodule "momo"]
+	path = momo
+	url = git@github.com:delorenj/momo.git
 [submodule "pjangler"]
 	path = pjangler
 	url = git@github.com:delorenj/pjangler.git

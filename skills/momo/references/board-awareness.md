@@ -1,7 +1,8 @@
 # Board awareness — resolving the repo and reading the world
 
-Momo is repo-agnostic. Everything is resolved at runtime from the nearest ancestor
-`.project.json` (the pjangler CommonProject marker). Nothing is hardcoded to a repo.
+Momo is repo-agnostic. PJangler's nearest-ancestor `.project.json` supplies
+stable project/bootstrap identity and provider binding inputs. It does not
+contain authoritative lifecycle state.
 
 ## What `.project.json` gives you
 
@@ -22,33 +23,43 @@ Momo is repo-agnostic. Everything is resolved at runtime from the nearest ancest
 - **role_dir** → where the shared machinery lives: `<repo>/<role_dir>/.scripts/…`
   (the `tp` adapter, sentinel bin scripts, the runtime submodule, evidence dir).
 
-## Reading the board — always through the adapter
+Use the stable slug/binding to resolve Lifecycle, then fetch its authoritative
+snapshot: lifecycle ID, spec/state versions, legal frontier, obligations,
+blockers, and capability grants. Use `scripts/lifecycle_client.py fetch` and
+follow `lifecycle-client.md` for the implemented fail-closed read/command path.
 
-Do **not** call Plane/Linear/Trello directly, and do **not** use the
-`project-lifecycle` skill's `plane-workspaces.json` path for state
-transitions — it can resolve a different board and desync from Hermes. The `tp` adapter is
-the single source of truth and keeps you byte-identical to the sentinel. Use the wrapper:
+## Authoritative lifecycle versus ticket/board records
+
+Lifecycle is the single source of project-lifecycle truth. It alone calculates
+state, legal frontier, obligations, and capability validity. Momo submits
+idempotent intent with the expected state version and renders the returned
+accepted/rejected/stale/unavailable result.
+
+The current adapter remains useful for provider-owned ticket and board records:
 
 ```bash
 bash <skill_dir>/scripts/momo-board.sh list_issues        # [{id,key,title,state,state_type,...}]
 bash <skill_dir>/scripts/momo-board.sh active_milestone   # {id,name,state} (Plane cycle; may be empty)
 bash <skill_dir>/scripts/momo-board.sh get_issue <uuid>   # incl description + comments
 bash <skill_dir>/scripts/momo-board.sh comment <uuid> "…" # post a PM/review note (sign it: "— momo")
-bash <skill_dir>/scripts/momo-board.sh transition <uuid> <state>
 ```
 
-Reason in **normalized states** only: `backlog | unstarted | started | in_review | completed`.
+Do not call `momo-board.sh transition` in the target workflow. That operation is
+a legacy direct provider write retained only for migration compatibility.
+Normalized adapter values (`backlog | unstarted | started | in_review |
+completed`) are projection vocabulary, not the authoritative state model.
 The wrapper finds the repo root + role_dir, and (for Plane) maps the per-workspace secret
 `PLANE_<WORKSPACE>_API_KEY` (from `~/.config/zshyzsh/secrets.zsh`) into the `PLANE_API_KEY`
 the adapter needs. `PLANE_BASE` defaults to `https://plane.delo.sh`.
 
-## Provider = trello (self-contained adapter + config-driven lanes)
+## Provider = trello (legacy/projection adapter)
 
 `momo-board.sh` dispatches on `.project.json` `ticket_provider.type`. For `plane`/`linear`
 it uses the repo's installed `tp` adapter (above). For **`trello`** it uses Momo's OWN
 bundled adapter — `scripts/providers/trello.py` (stdlib-only; no `uv`/`httpx`; no per-repo
-scaffold and **no `role_dir` required**). Same normalized ops, so all doctrine below is
-provider-uniform. Creds: `TRELLO_API_KEY` (or `TRELLO_KEY`) + `TRELLO_TOKEN`; board id from
+scaffold and **no `role_dir` required**). Its normalized reads support projection
+comparison; its transition operation is not target authority. Creds:
+`TRELLO_API_KEY` (or `TRELLO_KEY`) + `TRELLO_TOKEN`; board id from
 `.project.json` `ticket_provider.board_id`.
 
 Trello columns rarely match Momo's five normalized stages 1:1, so the per-repo lane mapping
@@ -66,15 +77,15 @@ only). Schema:
     "in_review": ["Ready for testing", "Awaiting approval"],
     "completed": ["Completed"]
   },
-  "write_targets": { "in_review": "Ready for testing" },  // canonical lane a `transition <state>` writes to (else lanes[state][0])
+  "write_targets": { "in_review": "Ready for testing" },  // legacy migration mapping only
   "lane_notes":    { "Awaiting approval": "blocked on PR approval", … }  // human semantics, optional
 }
 ```
 
-`transition <id> <target>` accepts a normalized state (→ its `write_targets`/first lane) OR
-a literal lane name (moved verbatim — e.g. to pick the PR-blocked vs QA lane explicitly). It
-**fails loud** on any target that is neither a known state nor a live lane; lanes off the map
-read back as `state:"other"` with their real `list` preserved. Never guess a lane.
+The adapter's current `transition` operation can map a state or literal lane, but
+the corrected target never invokes it directly. Only Lifecycle may cause a
+provider projection change through its authorized adapter boundary. Lanes off the map read as
+`state:"other"`; never infer lifecycle legality from a lane.
 
 **First-run setup (one time per repo).** If `.momo/config.json` is absent, run
 `scripts/momo-config.py detect` — it reports `is_standard`, `unmapped_lanes`, and
@@ -95,28 +106,34 @@ this:
    — **verify by name**, because near-duplicate boards exist (e.g. in `33god`: "Candy Store"
    CSTOR, "Candybar" CANDY, "Candystore" CANDYS — only the exact repo name is correct).
 3. Backfill `.project.json` `ticket_provider.board_id` (and correct `identifier` if wrong).
-4. **Record the decision** (`record-decision.py`, basis `one-source-of-truth`,
-   `respect-the-contracts`) — this is a shared-state change Hermes will also read.
+4. Submit the repaired binding as an observation and **record the decision**
+   (`record-decision.py`, basis `one-source-of-truth`,
+   `respect-the-contracts`). This is bootstrap metadata, not a lifecycle write.
 
 This backfill is a config repair, not a code mutation, so Momo may do it directly. Anything
 beyond a binding repair still goes through a delegated worker.
 
-## Seeing what Hermes is doing (avoid double-driving)
+## Seeing what Hermes is doing (avoid double-dispatch)
 
 - `<role_dir>/runtime/continuous-ticket-sentinel-state.json` — machine-readable feed:
   `status` (idle|checking|active|blocked|stalled|error), `active_issue`, `session`,
-  `worktree`, `last_heartbeat_at`. **May be absent** when reconcile is disabled
-  (`role.yaml` has no `reconcile: {enabled: true}` block) — then Hermes only checkpoints.
+  `worktree`, `last_heartbeat_at`. **May be absent** when Hermes actor-work polling
+  is disabled (the historical `role.yaml` field is named `reconcile`) — then
+  Hermes only checkpoints. This poller never reconciles Lifecycle truth.
 - Tail `<role_dir>/runtime/logs/heartbeat.log` and read `<role_dir>/runtime/memories/MEMORY.md`
   ("Recent context") for Hermes' mental model.
 - Honor **WIP=1**: if Hermes shows an active worker, do not start a second. If you take a
   ticket, you own the WIP slot until it clears.
 
-## Local truth surfaces (proof, not the board)
+## Evidence and projection surfaces
 
+- Authority: versioned Lifecycle snapshot/command result via
+  `scripts/lifecycle_client.py` and Candystore's read-only projection API
 - Evidence: `_bmad-output/implementation-artifacts/issue-evidence/<ISSUE>.md`
 - Decision/event trail: `_bmad-output/implementation-artifacts/bloodbank-events.jsonl`
 - Live workers: `git status`, branches, `git worktree list`, recent commits, zellij sessions.
 
-When the board and the evidence disagree, the evidence wins; post a truth-check comment on
-the ticket and keep it open.
+When the provider board, evidence, and Lifecycle disagree, Lifecycle remains the
+state authority. Submit the evidence/discrepancy as an observation, record a
+truth-check decision, and render the authoritative version; Momo does not choose
+or write the winning state.
