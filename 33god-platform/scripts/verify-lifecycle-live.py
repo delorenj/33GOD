@@ -30,7 +30,7 @@ SOURCE_ROOT = PLATFORM_ROOT.parent
 COMPOSE_FILE = PLATFORM_ROOT / "compose.yaml"
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311"
+    "sha256:75879a0eda1179a806dca55f189b4e53796034a8a0d70d6aa1a78569015793f5"
 )
 NATS_BOX_IMAGE = (
     "natsio/nats-box@"
@@ -895,6 +895,9 @@ asyncio.run(main())
         initial = self.state()
         if initial["status"] != "active" or initial["state_version"] != 1:
             raise LiveProofError(f"unexpected deterministic bootstrap state: {initial}")
+        initial_reconciled_at = datetime.fromisoformat(
+            initial["last_reconciled_at"].replace("Z", "+00:00")
+        )
         capability_version = self.capability_version()
 
         running = set(
@@ -1041,7 +1044,7 @@ asyncio.run(main())
             ),
             timeout=120,
         )
-        preactivation_authority_time = datetime.fromisoformat(
+        preactivation_reconciled_at = datetime.fromisoformat(
             preactivation["last_reconciled_at"].replace("Z", "+00:00")
         )
         activation = wire_time()
@@ -1049,17 +1052,19 @@ asyncio.run(main())
         if (
             persisted_prepublication["source_event_id"] != prepublished_evidence["id"]
             or persisted_observed_at != claimed_completion_value
+            or persisted_received_at != trusted_publication
+            or preactivation_reconciled_at != initial_reconciled_at
             or not (
-                preactivation_authority_time
-                <= trusted_publication
+                initial_reconciled_at
+                < trusted_publication
                 < activation_value
                 < claimed_completion_value
                 and persisted_received_at < activation_value
             )
         ):
             raise LiveProofError(
-                "prepublication chronology was not immutable storage <= canonical "
-                "receipt < activation < claimed completion"
+                "future producer time advanced authority beyond the immutable "
+                "publication boundary before activation"
             )
 
         first = self.command(
@@ -1071,6 +1076,9 @@ asyncio.run(main())
         self.publish(first)
         first_result = self.wait_command(first["id"], "applied")
         first_waiting = self.wait_state_version(target_waiting_version, "waiting")
+        first_waiting_reconciled_at = datetime.fromisoformat(
+            first_waiting["last_reconciled_at"].replace("Z", "+00:00")
+        )
         obligation = next(
             (
                 item
@@ -1094,6 +1102,7 @@ asyncio.run(main())
             or waiting_frontier is None
             or waiting_frontier.get("allowed") is not False
             or waiting_frontier.get("reason_code") != "PENDING_OBLIGATIONS"
+            or first_waiting_reconciled_at != activation_value
         ):
             raise LiveProofError(
                 "first WAITING authority snapshot did not expose the pending "
@@ -1131,12 +1140,16 @@ asyncio.run(main())
         occurrence_activation = datetime.fromisoformat(
             obligation["activated_at"].replace("Z", "+00:00")
         )
+        replayed_reconciled_at = datetime.fromisoformat(
+            progressed["last_reconciled_at"].replace("Z", "+00:00")
+        )
         if (
             persisted_prepublication["source_event_id"] != prepublished_evidence["id"]
             or obligation["obligation_instance_id"] != occurrence_id
             or obligation["status"] != "pending"
             or waiting_frontier["allowed"] is not False
             or waiting_frontier["reason_code"] != "PENDING_OBLIGATIONS"
+            or replayed_reconciled_at != activation_value
             or not (
                 trusted_publication < occurrence_activation < claimed_completion_value
                 and persisted_received_at < occurrence_activation
@@ -1167,10 +1180,11 @@ asyncio.run(main())
             "observation_received_at": persisted_prepublication["received_at"],
             "observation_observed_at": persisted_prepublication["observed_at"],
             "observation_existed_before_waiting": True,
+            "last_reconciled_before_waiting": preactivation["last_reconciled_at"],
+            "last_reconciled_after_waiting": progressed["last_reconciled_at"],
             "occurrence_activated_at": obligation["activated_at"],
             "claimed_completed_at": claimed_completion,
             "obligation_instance_id": occurrence_id,
-            "preactivation_authority_time": preactivation["last_reconciled_at"],
             "preactivation_state_version": preactivation["state_version"],
             "first_waiting_state_version": first_waiting["state_version"],
             "post_activation_state_version": progressed["state_version"],

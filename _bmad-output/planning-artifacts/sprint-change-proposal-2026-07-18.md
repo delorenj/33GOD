@@ -44,13 +44,13 @@ Lifecycle do not drive the same reconcile loop.
 ### Runtime and contracts
 
 - Lifecycle runtime source:
-  `719e6af0f06f1bdb30937326380ac67581e8dbb8`
+  `4513d520c8e8719245b7aa70e5486857e2472439`
 - Lifecycle runtime image:
-  `ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311`
+  `ghcr.io/delorenj/lifecycle@sha256:75879a0eda1179a806dca55f189b4e53796034a8a0d70d6aa1a78569015793f5`
 - Bloodbank contract/transport revision:
   `48031ee39c238b9d4715b81b74076635235f96d5`
 - Lifecycle authority/integration revision:
-  `719e6af0f06f1bdb30937326380ac67581e8dbb8`
+  `4513d520c8e8719245b7aa70e5486857e2472439`
 
 Root Compose references the immutable image digest and contains no Lifecycle
 build key. A dedicated PostgreSQL database, secret, volume, and private network
@@ -141,7 +141,7 @@ Component feature refs are published before the root gitlink update:
 | Component | Branch | Revision |
 |---|---|---|
 | Bloodbank | `feature/moirai-lifecycle-capability-contract-20260718` | `48031ee39c238b9d4715b81b74076635235f96d5` |
-| Lifecycle | `fix/trusted-publication-reconcile-time-20260719` | `719e6af0f06f1bdb30937326380ac67581e8dbb8` |
+| Lifecycle | `feature/moirai-lifecycle-integration-docs-20260718` | `4513d520c8e8719245b7aa70e5486857e2472439` |
 | Candystore | `feature/moirai-lifecycle-projection-20260718` | `b1f6fda3739d095535b326cc89b9a6c7823f63d8` |
 | Momo | `feature/moirai-lifecycle-client-20260718` | `9e3a67a36b3dfe09b4061029d7b52eab39f4d011` |
 | Holocene | `feature/moirai-lifecycle-surface-20260718` | `544ca73f4cc75ef98956873b11085216af12a297` |

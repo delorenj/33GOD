@@ -9,7 +9,7 @@ x-33god-model:
   tools: local-one-shot
   full: local-with-tools
   cloud: unsupported-local-bind-model
-x-lifecycle-image: &lifecycle-image ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311
+x-lifecycle-image: &lifecycle-image ghcr.io/delorenj/lifecycle@sha256:75879a0eda1179a806dca55f189b4e53796034a8a0d70d6aa1a78569015793f5
 
 services:
   bloodbank-nats:
