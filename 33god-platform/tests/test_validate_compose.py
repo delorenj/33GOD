@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import base64
 import copy
 import importlib.util
 import json
@@ -20,6 +21,11 @@ SPEC = importlib.util.spec_from_file_location("validate_compose", SCRIPT)
 assert SPEC and SPEC.loader
 VALIDATOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VALIDATOR)
+LIVE_SCRIPT = PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py"
+LIVE_SPEC = importlib.util.spec_from_file_location("verify_lifecycle_live", LIVE_SCRIPT)
+assert LIVE_SPEC and LIVE_SPEC.loader
+LIVE_HARNESS = importlib.util.module_from_spec(LIVE_SPEC)
+LIVE_SPEC.loader.exec_module(LIVE_HARNESS)
 
 PORT_OVERRIDE_KEYS = (
     "BLOODBANK_NATS_CLIENT_PORT",
@@ -557,6 +563,10 @@ class ComposeSemanticValidationTests(unittest.TestCase):
             'invocation_publish_ack["stream_sequence"]',
             'receipt["invocation"]["id"]',
             'receipt["completion"]["event_id"]',
+            "completion_stream_message = self.stream_message(",
+            'receipt["completion"]["duplicate"] is not False',
+            'completion_stream_message["headers"]',
+            '"Nats-Msg-Id": completion_event["id"]',
             '"receipt/artifact identity mismatch"',
         ):
             with self.subTest(required=required):
@@ -577,6 +587,8 @@ class ComposeSemanticValidationTests(unittest.TestCase):
             "filter_subject=INVOCATION_SUBJECT",
             "jetstream.pull_subscribe(",
             "await lifecycle_client.publish_envelope_async(",
+            'completed_at = command["time"]',
+            'headers={"Nats-Msg-Id": completion["id"]}',
             "await message.ack_sync(",
             'operations.append("completion_puback")',
             'operations.append("invocation_ack_sync")',
@@ -588,6 +600,37 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         ack_recorded = worker.index('operations.append("invocation_ack_sync")', ack)
         self.assertLess(puback, ack)
         self.assertLess(ack, ack_recorded)
+
+    def test_stored_nats_headers_require_unambiguous_canonical_message_id(
+        self,
+    ) -> None:
+        event_id = "11111111-1111-4111-8111-111111111111"
+        expected = {"Nats-Msg-Id": event_id}
+        self.assertEqual(
+            LIVE_HARNESS.stored_nats_headers(
+                {"headers": {"Nats-Msg-Id": [event_id]}}
+            ),
+            expected,
+        )
+
+        block = f"NATS/1.0\r\nNats-Msg-Id: {event_id}\r\n\r\n".encode()
+        self.assertEqual(
+            LIVE_HARNESS.stored_nats_headers(
+                {"hdrs": base64.b64encode(block).decode()}
+            ),
+            expected,
+        )
+
+        duplicate_block = (
+            f"NATS/1.0\r\nNats-Msg-Id: {event_id}\r\n"
+            f"Nats-Msg-Id: {event_id}\r\n\r\n"
+        ).encode()
+        with self.assertRaisesRegex(
+            LIVE_HARNESS.LiveProofError, "ambiguous headers"
+        ):
+            LIVE_HARNESS.stored_nats_headers(
+                {"hdrs": base64.b64encode(duplicate_block).decode()}
+            )
 
     def test_live_matrix_proves_deployed_single_writer_outage_choreography(
         self,

@@ -76,7 +76,7 @@ Candystore exposes no operational Lifecycle mutation endpoint.
 ### Momo obligation-to-skill seam
 
 Momo revision
-`9b6b1e7d30001f5918d32e99cbcbf5200fc29e1d`:
+`4c59f10460798f1ba8853b4f0b59b56ce31bacbd`:
 
 - consumes authoritative snapshots/frontier/obligations;
 - ranks only legal frontier commands while servicing pending obligations as
@@ -86,7 +86,9 @@ Momo revision
 - emits decision rationale separately from state-changing intent; and
 - durably consumes the exact canonical agent invocation, verifies the promoted
   skill resource, writes and hashes a bounded review report, publishes exact
-  completion evidence, and acknowledges only after its PubAck; and
+  completion evidence with invocation-derived stable identity/time and the
+  completion CloudEvent ID as `Nats-Msg-Id`, and acknowledges only after its
+  PubAck; and
 - publishes Lifecycle commands through Bloodbank.
 
 Every state-changing command carries actor, capability/grant, idempotency,
@@ -147,7 +149,7 @@ Component feature refs are published before the root gitlink update:
 | Bloodbank | `feature/moirai-lifecycle-capability-contract-20260718` | `48031ee39c238b9d4715b81b74076635235f96d5` |
 | Lifecycle | `fix/trusted-command-publication-time-20260719` | `cda59658bef6d586c8aa01cacd88bc4e3ee867e0` |
 | Candystore | `feature/moirai-lifecycle-projection-20260718` | `b1f6fda3739d095535b326cc89b9a6c7823f63d8` |
-| Momo | `fix/real-obligation-worker-20260719` | `9b6b1e7d30001f5918d32e99cbcbf5200fc29e1d` |
+| Momo | `fix/real-obligation-worker-20260719` | `4c59f10460798f1ba8853b4f0b59b56ce31bacbd` |
 | Holocene | `feature/moirai-lifecycle-surface-20260718` | `544ca73f4cc75ef98956873b11085216af12a297` |
 
 Each ref was fetched and checked out from anonymous credential-disabled HTTPS,

@@ -15,7 +15,7 @@ Thin router for the 33GOD / DeLoNET platform. Load this skill when a request tou
 - **The standalone Lifecycle component is the sole deterministic 33GOD lifecycle authority.** It owns specification/status, state versions, legal transitions and guards, modes, frontier, obligations/blockers/gates/capabilities, reconciliation, and every lifecycle state write.
 - **Plane owns ticket/work-item records and board/lane state only.** It does not evaluate or write deterministic Lifecycle truth.
 - **`project-lifecycle` routes only Plane ticket/work-item and board/lane mutations.** It never routes deterministic Lifecycle authority evaluation or writes.
-- **Momo chooses and ranks what legal work to attempt and publishes evidence.** It does not determine Lifecycle truth or write lifecycle state.
+- **Momo chooses and executes legal work and publishes evidence.** It does not determine Lifecycle truth or write lifecycle state.
 - **Holocene renders authoritative Lifecycle data and invokes high-level actions.** It is not the engine or source of truth and does not persist Lifecycle truth.
 - **Bloodbank owns canonical inter-service contracts and NATS/Dapr transport.** No other skill mints event names, and agent CLIs invoke one canonical Bloodbank publisher.
 - **Candystore owns append-only audit history and Lifecycle read projections.** It never owns operational Lifecycle writes.

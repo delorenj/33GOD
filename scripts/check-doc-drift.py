@@ -45,7 +45,7 @@ COMPONENT_REVISIONS = {
     "bloodbank": "48031ee39c238b9d4715b81b74076635235f96d5",
     "lifecycle": "cda59658bef6d586c8aa01cacd88bc4e3ee867e0",
     "candystore": "b1f6fda3739d095535b326cc89b9a6c7823f63d8",
-    "momo": "9b6b1e7d30001f5918d32e99cbcbf5200fc29e1d",
+    "momo": "4c59f10460798f1ba8853b4f0b59b56ce31bacbd",
     "holocene": "544ca73f4cc75ef98956873b11085216af12a297",
 }
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
@@ -57,7 +57,7 @@ ECOSYSTEM_AUTHORITY_CONTRACT = (
     "standalone Lifecycle component is the sole deterministic 33GOD lifecycle authority",
     "Plane owns ticket/work-item records and board/lane state only",
     "`project-lifecycle` routes only Plane ticket/work-item and board/lane mutations",
-    "Momo chooses and ranks what legal work to attempt and publishes evidence",
+    "Momo chooses and executes legal work and publishes evidence",
     "Holocene renders authoritative Lifecycle data and invokes high-level actions",
     "Bloodbank owns canonical inter-service contracts and NATS/Dapr transport",
     "Candystore owns append-only audit history and Lifecycle read projections",
@@ -658,6 +658,50 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             "Momo durable obligation actor files are missing: "
             + ", ".join(str(path) for path in missing_actor_files)
         )
+    else:
+        worker_text = (canonical / "scripts/obligation_worker.py").read_text(
+            encoding="utf-8"
+        )
+        required_worker_contract = {
+            "invocation-derived completion time": 'completed_at = command["time"]',
+            "canonical JetStream message ID": (
+                'headers={"Nats-Msg-Id": completion["id"]}'
+            ),
+            "completion PubAck marker": 'operations.append("completion_puback")',
+            "invocation ACK confirmation": "await message.ack_sync(",
+            "receipt write": "_atomic_write(Path(receipt_path)",
+        }
+        for label, snippet in required_worker_contract.items():
+            if snippet not in worker_text:
+                errors.append(f"Momo worker lacks {label}")
+        ordered_worker_contract = [
+            required_worker_contract["completion PubAck marker"],
+            required_worker_contract["invocation ACK confirmation"],
+            required_worker_contract["receipt write"],
+        ]
+        if all(snippet in worker_text for snippet in ordered_worker_contract):
+            positions = [worker_text.index(snippet) for snippet in ordered_worker_contract]
+            if positions != sorted(positions):
+                errors.append("Momo worker violates PubAck-before-ACK-before-receipt order")
+
+    harness_path = platform / "scripts/verify-lifecycle-live.py"
+    harness_text = (
+        harness_path.read_text(encoding="utf-8") if harness_path.is_file() else ""
+    )
+    required_harness_contract = {
+        "stored completion message lookup": (
+            "completion_stream_message = self.stream_message("
+        ),
+        "clean non-duplicate completion PubAck": (
+            'receipt["completion"]["duplicate"] is not False'
+        ),
+        "stored canonical completion message ID": (
+            '"Nats-Msg-Id": completion_event["id"]'
+        ),
+    }
+    for label, snippet in required_harness_contract.items():
+        if snippet not in harness_text:
+            errors.append(f"Lifecycle live harness lacks {label}")
     return errors
 
 

@@ -454,7 +454,6 @@ async def process_invocation_message(
     receipt_path: Path,
     expected_stream: str,
     consumer: str,
-    clock: Any = None,
     preview_path: Path | None = None,
     release_path: Path | None = None,
     release_timeout: float = 60.0,
@@ -488,7 +487,10 @@ async def process_invocation_message(
         report_path=Path(report_path),
     )
     operations.extend(["review_artifact_written", "review_artifact_hashed"])
-    completed_at = clock() if clock is not None else _utc_now()
+    # ACK confirmation can fail after a successful completion PubAck. Derive the
+    # completion timestamp from the immutable invocation so that redelivery
+    # reconstructs the exact same CloudEvent ID, time, and JetStream message ID.
+    completed_at = command["time"]
     try:
         completion_plan = lifecycle_client.build_obligation_completion_evidence(
             plan,
@@ -519,6 +521,7 @@ async def process_invocation_message(
                 subject,
                 payload,
                 timeout=publish_timeout,
+                headers={"Nats-Msg-Id": completion["id"]},
             ),
         )
     except Exception as exc:
@@ -576,6 +579,8 @@ async def process_invocation_message(
 
 
 def _utc_now() -> str:
+    """Return wall-clock time for non-semantic worker status markers only."""
+
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 

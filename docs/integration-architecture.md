@@ -82,7 +82,9 @@ does not join the Lifecycle authority network.
 - Pending obligations make the corresponding frontier transition illegal;
   only exact canonical completion evidence from the durable Momo actor can
   unlock authority progression, and the actor ACKs invocation only after its
-  completion receives a JetStream PubAck.
+  completion receives a JetStream PubAck. Completion identity/time are stable
+  across redelivery, the exact CloudEvent ID is the JetStream `Nats-Msg-Id`, and
+  a clean run rejects a duplicate completion PubAck.
 - A late-starting Candystore replays pre-existing snapshots and verdicts, and
   duplicate IDs always project the immutable stored event rather than a
   conflicting delivery.

@@ -3,7 +3,7 @@
 **Architecture:** Event-driven, local-first platform with an implemented
 Lifecycle authority vertical slice
 
-**Last updated:** 2026-07-18
+**Last updated:** 2026-07-19
 
 ## Current state
 
@@ -17,7 +17,8 @@ path is implemented and locally verified with:
 - fail-closed migration, deterministic bootstrap, then serve ordering;
 - canonical Bloodbank contracts and JetStream;
 - durable Candystore Lifecycle projections;
-- bounded Momo legal-work/invocation intent; and
+- bounded Momo legal-work execution with retry-stable, artifact-backed
+  completion publication and PubAck-before-ACK; and
 - a Candystore-backed Holocene read/command surface.
 
 The isolated acceptance gate proves the seven offline, restart, stale-version,
@@ -34,8 +35,8 @@ render-only and unsupported.
 | Lifecycle | Specification, operational state, reconcile, legal work, grants, and writes |
 | Bloodbank | Canonical schemas and NATS/Dapr transport |
 | Candystore | Append-only history and read projections |
-| Momo | Business ranking/delegation and canonical invocation/command intent |
-| Holocene | Rendering and high-level command initiation |
+| Momo | Business ranking/delegation, legal-work execution, and evidence; never lifecycle truth |
+| Holocene | Rendering and high-level action invocation only |
 | Root platform | Process topology, pins, profiles, validation, and release gates |
 
 Live manifests, code, and tests outrank prose. Root documentation governs

@@ -1,6 +1,6 @@
 # 33GOD Project Overview
 
-**Date:** 2026-07-18
+**Date:** 2026-07-19
 
 **Type:** Four-part monorepo knowledge boundary
 
@@ -48,8 +48,9 @@ be duplicated by the projection.
 - Candystore is the durable read model; Holocene reads it over the host API's
   loopback boundary.
 - Lifecycle is the only project-lifecycle writer. Bloodbank transports its
-  contracts, Candystore stores its event history/read models, Momo chooses among
-  its legal frontier, and Holocene renders/submits high-level commands.
+  contracts, Candystore is append-only audit/projection only, Momo chooses and
+  executes legal work while publishing retry-stable evidence, and Holocene only
+  renders and invokes high-level actions.
 - Holocene web and API remain separate trust zones. Compose preflights the host
   API but does not claim or containerize its system authority.
 - PJangler is operational tooling, not an HTTP service. MCP uses stdio.

@@ -114,7 +114,9 @@ Candystore image; verifies the exact rendered Lifecycle digest before `up`;
 tests all seven offline/restart/outage/persistence invariants plus true
 late-subscriber replay, pending-obligation rejection and real durable-actor
 completion unlock, independently verified report bytes, completion PubAck before
-invocation ACK, authoritative capability versions, conflicting-duplicate
+invocation ACK, invocation-derived completion identity/time, exact stored
+`Nats-Msg-Id`, a non-duplicate clean completion PubAck, authoritative capability
+versions, conflicting-duplicate
 integrity, and the Candystore/Momo/Holocene seams; and removes only the resources
 it created. It does not prune Docker or touch another Compose project.
 

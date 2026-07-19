@@ -101,6 +101,46 @@ def sql_literal(value: str) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+def stored_nats_headers(record: dict[str, Any]) -> dict[str, str]:
+    """Normalize headers returned by `nats stream get --json`."""
+
+    structured = record.get("headers")
+    if structured is not None:
+        if not isinstance(structured, dict):
+            raise LiveProofError("JetStream stored message headers are not an object")
+        headers: dict[str, str] = {}
+        for name, raw_value in structured.items():
+            value = raw_value
+            if isinstance(value, list) and len(value) == 1:
+                value = value[0]
+            if not isinstance(name, str) or not isinstance(value, str):
+                raise LiveProofError("JetStream stored message header is not scalar text")
+            headers[name] = value
+        return headers
+
+    encoded = record.get("hdrs")
+    if encoded is None:
+        return {}
+    if not isinstance(encoded, str):
+        raise LiveProofError("JetStream stored message hdrs are not base64 text")
+    try:
+        block = base64.b64decode(encoded, validate=True).decode("utf-8")
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise LiveProofError("JetStream stored message headers are malformed") from exc
+    lines = block.splitlines()
+    if not lines or not lines[0].startswith("NATS/1.0"):
+        raise LiveProofError("JetStream stored message omitted the NATS header preamble")
+    headers = {}
+    for line in lines[1:]:
+        if not line:
+            break
+        name, separator, value = line.partition(":")
+        if not separator or not name.strip() or name.strip() in headers:
+            raise LiveProofError("JetStream stored message contains ambiguous headers")
+        headers[name.strip()] = value.strip()
+    return headers
+
+
 def wait_for(
     description: str,
     predicate: Callable[[], Any],
@@ -1025,6 +1065,7 @@ asyncio.run(main())
             "event_type": envelope.get("type"),
             "kind": envelope.get("kind"),
             "stored_at": record.get("time"),
+            "headers": stored_nats_headers(record),
         }
 
     def wait_health(
@@ -3042,6 +3083,26 @@ asyncio.run(main())
                     f"{actor_log[-4000:]}"
                 )
 
+            completion_stream_message = self.stream_message(
+                "BLOODBANK_EVENTS",
+                receipt["completion"]["stream_sequence"],
+            )
+            if (
+                receipt["completion"]["duplicate"] is not False
+                or completion_stream_message["stream"] != "BLOODBANK_EVENTS"
+                or completion_stream_message["stream_sequence"]
+                != receipt["completion"]["stream_sequence"]
+                or completion_stream_message["subject"] != completion_event["subject"]
+                or completion_stream_message["event_id"] != completion_event["id"]
+                or completion_stream_message["headers"]
+                != {"Nats-Msg-Id": completion_event["id"]}
+            ):
+                raise LiveProofError(
+                    "Momo completion PubAck/header identity mismatch: "
+                    f"receipt={receipt['completion']!r}, "
+                    f"stored={completion_stream_message!r}"
+                )
+
             workspace_root = temp_dir.resolve()
             artifact_path = Path(receipt["artifact"]["path"]).resolve()
             if (
@@ -3164,6 +3225,7 @@ asyncio.run(main())
             },
             "completion_subject": completion_event["subject"],
             "completion_event_id": completion_event["id"],
+            "completion_stream_message": completion_stream_message,
             "invocation_puback": invocation_publish_ack,
             "actor_ready": actor_ready,
             "actor_receipt": receipt,

@@ -3,7 +3,7 @@ name: Momo
 role: lifecycle-policy-client
 repo: ../momo
 description: Process manager that ranks Lifecycle-legal work and durably executes exact canonical skill invocations, publishing artifact-backed evidence through Bloodbank.
-source_revision: 9b6b1e7d30001f5918d32e99cbcbf5200fc29e1d
+source_revision: 4c59f10460798f1ba8853b4f0b59b56ce31bacbd
 compose:
   files: []
   platform_projection: ../compose.yaml
