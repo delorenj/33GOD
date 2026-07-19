@@ -9,7 +9,7 @@ project-lifecycle writer.
 
 The exact Lifecycle runtime is:
 
-`ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311`
+`ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210`
 
 Compose has no Lifecycle build key. The cloud profile is render-only and
 unsupported; never run `docker compose --profile cloud up`.
@@ -27,13 +27,13 @@ case "$ghcr_anon_dir" in /tmp/33god-ghcr-anon.*) ;; *) exit 1 ;; esac
 trap 'find "$ghcr_anon_dir" -depth -delete' EXIT
 test "$(find "$ghcr_anon_dir" -mindepth 1 -type f | wc -l)" -eq 0
 DOCKER_CONFIG="$ghcr_anon_dir" docker pull \
-  ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311
+  ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210
 test "$(find "$ghcr_anon_dir" -mindepth 1 -type f | wc -l)" -eq 0
 ```
 
 ```text
-Digest: sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311
-Status: Image is up to date for ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311
+Digest: sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210
+Status: Image is up to date for ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210
 credential_files_before=0
 credential_files_after=0
 temporary_docker_config_removed=yes
