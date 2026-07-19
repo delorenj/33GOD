@@ -487,6 +487,9 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         source = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
             encoding="utf-8"
         )
+        target_waiting_version = source.index(
+            'target_waiting_version = initial["state_version"] + 1'
+        )
         evidence_publish = source.index("prepublished_ack = self.publish_jetstream")
         stream_storage = source.index(
             "prepublished_stream_row = next(", evidence_publish
@@ -514,8 +517,21 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         replay_assertion = source.index(
             '"prepublished evidence replay rejection"', first_waiting_assertion
         )
+        completion_envelope = source.index("canonical_completion = {", replay_assertion)
+        completion_publish = source.index(
+            "completion_ack = self.publish_jetstream(canonical_completion)",
+            completion_envelope,
+        )
+        completion_storage = source.index(
+            "completion_stream_row = next(", completion_publish
+        )
+        completion_unlock = source.index(
+            '"canonical post-activation occurrence completion unlock"',
+            completion_storage,
+        )
         self.assertNotIn("set_evidence_consumer_pause", source)
         self.assertIn("'duplicate': bool(ack.duplicate)", source)
+        self.assertLess(target_waiting_version, evidence_publish)
         self.assertLess(evidence_publish, stream_storage)
         self.assertLess(stream_storage, trusted_publication)
         self.assertLess(trusted_publication, observation_wait)
@@ -527,6 +543,18 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         self.assertLess(waiting_reply, first_waiting)
         self.assertLess(first_waiting, first_waiting_assertion)
         self.assertLess(first_waiting_assertion, replay_assertion)
+        self.assertLess(replay_assertion, completion_envelope)
+        self.assertLess(completion_envelope, completion_publish)
+        self.assertLess(completion_publish, completion_storage)
+        self.assertLess(completion_storage, completion_unlock)
+        self.assertIn(
+            "preactivation_reconciled_at != initial_reconciled_at",
+            source[preactivation:waiting_command],
+        )
+        self.assertIn(
+            "replayed_reconciled_at != activation_value",
+            source[replay_assertion:completion_envelope],
+        )
         self.assertIn(
             'expected_state_version=preactivation["state_version"]',
             source[waiting_command:waiting_publish],
@@ -542,6 +570,22 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         self.assertIn(
             '"ordering_key": f"lifecycle:{self.lifecycle_id}"',
             source[evidence_publish - 5000 : waiting_command],
+        )
+        completion_source = source[completion_envelope:completion_publish]
+        self.assertIn('"causationid": completion_invocation_id', completion_source)
+        self.assertIn('"obligation_instance_id": occurrence_id', completion_source)
+        self.assertIn('"completed_at": completion_time', completion_source)
+        self.assertIn(
+            '"ordering_key": f"lifecycle:{self.lifecycle_id}"',
+            completion_source,
+        )
+        self.assertIn(
+            'current["status"] == "active"',
+            source[completion_unlock : completion_unlock + 1000],
+        )
+        self.assertIn(
+            'and not current["obligations"]',
+            source[completion_unlock : completion_unlock + 1000],
         )
 
         final_health = source.index(

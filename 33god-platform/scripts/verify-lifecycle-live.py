@@ -30,7 +30,7 @@ SOURCE_ROOT = PLATFORM_ROOT.parent
 COMPOSE_FILE = PLATFORM_ROOT / "compose.yaml"
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:9569564aa143c1118f6e3c9a67fd1e2b4eb1fdf26cba16365a508455df7b4775"
+    "sha256:fc1775ac67f79e8e3289d8e424069519430d68e8473f4b936c6e5dcbbdd0cef5"
 )
 NATS_BOX_IMAGE = (
     "natsio/nats-box@"
@@ -407,7 +407,8 @@ class Harness:
               'spec_version', spec_version, 'state_version', state_version,
               'fingerprint', state_fingerprint, 'legal_frontier', legal_frontier,
               'obligations', obligations, 'capabilities', capabilities,
-              'observed_through', observed_through
+              'observed_through', observed_through,
+              'last_reconciled_at', last_reconciled_at
             )::text
             FROM lifecycle_state WHERE lifecycle_id = %s
             """
@@ -894,6 +895,9 @@ asyncio.run(main())
         initial = self.state()
         if initial["status"] != "active" or initial["state_version"] != 1:
             raise LiveProofError(f"unexpected deterministic bootstrap state: {initial}")
+        initial_reconciled_at = datetime.fromisoformat(
+            initial["last_reconciled_at"].replace("Z", "+00:00")
+        )
         capability_version = self.capability_version()
 
         running = set(
@@ -908,7 +912,7 @@ asyncio.run(main())
             "[live] proving trusted pre-publication replay and offline progression",
             flush=True,
         )
-        target_waiting_version = initial["state_version"] + 2
+        target_waiting_version = initial["state_version"] + 1
         occurrence_id = str(
             uuid.uuid5(
                 uuid.NAMESPACE_URL,
@@ -1032,7 +1036,7 @@ asyncio.run(main())
             lambda: (
                 current
                 if (current := self.state())["state_version"]
-                == initial["state_version"] + 1
+                == initial["state_version"]
                 and current["status"] == "active"
                 and self.reconcile_queue_depth() == 0
                 and self.counts()["outbox_pending"] == 0
@@ -1040,19 +1044,27 @@ asyncio.run(main())
             ),
             timeout=120,
         )
+        preactivation_reconciled_at = datetime.fromisoformat(
+            preactivation["last_reconciled_at"].replace("Z", "+00:00")
+        )
         activation = wire_time()
         activation_value = datetime.fromisoformat(activation.replace("Z", "+00:00"))
         if (
             persisted_prepublication["source_event_id"] != prepublished_evidence["id"]
             or persisted_observed_at != claimed_completion_value
+            or persisted_received_at != trusted_publication
+            or preactivation_reconciled_at != initial_reconciled_at
             or not (
-                trusted_publication < activation_value < claimed_completion_value
+                initial_reconciled_at
+                < trusted_publication
+                < activation_value
+                < claimed_completion_value
                 and persisted_received_at < activation_value
             )
         ):
             raise LiveProofError(
-                "prepublication chronology was not immutable storage <= canonical "
-                "receipt < activation < claimed completion"
+                "future producer time advanced authority beyond the immutable "
+                "publication boundary before activation"
             )
 
         first = self.command(
@@ -1064,6 +1076,9 @@ asyncio.run(main())
         self.publish(first)
         first_result = self.wait_command(first["id"], "applied")
         first_waiting = self.wait_state_version(target_waiting_version, "waiting")
+        first_waiting_reconciled_at = datetime.fromisoformat(
+            first_waiting["last_reconciled_at"].replace("Z", "+00:00")
+        )
         obligation = next(
             (
                 item
@@ -1087,6 +1102,7 @@ asyncio.run(main())
             or waiting_frontier is None
             or waiting_frontier.get("allowed") is not False
             or waiting_frontier.get("reason_code") != "PENDING_OBLIGATIONS"
+            or first_waiting_reconciled_at != activation_value
         ):
             raise LiveProofError(
                 "first WAITING authority snapshot did not expose the pending "
@@ -1124,12 +1140,16 @@ asyncio.run(main())
         occurrence_activation = datetime.fromisoformat(
             obligation["activated_at"].replace("Z", "+00:00")
         )
+        replayed_reconciled_at = datetime.fromisoformat(
+            progressed["last_reconciled_at"].replace("Z", "+00:00")
+        )
         if (
             persisted_prepublication["source_event_id"] != prepublished_evidence["id"]
             or obligation["obligation_instance_id"] != occurrence_id
             or obligation["status"] != "pending"
             or waiting_frontier["allowed"] is not False
             or waiting_frontier["reason_code"] != "PENDING_OBLIGATIONS"
+            or replayed_reconciled_at != activation_value
             or not (
                 trusted_publication < occurrence_activation < claimed_completion_value
                 and persisted_received_at < occurrence_activation
@@ -1160,6 +1180,8 @@ asyncio.run(main())
             "observation_received_at": persisted_prepublication["received_at"],
             "observation_observed_at": persisted_prepublication["observed_at"],
             "observation_existed_before_waiting": True,
+            "last_reconciled_before_waiting": preactivation["last_reconciled_at"],
+            "last_reconciled_after_waiting": progressed["last_reconciled_at"],
             "occurrence_activated_at": obligation["activated_at"],
             "claimed_completed_at": claimed_completion,
             "obligation_instance_id": occurrence_id,
@@ -1246,6 +1268,121 @@ asyncio.run(main())
             "state_version": after_unauthorized["state_version"],
             "history_count": unauthorized_before["history"],
             "submitted_capability_version": capability_version,
+        }
+
+        print(
+            "[live] proving canonical post-activation occurrence completion",
+            flush=True,
+        )
+        completion_invocation_id = stable_uuid(
+            f"{self.suffix}:post-activation-invocation"
+        )
+        completion_time = wire_time()
+        canonical_completion = {
+            "specversion": "1.0",
+            "id": stable_uuid(f"{self.suffix}:evidence:post-activation"),
+            "source": "urn:33god:service:momo",
+            "type": "bloodbank.v1.lifecycle.obligation_evidence.submitted",
+            "subject": "bloodbank.evt.v1.lifecycle.obligation_evidence.submitted",
+            "time": completion_time,
+            "datacontenttype": "application/json",
+            "dataschema": (
+                "apicurio://holyfields/"
+                "bloodbank.v1.lifecycle.obligation_evidence.submitted/versions/2"
+            ),
+            "correlationid": first["correlationid"],
+            "causationid": completion_invocation_id,
+            "producer": "momo",
+            "service": "momo",
+            "domain": "lifecycle",
+            "schemaref": "bloodbank.v1.lifecycle.obligation_evidence.submitted.v2",
+            "kind": "event",
+            "actor": {"type": "service", "agent_id": "momo"},
+            "ordering_key": f"lifecycle:{self.lifecycle_id}",
+            "data": {
+                "contract_version": 2,
+                "lifecycle_id": self.lifecycle_id,
+                "repo": REPO,
+                "obligation_id": "independent-review",
+                "obligation_instance_id": occurrence_id,
+                "obligation_kind": "independent_review",
+                "target_actor_id": "agent:independent-reviewer",
+                "invocation_id": completion_invocation_id,
+                "skill_ref": {"name": "bmad-code-review", "selector": "6.10.2"},
+                "completed_at": completion_time,
+                "evidence": {
+                    "kind": "skill_completion",
+                    "outcome": "completed",
+                    "artifact_id": f"review:{self.suffix}",
+                    "artifact_sha256": "a" * 64,
+                    "summary": "Canonical post-activation independent review completed.",
+                },
+            },
+        }
+        completion_ack = self.publish_jetstream(canonical_completion)
+        if (
+            completion_ack.get("stream") != "BLOODBANK_EVENTS"
+            or completion_ack.get("event_id") != canonical_completion["id"]
+            or completion_ack.get("subject") != canonical_completion["subject"]
+            or not isinstance(completion_ack.get("stream_sequence"), int)
+            or completion_ack["stream_sequence"] <= 0
+            or completion_ack.get("duplicate") is not False
+        ):
+            raise LiveProofError(
+                f"canonical completion lacked an exact JetStream ack: {completion_ack!r}"
+            )
+        completion_stream_row = next(
+            (
+                item
+                for item in self.stream_messages_since(
+                    "BLOODBANK_EVENTS",
+                    after_sequence=int(completion_ack["stream_sequence"]) - 1,
+                )
+                if item["event_id"] == canonical_completion["id"]
+            ),
+            None,
+        )
+        if completion_stream_row is None or not isinstance(
+            completion_stream_row.get("stored_at"), str
+        ):
+            raise LiveProofError(
+                "canonical completion has no immutable JetStream storage timestamp"
+            )
+        completion_time_value = datetime.fromisoformat(
+            completion_time.replace("Z", "+00:00")
+        )
+        completion_publication = datetime.fromisoformat(
+            completion_stream_row["stored_at"].replace("Z", "+00:00")
+        )
+        if not (
+            occurrence_activation < completion_time_value <= completion_publication
+            and completion_publication < claimed_completion_value
+        ):
+            raise LiveProofError(
+                "canonical completion was not published after occurrence activation"
+            )
+        unlocked = wait_for(
+            "canonical post-activation occurrence completion unlock",
+            lambda: (
+                current
+                if (current := self.state())["state_version"]
+                == progressed["state_version"] + 1
+                and current["status"] == "active"
+                and not current["obligations"]
+                and self.reconcile_queue_depth() == 0
+                and self.counts()["outbox_pending"] == 0
+                else None
+            ),
+            timeout=120,
+        )
+        self.summary["invariants"]["canonical_post_activation_completion"] = {
+            "event_id": canonical_completion["id"],
+            "invocation_id": completion_invocation_id,
+            "obligation_instance_id": occurrence_id,
+            "completed_at": completion_time,
+            "jetstream_ack": completion_ack,
+            "stream_record": completion_stream_row,
+            "state": unlocked,
         }
 
         print(

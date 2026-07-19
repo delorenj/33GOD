@@ -3,9 +3,11 @@ name: Lifecycle
 role: project-lifecycle-authority
 repo: ../lifecycle
 description: Sole deterministic lifecycle specification, state, reconcile, frontier, obligation, grant, and write authority.
-gitlink_revision: b74b2d5297f7c3b6a0a2d24b499b89e3646ad689
-image_source_revision: b74b2d5297f7c3b6a0a2d24b499b89e3646ad689
-image: ghcr.io/delorenj/lifecycle@sha256:9569564aa143c1118f6e3c9a67fd1e2b4eb1fdf26cba16365a508455df7b4775
+source_ref: refs/heads/feature/moirai-lifecycle-integration-docs-20260718
+source_revision: c1c2e2cf99eb5da48bca1098c20aebcc99065107
+gitlink_revision: c1c2e2cf99eb5da48bca1098c20aebcc99065107
+image_source_revision: c1c2e2cf99eb5da48bca1098c20aebcc99065107
+image: ghcr.io/delorenj/lifecycle@sha256:fc1775ac67f79e8e3289d8e424069519430d68e8473f4b936c6e5dcbbdd0cef5
 compose:
   files: []
   platform_projection: ../compose.yaml
