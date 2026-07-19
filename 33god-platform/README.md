@@ -1,119 +1,124 @@
 # 33GOD Platform Control Plane
 
-This directory owns the normalized cross-component Compose projection, component
-registry, change policy, and semantic gates for 33GOD. Component repositories
-remain authoritative for their internal implementations. The projection at
-`compose.yaml` is validated against those sources; it is a deployment target,
-not evidence that the host has been cut over.
+This directory owns the normalized cross-component Compose projection,
+component registry, machine change ledger, and semantic gates for 33GOD.
+Component repositories remain authoritative for their internal behavior.
 
-## Integrated local target
+## Implemented local topology
 
-The no-profile model contains:
+The default render contains twelve processes:
 
-- Bloodbank NATS JetStream, one-shot stream initialization, and Dapr placement.
-- Exactly one standalone Candystore PostgreSQL, application, and Dapr sidecar.
-- A Holocene host-API preflight followed by the Holocene web container. The API
-  remains the existing `holocene-api.service` user unit on host port `4000`.
+- Bloodbank NATS JetStream and its one-shot canonical stream initializer;
+- Dapr placement;
+- a dedicated Lifecycle PostgreSQL authority database;
+- one-shot Lifecycle migration and deterministic bootstrap jobs;
+- one Lifecycle authority service;
+- Candystore PostgreSQL, application, and durable Dapr sidecar; and
+- Holocene host-API preflight and web.
 
-The `tools` and `full` renders additionally expose PJangler CLI and MCP
-definitions. Both have zero service replicas and are intended only for explicit
-`docker compose run` use. PJangler MCP is stdio; neither definition has a port,
-HTTP healthcheck, restart loop, or daemon contract.
+Lifecycle uses exactly
+`ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311`.
+There is no Lifecycle `build` key or local-image fallback. Its OCI revision is
+`719e6af0f06f1bdb30937326380ac67581e8dbb8`.
 
-The approved headless Lifecycle component is not present in this projection or
-deployed on the host. The current Bloodbank controller is only its extraction
-embryo. A future default service must pass schema/outbox, history migration,
-single-writer, replay, rollback, and client-cutover gates before it is added;
-documentation approval alone is not deployment evidence.
+Startup fails closed:
 
-The `cloud` profile is render-only and deliberately unsupported. It retains the
-local bind/external-network model plus a rejection service so drift remains
-visible. The cloud profile has no supported lifecycle surface.
+```text
+lifecycle-postgres healthy
+  -> lifecycle-migrate completed successfully
+  -> lifecycle-bootstrap completed successfully
+  -> lifecycle serve
 
-> **Do not run `docker compose --profile cloud up`.** Compose selects every
-> unprofiled local service as well as `cloud-unsupported`, so NATS, PostgreSQL,
-> Candystore, and Holocene may start and mutate state before the rejection
-> container exits. Cloud is configuration/render inspection only, and this repo
-> intentionally defines no cloud lifecycle task.
-
-## Ownership and source roots
-
-`33god-platform/compose.yaml` is the root-owned normalized projection. It does
-not edit or include the component Compose files and does not replace their
-ownership. Source mounts/build contexts resolve from `GOD_SOURCE_ROOT`, which
-defaults to the parent of this directory. Set it explicitly when validating
-from an isolated worktree:
-
-```bash
-export GOD_SOURCE_ROOT=/home/delorenj/code/33GOD
+bloodbank-nats healthy
+  -> nats-init completed successfully
+  -> lifecycle serve
 ```
 
-No secret values belong in this directory. The model names only these operator
-configuration boundaries:
+The authority database has its own secret, volume, and private network. It does
+not reuse Candystore storage, credentials, or network membership. Lifecycle
+joins that private network and the Bloodbank network only. Candystore is a
+durable event-history/read-projection owner and never an operational Lifecycle
+writer.
 
-- Bloodbank port keys: `BLOODBANK_NATS_CLIENT_PORT`,
-  `BLOODBANK_NATS_MONITOR_PORT`, and `BLOODBANK_DAPR_PLACEMENT_PORT`.
-- Candystore port keys: `CANDYSTORE_POSTGRES_PORT`, `CANDYSTORE_PORT`, and
-  `CANDYSTORE_DAPR_HTTP_PORT`; database settings remain local-development
-  defaults in the candidate and must move to an ignored env/secret source
-  before hosted use.
-- Holocene web reads the optional component-owned
-  `holocene/.env.holocene-web`; sensitive inputs originate from its ignored
-  environment/1Password-reference workflow. The host API unit owns
-  `CANDYSTORE_API_URL` and related host-service configuration.
-- PJangler registry/provider settings remain host-scoped and are not forwarded
-  wholesale into the tool containers.
+The `tools` and `full` profiles add zero-replica, run-only PJangler CLI and
+stdio MCP definitions. The `cloud` profile remains render-only and
+unsupported. Never run `docker compose --profile cloud up`: unprofiled local
+services would also be selected.
 
-## Static validation
+## Authority boundary
 
-These commands render or inspect files only; they do not start services:
+| Concern | Owner |
+|---|---|
+| Project/bootstrap identity and binding inputs | PJangler |
+| Specification, state, legal transitions, reconcile, frontier, obligations, blockers/gates, grants, and all lifecycle writes | Lifecycle |
+| Canonical inter-service contracts and NATS/Dapr transport | Bloodbank |
+| Append-only event history and Lifecycle read projections | Candystore |
+| Legal-work ranking, delegation, evidence, and command intent | Momo |
+| Rendering and high-level command initiation | Holocene |
+| Process topology, pins, profiles, and release gates | 33GOD root |
+
+All inter-service commands and events traverse Bloodbank. Momo and Holocene do
+not write Lifecycle or Candystore state directly.
+
+## Configuration boundaries
+
+All published development ports bind to `127.0.0.1` and are
+caller-overridable:
+
+- `BLOODBANK_NATS_CLIENT_PORT` (default `4222`)
+- `BLOODBANK_NATS_MONITOR_PORT` (default `8222`)
+- `BLOODBANK_DAPR_PLACEMENT_PORT` (default `50005`)
+- `LIFECYCLE_PORT` (default `8088`)
+- `CANDYSTORE_POSTGRES_PORT` (default `5434`)
+- `CANDYSTORE_PORT` (default `8683`)
+- `CANDYSTORE_DAPR_HTTP_PORT` (default `3504`)
+
+`LIFECYCLE_POSTGRES_PASSWORD_FILE` points to a caller-created read-only file in
+an owner-only directory. The file must be readable by the non-root Lifecycle
+and PostgreSQL container users; the isolated verifier uses mode 0444 inside a
+mode-0700 ephemeral directory and removes it after teardown. Narrow bootstrap
+identity, actor, capability, timestamp, and mode values have explicit
+`LIFECYCLE_BOOTSTRAP_*` inputs. Network and volume names are also
+caller-overridable, which lets the live gate coexist with unrelated projects.
+`GOD_SOURCE_ROOT` defaults to the parent directory and selects the checked-out
+component sources used by Candystore and Holocene.
+
+## Validation
+
+Read-only/static gates:
 
 ```bash
 python3 scripts/platform.py validate
 python3 scripts/platform.py components list
 python3 scripts/platform.py backfills check
-python3 scripts/validate-compose.py --source-root "$GOD_SOURCE_ROOT"
+python3 scripts/validate-compose.py --source-root "${GOD_SOURCE_ROOT:-..}"
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-From the repository root, `mise run platform:compose:validate`,
-`mise run platform:compose:test`, and `mise run docs:drift` wrap the same gates.
-The semantic validator renders default, `tools`, `full`, and `cloud`, then
-asserts service cardinality, environment-selected ports, the exact Bloodbank to
-Candystore Dapr subscription path, dependencies, host boundaries, mounts, exact
-per-service network isolation, Traefik auth/routing, three external networks,
-and five adopted external volumes. Every checked-in JSON render uses Compose
-`--no-env-resolution`, so the optional Holocene component env file remains a
-path reference and its values do not enter captured output.
+The semantic validator renders default, `tools`, `full`, and `cloud` and
+checks exact service sets, immutable registry images, Lifecycle's no-build
+invariant, fail-closed job ordering, health checks, ports, networks, storage,
+secret scope, and profile behavior.
 
-## Runtime inputs
-
-The root stack uses external networks `bloodbank-network`,
-`candystore-internal`, and `proxy`, plus the five adopted external volumes.
-`holocene-api.service` remains the host API authority. Bloodbank, Candystore,
-Holocene, and PJangler sources must be clean and match the root gitlinks.
-
-Verify clean, pinned component inputs without displaying file contents:
+The destructive-looking acceptance work is isolated behind:
 
 ```bash
-candidate_root=$(git rev-parse --show-toplevel)
-for component in bloodbank candystore holocene pjangler; do
-  expected=$(git -C "$candidate_root" ls-tree HEAD "$component" | awk '{print $3}')
-  actual=$(git -C "$GOD_SOURCE_ROOT/$component" rev-parse HEAD)
-  test "$actual" = "$expected"
-  test -z "$(git -C "$GOD_SOURCE_ROOT/$component" status --porcelain)"
-done
+python3 scripts/verify-lifecycle-live.py --screenshots-dir /tmp/33god-lifecycle-proof
 ```
 
-The dependency order is NATS, NATS initialization and placement,
-Candystore PostgreSQL, Candystore app, exactly one Candystore sidecar, Holocene
-API preflight, then Holocene web. Verify the durable `candystore-events`
-consumer cardinality after startup.
+That gate allocates a unique Compose project, ports, networks, volumes, and
+Candystore image; verifies the exact rendered Lifecycle digest before `up`;
+tests all seven offline/restart/outage/persistence invariants plus true
+late-subscriber replay, pending-obligation rejection and completion unlock,
+authoritative capability versions, conflicting-duplicate integrity, and the
+Candystore/Momo/Holocene seams; and removes only the resources it created. It
+does not prune Docker or touch another Compose project.
 
-After the Lifecycle implementation gate, its runtime dependency order is
-project identity from PJangler, Bloodbank transport/contracts, Lifecycle
-reconciliation, Candystore history/projections, then Momo and Holocene clients.
-That target is deliberately absent from the current validated render.
+## Current deployment label
 
-See [the topology audit](./docs/integrated-compose-topology-audit.md) for the
-evidence, port table, health signals, ownership, and cutover acceptance checks.
+The topology and isolated live path are implemented and verified locally. This
+branch does not promote the cloud profile, publish the root integration branch,
+or create a release tag. See
+[Lifecycle Architecture](../docs/architecture-lifecycle.md) for semantic
+ownership and [Integration Architecture](../docs/integration-architecture.md)
+for the cross-component data flow.

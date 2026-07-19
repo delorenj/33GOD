@@ -10,14 +10,14 @@ product:
 
 profiles:
   default:
-    description: Validated local target; Bloodbank core, one Candystore, Holocene API preflight, and Holocene web.
-    includes: [core, audit, control]
+    description: Validated local target; Bloodbank core, Lifecycle authority, one Candystore, Holocene API preflight, and Holocene web.
+    includes: [core, lifecycle-authority, audit, control]
   tools:
     description: Default target plus zero-replica, run-only PJangler CLI and stdio MCP tools.
-    includes: [core, audit, control, provisioning-tools]
+    includes: [core, lifecycle-authority, audit, control, policy-client, provisioning-tools]
   full:
     description: Current local full model; identical to tools until more optional services are governed.
-    includes: [core, audit, control, provisioning-tools]
+    includes: [core, lifecycle-authority, audit, control, policy-client, provisioning-tools]
   cloud:
     description: Render-only unsupported local-bind model with an explicit rejection gate; never start it.
     includes: [unsupported]
@@ -25,19 +25,23 @@ profiles:
 compose_projection:
   owner: 33god-platform
   file: compose.yaml
-  state: validated-target-not-live-cutover
+  state: validated-local-and-isolated-live
   source_root_env: GOD_SOURCE_ROOT
   source_root_default: ..
   semantic_validator: scripts/validate-compose.py
   prohibitions:
     - never use the Bloodbank legacy Candystore profile
+    - never build or substitute a local Lifecycle image
+    - never attach Lifecycle to Candystore storage or credentials
     - never expose a lifecycle surface for the cloud profile
     - never use docker compose down -v
     - never remove adopted or detached legacy volumes during migration
 
 component_files:
   - components/bloodbank.yaml
+  - components/lifecycle.yaml
   - components/candystore.yaml
+  - components/momo.yaml
   - components/holocene.yaml
   - components/pjangler.yaml
   - components/hermes-fleet.yaml
@@ -51,7 +55,9 @@ contract_paths:
   - ../bloodbank/docs/event-naming.md
   - ../bloodbank/schemas
   - ../bloodbank/services/agent-hooks/hooks.master.json
+  - ../lifecycle/docs
   - ../candystore/migrations
+  - ../momo/skill
   - ../holocene/docs
   - ../pipeline-mcp-hub/README.md
   - ../pjangler/templates
@@ -68,3 +74,4 @@ change_policy:
     - Hermes fleet runtime/profile contract changes
     - skill hub routing changes
     - compose/network/port/secret boundary changes
+    - lifecycle command, projection, frontier, obligation, or client changes

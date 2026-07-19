@@ -3,13 +3,14 @@ name: Bloodbank
 role: event-backbone
 repo: ../bloodbank
 description: NATS JetStream and Dapr event backbone for all 33GOD inter-service traffic.
+source_revision: 48031ee39c238b9d4715b81b74076635235f96d5
 compose:
   files:
     - ../bloodbank/compose/docker-compose.yml
   platform_projection: ../compose.yaml
   services: [bloodbank-nats, nats-init, dapr-placement]
   profiles: [default]
-  state: validated-target-not-live-cutover
+  state: validated-local-and-isolated-live
   ownership: Root owns the normalized projection; Bloodbank owns NATS, stream, and Dapr contracts.
   excluded: [legacy-candystore-postgres, legacy-candystore-app, legacy-candystore-daprd]
 health:
@@ -21,7 +22,7 @@ source_of_truth:
   - ../bloodbank/schemas
   - ../bloodbank/services/agent-hooks/hooks.master.json
 changelog:
-  topics: [events, schemas, hooks, dapr, nats]
+  topics: [events, schemas, hooks, dapr, nats, lifecycle-contracts]
 public_card:
   title: Event Backbone
   promise: CloudEvents over NATS/Dapr with canonical schemas and provider-neutral agent hooks.

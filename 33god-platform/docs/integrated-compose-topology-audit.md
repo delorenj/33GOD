@@ -1,6 +1,7 @@
 # Integrated Compose topology audit
 
-**Status:** Validated integrated local stack; live under root Compose
+**Status:** Historical 2026-07-15 topology snapshot; superseded for Lifecycle
+topology by the 2026-07-18 addendum
 
 **Snapshot:** 2026-07-15 01:22-01:25 EDT
 
@@ -12,15 +13,13 @@ does not change component repositories or runtime state.
 
 ## 2026-07-18 lifecycle-boundary addendum
 
-This audit remains authoritative for the four-component deployment snapshot it
-captured. It does not include or prove a standalone project-lifecycle service.
-The approved target adds a headless Lifecycle component as the sole owner of
-versioned spec/state, reconciliation, frontier, obligations, and capability
-validation. Bloodbank remains transport/schema authority, Candystore remains
-durable history/read models, PJangler remains project/bootstrap identity, Momo
-remains the PM/EM intent client, and Holocene remains a renderer/command client.
-The tested Bloodbank controller is the extraction embryo; no extraction,
-migration, Compose wiring, or client cutover is claimed by this addendum.
+The body below remains evidence for the four-component snapshot it captured.
+Current root Compose additionally includes the digest-pinned standalone
+Lifecycle authority, dedicated PostgreSQL/private network/secret, fail-closed
+migrate/bootstrap/serve chain, durable Candystore projection, Momo
+obligation-to-skill seam, and Holocene read/command surface. The isolated live
+gate proves all seven offline/restart/outage/persistence invariants. See
+`../README.md` and `../../docs/architecture-lifecycle.md` for current truth.
 
 ## Decision
 

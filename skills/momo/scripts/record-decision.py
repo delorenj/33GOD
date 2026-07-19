@@ -78,6 +78,14 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="print envelope only; write/publish nothing")
     ap.add_argument("--local-only", action="store_true", help="write local trail; skip the live bus")
     ap.add_argument("--quiet", action="store_true")
+    # actor.cli/provider identify the CARRIER Momo runs under. Parameterized (not hardcoded)
+    # so a non-Claude carrier (OpenCode/Codex/Hermes) emits an accurate actor per
+    # event-naming v1 (provider/CLI identity lives truthfully in actor.*). Default to the
+    # Claude carrier for backward compatibility; env MOMO_CLI/MOMO_PROVIDER override.
+    ap.add_argument("--cli", default=os.environ.get("MOMO_CLI", "claude"),
+                    help="carrier CLI in actor.cli (default: env MOMO_CLI or 'claude')")
+    ap.add_argument("--provider", default=os.environ.get("MOMO_PROVIDER", "anthropic"),
+                    help="carrier provider in actor.provider (default: env MOMO_PROVIDER or 'anthropic')")
     args = ap.parse_args()
 
     start = pathlib.Path(args.root) if args.root else pathlib.Path.cwd()
@@ -121,7 +129,7 @@ def main() -> int:
         "domain": "repo",
         "producer": f"agent:{args.actor}",
         "service": slug,
-        "actor": {"type": "agent_cli", "agent_id": args.actor, "cli": "claude", "provider": "anthropic"},
+        "actor": {"type": "agent_cli", "agent_id": args.actor, "cli": args.cli, "provider": args.provider},
         "ordering_key": f"repo:{slug}",
         "correlationid": args.correlation_id or str(uuid.uuid4()),
         "causationid": args.causation_id,

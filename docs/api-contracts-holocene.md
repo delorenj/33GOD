@@ -38,11 +38,24 @@ Next.js provides browser proxies and HQ Telegram Mini App routes. `/api/modules/
 
 SSE is snapshot polling per connection, not Bloodbank consumption. Each fleet client can trigger serial systemd work. Candystore failure is currently silent; callers must not equate an empty history with a healthy zero-event state.
 
-## Planned Lifecycle Client Contract
+## Lifecycle Client Contract
 
-There is no deployed lifecycle API or Holocene adapter today. The target
-Holocene surface may read versioned authoritative snapshots and submit
-idempotent high-level intent commands through Bloodbank. It must expose pending,
-accepted, rejected, stale, and unavailable outcomes without optimistically
-writing local state. Lifecycle performs capability validation and reconciliation;
-Holocene only renders the result.
+The implemented Holocene API reads a versioned Lifecycle projection from
+Candystore and returns explicit unknown/degraded output when it is missing or
+stale. The web surface preserves identity, spec/state versions, provenance,
+freshness, status/health/phase/fingerprint, frontier, obligations,
+blockers/gates, and stable verdicts.
+
+High-level actions accept the selected authority frontier, expected state
+version, actor, capability ID, and intent parameters. Capability version and
+all semantic IDs are derived from the authoritative projection and full
+immutable request; caller-supplied substitutes are rejected. Missing, wrong, or
+`allowed=false` frontier items publish nothing. Gate resolution also publishes
+nothing unless `parameters.resolution` is present.
+
+The publisher requires its subject argument to equal `envelope.subject`. Its
+core NATS TCP write plus PING/PONG receipt is reported as broker processing,
+with `durable_jetstream_acknowledged: false` and `authority_accepted: false`;
+it is not described as queueing or durable acceptance. Holocene does not
+optimistically update local state, and renders only the later authoritative
+projection/verdict as truth.

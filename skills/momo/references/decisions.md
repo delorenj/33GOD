@@ -6,6 +6,11 @@ carrying the decision, the **pillars it rests on**, and the reasoning. This is w
 Momo's autonomy auditable — the operator (and Hermes, and dashboards) can query *why* Momo
 did what it did.
 
+**Authority limit:** a decision event records business reasoning only. It does
+not legalize an action, satisfy an obligation, validate a capability, or write
+lifecycle state. State-changing intent uses the separate versioned/idempotent
+Lifecycle command contract.
+
 ## The mechanism
 
 ```bash
@@ -52,13 +57,13 @@ knowingly offline.
 
 ## When to record (mandatory)
 
-- Pulling a **To Do** (or Backlog) ticket into active work on your own judgment.
+- Choosing a legal frontier item and submitting work-start intent.
 - **Accepting** or **holding** a review-lane ticket.
 - **Cutting scope** / deferring an AC to unblock a dependent.
 - Choosing an **approach or architecture** among alternatives.
 - **Stopping** the board-clearing loop (name the stop condition).
 - **Rolling back** a review-accepted ticket a dependent proved broken.
-- A **board_id / binding self-heal** (shared-state change Hermes will read).
+- A **board_id / binding self-heal** (PJangler/bootstrap metadata repair).
 
 Trivial, obvious, or purely mechanical steps do **not** need an event — reserve the trail
 for calls where knowing the *why* later has value.
@@ -74,7 +79,9 @@ curl -s 'https://ntfy.delo.sh/bloodbank/json?poll=1&since=120s'
 
 ## Note on the sentinel's own events
 
-The sentinel scripts (`issue-autonomous-review.sh`, close gate) emit their own repo-lane
+The current sentinel scripts (`issue-autonomous-review.sh`, close gate) emit their own repo-lane
 events (`…issue.autonomous_review.decided`, `…issue.gate.passed/failed`) via the local
 `emit-event.py`. Those are complementary — let the scripts emit them. Momo's
-`record-decision.py` is for the *judgment* decisions that have no script of their own.
+`record-decision.py` is for the *judgment* decisions that have no script of their
+own. These events remain audit history; Lifecycle consumes observations/evidence
+and independently determines the authoritative result.
