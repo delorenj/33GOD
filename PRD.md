@@ -113,13 +113,16 @@ Validation state as of this handoff:
 - `python3 33god-platform/scripts/platform.py components list`: passes.
 - `python3 33god-platform/scripts/platform.py backfills check`: passes.
 - Candidate default, `tools`, `full`, and `cloud` renders pass.
-- Candidate semantic validation and 20 focused tests pass against the populated
-  source root.
+- Candidate semantic validation and all 38 platform tests pass against the
+  populated source root.
 - The root documentation drift gate invokes the candidate validator with
   explicit `GOD_SOURCE_ROOT` while preserving all previous parity checks.
 - The isolated live gate passes all seven Lifecycle offline/restart/outage/
-  persistence invariants, including a real authority commit and ordered outbox
-  drain during NATS loss, plus occurrence-isolated obligation evidence,
+  persistence invariants, including a single deployed-writer command received
+  through the canonical JetStream durable, blocked behind a PostgreSQL row
+  lock, committed with ordered unpublished outbox rows during NATS loss, and
+  durably redelivered/idempotently drained after recovery, plus
+  occurrence-isolated obligation evidence,
   authority-spoof rejection, versioned capability and causal-lineage flow,
   true late-subscriber replay, canonical duplicate integrity, and the
   Candystore, Momo, and Holocene seams.

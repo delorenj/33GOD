@@ -119,9 +119,11 @@ networks/volumes. It proves:
    deterministically without duplicate transition effects.
 4. Stale `expected_state_version` is rejected without mutation.
 5. Missing/invalid capability is rejected without mutation.
-6. A canonical authority transaction commits state and exact ordered outbox
-   rows during NATS outage; recovery publishes those IDs in order and drains
-   them without a duplicate transition effect.
+6. The deployed Lifecycle durable receives a canonical JetStream command and
+   blocks behind a harness-held PostgreSQL row lock; after NATS stops, releasing
+   that lock lets the sole deployed writer commit state and exact ordered
+   unpublished outbox rows. Recovery redelivers idempotently, preserves
+   state/history/command-result counts, and publishes those IDs in order.
 7. Dedicated PostgreSQL persistence survives Lifecycle and database process
    restarts.
 

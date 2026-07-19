@@ -20,9 +20,10 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 - Added semantic/adversarial tests and the isolated live seven-invariant
   failure matrix with pre-start durable replay, pending-obligation rejection,
   canonical active-occurrence satisfaction, authority-spoof rejection,
-  versioned grants, conflicting-duplicate integrity, a real during-outage
-  authority transaction/outbox drain, unique Docker resources, and exact
-  cleanup.
+  versioned grants, conflicting-duplicate integrity, and a real single-writer
+  outage proof: canonical JetStream ingress, deployed-consumer ack-pending and
+  PostgreSQL row blocking, atomic commit while NATS is down, durable idempotent
+  redelivery, ordered outbox drain, unique Docker resources, and exact cleanup.
 - Preserved the six-way semantic ownership boundary and kept cloud render-only;
   no root release or cloud promotion is implied.
 

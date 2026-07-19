@@ -486,10 +486,15 @@ contract or competing reconciler is permitted.
 - Holocene renders the Candystore projection and submits complete high-level
   commands through Bloodbank without local lifecycle mutation.
 - The isolated live matrix passes all seven offline, restart, stale-version,
-  capability, during-outage commit/outbox recovery/order, and PostgreSQL
-  persistence invariants plus occurrence-isolated obligation evidence,
-  authority-spoof rejection, versioned grants, real causal IDs, pre-start
-  replay, and conflicting-duplicate integrity.
+  capability, and PostgreSQL persistence invariants. Its outage proof publishes
+  through `BLOODBANK_COMMANDS`, observes the deployed durable's ack-pending
+  delivery behind a PostgreSQL row lock, stops NATS before releasing the lock,
+  proves the single deployed writer's atomic database commit, then proves
+  durable idempotent redelivery and ordered outbox recovery without duplicate
+  state/history/command-result counts. The matrix also covers
+  occurrence-isolated obligation evidence, authority-spoof rejection,
+  versioned grants, real causal IDs, pre-start replay, and
+  conflicting-duplicate integrity.
 
 ### Current authority matrix
 

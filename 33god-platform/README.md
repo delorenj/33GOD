@@ -114,6 +114,18 @@ authoritative capability versions, conflicting-duplicate integrity, and the
 Candystore/Momo/Holocene seams; and removes only the resources it created. It
 does not prune Docker or touch another Compose project.
 
+The NATS-outage phase has one authority writer: the already deployed Compose
+Lifecycle service. The harness holds its target PostgreSQL row, publishes the
+real command to `BLOODBANK_COMMANDS`, requires the
+`lifecycle-authority-commands-v1` durable to show an ack-pending delivery, then
+stops NATS and releases the row. It proves the deployed transaction committed
+state, history, one command result, and ordered unpublished outbox rows while
+NATS was down. Recovery restarts the same Lifecycle container, forces durable
+redelivery after discarding its disconnected client buffer, isolates the
+startup sweep with a non-mutating PostgreSQL table lock, and proves one
+idempotent reply without duplicate authoritative counts before verifying
+ordered outbox drain. No helper imports or invokes Lifecycle authority code.
+
 ## Current deployment label
 
 The topology and isolated live path are implemented and verified locally. This

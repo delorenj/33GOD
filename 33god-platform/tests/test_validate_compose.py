@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import copy
 import importlib.util
 import json
@@ -449,13 +450,45 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         )
         self.assertTrue(any("published readiness CLI" in error for error in errors))
 
-    def test_live_matrix_uses_internal_authority_only_during_nats_outage(
+    def test_live_matrix_forbids_synthetic_or_second_lifecycle_writer(
         self,
     ) -> None:
         source = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
             encoding="utf-8"
         )
-        self.assertEqual(source.count("self.apply_internal_command("), 2)
+        for forbidden in (
+            "def apply_internal_command",
+            "apply_internal_command(",
+            "from authority import LifecycleAuthority",
+            "LifecycleAuthority(",
+            "handle_command_envelope(",
+            "LifecycleRepository(",
+            "LIFECYCLE_INTERNAL_COMMAND",
+            "aion-live-outage",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, source)
+
+        lifecycle_image_containers: list[str] = []
+        for node in ast.walk(ast.parse(source)):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if any(
+                isinstance(call, ast.Call)
+                and isinstance(call.func, ast.Attribute)
+                and call.func.attr == "docker"
+                and any(
+                    isinstance(argument, ast.Name)
+                    and argument.id == "LIFECYCLE_IMAGE"
+                    for argument in call.args
+                )
+                for call in ast.walk(node)
+            ):
+                lifecycle_image_containers.append(node.name)
+        self.assertEqual(lifecycle_image_containers, ["publish_jetstream"])
+        self.assertNotIn(
+            '"--network",\n            self.networks["lifecycle"]', source
+        )
 
         autonomous_start = source.index('"autonomous-after-persistence"')
         autonomous = source[
@@ -480,6 +513,110 @@ class ComposeSemanticValidationTests(unittest.TestCase):
             quiesce,
         )
         self.assertNotIn("apply_internal_command", quiesce)
+
+    def test_live_matrix_proves_deployed_single_writer_outage_choreography(
+        self,
+    ) -> None:
+        source = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
+            encoding="utf-8"
+        )
+        for required in (
+            'COMMAND_STREAM = "BLOODBANK_COMMANDS"',
+            'COMMAND_CONSUMER = "lifecycle-authority-commands-v1"',
+            "PGAPPNAME=",
+            "BEGIN;",
+            "FOR UPDATE;",
+            "SELECT pg_sleep(300);",
+            "pg_stat_activity",
+            "pg_blocking_pids",
+            "pg_terminate_backend",
+            '"consumer",\n            "info"',
+            '"--json"',
+            'get("num_ack_pending", 0)',
+            "outage_publish_ack = self.publish_jetstream(outage_command)",
+            'self.compose("stop", "bloodbank-nats")',
+            'self.compose("start", "bloodbank-nats")',
+            'self.wait_command(outage_command["id"], "applied")',
+            'any(item["published"] for item in outage_rows_during)',
+            'item["verdict"] == "idempotent"',
+            'recovered_counts["history"]',
+            'recovered_counts["commands"]',
+            'recovered_result != outage_result',
+            '"no message found (10037)"',
+            "command_removed_after_ack = wait_for(",
+            "stream_outbox_sequences != sorted(stream_outbox_sequences)",
+            "self.release_lifecycle_row_lock(check=False)",
+            "self.release_lifecycle_recovery_guard(check=False)",
+            "harness.cleanup()",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, source)
+
+        lock_start = source.index("self.start_lifecycle_row_lock()")
+        lock_active = source.index("self.wait_lifecycle_row_lock()", lock_start)
+        publish = source.index(
+            "outage_publish_ack = self.publish_jetstream(outage_command)",
+            lock_active,
+        )
+        ack_pending = source.index('get("num_ack_pending", 0)', publish)
+        blocked_writer = source.index(
+            "self.wait_blocked_lifecycle_writer()", ack_pending
+        )
+        nats_stop = source.index(
+            'self.compose("stop", "bloodbank-nats")', blocked_writer
+        )
+        lock_release = source.index(
+            "self.release_lifecycle_row_lock()", nats_stop
+        )
+        database_result = source.index(
+            'self.wait_command(outage_command["id"], "applied")', lock_release
+        )
+        database_counts = source.index(
+            "outage_committed_counts = self.counts()", database_result
+        )
+        pending_outbox = source.index(
+            "outage_rows_during = [", database_counts
+        )
+        nats_start = source.index(
+            'self.compose("start", "bloodbank-nats")', pending_outbox
+        )
+        persisted_pending = source.index(
+            '"persisted ack-pending delivery after NATS restart"', nats_start
+        )
+        no_early_publication = source.index(
+            '"outbox publication occurred before the deployed Lifecycle service recovered"',
+            persisted_pending,
+        )
+        lifecycle_recovery = source.index(
+            'self.compose("start", "lifecycle")', no_early_publication
+        )
+        redelivery = source.index(
+            'f"{COMMAND_CONSUMER} durable redelivery acknowledgement"',
+            lifecycle_recovery,
+        )
+        idempotent = source.index(
+            'item["verdict"] == "idempotent"', redelivery
+        )
+        no_duplicates = source.index(
+            '"durable command redelivery duplicated authoritative state, history, or command results"',
+            idempotent,
+        )
+        self.assertLess(lock_start, lock_active)
+        self.assertLess(lock_active, publish)
+        self.assertLess(publish, ack_pending)
+        self.assertLess(ack_pending, blocked_writer)
+        self.assertLess(blocked_writer, nats_stop)
+        self.assertLess(nats_stop, lock_release)
+        self.assertLess(lock_release, database_result)
+        self.assertLess(database_result, database_counts)
+        self.assertLess(database_counts, pending_outbox)
+        self.assertLess(pending_outbox, nats_start)
+        self.assertLess(nats_start, persisted_pending)
+        self.assertLess(persisted_pending, no_early_publication)
+        self.assertLess(no_early_publication, lifecycle_recovery)
+        self.assertLess(lifecycle_recovery, redelivery)
+        self.assertLess(redelivery, idempotent)
+        self.assertLess(idempotent, no_duplicates)
 
     def test_live_matrix_proves_true_prepublication_replay_and_final_health(
         self,
