@@ -5,6 +5,7 @@ repo: ../lifecycle
 description: Sole deterministic lifecycle specification, state, reconcile, frontier, obligation, grant, and write authority.
 gitlink_revision: cda59658bef6d586c8aa01cacd88bc4e3ee867e0
 image_source_revision: cda59658bef6d586c8aa01cacd88bc4e3ee867e0
+image_tag: ghcr.io/delorenj/lifecycle:sha-cda59658bef6d586c8aa01cacd88bc4e3ee867e0
 image: ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210
 compose:
   files: []
