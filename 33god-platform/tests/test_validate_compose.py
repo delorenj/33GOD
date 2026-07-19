@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import base64
 import copy
 import importlib.util
 import json
@@ -20,6 +21,11 @@ SPEC = importlib.util.spec_from_file_location("validate_compose", SCRIPT)
 assert SPEC and SPEC.loader
 VALIDATOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VALIDATOR)
+LIVE_SCRIPT = PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py"
+LIVE_SPEC = importlib.util.spec_from_file_location("verify_lifecycle_live", LIVE_SCRIPT)
+assert LIVE_SPEC and LIVE_SPEC.loader
+LIVE_HARNESS = importlib.util.module_from_spec(LIVE_SPEC)
+LIVE_SPEC.loader.exec_module(LIVE_HARNESS)
 
 PORT_OVERRIDE_KEYS = (
     "BLOODBANK_NATS_CLIENT_PORT",
@@ -513,6 +519,118 @@ class ComposeSemanticValidationTests(unittest.TestCase):
             quiesce,
         )
         self.assertNotIn("apply_internal_command", quiesce)
+
+    def test_live_matrix_requires_real_durable_momo_obligation_execution(
+        self,
+    ) -> None:
+        harness = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
+            encoding="utf-8"
+        )
+        worker = (
+            PLATFORM_ROOT.parent
+            / "skills"
+            / "momo"
+            / "scripts"
+            / "obligation_worker.py"
+        ).read_text(encoding="utf-8")
+
+        momo_start = harness.index(
+            'print("[live] exercising real Momo durable obligation actor", flush=True)'
+        )
+        momo_end = harness.index(
+            'print("[live] exercising Holocene read/action and browser surfaces", flush=True)',
+            momo_start,
+        )
+        momo = harness[momo_start:momo_end]
+        for forbidden in (
+            '"complete-obligation"',
+            '"artifact_sha256": "a" * 64',
+            "completion_path.write_text(json.dumps(completion_event)",
+            "completion_publish = run(",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, momo)
+
+        for required in (
+            "start_momo_obligation_actor(",
+            '"Momo durable actor readiness"',
+            "invocation_publish_ack = self.publish_jetstream(",
+            '"Momo obligation receipt"',
+            "hashlib.sha256(artifact_bytes).hexdigest()",
+            'len(set(artifact_sha256)) == 1',
+            'receipt["artifact"]["sha256"] != artifact_sha256',
+            'receipt["delivery"]["stream_sequence"]',
+            'invocation_publish_ack["stream_sequence"]',
+            'receipt["invocation"]["id"]',
+            'receipt["completion"]["event_id"]',
+            "completion_stream_message = self.stream_message(",
+            'receipt["completion"]["duplicate"] is not False',
+            'completion_stream_message["headers"]',
+            '"Nats-Msg-Id": completion_event["id"]',
+            '"receipt/artifact identity mismatch"',
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, momo)
+
+        ready = momo.index('"Momo durable actor readiness"')
+        publish = momo.index("invocation_publish_ack = self.publish_jetstream(")
+        receipt = momo.index('"Momo obligation receipt"', publish)
+        authority = momo.index("momo_state = self.wait_state_version(", receipt)
+        self.assertLess(ready, publish)
+        self.assertLess(publish, receipt)
+        self.assertLess(receipt, authority)
+
+        for required in (
+            "ConsumerConfig(",
+            "durable_name=args.consumer",
+            "ack_policy=AckPolicy.EXPLICIT",
+            "filter_subject=INVOCATION_SUBJECT",
+            "jetstream.pull_subscribe(",
+            "await lifecycle_client.publish_envelope_async(",
+            'completed_at = command["time"]',
+            'headers={"Nats-Msg-Id": completion["id"]}',
+            "await message.ack_sync(",
+            'operations.append("completion_puback")',
+            'operations.append("invocation_ack_sync")',
+        ):
+            with self.subTest(worker_required=required):
+                self.assertIn(required, worker)
+        puback = worker.index('operations.append("completion_puback")')
+        ack = worker.index("await message.ack_sync(", puback)
+        ack_recorded = worker.index('operations.append("invocation_ack_sync")', ack)
+        self.assertLess(puback, ack)
+        self.assertLess(ack, ack_recorded)
+
+    def test_stored_nats_headers_require_unambiguous_canonical_message_id(
+        self,
+    ) -> None:
+        event_id = "11111111-1111-4111-8111-111111111111"
+        expected = {"Nats-Msg-Id": event_id}
+        self.assertEqual(
+            LIVE_HARNESS.stored_nats_headers(
+                {"headers": {"Nats-Msg-Id": [event_id]}}
+            ),
+            expected,
+        )
+
+        block = f"NATS/1.0\r\nNats-Msg-Id: {event_id}\r\n\r\n".encode()
+        self.assertEqual(
+            LIVE_HARNESS.stored_nats_headers(
+                {"hdrs": base64.b64encode(block).decode()}
+            ),
+            expected,
+        )
+
+        duplicate_block = (
+            f"NATS/1.0\r\nNats-Msg-Id: {event_id}\r\n"
+            f"Nats-Msg-Id: {event_id}\r\n\r\n"
+        ).encode()
+        with self.assertRaisesRegex(
+            LIVE_HARNESS.LiveProofError, "ambiguous headers"
+        ):
+            LIVE_HARNESS.stored_nats_headers(
+                {"hdrs": base64.b64encode(duplicate_block).decode()}
+            )
 
     def test_live_matrix_proves_deployed_single_writer_outage_choreography(
         self,

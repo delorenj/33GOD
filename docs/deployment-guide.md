@@ -121,8 +121,10 @@ isolated acceptance and safe coexistence with unrelated projects.
 ## Isolated live acceptance
 
 ```bash
+proof_dir="$(mktemp -d /tmp/33god-lifecycle-proof-XXXXXXXX)"
 python3 33god-platform/scripts/verify-lifecycle-live.py \
-  --screenshots-dir /tmp/33god-lifecycle-proof
+  --proof-dir "$proof_dir" \
+  --screenshots-dir "$proof_dir/screenshots"
 ```
 
 Before `up`, the gate renders the model and rejects any Lifecycle digest
@@ -145,8 +147,9 @@ conflicting duplicate cannot spoof the stored row or projection. It also
 audits but excludes non-authority snapshot/reply candidates, rejects
 pre-activation and prior-occurrence evidence, proves active-occurrence unlock
 and repeated-occurrence isolation, preserves real causal IDs, exercises
-authoritative capability-version flow, and covers Momo's and Holocene's client
-surfaces.
+authoritative capability-version flow, verifies Momo's invocation-derived
+completion ID/time, exact stored `Nats-Msg-Id`, non-duplicate clean PubAck, and
+PubAck-before-ACK order, and covers Momo's and Holocene's client surfaces.
 Cleanup uses the unique resource names and never prunes Docker.
 
 ## Promotion boundary

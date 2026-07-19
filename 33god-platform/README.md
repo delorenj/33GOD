@@ -53,7 +53,7 @@ services would also be selected.
 | Specification, state, legal transitions, reconcile, frontier, obligations, blockers/gates, grants, and all lifecycle writes | Lifecycle |
 | Canonical inter-service contracts and NATS/Dapr transport | Bloodbank |
 | Append-only event history and Lifecycle read projections | Candystore |
-| Legal-work ranking, delegation, evidence, and command intent | Momo |
+| Legal-work ranking, delegation, durable invocation execution, artifact evidence, and command intent | Momo |
 | Rendering and high-level command initiation | Holocene |
 | Process topology, pins, profiles, and release gates | 33GOD root |
 
@@ -103,16 +103,22 @@ secret scope, and profile behavior.
 The destructive-looking acceptance work is isolated behind:
 
 ```bash
-python3 scripts/verify-lifecycle-live.py --screenshots-dir /tmp/33god-lifecycle-proof
+proof_dir="$(mktemp -d /tmp/33god-lifecycle-proof-XXXXXXXX)"
+python3 scripts/verify-lifecycle-live.py \
+  --proof-dir "$proof_dir" \
+  --screenshots-dir "$proof_dir/screenshots"
 ```
 
 That gate allocates a unique Compose project, ports, networks, volumes, and
 Candystore image; verifies the exact rendered Lifecycle digest before `up`;
 tests all seven offline/restart/outage/persistence invariants plus true
-late-subscriber replay, pending-obligation rejection and completion unlock,
-authoritative capability versions, conflicting-duplicate integrity, and the
-Candystore/Momo/Holocene seams; and removes only the resources it created. It
-does not prune Docker or touch another Compose project.
+late-subscriber replay, pending-obligation rejection and real durable-actor
+completion unlock, independently verified report bytes, completion PubAck before
+invocation ACK, invocation-derived completion identity/time, exact stored
+`Nats-Msg-Id`, a non-duplicate clean completion PubAck, authoritative capability
+versions, conflicting-duplicate
+integrity, and the Candystore/Momo/Holocene seams; and removes only the resources
+it created. It does not prune Docker or touch another Compose project.
 
 The NATS-outage phase has one authority writer: the already deployed Compose
 Lifecycle service. The harness holds its target PostgreSQL row, publishes the

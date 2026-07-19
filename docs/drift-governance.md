@@ -106,9 +106,10 @@ The six volumes and four external networks retain operator-selected identities
 across root-stack restarts.
 
 Lifecycle is the sole project-lifecycle writer.
-Bloodbank transports its contracts, Candystore stores history/read models,
-PJangler supplies identity, Momo submits legal-work intent, and Holocene renders
-and commands. Direct provider/database writes from those clients are drift.
+Bloodbank transports its contracts, Candystore is append-only audit/projection
+only, PJangler supplies identity, Momo chooses and executes legal work while
+publishing evidence, and Holocene only renders and invokes high-level actions
+only. Direct provider/database writes from those clients are drift.
 
 ## Acceptance policy
 

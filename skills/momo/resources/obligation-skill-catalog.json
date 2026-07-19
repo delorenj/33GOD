@@ -1,0 +1,12 @@
+{
+  "schema": "momo.obligation-skill-catalog.v1",
+  "bindings": [
+    {
+      "name": "bmad-code-review",
+      "selector": "6.10.2",
+      "adapter": "bounded-evidence-review-v1",
+      "resource_path": ".agents/skills/bmad-code-review/SKILL.md",
+      "resource_sha256": "c303ef6d8cc507ef268e95978052250289bd0c76941441a023baebfd807c1efd"
+    }
+  ]
+}
