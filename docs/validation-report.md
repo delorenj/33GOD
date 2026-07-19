@@ -1,5 +1,9 @@
 # Integrated Compose Documentation Validation Report
 
+> **Historical report:** this file captures the 2026-07-15 four-component
+> baseline. The 2026-07-18 Lifecycle topology and failure matrix supersede its
+> lifecycle gap statements; see [Lifecycle Architecture](./architecture-lifecycle.md).
+
 **Validated:** 2026-07-15
 
 **Implementation base:** `c4f78bbe383a9c1d5ee12e2e81472f6a179b97ad`
@@ -131,8 +135,9 @@ networks, host systemd authority, listener/auth risks, local credentials,
 single-host storage, tenancy, and backup/restore are replaced by a cloud-owned
 design.
 
-The next lifecycle-specific validation report must be additive. It must retain
-this Compose evidence while proving extraction provenance, evaluator parity,
-data-history preservation, registered/envelope-valid contracts, working outbox
-publication, deterministic frontier/obligations/capability verdicts, idempotent
-state-versioned commands, client boundaries, exactly one writer, and rollback.
+The implemented lifecycle-specific validation is additive to this baseline. It
+proves extraction provenance, data-history preservation, exact registered
+contracts, outbox publication/recovery, deterministic frontier/obligations and
+versioned capability verdicts, idempotent state-versioned commands, client
+boundaries, and exactly one authority writer. Execution proceeds forward from
+committed state and durable evidence.

@@ -19,7 +19,9 @@ except ImportError as exc:  # pragma: no cover - environment guard
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_ROOT = Path(os.environ.get("GOD_SOURCE_ROOT", ROOT.parent)).expanduser().resolve()
+SOURCE_ROOT = (
+    Path(os.environ.get("GOD_SOURCE_ROOT", ROOT.parent)).expanduser().resolve()
+)
 SOURCE_PLATFORM_ROOT = SOURCE_ROOT / "33god-platform"
 MAX_SCAN_FILE_BYTES = 1_000_000
 
@@ -37,7 +39,17 @@ def resolve_path(value: str | Path, base: Path = ROOT) -> Path:
     path = Path(raw)
     if not path.is_absolute():
         if str(path).startswith(".."):
-            base = SOURCE_PLATFORM_ROOT
+            source_candidate = (SOURCE_PLATFORM_ROOT / path).resolve()
+            checkout_candidate = (ROOT / path).resolve()
+            # A worker checkout can contain newly selected components that are
+            # absent from the canonical source root while external sibling
+            # repos resolve only from that canonical root. Prefer the explicit
+            # source root, then fall back to this read-only manifest checkout.
+            return (
+                source_candidate
+                if source_candidate.exists() or not checkout_candidate.exists()
+                else checkout_candidate
+            )
         path = base / path
     return path.resolve()
 
@@ -95,7 +107,16 @@ def validate_components() -> list[str]:
 
 def validate_changes() -> list[str]:
     errors: list[str] = []
-    required = {"id", "date", "component", "kind", "summary", "affects", "required_backfills", "docs"}
+    required = {
+        "id",
+        "date",
+        "component",
+        "kind",
+        "summary",
+        "affects",
+        "required_backfills",
+        "docs",
+    }
     ids: set[str] = set()
     for path in sorted((ROOT / "changes").glob("*.jsonl")):
         with path.open("r", encoding="utf-8") as handle:
@@ -110,10 +131,14 @@ def validate_changes() -> list[str]:
                     continue
                 missing = sorted(required - set(item))
                 if missing:
-                    errors.append(f"{path}:{line_no}: missing required keys: {', '.join(missing)}")
+                    errors.append(
+                        f"{path}:{line_no}: missing required keys: {', '.join(missing)}"
+                    )
                 change_id = item.get("id")
                 if change_id in ids:
-                    errors.append(f"{path}:{line_no}: duplicate change id {change_id!r}")
+                    errors.append(
+                        f"{path}:{line_no}: duplicate change id {change_id!r}"
+                    )
                 ids.add(change_id)
                 for key in ("affects", "required_backfills", "docs"):
                     if not isinstance(item.get(key), list):
@@ -123,7 +148,16 @@ def validate_changes() -> list[str]:
 
 def validate_backfill_manifests() -> list[str]:
     errors: list[str] = []
-    required = {"id", "title", "owner_component", "kind", "summary", "search_paths", "forbidden_patterns", "remediation"}
+    required = {
+        "id",
+        "title",
+        "owner_component",
+        "kind",
+        "summary",
+        "search_paths",
+        "forbidden_patterns",
+        "remediation",
+    }
     ids: set[str] = set()
     for path in sorted((ROOT / "backfills").glob("*.yaml")):
         item = load_yaml(path)
@@ -170,7 +204,9 @@ def cmd_components_list(_: argparse.Namespace) -> int:
             )
         )
     headers = ("id", "role", "repo", "profiles", "path", "compose")
-    widths = [max(len(str(row[i])) for row in [headers, *rows]) for i in range(len(headers))]
+    widths = [
+        max(len(str(row[i])) for row in [headers, *rows]) for i in range(len(headers))
+    ]
     print("  ".join(str(headers[i]).ljust(widths[i]) for i in range(len(headers))))
     print("  ".join("-" * width for width in widths))
     for row in rows:
@@ -202,7 +238,10 @@ def iter_search_files(search_paths: list[str]) -> list[Path]:
 
 def scan_backfill(path: Path) -> tuple[str, list[str]]:
     manifest = load_yaml(path)
-    patterns = [re.compile(re.escape(str(pattern))) for pattern in manifest.get("forbidden_patterns", [])]
+    patterns = [
+        re.compile(re.escape(str(pattern)))
+        for pattern in manifest.get("forbidden_patterns", [])
+    ]
     findings: list[str] = []
     if not patterns:
         return manifest["id"], findings
@@ -239,7 +278,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="33GOD platform control-plane utility")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    validate = sub.add_parser("validate", help="validate manifests, changelog, and backfill manifests")
+    validate = sub.add_parser(
+        "validate", help="validate manifests, changelog, and backfill manifests"
+    )
     validate.set_defaults(func=cmd_validate)
 
     components = sub.add_parser("components", help="component manifest commands")
@@ -249,7 +290,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     backfills = sub.add_parser("backfills", help="backfill commands")
     backfills_sub = backfills.add_subparsers(dest="backfills_command", required=True)
-    backfills_check = backfills_sub.add_parser("check", help="run read-only stale-config checks")
+    backfills_check = backfills_sub.add_parser(
+        "check", help="run read-only stale-config checks"
+    )
     backfills_check.set_defaults(func=cmd_backfills_check)
 
     return parser

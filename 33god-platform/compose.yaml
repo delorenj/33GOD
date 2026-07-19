@@ -9,20 +9,22 @@ x-33god-model:
   tools: local-one-shot
   full: local-with-tools
   cloud: unsupported-local-bind-model
+x-lifecycle-image: &lifecycle-image ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311
 
 services:
   bloodbank-nats:
-    image: nats:2.10-alpine
-    container_name: bloodbank-nats
+    image: nats@sha256:b83efabe3e7def1e0a4a31ec6e078999bb17c80363f881df35edc70fcb6bb927
     command: ["-js", "-sd", "/data/jetstream", "-m", "8222", "-DV"]
     environment:
       BLOODBANK_NATS_URL: nats://nats:4222
     ports:
       - target: 4222
         published: "${BLOODBANK_NATS_CLIENT_PORT:-4222}"
+        host_ip: 127.0.0.1
         protocol: tcp
       - target: 8222
         published: "${BLOODBANK_NATS_MONITOR_PORT:-8222}"
+        host_ip: 127.0.0.1
         protocol: tcp
     volumes:
       - bloodbank-nats-data:/data/jetstream
@@ -38,8 +40,7 @@ services:
     restart: unless-stopped
 
   nats-init:
-    image: natsio/nats-box:0.14.5
-    container_name: bloodbank-nats-init
+    image: natsio/nats-box@sha256:0784ab710aefaf6ef037ed797ee7dcde613c6ad208c4dbff1945fc7c1b5b5375
     depends_on:
       bloodbank-nats:
         condition: service_healthy
@@ -58,13 +59,118 @@ services:
     networks: [bloodbank-network]
     restart: "no"
 
+  lifecycle-postgres:
+    image: postgres@sha256:20edbde7749f822887a1a022ad526fde0a47d6b2be9a8364433605cf65099416
+    environment:
+      POSTGRES_USER: lifecycle
+      POSTGRES_DB: lifecycle
+      POSTGRES_PASSWORD_FILE: /run/secrets/lifecycle-postgres-password
+    secrets: [lifecycle-postgres-password]
+    volumes:
+      - lifecycle-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifecycle -d lifecycle"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    networks:
+      lifecycle-internal:
+        aliases: [lifecycle-postgres]
+    restart: unless-stopped
+
+  lifecycle-migrate:
+    image: *lifecycle-image
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        password="$$(python -c 'from pathlib import Path; from urllib.parse import quote; print(quote(Path("/run/secrets/lifecycle-postgres-password").read_text().strip(), safe=""))')"
+        export LIFECYCLE_DATABASE_URL="postgresql://lifecycle:$${password}@lifecycle-postgres:5432/lifecycle"
+        unset password
+        exec python -m main migrate
+    secrets: [lifecycle-postgres-password]
+    depends_on:
+      lifecycle-postgres:
+        condition: service_healthy
+    networks: [lifecycle-internal]
+    restart: "no"
+
+  lifecycle-bootstrap:
+    image: *lifecycle-image
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        password="$$(python -c 'from pathlib import Path; from urllib.parse import quote; print(quote(Path("/run/secrets/lifecycle-postgres-password").read_text().strip(), safe=""))')"
+        export LIFECYCLE_DATABASE_URL="postgresql://lifecycle:$${password}@lifecycle-postgres:5432/lifecycle"
+        unset password
+        exec python -m main bootstrap \
+          --lifecycle-id "$${LIFECYCLE_BOOTSTRAP_ID}" \
+          --name "$${LIFECYCLE_BOOTSTRAP_NAME}" \
+          --repo "$${LIFECYCLE_BOOTSTRAP_REPO}" \
+          --actor-id "$${LIFECYCLE_BOOTSTRAP_ACTOR_ID}" \
+          --capability-id "$${LIFECYCLE_BOOTSTRAP_CAPABILITY_ID}" \
+          --as-of "$${LIFECYCLE_BOOTSTRAP_AS_OF}" \
+          --mode "$${LIFECYCLE_BOOTSTRAP_MODE}"
+    environment:
+      LIFECYCLE_BOOTSTRAP_ID: "${LIFECYCLE_BOOTSTRAP_ID:-lc_33god_platform}"
+      LIFECYCLE_BOOTSTRAP_NAME: "${LIFECYCLE_BOOTSTRAP_NAME:-33GOD Platform}"
+      LIFECYCLE_BOOTSTRAP_REPO: "${LIFECYCLE_BOOTSTRAP_REPO:-delorenj/33GOD}"
+      LIFECYCLE_BOOTSTRAP_ACTOR_ID: "${LIFECYCLE_BOOTSTRAP_ACTOR_ID:-operator:33god-bootstrap}"
+      LIFECYCLE_BOOTSTRAP_CAPABILITY_ID: "${LIFECYCLE_BOOTSTRAP_CAPABILITY_ID:-cap:33god-platform:lifecycle-command}"
+      LIFECYCLE_BOOTSTRAP_AS_OF: "${LIFECYCLE_BOOTSTRAP_AS_OF:-2026-07-18T00:00:00Z}"
+      LIFECYCLE_BOOTSTRAP_MODE: "${LIFECYCLE_BOOTSTRAP_MODE:-supervised}"
+    secrets: [lifecycle-postgres-password]
+    depends_on:
+      lifecycle-migrate:
+        condition: service_completed_successfully
+    networks: [lifecycle-internal]
+    restart: "no"
+
+  lifecycle:
+    image: *lifecycle-image
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - |
+        password="$$(python -c 'from pathlib import Path; from urllib.parse import quote; print(quote(Path("/run/secrets/lifecycle-postgres-password").read_text().strip(), safe=""))')"
+        export LIFECYCLE_DATABASE_URL="postgresql://lifecycle:$${password}@lifecycle-postgres:5432/lifecycle"
+        unset password
+        exec python -m main serve
+    environment:
+      BLOODBANK_NATS_URLS: nats://nats:4222
+      LIFECYCLE_INSTANCE: "${LIFECYCLE_INSTANCE:-33god-platform}"
+      LIFECYCLE_HTTP_HOST: 0.0.0.0
+      LIFECYCLE_HTTP_PORT: "8080"
+    secrets: [lifecycle-postgres-password]
+    ports:
+      - target: 8080
+        published: "${LIFECYCLE_PORT:-8088}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      lifecycle-postgres:
+        condition: service_healthy
+      lifecycle-bootstrap:
+        condition: service_completed_successfully
+      bloodbank-nats:
+        condition: service_healthy
+      nats-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-m", "main", "healthcheck", "--url", "http://127.0.0.1:8080/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks: [lifecycle-internal, bloodbank-network]
+    restart: unless-stopped
+
   dapr-placement:
-    image: daprio/dapr:1.13.0
-    container_name: bloodbank-dapr-placement
+    image: daprio/dapr@sha256:0d9dbe22d81dad91f3cde6f85a31ad0185ceaa55f82a4ba29cc46020f31a79d4
     command: ["./placement", "--port", "50005"]
     ports:
       - target: 50005
         published: "${BLOODBANK_DAPR_PLACEMENT_PORT:-50005}"
+        host_ip: 127.0.0.1
         protocol: tcp
     networks:
       bloodbank-network:
@@ -72,8 +178,7 @@ services:
     restart: unless-stopped
 
   candystore-postgres:
-    image: postgres:16-alpine
-    container_name: candystore-postgres
+    image: postgres@sha256:20edbde7749f822887a1a022ad526fde0a47d6b2be9a8364433605cf65099416
     environment:
       POSTGRES_USER: candystore
       POSTGRES_PASSWORD: candystore
@@ -99,8 +204,7 @@ services:
   candystore:
     build:
       context: ${GOD_SOURCE_ROOT:-..}/candystore
-    image: candystore:local
-    container_name: candystore
+    image: ${CANDYSTORE_IMAGE:-candystore:local}
     environment:
       APP_PORT: "3001"
       APP_HOST: 0.0.0.0
@@ -108,6 +212,12 @@ services:
       SUBSCRIBE_PUBSUB: bloodbank-pubsub
       SUBSCRIBE_TOPIC: bloodbank.evt.v1.>
       SUBSCRIBE_ROUTE: /events/all
+      BLOODBANK_SCHEMAS_DIR: /bloodbank-schemas
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/bloodbank/schemas
+        target: /bloodbank-schemas
+        read_only: true
     ports:
       - target: 3001
         published: "${CANDYSTORE_PORT:-8683}"
@@ -132,8 +242,7 @@ services:
     restart: unless-stopped
 
   candystore-daprd:
-    image: daprio/daprd:1.13.0
-    container_name: candystore-daprd
+    image: daprio/daprd@sha256:286806d0eac7edc37c310427e7813da403257f51395eeec912cdd2889f9a9b37
     command:
       - ./daprd
       - --app-id=candystore
@@ -166,7 +275,7 @@ services:
     restart: unless-stopped
 
   holocene-api-preflight:
-    image: curlimages/curl:8.14.1
+    image: curlimages/curl@sha256:9a1ed35addb45476afa911696297f8e115993df459278ed036182dd2cd22b67b
     command: ["--fail", "--silent", "--show-error", "http://host.docker.internal:4000/health"]
     extra_hosts: ["host.docker.internal:host-gateway"]
     depends_on:
@@ -176,8 +285,7 @@ services:
     restart: "no"
 
   holocene-web:
-    image: node:22
-    container_name: holocene-web
+    image: node@sha256:1031993481795705055273f2eef0c24597abdcb277d6e058c82f78cbbdef92a6
     working_dir: /app
     command: >
       sh -c "corepack enable
@@ -234,7 +342,7 @@ services:
     restart: unless-stopped
 
   pjangler-cli:
-    image: node:22
+    image: node@sha256:1031993481795705055273f2eef0c24597abdcb277d6e058c82f78cbbdef92a6
     profiles: [tools, full]
     working_dir: /workspace
     entrypoint: ["/opt/33god/pjangler-tool-entrypoint.sh"]
@@ -253,7 +361,7 @@ services:
     restart: "no"
 
   pjangler-mcp:
-    image: node:22
+    image: node@sha256:1031993481795705055273f2eef0c24597abdcb277d6e058c82f78cbbdef92a6
     profiles: [tools, full]
     working_dir: /workspace
     entrypoint: ["/opt/33god/pjangler-tool-entrypoint.sh"]
@@ -273,7 +381,7 @@ services:
     restart: "no"
 
   cloud-unsupported:
-    image: alpine:3.20
+    image: alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
     profiles: [cloud]
     command:
       - sh
@@ -286,27 +394,37 @@ services:
 networks:
   bloodbank-network:
     external: true
-    name: bloodbank-network
+    name: ${BLOODBANK_NETWORK_NAME:-bloodbank-network}
+  lifecycle-internal:
+    external: true
+    name: ${LIFECYCLE_NETWORK_NAME:-lifecycle-internal}
   candystore-internal:
     external: true
-    name: candystore-internal
+    name: ${CANDYSTORE_NETWORK_NAME:-candystore-internal}
   proxy:
     external: true
-    name: proxy
+    name: ${PROXY_NETWORK_NAME:-proxy}
 
 volumes:
   bloodbank-nats-data:
     external: true
-    name: bloodbank_bloodbank-nats-data
+    name: ${BLOODBANK_NATS_VOLUME:-bloodbank_bloodbank-nats-data}
+  lifecycle-pgdata:
+    external: true
+    name: ${LIFECYCLE_POSTGRES_VOLUME:-lifecycle_pgdata}
   candystore-pgdata:
     external: true
-    name: candystore_pgdata
+    name: ${CANDYSTORE_POSTGRES_VOLUME:-candystore_pgdata}
   holocene-node-modules:
     external: true
-    name: holocene_holocene_node_modules
+    name: ${HOLOCENE_NODE_MODULES_VOLUME:-holocene_holocene_node_modules}
   holocene-web-node-modules:
     external: true
-    name: holocene_holocene_web_node_modules
+    name: ${HOLOCENE_WEB_NODE_MODULES_VOLUME:-holocene_holocene_web_node_modules}
   holocene-web-next:
     external: true
-    name: holocene_holocene_web_next
+    name: ${HOLOCENE_WEB_NEXT_VOLUME:-holocene_holocene_web_next}
+
+secrets:
+  lifecycle-postgres-password:
+    file: ${LIFECYCLE_POSTGRES_PASSWORD_FILE:-/run/secrets/33god-lifecycle-postgres-password}

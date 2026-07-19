@@ -1,121 +1,99 @@
 # 33GOD Integration Architecture
 
+**Current state:** Lifecycle local vertical slice implemented and verified on
+2026-07-18.
+
 ## Authority model
 
-Root documentation owns component relationships, the normalized Compose
-projection, and deployment gates. Component repositories own internal APIs and
-implementation. Authority order is executable manifests/runtime configuration,
-code, tests/validation, root integration docs, component docs, then historical
-plans.
-
-For project lifecycle semantics the approved authority is the planned headless
-Lifecycle component. Root Compose process ownership, Bloodbank transport,
-Candystore history, Momo judgment, Holocene rendering, and PJangler identity are
-separate concerns.
-
-## Validated target
+Executable manifests, pinned code, contracts, and tests outrank prose. Root owns
+cross-component topology and release gates; each component owns its internals.
+Project lifecycle authority remains separate from process deployment ownership.
 
 ```text
-Bloodbank NATS --healthy--> NATS init --completed--------------------+
-       |                                                              |
-       +--> Dapr placement                                            |
-                                                                      v
-Candystore PostgreSQL --healthy--> app --ready--> one Candystore daprd
-                                             durable candystore-events
+PJangler identity/binding inputs
+              |
+              v
+observations/evidence -> Lifecycle authority <--- canonical command intent
+                         | state/frontier/obligations/grants
+                         | transactional state/history/outbox
+                         v
+                 Bloodbank NATS/JetStream
                          |
-                         +--> host Holocene API reads 127.0.0.1:8683
-                                      |
-                                      v preflight /health on :4000
-                              Holocene web on proxy:3001
-
-PJangler CLI / stdio MCP: tools/full, zero replicas, explicit run only
-Cloud: render-only unsupported local-bind model
-
-Lifecycle: approved extraction target, absent from this deployed topology
+              +----------+----------+
+              |                     |
+              v                     v
+     Candystore history       command/reply transport
+        + read projection            |
+              |                      |
+        +-----+------+               |
+        |            |               |
+        v            v               |
+ Momo ranks      Holocene renders     |
+ legal work      and initiates        |
+        \            /               |
+         +-- canonical intents -------+
 ```
 
-The candidate is statically validated, not deployed. Fixed container names mean
-the target cannot coexist with current component-managed containers during a
-cutover.
+No direct service-to-service mutation path exists. Momo and Holocene publish
+through Bloodbank; Lifecycle alone validates and commits resulting state.
 
-The later lifecycle vertical slice is a separate target interaction:
+## Root process graph
 
 ```text
-PJangler project identity ---> Lifecycle spec/binding
-observations + evidence -----> deterministic reconcile
-                               state/frontier/obligations/grants
-                                           |
-                          canonical Bloodbank commands/events
-                                           |
-                                  Candystore history/read models
-                                   /                         \
-                     Momo selects legal work       Holocene renders/commands
-                                   \                         /
-                                    intent ---> Lifecycle validates
+bloodbank-nats healthy -> nats-init complete ------------------+
+        |                                                       |
+        +-> dapr-placement                                      |
+                                                                v
+lifecycle-postgres healthy -> migrate -> bootstrap -> Lifecycle ready
+        |
+        +-- dedicated lifecycle-pgdata on lifecycle-internal
+
+candystore-postgres healthy -> Candystore ready -> durable daprd
+                                      |
+                                      +-> host Holocene API
+                                              |
+                                      preflight complete -> Holocene web
 ```
+
+Lifecycle uses only its private database network and Bloodbank. Candystore uses
+its own database/network and joins Bloodbank through its Dapr sidecar. Holocene
+does not join the Lifecycle authority network.
 
 ## Contract matrix
 
-| Concern | Owner | Root projection contract |
+| Concern | Owner | Exercised integration |
 |---|---|---|
-| NATS streams and Dapr transport | Bloodbank | Tracked initializer is read-only mounted; NATS/init/placement are default |
-| Durable event history | Candystore | One PostgreSQL/app/daprd; durable component is Candystore-owned |
-| Mission control | Holocene | Web is default; privileged API remains host systemd and is preflighted |
-| Project tooling | PJangler | CLI and MCP are run-only; MCP is stdio; no ports/health/daemon |
-| Project lifecycle truth (planned) | Lifecycle | No current service; future single writer for spec/state/reconcile/frontier/obligations/capabilities |
-| Business process management | Momo | Read frontier, choose legal work, delegate/review, submit intent; no lifecycle writes |
-| Networks | Bloodbank/Candystore/host proxy owners | Exact external names are preserved |
-| Persistent data | Component/runtime owners | Five adopted volumes are external; legacy volumes remain detached |
-| Cross-component projection | 33god-platform | Root normalizes names/dependencies without editing component sources |
-
-## Ports and reachability
-
-The validator preserves NATS `4222`/`8222`, Dapr placement `50005`, loopback
-Candystore PostgreSQL `5434`, loopback Candystore app `8683`, and loopback
-Candystore daprd `3504`. Holocene web exposes container-only `3001` to Traefik.
-Compose publishes no `4000`; the existing host API owns it. PJangler publishes
-no ports.
+| Identity/binding inputs | PJangler | Deterministic input to bootstrap/spec |
+| Lifecycle state/reconcile/frontier/obligations/grants | Lifecycle | Exact digest, dedicated PostgreSQL, sole writer |
+| Commands/events/transport | Bloodbank | Pinned `48031ee…` schemas and initialized JetStream |
+| Event history/read projections | Candystore | Durable consumer, replay-safe current snapshot/verdict API |
+| Prioritization/delegation | Momo | Legal frontier only, canonical skill resolution, separated rationale/intent |
+| Mission control | Holocene | Candystore-backed read surface and Bloodbank command publication |
+| Deployment/process gates | 33GOD root | Immutable pins, ordering, health, isolation, profile semantics |
 
 ## Failure and trust boundaries
 
-- `nats-init` must finish before the durable Candystore sidecar starts.
-- Candystore readiness includes PostgreSQL; app liveness alone is insufficient.
-- The host API preflight establishes reachability, not application auth safety.
-- Holocene history remains a direct HTTP read-side exception to Bloodbank.
-- Holocene lifecycle UI must render authoritative version/provenance/freshness
-  and submit commands; it cannot compute transitions or write provider state.
-- Momo's current direct `tp`/Trello transitions are legacy behavior until the
-  lifecycle command seam exists. They are not target lifecycle truth.
-- PJangler recipes requiring host files, systemd, or provider credentials remain
-  host-authority operations even though narrow container definitions exist.
-- A successful cloud render is evidence of honest unsupported assumptions, not
-  cloud readiness.
+- Lifecycle truth progresses while Holocene or Momo is offline.
+- Missing/stale projection data renders unknown/degraded.
+- Lifecycle readiness fails during a broker outage while committed state and
+  liveness remain intact.
+- Transactional outbox order and eventual publication survive NATS recovery.
+- Stale versions and invalid grants yield stable non-mutating verdicts.
+- Pending obligations make the corresponding frontier transition illegal;
+  only exact canonical completion evidence can unlock authority progression.
+- A late-starting Candystore replays pre-existing snapshots and verdicts, and
+  duplicate IDs always project the immutable stored event rather than a
+  conflicting delivery.
+- Restarting Lifecycle or its PostgreSQL process preserves the dedicated
+  authority volume and does not duplicate transition effects.
+- The cloud profile is a render-only rejection model, not a deployment target.
 
-## Lifecycle extraction boundary
+## Current deployment label
 
-The tested Bloodbank controller is the extraction embryo. Its pure evaluator,
-leased queue, transactional state/history/outbox persistence, and 21 passing
-focused tests are current evidence. The default publisher is unconfigured,
-`blocker.detected` lacks a schema, and initial `status.updated` staging can
-conflict with the registered schema. No standalone repository/service or root
-Compose entry exists.
+The normalized local topology and isolated live acceptance path are implemented.
+The host has not been promoted to a cloud topology, this worker branch is not a
+release branch, and no release tag is created by this slice.
 
-Extraction must preserve repository provenance and current database history.
-The target adds a versioned spec, legal frontier, obligations, capability
-validation, idempotent commands, and optimistic state-version checks. Exactly
-one writer is a cutover gate.
-
-## Data and network safety
-
-External networks are `bloodbank-network`, `candystore-internal`, and `proxy`.
-Adopted volumes are `bloodbank_bloodbank-nats-data`, `candystore_pgdata`, and
-the three `holocene_*` dependency/build volumes listed in the deployment guide.
-The projection forbids the Bloodbank legacy Candystore services. Detached
-legacy volumes remain preserved and unmounted.
-
-## Change discipline
-
-Any event, template, port, network, secret-source, storage, service-cardinality,
-profile, or host-boundary change requires a machine change record, pipeline
-changelog entry, relevant semantic-validator update, root documentation update,
-and owner review. See [Drift Governance](./drift-governance.md).
+See [Lifecycle Architecture](./architecture-lifecycle.md),
+[Deployment Guide](./deployment-guide.md), and
+[Drift Governance](./drift-governance.md).

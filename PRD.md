@@ -2,7 +2,7 @@
 
 Status: Integrated local Compose stack live
 Owner: 33GOD Director
-Last updated: July 15, 2026
+Last updated: July 18, 2026
 
 ## Summary
 
@@ -18,13 +18,12 @@ subscription service. `33god-platform/` indexes components, records
 cross-component changes, defines backfill checks, and owns the live normalized
 integrated Compose stack.
 
-The approved product boundary also introduces a separate, headless
-`lifecycle` component. It is the sole target authority for versioned lifecycle
+The implemented product boundary includes a separate, headless `lifecycle`
+component. It is the sole authority for versioned lifecycle
 specification, operational state, deterministic reconciliation, legal frontier,
-obligations, and capability validation. This boundary is approved but not yet
-implemented or deployed. The tested controller under
-`bloodbank/services/lifecycle-controller/` is the extraction embryo whose
-history must be preserved.
+obligations, and capability validation. The local vertical slice uses a
+dedicated PostgreSQL authority store, canonical Bloodbank transport, durable
+Candystore projections, and bounded Momo/Holocene clients.
 
 ## Situation
 
@@ -71,10 +70,10 @@ boundaries, managed storage, cloud secrets, and subscription packaging.
 ## Current control-plane state
 
 `33god-platform/` is the product control-plane directory and root-owned
-cross-component projection. Implementation base `c4f78bb` replaced the former
-readiness scaffold with a validated local Compose target. Root Compose now owns
-Bloodbank core, the canonical Candystore deployment, and Holocene web; the
-Holocene API remains a healthy host service by design.
+cross-component projection. Root Compose owns Bloodbank core, the dedicated
+Lifecycle authority process/storage topology, the canonical Candystore
+deployment, and Holocene web; the Holocene API remains a host service by
+design.
 
 Current artifacts include:
 
@@ -89,8 +88,8 @@ Current artifacts include:
 - `33god-platform/docs/backfills.md`: backfill program overview.
 - `33god-platform/skills/33god-hub/`: unified skill entrypoint for agents.
 - `33god-platform/compose.yaml`: normalized local target for Bloodbank core,
-  exactly one Candystore, Holocene API preflight/web, and run-only PJangler
-  tools.
+  Lifecycle PostgreSQL/migrate/bootstrap/serve, exactly one Candystore,
+  Holocene API preflight/web, and run-only PJangler tools.
 - `33god-platform/scripts/validate-compose.py`: semantic validator for default,
   `tools`, `full`, and render-only unsupported `cloud`.
 - Root `mise.toml` tasks:
@@ -101,11 +100,12 @@ Current artifacts include:
   - `platform:compose:test`
   - `docs:drift`
 
-The current integrated stack does **not** contain a standalone lifecycle
-service. Bloodbank still contains the tested controller embryo, its default
-outbox publisher is unconfigured, and its emitted lifecycle contracts have
-known schema drift. Those facts describe the current state; they do not change
-the approved target ownership.
+The integrated model pins Lifecycle to
+`ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311`
+with no build key. Bloodbank is pinned at
+`48031ee39c238b9d4715b81b74076635235f96d5`; clients reuse its canonical
+snapshot-v3 capability/obligation-occurrence and completion-evidence-v2
+contracts instead of defining a competing contract.
 
 Validation state as of this handoff:
 
@@ -113,10 +113,16 @@ Validation state as of this handoff:
 - `python3 33god-platform/scripts/platform.py components list`: passes.
 - `python3 33god-platform/scripts/platform.py backfills check`: passes.
 - Candidate default, `tools`, `full`, and `cloud` renders pass.
-- Candidate semantic validation and three focused tests pass against the
-  populated source root.
+- Candidate semantic validation and 20 focused tests pass against the populated
+  source root.
 - The root documentation drift gate invokes the candidate validator with
   explicit `GOD_SOURCE_ROOT` while preserving all previous parity checks.
+- The isolated live gate passes all seven Lifecycle offline/restart/outage/
+  persistence invariants, including a real authority commit and ordered outbox
+  drain during NATS loss, plus occurrence-isolated obligation evidence,
+  authority-spoof rejection, versioned capability and causal-lineage flow,
+  true late-subscriber replay, canonical duplicate integrity, and the
+  Candystore, Momo, and Holocene seams.
 
 Cloud remains blocked. Its profile exists only to render the unsupported
 local-bind model and rejection gate; it must never be used with `docker compose
@@ -167,9 +173,8 @@ source with optional hosted subscription access.
 This PRD does not require replacing every legacy workflow in the first slice.
 Legacy projects can be backfilled in stages.
 
-This planning correction does not claim that the standalone lifecycle
-repository, service, data migration, command surface, or deployment wiring
-already exists.
+This slice does not promote the render-only cloud profile, publish the root
+integration branch, or create a release tag.
 
 ## Functional requirements
 
@@ -211,8 +216,9 @@ Acceptance criteria:
   stays green.
 - The root owns a normalized projection while components retain internal
   implementation ownership.
-- The default contains Bloodbank NATS/init/placement, exactly one standalone
-  Candystore PostgreSQL/app/daprd, Holocene API preflight, and Holocene web.
+- The default contains Bloodbank NATS/init/placement; dedicated Lifecycle
+  PostgreSQL/migrate/bootstrap/serve; exactly one standalone Candystore
+  PostgreSQL/app/daprd; Holocene API preflight; and Holocene web.
 - The Holocene API remains host systemd; Compose must not publish port 4000.
 - PJangler CLI and stdio MCP are zero-replica, run-only tools with no ports,
   HTTP health, or daemon lifecycle.
@@ -220,11 +226,11 @@ Acceptance criteria:
   - `default`: the local core/audit/control target.
   - `tools` and `full`: default plus run-only PJangler definitions.
   - `cloud`: render-only unsupported evidence with an explicit rejection gate.
-- The semantic validator enforces ports, start order, three external networks,
-  exact service memberships, five adopted external volumes, the canonical
+- The semantic validator enforces ports, start order, four external networks,
+  exact service memberships, six adopted external volumes, the canonical
   Candystore Dapr subscription path, exact Holocene Host/auth/proxy labels,
-  unresolved Holocene env-file references, and the exclusion of Bloodbank
-  legacy Candystore.
+  unresolved Holocene env-file references, Lifecycle's exact digest/no-build
+  contract, and the exclusion of Bloodbank legacy Candystore.
 - Checked-in render tasks use `--no-env-resolution`; caller-selected port
   overrides are validated rather than masked.
 - Static validation may use the authoritative dirty primary source read-only,
@@ -369,11 +375,11 @@ Acceptance criteria:
 - Bloodbank owns canonical lifecycle command/event schemas and transport.
 - Candystore owns durable event history and lifecycle read projections, not the
   operational lifecycle writer.
-- The Bloodbank controller embryo is extracted with commit and data-history
-  preservation rather than rewritten as a greenfield service.
-- The vertical slice is not complete until outbox publication is configured,
-  every emitted type is registered, emitted envelopes validate, and exactly one
-  lifecycle writer is proven in deployment.
+- The standalone component preserves the deterministic controller lineage while
+  owning its dedicated operational database and publication path.
+- The vertical slice proves configured outbox publication, registered/validated
+  contracts, one operational writer, durable projections, bounded clients, and
+  the seven-invariant live failure matrix.
 
 ## Non-functional requirements
 
@@ -418,9 +424,9 @@ These issues are the first things the director must triage.
 
 6. Reconcile root repo dirt before treating `33GOD` itself as a release branch.
 
-7. Extract the lifecycle controller embryo into the standalone component,
-   close the outbox/schema gaps, preserve operational history, and gate all
-   clients on the new command/read contract.
+7. **Resolved 2026-07-18:** the standalone Lifecycle authority, dedicated
+   persistence, outbox/contract path, Candystore projection, Momo seam,
+   Holocene surface, and root isolated failure matrix are implemented.
 
 ## MVP plan
 
@@ -443,21 +449,18 @@ Remove the biggest sources of daily drift.
 - Move Hermes PM runtimes into mounted volumes.
 - Add runtime backup and restore docs.
 
-### Phase 2a. Establish lifecycle authority
+### Phase 2a. Establish lifecycle authority — implemented
 
-Build the prerequisite vertical slice before Momo autonomy or Holocene
-lifecycle commands are treated as target behavior.
-
-- Freeze lifecycle identity, spec/state versions, frontier, obligations,
-  capability grants, commands, and Bloodbank contracts.
-- Extract the tested Bloodbank controller with repository history preserved.
-- Add the missing frontier/obligation/capability and command semantics.
-- Migrate current lifecycle tables with backup, row/fingerprint/history checks,
-  a single-writer cutover, and a verified rollback point.
-- Wire the transactional outbox to Bloodbank and persist canonical lifecycle
-  events/read models through Candystore.
-- Move Momo and Holocene to lifecycle read/command clients before retiring
-  their legacy direct-board paths.
+- Lifecycle owns identity-bound spec/state versions, frontier, obligations,
+  grants, commands, deterministic reconcile, and every operational write.
+- Root Compose provides dedicated persistence and fail-closed
+  migrate/bootstrap/serve ordering with the immutable image digest.
+- Bloodbank carries canonical contracts; Candystore durably projects events.
+- Momo invokes only legal frontier work and Holocene renders/commands without
+  local truth.
+- The isolated failure matrix proves offline independence, restart/idempotency,
+  stale-version and capability rejection, NATS recovery/order, and PostgreSQL
+  persistence.
 
 ### Phase 3. Build the local compose stack
 
@@ -499,8 +502,7 @@ Operate the local product through root Compose. Keep the platform registry,
 semantic validator, and documentation drift gate green after component or
 topology changes. Cloud remains a separate design phase.
 
-For project lifecycle, route all state-changing intent through the standalone
-`lifecycle` component after its vertical slice is implemented. Preserve the
-Bloodbank controller's code and data history during extraction; do not describe
-Momo business judgment, Holocene display state, Candystore history, or PJangler
+For project lifecycle, route all state-changing intent through Bloodbank to the
+standalone `lifecycle` component. Do not describe Momo business judgment,
+Holocene display state, Candystore history, Bloodbank transport, or PJangler
 identity as lifecycle truth.

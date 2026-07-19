@@ -82,12 +82,17 @@ inputDocuments:
 workflowType: 'architecture'
 project_name: '33GOD'
 user_name: 'Jarad'
-date: '2026-07-15T20:33:09-04:00'
+date: '2026-07-18T12:00:00-04:00'
 ---
 
 # Architecture Decision Document
 
 _This document builds collaboratively through step-by-step discovery. Sections are appended as we work through each architectural decision together._
+
+**Current implementation label (2026-07-18):** the local Lifecycle authority
+vertical slice, Candystore projection, Momo policy seam, Holocene read/command
+surface, and root failure matrix are implemented. Sections describing the
+earlier extraction gap are superseded by the implementation record below.
 
 ## Project Context Analysis
 
@@ -115,10 +120,9 @@ The current root PRD defines thirteen functional requirement groups:
 The architecture must extend this four-component deployed baseline to cover the
 following additional product boundaries:
 
-- **Lifecycle:** planned headless component that exclusively owns lifecycle
-  specification/state/reconciliation, legal frontier, obligations, and
-  capability validation. It is not implemented as a standalone repository or
-  deployed service yet.
+- **Lifecycle:** implemented headless component that exclusively owns lifecycle
+  specification/state/reconciliation, legal frontier, obligations, capability
+  validation, and every state-changing write.
 - **Momo:** PM/EM process manager, heartbeat-driven business decision system,
   ticket abstraction, delegation workflows, and Hindsight-backed project
   memory. It selects among lifecycle-legal work but never computes or writes
@@ -360,9 +364,9 @@ This rule applies to runtime units, not every conceptual component:
 - Holocene web: required.
 - Voxxy core and each independently scheduled engine: required.
 - Momo runtime/heartbeat adapter: required if deployed as a container.
-- Lifecycle service: required after the extraction vertical slice passes
-  contract, storage-migration, outbox, replay, health, and rollback gates. It is
-  absent from the current validated Compose set.
+- Lifecycle service: present in the validated local Compose set by exact
+  immutable digest, with dedicated PostgreSQL and fail-closed
+  migrate/bootstrap/serve ordering. Compose never builds it.
 - PJangler: optional run-only tool image, not a daemon.
 - Bloodbank: upstream service images plus component-owned initialization and
   configuration artifacts; custom runtime code requires its own image.
@@ -457,28 +461,37 @@ and agent bundles.
 
 ### Decision
 
-Create a separate headless component named `lifecycle`. Extract the tested
-controller embryo from Bloodbank with commit and data-history preservation, then
-extend it to the complete target contract. Do not build a second greenfield
-reconciler and do not leave lifecycle semantics in Bloodbank merely because the
-embryo was incubated there.
+Use the separate headless `lifecycle` component as the only deterministic
+authority. Bloodbank retains canonical contracts/transport; no second client
+contract or competing reconciler is permitted.
 
 ### Current state
 
-- Bloodbank pin `03415705a39d77f1e6d73c8a9c92ee177320df7e` contains the
-  evaluator, leased reconcile queue, transactional state/history/outbox writes,
-  worker, sweeper, SQL, runbook, and 21 passing focused tests.
-- The default outbox publisher raises `outbox publisher is not configured`.
-- `bloodbank.v1.lifecycle.blocker.detected` has no registered schema.
-- `status.updated` staging can violate its schema with empty `repo` and null
-  `previous` on initial reconciliation.
-- The controller is not in Bloodbank Compose or the root integrated Compose.
-- It does not yet implement the target legal frontier, obligations, capability
-  grants, or a versioned/idempotent command surface.
-- Momo and Holocene contain planning/workflow prose that directly computes or
-  writes ticket state. Those are legacy client paths, not target authority.
+- Lifecycle runtime source `719e6af0f06f1bdb30937326380ac67581e8dbb8`
+  is exercised only as
+  `ghcr.io/delorenj/lifecycle@sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311`.
+- Bloodbank is pinned at
+  `48031ee39c238b9d4715b81b74076635235f96d5`; its canonical snapshot v3
+  capability/obligation-occurrence contract and completion-evidence v2 define
+  the exact wire path used by authority and clients.
+- Root Compose runs dedicated Lifecycle PostgreSQL, one-shot migration,
+  deterministic bootstrap, and serve with fail-closed dependencies.
+- Candystore consumes canonical lifecycle events durably and serves a replay-safe,
+  version-ordered, visibly stale/unknown read projection; duplicate IDs always
+  re-project the canonical stored envelope rather than a conflicting delivery.
+- Momo ranks only authoritative legal frontier commands, services canonical
+  pending obligations as directly correlated actor work, resolves canonical
+  skill references, and separates rationale from invocation/evidence/command
+  intent.
+- Holocene renders the Candystore projection and submits complete high-level
+  commands through Bloodbank without local lifecycle mutation.
+- The isolated live matrix passes all seven offline, restart, stale-version,
+  capability, during-outage commit/outbox recovery/order, and PostgreSQL
+  persistence invariants plus occurrence-isolated obligation evidence,
+  authority-spoof rejection, versioned grants, real causal IDs, pre-start
+  replay, and conflicting-duplicate integrity.
 
-### Target authority matrix
+### Current authority matrix
 
 | Concern | Sole owner | Allowed client behavior |
 |---|---|---|
@@ -490,9 +503,9 @@ embryo was incubated there.
 | Durable event history/read models | Candystore | Clients query projections; Candystore never writes lifecycle state |
 | Business prioritization/delegation | Momo | Submit intent; never calculate or persist lifecycle truth |
 | UI/operations | Holocene | Render snapshots and submit high-level commands; never infer results |
-| Integrated deployment process | 33GOD root | Run exactly one lifecycle service after all cutover gates pass |
+| Integrated deployment process | 33GOD root | Run exactly one digest-pinned lifecycle authority process |
 
-### Target interaction
+### Current interaction
 
 ```text
 PJangler identity -----> Lifecycle binding/spec
@@ -525,16 +538,11 @@ observations/evidence ------> | deterministic reconcile
 - Momo decision events explain why it selected a legal action. They do not enact
   that action.
 
-### History-preserving extraction
+### Implementation record
 
-1. Create the new repository from the Bloodbank controller path while retaining
-   commit provenance.
-2. Freeze and register lifecycle command/event contracts in Bloodbank.
-3. Back up operational tables and record row counts, primary keys, fingerprints,
-   status-history ordering, and outbox publication state.
-4. Run parity/golden tests against the extracted evaluator before extending it.
-5. Add frontier, obligations, capability validation, and command handling.
-6. Cut over one writer only; compare migrated data and retain a rollback point.
-7. Wire Momo, Holocene, and Candystore clients before removing legacy paths.
-8. Add the service to root Compose only after health, migration, replay, schema,
-   single-writer, and rollback gates pass.
+The local vertical slice is complete: immutable image pin, dedicated operational
+store, migration/bootstrap/serve chain, canonical Bloodbank publication,
+transactional outbox recovery, durable Candystore projection, and bounded
+Momo/Holocene clients all have automated and isolated live evidence. Remaining
+work is a separate production/cloud rollout decision, not completion of this
+local authority slice.

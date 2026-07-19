@@ -2,14 +2,15 @@ id: candystore
 name: Candystore
 role: event-audit-trail
 repo: ../candystore
-description: Durable Bloodbank event history, query API, summaries, and UI.
+description: Durable Bloodbank history plus replay-safe Lifecycle read projection and query API.
+source_revision: b1f6fda3739d095535b326cc89b9a6c7823f63d8
 compose:
   files:
     - ../candystore/compose.yml
   platform_projection: ../compose.yaml
   services: [candystore-postgres, candystore, candystore-daprd]
   profiles: [default]
-  state: validated-target-not-live-cutover
+  state: validated-local-and-isolated-live
   ownership: Root owns the normalized projection; Candystore owns its image, migrations, API, and durable Dapr component.
   cardinality: exactly-one-postgres-app-daprd
 health:
@@ -20,7 +21,7 @@ source_of_truth:
   - ../candystore/candystore
   - ../candystore/web
 changelog:
-  topics: [event-storage, audit, postgres, dapr]
+  topics: [event-storage, audit, postgres, dapr, lifecycle-projection]
 public_card:
   title: Event History
   promise: Queryable event/session memory for the whole pipeline.
