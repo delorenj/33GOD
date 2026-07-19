@@ -2,7 +2,7 @@
 title: 'Real Momo obligation actor for lifecycle live proof'
 type: 'bugfix'
 created: '2026-07-18'
-status: 'review'
+status: 'completed'
 baseline_commit: 'af23690150a7ae2738ceea144889efaafccc6716'
 context:
   - 'AGENTS.md'
@@ -59,6 +59,14 @@ context:
 - [x] Component/root Git refs -- branch from accepted pins, commit, push, advance gitlink, and verify remote fetchability.
 - [x] Validation/live proof/cleanup -- run focused/full tests, four Compose models, drift gate, fresh Holocene build if required, isolated live matrix, and zero-residue audit.
 
+**Transport Contract Follow-up (2026-07-19):**
+- [x] Native completion publication -- publish the exact completion CloudEvent ID as `Nats-Msg-Id` and capture/assert it in the fake JetStream.
+- [x] ACK ambiguity -- prove `ack_sync` failure after completion PubAck leaves the invocation unacked and writes no receipt.
+- [x] Retry identity -- derive completion ID/time from the immutable invocation and prove redelivery reconstructs the same event.
+- [x] Root parity -- promote byte-identical Momo skill bytes, pin exact component revision `4c59f10460798f1ba8853b4f0b59b56ce31bacbd`, and require broker-stored header plus non-duplicate clean PubAck evidence.
+- [x] Validation and live proof -- pass 77 Momo tests, 40 root platform tests, Ruff/compile/diff, four Compose models, drift `21/0/0`, populated-root manifest validation, review-graph change/flow analysis, fresh live proof, and zero `aion-*` residue.
+- [x] Ordered publication -- push and verify Momo `fix/real-obligation-worker-20260719`, then push and verify root `feature/prometheus-real-momo-execution` at implementation checkpoint `585d47c5ba60f74dfe81149f959c447de4be3755`.
+
 **Acceptance Criteria:**
 - Given the actor is ready before publish, when the canonical invocation reaches JetStream, then the receipt delivery sequence and invocation ID match the publisher PubAck exactly.
 - Given a current-run evidence package and exact promoted skill resource, when the adapter succeeds, then the artifact exists and its independently recomputed byte hash equals both receipt and completion evidence.
@@ -69,17 +77,28 @@ context:
 
 ## Spec Change Log
 
-- 2026-07-19: Implemented the durable Momo obligation actor, promoted its exact skill bytes, replaced synthetic harness success, and verified component commit `9b6b1e7d30001f5918d32e99cbcbf5200fc29e1d`, root implementation checkpoint `e485f941d8b366a72e1a4477b221f3e7739e7cba`, the isolated live proof, and zero-residue cleanup.
+- 2026-07-19: Completed the native JetStream publication/ACK follow-up, published Momo `4c59f10460798f1ba8853b4f0b59b56ce31bacbd`, published root implementation checkpoint `585d47c5ba60f74dfe81149f959c447de4be3755`, verified canonical stored message ID and non-duplicate completion PubAck in isolated project `aion-lifecycle-21568c89df`, and confirmed zero-residue cleanup.
 
 ## Design Notes
 
-The selector is an explicit adapter compatibility mapping, not an inferred BMAD package version. The worker verifies the promoted resource bytes, reconstructs the invocation plan solely from the delivered envelope, and uses Momo's existing full semantic verifier. An optional release file lets the harness publish negative clones derived from the actor-authored completion preview before the actor publishes the only satisfying event.
+The selector is an explicit adapter compatibility mapping, not an inferred BMAD package version. The worker verifies the promoted resource bytes, reconstructs the invocation plan solely from the delivered envelope, and uses Momo's existing full semantic verifier. Completion time is derived from that immutable invocation, so an ACK-ambiguous redelivery reconstructs the same CloudEvent ID/time and the same `Nats-Msg-Id`. An optional release file lets the harness publish negative clones derived from the actor-authored completion preview before the actor publishes the only satisfying event.
 
 ## Verification
 
 **Commands:**
-- `cd momo && mise run test && mise run lint` -- all focused/full Momo checks pass.
-- `mise run platform:validate && mise run platform:compose:test && mise run platform:compose:validate` -- registry, units, and default/tools/full/cloud semantics pass.
-- `mise run docs:drift` -- root contracts and exact pins agree.
-- `python3 33god-platform/scripts/verify-lifecycle-live.py --proof-dir <fresh-dir> --screenshots-dir <fresh-dir>/screenshots` -- real actor matrix passes and preserves receipt/report.
-- `git ls-remote --heads origin <exact-ref>` -- component and root refs resolve to delivered commits.
+- `cd momo && mise run test && mise run lint` -- 77 tests and Ruff pass.
+- `mise run platform:compose:test` -- 40 root platform tests pass.
+- `GOD_SOURCE_ROOT=/home/delorenj/code/33GOD mise run platform:validate` and `mise run platform:compose:validate` -- manifest registry and default/tools/full/cloud semantics pass.
+- `mise run docs:drift` -- root contracts and exact pins agree at `21 PASS / 0 WARN / 0 FAIL`.
+- `python3 33god-platform/scripts/verify-lifecycle-live.py --proof-dir /tmp/33god-lifecycle-proof-syntaxsorcerer-transport-C0E0AISE --screenshots-dir /tmp/33god-lifecycle-proof-syntaxsorcerer-transport-C0E0AISE/screenshots` -- real actor matrix passes and preserves receipt/report/proof.
+- `git ls-remote --heads origin refs/heads/<exact-ref>` -- Momo and root refs matched their delivered commits before this closure record.
+
+## Final Follow-up Proof
+
+- **Published refs:** Momo `fix/real-obligation-worker-20260719` at `4c59f10460798f1ba8853b4f0b59b56ce31bacbd`; root `feature/prometheus-real-momo-execution` implementation checkpoint at `585d47c5ba60f74dfe81149f959c447de4be3755`.
+- **Fresh run:** project `aion-lifecycle-21568c89df`, lifecycle `lc_aion_21568c89df`, proof `/tmp/33god-lifecycle-proof-syntaxsorcerer-transport-C0E0AISE/proof.json`, pinned image `ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210`.
+- **Actor identity:** invocation `1528fbfb-b967-537e-b6d2-4422df1c8dc8`; completion `35244f41-e18e-5f38-97a8-dfa7f9a4fdce`; stored `Nats-Msg-Id` exactly equals the completion ID; completion PubAck stream sequence `18`, `duplicate=false`.
+- **Ordering:** `completion_puback` sequence `10`, `invocation_ack_sync` sequence `11`, `receipt_written` sequence `12`; durable consumer ended with `num_ack_pending=0`.
+- **Artifact:** `/tmp/33god-lifecycle-proof-syntaxsorcerer-transport-C0E0AISE/momo-obligation/review-report.md`, 1172 bytes, SHA-256 `e32eea6f7e6fd398a475f6ca29baa0ca6ac167fb5a97c47847aa30f652407483`; promoted resource `.agents/skills/bmad-code-review/SKILL.md`, SHA-256 `c303ef6d8cc507ef268e95978052250289bd0c76941441a023baebfd807c1efd`.
+- **Authority/audit:** Lifecycle reached `active`; authoritative observation count `1`; Candystore event count `1`; Momo never wrote lifecycle truth.
+- **Cleanup:** proof summary reports no remaining containers, networks, volumes, local Candystore image, or ephemeral secret; independent global `aion-*` container/network/volume/image inventories were empty.
