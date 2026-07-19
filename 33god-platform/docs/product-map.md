@@ -3,8 +3,8 @@
 33GOD is a private, local-first development environment. Component
 implementations remain split across repos; this control plane provides one
 root-owned, normalized Compose target and one product-governance surface. The
-local Lifecycle path has semantic and isolated live validation; cloud remains
-deliberately unpromoted.
+local Lifecycle path has semantic and isolated live validation; hosted/cloud
+topology is outside the supported scope.
 
 | Product card | Component | What subscribers get |
 |---|---|---|
@@ -12,8 +12,8 @@ deliberately unpromoted.
 | Event History | Candystore | Durable event/session history with query and summary APIs. |
 | Lifecycle Authority | Lifecycle | Versioned spec/state, deterministic reconciliation, legal frontier, obligations, capability validation, and all lifecycle writes. |
 | Process Manager | Momo | Intelligent PM/EM policy and durable actor that selects legal work, executes exact skill invocations, and publishes retry-stable artifact evidence with PubAck-before-ACK without writing lifecycle truth. |
-| Mission Control | Holocene | Dashboard/renderer and high-level action invoker for pipeline health, hooks, agents, and operations. |
-| Project Factory | PJangler | Project/bootstrap identity and agent provisioning from one registry and template set. |
+| Operator Dashboard | Holocene | Dashboard/renderer and high-level action invoker for pipeline health, hooks, agents, and operations. |
+| Project Factory | PJangler | Project identity, bootstrap, and provider-neutral bindings from one registry and template set. |
 | Managed AI Worker Fleet | Hermes Fleet | Long-running agents with shared provider config and profile-local state. |
 | Unified Agent Skills | Skillex | One skill/capability catalog distributed across coding-agent CLIs. |
 | Persistent Memory | Hindsight | Recall, retain, and journal hooks across sessions. |
@@ -25,10 +25,10 @@ deliberately unpromoted.
 
 1. **Runtime core:** Bloodbank, Dapr, NATS, Lifecycle, and Candystore.
 2. **Process policy:** Momo PM/EM orchestration over Lifecycle's legal frontier.
-3. **Control plane:** Holocene, Pipeline MCP Hub, platform manifests.
-4. **Provisioning:** PJangler, CommonProject, Hermes agent templates.
+3. **Operator access:** Holocene dashboard/renderer and Pipeline MCP Hub.
+4. **Bootstrap and bindings:** PJangler, CommonProject, Hermes agent templates.
 5. **Agent capability:** Skillex, Hindsight, canonical hooks.
-6. **Operator experience:** Candybar, HeyMa, product docs.
+6. **Root governance:** platform manifests, exact pins, topology, acceptance, and drift.
 
 ## Local-first rule
 

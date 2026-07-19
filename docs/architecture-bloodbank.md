@@ -3,7 +3,7 @@
 ## Current integration role
 
 Bloodbank at
-`48031ee39c238b9d4715b81b74076635235f96d5` is the canonical
+`aacd88564ea299924b8298165933ba821640bdba` is the canonical
 inter-service contract and transport authority. It owns Lifecycle
 command/event/reply schemas, subject naming, NATS JetStream topology, Dapr
 transport components, and stream initialization. It does not own deterministic
@@ -37,10 +37,10 @@ durable Dapr consumer projects canonical lifecycle events. Momo and Holocene
 publish client intent through Bloodbank; neither connects to an authority
 database or writes provider lifecycle state.
 
-Any older lifecycle-controller implementation remaining under Bloodbank is
-historical lineage/evidence. Root Compose does not start it. The standalone
-Lifecycle component and its dedicated PostgreSQL database are the only current
-operational authority path.
+The removed `services/lifecycle-controller` tree is preserved only as immutable
+extraction provenance in Bloodbank's documentation. Bloodbank has no executable
+lifecycle controller. The standalone Lifecycle component and its dedicated
+PostgreSQL database are the only current operational authority path.
 
 ## Failure boundary
 

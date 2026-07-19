@@ -1,9 +1,9 @@
 id: holocene
 name: Holocene
-role: control-plane-dashboard
+role: dashboard-renderer
 repo: ../holocene
 description: Mission-control dashboard plus real-browser Lifecycle read/action surface backed by Candystore projections and Bloodbank commands.
-source_revision: 80d9cc8be81eebe4476304a4b186da445731a5ab
+source_revision: 2beee67b433f1bd66abf7bce552d90e89413ae27
 compose:
   files:
     - ../holocene/compose.yml

@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import csv
+import hashlib
 import json
 import re
 import subprocess
@@ -42,12 +44,14 @@ LIFECYCLE_TAG = (
     "sha-cda59658bef6d586c8aa01cacd88bc4e3ee867e0"
 )
 COMPONENT_REVISIONS = {
-    "bloodbank": "48031ee39c238b9d4715b81b74076635235f96d5",
+    "bloodbank": "aacd88564ea299924b8298165933ba821640bdba",
     "lifecycle": "cda59658bef6d586c8aa01cacd88bc4e3ee867e0",
-    "candystore": "b1f6fda3739d095535b326cc89b9a6c7823f63d8",
-    "momo": "4c59f10460798f1ba8853b4f0b59b56ce31bacbd",
-    "holocene": "80d9cc8be81eebe4476304a4b186da445731a5ab",
+    "candystore": "3c00080446bb9d4cb55c670477983306abcfe7ce",
+    "momo": "8eeff1ce839c3bcffc2d3943322bc1dd8ef63fee",
+    "holocene": "2beee67b433f1bd66abf7bce552d90e89413ae27",
+    "pjangler": "13be237eaa454f22525dd9b4e5dd804b4516c212",
 }
+COMMONPROJECT_REVISION = "5dce335d10b44692414a5c67f12684ecc4fa5a41"
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
     r"ghcr\.io/delorenj/lifecycle@sha256:[0-9a-f]{64}"
 )
@@ -100,6 +104,69 @@ BLOODBANK_API_STALE_PATTERNS = {
         r"(?:Lifecycle truth|Lifecycle state|Lifecycle authority)"
     ),
 }
+AUTHORITY_PARITY_PATTERNS = {
+    "Holocene control-plane role": re.compile(
+        r"(?i)(?:\bHolocene\b.{0,100}\bcontrol[-_ ]?plane\b|"
+        r"\bcontrol[-_ ]?plane\b[^A-Za-z0-9]{0,12}\bHolocene\b|"
+        r"\bcontrol-plane-dashboard\b)"
+    ),
+    "shared Momo reconcile loop": re.compile(
+        r"(?i)(?:\bMomo(?:/Hermes)?\s+(?:and|with)\s+Lifecycle\s+"
+        r"(?:share|drive|run|own)s?\b.{0,40}\breconcile loop\b|"
+        r"\bMomo\s+(?:shares|drives|runs|owns)\s+(?:the\s+)?"
+        r"(?:(?:same|one)\s+|Lifecycle's\s+)?reconcile loop\b)"
+    ),
+    "Momo determines lifecycle truth": re.compile(
+        r"(?i)\bMomo\s+(?:determines?|decides?)\s+(?:what\s+is\s+)?"
+        r"(?:the\s+)?(?:lifecycle\s+)?truth\b"
+    ),
+    "non-Lifecycle component authority role": re.compile(
+        r"(?i)(?:\b(?:Candystore|PJangler|Holocene)\b\s+"
+        r"(?:is|acts as|serves as|owns|runs|provides)\b.{0,60}"
+        r"\b(?:lifecycle[- ]authority|lifecycle[- ]writer|lifecycle[- ]engine)\b|"
+        r"\b(?:lifecycle[- ]authority|lifecycle[- ]writer|lifecycle[- ]engine)\b\s+"
+        r"(?:is|belongs to|is owned by|is provided by)\s+"
+        r"\b(?:Candystore|PJangler|Holocene)\b|"
+        r"\|\s*(?:lifecycle[- ]authority|lifecycle[- ]writer|lifecycle[- ]engine)\s*"
+        r"\|\s*(?:Candystore|PJangler|Holocene)\s*\|)"
+    ),
+}
+DEPLOYMENT_CEREMONY_PATTERNS = {
+    "safe-coexistence ceremony": re.compile(r"(?i)\b(?:safe[- ]?)?coexist(?:ence|s|ing)?\b"),
+    "Momo-offline safety ceremony": re.compile(
+        r"(?i)\bMomo[- ]offline\s+safety\b"
+    ),
+    "promotion boundary": re.compile(r"(?im)^##\s+Promotion boundary\s*$"),
+    "separate owner decision": re.compile(r"(?i)\bseparate owner decision\b"),
+    "destructive-looking acceptance ceremony": re.compile(
+        r"(?i)\bdestructive[- ]looking acceptance work\b"
+    ),
+    "release or deployment ceremony": re.compile(
+        r"(?i)\b(?:release|promotion|deployment) ceremony\b"
+    ),
+    "root integration publication ceremony": re.compile(
+        r"(?i)\broot integration publication\b"
+    ),
+    "release-tag ceremony": re.compile(r"(?i)\brelease tag\b"),
+    "release-promotion ceremony": re.compile(r"(?i)\brelease promotion\b"),
+}
+TICKET_LIFECYCLE_COMMAND_SURFACES = (
+    Path(".augment/commands/bmad/workflows/custom-ticket-lifecycle.md"),
+    Path(".claude/commands/bmad/custom/workflows/ticket-lifecycle.md"),
+    Path(".gemini/commands/bmad-workflow-custom-ticket-lifecycle.toml"),
+    Path(".opencode/command/bmad-custom-ticket-lifecycle.md"),
+)
+CURRENT_DEPLOYMENT_ARTIFACTS = {
+    "PRD.md",
+    "docs/deployment-guide.md",
+    "docs/architecture-lifecycle.md",
+    "docs/integration-architecture.md",
+    "33god-platform/README.md",
+    "_bmad-output/planning-artifacts/sprint-change-proposal-2026-07-18.md",
+}
+CURRENT_AUTHORITY_JSON_ARTIFACTS = (
+    "docs/project-scan-report.json",
+)
 
 
 class Reporter:
@@ -389,6 +456,167 @@ def bloodbank_api_contract_errors(api_text: str) -> list[str]:
     return errors
 
 
+def authority_parity_text_errors(path: str, text: str) -> list[str]:
+    """Reject current prose or manifest language that transfers authority."""
+
+    paragraphs = [
+        re.sub(r"\s+", " ", paragraph)
+        for paragraph in re.split(r"\n\s*\n", text)
+    ]
+    errors = [
+        f"{path} contains {label}"
+        for label, pattern in AUTHORITY_PARITY_PATTERNS.items()
+        if any(pattern.search(paragraph) for paragraph in paragraphs)
+    ]
+    if path in CURRENT_DEPLOYMENT_ARTIFACTS:
+        errors.extend(
+            f"{path} contains {label}"
+            for label, pattern in DEPLOYMENT_CEREMONY_PATTERNS.items()
+            if pattern.search(text)
+        )
+    return errors
+
+
+def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
+    """Allow only Momo's canonical ticket-lifecycle client workflow."""
+
+    errors: list[str] = []
+    workflow_roots = (
+        Path("_bmad/custom/workflows/ticket-lifecycle"),
+        Path("_bmad/_config/custom/custom/workflows/ticket-lifecycle"),
+    )
+    manifest_paths = (
+        Path("_bmad/_config/workflow-manifest.csv"),
+        Path("_bmad/_config/files-manifest.csv"),
+    )
+    non_momo_roots = {
+        "bloodbank": source / "bloodbank",
+        "candystore": source / "candystore",
+        "holocene": source / "holocene",
+        "pjangler": source / "pjangler",
+        "pjangler/templates/commonproject": (
+            source / "pjangler/templates/commonproject"
+        ),
+    }
+    for component, root in non_momo_roots.items():
+        for relative in workflow_roots:
+            path = root / relative
+            if path.is_dir() and any(candidate.is_file() for candidate in path.rglob("*")):
+                errors.append(
+                    f"{component} retains non-Momo ticket-lifecycle workflow at {relative}"
+                )
+        for relative in manifest_paths:
+            path = root / relative
+            if path.is_file() and "ticket-lifecycle" in path.read_text(
+                encoding="utf-8"
+            ).casefold():
+                errors.append(
+                    f"{component} registers non-Momo ticket-lifecycle workflow in {relative}"
+                )
+        for relative in TICKET_LIFECYCLE_COMMAND_SURFACES:
+            if (root / relative).is_file():
+                errors.append(
+                    f"{component} retains non-Momo ticket-lifecycle command surface at {relative}"
+                )
+
+    momo = source / "momo"
+    if not momo.is_dir():
+        return [*errors, "Momo checkout is missing"]
+    source_workflow = momo / workflow_roots[0]
+    mirror_workflow = momo / workflow_roots[1]
+    source_files = {
+        path.relative_to(source_workflow)
+        for path in source_workflow.rglob("*")
+        if path.is_file()
+    }
+    mirror_files = {
+        path.relative_to(mirror_workflow)
+        for path in mirror_workflow.rglob("*")
+        if path.is_file()
+    }
+    if not source_files or source_files != mirror_files:
+        errors.append("Momo canonical ticket-lifecycle source/mirror file sets differ")
+    mismatched_files = [
+        relative.as_posix()
+        for relative in sorted(source_files & mirror_files)
+        if (source_workflow / relative).read_bytes()
+        != (mirror_workflow / relative).read_bytes()
+    ]
+    if mismatched_files:
+        errors.append(
+            "Momo canonical ticket-lifecycle source/mirror bytes differ: "
+            + ", ".join(mismatched_files)
+        )
+    if any(path.suffix == ".bak" for path in source_files | mirror_files):
+        errors.append("Momo canonical ticket-lifecycle workflow retains .bak residue")
+
+    workflow_manifest = momo / manifest_paths[0]
+    workflow_rows = (
+        [
+            line
+            for line in workflow_manifest.read_text(encoding="utf-8").splitlines()
+            if "ticket-lifecycle" in line.casefold()
+        ]
+        if workflow_manifest.is_file()
+        else []
+    )
+    if len(workflow_rows) != 1:
+        errors.append(
+            "Momo must register exactly one canonical ticket-lifecycle workflow"
+        )
+
+    files_manifest = momo / manifest_paths[1]
+    file_rows = []
+    if files_manifest.is_file():
+        with files_manifest.open(encoding="utf-8", newline="") as handle:
+            file_rows = [
+                row
+                for row in csv.DictReader(handle)
+                if "ticket-lifecycle" in row.get("path", "").casefold()
+            ]
+    expected_manifest_paths = {
+        f"custom/workflows/ticket-lifecycle/{relative.as_posix()}"
+        for relative in source_files
+    }
+    actual_manifest_paths = [row.get("path", "") for row in file_rows]
+    if (
+        len(file_rows) != len(source_files)
+        or set(actual_manifest_paths) != expected_manifest_paths
+        or len(actual_manifest_paths) != len(set(actual_manifest_paths))
+    ):
+        errors.append(
+            "Momo ticket-lifecycle files-manifest paths differ from canonical source"
+        )
+    for row in file_rows:
+        relative_path = row.get("path", "")
+        if relative_path not in expected_manifest_paths:
+            continue
+        source_path = momo / "_bmad" / relative_path
+        expected_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        if row.get("hash") != expected_hash:
+            errors.append(
+                "Momo ticket-lifecycle files-manifest hash differs for "
+                f"{relative_path}"
+            )
+    return errors
+
+
+def bloodbank_live_inventory_errors(source: Path) -> list[str]:
+    """Reject a live Bloodbank lifecycle-controller service or README inventory row."""
+
+    errors: list[str] = []
+    if (source / "bloodbank/services/lifecycle-controller").exists():
+        errors.append("Bloodbank retains executable services/lifecycle-controller")
+    readme = source / "bloodbank/README.md"
+    readme_text = readme.read_text(encoding="utf-8") if readme.is_file() else ""
+    for line in readme_text.splitlines():
+        if "`services/`" in line and re.search(
+            r"(?i)lifecycle[- ]controller", line
+        ):
+            errors.append("Bloodbank README lists a live lifecycle controller service")
+    return errors
+
+
 def check_high_risk_contracts(source: Path, report: Reporter) -> None:
     validator = source / "bloodbank/services/agent-hooks/core/validate.py"
     text = validator.read_text(encoding="utf-8") if validator.is_file() else ""
@@ -502,7 +730,7 @@ def check_compose_candidate(
         report.passed(
             "root-compose",
             f"{detail}; exact lifecycle digest, component revisions, ownership text, "
-            "and promoted Momo skill are current",
+            "authority-parity workflow surfaces, and promoted Momo skill are current",
         )
 
 
@@ -539,12 +767,78 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             errors.append(
                 f"{name} checkout={actual or 'unavailable'} expected={expected}"
             )
+        index_result = subprocess.run(
+            ["git", "-C", str(source), "ls-files", "--stage", "--", name],
+            text=True,
+            capture_output=True,
+        )
+        index_fields = index_result.stdout.split()
+        index_mode = index_fields[0] if index_fields else ""
+        index_revision = index_fields[1] if len(index_fields) > 1 else ""
+        if (
+            index_result.returncode
+            or index_mode != "160000"
+            or index_revision != expected
+        ):
+            errors.append(
+                f"root gitlink {name}={index_revision or 'unavailable'} expected={expected}"
+            )
         manifest = platform / "components" / f"{name}.yaml"
         manifest_text = (
             manifest.read_text(encoding="utf-8") if manifest.is_file() else ""
         )
         if expected not in manifest_text:
             errors.append(f"{name} component manifest does not pin {expected}")
+
+    commonproject = source / "pjangler/templates/commonproject"
+    commonproject_result = subprocess.run(
+        ["git", "-C", str(commonproject), "rev-parse", "HEAD"],
+        text=True,
+        capture_output=True,
+    )
+    commonproject_actual = commonproject_result.stdout.strip()
+    if (
+        commonproject_result.returncode
+        or commonproject_actual != COMMONPROJECT_REVISION
+    ):
+        errors.append(
+            "CommonProject checkout="
+            f"{commonproject_actual or 'unavailable'} expected={COMMONPROJECT_REVISION}"
+        )
+    commonproject_index = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(source / "pjangler"),
+            "ls-files",
+            "--stage",
+            "--",
+            "templates/commonproject",
+        ],
+        text=True,
+        capture_output=True,
+    )
+    commonproject_fields = commonproject_index.stdout.split()
+    commonproject_mode = commonproject_fields[0] if commonproject_fields else ""
+    commonproject_pin = (
+        commonproject_fields[1] if len(commonproject_fields) > 1 else ""
+    )
+    if (
+        commonproject_index.returncode
+        or commonproject_mode != "160000"
+        or commonproject_pin != COMMONPROJECT_REVISION
+    ):
+        errors.append(
+            "PJangler CommonProject gitlink="
+            f"{commonproject_pin or 'unavailable'} expected={COMMONPROJECT_REVISION}"
+        )
+    pjangler_manifest = platform / "components/pjangler.yaml"
+    pjangler_manifest_text = pjangler_manifest.read_text(encoding="utf-8")
+    if COMMONPROJECT_REVISION not in pjangler_manifest_text:
+        errors.append(
+            "pjangler component manifest does not pin CommonProject "
+            f"{COMMONPROJECT_REVISION}"
+        )
 
     lifecycle_manifest = platform / "components" / "lifecycle.yaml"
     lifecycle_manifest_text = lifecycle_manifest.read_text(encoding="utf-8")
@@ -560,7 +854,12 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             )
 
     current_paths = [
+        docs_checkout / "AGENTS.md",
         docs_checkout / "PRD.md",
+        *(
+            docs_checkout / relative
+            for relative in CURRENT_AUTHORITY_JSON_ARTIFACTS
+        ),
         *sorted((docs_checkout / "docs").rglob("*.md")),
         *sorted((docs_checkout / "_bmad-output/planning-artifacts").glob("*.md")),
         *sorted(platform.rglob("*.md")),
@@ -570,6 +869,28 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         *sorted((docs_checkout / "skills/momo").rglob("*.md")),
         *sorted((docs_checkout / "skills/momo").rglob("*.py")),
     ]
+    for component in ("candystore", "holocene", "momo", "pjangler"):
+        component_root = source / component
+        current_paths.extend(
+            [
+                component_root / "README.md",
+                component_root / "AGENTS.md",
+                *sorted((component_root / "docs").rglob("*.md")),
+            ]
+        )
+    holocene_root = source / "holocene"
+    current_paths.extend(
+        [
+            holocene_root / "package.json",
+            holocene_root / "agents/hermes/pm/SOUL.md",
+            *sorted((holocene_root / ".stitch").rglob("*.md")),
+            *sorted((holocene_root / ".stitch").rglob("*.html")),
+            *sorted((holocene_root / "apps").rglob("*.ts")),
+            *sorted((holocene_root / "apps").rglob("*.tsx")),
+            *sorted((holocene_root / "packages").rglob("*.ts")),
+            *sorted((holocene_root / "packages").rglob("*.tsx")),
+        ]
+    )
     ownership_patterns = {
         "Momo lifecycle authority": re.compile(
             r"(?i)\bMomo\s+(?:owns|calculates|persists|writes|drives)\s+(?:the\s+)?lifecycle"
@@ -600,14 +921,19 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             continue
         seen.add(path)
         text = path.read_text(encoding="utf-8")
+        try:
+            display_path = path.relative_to(docs_checkout).as_posix()
+        except ValueError:
+            display_path = f"source/{path.relative_to(source).as_posix()}"
         for image in LIFECYCLE_DIGEST_REFERENCE.findall(text):
             if image != LIFECYCLE_IMAGE:
                 errors.append(
-                    f"{path.relative_to(docs_checkout)} retains non-current Lifecycle digest"
+                    f"{display_path} retains non-current Lifecycle digest"
                 )
         for label, pattern in ownership_patterns.items():
             if pattern.search(text):
-                errors.append(f"{path.relative_to(docs_checkout)} contains {label}")
+                errors.append(f"{display_path} contains {label}")
+        errors.extend(authority_parity_text_errors(display_path, text))
 
     ecosystem_path = docs_checkout / "skills/ecosystem/SKILL.md"
     ecosystem_text = (
@@ -702,6 +1028,8 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
     for label, snippet in required_harness_contract.items():
         if snippet not in harness_text:
             errors.append(f"Lifecycle live harness lacks {label}")
+    errors.extend(ticket_lifecycle_surface_errors(source))
+    errors.extend(bloodbank_live_inventory_errors(source))
     return errors
 
 

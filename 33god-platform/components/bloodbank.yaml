@@ -1,9 +1,9 @@
 id: bloodbank
 name: Bloodbank
-role: event-backbone
+role: schema-contract-transport
 repo: ../bloodbank
-description: NATS JetStream and Dapr event backbone for all 33GOD inter-service traffic.
-source_revision: 48031ee39c238b9d4715b81b74076635235f96d5
+description: Canonical event schemas/contracts plus NATS JetStream and Dapr transport for all 33GOD inter-service traffic.
+source_revision: aacd88564ea299924b8298165933ba821640bdba
 compose:
   files:
     - ../bloodbank/compose/docker-compose.yml

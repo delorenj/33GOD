@@ -11,13 +11,13 @@ product:
 profiles:
   default:
     description: Validated local target; Bloodbank core, Lifecycle authority, one Candystore, Holocene API preflight, and Holocene web.
-    includes: [core, lifecycle-authority, audit, control]
+    includes: [core, lifecycle-authority, audit, dashboard]
   tools:
     description: Default target plus zero-replica, run-only PJangler CLI and stdio MCP tools.
-    includes: [core, lifecycle-authority, audit, control, policy-client, provisioning-tools]
+    includes: [core, lifecycle-authority, audit, dashboard, work-client, bootstrap-tools]
   full:
     description: Current local full model; identical to tools until more optional services are governed.
-    includes: [core, lifecycle-authority, audit, control, policy-client, provisioning-tools]
+    includes: [core, lifecycle-authority, audit, dashboard, work-client, bootstrap-tools]
   cloud:
     description: Render-only unsupported local-bind model with an explicit rejection gate; never start it.
     includes: [unsupported]

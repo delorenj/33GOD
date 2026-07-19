@@ -1,9 +1,9 @@
 id: candystore
 name: Candystore
-role: event-audit-trail
+role: audit-and-read-projection
 repo: ../candystore
-description: Durable Bloodbank history plus replay-safe Lifecycle read projection and query API.
-source_revision: b1f6fda3739d095535b326cc89b9a6c7823f63d8
+description: Append-only Bloodbank audit history plus rebuildable Lifecycle read projections and query API; never a lifecycle writer.
+source_revision: 3c00080446bb9d4cb55c670477983306abcfe7ce
 compose:
   files:
     - ../candystore/compose.yml

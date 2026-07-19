@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Holocene is a production-first, single-operator mission-control dashboard. Its live architecture combines a Next.js web container with an external Fastify host API that reads Hermes/systemd/runtime files, Redis hook health, Prometheus, Traefik state, and Candystore history. It is an operational prototype with broad host authority, not an enterprise multi-user control plane. For project lifecycle it is only a renderer and high-level command surface; it never calculates or writes lifecycle truth.
+Holocene is a production-first, single-operator mission-control dashboard and renderer. Its live architecture combines a Next.js web container with an external Fastify host API that reads Hermes/systemd/runtime files, Redis hook health, Prometheus, Traefik state, and Candystore history. It is an operational prototype with broad host access, not an enterprise multi-user operations service. For project lifecycle it is only a renderer and high-level command surface; it never calculates or writes lifecycle truth.
 
 ## Technology Stack
 
@@ -16,7 +16,7 @@ Holocene is a production-first, single-operator mission-control dashboard. Its l
 
 ## Architecture Pattern
 
-Split-deployment control plane with stateless snapshot projections and client polling/SSE. The web is containerized; the API runs with host-user authority through systemd. Generic module packages model a future event-reducer architecture but are mostly dormant in the live path.
+Split-deployment dashboard with stateless snapshot projections and client polling/SSE. The web is containerized; the API runs with host-user authority through systemd. Generic module packages model a future event-reducer architecture but are mostly dormant in the live path.
 
 ## Runtime Components
 

@@ -115,8 +115,8 @@ Lifecycle PostgreSQL joins only `lifecycle-internal`. Lifecycle serve joins
 `lifecycle-internal` and `bloodbank-network`. It never mounts Candystore
 storage or credentials.
 
-All network and volume names are caller-overridable. This is required for
-isolated acceptance and safe coexistence with unrelated projects.
+All network and volume names are caller-overridable so each isolated acceptance
+run receives exact run-scoped resources.
 
 ## Isolated live acceptance
 
@@ -131,8 +131,8 @@ Before `up`, the gate renders the model and rejects any Lifecycle digest
 mismatch or build key. It allocates a unique Compose project, free ports,
 networks, volumes, and local Candystore image. It then proves:
 
-1. Holocene-offline independence.
-2. Momo-offline safety.
+1. Lifecycle progresses without Holocene.
+2. Lifecycle remains the sole writer while Momo is absent.
 3. deterministic restart catch-up without duplicate effects.
 4. stale-version rejection without mutation.
 5. capability rejection without mutation.
@@ -164,8 +164,8 @@ screenshots. The harness never authors the successful Holocene POST and instead
 validates the receipt independently against API, Lifecycle, broker, and
 Candystore observations.
 
-## Promotion boundary
+## Supported scope
 
-This implemented slice is locally verified. Production/cloud rollout, root
-integration publication, and a release tag require a separate owner decision.
-No cloud lifecycle command is supported by this guide.
+This guide covers the locally verified authority topology and acceptance gates.
+The hosted/cloud topology is outside this contract, and no cloud lifecycle
+command is supported.
