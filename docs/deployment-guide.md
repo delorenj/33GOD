@@ -11,6 +11,10 @@ The exact Lifecycle runtime is:
 
 `ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210`
 
+Its published source-provenance tag is
+`ghcr.io/delorenj/lifecycle:sha-cda59658bef6d586c8aa01cacd88bc4e3ee867e0`;
+deployments continue to use only the immutable digest above.
+
 Compose has no Lifecycle build key. The cloud profile is render-only and
 unsupported; never run `docker compose --profile cloud up`.
 

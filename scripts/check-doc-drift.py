@@ -37,6 +37,10 @@ LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
     "sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210"
 )
+LIFECYCLE_TAG = (
+    "ghcr.io/delorenj/lifecycle:"
+    "sha-cda59658bef6d586c8aa01cacd88bc4e3ee867e0"
+)
 COMPONENT_REVISIONS = {
     "bloodbank": "48031ee39c238b9d4715b81b74076635235f96d5",
     "lifecycle": "cda59658bef6d586c8aa01cacd88bc4e3ee867e0",
@@ -541,6 +545,19 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         )
         if expected not in manifest_text:
             errors.append(f"{name} component manifest does not pin {expected}")
+
+    lifecycle_manifest = platform / "components" / "lifecycle.yaml"
+    lifecycle_manifest_text = lifecycle_manifest.read_text(encoding="utf-8")
+    expected_lifecycle_pins = {
+        "image_source_revision": COMPONENT_REVISIONS["lifecycle"],
+        "image_tag": LIFECYCLE_TAG,
+        "image": LIFECYCLE_IMAGE,
+    }
+    for field, expected in expected_lifecycle_pins.items():
+        if f"{field}: {expected}" not in lifecycle_manifest_text:
+            errors.append(
+                f"Lifecycle component manifest {field} does not pin {expected}"
+            )
 
     current_paths = [
         docs_checkout / "PRD.md",
