@@ -11,7 +11,7 @@ deliberately unpromoted.
 | Event Backbone | Bloodbank | CloudEvents over NATS/Dapr with canonical schemas and transport contracts. |
 | Event History | Candystore | Durable event/session history with query and summary APIs. |
 | Lifecycle Authority | Lifecycle | Versioned spec/state, deterministic reconciliation, legal frontier, obligations, capability validation, and all lifecycle writes. |
-| Process Manager | Momo | Intelligent PM/EM policy that selects legal work, delegates, reviews, and submits intent without writing lifecycle truth. |
+| Process Manager | Momo | Intelligent PM/EM policy and durable actor that selects legal work, executes exact skill invocations, publishes artifact evidence, and submits intent without writing lifecycle truth. |
 | Mission Control | Holocene | Dashboard/renderer and high-level command client for pipeline health, hooks, agents, and operations. |
 | Project Factory | PJangler | Project/bootstrap identity and agent provisioning from one registry and template set. |
 | Managed AI Worker Fleet | Hermes Fleet | Long-running agents with shared provider config and profile-local state. |

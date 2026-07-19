@@ -514,6 +514,81 @@ class ComposeSemanticValidationTests(unittest.TestCase):
         )
         self.assertNotIn("apply_internal_command", quiesce)
 
+    def test_live_matrix_requires_real_durable_momo_obligation_execution(
+        self,
+    ) -> None:
+        harness = (PLATFORM_ROOT / "scripts" / "verify-lifecycle-live.py").read_text(
+            encoding="utf-8"
+        )
+        worker = (
+            PLATFORM_ROOT.parent
+            / "skills"
+            / "momo"
+            / "scripts"
+            / "obligation_worker.py"
+        ).read_text(encoding="utf-8")
+
+        momo_start = harness.index(
+            'print("[live] exercising real Momo durable obligation actor", flush=True)'
+        )
+        momo_end = harness.index(
+            'print("[live] exercising Holocene read/action and browser surfaces", flush=True)',
+            momo_start,
+        )
+        momo = harness[momo_start:momo_end]
+        for forbidden in (
+            '"complete-obligation"',
+            '"artifact_sha256": "a" * 64',
+            "completion_path.write_text(json.dumps(completion_event)",
+            "completion_publish = run(",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, momo)
+
+        for required in (
+            "start_momo_obligation_actor(",
+            '"Momo durable actor readiness"',
+            "invocation_publish_ack = self.publish_jetstream(",
+            '"Momo obligation receipt"',
+            "hashlib.sha256(artifact_bytes).hexdigest()",
+            'len(set(artifact_sha256)) == 1',
+            'receipt["artifact"]["sha256"] != artifact_sha256',
+            'receipt["delivery"]["stream_sequence"]',
+            'invocation_publish_ack["stream_sequence"]',
+            'receipt["invocation"]["id"]',
+            'receipt["completion"]["event_id"]',
+            '"receipt/artifact identity mismatch"',
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, momo)
+
+        ready = momo.index('"Momo durable actor readiness"')
+        publish = momo.index("invocation_publish_ack = self.publish_jetstream(")
+        receipt = momo.index('"Momo obligation receipt"', publish)
+        authority = momo.index("momo_state = self.wait_state_version(", receipt)
+        self.assertLess(ready, publish)
+        self.assertLess(publish, receipt)
+        self.assertLess(receipt, authority)
+
+        for required in (
+            "ConsumerConfig(",
+            "durable_name=args.consumer",
+            "ack_policy=AckPolicy.EXPLICIT",
+            "filter_subject=INVOCATION_SUBJECT",
+            "jetstream.pull_subscribe(",
+            "await lifecycle_client.publish_envelope_async(",
+            "await message.ack_sync(",
+            'operations.append("completion_puback")',
+            'operations.append("invocation_ack_sync")',
+        ):
+            with self.subTest(worker_required=required):
+                self.assertIn(required, worker)
+        puback = worker.index('operations.append("completion_puback")')
+        ack = worker.index("await message.ack_sync(", puback)
+        ack_recorded = worker.index('operations.append("invocation_ack_sync")', ack)
+        self.assertLess(puback, ack)
+        self.assertLess(ack, ack_recorded)
+
     def test_live_matrix_proves_deployed_single_writer_outage_choreography(
         self,
     ) -> None:

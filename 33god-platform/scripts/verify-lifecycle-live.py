@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import argparse
 import base64
+from contextlib import nullcontext
 from datetime import UTC, datetime, timedelta
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -41,6 +43,7 @@ CAPABILITY_ID = "cap:33god-platform:lifecycle-command"
 REPO = "delorenj/33GOD"
 COMMAND_STREAM = "BLOODBANK_COMMANDS"
 COMMAND_CONSUMER = "lifecycle-authority-commands-v1"
+INVOCATION_SUBJECT = "bloodbank.cmd.v1.agent.invocation.start"
 PROTECTED_BASELINE_CONTAINERS = (
     "bloodbank-nats",
     "bloodbank-dapr-placement",
@@ -156,10 +159,23 @@ def terminate(process: subprocess.Popen[bytes] | None) -> None:
 
 
 class Harness:
-    def __init__(self, screenshots_dir: Path | None) -> None:
+    def __init__(
+        self,
+        screenshots_dir: Path | None,
+        proof_dir: Path | None = None,
+    ) -> None:
         self.suffix = uuid.uuid4().hex[:10]
         self.project = f"aion-lifecycle-{self.suffix}"
         self.lifecycle_id = f"lc_aion_{self.suffix}"
+        self.proof_dir = proof_dir.resolve() if proof_dir is not None else None
+        if self.proof_dir is not None:
+            if self.proof_dir.exists():
+                if any(self.proof_dir.iterdir()):
+                    raise LiveProofError(
+                        f"proof directory must be empty: {self.proof_dir}"
+                    )
+            else:
+                self.proof_dir.mkdir(parents=True)
         self.password = secrets.token_hex(20)
         self.secret_dir = PLATFORM_ROOT / f".aion-secret-{self.suffix}"
         self.secret_dir.mkdir(mode=0o700)
@@ -242,6 +258,7 @@ class Harness:
         self.lifecycle_recovery_application = (
             f"lifecycle-outage-recovery-{self.suffix}"
         )
+        self.momo_actor_process: subprocess.Popen[bytes] | None = None
         self.created_resources = False
         self.cleaned = False
         self.prestart_snapshot_event_id: str | None = None
@@ -252,6 +269,7 @@ class Harness:
             "lifecycle_id": self.lifecycle_id,
             "image": LIFECYCLE_IMAGE,
             "bloodbank_commit": "48031ee39c238b9d4715b81b74076635235f96d5",
+            "proof_dir": str(self.proof_dir) if self.proof_dir is not None else None,
             "invariants": {},
             "seams": {},
         }
@@ -324,6 +342,7 @@ class Harness:
     def cleanup(self) -> None:
         if self.cleaned:
             return
+        terminate(self.momo_actor_process)
         self.release_lifecycle_recovery_guard(check=False)
         self.release_lifecycle_row_lock(check=False)
         terminate(self.web_process)
@@ -868,6 +887,70 @@ asyncio.run(main())
             "--json",
         )
         return json.loads(result.stdout)
+
+    def start_momo_obligation_actor(
+        self,
+        *,
+        workspace: Path,
+        consumer: str,
+    ) -> subprocess.Popen[bytes]:
+        """Start the promoted durable Momo actor before invocation publication."""
+
+        worker = SOURCE_ROOT / "skills" / "momo" / "scripts" / "obligation_worker.py"
+        catalog = (
+            SOURCE_ROOT
+            / "skills"
+            / "momo"
+            / "resources"
+            / "obligation-skill-catalog.json"
+        )
+        command = [
+            "uv",
+            "run",
+            "--project",
+            str(SOURCE_ROOT / "momo"),
+            "python",
+            str(worker),
+            "--nats-url",
+            f"nats://127.0.0.1:{self.ports['nats']}",
+            "--stream",
+            COMMAND_STREAM,
+            "--consumer",
+            consumer,
+            "--expectation",
+            str(workspace / "invocation-expectation.json"),
+            "--catalog",
+            str(catalog),
+            "--resource-root",
+            str(SOURCE_ROOT / "momo"),
+            "--evidence-package",
+            str(workspace / "evidence-package.json"),
+            "--report",
+            str(workspace / "review-report.md"),
+            "--receipt",
+            str(workspace / "worker-receipt.json"),
+            "--ready-file",
+            str(workspace / "worker-ready.json"),
+            "--preview-file",
+            str(workspace / "completion-preview.json"),
+            "--release-file",
+            str(workspace / "completion.release"),
+            "--timeout",
+            "120",
+            "--release-timeout",
+            "120",
+        ]
+        log_path = workspace / "worker.log"
+        with log_path.open("wb") as log_handle:
+            process = subprocess.Popen(
+                command,
+                cwd=SOURCE_ROOT,
+                env=os.environ.copy(),
+                stdout=log_handle,
+                stderr=subprocess.STDOUT,
+            )
+        self.momo_actor_process = process
+        return process
 
     def container_status(self, service: str) -> str:
         container = self.compose("ps", "-a", "-q", service).stdout.strip()
@@ -2570,20 +2653,33 @@ asyncio.run(main())
         self.compose("start", "lifecycle")
         self.wait_health("/readyz", 200)
 
-        print(
-            "[live] exercising Momo obligation invocation and completion evidence",
-            flush=True,
+        print("[live] exercising real Momo durable obligation actor", flush=True)
+        momo_script = (
+            SOURCE_ROOT / "skills" / "momo" / "scripts" / "lifecycle_client.py"
         )
-        momo_script = SOURCE_ROOT / "momo" / "skill" / "scripts" / "lifecycle_client.py"
-        with tempfile.TemporaryDirectory(prefix=f"aion-momo-{self.suffix}-") as temp:
+        if self.proof_dir is None:
+            workspace_context: Any = tempfile.TemporaryDirectory(
+                prefix=f"aion-momo-{self.suffix}-"
+            )
+        else:
+            actor_workspace = self.proof_dir / "momo-obligation"
+            actor_workspace.mkdir()
+            workspace_context = nullcontext(str(actor_workspace))
+        with workspace_context as temp:
             temp_dir = Path(temp)
             snapshot_path = temp_dir / "snapshot.json"
-            evidence_path = temp_dir / "evidence.json"
+            evidence_package_path = temp_dir / "evidence-package.json"
+            expectation_path = temp_dir / "invocation-expectation.json"
             invocation_plan_path = temp_dir / "invocation-plan.json"
             invocation_path = temp_dir / "invocation.json"
             preactivation_path = temp_dir / "preactivation-evidence.json"
             wrong_occurrence_path = temp_dir / "wrong-occurrence-evidence.json"
-            completion_path = temp_dir / "completion.json"
+            ready_path = temp_dir / "worker-ready.json"
+            preview_path = temp_dir / "completion-preview.json"
+            release_path = temp_dir / "completion.release"
+            receipt_path = temp_dir / "worker-receipt.json"
+            report_path = temp_dir / "review-report.md"
+            actor_log_path = temp_dir / "worker.log"
             fetched = run(
                 [
                     sys.executable,
@@ -2596,7 +2692,10 @@ asyncio.run(main())
                 ]
             )
             snapshot = json.loads(fetched.stdout)
-            snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+            snapshot_bytes = (
+                json.dumps(snapshot, indent=2, sort_keys=True) + "\n"
+            ).encode()
+            snapshot_path.write_bytes(snapshot_bytes)
             pending_obligation = next(
                 item
                 for item in snapshot["obligations"]
@@ -2652,63 +2751,156 @@ asyncio.run(main())
                 raise LiveProofError(
                     "Momo invocation lost authoritative occurrence or causal lineage"
                 )
-            invocation_plan_path.write_text(json.dumps(invocation), encoding="utf-8")
-            invocation_path.write_text(
-                json.dumps(invocation["invocation_command"]), encoding="utf-8"
-            )
-            publish_env = os.environ.copy()
-            publish_env.update(
-                {
-                    "BLOODBANK_HOME": str(SOURCE_ROOT / "bloodbank"),
-                    "BLOODBANK_NATS_HOST": "127.0.0.1",
-                    "BLOODBANK_NATS_PORT": str(self.ports["nats"]),
-                }
-            )
-            invocation_publish = run(
-                [
-                    sys.executable,
-                    str(momo_script),
-                    "publish",
-                    "--envelope",
-                    str(invocation_path),
-                ],
-                env=publish_env,
-            )
-            if (
-                "bloodbank.cmd.v1.agent.invocation.start"
-                not in invocation_publish.stdout
-            ):
-                raise LiveProofError(
-                    "Momo did not publish the canonical invocation subject"
-                )
-            evidence_path.write_text(
-                json.dumps(
-                    {
-                        "kind": "skill_completion",
-                        "outcome": "completed",
-                        "artifact_id": f"review-report:{self.suffix}",
-                        "artifact_sha256": "a" * 64,
-                        "summary": "Independent review completed with concrete artifact evidence.",
-                    }
-                ),
+            invocation_plan_path.write_text(
+                json.dumps(invocation, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
-            completion = json.loads(
-                run(
-                    [
-                        sys.executable,
-                        str(momo_script),
-                        "complete-obligation",
-                        "--invocation-plan",
-                        str(invocation_plan_path),
-                        "--completed-at",
-                        wire_time(),
-                        "--evidence",
-                        str(evidence_path),
-                    ]
-                ).stdout
+            invocation_path.write_text(
+                json.dumps(
+                    invocation["invocation_command"], indent=2, sort_keys=True
+                )
+                + "\n",
+                encoding="utf-8",
             )
-            completion_event = completion["completion_evidence"]
+            selection = invocation["selection"]
+            invocation_command = invocation["invocation_command"]
+            invocation_context = invocation_command["data"]["context"]
+            expectation = {
+                "contract": "momo.obligation-worker.expectation.v1",
+                "invocation_id": invocation_command["id"],
+                "lifecycle_id": selection["lifecycle_id"],
+                "obligation_id": selection["obligation_id"],
+                "obligation_instance_id": selection["obligation_instance_id"],
+                "activated_at": selection["activated_at"],
+                "target_actor_id": selection["target_actor_id"],
+                "expected_state_version": selection["state_version"],
+                "authority_snapshot_event_id": selection[
+                    "authority_snapshot_event_id"
+                ],
+                "authority_snapshot_event_time": selection[
+                    "authority_snapshot_event_time"
+                ],
+                "authority_snapshot_correlation_id": selection[
+                    "authority_snapshot_correlation_id"
+                ],
+                "correlation_id": invocation_command["correlationid"],
+                "causation_id": invocation_command["causationid"],
+                "skill_ref": invocation_context["skill_ref"],
+            }
+            expectation_path.write_text(
+                json.dumps(expectation, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            obligation_index = snapshot["obligations"].index(pending_obligation)
+            evidence_package = {
+                "schema": "momo.obligation-review-evidence-package.v1",
+                "run_id": self.project,
+                "lifecycle_id": self.lifecycle_id,
+                "repo": REPO,
+                "artifacts": [
+                    {
+                        "id": "current-authority-projection",
+                        "path": snapshot_path.name,
+                        "media_type": "application/json",
+                        "size_bytes": len(snapshot_bytes),
+                        "sha256": hashlib.sha256(snapshot_bytes).hexdigest(),
+                    }
+                ],
+                "assertions": [
+                    {
+                        "id": "lifecycle-id",
+                        "artifact_id": "current-authority-projection",
+                        "pointer": "/lifecycle_id",
+                        "equals": self.lifecycle_id,
+                    },
+                    {
+                        "id": "authority-state-version",
+                        "artifact_id": "current-authority-projection",
+                        "pointer": "/state_version",
+                        "equals": selection["state_version"],
+                    },
+                    {
+                        "id": "authority-snapshot-event",
+                        "artifact_id": "current-authority-projection",
+                        "pointer": "/source/event_id",
+                        "equals": selection["authority_snapshot_event_id"],
+                    },
+                    {
+                        "id": "active-obligation-occurrence",
+                        "artifact_id": "current-authority-projection",
+                        "pointer": (
+                            f"/obligations/{obligation_index}/obligation_instance_id"
+                        ),
+                        "equals": selection["obligation_instance_id"],
+                    },
+                    {
+                        "id": "pending-obligation-status",
+                        "artifact_id": "current-authority-projection",
+                        "pointer": f"/obligations/{obligation_index}/status",
+                        "equals": "pending",
+                    },
+                    {
+                        "id": "canonical-skill-ref",
+                        "artifact_id": "current-authority-projection",
+                        "pointer": f"/obligations/{obligation_index}/skill_ref",
+                        "equals": skill_ref,
+                    },
+                    {
+                        "id": "authoritative-target",
+                        "artifact_id": "current-authority-projection",
+                        "pointer": f"/obligations/{obligation_index}/owner_id",
+                        "equals": selection["target_actor_id"],
+                    },
+                ],
+            }
+            evidence_package_path.write_text(
+                json.dumps(evidence_package, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            actor_consumer = f"aion-momo-{self.suffix}"
+            actor_process = self.start_momo_obligation_actor(
+                workspace=temp_dir,
+                consumer=actor_consumer,
+            )
+
+            def actor_output(path: Path) -> dict[str, Any] | None:
+                if path.is_file():
+                    return json.loads(path.read_text(encoding="utf-8"))
+                returncode = actor_process.poll()
+                if returncode is None:
+                    return None
+                log = actor_log_path.read_text(encoding="utf-8", errors="replace")
+                return {"worker_exit": returncode, "worker_log": log[-4000:]}
+
+            actor_ready = wait_for(
+                "Momo durable actor readiness",
+                lambda: actor_output(ready_path),
+                timeout=120,
+            )
+            if actor_ready.get("status") != "ready" or actor_ready.get(
+                "consumer"
+            ) != actor_consumer:
+                raise LiveProofError(f"Momo durable actor failed readiness: {actor_ready}")
+            invocation_publish_ack = self.publish_jetstream(invocation_command)
+            if (
+                invocation_publish_ack.get("stream") != COMMAND_STREAM
+                or invocation_publish_ack.get("event_id") != invocation_command["id"]
+                or invocation_publish_ack.get("subject") != INVOCATION_SUBJECT
+                or not isinstance(
+                    invocation_publish_ack.get("stream_sequence"), int
+                )
+                or invocation_publish_ack["stream_sequence"] < 1
+                or invocation_publish_ack.get("duplicate") is not False
+            ):
+                raise LiveProofError(
+                    "Momo invocation publication lacked an exact JetStream PubAck: "
+                    f"{invocation_publish_ack!r}"
+                )
+            completion_event = wait_for(
+                "Momo actor completion preview",
+                lambda: actor_output(preview_path),
+                timeout=120,
+            )
             if (
                 completion_event["data"]["obligation_id"] != pending_obligation["id"]
                 or completion_event["data"]["obligation_instance_id"]
@@ -2742,20 +2934,11 @@ asyncio.run(main())
             preactivation_event["data"]["evidence"]["artifact_id"] = (
                 f"historical-review:{self.suffix}"
             )
-            preactivation_event["data"]["evidence"]["artifact_sha256"] = "b" * 64
             preactivation_path.write_text(
-                json.dumps(preactivation_event), encoding="utf-8"
+                json.dumps(preactivation_event, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
             )
-            preactivation_publish = run(
-                [
-                    sys.executable,
-                    str(momo_script),
-                    "publish",
-                    "--envelope",
-                    str(preactivation_path),
-                ],
-                env=publish_env,
-            )
+            preactivation_publish = self.publish_jetstream(preactivation_event)
             preactivation_state = wait_for(
                 "pre-activation evidence rejection",
                 lambda: (
@@ -2799,20 +2982,11 @@ asyncio.run(main())
             wrong_occurrence_event["data"]["evidence"]["artifact_id"] = (
                 f"prior-occurrence-review:{self.suffix}"
             )
-            wrong_occurrence_event["data"]["evidence"]["artifact_sha256"] = "c" * 64
             wrong_occurrence_path.write_text(
-                json.dumps(wrong_occurrence_event), encoding="utf-8"
+                json.dumps(wrong_occurrence_event, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
             )
-            wrong_occurrence_publish = run(
-                [
-                    sys.executable,
-                    str(momo_script),
-                    "publish",
-                    "--envelope",
-                    str(wrong_occurrence_path),
-                ],
-                env=publish_env,
-            )
+            wrong_occurrence_publish = self.publish_jetstream(wrong_occurrence_event)
             wrong_occurrence_state = wait_for(
                 "wrong-occurrence evidence rejection",
                 lambda: (
@@ -2844,17 +3018,95 @@ asyncio.run(main())
                     "prior-occurrence evidence satisfied the active occurrence"
                 )
 
-            completion_path.write_text(json.dumps(completion_event), encoding="utf-8")
-            completion_publish = run(
-                [
-                    sys.executable,
-                    str(momo_script),
-                    "publish",
-                    "--envelope",
-                    str(completion_path),
-                ],
-                env=publish_env,
+            release_path.write_text("publish actor completion\n", encoding="utf-8")
+            receipt = wait_for(
+                "Momo obligation receipt",
+                lambda: actor_output(receipt_path),
+                timeout=120,
             )
+            if receipt.get("status") != "completed":
+                raise LiveProofError(f"Momo actor failed before receipt: {receipt}")
+            actor_exit = wait_for(
+                "Momo obligation actor exit",
+                lambda: (
+                    {"returncode": returncode}
+                    if (returncode := actor_process.poll()) is not None
+                    else None
+                ),
+                timeout=30,
+            )
+            actor_log = actor_log_path.read_text(encoding="utf-8", errors="replace")
+            if actor_exit["returncode"] != 0:
+                raise LiveProofError(
+                    f"Momo obligation actor exited {actor_exit['returncode']}: "
+                    f"{actor_log[-4000:]}"
+                )
+
+            workspace_root = temp_dir.resolve()
+            artifact_path = Path(receipt["artifact"]["path"]).resolve()
+            if (
+                workspace_root not in artifact_path.parents
+                or artifact_path != report_path.resolve()
+            ):
+                raise LiveProofError(
+                    "receipt/artifact identity mismatch: artifact escaped proof workspace"
+                )
+            artifact_bytes = artifact_path.read_bytes()
+            artifact_sha256 = hashlib.sha256(artifact_bytes).hexdigest()
+            if (
+                len(artifact_sha256) != 64
+                or any(character not in "0123456789abcdef" for character in artifact_sha256)
+                or len(set(artifact_sha256)) == 1
+            ):
+                raise LiveProofError("Momo actor produced a placeholder success hash")
+            if (
+                receipt["artifact"]["sha256"] != artifact_sha256
+                or receipt["artifact"]["size_bytes"] != len(artifact_bytes)
+                or completion_event["data"]["evidence"]["artifact_sha256"]
+                != artifact_sha256
+                or receipt["completion"]["event_id"] != completion_event["id"]
+                or receipt["completion"]["subject"] != completion_event["subject"]
+                or receipt["completion"]["stream"] != "BLOODBANK_EVENTS"
+                or not isinstance(receipt["completion"]["stream_sequence"], int)
+                or receipt["completion"]["stream_sequence"] < 1
+                or receipt["delivery"]["stream"] != COMMAND_STREAM
+                or receipt["delivery"]["consumer"] != actor_consumer
+                or receipt["delivery"]["stream_sequence"]
+                != invocation_publish_ack["stream_sequence"]
+                or receipt["invocation"]["id"] != invocation_command["id"]
+                or receipt["invocation"]["correlation_id"]
+                != invocation_command["correlationid"]
+                or receipt["invocation"]["causation_id"]
+                != invocation_command["causationid"]
+            ):
+                raise LiveProofError("receipt/artifact identity mismatch")
+            resource_relative = Path(receipt["skill"]["resource_path"])
+            resource_root = (SOURCE_ROOT / "momo").resolve()
+            skill_resource_path = (resource_root / resource_relative).resolve()
+            if (
+                resource_relative.is_absolute()
+                or ".." in resource_relative.parts
+                or resource_root not in skill_resource_path.parents
+                or hashlib.sha256(skill_resource_path.read_bytes()).hexdigest()
+                != receipt["skill"]["resource_sha256"]
+                or receipt["skill"]["name"] != skill_ref["name"]
+                or receipt["skill"]["selector"] != skill_ref["selector"]
+            ):
+                raise LiveProofError("Momo receipt skill resource identity mismatch")
+            operation_order = [
+                item["operation"] for item in receipt["operation_order"]
+            ]
+            if (
+                operation_order.index("completion_puback")
+                >= operation_order.index("invocation_ack_sync")
+                or [item["sequence"] for item in receipt["operation_order"]]
+                != list(range(1, len(operation_order) + 1))
+            ):
+                raise LiveProofError("Momo invocation ACK preceded completion PubAck")
+            actor_consumer_info = self.consumer_info(COMMAND_STREAM, actor_consumer)
+            if actor_consumer_info.get("num_ack_pending") != 0:
+                raise LiveProofError("Momo durable consumer retained an ACK-pending invocation")
+
             momo_state = self.wait_state_version(
                 wrong_occurrence_state["state_version"] + 1, "active"
             )
@@ -2897,7 +3149,7 @@ asyncio.run(main())
             "preactivation_evidence": {
                 "event_id": preactivation_event["id"],
                 "completed_at": preactivation_time,
-                "publish": preactivation_publish.stdout.strip(),
+                "publish": preactivation_publish,
                 "state_version": preactivation_state["state_version"],
                 "status": preactivation_obligation["status"],
             },
@@ -2906,13 +3158,23 @@ asyncio.run(main())
                 "submitted_obligation_instance_id": wrong_occurrence_event["data"][
                     "obligation_instance_id"
                 ],
-                "publish": wrong_occurrence_publish.stdout.strip(),
+                "publish": wrong_occurrence_publish,
                 "state_version": wrong_occurrence_state["state_version"],
                 "status": wrong_occurrence_obligation["status"],
             },
             "completion_subject": completion_event["subject"],
             "completion_event_id": completion_event["id"],
-            "completion_publish": completion_publish.stdout.strip(),
+            "invocation_puback": invocation_publish_ack,
+            "actor_ready": actor_ready,
+            "actor_receipt": receipt,
+            "actor_consumer": actor_consumer_info,
+            "actor_exit": actor_exit,
+            "actor_log": str(actor_log_path),
+            "artifact": {
+                "path": str(artifact_path),
+                "size_bytes": len(artifact_bytes),
+                "sha256": artifact_sha256,
+            },
             "authority_evidence_rows": evidence_rows,
             "candystore_evidence_rows": candystore_evidence_rows,
             "state_before": snapshot["state_version"],
@@ -3320,15 +3582,25 @@ asyncio.run(main())
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--proof-dir",
+        type=Path,
+        help="preserve the machine proof, Momo receipt, and review artifact here",
+    )
+    parser.add_argument(
         "--screenshots-dir",
         type=Path,
         help="run desktop/mobile browser proof and preserve screenshots here",
     )
     args = parser.parse_args()
-    harness = Harness(args.screenshots_dir)
+    harness = Harness(args.screenshots_dir, args.proof_dir)
     try:
         summary = harness.execute()
         harness.finish_cleanup_evidence()
+        if harness.proof_dir is not None:
+            (harness.proof_dir / "proof.json").write_text(
+                json.dumps(summary, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
         print(json.dumps(summary, indent=2, sort_keys=True), flush=True)
         return 0
     except (LiveProofError, OSError, subprocess.TimeoutExpired, ValueError) as exc:

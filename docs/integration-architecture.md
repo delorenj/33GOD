@@ -67,7 +67,7 @@ does not join the Lifecycle authority network.
 | Lifecycle state/reconcile/frontier/obligations/grants | Lifecycle | Exact digest, dedicated PostgreSQL, sole writer |
 | Commands/events/transport | Bloodbank | Pinned `48031ee…` schemas and initialized JetStream |
 | Event history/read projections | Candystore | Durable consumer, replay-safe current snapshot/verdict API |
-| Prioritization/delegation | Momo | Legal frontier only, canonical skill resolution, separated rationale/intent |
+| Prioritization/delegation/work execution | Momo | Legal frontier only, exact durable invocation consumption, pinned skill resource, artifact-backed evidence, separated rationale/intent |
 | Mission control | Holocene | Candystore-backed read surface and Bloodbank command publication |
 | Deployment/process gates | 33GOD root | Immutable pins, ordering, health, isolation, profile semantics |
 
@@ -80,7 +80,9 @@ does not join the Lifecycle authority network.
 - Transactional outbox order and eventual publication survive NATS recovery.
 - Stale versions and invalid grants yield stable non-mutating verdicts.
 - Pending obligations make the corresponding frontier transition illegal;
-  only exact canonical completion evidence can unlock authority progression.
+  only exact canonical completion evidence from the durable Momo actor can
+  unlock authority progression, and the actor ACKs invocation only after its
+  completion receives a JetStream PubAck.
 - A late-starting Candystore replays pre-existing snapshots and verdicts, and
   duplicate IDs always project the immutable stored event rather than a
   conflicting delivery.

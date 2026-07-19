@@ -16,7 +16,7 @@ import os
 import re
 import sys
 import uuid
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -247,6 +247,51 @@ def build_obligation_invocation(
         "decision_rationale": rationale or {},
         "invocation_command": command,
     }
+
+
+def reconstruct_obligation_invocation_plan(command: dict[str, Any]) -> dict[str, Any]:
+    """Reconstruct and fully verify an invocation plan from a delivered command.
+
+    Durable workers receive only the canonical Bloodbank envelope. This helper
+    derives the selection from that envelope instead of accepting a
+    harness-authored plan as execution input.
+    """
+
+    command = _object(command, "invocation command")
+    validate_bloodbank_envelope(command)
+    data = _object(command.get("data"), "invocation data")
+    context = _object(data.get("context"), "context")
+    obligation = _object(context.get("obligation"), "obligation")
+    plan = {
+        "selection": {
+            "kind": "obligation",
+            "lifecycle_id": _required_text(context, "lifecycle_id"),
+            "state_version": context.get("expected_state_version"),
+            "obligation_id": _required_text(obligation, "id"),
+            "obligation_instance_id": _uuid(
+                obligation.get("obligation_instance_id"), "obligation_instance_id"
+            ),
+            "activated_at": _timestamp(obligation.get("activated_at"), "activated_at"),
+            "target_actor_id": _required_text(data, "target_agent_id"),
+            "skill_ref": _skill_ref_value(context.get("skill_ref")),
+            "authority_snapshot_event_id": _uuid(
+                context.get("authority_snapshot_event_id"),
+                "authority snapshot event id",
+            ),
+            "authority_snapshot_event_time": _timestamp(
+                context.get("authority_snapshot_event_time"),
+                "authority snapshot event time",
+            ),
+            "authority_snapshot_correlation_id": _uuid(
+                context.get("authority_snapshot_correlation_id"),
+                "authority snapshot correlation id",
+            ),
+        },
+        "decision_rationale": {},
+        "invocation_command": command,
+    }
+    _verify_obligation_invocation_plan(plan)
+    return plan
 
 
 def _verify_obligation_invocation_plan(
@@ -672,6 +717,23 @@ def publish_envelope(
     payload = json.dumps(envelope, sort_keys=True, separators=(",", ":")).encode()
     publish(subject, payload, client_name="momo-lifecycle-client")
     return subject
+
+
+async def publish_envelope_async(
+    envelope: dict[str, Any],
+    *,
+    publish: Callable[[str, bytes], Awaitable[Any]],
+) -> Any:
+    """Validate and publish one canonical envelope with an async transport."""
+
+    publication: dict[str, Any] = {}
+
+    def capture(subject: str, payload: bytes, **_kwargs: Any) -> None:
+        publication["subject"] = subject
+        publication["payload"] = payload
+
+    publish_envelope(envelope, publish=capture)
+    return await publish(publication["subject"], publication["payload"])
 
 
 def validate_bloodbank_envelope(envelope: dict[str, Any]) -> None:

@@ -97,9 +97,12 @@ targeting a prior occurrence cannot satisfy the current obligation. Lifecycle
 records that observation and alone performs the resulting reconcile.
 
 Momo reads only the authoritative projection, filters and ranks the legal
-frontier, resolves an obligation's canonical skill reference, emits decision
-rationale separately from invocation/command intent, and publishes through
-Bloodbank. Holocene reads the Candystore projection and publishes high-level
+frontier, resolves an obligation's canonical skill reference, and emits
+decision rationale separately from invocation/command intent. Its named durable
+JetStream actor accepts only the exact authority-bound invocation, verifies the
+pinned skill resource, writes and hashes concrete review evidence, publishes
+completion through Bloodbank, and acknowledges only after the completion
+PubAck. Holocene reads the Candystore projection and publishes high-level
 commands through Bloodbank. Neither client derives, persists, or optimistically
 mutates lifecycle truth.
 
@@ -125,10 +128,11 @@ The same run starts Candystore only after authority snapshot and verdict events
 exist, proves their durable replay, attempts a conflicting duplicate ID and
 proves projection from the canonical stored envelope, and audits but excludes
 spoofed authority candidates. It exercises pre-activation and prior-occurrence
-rejection, exact active-occurrence completion unlock, repeated occurrence
-isolation, versioned capabilities, real causal lineage, and Momo/Holocene
-client fidelity. Cleanup addresses only the unique resources allocated by the
-run.
+rejection, exact active-occurrence completion unlock through the real Momo
+durable actor, report-byte hash verification, completion-PubAck-before-command-
+ACK ordering, repeated occurrence isolation, versioned capabilities, real
+causal lineage, and Momo/Holocene client fidelity. Cleanup addresses only the
+unique resources allocated by the run.
 
 ## Current versus future
 

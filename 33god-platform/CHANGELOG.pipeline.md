@@ -3,6 +3,19 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-07-19
+
+### Real Momo obligation execution
+
+- Published and pinned Momo `9b6b1e7…` with a named durable JetStream actor for
+  exact `bmad-code-review@6.10.2` obligation invocations.
+- Replaced harness-authored successful evidence with a real bounded review
+  report, exact byte SHA-256, completion PubAck before invocation ACK, and a
+  machine receipt linking broker delivery, invocation, skill resource,
+  artifact, and completion identities.
+- Kept Lifecycle as the sole lifecycle truth authority; Momo chooses and
+  executes legal work and publishes evidence only.
+
 ## 2026-07-18
 
 ### Lifecycle authority vertical slice

@@ -45,7 +45,7 @@ COMPONENT_REVISIONS = {
     "bloodbank": "48031ee39c238b9d4715b81b74076635235f96d5",
     "lifecycle": "cda59658bef6d586c8aa01cacd88bc4e3ee867e0",
     "candystore": "b1f6fda3739d095535b326cc89b9a6c7823f63d8",
-    "momo": "9e3a67a36b3dfe09b4061029d7b52eab39f4d011",
+    "momo": "9b6b1e7d30001f5918d32e99cbcbf5200fc29e1d",
     "holocene": "544ca73f4cc75ef98956873b11085216af12a297",
 }
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
@@ -625,6 +625,11 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
 
     promoted = docs_checkout / "skills/momo"
     canonical = source / "momo/skill"
+    required_momo_actor_files = {
+        Path("resources/obligation-skill-catalog.json"),
+        Path("scripts/lifecycle_client.py"),
+        Path("scripts/obligation_worker.py"),
+    }
     promoted_files = {
         path.relative_to(promoted)
         for path in promoted.rglob("*")
@@ -647,6 +652,12 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             errors.append(
                 "promoted skills/momo differs byte-for-byte: " + ", ".join(changed)
             )
+    missing_actor_files = sorted(required_momo_actor_files - canonical_files)
+    if missing_actor_files:
+        errors.append(
+            "Momo durable obligation actor files are missing: "
+            + ", ".join(str(path) for path in missing_actor_files)
+        )
     return errors
 
 

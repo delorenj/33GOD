@@ -67,7 +67,10 @@ cross-component relationships; component repositories govern their internals.
 
 ```bash
 GOD_SOURCE_ROOT="$PWD" mise run docs:drift
-python3 33god-platform/scripts/verify-lifecycle-live.py
+proof_dir="$(mktemp -d /tmp/33god-lifecycle-proof-XXXXXXXX)"
+python3 33god-platform/scripts/verify-lifecycle-live.py \
+  --proof-dir "$proof_dir" \
+  --screenshots-dir "$proof_dir/screenshots"
 ```
 
 The first command is static/read-only. The second creates an isolated,
