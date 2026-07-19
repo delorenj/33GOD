@@ -30,7 +30,7 @@ SOURCE_ROOT = PLATFORM_ROOT.parent
 COMPOSE_FILE = PLATFORM_ROOT / "compose.yaml"
 LIFECYCLE_IMAGE = (
     "ghcr.io/delorenj/lifecycle@"
-    "sha256:9569564aa143c1118f6e3c9a67fd1e2b4eb1fdf26cba16365a508455df7b4775"
+    "sha256:754d04488d57968824d1ddb077ae50eef758f4fad27bf0899c52c6df11d03311"
 )
 NATS_BOX_IMAGE = (
     "natsio/nats-box@"
@@ -407,7 +407,8 @@ class Harness:
               'spec_version', spec_version, 'state_version', state_version,
               'fingerprint', state_fingerprint, 'legal_frontier', legal_frontier,
               'obligations', obligations, 'capabilities', capabilities,
-              'observed_through', observed_through
+              'observed_through', observed_through,
+              'last_reconciled_at', last_reconciled_at
             )::text
             FROM lifecycle_state WHERE lifecycle_id = %s
             """
@@ -908,7 +909,7 @@ asyncio.run(main())
             "[live] proving trusted pre-publication replay and offline progression",
             flush=True,
         )
-        target_waiting_version = initial["state_version"] + 2
+        target_waiting_version = initial["state_version"] + 1
         occurrence_id = str(
             uuid.uuid5(
                 uuid.NAMESPACE_URL,
@@ -1032,7 +1033,7 @@ asyncio.run(main())
             lambda: (
                 current
                 if (current := self.state())["state_version"]
-                == initial["state_version"] + 1
+                == initial["state_version"]
                 and current["status"] == "active"
                 and self.reconcile_queue_depth() == 0
                 and self.counts()["outbox_pending"] == 0
@@ -1040,13 +1041,19 @@ asyncio.run(main())
             ),
             timeout=120,
         )
+        preactivation_authority_time = datetime.fromisoformat(
+            preactivation["last_reconciled_at"].replace("Z", "+00:00")
+        )
         activation = wire_time()
         activation_value = datetime.fromisoformat(activation.replace("Z", "+00:00"))
         if (
             persisted_prepublication["source_event_id"] != prepublished_evidence["id"]
             or persisted_observed_at != claimed_completion_value
             or not (
-                trusted_publication < activation_value < claimed_completion_value
+                preactivation_authority_time
+                <= trusted_publication
+                < activation_value
+                < claimed_completion_value
                 and persisted_received_at < activation_value
             )
         ):
@@ -1163,6 +1170,7 @@ asyncio.run(main())
             "occurrence_activated_at": obligation["activated_at"],
             "claimed_completed_at": claimed_completion,
             "obligation_instance_id": occurrence_id,
+            "preactivation_authority_time": preactivation["last_reconciled_at"],
             "preactivation_state_version": preactivation["state_version"],
             "first_waiting_state_version": first_waiting["state_version"],
             "post_activation_state_version": progressed["state_version"],

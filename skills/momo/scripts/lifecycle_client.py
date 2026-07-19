@@ -40,17 +40,13 @@ AUTHORITY_ACTOR_ID = "delorenj.lifecycle"
 SNAPSHOT_TYPE = "bloodbank.v1.lifecycle.snapshot.updated"
 SNAPSHOT_SUBJECT = "bloodbank.evt.v1.lifecycle.snapshot.updated"
 SNAPSHOT_SCHEMA_REF = "bloodbank.v1.lifecycle.snapshot.updated.v3"
-SNAPSHOT_DATA_SCHEMA = (
-    "apicurio://holyfields/bloodbank.v1.lifecycle.snapshot.updated/versions/3"
-)
+SNAPSHOT_DATA_SCHEMA = "apicurio://holyfields/bloodbank.v1.lifecycle.snapshot.updated/versions/3"
 MOMO_SOURCE = "urn:33god:service:momo"
 CAPABILITY_ACTION = "lifecycle.intent.submit"
 SKILL_NAME = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SCHEMA_PATH_BY_REF = {
-    "bloodbank.v1.agent.invocation.start.v1": (
-        "bloodbank/v1/agent/invocation.start.v1.json"
-    ),
+    "bloodbank.v1.agent.invocation.start.v1": ("bloodbank/v1/agent/invocation.start.v1.json"),
     "bloodbank.v1.lifecycle.intent.submit.command.v1": (
         "bloodbank/v1/lifecycle/intent.submit.command.v1.json"
     ),
@@ -126,14 +122,8 @@ def resolve_skill_ref(obligation: dict[str, Any]) -> dict[str, str]:
     selector = ref.get("selector")
     if not isinstance(name, str) or not SKILL_NAME.fullmatch(name):
         raise LifecycleClientError("skill_ref.name is not a canonical skill name")
-    if (
-        not isinstance(selector, str)
-        or not selector
-        or any(char.isspace() for char in selector)
-    ):
-        raise LifecycleClientError(
-            "skill_ref.selector must be non-empty and contain no whitespace"
-        )
+    if not isinstance(selector, str) or not selector or any(char.isspace() for char in selector):
+        raise LifecycleClientError("skill_ref.selector must be non-empty and contain no whitespace")
     return {"name": name, "selector": selector}
 
 
@@ -264,11 +254,7 @@ def _verify_obligation_invocation_plan(
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Recompute every material invocation byte before accepting completion."""
 
-    if set(invocation_plan) != {
-        "selection",
-        "decision_rationale",
-        "invocation_command",
-    }:
+    if set(invocation_plan) != {"selection", "decision_rationale", "invocation_command"}:
         raise LifecycleClientError("invocation plan contains noncanonical fields")
     _object(invocation_plan.get("decision_rationale"), "decision_rationale")
     selection = _object(invocation_plan.get("selection"), "selection")
@@ -278,21 +264,13 @@ def _verify_obligation_invocation_plan(
     validate_bloodbank_envelope(command)
     data = _object(command.get("data"), "invocation data")
     context = _object(data.get("context"), "context")
-    contract = _object(
-        context.get("completion_evidence_contract"), "completion contract"
-    )
+    contract = _object(context.get("completion_evidence_contract"), "completion contract")
     actor = _actor(command.get("actor"))
     lifecycle_id = _required_text(context, "lifecycle_id")
     repo = _required_text(context, "repo")
     state_version = context.get("expected_state_version")
-    if (
-        isinstance(state_version, bool)
-        or not isinstance(state_version, int)
-        or state_version < 1
-    ):
-        raise LifecycleClientError(
-            "invocation expected_state_version must be an integer >= 1"
-        )
+    if isinstance(state_version, bool) or not isinstance(state_version, int) or state_version < 1:
+        raise LifecycleClientError("invocation expected_state_version must be an integer >= 1")
     source_event_id = _uuid(
         context.get("authority_snapshot_event_id"),
         "authority snapshot event id",
@@ -400,17 +378,9 @@ def _verify_obligation_invocation_plan(
         },
     }
     if selection != expected_selection:
-        raise LifecycleClientError(
-            "invocation selection does not match complete semantic identity"
-        )
-    if (
-        contract != expected_contract
-        or context != expected_context
-        or command != expected_command
-    ):
-        raise LifecycleClientError(
-            "invocation command does not match complete semantic identity"
-        )
+        raise LifecycleClientError("invocation selection does not match complete semantic identity")
+    if contract != expected_contract or context != expected_context or command != expected_command:
+        raise LifecycleClientError("invocation command does not match complete semantic identity")
     return selection, command, context, contract
 
 
@@ -432,20 +402,14 @@ def build_obligation_completion_evidence(
 ) -> dict[str, Any]:
     """Build canonical completed-skill evidence for Lifecycle to evaluate."""
 
-    selection, command, context, contract = _verify_obligation_invocation_plan(
-        invocation_plan
-    )
+    selection, command, context, contract = _verify_obligation_invocation_plan(invocation_plan)
     completed_at = _timestamp(completed_at, "completed_at")
     activated_at = _timestamp(contract.get("activated_at"), "obligation activated_at")
     if _timestamp_value(completed_at) < _timestamp_value(activated_at):
-        raise LifecycleClientError(
-            "completion cannot predate the active obligation occurrence"
-        )
+        raise LifecycleClientError("completion cannot predate the active obligation occurrence")
     invocation_time = _timestamp(command.get("time"), "invocation command time")
     if _timestamp_value(completed_at) < _timestamp_value(invocation_time):
-        raise LifecycleClientError(
-            "completion cannot predate the canonical invocation command"
-        )
+        raise LifecycleClientError("completion cannot predate the canonical invocation command")
     evidence = _completion_evidence(evidence)
     # The invocation actor identifies who requested the work. Completion evidence
     # is a distinct Momo-produced authority input and therefore carries the
@@ -461,9 +425,7 @@ def build_obligation_completion_evidence(
         ),
         "obligation_kind": _required_text(contract, "obligation_kind"),
         "target_actor_id": _required_text(contract, "target_actor_id"),
-        "invocation_id": _uuid(
-            _required_text(contract, "invocation_id"), "invocation_id"
-        ),
+        "invocation_id": _uuid(_required_text(contract, "invocation_id"), "invocation_id"),
         "skill_ref": _skill_ref_value(context.get("skill_ref")),
         "completed_at": completed_at,
         "evidence": evidence,
@@ -488,9 +450,7 @@ def build_obligation_completion_evidence(
         "dataschema": (
             "apicurio://holyfields/bloodbank.v1.lifecycle.obligation_evidence.submitted/versions/2"
         ),
-        "correlationid": _uuid(
-            command.get("correlationid"), "invocation correlationid"
-        ),
+        "correlationid": _uuid(command.get("correlationid"), "invocation correlationid"),
         "causationid": _uuid(command.get("id"), "invocation event id"),
         "producer": "momo",
         "service": "momo",
@@ -524,26 +484,18 @@ def build_lifecycle_intent(
     if frontier_id is not None:
         candidates = [item for item in candidates if item.get("id") == frontier_id]
     if not candidates:
-        raise LifecycleClientError(
-            "no matching allowed frontier item at the current state version"
-        )
+        raise LifecycleClientError("no matching allowed frontier item at the current state version")
     frontier = candidates[0]
     lifecycle_id = _required_text(snapshot, "lifecycle_id")
     repo = _required_text(snapshot, "repo")
     actor = _actor(actor)
-    capability = _capability_context(
-        snapshot, actor_id=actor["agent_id"], frontier=frontier
-    )
+    capability = _capability_context(snapshot, actor_id=actor["agent_id"], frontier=frontier)
     evidence = _object(evidence, "evidence")
     if not evidence:
-        raise LifecycleClientError(
-            "Lifecycle intent requires non-empty evidence metadata"
-        )
+        raise LifecycleClientError("Lifecycle intent requires non-empty evidence metadata")
     intent_name, intent_target = _frontier_intent(frontier)
     intent_parameters = _object(parameters or {}, "parameters")
-    intent_parameters.update(
-        {"selected_frontier_id": frontier["id"], "evidence": evidence}
-    )
+    intent_parameters.update({"selected_frontier_id": frontier["id"], "evidence": evidence})
     source = _projection_source(snapshot)
     source_event_id = source["event_id"]
     source_event_time = source["event_time"]
@@ -617,9 +569,7 @@ def build_lifecycle_intent(
     }
 
 
-def verify_command_verdict(
-    command: dict[str, Any], reply: dict[str, Any]
-) -> dict[str, Any]:
+def verify_command_verdict(command: dict[str, Any], reply: dict[str, Any]) -> dict[str, Any]:
     """Accept only a schema-shaped, identity-matched Lifecycle authority verdict."""
 
     validate_bloodbank_envelope(command)
@@ -643,9 +593,7 @@ def verify_command_verdict(
     }
     for key, expected in envelope_checks.items():
         if reply.get(key) != expected:
-            raise LifecycleClientError(
-                f"Lifecycle reply {key} is not authoritative or matching"
-            )
+            raise LifecycleClientError(f"Lifecycle reply {key} is not authoritative or matching")
     _uuid(reply.get("id"), "Lifecycle reply id")
     replied_at = _timestamp(reply.get("time"), "Lifecycle reply time")
     authority_actor = _object(reply.get("actor"), "Lifecycle reply actor")
@@ -669,9 +617,7 @@ def verify_command_verdict(
     }
     for key, expected in checks.items():
         if data.get(key) != expected:
-            raise LifecycleClientError(
-                f"Lifecycle reply {key} does not match the command"
-            )
+            raise LifecycleClientError(f"Lifecycle reply {key} does not match the command")
     observed = data.get("observed_state_version")
     if isinstance(observed, bool) or not isinstance(observed, int) or observed < 1:
         raise LifecycleClientError("Lifecycle reply observed_state_version is invalid")
@@ -687,9 +633,7 @@ def verify_command_verdict(
         )
     if verdict == "applied":
         if mutated is not True or resulting != observed + 1:
-            raise LifecycleClientError(
-                "Lifecycle applied verdict has inconsistent mutation fields"
-            )
+            raise LifecycleClientError("Lifecycle applied verdict has inconsistent mutation fields")
         _uuid(applied_event_id, "applied_event_id")
     elif verdict == "idempotent":
         if mutated is not False or resulting != observed + 1:
@@ -698,9 +642,7 @@ def verify_command_verdict(
             )
         _uuid(applied_event_id, "applied_event_id")
         if data.get("reason_code") != "EFFECT_ALREADY_APPLIED":
-            raise LifecycleClientError(
-                "Lifecycle idempotent verdict reason is inconsistent"
-            )
+            raise LifecycleClientError("Lifecycle idempotent verdict reason is inconsistent")
     else:
         raise LifecycleClientError(f"Lifecycle command was not applied: {verdict}")
     return data
@@ -721,10 +663,7 @@ def publish_envelope(
     }
     if identity not in valid:
         raise LifecycleClientError("refusing to publish a non-canonical Momo envelope")
-    if (
-        envelope.get("kind") == "command"
-        and envelope.get("delivery") != "single_consumer"
-    ):
+    if envelope.get("kind") == "command" and envelope.get("delivery") != "single_consumer":
         raise LifecycleClientError("refusing to publish an invalid command envelope")
     validate_bloodbank_envelope(envelope)
     if publish is None:
@@ -740,13 +679,9 @@ def validate_bloodbank_envelope(envelope: dict[str, Any]) -> None:
 
     schemaref = envelope.get("schemaref")
     if schemaref not in SCHEMA_PATH_BY_REF:
-        raise LifecycleClientError(
-            f"unsupported canonical Bloodbank schemaref: {schemaref}"
-        )
+        raise LifecycleClientError(f"unsupported canonical Bloodbank schemaref: {schemaref}")
     schemas_root, registry = _bloodbank_schema_registry()
-    schema = json.loads(
-        (schemas_root / SCHEMA_PATH_BY_REF[schemaref]).read_text(encoding="utf-8")
-    )
+    schema = json.loads((schemas_root / SCHEMA_PATH_BY_REF[schemaref]).read_text(encoding="utf-8"))
     try:
         Draft202012Validator(
             schema,
@@ -773,44 +708,32 @@ def _bloodbank_schema_registry() -> tuple[Path, Registry]:
     for path in schemas_root.rglob("*.json"):
         document = json.loads(path.read_text(encoding="utf-8"))
         if "$id" in document:
-            registry = registry.with_resource(
-                document["$id"], Resource.from_contents(document)
-            )
+            registry = registry.with_resource(document["$id"], Resource.from_contents(document))
     return schemas_root, registry
 
 
 def _bloodbank_publisher() -> Callable[..., Any]:
     bloodbank_home = Path(
-        os.environ.get(
-            "BLOODBANK_HOME", str(Path.home() / "code" / "33GOD" / "bloodbank")
-        )
+        os.environ.get("BLOODBANK_HOME", str(Path.home() / "code" / "33GOD" / "bloodbank"))
     )
     core = bloodbank_home / "services" / "agent-hooks" / "core"
     if not core.is_dir():
-        raise LifecycleClientError(
-            f"Bloodbank publisher unavailable at {core}; set BLOODBANK_HOME"
-        )
+        raise LifecycleClientError(f"Bloodbank publisher unavailable at {core}; set BLOODBANK_HOME")
     sys.path.insert(0, str(core))
     try:
         from nats_publish import publish
     except Exception as exc:  # pragma: no cover - environment-specific import
-        raise LifecycleClientError(
-            f"cannot import Bloodbank NATS publisher: {exc}"
-        ) from exc
+        raise LifecycleClientError(f"cannot import Bloodbank NATS publisher: {exc}") from exc
     return publish
 
 
 def _current_state_version(snapshot: dict[str, Any]) -> int:
     status = snapshot.get("projection_status")
     if status != "current":
-        raise LifecycleClientError(
-            f"Lifecycle projection is not current: {status or 'unknown'}"
-        )
+        raise LifecycleClientError(f"Lifecycle projection is not current: {status or 'unknown'}")
     version = snapshot.get("state_version")
     if isinstance(version, bool) or not isinstance(version, int) or version < 1:
-        raise LifecycleClientError(
-            "authoritative state_version must be an integer >= 1"
-        )
+        raise LifecycleClientError("authoritative state_version must be an integer >= 1")
     return version
 
 
@@ -833,29 +756,19 @@ def _projection_source(snapshot: dict[str, Any]) -> dict[str, Any]:
     }
     for field, value in expected.items():
         if source.get(field) != value:
-            raise LifecycleClientError(
-                f"authoritative projection source {field} is invalid"
-            )
+            raise LifecycleClientError(f"authoritative projection source {field} is invalid")
     actor = _object(source.get("actor"), "authoritative projection source actor")
     if actor.get("type") != "service" or actor.get("agent_id") != AUTHORITY_ACTOR_ID:
         raise LifecycleClientError("authoritative projection source actor is invalid")
     authority_instance = _required_text(actor, "instance")
-    provenance = _object(
-        snapshot.get("provenance"), "authoritative projection provenance"
-    )
+    provenance = _object(snapshot.get("provenance"), "authoritative projection provenance")
     if provenance.get("authority") != AUTHORITY_PRODUCER:
         raise LifecycleClientError("authoritative projection provenance is invalid")
     if _required_text(provenance, "authority_instance") != authority_instance:
-        raise LifecycleClientError(
-            "authoritative projection authority instance is inconsistent"
-        )
-    correlation_id = _uuid(
-        source.get("correlation_id"), "authority snapshot correlation_id"
-    )
+        raise LifecycleClientError("authoritative projection authority instance is inconsistent")
+    correlation_id = _uuid(source.get("correlation_id"), "authority snapshot correlation_id")
     if "causation_id" not in source:
-        raise LifecycleClientError(
-            "authoritative projection source causation_id is missing"
-        )
+        raise LifecycleClientError("authoritative projection source causation_id is missing")
     causation_id = source.get("causation_id")
     if causation_id is not None:
         causation_id = _uuid(causation_id, "authority snapshot causation_id")
@@ -888,10 +801,7 @@ def _capability_context(
             and item.get("scope") == expected_scope
             and item.get("state_version") == state_version
             and isinstance(item.get("actions"), list)
-            and (
-                CAPABILITY_ACTION in item["actions"]
-                or frontier.get("action") in item["actions"]
-            )
+            and (CAPABILITY_ACTION in item["actions"] or frontier.get("action") in item["actions"])
         ),
         None,
     )
@@ -905,9 +815,7 @@ def _capability_context(
         or not isinstance(capability_version, int)
         or capability_version < 1
     ):
-        raise LifecycleClientError(
-            "authoritative capability_version must be an integer >= 1"
-        )
+        raise LifecycleClientError("authoritative capability_version must be an integer >= 1")
     return {
         "capability_id": _required_text(grant, "capability_id"),
         "capability_version": capability_version,
@@ -931,19 +839,12 @@ def _frontier_intent(frontier: dict[str, Any]) -> tuple[str, str]:
     elif action == "set_mode" and identifier.startswith("mode:"):
         target = identifier[len("mode:") :]
     else:
-        raise LifecycleClientError(
-            "frontier item cannot be mapped to a canonical Lifecycle intent"
-        )
+        raise LifecycleClientError("frontier item cannot be mapped to a canonical Lifecycle intent")
     return action, _nonempty(target, "frontier intent target")
 
 
 def _frontier_rank(item: dict[str, Any]) -> tuple[int, str]:
-    priorities = {
-        "work_item": 0,
-        "gate_resolution": 1,
-        "state_transition": 2,
-        "command": 3,
-    }
+    priorities = {"work_item": 0, "gate_resolution": 1, "state_transition": 2, "command": 3}
     return priorities.get(str(item.get("kind")), 9), str(item.get("id", ""))
 
 
@@ -956,18 +857,12 @@ def _completion_evidence(value: dict[str, Any]) -> dict[str, str]:
     value = _object(value, "completion evidence")
     expected = {"kind", "outcome", "artifact_id", "artifact_sha256", "summary"}
     if set(value) != expected:
-        raise LifecycleClientError(
-            "completion evidence must contain only the canonical fields"
-        )
+        raise LifecycleClientError("completion evidence must contain only the canonical fields")
     if value.get("kind") != "skill_completion" or value.get("outcome") != "completed":
-        raise LifecycleClientError(
-            "completion evidence must report completed skill work"
-        )
+        raise LifecycleClientError("completion evidence must report completed skill work")
     artifact_sha = _required_text(value, "artifact_sha256")
     if not SHA256.fullmatch(artifact_sha):
-        raise LifecycleClientError(
-            "artifact_sha256 must be 64 lowercase hex characters"
-        )
+        raise LifecycleClientError("artifact_sha256 must be 64 lowercase hex characters")
     summary = _required_text(value, "summary")
     if len(summary) > 500:
         raise LifecycleClientError("completion evidence summary exceeds 500 characters")
@@ -1045,9 +940,7 @@ def _semantic_digest(value: dict[str, Any]) -> str:
             allow_nan=False,
         ).encode()
     except (TypeError, ValueError) as exc:
-        raise LifecycleClientError(
-            f"semantic request must be canonical JSON: {exc}"
-        ) from exc
+        raise LifecycleClientError(f"semantic request must be canonical JSON: {exc}") from exc
     return hashlib.sha256(encoded).hexdigest()
 
 
