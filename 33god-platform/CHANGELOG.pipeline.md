@@ -5,6 +5,23 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 
 ## 2026-07-19
 
+### Lifecycle authority parity
+
+- Published and pinned Bloodbank `aacd885…`, Candystore `3c00080…`, Momo
+  `8eeff1c…`, Holocene `2beee67…`, PJangler `13be237…`, and PJangler's
+  CommonProject template `5dce335…`.
+- Removed every registered Ticket Lifecycle Client Workflow from Bloodbank,
+  Candystore, Holocene, PJangler, and CommonProject while retaining Momo's one
+  canonical source/mirror registration.
+- Defined Bloodbank as schema/transport, Candystore as audit/read projection,
+  Momo as legal-work chooser/executor, PJangler as identity/bootstrap/bindings,
+  Holocene as dashboard/renderer, and root as exact-pin/topology/acceptance/drift
+  owner. Lifecycle remains the only deterministic truth, reconcile, frontier,
+  obligation, capability-validity, and write authority.
+- Extended root drift and registry tests to reject competing workflow surfaces,
+  stale ownership language, stale Bloodbank controller inventory, and retired
+  deployment-process wording.
+
 ### Real Holocene browser action proof
 
 - Published and pinned Holocene `80d9cc8…` with semantic Lifecycle DOM
@@ -58,8 +75,8 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
   outage proof: canonical JetStream ingress, deployed-consumer ack-pending and
   PostgreSQL row blocking, atomic commit while NATS is down, durable idempotent
   redelivery, ordered outbox drain, unique Docker resources, and exact cleanup.
-- Preserved the six-way semantic ownership boundary and kept cloud render-only;
-  no root release or cloud promotion is implied.
+- Preserved the six-way semantic ownership boundary; cloud remains render-only
+  and unsupported.
 
 ## 2026-07-15
 

@@ -55,7 +55,7 @@ services would also be selected.
 | Append-only event history and Lifecycle read projections | Candystore |
 | Legal-work ranking, delegation, durable invocation execution, artifact evidence, and command intent | Momo |
 | Rendering and high-level command initiation | Holocene |
-| Process topology, pins, profiles, and release gates | 33GOD root |
+| Process topology, exact pins, profiles, acceptance, and drift | 33GOD root |
 
 All inter-service commands and events traverse Bloodbank. Momo and Holocene do
 not write Lifecycle or Candystore state directly.
@@ -79,7 +79,7 @@ and PostgreSQL container users; the isolated verifier uses mode 0444 inside a
 mode-0700 ephemeral directory and removes it after teardown. Narrow bootstrap
 identity, actor, capability, timestamp, and mode values have explicit
 `LIFECYCLE_BOOTSTRAP_*` inputs. Network and volume names are also
-caller-overridable, which lets the live gate coexist with unrelated projects.
+caller-overridable, which gives every live-gate run exact independent resources.
 `GOD_SOURCE_ROOT` defaults to the parent directory and selects the checked-out
 component sources used by Candystore and Holocene.
 
@@ -100,7 +100,7 @@ checks exact service sets, immutable registry images, Lifecycle's no-build
 invariant, fail-closed job ordering, health checks, ports, networks, storage,
 secret scope, and profile behavior.
 
-The destructive-looking acceptance work is isolated behind:
+The isolated live acceptance gate is:
 
 ```bash
 proof_dir="$(mktemp -d /tmp/33god-lifecycle-proof-XXXXXXXX)"
@@ -142,11 +142,11 @@ startup sweep with a non-mutating PostgreSQL table lock, and proves one
 idempotent reply without duplicate authoritative counts before verifying
 ordered outbox drain. No helper imports or invokes Lifecycle authority code.
 
-## Current deployment label
+## Supported scope
 
-The topology and isolated live path are implemented and verified locally. This
-branch does not promote the cloud profile, publish the root integration branch,
-or create a release tag. See
+The topology and isolated live path are implemented and verified locally. The
+hosted/cloud topology remains outside this contract, and the checked-in cloud
+profile is render-only and unsupported. See
 [Lifecycle Architecture](../docs/architecture-lifecycle.md) for semantic
 ownership and [Integration Architecture](../docs/integration-architecture.md)
 for the cross-component data flow.

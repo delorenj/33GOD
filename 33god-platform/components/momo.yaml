@@ -1,9 +1,9 @@
 id: momo
 name: Momo
-role: lifecycle-policy-client
+role: legal-work-chooser-executor
 repo: ../momo
-description: Process manager that ranks Lifecycle-legal work and durably executes exact canonical skill invocations, publishing artifact-backed evidence through Bloodbank.
-source_revision: 4c59f10460798f1ba8853b4f0b59b56ce31bacbd
+description: Process manager that chooses among Lifecycle-legal work and durably executes exact canonical skill invocations, publishing artifact-backed evidence through Bloodbank without determining truth.
+source_revision: 8eeff1ce839c3bcffc2d3943322bc1dd8ef63fee
 compose:
   files: []
   platform_projection: ../compose.yaml

@@ -6,7 +6,8 @@
 ## Authority model
 
 Executable manifests, pinned code, contracts, and tests outrank prose. Root owns
-cross-component topology and release gates; each component owns its internals.
+cross-component topology, acceptance, and drift gates; each component owns its
+internals.
 Project lifecycle authority remains separate from process deployment ownership.
 
 ```text
@@ -65,11 +66,11 @@ does not join the Lifecycle authority network.
 |---|---|---|
 | Identity/binding inputs | PJangler | Deterministic input to bootstrap/spec |
 | Lifecycle state/reconcile/frontier/obligations/grants | Lifecycle | Exact digest, dedicated PostgreSQL, sole writer |
-| Commands/events/transport | Bloodbank | Pinned `48031ee…` schemas and initialized JetStream |
+| Commands/events/transport | Bloodbank | Pinned `aacd885…` schemas and initialized JetStream |
 | Event history/read projections | Candystore | Durable consumer, replay-safe current snapshot/verdict API |
 | Prioritization/delegation/work execution | Momo | Legal frontier only, exact durable invocation consumption, pinned skill resource, artifact-backed evidence, separated rationale/intent |
-| Mission control | Holocene | Candystore-backed DOM, confirmed browser action, Bloodbank command publication, and later authoritative render |
-| Deployment/process gates | 33GOD root | Immutable pins, ordering, health, isolation, profile semantics |
+| Dashboard/rendering/high-level actions | Holocene | Candystore-backed DOM, confirmed browser action, Bloodbank command publication, and later authoritative render |
+| Topology/acceptance/drift | 33GOD root | Immutable pins, ordering, health, isolation, profile semantics |
 
 ## Failure and trust boundaries
 
@@ -96,11 +97,11 @@ does not join the Lifecycle authority network.
   authority volume and does not duplicate transition effects.
 - The cloud profile is a render-only rejection model, not a deployment target.
 
-## Current deployment label
+## Supported scope
 
 The normalized local topology and isolated live acceptance path are implemented.
-The host has not been promoted to a cloud topology, this worker branch is not a
-release branch, and no release tag is created by this slice.
+The hosted/cloud topology remains outside this contract; the checked-in cloud
+profile is render-only and unsupported.
 
 See [Lifecycle Architecture](./architecture-lifecycle.md),
 [Deployment Guide](./deployment-guide.md), and

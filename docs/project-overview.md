@@ -12,7 +12,7 @@
 Lifecycle slice integrates Bloodbank, Lifecycle, Candystore, Momo, Holocene,
 and PJangler's identity boundary.
 They exchange CloudEvents over NATS/Dapr, persist an audit read model, expose a
-local mission-control UI/API, and provision projects and agents.
+local operator dashboard/API, and bootstrap project and agent identity/bindings.
 
 Root owns the normalized Compose projection and semantic/live gates. Component
 sources remain authoritative and are pinned by root gitlinks. Lifecycle owns
@@ -26,8 +26,8 @@ writes; root owns only the service topology.
 | Bloodbank | Event names, schemas, NATS streams, Dapr transport | Default NATS JetStream, one-shot stream init, Dapr placement |
 | Lifecycle | Deterministic project lifecycle authority | Dedicated PostgreSQL, one-shot migrate/bootstrap, exact-digest serve |
 | Candystore | Durable event history, query/session APIs, audit UI | Exactly one default PostgreSQL/app/daprd deployment |
-| Holocene | Fleet observation and privileged host control | Default web plus preflight; API remains `holocene-api.service` on host port 4000 |
-| PJangler | Registry, parity, recipes, templates, CLI/MCP | Zero-replica CLI and stdio MCP definitions for explicit `run` in `tools`/`full` |
+| Holocene | Dashboard/renderer and high-level operator actions | Default web plus preflight; API remains `holocene-api.service` on host port 4000 |
+| PJangler | Project identity, bootstrap, provider-neutral bindings, and CommonProject templates | Zero-replica CLI and stdio MCP definitions for explicit `run` in `tools`/`full` |
 
 The target uses loopback, caller-overridable published ports, four external
 Docker networks, and six volume identities. It excludes Bloodbank's legacy

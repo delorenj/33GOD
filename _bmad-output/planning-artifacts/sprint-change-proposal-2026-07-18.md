@@ -34,7 +34,7 @@ The six supporting ownership boundaries remain independent:
 | Append-only event history and read projections | Candystore |
 | Legal-work ranking, delegation, evidence, and invocation intent | Momo |
 | Rendering and high-level command initiation | Holocene |
-| Process topology, pins, profiles, and release gates | 33GOD root |
+| Process topology, exact pins, profiles, acceptance, and drift | 33GOD root |
 
 Root process ownership is not lifecycle semantic ownership. Momo/Hermes and
 Lifecycle do not drive the same reconcile loop.
@@ -48,7 +48,7 @@ Lifecycle do not drive the same reconcile loop.
 - Lifecycle runtime image:
   `ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210`
 - Bloodbank contract/transport revision:
-  `48031ee39c238b9d4715b81b74076635235f96d5`
+  `aacd88564ea299924b8298165933ba821640bdba`
 - Lifecycle authority/integration revision:
   `cda59658bef6d586c8aa01cacd88bc4e3ee867e0`
 
@@ -61,7 +61,7 @@ must succeed before serve.
 ### Candystore read model
 
 Candystore revision
-`b1f6fda3739d095535b326cc89b9a6c7823f63d8` provides:
+`3c00080446bb9d4cb55c670477983306abcfe7ce` provides:
 
 - an operationally durable lifecycle consumer;
 - replay receipts and idempotent/version-ordered projection updates, including
@@ -76,7 +76,7 @@ Candystore exposes no operational Lifecycle mutation endpoint.
 ### Momo obligation-to-skill seam
 
 Momo revision
-`4c59f10460798f1ba8853b4f0b59b56ce31bacbd`:
+`8eeff1ce839c3bcffc2d3943322bc1dd8ef63fee`:
 
 - consumes authoritative snapshots/frontier/obligations;
 - ranks only legal frontier commands while servicing pending obligations as
@@ -98,7 +98,7 @@ direct Lifecycle, Candystore, provider, or local-truth write path.
 ### Holocene client surface
 
 Holocene revision
-`80d9cc8be81eebe4476304a4b186da445731a5ab`:
+`2beee67b433f1bd66abf7bce552d90e89413ae27`:
 
 - reads Candystore's Lifecycle projection;
 - renders identity, versions, provenance/freshness, status/health/phase/
@@ -123,7 +123,7 @@ a unique Compose project, caller-selected free ports, and uniquely named
 networks/volumes. It proves:
 
 1. Holocene offline does not halt Lifecycle truth progression.
-2. Momo offline does not corrupt or rewrite truth.
+2. Lifecycle remains the sole writer while Momo is absent.
 3. Lifecycle restart catches up committed observations/outbox work
    deterministically without duplicate transition effects.
 4. Stale `expected_state_version` is rejected without mutation.
@@ -145,7 +145,7 @@ isolated. Versioned grants and real causal lineage flow authority-to-client
 through Momo invocation/completion and Holocene render/command seams. Cleanup
 targets only resources created by that unique run.
 
-## 4. Publication record
+## 4. Initial vertical-slice publication record
 
 Component feature refs are published before the root gitlink update:
 
@@ -160,13 +160,29 @@ Component feature refs are published before the root gitlink update:
 Each ref was fetched and checked out from anonymous credential-disabled HTTPS,
 matched its exact revision, and contained its approved component base.
 
-## 5. Current versus remaining work
+## 5. Current authority-parity publication
+
+The authority-parity pass publishes and pins the exact current component refs:
+
+| Component | Branch | Revision |
+|---|---|---|
+| Bloodbank | `feature/theseus-bloodbank-authority-parity-20260719` | `aacd88564ea299924b8298165933ba821640bdba` |
+| Candystore | `feature/theseus-candystore-authority-parity-20260719` | `3c00080446bb9d4cb55c670477983306abcfe7ce` |
+| Momo | `feature/theseus-momo-authority-parity-20260719` | `8eeff1ce839c3bcffc2d3943322bc1dd8ef63fee` |
+| Holocene | `feature/theseus-holocene-authority-parity-20260719` | `2beee67b433f1bd66abf7bce552d90e89413ae27` |
+| CommonProject | `feature/theseus-commonproject-authority-parity-20260719` | `5dce335d10b44692414a5c67f12684ecc4fa5a41` |
+| PJangler | `feature/PJAN-27-theseus-authority-parity-20260719` | `13be237eaa454f22525dd9b4e5dd804b4516c212` |
+
+The non-Momo component trees and manifests contain no registered Ticket
+Lifecycle Client Workflow. Momo retains the single canonical source and mirror;
+it selects and executes legal work but never determines lifecycle truth.
+
+## 6. Current scope
 
 This proposal's local Lifecycle authority slice is complete. Current invariants
-remain release gates: exactly one lifecycle writer, Bloodbank-only
+remain acceptance and drift gates: exactly one lifecycle writer, Bloodbank-only
 inter-service traffic, durable read-side history, legal-frontier-only Momo
 selection, and renderer-only Holocene behavior.
 
-The cloud profile, production rollout, root integration publication, and final
-release tag are separate future decisions. They are not implied by local
-Compose or this implementation record.
+The hosted/cloud topology is outside this local contract. The checked-in cloud
+profile remains render-only and unsupported.

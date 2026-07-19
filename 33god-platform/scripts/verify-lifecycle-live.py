@@ -308,7 +308,7 @@ class Harness:
             "project": self.project,
             "lifecycle_id": self.lifecycle_id,
             "image": LIFECYCLE_IMAGE,
-            "bloodbank_commit": "48031ee39c238b9d4715b81b74076635235f96d5",
+            "bloodbank_commit": "aacd88564ea299924b8298165933ba821640bdba",
             "proof_dir": str(self.proof_dir) if self.proof_dir is not None else None,
             "invariants": {},
             "seams": {},

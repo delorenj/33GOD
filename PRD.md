@@ -2,7 +2,7 @@
 
 Status: Integrated local Compose stack live
 Owner: 33GOD Director
-Last updated: July 18, 2026
+Last updated: July 19, 2026
 
 ## Summary
 
@@ -102,8 +102,13 @@ Current artifacts include:
 
 The integrated model pins Lifecycle to
 `ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210`
-with no build key. Bloodbank is pinned at
-`48031ee39c238b9d4715b81b74076635235f96d5`; clients reuse its canonical
+with no build key. Root gitlinks and component manifests pin Bloodbank at
+`aacd88564ea299924b8298165933ba821640bdba`, Candystore at
+`3c00080446bb9d4cb55c670477983306abcfe7ce`, Momo at
+`8eeff1ce839c3bcffc2d3943322bc1dd8ef63fee`, and Holocene at
+`2beee67b433f1bd66abf7bce552d90e89413ae27`. PJangler is pinned at
+`13be237eaa454f22525dd9b4e5dd804b4516c212`, including CommonProject at
+`5dce335d10b44692414a5c67f12684ecc4fa5a41`. Clients reuse Bloodbank's canonical
 snapshot-v3 capability/obligation-occurrence and completion-evidence-v2
 contracts instead of defining a competing contract.
 
@@ -147,8 +152,8 @@ The platform baseline checkpoint used for this handoff is
 | Candystore | GO        | Remote tag peels to `48e05c3`    | `DELINKED_GREEN`    | Runtime is delinked from Git. Remote tag exists. Existing `pjangler audit` exception is scoped to `hermes.pm-scaffold`.                                                       |
 | Holocene   | GO/YELLOW | Local annotated tag at `800a604` | `IGNORE_ALL_YELLOW` | Focused runtime-drift verification only, not full suite green. PM runtime remains tracked as a submodule with `.gitmodules ignore = all`. Tag is local-only.                  |
 
-The baseline is good enough to proceed with platform-stack planning, but it is
-not a clean release train yet. Bloodbank and Holocene still need runtime
+The baseline is retained as historical context and is not the current
+authority-parity pin set. Bloodbank and Holocene still need runtime
 delinking or an explicit migration plan from tracked runtime submodules to
 mounted runtime volumes.
 
@@ -178,8 +183,8 @@ source with optional hosted subscription access.
 This PRD does not require replacing every legacy workflow in the first slice.
 Legacy projects can be backfilled in stages.
 
-This slice does not promote the render-only cloud profile, publish the root
-integration branch, or create a release tag.
+This slice does not define or run a hosted/cloud topology. The `cloud` profile
+remains render-only and unsupported.
 
 ## Functional requirements
 
@@ -311,7 +316,8 @@ Acceptance criteria:
 
 ### FR9. Mission control
 
-Holocene must become the operator-facing control plane for platform health.
+Holocene must be the operator-facing dashboard/renderer and high-level action
+surface for platform health.
 
 Acceptance criteria:
 
@@ -427,7 +433,7 @@ These issues are the first things the director must triage.
 5. **Resolved 2026-07-15:** the root projection and semantic validator model the
    integrated local stack; root Compose owns its lifecycle.
 
-6. Reconcile root repo dirt before treating `33GOD` itself as a release branch.
+6. Reconcile root repo dirt before publishing exact component and root pins.
 
 7. **Resolved 2026-07-18:** the standalone Lifecycle authority, dedicated
    persistence, outbox/contract path, Candystore projection, Momo seam,

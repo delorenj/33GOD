@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -127,6 +130,216 @@ class BloodbankApiContractDriftTests(unittest.TestCase):
         self.assertTrue(
             any("client lifecycle authority overclaim" in item for item in errors)
         )
+
+
+class AuthorityParityDriftTests(unittest.TestCase):
+    @staticmethod
+    def copy_momo_workflow_fixture(root: Path) -> None:
+        for relative in (
+            Path("_bmad/custom/workflows/ticket-lifecycle"),
+            Path("_bmad/_config/custom/custom/workflows/ticket-lifecycle"),
+        ):
+            shutil.copytree(ROOT / "momo" / relative, root / "momo" / relative)
+        config = root / "momo/_bmad/_config"
+        config.mkdir(parents=True, exist_ok=True)
+        for manifest in ("workflow-manifest.csv", "files-manifest.csv"):
+            shutil.copy2(ROOT / "momo/_bmad/_config" / manifest, config / manifest)
+
+    def test_current_authority_json_artifacts_are_scanned(self) -> None:
+        for relative in check_doc_drift.CURRENT_AUTHORITY_JSON_ARTIFACTS:
+            current = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertEqual(
+                check_doc_drift.authority_parity_text_errors(relative, current),
+                [],
+            )
+        stale = current.replace(
+            "Holocene web dashboard/renderer",
+            "Holocene web/control plane",
+        )
+        self.assertNotEqual(stale, current)
+        errors = check_doc_drift.authority_parity_text_errors(
+            "docs/project-scan-report.json",
+            stale,
+        )
+        self.assertTrue(any("Holocene control-plane role" in item for item in errors))
+
+    def test_current_deployment_artifacts_have_no_rejected_ceremony(self) -> None:
+        errors: list[str] = []
+        for relative in check_doc_drift.CURRENT_DEPLOYMENT_ARTIFACTS:
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            errors.extend(check_doc_drift.authority_parity_text_errors(relative, text))
+        self.assertEqual(errors, [])
+
+    def test_holocene_control_plane_labels_are_rejected(self) -> None:
+        for stale in (
+            "Holocene is the 33GOD control plane.",
+            "role: control-plane-dashboard",
+            "Control plane: Holocene and platform manifests.",
+        ):
+            with self.subTest(stale=stale):
+                errors = check_doc_drift.authority_parity_text_errors(
+                    "33god-platform/components/holocene.yaml", stale
+                )
+                self.assertTrue(
+                    any("Holocene control-plane role" in item for item in errors)
+                )
+
+    def test_momo_shared_reconcile_and_truth_claims_are_rejected(self) -> None:
+        stale_claims = {
+            "Momo and Lifecycle share one reconcile loop.": "shared Momo reconcile loop",
+            "Momo shares Lifecycle's reconcile loop.": "shared Momo reconcile loop",
+            "Momo determines lifecycle truth.": "Momo determines lifecycle truth",
+        }
+        for stale, label in stale_claims.items():
+            with self.subTest(stale=stale):
+                errors = check_doc_drift.authority_parity_text_errors(
+                    "docs/integration-architecture.md", stale
+                )
+                self.assertTrue(any(label in item for item in errors))
+
+    def test_non_lifecycle_component_authority_roles_are_rejected(self) -> None:
+        for stale in (
+            "Candystore is the lifecycle writer.",
+            "PJangler provides a lifecycle engine.",
+            "Lifecycle authority is Holocene.",
+            "| lifecycle writer | Candystore |",
+        ):
+            with self.subTest(stale=stale):
+                errors = check_doc_drift.authority_parity_text_errors(
+                    "33god-platform/components/example.yaml",
+                    stale,
+                )
+                self.assertTrue(
+                    any(
+                        "non-Lifecycle component authority role" in item
+                        for item in errors
+                    )
+                )
+
+    def test_rejected_deployment_ceremony_phrases_are_rejected(self) -> None:
+        stale_phrases = (
+            "safe coexistence with unrelated projects",
+            "Momo-offline safety",
+            "## Promotion boundary",
+            "requires a separate owner decision",
+            "destructive-looking acceptance work",
+            "root integration publication",
+            "create a release tag",
+        )
+        for stale in stale_phrases:
+            with self.subTest(stale=stale):
+                errors = check_doc_drift.authority_parity_text_errors(
+                    "docs/deployment-guide.md", stale
+                )
+                self.assertTrue(errors)
+
+    def test_current_ticket_lifecycle_surfaces_are_momo_only(self) -> None:
+        self.assertEqual(check_doc_drift.ticket_lifecycle_surface_errors(ROOT), [])
+
+    def test_momo_source_mirror_byte_drift_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_momo_workflow_fixture(root)
+            mirror = (
+                root
+                / "momo/_bmad/_config/custom/custom/workflows/ticket-lifecycle/workflow.md"
+            )
+            mirror.write_text(
+                mirror.read_text(encoding="utf-8") + "\nbyte drift\n",
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("source/mirror bytes differ" in item for item in errors))
+
+    def test_momo_files_manifest_hash_drift_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_momo_workflow_fixture(root)
+            source = root / "momo/_bmad/custom/workflows/ticket-lifecycle/workflow.md"
+            expected_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+            manifest = root / "momo/_bmad/_config/files-manifest.csv"
+            manifest.write_text(
+                manifest.read_text(encoding="utf-8").replace(
+                    expected_hash, "0" * 64, 1
+                ),
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("files-manifest hash differs" in item for item in errors))
+
+    def test_registered_non_momo_ticket_lifecycle_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_workflow = root / "momo/_bmad/custom/workflows/ticket-lifecycle"
+            mirror_workflow = (
+                root
+                / "momo/_bmad/_config/custom/custom/workflows/ticket-lifecycle"
+            )
+            source_workflow.mkdir(parents=True)
+            mirror_workflow.mkdir(parents=True)
+            (source_workflow / "workflow.md").write_text("client", encoding="utf-8")
+            (mirror_workflow / "workflow.md").write_text("client", encoding="utf-8")
+            momo_config = root / "momo/_bmad/_config"
+            (momo_config / "workflow-manifest.csv").write_text(
+                "ticket-lifecycle\n", encoding="utf-8"
+            )
+            (momo_config / "files-manifest.csv").write_text(
+                "custom/workflows/ticket-lifecycle/workflow.md\n", encoding="utf-8"
+            )
+            candystore_config = root / "candystore/_bmad/_config"
+            candystore_config.mkdir(parents=True)
+            (candystore_config / "workflow-manifest.csv").write_text(
+                "ticket-lifecycle\n", encoding="utf-8"
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(
+                any("candystore registers non-Momo" in item for item in errors)
+            )
+
+    def test_pjangler_commonproject_lifecycle_surfaces_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            commonproject = root / "pjangler/templates/commonproject"
+            workflow = commonproject / "_bmad/custom/workflows/ticket-lifecycle"
+            workflow.mkdir(parents=True)
+            (workflow / "workflow.md").write_text("engine", encoding="utf-8")
+            config = commonproject / "_bmad/_config"
+            config.mkdir(parents=True)
+            (config / "workflow-manifest.csv").write_text(
+                "ticket-lifecycle\n", encoding="utf-8"
+            )
+            command = (
+                commonproject
+                / ".opencode/command/bmad-custom-ticket-lifecycle.md"
+            )
+            command.parent.mkdir(parents=True)
+            command.write_text("command", encoding="utf-8")
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(
+                any(
+                    "pjangler/templates/commonproject retains non-Momo" in item
+                    for item in errors
+                )
+            )
+            self.assertTrue(
+                any(
+                    "pjangler/templates/commonproject registers non-Momo" in item
+                    for item in errors
+                )
+            )
+            self.assertTrue(any("command surface" in item for item in errors))
+
+    def test_stale_bloodbank_live_controller_inventory_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            bloodbank = root / "bloodbank"
+            bloodbank.mkdir()
+            (bloodbank / "README.md").write_text(
+                "| `services/` | heartbeat, lifecycle controller, agent hooks |\n",
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.bloodbank_live_inventory_errors(root)
+            self.assertTrue(any("README lists a live" in item for item in errors))
 
 
 if __name__ == "__main__":

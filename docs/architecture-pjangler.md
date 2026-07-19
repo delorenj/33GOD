@@ -2,7 +2,13 @@
 
 ## Executive Summary
 
-PJangler is a host-local provisioning control plane with a Commander CLI and stdio MCP server. Its reliable core is registry/project projection, parity detection/migration, CommonProject rendering, and recipe orchestration. Several “live” and safe-default claims exceed implementation behavior, and generated Bloodbank integration is transitional. PJangler owns project/bootstrap identity inputs, not operational lifecycle truth.
+PJangler is a host-local project-identity, bootstrap, and provider-binding tool
+with a Commander CLI and stdio MCP server. Its reliable core is
+registry/project projection, parity detection/migration, CommonProject
+rendering, and recipe orchestration. Several “live” and safe-default claims
+exceed implementation behavior, and generated Bloodbank integration is
+transitional. PJangler owns project/bootstrap identity inputs, never
+operational lifecycle truth.
 
 ## Technology Stack
 

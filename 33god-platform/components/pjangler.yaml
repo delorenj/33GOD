@@ -1,15 +1,17 @@
 id: pjangler
 name: PJangler
-role: provisioning-control-plane
+role: project-identity-bootstrap-bindings
 repo: ../pjangler
-description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects and agents.
+description: Project identity, bootstrap, and provider-neutral binding CLI/MCP tooling for 33GOD projects and agents.
+source_revision: 13be237eaa454f22525dd9b4e5dd804b4516c212
+commonproject_revision: 5dce335d10b44692414a5c67f12684ecc4fa5a41
 compose:
   files: []
   platform_projection: ../compose.yaml
   services: [pjangler-cli, pjangler-mcp]
   profiles: [tools, full]
   state: validated-target-not-live-cutover
-  ownership: Root owns the narrow tool projection; PJangler owns CLI and stdio MCP behavior.
+  ownership: Root owns the narrow tool projection; PJangler owns identity/bootstrap/binding CLI and stdio MCP behavior only.
   execution: run-only-zero-replicas
   listeners: none
 health:
@@ -25,5 +27,5 @@ changelog:
   topics: [project-registry, provisioning, templates, mcp]
 public_card:
   title: Project Factory
-  promise: Reproducible project and agent provisioning from one registry.
+  promise: Reproducible project identity, bootstrap, and provider bindings from one registry.
 backfills: []

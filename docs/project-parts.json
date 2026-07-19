@@ -25,7 +25,7 @@
       "name": "Holocene",
       "root_path": "holocene",
       "project_type_id": "web",
-      "role": "mission-control-and-host-control-plane",
+      "role": "dashboard-renderer-and-high-level-actions",
       "languages": ["TypeScript", "TSX"]
     },
     {
@@ -33,7 +33,7 @@
       "name": "PJangler",
       "root_path": "pjangler",
       "project_type_id": "cli",
-      "role": "project-and-agent-provisioning-control-plane",
+      "role": "project-identity-bootstrap-and-bindings",
       "languages": ["TypeScript", "Python", "Shell", "Jinja"]
     }
   ],

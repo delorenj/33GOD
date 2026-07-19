@@ -41,7 +41,7 @@ profile remains render-only and unsupported.
 | Candystore | Append-only history and read projections |
 | Momo | Business ranking/delegation, legal-work execution, and evidence; never lifecycle truth |
 | Holocene | Rendering and high-level action invocation only |
-| Root platform | Process topology, pins, profiles, validation, and release gates |
+| Root platform | Process topology, exact pins, profiles, acceptance, and drift |
 
 Live manifests, code, and tests outrank prose. Root documentation governs
 cross-component relationships; component repositories govern their internals.

@@ -135,9 +135,9 @@ following additional product boundaries:
   by PJangler; it generates projects rather than running as a platform daemon.
 - **Voxxy:** independently deployable voice service with CPU core, optional GPU
   engines, HTTP/MCP contracts, PostgreSQL dependency, and persistent media.
-- **PJangler:** project/fleet provisioning control plane exposed through CLI and
-  stdio MCP; it requires reproducible packaging but not an always-running HTTP
-  service.
+- **PJangler:** project identity, bootstrap, and provider-neutral bindings
+  exposed through CLI and stdio MCP; it requires reproducible packaging but not
+  an always-running HTTP service.
 - **Skillex:** a possible external capability-distribution dependency. Its
   inclusion in the runtime stack is not yet justified.
 
@@ -206,8 +206,8 @@ does not need to assume a regulated multi-tenant enterprise environment.
   projection, not the operational lifecycle writer.
 - Holocene remains the operator-facing renderer and high-level command surface;
   command results come from Lifecycle.
-- PJangler remains the deterministic project and fleet provisioning/identity
-  authority; lifecycle-looking status in its registry is a projection.
+- PJangler remains the deterministic project identity, bootstrap, and binding
+  input owner; lifecycle-looking status in its registry is a projection.
 - CommonProject is the mandatory base project-scaffold convention consumed by
   PJangler, not a competing bootstrap mechanism.
 - Hermes Template owns generated agent-role structure; mutable runtime state must
@@ -245,7 +245,7 @@ does not need to assume a regulated multi-tenant enterprise environment.
    that can mutate project flow; fleet contracts then precede Momo autonomy.
 6. **Event consistency:** lifecycle commands/events and Momo decision events use
    distinct Bloodbank contracts and remain queryable through Candystore.
-7. **Control-plane visibility:** Holocene renders lifecycle state version,
+7. **Dashboard visibility:** Holocene renders lifecycle state version,
    provenance, observation freshness, frontier, obligations, blockers/gates,
    command result, component version, and readiness without recomputing truth.
 8. **Standalone compatibility:** CommonProject and Voxxy releases cannot depend
@@ -471,7 +471,7 @@ contract or competing reconciler is permitted.
   is exercised only as
   `ghcr.io/delorenj/lifecycle@sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210`.
 - Bloodbank is pinned at
-  `48031ee39c238b9d4715b81b74076635235f96d5`; its canonical snapshot v3
+  `aacd88564ea299924b8298165933ba821640bdba`; its canonical snapshot v3
   capability/obligation-occurrence contract and completion-evidence v2 define
   the exact wire path used by authority and clients.
 - Root Compose runs dedicated Lifecycle PostgreSQL, one-shot migration,
@@ -511,7 +511,7 @@ contract or competing reconciler is permitted.
 | Durable event history/read models | Candystore | Clients query projections; Candystore never writes lifecycle state |
 | Business prioritization/delegation | Momo | Submit intent; never calculate or persist lifecycle truth |
 | UI/operations | Holocene | Render snapshots, confirm/click high-level browser actions, and observe later results; never infer results |
-| Integrated deployment process | 33GOD root | Run exactly one digest-pinned lifecycle authority process |
+| Process topology and acceptance/drift | 33GOD root | Run exactly one digest-pinned lifecycle authority process and enforce component pins |
 
 ### Current interaction
 

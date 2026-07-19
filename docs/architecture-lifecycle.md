@@ -12,7 +12,7 @@ immutable runtime image
 - Image source and gitlink revision:
   `cda59658bef6d586c8aa01cacd88bc4e3ee867e0`
 - Bloodbank contract revision:
-  `48031ee39c238b9d4715b81b74076635235f96d5`
+  `aacd88564ea299924b8298165933ba821640bdba`
 
 Root Compose references only the immutable digest. It never rebuilds Lifecycle
 and has no Lifecycle build or local-image substitution.
@@ -35,7 +35,7 @@ The surrounding ownership split is:
 | Append-only event history and read projections | Candystore |
 | Legal-work ranking, delegation, evidence, and invocation intent | Momo |
 | Read rendering and high-level command initiation | Holocene |
-| Process topology, immutable pins, profiles, and gates | 33GOD root |
+| Process topology, immutable pins, profiles, acceptance, and drift | 33GOD root |
 
 Database location never transfers semantic ownership. Lifecycle has an isolated
 PostgreSQL authority database; Candystore has separate storage and credentials.
@@ -116,7 +116,7 @@ The isolated gate in
 with unique ports, networks, and volumes. It proves:
 
 1. Holocene offline does not halt Lifecycle transitions.
-2. Momo offline does not corrupt or rewrite truth.
+2. Lifecycle remains the sole writer while Momo is absent.
 3. Lifecycle restart catches up committed observations/outbox work without a
    duplicate transition effect.
 4. Stale `expected_state_version` is rejected without mutation.
@@ -147,6 +147,6 @@ resources allocated by the run.
 ## Current versus future
 
 Current: the local authority topology, three client seams, immutable image pin,
-semantic gates, and isolated failure matrix are implemented. Future: a separate
-hosted/cloud design, production rollout decision, release promotion, and any
-additional lifecycle domains. The cloud profile is intentionally unsupported.
+semantic gates, and isolated failure matrix are implemented. A hosted/cloud
+design and any additional lifecycle domains are outside this local contract.
+The cloud profile is intentionally unsupported.
