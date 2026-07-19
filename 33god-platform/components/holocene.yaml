@@ -2,8 +2,8 @@ id: holocene
 name: Holocene
 role: control-plane-dashboard
 repo: ../holocene
-description: Mission-control dashboard plus Candystore-backed Lifecycle read/command surface.
-source_revision: 544ca73f4cc75ef98956873b11085216af12a297
+description: Mission-control dashboard plus real-browser Lifecycle read/action surface backed by Candystore projections and Bloodbank commands.
+source_revision: 80d9cc8be81eebe4476304a4b186da445731a5ab
 compose:
   files:
     - ../holocene/compose.yml
@@ -21,7 +21,7 @@ source_of_truth:
   - ../holocene/packages
   - ../holocene/docs
 changelog:
-  topics: [dashboard, status, live-data, tooling-health, lifecycle-client]
+  topics: [dashboard, status, live-data, tooling-health, lifecycle-client, lifecycle-browser-proof]
 public_card:
   title: Mission Control
   promise: Live operational view of agents, events, and platform health.

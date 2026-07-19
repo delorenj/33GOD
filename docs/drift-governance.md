@@ -92,6 +92,7 @@ configuration/render inspection model.
 | LIFE-BOUNDARY-01 | 2026-07-18 | Standalone Lifecycle is the only operational writer; Momo and Holocene use bounded Bloodbank command clients |
 | LIFE-OUTBOX-01 | 2026-07-18 | Exact immutable image passed NATS outage/recovery with committed state, ordered outbox, zero pending rows, and eventual publication |
 | LIFE-SCHEMA-01 | 2026-07-18 | Bloodbank validation passed at `48031ee…`; exact versioned grants, occurrence-bound completion evidence, client command envelopes, snapshot v3, and Lifecycle replies were exercised |
+| LIFE-HOLO-BROWSER-01 | 2026-07-19 | Holocene `80d9cc8…` owns a real Chromium confirmation/click/POST/202/render proof; the root harness independently verifies its receipt and cannot author the successful action |
 
 Resolving `ROOT-COMPOSE-01` means an integrated local stack exists.
 `ROOT-CLOUD-01` remains a separate hosted-design concern.

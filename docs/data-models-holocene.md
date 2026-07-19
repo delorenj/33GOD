@@ -9,6 +9,11 @@ lifecycle ID, spec/state version, provenance, freshness, legal
 frontier, obligations, and command result. Local React state must never become
 the source of a lifecycle transition.
 
+The machine browser receipt is proof data, not lifecycle state. It links the
+rendered frontier/actor/grant/version and confirmation/click to the observed
+POST/202 broker receipt, then links those command identities to the later
+rendered Lifecycle state/version and Candystore causality/verdict.
+
 ## Fleet Projection
 
 Fleet entries combine Hermes registry identity, project/role metadata, systemd unit state, runtime activity files, logs, and optional Candystore event history. Active work tracks status, issue/session/worktree, heartbeat/activity timestamps, last runner result, evidence paths, and age.

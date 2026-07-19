@@ -46,7 +46,7 @@ COMPONENT_REVISIONS = {
     "lifecycle": "cda59658bef6d586c8aa01cacd88bc4e3ee867e0",
     "candystore": "b1f6fda3739d095535b326cc89b9a6c7823f63d8",
     "momo": "4c59f10460798f1ba8853b4f0b59b56ce31bacbd",
-    "holocene": "544ca73f4cc75ef98956873b11085216af12a297",
+    "holocene": "80d9cc8be81eebe4476304a4b186da445731a5ab",
 }
 LIFECYCLE_DIGEST_REFERENCE = re.compile(
     r"ghcr\.io/delorenj/lifecycle@sha256:[0-9a-f]{64}"

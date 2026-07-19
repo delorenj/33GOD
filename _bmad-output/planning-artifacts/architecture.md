@@ -484,7 +484,10 @@ contract or competing reconciler is permitted.
   skill references, and separates rationale from invocation/evidence/command
   intent.
 - Holocene renders the Candystore projection and submits complete high-level
-  commands through Bloodbank without local lifecycle mutation.
+  commands through Bloodbank without local lifecycle mutation. Its reusable
+  Chromium proof reads exact action identity from semantic DOM state, accepts
+  the matching confirmation, records the real browser POST/202 receipt, and
+  waits for the later authoritative state/version/causality/verdict render.
 - The isolated live matrix passes all seven offline, restart, stale-version,
   capability, and PostgreSQL persistence invariants. Its outage proof publishes
   through `BLOODBANK_COMMANDS`, observes the deployed durable's ack-pending
@@ -507,7 +510,7 @@ contract or competing reconciler is permitted.
 | Commands/events/schema/transport | Bloodbank | Lifecycle publishes/consumes only registered canonical contracts |
 | Durable event history/read models | Candystore | Clients query projections; Candystore never writes lifecycle state |
 | Business prioritization/delegation | Momo | Submit intent; never calculate or persist lifecycle truth |
-| UI/operations | Holocene | Render snapshots and submit high-level commands; never infer results |
+| UI/operations | Holocene | Render snapshots, confirm/click high-level browser actions, and observe later results; never infer results |
 | Integrated deployment process | 33GOD root | Run exactly one digest-pinned lifecycle authority process |
 
 ### Current interaction
@@ -524,9 +527,9 @@ observations/evidence ------> | deterministic reconcile
                    Candystore history/read models
                          |                 |
                          v                 v
-                  Momo reads          Holocene renders
-                  frontier, picks     state/provenance
-                  legal work          and sends command
+                  Momo reads          Holocene browser renders
+                  frontier, picks     state/provenance, confirms/
+                  legal work          clicks, then observes result
                          \                 /
                           -- intent/command --> Lifecycle validates
 ```

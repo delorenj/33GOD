@@ -113,8 +113,8 @@ Validation state as of this handoff:
 - `python3 33god-platform/scripts/platform.py components list`: passes.
 - `python3 33god-platform/scripts/platform.py backfills check`: passes.
 - Candidate default, `tools`, `full`, and `cloud` renders pass.
-- Candidate semantic validation and all 38 platform tests pass against the
-  populated source root.
+- Candidate semantic validation and the platform suite, including real-browser
+  anti-synthetic gates, pass against the populated source root.
 - The root documentation drift gate invokes the candidate validator with
   explicit `GOD_SOURCE_ROOT` while preserving all previous parity checks.
 - The isolated live gate passes all seven Lifecycle offline/restart/outage/
@@ -125,7 +125,9 @@ Validation state as of this handoff:
   occurrence-isolated obligation evidence,
   authority-spoof rejection, versioned capability and causal-lineage flow,
   true late-subscriber replay, canonical duplicate integrity, and the
-  Candystore, Momo, and Holocene seams.
+  Candystore, Momo, and Holocene seams. The Holocene seam is a real Chromium
+  confirmation/click/browser-POST proof whose receipt is independently checked
+  against the later Lifecycle and Candystore outcome.
 
 Cloud remains blocked. Its profile exists only to render the unsupported
 local-bind model and rejection gate; it must never be used with `docker compose
@@ -460,7 +462,8 @@ Remove the biggest sources of daily drift.
   migrate/bootstrap/serve ordering with the immutable image digest.
 - Bloodbank carries canonical contracts; Candystore durably projects events.
 - Momo invokes only legal frontier work and Holocene renders/commands without
-  local truth.
+  local truth. Holocene's successful live seam is driven through the rendered
+  browser control and completes only after the authority-owned result renders.
 - The isolated failure matrix proves offline independence, restart/idempotency,
   stale-version and capability rejection, NATS recovery/order, and PostgreSQL
   persistence.

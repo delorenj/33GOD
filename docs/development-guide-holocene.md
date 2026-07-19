@@ -16,9 +16,13 @@ pnpm install --frozen-lockfile
 pnpm dev
 pnpm build
 pnpm typecheck
+pnpm test
+pnpm lint
 ```
 
-`pnpm lint` and `pnpm test` currently exercise no-op package scripts, not substantive lint/tests. CI also calls nonexistent scripts and is not a reliable gate.
+Lifecycle packages and the web app have substantive client, API, helper, and
+component tests; some unrelated workspace package lint/test scripts remain
+message-only stubs. Run the full workspace commands plus the production build.
 
 ## API Workflow
 
@@ -41,6 +45,16 @@ docker logs --tail 100 holocene-web
 ```
 
 The production container bind-mounts source and rebuilds on start, which updates generated state in the checkout.
+
+## Lifecycle Browser Proof
+
+With the Holocene API/web and the isolated Lifecycle/Candystore/Bloodbank stack
+running, invoke the reusable proof through the root live harness. The script
+itself is `scripts/prove-lifecycle-browser.mjs`; it requires an expected current
+frontier and writes a machine JSON receipt plus desktop/mobile screenshots.
+Never substitute a Playwright CLI screenshot, a harness-authored success POST,
+or a mocked browser route: the contract requires the real confirmation, click,
+request/response, and later authoritative render.
 
 ## Required Local Configuration
 

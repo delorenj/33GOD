@@ -19,13 +19,17 @@ path is implemented and locally verified with:
 - durable Candystore Lifecycle projections;
 - bounded Momo legal-work execution with retry-stable, artifact-backed
   completion publication and PubAck-before-ACK; and
-- a Candystore-backed Holocene read/command surface.
+- a Candystore-backed Holocene read/action surface with real Chromium
+  confirmation, click, browser POST/202 capture, authoritative rendered
+  outcome, and desktop/mobile proof images.
 
 The isolated acceptance gate proves the seven offline, restart, stale-version,
 capability, broker-recovery, ordering, and persistence invariants plus
 pending-obligation evidence, versioned grants, pre-start durable replay, and
-canonical conflicting-duplicate integrity. The cloud profile remains
-render-only and unsupported.
+canonical conflicting-duplicate integrity. Its Holocene phase verifies the
+machine-readable browser receipt independently against Lifecycle and
+Candystore; the harness does not submit the successful action. The cloud
+profile remains render-only and unsupported.
 
 ## Ownership
 

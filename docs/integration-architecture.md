@@ -68,7 +68,7 @@ does not join the Lifecycle authority network.
 | Commands/events/transport | Bloodbank | Pinned `48031ee…` schemas and initialized JetStream |
 | Event history/read projections | Candystore | Durable consumer, replay-safe current snapshot/verdict API |
 | Prioritization/delegation/work execution | Momo | Legal frontier only, exact durable invocation consumption, pinned skill resource, artifact-backed evidence, separated rationale/intent |
-| Mission control | Holocene | Candystore-backed read surface and Bloodbank command publication |
+| Mission control | Holocene | Candystore-backed DOM, confirmed browser action, Bloodbank command publication, and later authoritative render |
 | Deployment/process gates | 33GOD root | Immutable pins, ordering, health, isolation, profile semantics |
 
 ## Failure and trust boundaries
@@ -88,6 +88,10 @@ does not join the Lifecycle authority network.
 - A late-starting Candystore replays pre-existing snapshots and verdicts, and
   duplicate IDs always project the immutable stored event rather than a
   conflicting delivery.
+- The live Holocene seam is an unmocked Chromium confirmation and click. Its
+  browser-originated POST receives only a non-authoritative 202 broker receipt;
+  success is complete only after Lifecycle's later state/version and
+  Candystore's matching causality/verdict visibly render.
 - Restarting Lifecycle or its PostgreSQL process preserves the dedicated
   authority volume and does not duplicate transition effects.
 - The cloud profile is a render-only rejection model, not a deployment target.

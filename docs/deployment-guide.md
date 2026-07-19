@@ -152,6 +152,18 @@ completion ID/time, exact stored `Nats-Msg-Id`, non-duplicate clean PubAck, and
 PubAck-before-ACK order, and covers Momo's and Holocene's client surfaces.
 Cleanup uses the unique resource names and never prunes Docker.
 
+For the Holocene seam, the API and web are running before Chromium loads the
+current `/lifecycle/<id>` projection. The browser reads the exact actionable
+frontier, selected actor, capability grant, and expected version from the DOM;
+proves and accepts the matching confirmation; clicks the enabled action; and
+captures the actual browser POST plus HTTP 202 response. That response must say
+`broker_processed=true` and `authority_accepted=false`. The browser then waits
+for the UI to render Lifecycle's later state/version and Candystore's source
+causality and command verdict, and writes a JSON receipt with desktop and mobile
+screenshots. The harness never authors the successful Holocene POST and instead
+validates the receipt independently against API, Lifecycle, broker, and
+Candystore observations.
+
 ## Promotion boundary
 
 This implemented slice is locally verified. Production/cloud rollout, root
