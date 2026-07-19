@@ -2,7 +2,7 @@
 title: 'Real Momo obligation actor for lifecycle live proof'
 type: 'bugfix'
 created: '2026-07-18'
-status: 'in-progress'
+status: 'review'
 baseline_commit: 'af23690150a7ae2738ceea144889efaafccc6716'
 context:
   - 'AGENTS.md'
@@ -52,12 +52,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Momo worker/catalog/client/tests/dependencies -- implement consume, validate, resolve, execute, hash, publish, ack, receipt, and failure semantics.
-- [ ] Promoted root Momo skill -- mirror component skill bytes without drift.
-- [ ] Live harness/platform tests -- replace synthetic success and retain actor-derived occurrence fixtures.
-- [ ] Manifests/docs/changelog/drift constants -- describe real actor execution while preserving authority language and exact pins.
-- [ ] Component/root Git refs -- branch from accepted pins, commit, push, advance gitlink, and verify remote fetchability.
-- [ ] Validation/live proof/cleanup -- run focused/full tests, four Compose models, drift gate, fresh Holocene build if required, isolated live matrix, and zero-residue audit.
+- [x] Momo worker/catalog/client/tests/dependencies -- implement consume, validate, resolve, execute, hash, publish, ack, receipt, and failure semantics.
+- [x] Promoted root Momo skill -- mirror component skill bytes without drift.
+- [x] Live harness/platform tests -- replace synthetic success and retain actor-derived occurrence fixtures.
+- [x] Manifests/docs/changelog/drift constants -- describe real actor execution while preserving authority language and exact pins.
+- [x] Component/root Git refs -- branch from accepted pins, commit, push, advance gitlink, and verify remote fetchability.
+- [x] Validation/live proof/cleanup -- run focused/full tests, four Compose models, drift gate, fresh Holocene build if required, isolated live matrix, and zero-residue audit.
 
 **Acceptance Criteria:**
 - Given the actor is ready before publish, when the canonical invocation reaches JetStream, then the receipt delivery sequence and invocation ID match the publisher PubAck exactly.
@@ -68,6 +68,8 @@ context:
 - Given final cleanup and pushed refs, when inventories and `ls-remote` are checked, then no isolated residue remains and exact Momo/root commits are remotely fetchable.
 
 ## Spec Change Log
+
+- 2026-07-19: Implemented the durable Momo obligation actor, promoted its exact skill bytes, replaced synthetic harness success, and verified component commit `9b6b1e7d30001f5918d32e99cbcbf5200fc29e1d`, root implementation checkpoint `e485f941d8b366a72e1a4477b221f3e7739e7cba`, the isolated live proof, and zero-residue cleanup.
 
 ## Design Notes
 
