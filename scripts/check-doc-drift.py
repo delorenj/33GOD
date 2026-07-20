@@ -977,6 +977,64 @@ MOMO_HOLOCENE_COPY_ACTION = re.compile(
     r"(?i)\b(?:copy|copies|copied|replica|mirror|mirrored|byte[- ]identical|"
     r"store|stores|stored|persist|persists|persisted)\b"
 )
+MOMO_HOLOCENE_COORDINATOR = re.compile(
+    r"\s*(?:(?:,\s*)?\b(and|or|nor|yet|then|while|whereas|although|though)\b|"
+    r"(,))\s*",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_NEGATION_EXCEPTION = re.compile(
+    r"(?:\b(?:not|[\w]+n't)\s+(?:only|merely|just)|"
+    r"\b(?:not|never|cannot|[\w]+n't)\s+(?:not|never|without|[\w]+n't))\s*$",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_NEGATION_MARKER = re.compile(
+    r"\b(?:never|neither|no|not|cannot|without|[\w]+n't|"
+    r"prohibit(?:s|ed)?|forbid(?:s|den)?|bar(?:s|red)?|disallow(?:s|ed)?)\b",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_NEGATED_ACTION_PREFIX = re.compile(
+    r"(?:"
+    r"\b(?:never|neither|no|not|cannot)\b|"
+    r"\b[\w]+n't\b|"
+    r"\b(?:do|does|did|is|are|was|were|be|been|being|has|have|had|"
+    r"will|would|shall|should|can|could|must|may|might)\s+not\b|"
+    r"\bwithout(?:\s+(?:a|any|the))?"
+    r")"
+    r"(?:\s+(?:currently|ever|again|directly|indirectly|locally|remotely|"
+    r"separately|also|otherwise|automatically|permanently|temporarily))*\s*$",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_DOUBLE_NEGATED_PROHIBITION = re.compile(
+    r"\b(?:not|[\w]+n't)\s+(?:expressly\s+)?"
+    r"(?:prohibit(?:s|ed)?|forbid(?:s|den)?|bar(?:s|red)?|disallow(?:s|ed)?)\b",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_PROHIBITION_PREFIX = re.compile(
+    r"\b(?:prohibit(?:s|ed)?|forbid(?:s|den)?|bar(?:s|red)?|disallow(?:s|ed)?)\b"
+    r"(?:\s+[\w-]+){0,5}\s*$",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_PASSIVE_NEGATION = re.compile(
+    r"^\s+(?:(?:is|are|was|were|be|been|being|has|have|had|will|would|shall|"
+    r"should|can|could|must)\s+(?:not|never)\b|"
+    r"(?:is|are|was|were|has|have|had|will|would|shall|should|can|could|must)"
+    r"n't\b)(?!\s+(?:only|merely|just)\b)",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_BARE_COPY_VERB = re.compile(
+    r"^\s*(?:(?:then|also|ever|again|directly|indirectly)\s+){0,2}"
+    r"(?:copy|copies|copied|mirror|mirrored|store|stores|stored|persist|"
+    r"persists|persisted)\b",
+    re.IGNORECASE,
+)
+MOMO_HOLOCENE_BARE_SHARED_AUX_VERB = re.compile(
+    r"^\s*(?:(?:then|also|ever|again|directly|indirectly)\s+){0,2}"
+    r"(?:copy|mirror|store|persist)\b",
+    re.IGNORECASE,
+)
+MOMO_POLICY_APOSTROPHE_TRANSLATION = str.maketrans(
+    {"‘": "'", "’": "'", "ʼ": "'", "＇": "'"}
+)
 
 
 def has_ticket_lifecycle_identity(value: str) -> bool:
@@ -1014,32 +1072,110 @@ def exact_momo_policy_description(description: str) -> bool:
     )
 
 
+def momo_policy_coordination_units(clause: str) -> list[tuple[str, str | None]]:
+    """Split predicate coordinators while retaining the preceding relationship."""
+
+    units: list[tuple[str, str | None]] = []
+    cursor = 0
+    separator: str | None = None
+    for boundary in MOMO_HOLOCENE_COORDINATOR.finditer(clause):
+        unit = clause[cursor : boundary.start()]
+        if unit.strip():
+            units.append((unit, separator))
+        separator = boundary.group(1).casefold() if boundary.group(1) else ","
+        cursor = boundary.end()
+    unit = clause[cursor:]
+    if unit.strip():
+        units.append((unit, separator))
+    return units
+
+
+def has_clear_holocene_copy_prohibition(
+    unit: str, targets: list[re.Match[str]]
+) -> bool:
+    """Recognize only negation attached directly to one copy/storage predicate."""
+
+    if len(MOMO_HOLOCENE_NEGATION_MARKER.findall(unit)) > 1:
+        return False
+    for target in targets:
+        before = unit[: target.start()]
+        if MOMO_HOLOCENE_NEGATION_EXCEPTION.search(before):
+            continue
+        if MOMO_HOLOCENE_NEGATED_ACTION_PREFIX.search(before):
+            return True
+        if (
+            MOMO_HOLOCENE_PROHIBITION_PREFIX.search(before)
+            and not MOMO_HOLOCENE_DOUBLE_NEGATED_PROHIBITION.search(before)
+        ):
+            return True
+        if MOMO_HOLOCENE_PASSIVE_NEGATION.match(unit[target.end() :]):
+            return True
+    return False
+
+
 def has_positive_holocene_copy_claim(text: str) -> bool:
     """Reject copy ownership claims while permitting an explicit prohibition."""
 
-    normalized = unicodedata.normalize("NFKC", text)
+    normalized = unicodedata.normalize("NFKC", text).translate(
+        MOMO_POLICY_APOSTROPHE_TRANSLATION
+    )
     clauses = re.split(
-        r"(?:[;\n]|(?<=[.!?])\s+|\bbut\b|\bhowever\b)",
+        r"(?:[;:\n]|\s+[—–]\s+|(?<=[.!?])\s+|\bbut\b|\bhowever\b)",
         normalized,
         flags=re.IGNORECASE,
     )
     for clause in clauses:
         if not re.search(r"(?i)\bHolocene\b", clause):
             continue
-        for action in MOMO_HOLOCENE_COPY_ACTION.finditer(clause):
-            before = clause[max(0, action.start() - 64) : action.start()]
-            around = clause[max(0, action.start() - 24) : action.end() + 32]
-            if re.search(
-                r"(?i)\b(?:never|not|no|without|neither|forbid(?:s|den)?|"
-                r"prohibit(?:s|ed)?|mustn['’]?t|cannot|can['’]?t)\b",
-                before,
-            ) or re.search(r"(?i)\b(?:no|not)\s+(?:\w+\s+){0,2}", around):
+        units = momo_policy_coordination_units(clause)
+        action_units = [
+            (unit, separator, list(MOMO_HOLOCENE_COPY_ACTION.finditer(unit)))
+            for unit, separator in units
+        ]
+        scoped_action_units = {
+            index
+            for index, (unit, _separator, actions) in enumerate(action_units)
+            if actions and re.search(r"(?i)\bHolocene\b", unit)
+        }
+        previous_negated_copy_predicate = False
+        previous_wide_scope_negation = False
+        for index, (unit, separator, actions) in enumerate(action_units):
+            if not actions:
+                previous_negated_copy_predicate = False
+                previous_wide_scope_negation = False
                 continue
-            return True
-        if re.search(r"(?i)\bMomo\s*/\s*Holocene\b", clause) and not re.search(
-            r"(?i)\b(?:never|not|no|without|forbidden|prohibited)\b", clause
-        ):
-            return True
+            explicitly_prohibited = has_clear_holocene_copy_prohibition(unit, actions)
+            bare_copy_verb = MOMO_HOLOCENE_BARE_COPY_VERB.search(unit)
+            shared_aux_verb = MOMO_HOLOCENE_BARE_SHARED_AUX_VERB.search(unit)
+            inherits_prohibition = (
+                previous_negated_copy_predicate
+                and bare_copy_verb is not None
+                and (shared_aux_verb is not None or previous_wide_scope_negation)
+                and (
+                    separator in {"and", "or", "nor"}
+                    or (separator == "," and not unit[bare_copy_verb.end() :].strip())
+                )
+            )
+            if explicitly_prohibited or inherits_prohibition:
+                previous_negated_copy_predicate = True
+                previous_wide_scope_negation = (
+                    previous_wide_scope_negation
+                    if inherits_prohibition
+                    else re.search(r"(?i)\b(?:never|neither)\b", unit) is not None
+                )
+                continue
+            previous_negated_copy_predicate = False
+            previous_wide_scope_negation = False
+            if not scoped_action_units or index in scoped_action_units:
+                return True
+        if any(actions for _unit, _separator, actions in action_units):
+            continue
+        for unit, _separator in units:
+            pairing = re.search(r"(?i)\bMomo\s*/\s*Holocene\b", unit)
+            if pairing is not None and not has_clear_holocene_copy_prohibition(
+                unit, [pairing]
+            ):
+                return True
     return False
 
 

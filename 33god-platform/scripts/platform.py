@@ -2120,6 +2120,14 @@ def iter_backfill_glob(
                             f"backfill glob entry cannot be inspected safely: {child}"
                         ) from exc
                     if stat.S_ISLNK(metadata.st_mode):
+                        matches_wildcard = (
+                            not (entry.name.startswith(".") and not part.startswith("."))
+                            and fnmatch.fnmatchcase(entry.name, part)
+                        )
+                        if part == "**" or matches_wildcard:
+                            raise ValueError(
+                                f"backfill glob must not traverse a symlink: {child}"
+                            )
                         continue
                     if part == "**":
                         if stat.S_ISDIR(metadata.st_mode):

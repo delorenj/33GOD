@@ -430,23 +430,79 @@ class PolicyAndTraversalHardeningTests(GitFixtureMixin, unittest.TestCase):
             errors = drift.ticket_lifecycle_surface_errors(root)
             self.assertTrue(any("valid UTF-8" in item or "malformed" in item for item in errors))
 
-    def test_negated_holocene_copy_is_allowed_but_positive_copy_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            self.write_momo_fixture(root, "Never store a copy in Holocene.\n")
-            self.assertFalse(
-                any(
-                    "Holocene copy claim" in item
-                    for item in drift.ticket_lifecycle_surface_errors(root)
+    def test_holocene_copy_negation_is_scoped_to_the_storage_predicate(self) -> None:
+        positive_claims = (
+            "Store a copy in Holocene.\n",
+            "Momo does not own lifecycle truth and stores a copy in Holocene.\n",
+            "Momo does not own lifecycle truth and stores a copy in Momo/Holocene.\n",
+            "Momo does not own lifecycle truth, and stores a copy in Holocene.\n",
+            "Momo does not own lifecycle truth, yet stores a copy in Holocene.\n",
+            "Momo does not mirror lifecycle truth, stores a copy in Holocene.\n",
+            "Momo does not mirror lifecycle truth and stores a copy in Holocene.\n",
+            "Momo does not mirror lifecycle truth；stores a copy in Holocene.\n",
+            "Momo does not mirror lifecycle truth: stores a copy in Holocene.\n",
+            "Momo does not mirror lifecycle truth — stores a copy in Holocene.\n",
+            "Momo does not mirror lifecycle truth then stores a copy in Holocene.\n",
+            (
+                "Ｍｏｍｏ doesn’t own lifecycle truth，and stores a copy in "
+                "Ｈｏｌｏｃｅｎｅ．\n"
+            ),
+            (
+                "Momo does not own lifecycle truth or persist lifecycle state, "
+                "yet mirrors a copy in Holocene.\n"
+            ),
+            "Momo not only stores a copy in Holocene, it indexes it.\n",
+            "Momo does not merely store a copy in Holocene.\n",
+            "Momo is not prohibited from storing a copy in Holocene.\n",
+            "Momo does not not store a copy in Holocene.\n",
+            "Momo can’t not store a copy in Holocene.\n",
+            "Momo is not without a copy in Holocene.\n",
+        )
+        prohibitions = (
+            "Never store a copy in Holocene.\n",
+            "Momo does not store a copy in Holocene.\n",
+            "Momo does not store a copy in Momo/Holocene.\n",
+            "Momo doesn’t store a copy in Holocene.\n",
+            "Ｍｏｍｏ does not store a copy in Ｈｏｌｏｃｅｎｅ．\n",
+            "Momo does not store or persist a copy in Holocene.\n",
+            "Momo does not store, mirror, or persist a copy in Holocene.\n",
+            "Momo neither stores nor persists a copy in Holocene.\n",
+            "Momo never stores or persists a copy in Holocene.\n",
+            "Momo stores no copy in Holocene.\n",
+            "A copy is not stored in Holocene by Momo.\n",
+            "A copy isn’t retained in Holocene by Momo.\n",
+            (
+                "Momo persists task state and does not store a copy in "
+                "Holocene.\n"
+            ),
+            "Momo mustn’t store a copy in Holocene; it emits only references.\n",
+        )
+        for workflow_text in positive_claims:
+            with (
+                self.subTest(kind="positive", workflow_text=workflow_text),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                root = Path(temporary)
+                self.write_momo_fixture(root, workflow_text)
+                self.assertTrue(
+                    any(
+                        "Holocene copy claim" in item
+                        for item in drift.ticket_lifecycle_surface_errors(root)
+                    )
                 )
-            )
-            self.write_momo_fixture(root, "Store a copy in Holocene.\n")
-            self.assertTrue(
-                any(
-                    "Holocene copy claim" in item
-                    for item in drift.ticket_lifecycle_surface_errors(root)
+        for workflow_text in prohibitions:
+            with (
+                self.subTest(kind="prohibition", workflow_text=workflow_text),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                root = Path(temporary)
+                self.write_momo_fixture(root, workflow_text)
+                self.assertFalse(
+                    any(
+                        "Holocene copy claim" in item
+                        for item in drift.ticket_lifecycle_surface_errors(root)
+                    )
                 )
-            )
 
     def test_exact_promoted_prefix_rejects_blob_symlink_and_gitlink_modes(self) -> None:
         for prefix in ("agents/hermes/pm", "pipeline-mcp-hub"):
@@ -613,6 +669,62 @@ class BackfillHardeningTests(unittest.TestCase):
             ):
                 self.assertEqual(platform.cmd_backfills_check(None), 1)
             self.assertIn("manifest count", stderr.getvalue())
+
+    def test_recursive_wildcard_symlinks_fail_closed_without_outside_payload(self) -> None:
+        variants = (
+            ("child-directory", Path("linked"), True),
+            ("leaf", Path("linked.txt"), False),
+            ("nested-directory", Path("nested/linked"), True),
+            ("nested-leaf", Path("nested/linked.txt"), False),
+        )
+        for name, relative_link, directory_link in variants:
+            with (
+                self.subTest(name=name),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                root = Path(temporary)
+                scan = root / "scan"
+                link = scan / relative_link
+                link.parent.mkdir(parents=True, exist_ok=True)
+                outside = root / f"outside-{name}"
+                marker = f"OUTSIDE-{name.upper()}-PAYLOAD"
+                if directory_link:
+                    outside.mkdir()
+                    (outside / "secret.txt").write_text(
+                        marker + "\n", encoding="utf-8"
+                    )
+                else:
+                    outside.write_text(marker + "\n", encoding="utf-8")
+                link.symlink_to(outside, target_is_directory=directory_link)
+                manifest = root / "manifest.yaml"
+                manifest.write_text(
+                    "id: wildcard-symlink-negative\n"
+                    f"search_paths:\n  - {scan}/**/*.txt\n"
+                    f"forbidden_patterns:\n  - {marker}\n",
+                    encoding="utf-8",
+                )
+
+                with self.assertRaisesRegex(
+                    ValueError, "backfill glob must not traverse a symlink"
+                ) as raised:
+                    platform.scan_backfill(manifest)
+                diagnostic = str(raised.exception)
+                self.assertNotIn(marker, diagnostic)
+                self.assertNotIn(str(outside), diagnostic)
+
+                if name == "child-directory":
+                    stderr = io.StringIO()
+                    with (
+                        patch.object(
+                            platform, "contained_platform_files", return_value=[manifest]
+                        ),
+                        redirect_stderr(stderr),
+                    ):
+                        self.assertEqual(platform.cmd_backfills_check(None), 1)
+                    cli_diagnostic = stderr.getvalue()
+                    self.assertNotIn("Traceback", cli_diagnostic)
+                    self.assertNotIn(marker, cli_diagnostic)
+                    self.assertNotIn(str(outside), cli_diagnostic)
 
 
 if __name__ == "__main__":
