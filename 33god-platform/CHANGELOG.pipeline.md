@@ -13,8 +13,9 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 - Separated the exact six-component Lifecycle acceptance slice from the exact
   twelve-component product registry in executable validation and current docs.
 - Reconciled every root gitlink with a credential-free HTTPS mapping, preserved
-  the exact planned Toad and Hermes Template pins, and made repository status
-  verify the checkout's own top-level, origin identity, gitlink, and `HEAD`.
+  the exact planned Toad and Hermes Template pins, and made root inventory
+  validation require every checkout's own top-level, exact index `HEAD`, and
+  normalized origin identity, including gitlinks outside the component registry.
 - Expanded root drift fixtures and live scanning to cover semantic provider
   completion surfaces, backups, mirrors, symlinks, adapters/runners,
   operational nested gitlinks, Momo copy/manifest claims, Holocene branding,

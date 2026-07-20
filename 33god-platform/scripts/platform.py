@@ -67,7 +67,9 @@ PRODUCT_COMPONENT_IDS = (
 
 def load_yaml(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
-        data = yaml.safe_load(handle) or {}
+        data = yaml.safe_load(handle)
+    if data is None:
+        data = {}
     if not isinstance(data, dict):
         raise ValueError(f"{path}: expected YAML mapping")
     return data
@@ -114,23 +116,27 @@ def resolve_external_path(candidate: Path) -> Path:
 def resolve_path(value: str | Path, base: Path = ROOT) -> Path:
     raw = os.path.expandvars(os.path.expanduser(str(value)))
     path = Path(raw)
-    if not path.is_absolute():
-        if path.parts and path.parts[0] == "..":
-            candidate = lexical_path(SOURCE_PLATFORM_ROOT / path)
-            if is_within(candidate, SOURCE_ROOT):
-                # In-tree component roots are atomic: every descendant stays
-                # beneath the selected checkout, so a missing leaf fails
-                # closed instead of being borrowed from another checkout.
-                resolved = candidate.resolve()
-                if not is_within(resolved, SOURCE_ROOT):
-                    raise ValueError(
-                        "selected in-tree path resolves outside GOD_SOURCE_ROOT: "
-                        f"{candidate} -> {resolved}"
-                    )
-                return resolved
-            return resolve_external_path(candidate)
-        path = base / path
-    return path.resolve()
+    if path.is_absolute():
+        # Explicit absolute registry paths (notably Hindsight's ~/.agents)
+        # intentionally remain supported. Relative paths alone are governed
+        # by the selected source/external-root containment policy below.
+        return path.resolve()
+
+    anchor = SOURCE_PLATFORM_ROOT if path.parts and path.parts[0] == ".." else base
+    candidate = lexical_path(anchor / path)
+    if not is_within(candidate, SOURCE_ROOT):
+        return resolve_external_path(candidate)
+
+    # In-tree component roots are atomic: every relative descendant stays
+    # beneath the selected checkout after lexical normalization and symlink
+    # resolution, so missing leaves cannot be borrowed from another checkout.
+    resolved = candidate.resolve()
+    if not is_within(resolved, SOURCE_ROOT):
+        raise ValueError(
+            "selected in-tree path resolves outside GOD_SOURCE_ROOT: "
+            f"{candidate} -> {resolved}"
+        )
+    return resolved
 
 
 def platform_config() -> dict[str, Any]:
@@ -208,8 +214,15 @@ def gitmodule_mappings(root: Path | None = None) -> dict[str, dict[str, str]]:
         mapped_path = parser.get(section, "path", fallback="").strip()
         if not mapped_path:
             continue
+        name = section.removeprefix('submodule "').removesuffix('"')
+        if mapped_path in mappings:
+            previous = mappings[mapped_path]["name"]
+            raise ValueError(
+                f"{path}: ambiguous duplicate submodule path {mapped_path!r} "
+                f"in sections {previous!r} and {name!r}"
+            )
         mappings[mapped_path] = {
-            "name": section.removeprefix('submodule "').removesuffix('"'),
+            "name": name,
             "url": parser.get(section, "url", fallback="").strip(),
         }
     return mappings
@@ -330,7 +343,7 @@ def validate_gitlink_inventory() -> list[str]:
     try:
         gitlinks = gitlink_entries()
         mappings = gitmodule_mappings()
-    except (configparser.Error, OSError) as exc:
+    except (configparser.Error, OSError, ValueError) as exc:
         return [f".gitmodules: cannot parse root gitlink inventory safely: {exc}"]
     missing = sorted(set(gitlinks) - set(mappings))
     extra = sorted(set(mappings) - set(gitlinks))
@@ -343,6 +356,51 @@ def validate_gitlink_inventory() -> list[str]:
         if not url.startswith("https://"):
             errors.append(
                 f".gitmodules: {path} must use a credential-free HTTPS URL, found {url!r}"
+            )
+    for path, expected_revision in sorted(gitlinks.items()):
+        mapping = mappings.get(path)
+        if mapping is None:
+            continue
+        checkout = lexical_path(SOURCE_ROOT / path)
+        if not is_within(checkout, SOURCE_ROOT):
+            errors.append(
+                f"root gitlink {path}: checkout path escapes GOD_SOURCE_ROOT: {checkout}"
+            )
+            continue
+        resolved_checkout = checkout.resolve()
+        if not is_within(resolved_checkout, SOURCE_ROOT):
+            errors.append(
+                f"root gitlink {path}: checkout resolves outside GOD_SOURCE_ROOT: "
+                f"{checkout} -> {resolved_checkout}"
+            )
+            continue
+
+        actual_revision = git_checkout_revision(checkout)
+        if actual_revision is None:
+            errors.append(
+                f"root gitlink {path}: checkout is not initialized as its own "
+                f"Git repository at index revision {expected_revision}"
+            )
+            continue
+        if actual_revision != expected_revision:
+            errors.append(
+                f"root gitlink {path}: checkout HEAD {actual_revision} does not "
+                f"match index revision {expected_revision}"
+            )
+
+        actual_origin = git_checkout_origin(checkout)
+        expected_origin = mapping["url"]
+        if not actual_origin:
+            errors.append(
+                f"root gitlink {path}: initialized checkout has no origin; "
+                f"expected {expected_origin}"
+            )
+        elif normalize_repository_url(actual_origin) != normalize_repository_url(
+            expected_origin
+        ):
+            errors.append(
+                f"root gitlink {path}: checkout origin {actual_origin!r} does not "
+                f"match .gitmodules URL {expected_origin!r}"
             )
     return errors
 
@@ -567,22 +625,36 @@ def cmd_components_list(_: argparse.Namespace) -> int:
         print(f"ERROR component registry cannot be loaded safely: {exc}", file=sys.stderr)
         return 1
     for component in components:
-        try:
-            repo: Path | str = resolve_path(component["repo"])
-            status, revision = component_repo_status(component)
-        except (configparser.Error, OSError, TypeError, ValueError):
-            repo = str(component.get("repo", "<missing>"))
+        component_id = component.get("id")
+        role = component.get("role")
+        component_id_text = (
+            str(component_id) if component_id is not None else "<missing>"
+        )
+        role_text = str(role) if role is not None else "<missing>"
+        repo_value = component.get("repo")
+        if repo_value is None:
+            repo: Path | str = "<missing>"
             status, revision = "invalid", None
+        else:
+            try:
+                repo = resolve_path(repo_value)
+                status, revision = component_repo_status(component)
+            except (configparser.Error, OSError, TypeError, ValueError):
+                repo = str(repo_value)
+                status, revision = "invalid", None
         recorded = recorded_revision(component)
-        compose_files = component.get("compose", {}).get("files", []) or []
+        compose = component.get("compose")
+        if not isinstance(compose, dict):
+            compose = {}
+        compose_files = compose.get("files", []) or []
         rows.append(
             (
-                component["id"],
-                component["role"],
-                "acceptance" if component["id"] in slice_ids else "registry",
+                component_id_text,
+                role_text,
+                "acceptance" if component_id_text in slice_ids else "registry",
                 status,
                 (revision or recorded or "-")[:12],
-                ",".join(component.get("compose", {}).get("profiles", []) or []),
+                ",".join(str(item) for item in compose.get("profiles", []) or []),
                 str(repo),
                 str(len(compose_files)),
             )

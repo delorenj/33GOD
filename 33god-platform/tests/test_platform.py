@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
+import io
 import subprocess
 from pathlib import Path
 import tempfile
@@ -166,6 +168,57 @@ class PlatformPathResolutionTests(unittest.TestCase):
                     platform.is_within(external_component, nested_checkout)
                 )
 
+    def test_embedded_traversal_is_remapped_through_external_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "nested/source"
+            platform_root = source / "33god-platform"
+            external_root = root / "external"
+            controlled = external_root / "outside"
+            platform_root.mkdir(parents=True)
+            controlled.mkdir(parents=True)
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+                patch.object(platform, "EXTERNAL_ROOT", external_root),
+                patch.object(platform, "EXTERNAL_ROOT_IS_EXPLICIT", True),
+            ):
+                resolved = platform.resolve_path(
+                    "nested/../../../outside", base=platform_root
+                )
+                self.assertEqual(resolved, controlled)
+                self.assertTrue(platform.is_within(resolved, external_root))
+                self.assertFalse(platform.is_within(resolved, source))
+
+    def test_embedded_traversal_beyond_sibling_boundary_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "nested/source"
+            platform_root = source / "33god-platform"
+            external_root = root / "external"
+            platform_root.mkdir(parents=True)
+            external_root.mkdir(parents=True)
+            uncontrolled = root / "outside"
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+                patch.object(platform, "EXTERNAL_ROOT", external_root),
+                patch.object(platform, "EXTERNAL_ROOT_IS_EXPLICIT", True),
+            ):
+                with self.assertRaisesRegex(
+                    ValueError, "escapes the supported sibling boundary"
+                ):
+                    platform.resolve_path(
+                        "nested/../../../../outside", base=platform_root
+                    )
+                self.assertFalse(platform.is_within(uncontrolled, external_root))
+
+    def test_explicit_absolute_registry_path_remains_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            registry = Path(temporary) / ".agents"
+            registry.mkdir()
+            self.assertEqual(platform.resolve_path(registry), registry.resolve())
+
     def test_selected_component_symlink_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -287,9 +340,10 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
         root.mkdir(parents=True, exist_ok=True)
         if not (root / ".git").exists():
             self.git(root, "init", "-q")
+        mapped_path = component.relative_to(root).as_posix()
         (root / ".gitmodules").write_text(
-            '[submodule "component"]\n'
-            "\tpath = component\n"
+            f'[submodule "{mapped_path}"]\n'
+            f"\tpath = {mapped_path}\n"
             f"\turl = {url}\n",
             encoding="utf-8",
         )
@@ -298,7 +352,7 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
             "update-index",
             "--add",
             "--cacheinfo",
-            f"160000,{revision},component",
+            f"160000,{revision},{mapped_path}",
         )
 
     def test_plain_child_cannot_inherit_wrapper_git_identity(self) -> None:
@@ -316,7 +370,9 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
             source = Path(temporary) / "source"
             component = source / "component"
             url = "https://github.com/example/component.git"
-            revision = self.init_repo(component, "git@github.com:example/component.git")
+            revision = self.init_repo(
+                component, "git@github.com:example/component.git"
+            )
             self.configure_superproject(source, component, revision, url)
             component_data = {
                 "id": "component",
@@ -370,6 +426,145 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
                     ("uninitialized", None),
                 )
 
+    def test_initialized_gitlink_inventory_is_verified(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            component = source / "component"
+            url = "https://github.com/example/component.git"
+            revision = self.init_repo(
+                component, "git@github.com:example/component.git"
+            )
+            self.configure_superproject(source, component, revision, url)
+            with patch.object(platform, "SOURCE_ROOT", source):
+                self.assertEqual(platform.validate_gitlink_inventory(), [])
+
+    def test_uninitialized_gitlink_without_component_row_fails_inventory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            orphan = source / "orphan"
+            revision = "1" * 40
+            self.configure_superproject(
+                source,
+                orphan,
+                revision,
+                "https://github.com/example/orphan.git",
+            )
+            with patch.object(platform, "SOURCE_ROOT", source):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(
+                any(
+                    "root gitlink orphan" in item and "not initialized" in item
+                    for item in errors
+                )
+            )
+
+    def test_gitlink_inventory_rejects_checkout_revision_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            component = source / "component"
+            url = "https://github.com/example/component.git"
+            actual = self.init_repo(component, url)
+            expected = "1" * 40
+            self.assertNotEqual(actual, expected)
+            self.configure_superproject(source, component, expected, url)
+            with patch.object(platform, "SOURCE_ROOT", source):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(
+                any(
+                    "root gitlink component" in item
+                    and "does not match index revision" in item
+                    for item in errors
+                )
+            )
+
+    def test_gitlink_inventory_rejects_checkout_origin_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            component = source / "component"
+            expected_url = "https://github.com/example/component.git"
+            revision = self.init_repo(
+                component, "https://github.com/other/component.git"
+            )
+            self.configure_superproject(source, component, revision, expected_url)
+            with patch.object(platform, "SOURCE_ROOT", source):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(
+                any(
+                    "root gitlink component" in item
+                    and "does not match .gitmodules URL" in item
+                    for item in errors
+                )
+            )
+
+    def test_components_list_inherits_gitlink_inventory_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            orphan = source / "orphan"
+            self.configure_superproject(
+                source,
+                orphan,
+                "1" * 40,
+                "https://github.com/example/orphan.git",
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "load_components", return_value=[]),
+                patch.object(platform, "acceptance_slice_ids", return_value=[]),
+                patch.object(platform, "validate_acceptance_slice", return_value=[]),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                result = platform.cmd_components_list(None)
+            self.assertEqual(result, 1)
+            self.assertIn("root gitlink orphan", stderr.getvalue())
+
+    def test_components_list_reports_missing_repo_without_keyerror(self) -> None:
+        component = {
+            "id": "malformed",
+            "name": "Malformed",
+            "role": "test",
+            "description": "Missing repo fixture.",
+            "changelog": {"topics": ["malformed"]},
+            "_path": Path("components/malformed.yaml"),
+        }
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            patch.object(platform, "load_components", return_value=[component]),
+            patch.object(platform, "acceptance_slice_ids", return_value=[]),
+            patch.object(platform, "validate_gitlink_inventory", return_value=[]),
+            patch.object(platform, "validate_acceptance_slice", return_value=[]),
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            result = platform.cmd_components_list(None)
+        self.assertEqual(result, 1)
+        self.assertIn("missing required keys: repo", stderr.getvalue())
+
+    def test_components_list_reports_missing_id_and_role_without_keyerror(self) -> None:
+        component = {
+            "name": "Malformed",
+            "repo": "../malformed",
+            "description": "Missing identity fixture.",
+            "changelog": {"topics": ["malformed"]},
+            "_path": Path("components/malformed.yaml"),
+        }
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            patch.object(platform, "load_components", return_value=[component]),
+            patch.object(platform, "acceptance_slice_ids", return_value=[]),
+            patch.object(platform, "validate_gitlink_inventory", return_value=[]),
+            patch.object(platform, "validate_acceptance_slice", return_value=[]),
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            result = platform.cmd_components_list(None)
+        self.assertEqual(result, 1)
+        self.assertIn("missing required keys: id, role", stderr.getvalue())
+
     def test_components_list_reports_unsafe_repo_without_crashing(self) -> None:
         component = {
             "id": "unsafe",
@@ -399,6 +594,36 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
                 errors = platform.validate_gitlink_inventory()
             self.assertTrue(any("cannot parse" in item for item in errors))
 
+    def test_duplicate_gitmodule_paths_fail_as_ambiguous_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary)
+            self.git(source, "init", "-q")
+            revision = "1" * 40
+            (source / ".gitmodules").write_text(
+                '[submodule "first"]\n'
+                "\tpath = shared\n"
+                "\turl = https://github.com/example/first.git\n"
+                '[submodule "second"]\n'
+                "\tpath = shared\n"
+                "\turl = https://github.com/example/second.git\n",
+                encoding="utf-8",
+            )
+            self.git(
+                source,
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                f"160000,{revision},shared",
+            )
+            with patch.object(platform, "SOURCE_ROOT", source):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(
+                any(
+                    "ambiguous duplicate submodule path 'shared'" in item
+                    for item in errors
+                )
+            )
+
     def test_live_root_gitlinks_have_exact_https_mappings(self) -> None:
         gitlinks = platform.gitlink_entries(ROOT)
         mappings = platform.gitmodule_mappings(ROOT)
@@ -414,6 +639,9 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
             gitlinks["toad"],
             "34bd4e17ebf5cf7844bf0162b4d83b6ba1e422c5",
         )
+
+    def test_live_root_gitlink_inventory_is_fully_verified(self) -> None:
+        self.assertEqual(platform.validate_gitlink_inventory(), [])
 
 
 if __name__ == "__main__":

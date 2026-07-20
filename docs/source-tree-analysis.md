@@ -83,7 +83,7 @@ in-tree component. Both selected and external paths reject symlink escapes.
   outside root ownership.
 - Root validation checks a repository's own top-level, origin identity, root
   gitlink revision, and checkout `HEAD`; an empty directory is uninitialized.
-- Mapped planned gitlinks may remain uninitialized, but are reported honestly
-  and may not satisfy the six-component acceptance slice.
+- Every mapped root gitlink must be an initialized checkout at the exact index
+  revision and normalized `.gitmodules` origin, even without a component row.
 - External networks and volumes retain their exact identities; validation does
   not create, remove, or migrate them.

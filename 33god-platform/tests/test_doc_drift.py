@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from contextlib import redirect_stdout
 import copy
 import importlib.util
 import hashlib
+import io
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -198,6 +201,63 @@ class TopologyScopeDriftTests(unittest.TestCase):
         self.assertTrue(any("Lifecycle acceptance slice" in item for item in errors))
         self.assertTrue(any("twelve-component product registry" in item for item in errors))
         self.assertTrue(any("project-scan-report" in item for item in errors))
+
+    def test_top_level_yaml_list_is_a_controlled_topology_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            docs = root / "docs"
+            (source / "33god-platform").mkdir(parents=True)
+            docs.mkdir()
+            (docs / "project-parts.json").write_text(
+                json.dumps(self.parts), encoding="utf-8"
+            )
+            (docs / "project-scan-report.json").write_text(
+                json.dumps(self.scan), encoding="utf-8"
+            )
+            (source / "33god-platform/components.yaml").write_text(
+                "[]\n", encoding="utf-8"
+            )
+            report = check_doc_drift.Reporter()
+            output = io.StringIO()
+            with redirect_stdout(output):
+                check_doc_drift.check_part_declaration(source, docs, report)
+            self.assertEqual(report.failures, 1)
+            self.assertIn(
+                "cannot parse declaration: expected a YAML mapping",
+                output.getvalue(),
+            )
+
+    def test_command_rejects_top_level_json_list_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            docs_checkout = Path(temporary)
+            docs = docs_checkout / "docs"
+            docs.mkdir()
+            (docs / "project-parts.json").write_text("[]\n", encoding="utf-8")
+            (docs / "project-scan-report.json").write_text(
+                json.dumps(self.scan), encoding="utf-8"
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(DRIFT_CHECK),
+                    "--source-root",
+                    str(ROOT),
+                    "--docs-root",
+                    str(docs_checkout),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "FAIL topology-scope: cannot parse declaration: "
+                "project-parts.json: expected a top-level mapping, found list",
+                output,
+            )
+            self.assertNotIn("Traceback", output)
 
 
 class AuthorityParityDriftTests(unittest.TestCase):

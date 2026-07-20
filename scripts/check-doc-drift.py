@@ -218,7 +218,9 @@ def load_yaml(path: Path) -> dict[str, Any]:
     if yaml is None:
         raise RuntimeError("PyYAML unavailable")
     with path.open(encoding="utf-8") as handle:
-        value = yaml.safe_load(handle) or {}
+        value = yaml.safe_load(handle)
+    if value is None:
+        value = {}
     if not isinstance(value, dict):
         raise ValueError("expected a YAML mapping")
     return value
@@ -382,6 +384,16 @@ def check_part_declaration(source: Path, docs: Path, report: Reporter) -> None:
         parts_data = json.loads(parts_path.read_text(encoding="utf-8"))
         scan_data = json.loads(scan_path.read_text(encoding="utf-8"))
         platform_data = load_yaml(platform_path)
+        for label, declaration in (
+            ("project-parts.json", parts_data),
+            ("project-scan-report.json", scan_data),
+            ("33god-platform/components.yaml", platform_data),
+        ):
+            if not isinstance(declaration, dict):
+                raise ValueError(
+                    f"{label}: expected a top-level mapping, found "
+                    f"{type(declaration).__name__}"
+                )
     except (OSError, ValueError, KeyError, TypeError) as exc:
         report.fail("topology-scope", f"cannot parse declaration: {exc}")
         return
