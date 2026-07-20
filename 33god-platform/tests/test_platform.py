@@ -624,12 +624,53 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
                 )
             )
 
-    def test_live_root_gitlinks_have_exact_https_mappings(self) -> None:
+    def test_live_root_inventory_excludes_private_runtime_and_verifies_sources(
+        self,
+    ) -> None:
         gitlinks = platform.gitlink_entries(ROOT)
         mappings = platform.gitmodule_mappings(ROOT)
-        self.assertEqual(set(gitlinks), set(mappings))
+        expected_paths = {
+            "bloodbank",
+            "candybar",
+            "candystore",
+            "hermes-agent-template",
+            "holocene",
+            "lifecycle",
+            "momo",
+            "pjangler",
+            "toad",
+        }
+        forbidden_runtime = "agents/hermes/pm/runtime"
+
+        self.assertNotIn(forbidden_runtime, gitlinks)
+        self.assertNotIn(forbidden_runtime, mappings)
+        self.assertEqual(set(gitlinks), expected_paths)
+        self.assertEqual(set(mappings), expected_paths)
+
+        normalized_urls = [
+            platform.normalize_repository_url(item["url"])
+            for item in mappings.values()
+        ]
         self.assertTrue(
             all(item["url"].startswith("https://") for item in mappings.values())
+        )
+        self.assertEqual(len(normalized_urls), len(set(normalized_urls)))
+
+        for path, expected_revision in gitlinks.items():
+            checkout = ROOT / path
+            self.assertEqual(
+                platform.git_checkout_revision(checkout), expected_revision
+            )
+            self.assertEqual(
+                platform.normalize_repository_url(
+                    platform.git_checkout_origin(checkout) or ""
+                ),
+                platform.normalize_repository_url(mappings[path]["url"]),
+            )
+
+        self.assertEqual(
+            gitlinks["candybar"],
+            "509c03f350b5d41ec7a6779a3233dd61c9cbee91",
         )
         self.assertEqual(
             gitlinks["hermes-agent-template"],

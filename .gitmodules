@@ -25,7 +25,3 @@
 [submodule "toad"]
 	path = toad
 	url = https://github.com/delorenj/toad.git
-[submodule "agents/hermes/pm/runtime"]
-	path = agents/hermes/pm/runtime
-	url = https://github.com/delorenj/agent-hm-33god-pm.git
-	ignore = all

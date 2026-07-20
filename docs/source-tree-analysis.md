@@ -85,5 +85,7 @@ in-tree component. Both selected and external paths reject symlink escapes.
   gitlink revision, and checkout `HEAD`; an empty directory is uninitialized.
 - Every mapped root gitlink must be an initialized checkout at the exact index
   revision and normalized `.gitmodules` origin, even without a component row.
+- Live project-scoped Hermes runtime state is external/local operational state,
+  not a root source gitlink.
 - External networks and volumes retain their exact identities; validation does
   not create, remove, or migrate them.

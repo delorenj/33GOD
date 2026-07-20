@@ -20,6 +20,10 @@ coordination/
 # Bloodbank publisher hook runtime state (per-session only)
 .claude/session-tracking.json
 .claude/sessions/
+
+# Project-scoped Hermes runtime checkout is local operational state, not root source.
+/agents/hermes/pm/runtime/
+
 *.db
 *.db-journal
 *.db-wal

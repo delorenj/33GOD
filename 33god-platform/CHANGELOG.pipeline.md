@@ -16,6 +16,9 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
   the exact planned Toad and Hermes Template pins, and made root inventory
   validation require every checkout's own top-level, exact index `HEAD`, and
   normalized origin identity, including gitlinks outside the component registry.
+- Removed `agents/hermes/pm/runtime` from the root source tree. Live
+  project-scoped Hermes runtime state remains external/local operational state,
+  not a root source gitlink.
 - Expanded root drift fixtures and live scanning to cover semantic provider
   completion surfaces, backups, mirrors, symlinks, adapters/runners,
   operational nested gitlinks, Momo copy/manifest claims, Holocene branding,
