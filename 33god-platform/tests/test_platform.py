@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -562,9 +563,17 @@ class PlatformPathResolutionTests(unittest.TestCase):
             compiled = cache / "publish.cpython-314.pyc"
             source_file.write_text("source\n", encoding="utf-8")
             compiled.write_bytes(b"\xff\xfecompiled")
+            original_scandir = os.scandir
+
+            def guarded_scandir(path: object) -> object:
+                if Path(path) == cache:
+                    raise AssertionError("cache directory was traversed")
+                return original_scandir(path)
+
             with (
                 patch.object(platform, "SOURCE_ROOT", source),
                 patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+                patch.object(platform.os, "scandir", guarded_scandir),
             ):
                 self.assertEqual(platform.iter_search_files(["hooks"]), [source_file])
 
@@ -753,8 +762,37 @@ class PlatformValidationFailureTests(unittest.TestCase):
                 text=True,
                 capture_output=True,
             )
+            subprocess.run(
+                ["git", "-C", str(selected), "config", "user.name", "Platform Test"],
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(selected),
+                    "config",
+                    "user.email",
+                    "platform-test@example.invalid",
+                ],
+                check=True,
+            )
             (selected_platform / "components.yaml").write_text(
                 "component_files: [unterminated\n", encoding="utf-8"
+            )
+            (selected_platform / "changes/fixture.jsonl").write_text(
+                "{}\n", encoding="utf-8"
+            )
+            (selected_platform / "backfills/fixture.yaml").write_text(
+                "{}\n", encoding="utf-8"
+            )
+            subprocess.run(
+                ["git", "-C", str(selected), "add", "33god-platform"],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(selected), "commit", "-qm", "bad target"],
+                check=True,
             )
             env = os.environ.copy()
             env["GOD_SOURCE_ROOT"] = str(selected)
@@ -837,18 +875,74 @@ class PlatformBackfillFailureTests(unittest.TestCase):
             target.write_text("forbidden-marker\n", encoding="utf-8")
             manifest = root / "fixture.yaml"
             self.write_manifest(manifest, target)
-            original_read_text = Path.read_text
+            original_open = os.open
 
-            def selective_read_text(path: Path, *args: object, **kwargs: object) -> str:
-                if path == target:
+            def selective_open(path: object, *args: object, **kwargs: object) -> int:
+                if Path(path) == target:
                     raise PermissionError("denied")
-                return original_read_text(path, *args, **kwargs)
+                return original_open(path, *args, **kwargs)
 
             with (
-                patch.object(Path, "read_text", selective_read_text),
+                patch.object(platform.os, "open", selective_open),
                 self.assertRaisesRegex(ValueError, "cannot be read"),
             ):
                 platform.scan_backfill(manifest)
+
+    def test_unreadable_backfill_directory_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "scan"
+            restricted = target / "restricted"
+            restricted.mkdir(parents=True)
+            (restricted / "blocked.txt").write_text(
+                "forbidden-marker\n", encoding="utf-8"
+            )
+            manifest = root / "fixture.yaml"
+            self.write_manifest(manifest, target)
+            original_scandir = os.scandir
+
+            def selective_scandir(path: object) -> object:
+                if Path(path) == restricted:
+                    raise PermissionError("denied")
+                return original_scandir(path)
+
+            with (
+                patch.object(platform.os, "scandir", selective_scandir),
+                self.assertRaisesRegex(ValueError, "cannot be enumerated"),
+            ):
+                platform.scan_backfill(manifest)
+            with (
+                patch.object(platform.os, "scandir", selective_scandir),
+                self.assertRaisesRegex(ValueError, "cannot be enumerated"),
+            ):
+                platform.iter_search_files([str(target / "*" / "*.txt")])
+
+    def test_growing_and_virtual_backfill_files_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "growing.txt"
+            target.write_text("clean\n", encoding="utf-8")
+            original_read = os.read
+            grew = False
+
+            def growing_read(descriptor: int, size: int) -> bytes:
+                nonlocal grew
+                chunk = original_read(descriptor, size)
+                if chunk and not grew:
+                    grew = True
+                    with target.open("ab") as handle:
+                        handle.write(b"later\n")
+                return chunk
+
+            with (
+                patch.object(platform.os, "read", growing_read),
+                self.assertRaisesRegex(ValueError, "changed while reading"),
+            ):
+                platform.read_bounded_regular_file(target)
+
+        virtual = Path("/proc/self/cmdline")
+        if virtual.exists():
+            with self.assertRaisesRegex(ValueError, "virtual backfill file"):
+                platform.read_bounded_regular_file(virtual)
 
     def test_missing_backfill_id_returns_one_without_traceback(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -916,6 +1010,12 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
         )
         self.git(root, "add", ".gitmodules")
         self.git(root, "commit", "-qm", "record root gitlink")
+
+    def loose_object_path(self, repo: Path, object_id: str) -> Path:
+        git_dir = Path(self.git(repo, "rev-parse", "--git-dir"))
+        if not git_dir.is_absolute():
+            git_dir = repo / git_dir
+        return git_dir / "objects" / object_id[:2] / object_id[2:]
 
     def test_plain_child_cannot_inherit_wrapper_git_identity(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1104,6 +1204,142 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
                 ),
             ):
                 self.assertEqual(platform.validate_gitlink_inventory(), [])
+
+    def test_git_replacement_refs_cannot_substitute_root_tree_semantics(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / "repo"
+            self.init_repo(repo, "https://github.com/example/root.git")
+            bad_commit = self.git(repo, "rev-parse", "HEAD")
+            bad_blob = self.git(repo, "rev-parse", "HEAD:tracked.txt")
+            (repo / "tracked.txt").write_text("clean replacement\n", encoding="utf-8")
+            self.git(repo, "commit", "-qam", "clean replacement")
+            clean_commit = self.git(repo, "rev-parse", "HEAD")
+            self.git(repo, "reset", "--hard", "-q", bad_commit)
+            self.git(repo, "replace", bad_commit, clean_commit)
+            entries = platform.root_tree_entries(repo)
+            self.assertEqual(entries["tracked.txt"][2], bad_blob)
+
+    def test_platform_manifest_semantics_ignore_staged_and_dirty_bytes(self) -> None:
+        for mutation in ("bad-commit-clean-stage", "clean-commit-bad-dirty"):
+            with (
+                self.subTest(mutation=mutation),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                source = Path(temporary) / "source"
+                platform_root = source / "33god-platform"
+                platform_root.mkdir(parents=True)
+                self.git(source, "init", "-q")
+                self.git(source, "config", "user.name", "Platform Test")
+                self.git(
+                    source,
+                    "config",
+                    "user.email",
+                    "platform-test@example.invalid",
+                )
+                manifest = platform_root / "components.yaml"
+                committed = "bad" if mutation.startswith("bad") else "clean"
+                mutable = "clean" if committed == "bad" else "bad"
+                manifest.write_text(f"marker: {committed}\n", encoding="utf-8")
+                self.git(source, "add", "33god-platform/components.yaml")
+                self.git(source, "commit", "-qm", "published manifest")
+                manifest.write_text(f"marker: {mutable}\n", encoding="utf-8")
+                if mutation.endswith("stage"):
+                    self.git(source, "add", "33god-platform/components.yaml")
+                with (
+                    patch.object(platform, "SOURCE_ROOT", source),
+                    patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+                ):
+                    self.assertEqual(platform.platform_config()["marker"], committed)
+
+    def test_missing_component_head_commit_fails_with_surviving_ref(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / "component"
+            revision = self.init_repo(repo, "https://github.com/example/component.git")
+            self.loose_object_path(repo, revision).unlink()
+            with self.assertRaisesRegex(ValueError, "missing|failed safely"):
+                platform.git_checkout_revision(repo)
+
+    def test_missing_unrelated_root_blob_or_subtree_fails_closed(self) -> None:
+        for kind in ("blob", "tree"):
+            with (
+                self.subTest(kind=kind),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                repo = Path(temporary) / "root"
+                self.init_repo(repo, "https://github.com/example/root.git")
+                unrelated = repo / "unrelated/data.txt"
+                unrelated.parent.mkdir()
+                unrelated.write_text("unrelated\n", encoding="utf-8")
+                self.git(repo, "add", "unrelated/data.txt")
+                self.git(repo, "commit", "-qm", "unrelated subtree")
+                expression = "HEAD:unrelated/data.txt" if kind == "blob" else "HEAD:unrelated"
+                object_id = self.git(repo, "rev-parse", expression)
+                self.loose_object_path(repo, object_id).unlink()
+                with self.assertRaisesRegex(ValueError, "missing or invalid object"):
+                    platform.root_tree_entries(repo)
+
+    def test_root_gitlink_checkout_symlink_indirection_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            borrowed = source / "borrowed"
+            checkout = source / "component"
+            url = "https://github.com/example/component.git"
+            revision = self.init_repo(borrowed, url)
+            self.configure_superproject(source, checkout, revision, url)
+            checkout.symlink_to(borrowed, target_is_directory=True)
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(
+                    platform,
+                    "ROOT_GITLINK_CONTRACTS",
+                    {"component": (url, revision)},
+                ),
+            ):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(any("non-symlink directories" in item for item in errors))
+
+    def test_streaming_git_output_caps_kill_and_reap_real_flooders(self) -> None:
+        for stream_name in ("stdout", "stderr"):
+            with (
+                self.subTest(stream=stream_name),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                root = Path(temporary)
+                fake_git = root / "git"
+                pid_file = root / "pid"
+                fake_git.write_text(
+                    "#!/usr/bin/env python3\n"
+                    "import os, sys, time\n"
+                    "with open(os.environ['FLOOD_PID_FILE'], 'w', encoding='ascii') as handle:\n"
+                    "    handle.write(str(os.getpid()))\n"
+                    "stream = sys.stdout.buffer if os.environ['FLOOD_STREAM'] == 'stdout' else sys.stderr.buffer\n"
+                    "stream.write(b'PRIVATE-FLOOD-PAYLOAD' * 512)\n"
+                    "stream.flush()\n"
+                    "time.sleep(30)\n",
+                    encoding="utf-8",
+                )
+                fake_git.chmod(0o755)
+                environment = {
+                    "PATH": f"{root}{os.pathsep}{os.environ['PATH']}",
+                    "FLOOD_PID_FILE": str(pid_file),
+                    "FLOOD_STREAM": stream_name,
+                }
+                started = time.monotonic()
+                with (
+                    patch.dict(os.environ, environment),
+                    self.assertRaises(platform.GitValidationError) as raised,
+                ):
+                    platform._run_git_bytes(
+                        root,
+                        "status",
+                        stdout_limit=1024,
+                        stderr_limit=1024,
+                    )
+                self.assertLess(time.monotonic() - started, 5)
+                self.assertNotIn("PRIVATE-FLOOD-PAYLOAD", str(raised.exception))
+                child_pid = int(pid_file.read_text(encoding="ascii"))
+                with self.assertRaises(ProcessLookupError):
+                    os.kill(child_pid, 0)
 
     def test_uninitialized_gitlink_without_component_row_fails_inventory(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1431,13 +1667,15 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
             repo.mkdir()
             (repo / ".git").mkdir()
             failures = (
-                subprocess.TimeoutExpired(["git"], 10),
+                platform._BoundedProcessError("timeout"),
                 OSError("git unavailable"),
             )
             for failure in failures:
                 with (
                     self.subTest(failure=type(failure).__name__),
-                    patch.object(platform.subprocess, "run", side_effect=failure),
+                    patch.object(
+                        platform, "_run_bounded_process", side_effect=failure
+                    ),
                 ):
                     with self.assertRaisesRegex(
                         ValueError, "Git command failed safely"

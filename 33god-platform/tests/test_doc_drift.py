@@ -6,9 +6,11 @@ import importlib.util
 import hashlib
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -353,7 +355,10 @@ class AuthorityParityDriftTests(unittest.TestCase):
         root: Path,
         *,
         workflow_files: dict[str, str] | None = None,
-        description: str = "Bounded Lifecycle client for choosing and executing legal work.",
+        description: str = (
+            "Bounded Lifecycle client for choosing only Lifecycle-legal work and "
+            "executing only Lifecycle-legal work."
+        ),
     ) -> None:
         workflow_files = workflow_files or {
             "workflow.md": "Lifecycle bounded client protocol.\n"
@@ -578,6 +583,48 @@ class AuthorityParityDriftTests(unittest.TestCase):
                 any("source/mirror bytes differ" in item for item in errors)
             )
 
+    def test_bad_pinned_momo_bytes_survive_clean_staged_replacement(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(
+                root,
+                workflow_files={
+                    "workflow.md": "A copy is stored in Holocene.\n",
+                },
+            )
+            momo = root / "momo"
+            self.init_repo(momo)
+            self.git(momo, "add", ".")
+            self.git(momo, "commit", "-qm", "published bad workflow")
+            self.write_momo_workflow_fixture(root)
+            self.git(momo, "add", ".")
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("Holocene copy claim" in item for item in errors))
+
+    def test_clean_pinned_momo_ignores_bad_dirty_and_staged_bytes(self) -> None:
+        for mutation in ("dirty", "staged"):
+            with (
+                self.subTest(mutation=mutation),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                root = Path(temporary)
+                self.write_momo_workflow_fixture(root)
+                momo = root / "momo"
+                self.init_repo(momo)
+                self.git(momo, "add", ".")
+                self.git(momo, "commit", "-qm", "published clean workflow")
+                self.write_momo_workflow_fixture(
+                    root,
+                    workflow_files={
+                        "workflow.md": "A copy is stored in Holocene.\n",
+                    },
+                )
+                if mutation == "staged":
+                    self.git(momo, "add", ".")
+                self.assertEqual(
+                    check_doc_drift.ticket_lifecycle_surface_errors(root), []
+                )
+
     def test_momo_files_manifest_hash_drift_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -609,6 +656,33 @@ class AuthorityParityDriftTests(unittest.TestCase):
             errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
             self.assertTrue(any("Holocene copy claim" in item for item in errors))
 
+    def test_invalid_utf8_canonical_momo_bytes_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(root)
+            payload = b"A copy is stored in Holo\xffene.\n"
+            source = root / "momo/_bmad/custom/workflows/ticket-lifecycle/workflow.md"
+            mirror = (
+                root
+                / "momo/_bmad/_config/custom/custom/workflows/ticket-lifecycle/workflow.md"
+            )
+            source.write_bytes(payload)
+            mirror.write_bytes(payload)
+            manifest = root / "momo/_bmad/_config/files-manifest.csv"
+            old_hash = next(
+                row.rsplit('","', 1)[1].rstrip('"')
+                for row in manifest.read_text(encoding="utf-8").splitlines()
+                if "ticket-lifecycle/workflow.md" in row
+            )
+            manifest.write_text(
+                manifest.read_text(encoding="utf-8").replace(
+                    old_hash, hashlib.sha256(payload).hexdigest(), 1
+                ),
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("not valid UTF-8" in item for item in errors))
+
     def test_momo_manifest_must_describe_bounded_lifecycle_client(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -629,6 +703,19 @@ class AuthorityParityDriftTests(unittest.TestCase):
             "Not a bounded Lifecycle client for choosing and executing legal work.",
             "Bounded Lifecycle client for choosing and executing illegal work.",
             "Bounded Lifecycle client that does not execute legal work.",
+            (
+                "Bounded Lifecycle client for choosing work that is not "
+                "Lifecycle-legal work and executing work that is not "
+                "Lifecycle-legal work."
+            ),
+            (
+                "Bounded Lifecycle client for choosing Lifecycle-legal work but "
+                "refuses to execute Lifecycle-legal work."
+            ),
+            (
+                "Bounded Lifecycle client for ranking Lifecycle-legal work and is "
+                "prohibited from executing Lifecycle-legal work."
+            ),
         )
         for description in descriptions:
             with (
@@ -666,14 +753,21 @@ class AuthorityParityDriftTests(unittest.TestCase):
             self.write_momo_workflow_fixture(
                 root,
                 description=(
-                    "Bounded Lifecycle client for ranking Lifecycle-legal work and "
-                    "executing Lifecycle-legal work."
+                    "Bounded Lifecycle client for ranking only Lifecycle-legal work and "
+                    "executing only Lifecycle-legal work."
                 ),
             )
             self.assertEqual(check_doc_drift.ticket_lifecycle_surface_errors(root), [])
 
     def test_ticket_lifecycle_separator_variants_count_as_duplicate_rows(self) -> None:
-        variants = ("ticket_lifecycle", "ticket lifecycle")
+        variants = (
+            "ticket_lifecycle",
+            "ticket  lifecycle",
+            "ticket\tlifecycle",
+            "ticket--lifecycle",
+            "ticket/lifecycle",
+            "ticketlifecycle",
+        )
         for variant in variants:
             with (
                 self.subTest(variant=variant),
@@ -998,6 +1092,77 @@ class AuthorityParityDriftTests(unittest.TestCase):
                 check_doc_drift.non_momo_operational_surface_errors(root), []
             )
 
+    def test_root_replacement_ref_cannot_substitute_operational_semantics(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.init_repo(root)
+            runner = root / "pipeline-mcp-hub/bin/close.sh"
+            runner.parent.mkdir(parents=True)
+            runner.write_text("tp transition PIPE-1 completed\n", encoding="utf-8")
+            self.git(root, "add", "pipeline-mcp-hub/bin/close.sh")
+            self.git(root, "commit", "-qm", "published violation")
+            bad_commit = self.git(root, "rev-parse", "HEAD")
+            self.git(root, "rm", "-q", "pipeline-mcp-hub/bin/close.sh")
+            self.git(root, "commit", "-qm", "clean replacement")
+            clean_commit = self.git(root, "rev-parse", "HEAD")
+            self.git(root, "reset", "--hard", "-q", bad_commit)
+            self.git(root, "replace", bad_commit, clean_commit)
+            runner.unlink()
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_nested_replacement_ref_cannot_substitute_operational_semantics(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repo = root / "candystore"
+            self.init_repo(repo)
+            runner = repo / "bin/close.sh"
+            runner.parent.mkdir()
+            runner.write_text("tp transition CANDY-1 completed\n", encoding="utf-8")
+            self.git(repo, "add", "bin/close.sh")
+            self.git(repo, "commit", "-qm", "published violation")
+            bad_commit = self.git(repo, "rev-parse", "HEAD")
+            self.git(repo, "rm", "-q", "bin/close.sh")
+            self.git(repo, "commit", "-qm", "clean replacement")
+            clean_commit = self.git(repo, "rev-parse", "HEAD")
+            self.git(repo, "reset", "--hard", "-q", bad_commit)
+            self.git(repo, "replace", bad_commit, clean_commit)
+            runner.unlink()
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_deleted_pipeline_worktree_cannot_mask_published_violation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.init_repo(root)
+            runner = root / "pipeline-mcp-hub/bin/close.sh"
+            runner.parent.mkdir(parents=True)
+            runner.write_text("tp transition PIPE-1 completed\n", encoding="utf-8")
+            self.git(root, "add", "pipeline-mcp-hub/bin/close.sh")
+            self.git(root, "commit", "-qm", "published pipeline violation")
+            runner.unlink()
+            runner.parent.rmdir()
+            runner.parent.parent.rmdir()
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("pipeline-mcp-hub" in item for item in errors))
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_promoted_root_sentinel_provider_completion_is_scanned(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.init_repo(root)
+            sentinel = (
+                root
+                / "agents/hermes/pm/.scripts/sentinel/bin/issue-autonomous-review.sh"
+            )
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_text("tp transition ROOT-1 completed\n", encoding="utf-8")
+            self.git(root, "add", sentinel.relative_to(root).as_posix())
+            self.git(root, "commit", "-qm", "published promoted sentinel")
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("root/agents/hermes/pm" in item for item in errors))
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
     def test_bad_published_blob_survives_dirty_and_staged_masking(self) -> None:
         for mutation in ("dirty-replacement", "staged-replacement", "staged-deletion"):
             with (
@@ -1151,9 +1316,11 @@ class AuthorityParityDriftTests(unittest.TestCase):
             with (
                 patch.object(check_doc_drift, "is_own_checkout", return_value=True),
                 patch.object(
-                    check_doc_drift.subprocess,
-                    "run",
-                    return_value=subprocess.CompletedProcess(["git"], 1, "", "failed"),
+                    check_doc_drift,
+                    "_run_bounded_process",
+                    return_value=subprocess.CompletedProcess(
+                        ["git"], 1, b"", b"failed"
+                    ),
                 ),
             ):
                 with self.assertRaisesRegex(
@@ -1196,14 +1363,51 @@ class AuthorityParityDriftTests(unittest.TestCase):
             repo.mkdir()
             (repo / ".git").mkdir()
             with patch.object(
-                check_doc_drift.subprocess,
-                "run",
-                side_effect=subprocess.TimeoutExpired(["git"], 10),
+                check_doc_drift,
+                "_run_bounded_process",
+                side_effect=check_doc_drift._BoundedProcessError("timeout"),
             ):
                 with self.assertRaisesRegex(
                     RuntimeError, "tracked-file enumeration failed"
                 ):
                     check_doc_drift.repository_files(repo)
+
+    def test_drift_git_stderr_cap_kills_and_reaps_real_flooder(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fake_git = root / "git"
+            pid_file = root / "pid"
+            fake_git.write_text(
+                "#!/usr/bin/env python3\n"
+                "import os, sys, time\n"
+                "with open(os.environ['FLOOD_PID_FILE'], 'w', encoding='ascii') as handle:\n"
+                "    handle.write(str(os.getpid()))\n"
+                "sys.stderr.buffer.write(b'PRIVATE-DRIFT-PAYLOAD' * 512)\n"
+                "sys.stderr.buffer.flush()\n"
+                "time.sleep(30)\n",
+                encoding="utf-8",
+            )
+            fake_git.chmod(0o755)
+            environment = {
+                "PATH": f"{root}{os.pathsep}{os.environ['PATH']}",
+                "FLOOD_PID_FILE": str(pid_file),
+            }
+            started = time.monotonic()
+            with (
+                patch.dict(os.environ, environment),
+                self.assertRaises(RuntimeError) as raised,
+            ):
+                check_doc_drift._run_git_process(
+                    root,
+                    "status",
+                    stdout_limit=1024,
+                    stderr_limit=1024,
+                )
+            self.assertLess(time.monotonic() - started, 5)
+            self.assertNotIn("PRIVATE-DRIFT-PAYLOAD", str(raised.exception))
+            child_pid = int(pid_file.read_text(encoding="ascii"))
+            with self.assertRaises(ProcessLookupError):
+                os.kill(child_pid, 0)
 
     def test_stale_bloodbank_live_controller_inventory_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1229,6 +1433,45 @@ class AuthorityParityDriftTests(unittest.TestCase):
             self.assertTrue(
                 any("current Bloodbank guidance" in item for item in errors)
             )
+
+    def test_bad_published_root_guidance_survives_clean_staged_replacement(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.init_repo(root)
+            guide = root / "docs/development-guide-bloodbank.md"
+            guide.parent.mkdir(parents=True)
+            guide.write_text(
+                "cd bloodbank/services/lifecycle-controller\n", encoding="utf-8"
+            )
+            self.git(root, "add", "docs/development-guide-bloodbank.md")
+            self.git(root, "commit", "-qm", "published bad guidance")
+            guide.write_text("current clean guidance\n", encoding="utf-8")
+            self.git(root, "add", "docs/development-guide-bloodbank.md")
+            errors = check_doc_drift.root_current_guidance_errors(root)
+            self.assertTrue(any("current Bloodbank guidance" in item for item in errors))
+
+    def test_clean_published_root_guidance_ignores_bad_mutable_bytes(self) -> None:
+        for mutation in ("dirty", "staged"):
+            with (
+                self.subTest(mutation=mutation),
+                tempfile.TemporaryDirectory() as temporary,
+            ):
+                root = Path(temporary)
+                self.init_repo(root)
+                guide = root / "docs/development-guide-bloodbank.md"
+                guide.parent.mkdir(parents=True)
+                guide.write_text("current clean guidance\n", encoding="utf-8")
+                self.git(root, "add", "docs/development-guide-bloodbank.md")
+                self.git(root, "commit", "-qm", "published clean guidance")
+                guide.write_text(
+                    "cd bloodbank/services/lifecycle-controller\n",
+                    encoding="utf-8",
+                )
+                if mutation == "staged":
+                    self.git(root, "add", "docs/development-guide-bloodbank.md")
+                self.assertEqual(
+                    check_doc_drift.root_current_guidance_errors(root), []
+                )
 
     def test_current_architecture_controller_hosting_claim_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

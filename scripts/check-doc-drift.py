@@ -6,11 +6,15 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import io
 import json
 import os
 import re
+import selectors
+import signal
 import subprocess
 import sys
+import time
 import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -194,9 +198,17 @@ MAX_OPERATIONAL_FILE_BYTES = 1_000_000
 MAX_GIT_TREE_ENTRIES = 100_000
 MAX_GIT_TREE_OUTPUT_BYTES = 16_000_000
 MAX_GIT_BATCH_OUTPUT_BYTES = 16_000_000
-MAX_GIT_TEXT_OUTPUT_CHARS = 16_000_000
+MAX_GIT_TEXT_OUTPUT_BYTES = 16_000_000
 FULL_GIT_REVISION = re.compile(r"[0-9a-f]{40}")
 VALID_GIT_TREE_MODES = {"100644", "100755", "120000", "160000"}
+
+
+class _BoundedProcessError(RuntimeError):
+    """A child exceeded a resource boundary without retaining its payload."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
 
 
 class DuplicateYamlKeyError(ValueError):
@@ -260,21 +272,24 @@ class Reporter:
         self.emit("FAIL", check, detail)
 
 
-def load_yaml(path: Path) -> dict[str, Any]:
+def load_yaml_text(text: str, label: str) -> dict[str, Any]:
     if yaml is None:
         raise RuntimeError("PyYAML unavailable")
     try:
-        with path.open(encoding="utf-8") as handle:
-            value = yaml.load(handle, Loader=_UniqueKeyLoader)
+        value = yaml.load(text, Loader=_UniqueKeyLoader)
     except DuplicateYamlKeyError as exc:
-        raise ValueError(f"{path}: duplicate YAML mapping key") from exc
+        raise ValueError(f"{label}: duplicate YAML mapping key") from exc
     except yaml.YAMLError as exc:
-        raise ValueError(f"{path}: invalid YAML") from exc
+        raise ValueError(f"{label}: invalid YAML") from exc
     if value is None:
         value = {}
     if not isinstance(value, dict):
         raise ValueError("expected a YAML mapping")
     return value
+
+
+def load_yaml(path: Path) -> dict[str, Any]:
+    return load_yaml_text(path.read_text(encoding="utf-8", errors="strict"), str(path))
 
 
 def check_root_artifacts(source: Path, docs: Path, report: Reporter) -> None:
@@ -792,7 +807,7 @@ PROVIDER_COMPLETION_PATTERNS = (
     ),
     re.compile(r"(?i)\bunblocks?\s+dependents?\b"),
 )
-TICKET_LIFECYCLE_VARIANT = re.compile(r"(?i)ticket[-_ ]?lifecycle")
+TICKET_LIFECYCLE_VARIANT = re.compile(r"(?i)ticket(?:[\s/_-]*)lifecycle")
 MOMO_HOLOCENE_COPY_PATTERN = re.compile(
     r"(?is)(?:\b(?:copy|copies|replica|mirror|byte[- ]identical|stored)\b.{0,100}"
     r"\bHolocene\b|\bHolocene\b.{0,100}"
@@ -801,31 +816,227 @@ MOMO_HOLOCENE_COPY_PATTERN = re.compile(
 )
 
 
-def run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), *args],
-            text=True,
-            capture_output=True,
-            timeout=GIT_TIMEOUT_SECONDS,
+def has_ticket_lifecycle_identity(value: str) -> bool:
+    """Recognize one structural identity across canonical separator variants."""
+
+    tokens = tuple(
+        token
+        for token in re.split(r"[\s/_-]+", value.casefold())
+        if token
+    )
+    return "ticketlifecycle" in tokens or any(
+        tokens[index : index + 2] == ("ticket", "lifecycle")
+        for index in range(max(0, len(tokens) - 1))
+    )
+
+
+def exact_momo_policy_description(description: str) -> bool:
+    """Accept only the normalized, independently scoped legal-work contract."""
+
+    normalized = re.sub(r"\s+", " ", description.casefold()).strip()
+    return bool(
+        re.fullmatch(
+            r"bounded lifecycle client for (?:choosing|ranking) only "
+            r"lifecycle-legal work and executing only lifecycle-legal work\.?",
+            normalized,
         )
-    except (OSError, subprocess.TimeoutExpired, UnicodeError) as exc:
+    )
+
+
+def _terminate_process_group(process: subprocess.Popen[bytes]) -> None:
+    """Kill the isolated child process group and always reap the direct child."""
+
+    if process.poll() is None:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        except OSError:
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass
+    try:
+        process.wait(timeout=1)
+    except subprocess.TimeoutExpired:
+        try:
+            process.kill()
+        except ProcessLookupError:
+            pass
+        process.wait()
+
+
+def _run_bounded_process(
+    command: list[str],
+    *,
+    input_bytes: bytes | None = None,
+    stdout_limit: int,
+    stderr_limit: int,
+    timeout: float,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[bytes]:
+    """Stream a child through byte caps without shell execution or payload leaks."""
+
+    if stdout_limit < 0 or stderr_limit < 0 or timeout <= 0:
+        raise ValueError("invalid bounded subprocess limits")
+    process = subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+        env=env,
+    )
+    if process.stdout is None or process.stderr is None:
+        _terminate_process_group(process)
+        raise _BoundedProcessError("pipe")
+
+    selector = selectors.DefaultSelector()
+    streams = {"stdout": bytearray(), "stderr": bytearray()}
+    limits = {"stdout": stdout_limit, "stderr": stderr_limit}
+    input_view = memoryview(input_bytes or b"")
+    input_offset = 0
+    deadline = time.monotonic() + timeout
+    try:
+        for name, stream in (("stdout", process.stdout), ("stderr", process.stderr)):
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, name)
+        if process.stdin is not None:
+            os.set_blocking(process.stdin.fileno(), False)
+            selector.register(process.stdin, selectors.EVENT_WRITE, "stdin")
+
+        while selector.get_map():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise _BoundedProcessError("timeout")
+            events = selector.select(remaining)
+            if not events:
+                raise _BoundedProcessError("timeout")
+            for key, _mask in events:
+                stream = key.fileobj
+                name = str(key.data)
+                if name == "stdin":
+                    if input_offset >= len(input_view):
+                        selector.unregister(stream)
+                        stream.close()
+                        continue
+                    try:
+                        written = os.write(
+                            stream.fileno(), input_view[input_offset : input_offset + 65536]
+                        )
+                    except BrokenPipeError:
+                        selector.unregister(stream)
+                        stream.close()
+                    else:
+                        input_offset += written
+                    continue
+
+                remaining_capacity = limits[name] - len(streams[name])
+                try:
+                    chunk = os.read(
+                        stream.fileno(), min(65536, remaining_capacity + 1)
+                    )
+                except BlockingIOError:
+                    continue
+                if not chunk:
+                    selector.unregister(stream)
+                    stream.close()
+                    continue
+                streams[name].extend(chunk)
+                if len(streams[name]) > limits[name]:
+                    streams[name].clear()
+                    raise _BoundedProcessError("output")
+
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise _BoundedProcessError("timeout")
+        try:
+            returncode = process.wait(timeout=remaining)
+        except subprocess.TimeoutExpired as exc:
+            raise _BoundedProcessError("timeout") from exc
+    except BaseException:
+        for payload in streams.values():
+            payload.clear()
+        _terminate_process_group(process)
+        raise
+    finally:
+        selector.close()
+        if process.stdin is not None and not process.stdin.closed:
+            process.stdin.close()
+        for stream in (process.stdout, process.stderr):
+            if stream is not None and not stream.closed:
+                stream.close()
+    return subprocess.CompletedProcess(
+        command,
+        returncode,
+        bytes(streams["stdout"]),
+        bytes(streams["stderr"]),
+    )
+
+
+def _git_environment() -> dict[str, str]:
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "GIT_NO_REPLACE_OBJECTS": "1",
+            "GIT_NO_LAZY_FETCH": "1",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+    )
+    return environment
+
+
+def _run_git_process(
+    repo: Path,
+    *args: str,
+    input_bytes: bytes | None = None,
+    stdout_limit: int,
+    stderr_limit: int,
+) -> subprocess.CompletedProcess[bytes]:
+    operation = args[0] if args else "git"
+    try:
+        result = _run_bounded_process(
+            ["git", "-C", str(repo), *args],
+            input_bytes=input_bytes,
+            stdout_limit=stdout_limit,
+            stderr_limit=stderr_limit,
+            timeout=GIT_TIMEOUT_SECONDS,
+            env=_git_environment(),
+        )
+    except _BoundedProcessError as exc:
+        if exc.reason == "output":
+            raise RuntimeError(
+                f"Git command output exceeded its safe bound for {repo}: {operation}"
+            ) from exc
         raise RuntimeError(
-            f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
+            f"Git command failed safely for {repo}: {operation}"
+        ) from exc
+    except OSError as exc:
+        raise RuntimeError(
+            f"Git command failed safely for {repo}: {operation}"
         ) from exc
     if result.returncode:
-        raise RuntimeError(
-            f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
-        )
-    if (
-        len(result.stdout) > MAX_GIT_TEXT_OUTPUT_CHARS
-        or len(result.stderr) > MAX_GIT_TEXT_OUTPUT_CHARS
-    ):
-        raise RuntimeError(
-            f"Git command output exceeded its safe bound for {repo}: "
-            f"{args[0] if args else 'git'}"
-        )
+        raise RuntimeError(f"Git command failed safely for {repo}: {operation}")
     return result
+
+
+def run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    raw = _run_git_process(
+        repo,
+        *args,
+        stdout_limit=MAX_GIT_TEXT_OUTPUT_BYTES,
+        stderr_limit=MAX_GIT_TEXT_OUTPUT_BYTES,
+    )
+    try:
+        stdout = raw.stdout.decode("utf-8", errors="strict")
+        stderr = raw.stderr.decode("utf-8", errors="strict")
+    except UnicodeError as exc:
+        raise RuntimeError(
+            f"Git command returned invalid text safely for {repo}: "
+            f"{args[0] if args else 'git'}"
+        ) from exc
+    return subprocess.CompletedProcess(raw.args, raw.returncode, stdout, stderr)
 
 
 def run_git_bytes(
@@ -836,29 +1047,13 @@ def run_git_bytes(
 ) -> bytes:
     """Run bounded Git and return raw stdout without exposing stderr."""
 
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), *args],
-            input=input_bytes,
-            capture_output=True,
-            timeout=GIT_TIMEOUT_SECONDS,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise RuntimeError(
-            f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
-        ) from exc
-    if result.returncode:
-        raise RuntimeError(
-            f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
-        )
-    stdout = bytes(result.stdout)
-    stderr = bytes(result.stderr)
-    if len(stdout) > max_output_bytes or len(stderr) > MAX_GIT_BATCH_OUTPUT_BYTES:
-        raise RuntimeError(
-            f"Git command output exceeded its safe bound for {repo}: "
-            f"{args[0] if args else 'git'}"
-        )
-    return stdout
+    return _run_git_process(
+        repo,
+        *args,
+        input_bytes=input_bytes,
+        stdout_limit=max_output_bytes,
+        stderr_limit=MAX_GIT_BATCH_OUTPUT_BYTES,
+    ).stdout
 
 
 def is_own_checkout(repo: Path) -> bool:
@@ -880,7 +1075,30 @@ def checkout_revision(repo: Path) -> str | None:
     revision = result.stdout.strip()
     if not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise RuntimeError(f"Git returned an invalid HEAD revision for {repo}")
+    verify_commit_object_graph(repo, revision)
     return revision
+
+
+def verify_commit_object_graph(repo: Path, revision: str) -> None:
+    """Require one exact commit and all of its reachable objects to be local."""
+
+    if not FULL_GIT_REVISION.fullmatch(revision):
+        raise RuntimeError(f"{repo}: invalid exact Git commit revision")
+    if run_git(repo, "cat-file", "-t", revision).stdout.strip() != "commit":
+        raise RuntimeError(f"{repo}: exact Git revision is missing or is not a commit")
+    try:
+        run_git(
+            repo,
+            "fsck",
+            "--connectivity-only",
+            "--no-dangling",
+            "--no-reflogs",
+            revision,
+        )
+    except RuntimeError as exc:
+        raise RuntimeError(
+            f"{repo}: exact Git tree references a missing or invalid blob/tree object"
+        ) from exc
 
 
 def _parse_git_tree_records(repo: Path, raw: bytes) -> list[tuple[str, str, str, str]]:
@@ -984,8 +1202,7 @@ def repository_tree_entries(
         return []
     if not FULL_GIT_REVISION.fullmatch(revision):
         raise RuntimeError(f"{repo}: invalid exact Git commit revision")
-    if run_git(repo, "cat-file", "-t", revision).stdout.strip() != "commit":
-        raise RuntimeError(f"{repo}: exact Git revision is missing or is not a commit")
+    verify_commit_object_graph(repo, revision)
     raw = run_git_bytes(
         repo,
         "ls-tree",
@@ -1014,6 +1231,120 @@ def repository_tree_entries(
         )
         for mode, object_type, object_id, relative in entries
     ]
+
+
+GitSnapshot = dict[str, tuple[str, str, int | None]]
+
+
+def git_snapshot(repo: Path, revision: str | None = None) -> GitSnapshot | None:
+    """Capture one verified commit tree, or signal an explicit non-Git fallback."""
+
+    if not is_own_checkout(repo):
+        return None
+    exact_revision = checkout_revision(repo) if revision is None else revision
+    if exact_revision is None:
+        raise RuntimeError(f"{repo}: exact Git revision is unavailable")
+    return {
+        relative: (mode, object_id, object_size)
+        for mode, _kind, object_id, relative, object_size in repository_tree_entries(
+            repo, exact_revision
+        )
+    }
+
+
+def snapshot_blob_bytes(
+    repo: Path,
+    snapshot: GitSnapshot,
+    relative: str,
+    *,
+    label: str,
+    max_bytes: int = MAX_OPERATIONAL_FILE_BYTES,
+) -> bytes | None:
+    entry = snapshot.get(relative)
+    if entry is None:
+        return None
+    mode, object_id, object_size = entry
+    if mode not in {"100644", "100755"} or object_size is None:
+        raise RuntimeError(f"{label} is not a regular exact Git blob")
+    if object_size > max_bytes:
+        raise RuntimeError(f"{label} exceeds its safe size bound")
+    blob = run_git_bytes(
+        repo,
+        "cat-file",
+        "blob",
+        object_id,
+        max_output_bytes=max_bytes,
+    )
+    if len(blob) != object_size:
+        raise RuntimeError(f"{label} exact Git blob size changed while reading")
+    return blob
+
+
+def bounded_filesystem_bytes(
+    repo: Path,
+    relative: str,
+    *,
+    label: str,
+    max_bytes: int = MAX_OPERATIONAL_FILE_BYTES,
+) -> bytes | None:
+    """Strict non-Git fallback for tests and deliberately unpacked sources."""
+
+    path = repo / Path(PurePosixPath(relative))
+    if not path.exists() and not path.is_symlink():
+        return None
+    if path.is_symlink():
+        raise RuntimeError(f"{label} symlink is not permitted")
+    try:
+        resolved = path.resolve(strict=True)
+        repo_resolved = repo.resolve(strict=True)
+    except OSError as exc:
+        raise RuntimeError(f"{label} cannot be resolved safely") from exc
+    if not path_is_within(resolved, repo_resolved) or not path.is_file():
+        raise RuntimeError(f"{label} is not a contained regular file")
+    try:
+        with path.open("rb") as handle:
+            payload = handle.read(max_bytes + 1)
+    except OSError as exc:
+        raise RuntimeError(f"{label} cannot be read safely") from exc
+    if len(payload) > max_bytes:
+        raise RuntimeError(f"{label} exceeds its safe size bound")
+    return payload
+
+
+def repository_relative_bytes(
+    repo: Path,
+    snapshot: GitSnapshot | None,
+    relative: str,
+    *,
+    label: str,
+    max_bytes: int = MAX_OPERATIONAL_FILE_BYTES,
+) -> bytes | None:
+    if snapshot is not None:
+        return snapshot_blob_bytes(
+            repo, snapshot, relative, label=label, max_bytes=max_bytes
+        )
+    return bounded_filesystem_bytes(
+        repo, relative, label=label, max_bytes=max_bytes
+    )
+
+
+def repository_relative_text(
+    repo: Path,
+    snapshot: GitSnapshot | None,
+    relative: str,
+    *,
+    label: str,
+    max_bytes: int = MAX_OPERATIONAL_FILE_BYTES,
+) -> str | None:
+    payload = repository_relative_bytes(
+        repo, snapshot, relative, label=label, max_bytes=max_bytes
+    )
+    if payload is None:
+        return None
+    try:
+        return payload.decode("utf-8", errors="strict")
+    except UnicodeError as exc:
+        raise RuntimeError(f"{label} is not valid UTF-8") from exc
 
 
 def repository_gitlinks(repo: Path, revision: str | None = None) -> dict[str, str]:
@@ -1370,13 +1701,16 @@ def non_momo_operational_surface_errors(source: Path) -> list[str]:
             if relative == "momo":
                 continue
             errors.extend(scan_gitlink_tree(relative, source / relative, recorded))
-        if (source / "pipeline-mcp-hub").is_dir():
+        for component, tracked_prefix in (
+            ("root/agents/hermes/pm", "agents/hermes/pm"),
+            ("pipeline-mcp-hub", "pipeline-mcp-hub"),
+        ):
             errors.extend(
                 scan_operational_repository(
                     source,
-                    "pipeline-mcp-hub",
+                    component,
                     source,
-                    tracked_prefix="pipeline-mcp-hub",
+                    tracked_prefix=tracked_prefix,
                     revision=root_revision,
                 )
             )
@@ -1400,9 +1734,32 @@ def non_momo_operational_surface_errors(source: Path) -> list[str]:
 
 
 def canonical_workflow_files(
-    workflow_root: Path, momo_root: Path, label: str
+    workflow_root: Path,
+    momo_root: Path,
+    label: str,
+    snapshot: GitSnapshot | None = None,
 ) -> tuple[set[Path], list[str]]:
     errors: list[str] = []
+    if snapshot is not None:
+        prefix = workflow_root.relative_to(momo_root).as_posix().rstrip("/") + "/"
+        files: set[Path] = set()
+        for relative, (mode, _object_id, _size) in snapshot.items():
+            if not relative.startswith(prefix):
+                continue
+            child = relative.removeprefix(prefix)
+            if not child:
+                continue
+            if mode == "120000":
+                errors.append(
+                    f"Momo {label} workflow symlink is not permitted: {child}"
+                )
+            elif mode == "160000":
+                errors.append(
+                    f"Momo {label} workflow nested gitlink is not permitted: {child}"
+                )
+            else:
+                files.add(Path(PurePosixPath(child)))
+        return files, errors
     if not workflow_root.exists() and not workflow_root.is_symlink():
         return set(), errors
     if workflow_root.is_symlink():
@@ -1442,22 +1799,33 @@ def strict_csv_rows(
     expected_headers: tuple[str, ...],
     label: str,
     containment_root: Path,
+    snapshot: GitSnapshot | None = None,
 ) -> tuple[list[dict[str, str]], list[str]]:
     errors: list[str] = []
-    if not path.exists() and not path.is_symlink():
-        return [], errors
-    if path.is_symlink():
-        return [], [f"Momo {label} CSV symlink is not permitted"]
-    try:
-        resolved = path.resolve(strict=True)
-        root_resolved = containment_root.resolve(strict=True)
-    except (OSError, RuntimeError) as exc:
-        return [], [f"Momo malformed {label} CSV: {exc}"]
-    if not path_is_within(resolved, root_resolved):
-        return [], [f"Momo {label} CSV escapes the Momo checkout"]
     rows: list[dict[str, str]] = []
     try:
-        with path.open(encoding="utf-8", newline="") as handle:
+        if snapshot is not None:
+            relative = path.relative_to(containment_root).as_posix()
+            text = repository_relative_text(
+                containment_root,
+                snapshot,
+                relative,
+                label=f"Momo {label} CSV",
+            )
+            if text is None:
+                return [], errors
+            handle: Any = io.StringIO(text, newline="")
+        else:
+            if not path.exists() and not path.is_symlink():
+                return [], errors
+            if path.is_symlink():
+                return [], [f"Momo {label} CSV symlink is not permitted"]
+            resolved = path.resolve(strict=True)
+            root_resolved = containment_root.resolve(strict=True)
+            if not path_is_within(resolved, root_resolved):
+                return [], [f"Momo {label} CSV escapes the Momo checkout"]
+            handle = path.open(encoding="utf-8", errors="strict", newline="")
+        with handle:
             reader = csv.DictReader(handle, strict=True)
             headers = tuple(reader.fieldnames or ())
             if headers != expected_headers or len(headers) != len(set(headers)):
@@ -1470,7 +1838,7 @@ def strict_csv_rows(
                     errors.append(f"Momo {label} contains a malformed CSV row")
                     continue
                 rows.append({str(key): str(value) for key, value in row.items()})
-    except (OSError, UnicodeError, csv.Error) as exc:
+    except (OSError, RuntimeError, UnicodeError, csv.Error) as exc:
         errors.append(f"Momo malformed {label} CSV: {exc}")
     return rows, errors
 
@@ -1497,57 +1865,110 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
         ),
     }
     for component, root in non_momo_roots.items():
+        try:
+            snapshot = git_snapshot(root)
+        except RuntimeError as exc:
+            errors.append(f"{component} exact Git tree cannot be inspected: {exc}")
+            continue
         for relative in workflow_roots:
-            path = root / relative
-            if path.is_dir() and any(
-                candidate.is_file() for candidate in path.rglob("*")
-            ):
+            prefix = relative.as_posix().rstrip("/") + "/"
+            if snapshot is not None:
+                present = any(path.startswith(prefix) for path in snapshot)
+            else:
+                path = root / relative
+                present = path.is_dir() and any(
+                    candidate.is_file() for candidate in path.rglob("*")
+                )
+            if present:
                 errors.append(
                     f"{component} retains non-Momo ticket-lifecycle workflow at {relative}"
                 )
         for relative in manifest_paths:
-            path = root / relative
-            if (
-                path.is_file()
-                and "ticket-lifecycle" in path.read_text(encoding="utf-8").casefold()
-            ):
+            try:
+                text = repository_relative_text(
+                    root,
+                    snapshot,
+                    relative.as_posix(),
+                    label=f"{component} {relative.as_posix()}",
+                )
+            except RuntimeError as exc:
+                errors.append(
+                    f"{component} workflow registration cannot be inspected: {exc}"
+                )
+                continue
+            if text is not None and has_ticket_lifecycle_identity(text):
                 errors.append(
                     f"{component} registers non-Momo ticket-lifecycle workflow in {relative}"
                 )
         for relative in TICKET_LIFECYCLE_COMMAND_SURFACES:
-            if (root / relative).is_file():
+            if snapshot is not None:
+                present = relative.as_posix() in snapshot
+            else:
+                present = (root / relative).is_file()
+            if present:
                 errors.append(
                     f"{component} retains non-Momo ticket-lifecycle command surface at {relative}"
                 )
 
     momo = source / "momo"
+    if momo.is_symlink():
+        return [*errors, "Momo checkout symlink is not permitted"]
     if not momo.is_dir():
         return [*errors, "Momo checkout is missing"]
+    try:
+        momo_snapshot = git_snapshot(momo)
+    except RuntimeError as exc:
+        return [*errors, f"Momo exact Git tree cannot be inspected: {exc}"]
     source_workflow = momo / workflow_roots[0]
     mirror_workflow = momo / workflow_roots[1]
     source_files, source_file_errors = canonical_workflow_files(
-        source_workflow, momo, "canonical source"
+        source_workflow, momo, "canonical source", momo_snapshot
     )
     mirror_files, mirror_file_errors = canonical_workflow_files(
-        mirror_workflow, momo, "canonical mirror"
+        mirror_workflow, momo, "canonical mirror", momo_snapshot
     )
     errors.extend(source_file_errors)
     errors.extend(mirror_file_errors)
     if not source_files or source_files != mirror_files:
         errors.append("Momo canonical ticket-lifecycle source/mirror file sets differ")
     mismatched_files: list[str] = []
+    source_texts: dict[Path, str] = {}
     for relative in sorted(source_files & mirror_files):
+        source_relative = f"{workflow_roots[0].as_posix()}/{relative.as_posix()}"
+        mirror_relative = f"{workflow_roots[1].as_posix()}/{relative.as_posix()}"
         try:
-            differs = (source_workflow / relative).read_bytes() != (
-                mirror_workflow / relative
-            ).read_bytes()
-        except OSError:
+            source_bytes = repository_relative_bytes(
+                momo,
+                momo_snapshot,
+                source_relative,
+                label=f"Momo canonical source {relative.as_posix()}",
+            )
+            mirror_bytes = repository_relative_bytes(
+                momo,
+                momo_snapshot,
+                mirror_relative,
+                label=f"Momo canonical mirror {relative.as_posix()}",
+            )
+            if source_bytes is None or mirror_bytes is None:
+                raise RuntimeError("exact canonical workflow blob is missing")
+        except RuntimeError as exc:
             errors.append(
                 "Momo canonical ticket-lifecycle workflow file cannot be read: "
-                f"{relative.as_posix()}"
+                f"{relative.as_posix()}: {exc}"
             )
             continue
-        if differs:
+        for label, payload in (("source", source_bytes), ("mirror", mirror_bytes)):
+            try:
+                decoded = payload.decode("utf-8", errors="strict")
+            except UnicodeError:
+                errors.append(
+                    "Momo canonical ticket-lifecycle "
+                    f"{label} is not valid UTF-8: {relative.as_posix()}"
+                )
+            else:
+                if label == "source":
+                    source_texts[relative] = decoded
+        if source_bytes != mirror_bytes:
             mismatched_files.append(relative.as_posix())
     if mismatched_files:
         errors.append(
@@ -1557,12 +1978,7 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
     if any(path.suffix == ".bak" for path in source_files | mirror_files):
         errors.append("Momo canonical ticket-lifecycle workflow retains .bak residue")
 
-    for relative in sorted(source_files):
-        path = source_workflow / relative
-        try:
-            text = path.read_text(encoding="utf-8", errors="ignore")
-        except OSError:
-            continue
+    for relative, text in sorted(source_texts.items()):
         if MOMO_HOLOCENE_COPY_PATTERN.search(text):
             errors.append(
                 "Momo canonical ticket-lifecycle workflow contains Holocene copy "
@@ -1575,13 +1991,14 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
         ("name", "description", "module", "path"),
         "workflow-manifest",
         momo,
+        momo_snapshot,
     )
     errors.extend(workflow_manifest_errors)
     workflow_rows = [
         row
         for row in workflow_manifest_rows
-        if TICKET_LIFECYCLE_VARIANT.search(
-            " ".join(str(value) for value in row.values())
+        if any(
+            has_ticket_lifecycle_identity(str(value)) for value in row.values()
         )
     ]
     if len(workflow_rows) != 1:
@@ -1591,37 +2008,11 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
     else:
         row = workflow_rows[0]
         description = row.get("description", "")
-        normalized = description.casefold()
-        opposite_policy = re.search(
-            r"\bunbounded\b|\bnot\s+(?:a\s+)?bounded\b|"
-            r"\bnot\s+(?:a\s+)?(?:lifecycle\s+)?client\b|"
-            r"\billegal\s+work\b|\b(?:does\s+not|never)\s+"
-            r"(?:choose|chooses|rank|ranks|execute|executes)\b|"
-            r"\b(?:choos(?:e|es|ing)|rank(?:s|ed|ing)?|execut(?:e|es|ing))\b"
-            r".{0,60}\b(?:all|any|arbitrary|unbounded)\s+work\b|"
-            r"\b(?:choos(?:e|es|ing)|rank(?:s|ed|ing)?|execut(?:e|es|ing))\b"
-            r".{0,60}\billegal\b.{0,30}\bwork\b",
-            normalized,
-        )
-        legal_choice_or_rank = re.search(
-            r"\b(?:choos(?:e|es|ing)|rank(?:s|ed|ing)?)\b.{0,100}"
-            r"\blegal[- ]+work\b",
-            normalized,
-        )
-        legal_execution = re.search(
-            r"\bexecut(?:e|es|ing)\b.{0,100}\blegal[- ]+work\b",
-            normalized,
-        )
         metadata_valid = (
             row.get("name") == "ticket-lifecycle"
             and row.get("module") == "custom"
             and row.get("path") == "_bmad/custom/workflows/ticket-lifecycle/workflow.md"
-            and re.search(r"\bbounded\s+lifecycle\s+client\b", normalized)
-            and legal_choice_or_rank
-            and legal_execution
-            and opposite_policy is None
-            and "autonomous multi-agent ticket lifecycle" not in normalized
-            and "plane + bloodbank" not in normalized
+            and exact_momo_policy_description(description)
         )
         if not metadata_valid:
             errors.append(
@@ -1634,12 +2025,13 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
         ("type", "name", "module", "path", "hash"),
         "files-manifest",
         momo,
+        momo_snapshot,
     )
     errors.extend(files_manifest_errors)
     file_rows = [
         row
         for row in files_manifest_rows
-        if TICKET_LIFECYCLE_VARIANT.search(row.get("path", ""))
+        if has_ticket_lifecycle_identity(row.get("path", ""))
     ]
     expected_manifest_paths = {
         f"custom/workflows/ticket-lifecycle/{relative.as_posix()}"
@@ -1658,13 +2050,20 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
         relative_path = row.get("path", "")
         if relative_path not in expected_manifest_paths:
             continue
-        source_path = momo / "_bmad" / relative_path
         try:
-            expected_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
-        except OSError:
+            payload = repository_relative_bytes(
+                momo,
+                momo_snapshot,
+                f"_bmad/{relative_path}",
+                label=f"Momo files-manifest source {relative_path}",
+            )
+            if payload is None:
+                raise RuntimeError("exact source blob is missing")
+            expected_hash = hashlib.sha256(payload).hexdigest()
+        except RuntimeError as exc:
             errors.append(
                 "Momo ticket-lifecycle files-manifest source cannot be read for "
-                f"{relative_path}"
+                f"{relative_path}: {exc}"
             )
             continue
         if row.get("hash") != expected_hash:
@@ -1678,10 +2077,31 @@ def bloodbank_live_inventory_errors(source: Path) -> list[str]:
     """Reject a live Bloodbank lifecycle-controller service or README inventory row."""
 
     errors: list[str] = []
-    if (source / "bloodbank/services/lifecycle-controller").exists():
+    bloodbank = source / "bloodbank"
+    try:
+        snapshot = git_snapshot(bloodbank)
+    except RuntimeError as exc:
+        return [f"Bloodbank exact Git tree cannot be inspected: {exc}"]
+    if snapshot is not None:
+        controller_present = any(
+            relative == "services/lifecycle-controller"
+            or relative.startswith("services/lifecycle-controller/")
+            for relative in snapshot
+        )
+    else:
+        controller_present = (bloodbank / "services/lifecycle-controller").exists()
+    if controller_present:
         errors.append("Bloodbank retains executable services/lifecycle-controller")
-    readme = source / "bloodbank/README.md"
-    readme_text = readme.read_text(encoding="utf-8") if readme.is_file() else ""
+    try:
+        readme_text = repository_relative_text(
+            bloodbank,
+            snapshot,
+            "README.md",
+            label="Bloodbank README",
+        ) or ""
+    except RuntimeError as exc:
+        errors.append(f"Bloodbank README cannot be inspected safely: {exc}")
+        readme_text = ""
     for line in readme_text.splitlines():
         if "`services/`" in line and re.search(r"(?i)lifecycle[- ]controller", line):
             errors.append("Bloodbank README lists a live lifecycle controller service")
@@ -1716,21 +2136,39 @@ def root_current_guidance_errors(docs_checkout: Path) -> list[str]:
     """Reject root guidance that revives removed authority or stale topology."""
 
     errors: list[str] = []
+    try:
+        snapshot = git_snapshot(docs_checkout)
+    except RuntimeError as exc:
+        return [f"root current guidance exact Git tree cannot be inspected: {exc}"]
+
+    def current_text(relative: str) -> str:
+        try:
+            return (
+                repository_relative_text(
+                    docs_checkout,
+                    snapshot,
+                    relative,
+                    label=f"root current guidance {relative}",
+                )
+                or ""
+            )
+        except RuntimeError as exc:
+            errors.append(f"{relative} cannot be inspected safely: {exc}")
+            return ""
+
     for relative in (
         "docs/development-guide-bloodbank.md",
         "docs/component-inventory-bloodbank.md",
     ):
-        path = docs_checkout / relative
-        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        text = current_text(relative)
         if re.search(r"(?i)(?:bloodbank/)?services/lifecycle-controller", text):
             errors.append(
                 f"{relative} contains current Bloodbank guidance to the removed "
                 "lifecycle-controller"
             )
 
-    architecture = docs_checkout / "_bmad-output/planning-artifacts/architecture.md"
-    architecture_text = (
-        architecture.read_text(encoding="utf-8") if architecture.is_file() else ""
+    architecture_text = current_text(
+        "_bmad-output/planning-artifacts/architecture.md"
     )
     if RETIRED_ARCHITECTURE_INPUT.search(architecture_text):
         errors.append(
@@ -1744,8 +2182,7 @@ def root_current_guidance_errors(docs_checkout: Path) -> list[str]:
         )
 
     for relative in CURRENT_TOPOLOGY_TEXT_ARTIFACTS:
-        path = docs_checkout / relative
-        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        text = current_text(relative)
         if STALE_TOPOLOGY_PATTERN.search(text):
             errors.append(f"{relative} retains obsolete four-part topology guidance")
     return errors
@@ -1834,6 +2271,9 @@ def check_high_risk_contracts(source: Path, report: Reporter) -> None:
 def component_manifest_pin_errors(
     platform_root: Path,
     pins: dict[str, tuple[str, str]],
+    *,
+    checkout_root: Path | None = None,
+    snapshot: GitSnapshot | None = None,
 ) -> list[str]:
     """Validate revision fields structurally; unrelated text never satisfies a pin."""
 
@@ -1841,7 +2281,21 @@ def component_manifest_pin_errors(
     for name, (expected_field, expected_revision) in pins.items():
         manifest = platform_root / "components" / f"{name}.yaml"
         try:
-            data = load_yaml(manifest)
+            if snapshot is None:
+                data = load_yaml(manifest)
+            else:
+                if checkout_root is None:
+                    raise RuntimeError("exact manifest checkout root is missing")
+                relative = manifest.relative_to(checkout_root).as_posix()
+                text = repository_relative_text(
+                    checkout_root,
+                    snapshot,
+                    relative,
+                    label=f"{name} component manifest",
+                )
+                if text is None:
+                    raise RuntimeError("exact component manifest blob is missing")
+                data = load_yaml_text(text, relative)
         except (OSError, RuntimeError, ValueError) as exc:
             errors.append(f"{name} component manifest cannot be parsed safely: {exc}")
             continue
@@ -1872,7 +2326,7 @@ def check_compose_candidate(
         report.fail("root-compose", "candidate Compose validator or model is missing")
         return
     try:
-        result = subprocess.run(
+        raw_result = _run_bounded_process(
             [
                 sys.executable,
                 str(validator),
@@ -1881,12 +2335,18 @@ def check_compose_candidate(
                 "--source-root",
                 str(source),
             ],
-            text=True,
-            capture_output=True,
+            stdout_limit=MAX_GIT_TEXT_OUTPUT_BYTES,
+            stderr_limit=MAX_GIT_TEXT_OUTPUT_BYTES,
             timeout=GIT_TIMEOUT_SECONDS,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        report.fail("root-compose", f"candidate validator failed safely: {exc}")
+        result = subprocess.CompletedProcess(
+            raw_result.args,
+            raw_result.returncode,
+            raw_result.stdout.decode("utf-8", errors="strict"),
+            raw_result.stderr.decode("utf-8", errors="strict"),
+        )
+    except (_BoundedProcessError, OSError, UnicodeError):
+        report.fail("root-compose", "candidate validator failed safely")
         return
     detail = (result.stdout or result.stderr).strip().replace("\n", "; ")
     current_truth_errors = lifecycle_current_truth_errors(source, docs_checkout)
@@ -1910,8 +2370,16 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
     errors: list[str] = []
     platform = docs_checkout / "33god-platform"
     try:
-        compose_text = (platform / "compose.yaml").read_text(encoding="utf-8")
-    except OSError as exc:
+        docs_snapshot = git_snapshot(docs_checkout)
+        compose_text = repository_relative_text(
+            docs_checkout,
+            docs_snapshot,
+            "33god-platform/compose.yaml",
+            label="root Compose",
+        )
+        if compose_text is None:
+            raise RuntimeError("exact Compose blob is missing")
+    except (OSError, RuntimeError) as exc:
         return [f"Compose cannot be read safely: {exc}"]
     if compose_text.count(LIFECYCLE_IMAGE) != 1:
         errors.append(
@@ -1943,7 +2411,14 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         )
         for name, expected in COMPONENT_REVISIONS.items()
     }
-    errors.extend(component_manifest_pin_errors(platform, manifest_pins))
+    errors.extend(
+        component_manifest_pin_errors(
+            platform,
+            manifest_pins,
+            checkout_root=docs_checkout,
+            snapshot=docs_snapshot,
+        )
+    )
     for name, expected in COMPONENT_REVISIONS.items():
         try:
             actual = checkout_revision(source / name)
@@ -1984,7 +2459,17 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             f"{commonproject_pin or 'unavailable'} expected={COMMONPROJECT_REVISION}"
         )
     try:
-        pjangler_manifest = load_yaml(platform / "components/pjangler.yaml")
+        pjangler_text = repository_relative_text(
+            docs_checkout,
+            docs_snapshot,
+            "33god-platform/components/pjangler.yaml",
+            label="pjangler component manifest",
+        )
+        if pjangler_text is None:
+            raise RuntimeError("exact pjangler manifest blob is missing")
+        pjangler_manifest = load_yaml_text(
+            pjangler_text, "33god-platform/components/pjangler.yaml"
+        )
     except (OSError, RuntimeError, ValueError) as exc:
         errors.append(f"pjangler component manifest cannot be parsed safely: {exc}")
         pjangler_manifest = {}
@@ -1995,7 +2480,17 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         )
 
     try:
-        lifecycle_manifest = load_yaml(platform / "components" / "lifecycle.yaml")
+        lifecycle_text = repository_relative_text(
+            docs_checkout,
+            docs_snapshot,
+            "33god-platform/components/lifecycle.yaml",
+            label="Lifecycle component manifest",
+        )
+        if lifecycle_text is None:
+            raise RuntimeError("exact Lifecycle manifest blob is missing")
+        lifecycle_manifest = load_yaml_text(
+            lifecycle_text, "33god-platform/components/lifecycle.yaml"
+        )
     except (OSError, RuntimeError, ValueError) as exc:
         errors.append(f"Lifecycle component manifest cannot be parsed safely: {exc}")
         lifecycle_manifest = {}
@@ -2010,59 +2505,6 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
                 f"Lifecycle component manifest {field} does not pin {expected}"
             )
 
-    current_paths = [
-        docs_checkout / "AGENTS.md",
-        docs_checkout / "PRD.md",
-        *(docs_checkout / relative for relative in CURRENT_AUTHORITY_JSON_ARTIFACTS),
-        *sorted((docs_checkout / "docs").rglob("*.md")),
-        *sorted((docs_checkout / "_bmad-output/planning-artifacts").glob("*.md")),
-        *sorted(platform.rglob("*.md")),
-        *sorted(platform.rglob("*.yaml")),
-        *sorted(platform.rglob("*.jsonl")),
-        docs_checkout / "skills/ecosystem/SKILL.md",
-        *sorted((docs_checkout / "skills/momo").rglob("*.md")),
-        *sorted((docs_checkout / "skills/momo").rglob("*.py")),
-    ]
-    for component in ("candystore", "holocene", "momo", "pjangler"):
-        component_root = source / component
-        current_paths.extend(
-            [
-                component_root / "README.md",
-                component_root / "AGENTS.md",
-                *sorted((component_root / "docs").rglob("*.md")),
-            ]
-        )
-    holocene_root = source / "holocene"
-    current_paths.extend(
-        [
-            holocene_root / "package.json",
-            holocene_root / "agents/hermes/pm/SOUL.md",
-            *sorted((holocene_root / ".stitch").rglob("*.md")),
-            *sorted((holocene_root / ".stitch").rglob("*.html")),
-            *sorted((holocene_root / "apps").rglob("*.ts")),
-            *sorted((holocene_root / "apps").rglob("*.tsx")),
-            *sorted((holocene_root / "packages").rglob("*.ts")),
-            *sorted((holocene_root / "packages").rglob("*.tsx")),
-        ]
-    )
-    bloodbank_root = source / "bloodbank"
-    current_paths.extend(
-        [
-            bloodbank_root / "README.md",
-            *sorted((bloodbank_root / "services/agent-hooks").rglob("*.md")),
-            *sorted((bloodbank_root / "docs").rglob("*.md")),
-        ]
-    )
-    lifecycle_root = source / "lifecycle"
-    current_paths.extend(
-        [
-            lifecycle_root / "README.md",
-            *sorted((lifecycle_root / "docs").rglob("*.md")),
-        ]
-    )
-    current_paths.extend(
-        sorted((source / "momo/_bmad/custom/workflows/ticket-lifecycle").rglob("*.md"))
-    )
     ownership_patterns = {
         "Momo lifecycle authority": re.compile(
             r"(?i)\bMomo\s+(?:owns|calculates|persists|writes|drives)\s+(?:the\s+)?lifecycle"
@@ -2087,16 +2529,111 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             r"(?i)\bLifecycle\b.{0,50}\b(?:not implemented|not yet implemented|planned only)\b"
         ),
     }
-    seen: set[Path] = set()
-    for path in current_paths:
-        if path in seen or not path.is_file():
-            continue
-        seen.add(path)
-        text = path.read_text(encoding="utf-8")
+    current_texts: dict[str, str] = {}
+
+    def add_exact_current_texts(
+        repo: Path,
+        revision: str | None,
+        display_prefix: str,
+        include: Any,
+    ) -> None:
         try:
-            display_path = path.relative_to(docs_checkout).as_posix()
-        except ValueError:
-            display_path = f"source/{path.relative_to(source).as_posix()}"
+            snapshot = git_snapshot(repo, revision)
+        except RuntimeError as exc:
+            errors.append(f"{display_prefix or 'root'} current tree cannot be inspected: {exc}")
+            return
+        if snapshot is None:
+            errors.append(
+                f"{display_prefix or 'root'} current tree is not an explicit Git checkout"
+            )
+            return
+        for relative, (mode, _object_id, _size) in sorted(snapshot.items()):
+            if mode == "160000" or not include(relative):
+                continue
+            display_path = f"{display_prefix}{relative}"
+            try:
+                text = repository_relative_text(
+                    repo,
+                    snapshot,
+                    relative,
+                    label=f"current guidance {display_path}",
+                )
+            except RuntimeError as exc:
+                errors.append(f"{display_path} cannot be inspected safely: {exc}")
+                continue
+            if text is not None:
+                current_texts.setdefault(display_path, text)
+
+    root_exact = {
+        "AGENTS.md",
+        "PRD.md",
+        *CURRENT_AUTHORITY_JSON_ARTIFACTS,
+        "skills/ecosystem/SKILL.md",
+    }
+    add_exact_current_texts(
+        docs_checkout,
+        None,
+        "",
+        lambda relative: (
+            relative in root_exact
+            or (relative.startswith("docs/") and relative.endswith(".md"))
+            or (
+                relative.startswith("_bmad-output/planning-artifacts/")
+                and relative.endswith(".md")
+                and "/" not in relative.removeprefix(
+                    "_bmad-output/planning-artifacts/"
+                )
+            )
+            or (
+                relative.startswith("33god-platform/")
+                and relative.endswith((".md", ".yaml", ".jsonl"))
+            )
+            or (
+                relative.startswith("skills/momo/")
+                and relative.endswith((".md", ".py"))
+            )
+        ),
+    )
+
+    component_selectors: dict[str, Any] = {
+        "candystore": lambda relative: relative in {"README.md", "AGENTS.md"}
+        or (relative.startswith("docs/") and relative.endswith(".md")),
+        "pjangler": lambda relative: relative in {"README.md", "AGENTS.md"}
+        or (relative.startswith("docs/") and relative.endswith(".md")),
+        "momo": lambda relative: relative in {"README.md", "AGENTS.md"}
+        or (relative.startswith("docs/") and relative.endswith(".md"))
+        or (
+            relative.startswith("_bmad/custom/workflows/ticket-lifecycle/")
+            and relative.endswith(".md")
+        ),
+        "holocene": lambda relative: relative
+        in {"README.md", "AGENTS.md", "package.json", "agents/hermes/pm/SOUL.md"}
+        or (relative.startswith("docs/") and relative.endswith(".md"))
+        or (
+            relative.startswith(".stitch/")
+            and relative.endswith((".md", ".html"))
+        )
+        or (
+            relative.startswith(("apps/", "packages/"))
+            and relative.endswith((".ts", ".tsx"))
+        ),
+        "bloodbank": lambda relative: relative == "README.md"
+        or (
+            relative.startswith(("services/agent-hooks/", "docs/"))
+            and relative.endswith(".md")
+        ),
+        "lifecycle": lambda relative: relative == "README.md"
+        or (relative.startswith("docs/") and relative.endswith(".md")),
+    }
+    for component, include in component_selectors.items():
+        add_exact_current_texts(
+            source / component,
+            COMPONENT_REVISIONS[component],
+            f"source/{component}/",
+            include,
+        )
+
+    for display_path, text in current_texts.items():
         for image in LIFECYCLE_DIGEST_REFERENCE.findall(text):
             if image != LIFECYCLE_IMAGE:
                 errors.append(f"{display_path} retains non-current Lifecycle digest")
@@ -2105,46 +2642,72 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
                 errors.append(f"{display_path} contains {label}")
         errors.extend(authority_parity_text_errors(display_path, text))
 
-    ecosystem_path = docs_checkout / "skills/ecosystem/SKILL.md"
-    ecosystem_text = (
-        ecosystem_path.read_text(encoding="utf-8") if ecosystem_path.is_file() else ""
-    )
+    ecosystem_text = current_texts.get("skills/ecosystem/SKILL.md", "")
     errors.extend(ecosystem_authority_errors(ecosystem_text))
 
-    bloodbank_api_path = docs_checkout / "docs/api-contracts-bloodbank.md"
-    bloodbank_api_text = (
-        bloodbank_api_path.read_text(encoding="utf-8")
-        if bloodbank_api_path.is_file()
-        else ""
-    )
+    bloodbank_api_text = current_texts.get("docs/api-contracts-bloodbank.md", "")
     errors.extend(bloodbank_api_contract_errors(bloodbank_api_text))
     errors.extend(root_current_guidance_errors(docs_checkout))
 
-    promoted = docs_checkout / "skills/momo"
-    canonical = source / "momo/skill"
     required_momo_actor_files = {
         Path("resources/obligation-skill-catalog.json"),
         Path("scripts/lifecycle_client.py"),
         Path("scripts/obligation_worker.py"),
     }
-    promoted_files = {
-        path.relative_to(promoted)
-        for path in promoted.rglob("*")
-        if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
-    }
-    canonical_files = {
-        path.relative_to(canonical)
-        for path in canonical.rglob("*")
-        if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
-    }
+    try:
+        promoted_snapshot = docs_snapshot
+        canonical_snapshot = git_snapshot(
+            source / "momo", COMPONENT_REVISIONS["momo"]
+        )
+    except RuntimeError as exc:
+        errors.append(f"Momo promoted/canonical exact trees cannot be inspected: {exc}")
+        promoted_snapshot = {}
+        canonical_snapshot = {}
+    if promoted_snapshot is None or canonical_snapshot is None:
+        errors.append("Momo promoted/canonical roots must be explicit Git checkouts")
+        promoted_snapshot = promoted_snapshot or {}
+        canonical_snapshot = canonical_snapshot or {}
+
+    def exact_prefix_files(snapshot: GitSnapshot, prefix: str) -> set[Path]:
+        files: set[Path] = set()
+        normalized = prefix.rstrip("/") + "/"
+        for relative, (mode, _object_id, _size) in snapshot.items():
+            if not relative.startswith(normalized):
+                continue
+            child = Path(PurePosixPath(relative.removeprefix(normalized)))
+            if "__pycache__" in child.parts or child.suffix == ".pyc":
+                continue
+            if mode not in {"100644", "100755"}:
+                errors.append(f"{prefix}/{child.as_posix()} is not a regular blob")
+                continue
+            files.add(child)
+        return files
+
+    promoted_files = exact_prefix_files(promoted_snapshot, "skills/momo")
+    canonical_files = exact_prefix_files(canonical_snapshot, "skill")
     if promoted_files != canonical_files:
         errors.append("promoted skills/momo file set differs from momo/skill")
     else:
-        changed = [
-            str(relative)
-            for relative in sorted(promoted_files)
-            if (promoted / relative).read_bytes() != (canonical / relative).read_bytes()
-        ]
+        changed: list[str] = []
+        for relative in sorted(promoted_files):
+            try:
+                promoted_bytes = snapshot_blob_bytes(
+                    docs_checkout,
+                    promoted_snapshot,
+                    f"skills/momo/{relative.as_posix()}",
+                    label=f"promoted skills/momo/{relative.as_posix()}",
+                )
+                canonical_bytes = snapshot_blob_bytes(
+                    source / "momo",
+                    canonical_snapshot,
+                    f"skill/{relative.as_posix()}",
+                    label=f"canonical momo/skill/{relative.as_posix()}",
+                )
+            except RuntimeError as exc:
+                errors.append(f"Momo promoted/canonical blob cannot be read: {exc}")
+                continue
+            if promoted_bytes != canonical_bytes:
+                changed.append(relative.as_posix())
         if changed:
             errors.append(
                 "promoted skills/momo differs byte-for-byte: " + ", ".join(changed)
@@ -2156,9 +2719,16 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             + ", ".join(str(path) for path in missing_actor_files)
         )
     else:
-        worker_text = (canonical / "scripts/obligation_worker.py").read_text(
-            encoding="utf-8"
-        )
+        try:
+            worker_text = repository_relative_text(
+                source / "momo",
+                canonical_snapshot,
+                "skill/scripts/obligation_worker.py",
+                label="Momo canonical obligation worker",
+            ) or ""
+        except RuntimeError as exc:
+            errors.append(f"Momo canonical obligation worker cannot be read: {exc}")
+            worker_text = ""
         required_worker_contract = {
             "invocation-derived completion time": 'completed_at = command["time"]',
             "canonical JetStream message ID": (
@@ -2188,10 +2758,16 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
                     "PubAck-before-ACK-before-receipt order; execution proof remains native/live"
                 )
 
-    harness_path = platform / "scripts/verify-lifecycle-live.py"
-    harness_text = (
-        harness_path.read_text(encoding="utf-8") if harness_path.is_file() else ""
-    )
+    try:
+        harness_text = repository_relative_text(
+            docs_checkout,
+            promoted_snapshot,
+            "33god-platform/scripts/verify-lifecycle-live.py",
+            label="Lifecycle live harness",
+        ) or ""
+    except RuntimeError as exc:
+        errors.append(f"Lifecycle live harness cannot be read: {exc}")
+        harness_text = ""
     required_harness_contract = {
         "stored completion message lookup": (
             "completion_stream_message = self.stream_message("
