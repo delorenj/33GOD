@@ -10,15 +10,29 @@ import glob
 import json
 import os
 import re
-import selectors
-import signal
 import stat
 import subprocess
 import sys
-import time
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, Iterator, NamedTuple
 from urllib.parse import urlsplit
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPOSITORY_ROOT))
+
+from scripts.validation_runtime import (  # noqa: E402
+    BoundDirectory,
+    BoundedProcessError,
+    ValidationBudget,
+    open_bound_directory,
+    run_bounded_process,
+    sanitized_git_environment,
+    terminate_process_group,
+    verify_local_git_object_closure,
+)
 
 try:
     import yaml
@@ -27,6 +41,52 @@ except ImportError as exc:  # pragma: no cover - environment guard
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+_BoundedProcessError = BoundedProcessError
+_run_bounded_process = run_bounded_process
+_terminate_process_group = terminate_process_group
+
+
+class PlatformValidationState:
+    """One command's exact Git views and aggregate resource budget."""
+
+    def __init__(self) -> None:
+        self.budget = ValidationBudget()
+        self.checkout_roots: dict[str, Path | None] = {}
+        self.revisions: dict[str, str] = {}
+        self.root_trees: dict[
+            tuple[str, str], dict[str, tuple[str, str, str]]
+        ] = {}
+        self.platform_snapshots: dict[
+            tuple[str, str], dict[str, tuple[str, str, int]] | None
+        ] = {}
+
+
+_ACTIVE_VALIDATION_STATE: ContextVar[PlatformValidationState | None] = ContextVar(
+    "platform_validation_state", default=None
+)
+
+
+@contextmanager
+def validation_session() -> Iterator[PlatformValidationState]:
+    existing = _ACTIVE_VALIDATION_STATE.get()
+    if existing is not None:
+        yield existing
+        return
+    state = PlatformValidationState()
+    token = _ACTIVE_VALIDATION_STATE.set(state)
+    try:
+        yield state
+    finally:
+        _ACTIVE_VALIDATION_STATE.reset(token)
+
+
+def _validation_state() -> PlatformValidationState | None:
+    return _ACTIVE_VALIDATION_STATE.get()
+
+
+def _repository_key(repo: Path) -> str:
+    return os.path.abspath(os.fspath(repo))
 
 # The selected source root is exactly one checkout. An explicit GOD_SOURCE_ROOT
 # is authoritative; otherwise the checkout that contains this 33god-platform
@@ -57,7 +117,28 @@ MAX_GIT_OUTPUT_BYTES = 16_000_000
 MAX_GIT_TREE_ENTRIES = 100_000
 MAX_BACKFILL_ENTRIES = 100_000
 MAX_BACKFILL_FILES = 25_000
-BACKFILL_EXCLUDED_PARTS = {".git", "__pycache__"}
+MAX_BACKFILL_MANIFESTS = 1_000
+MAX_BACKFILL_PATTERNS = 1_000
+MAX_BACKFILL_SEARCH_PATHS = 1_000
+MAX_BACKFILL_PATTERN_LENGTH = 4_096
+MAX_BACKFILL_PATTERN_COMPONENTS = 128
+MAX_BACKFILL_RECURSIVE_DEPTH = 64
+BACKFILL_EXCLUDED_PARTS = {
+    ".cache",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "build",
+    "cache",
+    "caches",
+    "dist",
+    "node_modules",
+    "venv",
+}
 BACKFILL_EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 FULL_GIT_REVISION = re.compile(r"[0-9a-f]{40}")
 LIFECYCLE_ACCEPTANCE_SLICE = (
@@ -222,12 +303,14 @@ class GitValidationError(ValueError):
     """A deterministic, secret-free Git provenance failure."""
 
 
-class _BoundedProcessError(RuntimeError):
-    """A child exceeded a resource boundary without retaining its payload."""
+class BackfillCandidate(NamedTuple):
+    """One enumerated regular-file inode and its descriptor-relative path."""
 
-    def __init__(self, reason: str) -> None:
-        super().__init__(reason)
-        self.reason = reason
+    path: Path
+    anchor: Path
+    relative: PurePosixPath
+    device: int
+    inode: int
 
 
 class DuplicateYamlKeyError(ValueError):
@@ -512,151 +595,8 @@ def acceptance_slice_ids(cfg: dict[str, Any] | None = None) -> list[str]:
     return [str(item) for item in components]
 
 
-def _terminate_process_group(process: subprocess.Popen[bytes]) -> None:
-    """Kill the isolated child process group and always reap the direct child."""
-
-    if process.poll() is None:
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        except OSError:
-            try:
-                process.kill()
-            except ProcessLookupError:
-                pass
-    try:
-        process.wait(timeout=1)
-    except subprocess.TimeoutExpired:
-        try:
-            process.kill()
-        except ProcessLookupError:
-            pass
-        process.wait()
-
-
-def _run_bounded_process(
-    command: list[str],
-    *,
-    input_bytes: bytes | None = None,
-    stdout_limit: int,
-    stderr_limit: int,
-    timeout: float,
-    env: dict[str, str] | None = None,
-) -> subprocess.CompletedProcess[bytes]:
-    """Stream a child through byte caps without shell execution or payload leaks."""
-
-    if stdout_limit < 0 or stderr_limit < 0 or timeout <= 0:
-        raise ValueError("invalid bounded subprocess limits")
-    process = subprocess.Popen(
-        command,
-        stdin=subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        start_new_session=True,
-        env=env,
-    )
-    if process.stdout is None or process.stderr is None:
-        _terminate_process_group(process)
-        raise _BoundedProcessError("pipe")
-
-    selector = selectors.DefaultSelector()
-    streams: dict[str, bytearray] = {
-        "stdout": bytearray(),
-        "stderr": bytearray(),
-    }
-    limits = {"stdout": stdout_limit, "stderr": stderr_limit}
-    input_view = memoryview(input_bytes or b"")
-    input_offset = 0
-    deadline = time.monotonic() + timeout
-    try:
-        for name, stream in (("stdout", process.stdout), ("stderr", process.stderr)):
-            os.set_blocking(stream.fileno(), False)
-            selector.register(stream, selectors.EVENT_READ, name)
-        if process.stdin is not None:
-            os.set_blocking(process.stdin.fileno(), False)
-            selector.register(process.stdin, selectors.EVENT_WRITE, "stdin")
-
-        while selector.get_map():
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise _BoundedProcessError("timeout")
-            events = selector.select(remaining)
-            if not events:
-                raise _BoundedProcessError("timeout")
-            for key, _mask in events:
-                stream = key.fileobj
-                name = str(key.data)
-                if name == "stdin":
-                    if input_offset >= len(input_view):
-                        selector.unregister(stream)
-                        stream.close()
-                        continue
-                    try:
-                        written = os.write(
-                            stream.fileno(), input_view[input_offset : input_offset + 65536]
-                        )
-                    except BrokenPipeError:
-                        selector.unregister(stream)
-                        stream.close()
-                    else:
-                        input_offset += written
-                    continue
-
-                remaining_capacity = limits[name] - len(streams[name])
-                try:
-                    chunk = os.read(
-                        stream.fileno(), min(65536, remaining_capacity + 1)
-                    )
-                except BlockingIOError:
-                    continue
-                if not chunk:
-                    selector.unregister(stream)
-                    stream.close()
-                    continue
-                streams[name].extend(chunk)
-                if len(streams[name]) > limits[name]:
-                    streams[name].clear()
-                    raise _BoundedProcessError("output")
-
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise _BoundedProcessError("timeout")
-        try:
-            returncode = process.wait(timeout=remaining)
-        except subprocess.TimeoutExpired as exc:
-            raise _BoundedProcessError("timeout") from exc
-    except BaseException:
-        for payload in streams.values():
-            payload.clear()
-        _terminate_process_group(process)
-        raise
-    finally:
-        selector.close()
-        if process.stdin is not None and not process.stdin.closed:
-            process.stdin.close()
-        for stream in (process.stdout, process.stderr):
-            if stream is not None and not stream.closed:
-                stream.close()
-    return subprocess.CompletedProcess(
-        command,
-        returncode,
-        bytes(streams["stdout"]),
-        bytes(streams["stderr"]),
-    )
-
-
 def _git_environment() -> dict[str, str]:
-    environment = os.environ.copy()
-    environment.update(
-        {
-            "GIT_NO_REPLACE_OBJECTS": "1",
-            "GIT_NO_LAZY_FETCH": "1",
-            "GIT_OPTIONAL_LOCKS": "0",
-            "GIT_TERMINAL_PROMPT": "0",
-        }
-    )
-    return environment
+    return sanitized_git_environment()
 
 
 def _run_git_bytes(
@@ -666,16 +606,23 @@ def _run_git_bytes(
     stdout_limit: int = MAX_GIT_OUTPUT_BYTES,
     stderr_limit: int = MAX_GIT_OUTPUT_BYTES,
     allowed_returncodes: frozenset[int] = frozenset({0}),
+    pass_fds: tuple[int, ...] = (),
 ) -> subprocess.CompletedProcess[bytes]:
     operation = args[0] if args else "git"
+    state = _validation_state()
+    timeout = GIT_TIMEOUT_SECONDS
+    if state is not None:
+        state.budget.consume("git_calls")
+        timeout = state.budget.remaining_seconds(GIT_TIMEOUT_SECONDS)
     try:
         result = _run_bounded_process(
             ["git", "-C", str(repo), *args],
             input_bytes=input_bytes,
             stdout_limit=stdout_limit,
             stderr_limit=stderr_limit,
-            timeout=GIT_TIMEOUT_SECONDS,
+            timeout=timeout,
             env=_git_environment(),
+            pass_fds=pass_fds,
         )
     except _BoundedProcessError as exc:
         if exc.reason == "output":
@@ -696,10 +643,20 @@ def _run_git_bytes(
     return result
 
 
-def _run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def _run_git(
+    repo: Path,
+    *args: str,
+    allowed_returncodes: frozenset[int] = frozenset({0}),
+    pass_fds: tuple[int, ...] = (),
+) -> subprocess.CompletedProcess[str]:
     """Run byte-bounded Git and decode output strictly without payload diagnostics."""
 
-    raw = _run_git_bytes(repo, *args)
+    raw = _run_git_bytes(
+        repo,
+        *args,
+        allowed_returncodes=allowed_returncodes,
+        pass_fds=pass_fds,
+    )
     try:
         stdout = raw.stdout.decode("utf-8", errors="strict")
         stderr = raw.stderr.decode("utf-8", errors="strict")
@@ -712,14 +669,23 @@ def _run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 
 def own_checkout_root(repo: Path) -> Path | None:
+    key = _repository_key(repo)
+    state = _validation_state()
+    if state is not None and key in state.checkout_roots:
+        return state.checkout_roots[key]
     if not repo.is_dir() or not (repo / ".git").exists():
+        if state is not None:
+            state.checkout_roots[key] = None
         return None
     result = _run_git(repo, "rev-parse", "--show-toplevel")
     top_level = result.stdout.strip()
     if not top_level:
         raise GitValidationError(f"Git command returned no checkout root for {repo}")
     resolved = Path(top_level).resolve()
-    return resolved if resolved == repo.resolve() else None
+    checkout = resolved if resolved == repo.resolve() else None
+    if state is not None:
+        state.checkout_roots[key] = checkout
+    return checkout
 
 
 def validate_selected_roots() -> None:
@@ -758,47 +724,66 @@ def validate_selected_roots() -> None:
 def verify_commit_object_graph(repo: Path, revision: str) -> None:
     """Require one exact commit and all of its reachable objects to be local."""
 
-    if not FULL_GIT_REVISION.fullmatch(revision):
-        raise GitValidationError(f"Git returned an invalid commit revision for {repo}")
-    if _run_git(repo, "cat-file", "-t", revision).stdout.strip() != "commit":
-        raise GitValidationError(f"Git revision is missing or is not a commit for {repo}")
     try:
-        _run_git(
+        verify_local_git_object_closure(
             repo,
-            "fsck",
-            "--connectivity-only",
-            "--no-dangling",
-            "--no-reflogs",
             revision,
+            lambda args, payload, limit, allowed: _run_git_bytes(
+                repo,
+                *args,
+                input_bytes=payload,
+                stdout_limit=limit,
+                stderr_limit=limit,
+                allowed_returncodes=allowed,
+            ),
+            max_objects=MAX_GIT_TREE_ENTRIES,
+            max_output_bytes=MAX_GIT_OUTPUT_BYTES,
         )
-    except GitValidationError as exc:
+    except (GitValidationError, OSError, UnicodeError, ValueError) as exc:
         raise GitValidationError(
-            f"Git commit graph contains a missing or invalid object for {repo}"
+            f"Git commit closure contains a missing or invalid object, or uses "
+            f"non-local provenance, for {repo}"
         ) from exc
 
 
 def root_commit_revision(root: Path) -> str:
+    key = _repository_key(root)
+    state = _validation_state()
+    if state is not None and key in state.revisions:
+        return state.revisions[key]
     revision = _run_git(root, "rev-parse", "HEAD").stdout.strip()
     if not FULL_GIT_REVISION.fullmatch(revision):
         raise GitValidationError("root Git checkout returned an invalid HEAD revision")
     verify_commit_object_graph(root, revision)
+    if state is not None:
+        state.revisions[key] = revision
     return revision
 
 
-def root_tree_entries(root: Path) -> dict[str, tuple[str, str, str]]:
+def root_tree_entries(
+    root: Path, revision: str | None = None
+) -> dict[str, tuple[str, str, str]]:
     """Read the exact root commit tree, independent of index/worktree state."""
 
     if own_checkout_root(root) is None:
         raise GitValidationError(
             f"{root}: selected source root must be its own Git checkout"
         )
-    revision = root_commit_revision(root)
-    result = _run_git(root, "ls-tree", "-z", "--full-tree", revision)
+    exact_revision = root_commit_revision(root) if revision is None else revision
+    key = (_repository_key(root), exact_revision)
+    state = _validation_state()
+    if state is not None and key in state.root_trees:
+        return state.root_trees[key]
+    verify_commit_object_graph(root, exact_revision)
+    result = _run_git(root, "ls-tree", "-z", "--full-tree", exact_revision)
     entries: dict[str, tuple[str, str, str]] = {}
     records = result.stdout.split("\0")
     if records[-1:] != [""]:
         raise GitValidationError("root Git commit tree returned malformed data")
     for record in records[:-1]:
+        state = _validation_state()
+        if state is not None:
+            state.budget.consume("entries")
         if "\t" not in record:
             raise GitValidationError("root Git commit tree contains a malformed record")
         metadata, path = record.split("\t", 1)
@@ -827,6 +812,8 @@ def root_tree_entries(root: Path) -> dict[str, tuple[str, str, str]]:
                 "root Git commit tree contains invalid object type"
             )
         entries[path] = (mode, object_type, object_id)
+    if state is not None:
+        state.root_trees[key] = entries
     return entries
 
 
@@ -854,6 +841,9 @@ def committed_file_entries(
     for record in records[:-1]:
         if len(entries) >= MAX_GIT_TREE_ENTRIES or b"\t" not in record:
             raise GitValidationError("root Git commit tree exceeds or violates bounds")
+        state = _validation_state()
+        if state is not None:
+            state.budget.consume("entries")
         metadata, raw_path = record.split(b"\t", 1)
         fields = metadata.split(b" ")
         try:
@@ -914,21 +904,32 @@ def committed_file_entries(
 def committed_platform_snapshot() -> dict[str, tuple[str, str, int]] | None:
     """Return the exact platform subtree, or an explicit non-Git fallback marker."""
 
+    state = _validation_state()
+    state_key = (_repository_key(SOURCE_ROOT), _repository_key(SOURCE_PLATFORM_ROOT))
+    if state is not None and state_key in state.platform_snapshots:
+        return state.platform_snapshots[state_key]
     if lexical_path(SOURCE_PLATFORM_ROOT) != lexical_path(
         SOURCE_ROOT / "33god-platform"
     ):
+        if state is not None:
+            state.platform_snapshots[state_key] = None
         return None
     if own_checkout_root(SOURCE_ROOT) is None:
+        if state is not None:
+            state.platform_snapshots[state_key] = None
         return None
     revision = root_commit_revision(SOURCE_ROOT)
     prefix = "33god-platform/"
-    return {
+    snapshot = {
         path.removeprefix(prefix): entry
         for path, entry in committed_file_entries(
             SOURCE_ROOT, revision, prefix.rstrip("/")
         ).items()
         if path.startswith(prefix)
     }
+    if state is not None:
+        state.platform_snapshots[state_key] = snapshot
+    return snapshot
 
 
 def platform_input_bytes(
@@ -948,6 +949,9 @@ def platform_input_bytes(
             raise ValueError(f"33god-platform input cannot be read: {relative_text}") from exc
         if len(payload) > max_bytes:
             raise ValueError(f"33god-platform input exceeds its bound: {relative_text}")
+        state = _validation_state()
+        if state is not None:
+            state.budget.consume("retained_bytes", len(payload))
         return payload
     entry = selected.get(relative_text)
     if entry is None:
@@ -966,6 +970,9 @@ def platform_input_bytes(
         raise ValueError(
             f"committed 33god-platform input changed while reading: {relative_text}"
         )
+    state = _validation_state()
+    if state is not None:
+        state.budget.consume("retained_bytes", len(payload))
     return payload
 
 
@@ -1231,6 +1238,65 @@ def git_checkout_origin(repo: Path) -> str | None:
     return stdout.strip() or None
 
 
+def bound_git_checkout_identity(
+    bound: BoundDirectory,
+) -> tuple[str | None, str | None]:
+    """Read revision and origin from the same held checkout directory inode."""
+
+    repo = bound.process_path
+    inherited = (bound.fd,)
+    prefix = _run_git(repo, "rev-parse", "--show-prefix", pass_fds=inherited)
+    if prefix.stdout.strip():
+        return None, None
+    inside = _run_git(
+        repo, "rev-parse", "--is-inside-work-tree", pass_fds=inherited
+    ).stdout.strip()
+    if inside != "true":
+        return None, None
+    revision = _run_git(
+        repo, "rev-parse", "HEAD", pass_fds=inherited
+    ).stdout.strip()
+    if not FULL_GIT_REVISION.fullmatch(revision):
+        raise GitValidationError("bound checkout returned an invalid HEAD revision")
+    try:
+        verify_local_git_object_closure(
+            repo,
+            revision,
+            lambda args, payload, limit, allowed: _run_git_bytes(
+                repo,
+                *args,
+                input_bytes=payload,
+                stdout_limit=limit,
+                stderr_limit=limit,
+                allowed_returncodes=allowed,
+                pass_fds=inherited,
+            ),
+            max_objects=MAX_GIT_TREE_ENTRIES,
+            max_output_bytes=MAX_GIT_OUTPUT_BYTES,
+        )
+    except (GitValidationError, OSError, UnicodeError, ValueError) as exc:
+        raise GitValidationError("bound checkout has an invalid commit closure") from exc
+    raw_origin = _run_git_bytes(
+        repo,
+        "config",
+        "--local",
+        "--get",
+        "remote.origin.url",
+        allowed_returncodes=frozenset({0, 1}),
+        pass_fds=inherited,
+    )
+    try:
+        origin = raw_origin.stdout.decode("utf-8", errors="strict").strip()
+        raw_origin.stderr.decode("utf-8", errors="strict")
+    except UnicodeError as exc:
+        raise GitValidationError("bound checkout origin is not valid UTF-8") from exc
+    if raw_origin.returncode == 1 and not origin:
+        return revision, None
+    if raw_origin.returncode != 0:
+        raise GitValidationError("bound checkout origin cannot be read safely")
+    return revision, origin or None
+
+
 def validate_component_contracts(
     components: list[dict[str, Any]],
 ) -> list[str]:
@@ -1462,6 +1528,12 @@ def validate_gitlink_inventory() -> list[str]:
                 f"root gitlink {path}: checkout path escapes GOD_SOURCE_ROOT: {checkout}"
             )
             continue
+        if not checkout.exists() and not checkout.is_symlink():
+            errors.append(
+                f"root gitlink {path}: checkout is not initialized as its own "
+                f"Git repository at commit revision {expected_revision}"
+            )
+            continue
         if (checkout.exists() or checkout.is_symlink()) and not is_real_directory_chain(
             SOURCE_ROOT, checkout
         ):
@@ -1470,15 +1542,21 @@ def validate_gitlink_inventory() -> list[str]:
                 "non-symlink directories"
             )
             continue
-        resolved_checkout = checkout.resolve()
-        if not is_within(resolved_checkout, SOURCE_ROOT):
+        try:
+            with open_bound_directory(SOURCE_ROOT, PurePosixPath(path)) as bound:
+                actual_revision, actual_origin = bound_git_checkout_identity(bound)
+                stable_binding = bound.canonical_path_matches()
+        except (GitValidationError, OSError, ValueError):
             errors.append(
-                f"root gitlink {path}: checkout resolves outside GOD_SOURCE_ROOT: "
-                f"{checkout} -> {resolved_checkout}"
+                f"root gitlink {path}: checkout identity cannot be read safely "
+                "from one bound directory inode"
             )
             continue
-
-        actual_revision = git_checkout_revision(checkout)
+        if not stable_binding:
+            errors.append(
+                f"root gitlink {path}: checkout path changed during identity validation"
+            )
+            continue
         if actual_revision is None:
             errors.append(
                 f"root gitlink {path}: checkout is not initialized as its own "
@@ -1491,7 +1569,6 @@ def validate_gitlink_inventory() -> list[str]:
                 f"match commit revision {expected_revision}"
             )
 
-        actual_origin = git_checkout_origin(checkout)
         if not actual_origin:
             errors.append(
                 f"root gitlink {path}: initialized checkout has no origin; "
@@ -1952,190 +2029,253 @@ def _validate_governed_backfill_path(
     return resolved
 
 
-def iter_backfill_glob(pattern: str) -> Any:
-    """Expand one glob explicitly so directory errors are never suppressed."""
+def _backfill_budget(budget: ValidationBudget | None = None) -> ValidationBudget:
+    if budget is not None:
+        return budget
+    state = _validation_state()
+    if state is not None:
+        return state.budget
+    return ValidationBudget(
+        max_entries=MAX_BACKFILL_ENTRIES,
+        max_files=MAX_BACKFILL_FILES,
+        max_matches=MAX_BACKFILL_ENTRIES,
+    )
 
+
+def _validate_backfill_pattern(pattern: str) -> tuple[Path, tuple[str, ...]]:
+    if len(pattern.encode("utf-8", errors="strict")) > MAX_BACKFILL_PATTERN_LENGTH:
+        raise ValueError("backfill glob exceeds its pattern length bound")
     candidate = Path(pattern)
-    if candidate.anchor:
-        root = Path(candidate.anchor)
-        parts = candidate.parts[1:]
-    else:
-        root = Path(".")
-        parts = candidate.parts
-    entries_seen = 0
-    active_states: set[tuple[int, int, int]] = set()
+    parts = candidate.parts[1:] if candidate.anchor else candidate.parts
+    if len(parts) > MAX_BACKFILL_PATTERN_COMPONENTS:
+        raise ValueError("backfill glob exceeds its component bound")
+    if sum(part == "**" for part in parts) > MAX_BACKFILL_RECURSIVE_DEPTH:
+        raise ValueError("backfill glob exceeds its recursive wildcard bound")
+    return (Path(candidate.anchor) if candidate.anchor else Path("."), tuple(parts))
 
-    def directory_entries(base: Path, index: int) -> Any:
-        nonlocal entries_seen
+
+def iter_backfill_glob(
+    pattern: str, budget: ValidationBudget | None = None
+) -> Any:
+    """Expand a finite glob iteratively without following any symlink."""
+
+    active_budget = _backfill_budget(budget)
+    root, parts = _validate_backfill_pattern(pattern)
+    stack: list[tuple[Path, int, int]] = [(root, 0, 0)]
+    inspected_states: set[tuple[int, int, int]] = set()
+    while stack:
+        active_budget.check_time()
+        base, index, depth = stack.pop()
+        if index == len(parts):
+            yield base
+            continue
+        part = parts[index]
+        if part not in {"**"} and not glob.has_magic(part):
+            child = base / part
+            try:
+                metadata = child.lstat()
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+            except OSError as exc:
+                raise ValueError(
+                    f"backfill glob path cannot be inspected safely: {child}"
+                ) from exc
+            if stat.S_ISLNK(metadata.st_mode):
+                raise ValueError(f"backfill glob must not traverse a symlink: {child}")
+            if child.name in BACKFILL_EXCLUDED_PARTS:
+                continue
+            stack.append((child, index + 1, depth))
+            continue
+
         try:
-            metadata = base.stat()
+            base_metadata = base.lstat()
         except (FileNotFoundError, NotADirectoryError):
-            return
+            continue
         except OSError as exc:
             raise ValueError(
                 f"backfill glob directory cannot be inspected safely: {base}"
             ) from exc
-        if not stat.S_ISDIR(metadata.st_mode):
-            return
-        state = (index, metadata.st_dev, metadata.st_ino)
-        if state in active_states:
-            return
-        active_states.add(state)
-        try:
-            try:
-                iterator = os.scandir(base)
-            except OSError as exc:
-                raise ValueError(
-                    f"backfill glob directory cannot be enumerated safely: {base}"
-                ) from exc
-            try:
-                with iterator:
-                    for entry in iterator:
-                        entries_seen += 1
-                        if entries_seen > MAX_BACKFILL_ENTRIES:
-                            raise ValueError(
-                                "backfill glob exceeds its finite entry bound"
-                            )
-                        yield entry
-            except OSError as exc:
-                raise ValueError(
-                    f"backfill glob directory cannot be enumerated safely: {base}"
-                ) from exc
-        finally:
-            active_states.remove(state)
-
-    def expand(base: Path, index: int) -> Any:
-        if index == len(parts):
-            yield base
-            return
-        part = parts[index]
+        if stat.S_ISLNK(base_metadata.st_mode):
+            raise ValueError(f"backfill glob must not traverse a symlink: {base}")
+        if not stat.S_ISDIR(base_metadata.st_mode):
+            continue
+        state_key = (index, base_metadata.st_dev, base_metadata.st_ino)
+        if state_key in inspected_states:
+            raise ValueError("backfill glob directory cycle detected")
+        inspected_states.add(state_key)
         if part == "**":
-            yield from expand(base, index + 1)
-            for entry in directory_entries(base, index) or ():
-                child = Path(entry.path)
-                try:
-                    is_directory = entry.is_dir(follow_symlinks=True)
-                except OSError as exc:
-                    raise ValueError(
-                        f"backfill glob entry cannot be inspected safely: {child}"
-                    ) from exc
-                if is_directory and entry.name not in BACKFILL_EXCLUDED_PARTS:
-                    yield from expand(child, index)
-                elif index + 1 == len(parts):
-                    yield child
-            return
-        if glob.has_magic(part):
-            for entry in directory_entries(base, index) or ():
-                if entry.name.startswith(".") and not part.startswith("."):
-                    continue
-                if fnmatch.fnmatchcase(entry.name, part):
-                    yield from expand(Path(entry.path), index + 1)
-            return
-        child = base / part
+            stack.append((base, index + 1, depth))
         try:
-            child.lstat()
-        except (FileNotFoundError, NotADirectoryError):
-            return
+            iterator = os.scandir(base)
+            with iterator:
+                for entry in iterator:
+                    active_budget.consume("entries")
+                    if entry.name in BACKFILL_EXCLUDED_PARTS:
+                        continue
+                    child = Path(entry.path)
+                    try:
+                        metadata = entry.stat(follow_symlinks=False)
+                    except OSError as exc:
+                        raise ValueError(
+                            f"backfill glob entry cannot be inspected safely: {child}"
+                        ) from exc
+                    if stat.S_ISLNK(metadata.st_mode):
+                        continue
+                    if part == "**":
+                        if stat.S_ISDIR(metadata.st_mode):
+                            if depth >= MAX_BACKFILL_RECURSIVE_DEPTH:
+                                raise ValueError(
+                                    "backfill glob exceeds its recursive depth bound"
+                                )
+                            stack.append((child, index, depth + 1))
+                        elif index + 1 == len(parts):
+                            stack.append((child, index + 1, depth))
+                    elif (
+                        not (entry.name.startswith(".") and not part.startswith("."))
+                        and fnmatch.fnmatchcase(entry.name, part)
+                    ):
+                        stack.append((child, index + 1, depth))
         except OSError as exc:
             raise ValueError(
-                f"backfill glob path cannot be inspected safely: {child}"
+                f"backfill glob directory cannot be enumerated safely: {base}"
             ) from exc
-        yield from expand(child, index + 1)
-
-    yield from expand(root, 0)
 
 
-def iter_search_files(search_paths: list[str]) -> list[Path]:
-    files: set[Path] = set()
-    visited_directories: set[tuple[int, int]] = set()
-    entries_seen = 0
-
-    def resolved_entry(
-        path: Path, governed_root: Path | None, item: str
-    ) -> tuple[Path, os.stat_result]:
+def _absolute_no_symlink_entry(path: Path, item: str) -> tuple[Path, os.stat_result]:
+    absolute = lexical_path(path)
+    anchor = Path(absolute.anchor)
+    cursor = anchor
+    try:
+        metadata = anchor.lstat()
+    except OSError as exc:
+        raise ValueError(
+            f"backfill path cannot be resolved or inspected safely: {item}"
+        ) from exc
+    for part in absolute.parts[1:]:
+        cursor /= part
         try:
-            resolved = path.resolve(strict=True)
-            metadata = resolved.stat()
+            metadata = cursor.lstat()
         except OSError as exc:
             raise ValueError(
                 f"backfill path cannot be resolved or inspected safely: {item}"
             ) from exc
-        if governed_root is not None:
-            resolved = _validate_governed_backfill_path(
-                path,
-                governed_root,
-                item,
-                directory=stat.S_ISDIR(metadata.st_mode),
-            )
-            try:
-                metadata = resolved.stat()
-            except OSError as exc:
-                raise ValueError(
-                    f"backfill path cannot be inspected safely: {item}"
-                ) from exc
-        return resolved, metadata
+        if stat.S_ISLNK(metadata.st_mode):
+            raise ValueError(f"backfill path must not traverse a symlink: {item}")
+    return absolute, metadata
 
-    def add_file(path: Path) -> None:
+
+def _candidate_from_metadata(path: Path, metadata: os.stat_result) -> BackfillCandidate:
+    absolute = lexical_path(path)
+    return BackfillCandidate(
+        path=absolute,
+        anchor=Path(absolute.anchor),
+        relative=PurePosixPath(*absolute.parts[1:]),
+        device=metadata.st_dev,
+        inode=metadata.st_ino,
+    )
+
+
+def iter_search_candidates(
+    search_paths: list[str], budget: ValidationBudget | None = None
+) -> list[BackfillCandidate]:
+    active_budget = _backfill_budget(budget)
+    if len(search_paths) > MAX_BACKFILL_SEARCH_PATHS:
+        raise ValueError("backfill scan exceeds its search-path bound")
+    files: dict[Path, BackfillCandidate] = {}
+    visited_directories: set[tuple[int, int]] = set()
+
+    def inspect(
+        path: Path, governed_root: Path | None, item: str
+    ) -> tuple[Path, os.stat_result]:
+        try:
+            absolute, metadata = _absolute_no_symlink_entry(path, item)
+        except ValueError as exc:
+            if governed_root is not None:
+                try:
+                    resolved = path.resolve(strict=True)
+                except OSError:
+                    pass
+                else:
+                    if is_within(resolved, lexical_path(SOURCE_ROOT)):
+                        raise ValueError(
+                            f"relative backfill path re-enters GOD_SOURCE_ROOT: {item}"
+                        ) from exc
+            raise
+        if governed_root is not None:
+            governed = lexical_path(governed_root)
+            if not is_within(absolute, governed):
+                raise ValueError(f"relative backfill path escapes its governed root: {item}")
+            if stat.S_ISDIR(metadata.st_mode) and is_within(
+                lexical_path(SOURCE_ROOT), absolute
+            ):
+                raise ValueError(
+                    f"relative backfill directory is an ancestor of GOD_SOURCE_ROOT: {item}"
+                )
+            if governed != lexical_path(SOURCE_ROOT) and is_within(
+                absolute, lexical_path(SOURCE_ROOT)
+            ):
+                raise ValueError(f"relative backfill path re-enters GOD_SOURCE_ROOT: {item}")
+        return absolute, metadata
+
+    def add_file(path: Path, metadata: os.stat_result) -> None:
         if path.suffix.casefold() in BACKFILL_EXCLUDED_SUFFIXES:
             return
-        files.add(path)
-        if len(files) > MAX_BACKFILL_FILES:
-            raise ValueError("backfill scan exceeds its finite file bound")
+        if path not in files:
+            active_budget.consume("files")
+            files[path] = _candidate_from_metadata(path, metadata)
 
-    def walk_directory(
-        root: Path, governed_root: Path | None, item: str
-    ) -> None:
-        nonlocal entries_seen
-        stack = [root]
+    def walk_directory(root: Path, governed_root: Path | None, item: str) -> None:
+        stack = [(root, 0)]
         while stack:
-            directory = stack.pop()
-            try:
-                directory_metadata = directory.stat()
-            except OSError as exc:
-                raise ValueError(
-                    f"backfill directory cannot be inspected safely: {directory}"
-                ) from exc
+            active_budget.check_time()
+            directory, depth = stack.pop()
+            absolute, directory_metadata = inspect(directory, governed_root, item)
+            if not stat.S_ISDIR(directory_metadata.st_mode):
+                raise ValueError(f"backfill target is not a directory: {directory}")
             identity = (directory_metadata.st_dev, directory_metadata.st_ino)
             if identity in visited_directories:
-                continue
+                raise ValueError("backfill directory traversal cycle detected")
             visited_directories.add(identity)
+            if depth > MAX_BACKFILL_RECURSIVE_DEPTH:
+                raise ValueError("backfill scan exceeds its recursive depth bound")
             try:
-                iterator = os.scandir(directory)
-            except OSError as exc:
-                raise ValueError(
-                    f"backfill directory cannot be enumerated safely: {directory}"
-                ) from exc
-            try:
+                iterator = os.scandir(absolute)
                 with iterator:
                     for entry in iterator:
-                        entries_seen += 1
-                        if entries_seen > MAX_BACKFILL_ENTRIES:
-                            raise ValueError(
-                                "backfill scan exceeds its finite entry bound"
-                            )
+                        active_budget.consume("entries")
+                        if entry.name in BACKFILL_EXCLUDED_PARTS:
+                            continue
+                        child = Path(entry.path)
                         try:
-                            is_real_directory = entry.is_dir(follow_symlinks=False)
+                            entry_metadata = entry.stat(follow_symlinks=False)
                         except OSError as exc:
                             raise ValueError(
                                 "backfill directory entry cannot be inspected safely: "
-                                f"{entry.path}"
+                                f"{child}"
                             ) from exc
-                        if (
-                            is_real_directory
-                            and entry.name in BACKFILL_EXCLUDED_PARTS
-                        ):
+                        if stat.S_ISLNK(entry_metadata.st_mode):
+                            if governed_root is not None:
+                                try:
+                                    resolved = child.resolve(strict=True)
+                                except OSError:
+                                    continue
+                                if is_within(resolved, lexical_path(SOURCE_ROOT)):
+                                    raise ValueError(
+                                        "relative backfill path re-enters "
+                                        f"GOD_SOURCE_ROOT: {item}"
+                                    )
                             continue
-                        child = Path(entry.path)
-                        resolved, metadata = resolved_entry(
+                        child_absolute, metadata = inspect(
                             child, governed_root, item
                         )
                         if stat.S_ISDIR(metadata.st_mode):
-                            stack.append(resolved)
+                            stack.append((child_absolute, depth + 1))
                         elif stat.S_ISREG(metadata.st_mode):
-                            add_file(resolved)
+                            add_file(child_absolute, metadata)
                         else:
                             raise ValueError(
-                                f"backfill target is not a regular file or directory: {child}"
+                                "backfill target is not a regular file or directory: "
+                                f"{child}"
                             )
             except OSError as exc:
                 raise ValueError(
@@ -2146,67 +2286,111 @@ def iter_search_files(search_paths: list[str]) -> list[Path]:
         if not isinstance(item, str):
             raise ValueError("backfill search path must be a string")
         expanded = os.path.expandvars(os.path.expanduser(item))
+        _validate_backfill_pattern(expanded)
         candidate = Path(expanded)
+        if any(part in BACKFILL_EXCLUDED_PARTS for part in candidate.parts):
+            continue
         governed_root: Path | None = None
         if candidate.is_absolute():
             pattern = expanded
         else:
             pattern, governed_root = _relative_backfill_pattern(expanded)
-        matches_seen = 0
-        for matched_path in iter_backfill_glob(pattern):
-            matches_seen += 1
-            entries_seen += 1
-            if matches_seen > MAX_BACKFILL_ENTRIES or entries_seen > MAX_BACKFILL_ENTRIES:
-                raise ValueError("backfill glob exceeds its finite entry bound")
-            path = Path(matched_path)
-            resolved, metadata = resolved_entry(path, governed_root, item)
-            if any(part in BACKFILL_EXCLUDED_PARTS for part in resolved.parts):
+        matched = False
+        for matched_path in iter_backfill_glob(pattern, active_budget):
+            matched = True
+            active_budget.consume("matches")
+            path, metadata = inspect(Path(matched_path), governed_root, item)
+            if any(part in BACKFILL_EXCLUDED_PARTS for part in path.parts):
                 continue
             if stat.S_ISDIR(metadata.st_mode):
-                walk_directory(resolved, governed_root, item)
+                walk_directory(path, governed_root, item)
             elif stat.S_ISREG(metadata.st_mode):
-                add_file(resolved)
+                add_file(path, metadata)
             else:
                 raise ValueError(
                     f"backfill target is not a regular file or directory: {path}"
                 )
-        if matches_seen == 0 and not glob.has_magic(pattern):
-            maybe = Path(pattern)
+        if not matched and not glob.has_magic(pattern):
             try:
-                exists = maybe.exists()
-            except OSError as exc:
+                path, metadata = inspect(Path(pattern), governed_root, item)
+            except ValueError:
+                if Path(pattern).exists() or Path(pattern).is_symlink():
+                    raise
+                continue
+            if stat.S_ISDIR(metadata.st_mode):
+                walk_directory(path, governed_root, item)
+            elif stat.S_ISREG(metadata.st_mode):
+                add_file(path, metadata)
+            else:
                 raise ValueError(
-                    f"backfill path cannot be inspected safely: {item}"
-                ) from exc
-            if exists:
-                resolved, metadata = resolved_entry(maybe, governed_root, item)
-                if stat.S_ISDIR(metadata.st_mode):
-                    walk_directory(resolved, governed_root, item)
-                elif stat.S_ISREG(metadata.st_mode):
-                    add_file(resolved)
-                else:
-                    raise ValueError(
-                        f"backfill target is not a regular file or directory: {maybe}"
-                    )
-    return sorted(files)
+                    f"backfill target is not a regular file or directory: {path}"
+                )
+    return [files[path] for path in sorted(files)]
 
 
-def read_bounded_regular_file(path: Path) -> str:
-    """Read one stable regular file through a descriptor and a hard byte cap."""
+def iter_search_files(search_paths: list[str]) -> list[Path]:
+    """Compatibility view over the inode-bearing production enumeration."""
 
-    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+    return [candidate.path for candidate in iter_search_candidates(search_paths)]
+
+
+def read_bounded_regular_file(
+    target: Path | BackfillCandidate,
+    budget: ValidationBudget | None = None,
+) -> str:
+    """Read the enumerated inode through no-follow, nonblocking descriptors."""
+
+    active_budget = _backfill_budget(budget)
+    if isinstance(target, BackfillCandidate):
+        candidate = target
+    else:
+        try:
+            path, metadata = _absolute_no_symlink_entry(Path(target), str(target))
+        except ValueError as exc:
+            raise ValueError(
+                f"{target}: changed while reading or is a virtual backfill file"
+            ) from exc
+        candidate = _candidate_from_metadata(path, metadata)
+    path = candidate.path
+    directory_flags = (
+        os.O_RDONLY
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_DIRECTORY", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+    )
+    file_flags = (
+        os.O_RDONLY
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_NONBLOCK", 0)
+    )
+    root_fd = -1
+    directory_fd = -1
+    descriptor = -1
     try:
-        descriptor = os.open(path, flags)
-    except OSError as exc:
-        raise ValueError(f"{path}: cannot be read for backfill scanning") from exc
-    try:
+        root_fd = os.open(candidate.anchor, directory_flags)
+        directory_fd = root_fd
+        parent_parts = candidate.relative.parts[:-1]
+        if not candidate.relative.parts:
+            raise ValueError(f"{path}: invalid descriptor-relative backfill path")
+        for part in parent_parts:
+            next_fd = os.open(part, directory_flags, dir_fd=directory_fd)
+            if directory_fd != root_fd:
+                os.close(directory_fd)
+            directory_fd = next_fd
+        descriptor = os.open(
+            candidate.relative.parts[-1], file_flags, dir_fd=directory_fd
+        )
         before = os.fstat(descriptor)
+        if (before.st_dev, before.st_ino) != (candidate.device, candidate.inode):
+            raise ValueError(f"{path}: changed after backfill enumeration")
         if not stat.S_ISREG(before.st_mode):
             raise ValueError(f"{path}: is not a regular backfill scan file")
         if before.st_size > MAX_SCAN_FILE_BYTES:
             raise ValueError(f"{path}: exceeds the backfill scan size limit")
         payload = bytearray()
         while len(payload) <= MAX_SCAN_FILE_BYTES:
+            active_budget.check_time()
             chunk = os.read(
                 descriptor,
                 min(65536, MAX_SCAN_FILE_BYTES + 1 - len(payload)),
@@ -2218,20 +2402,18 @@ def read_bounded_regular_file(path: Path) -> str:
             payload.clear()
             raise ValueError(f"{path}: exceeds the backfill scan size limit")
         after = os.fstat(descriptor)
-        stable_identity = (before.st_dev, before.st_ino) == (
-            after.st_dev,
-            after.st_ino,
-        )
         stable_metadata = (
-            before.st_size == after.st_size == len(payload)
+            (before.st_dev, before.st_ino) == (after.st_dev, after.st_ino)
+            and before.st_size == after.st_size == len(payload)
             and before.st_mtime_ns == after.st_mtime_ns
             and before.st_ctime_ns == after.st_ctime_ns
         )
-        if not stable_identity or not stable_metadata:
+        if not stable_metadata:
             payload.clear()
             raise ValueError(
                 f"{path}: changed while reading or is a virtual backfill file"
             )
+        active_budget.consume("retained_bytes", len(payload))
         try:
             return bytes(payload).decode("utf-8", errors="strict")
         except UnicodeError as exc:
@@ -2239,10 +2421,18 @@ def read_bounded_regular_file(path: Path) -> str:
     except OSError as exc:
         raise ValueError(f"{path}: cannot be read for backfill scanning") from exc
     finally:
-        os.close(descriptor)
+        if descriptor >= 0:
+            os.close(descriptor)
+        if directory_fd >= 0 and directory_fd != root_fd:
+            os.close(directory_fd)
+        if root_fd >= 0:
+            os.close(root_fd)
 
 
-def scan_backfill(path: Path) -> tuple[str, list[str]]:
+def scan_backfill(
+    path: Path, budget: ValidationBudget | None = None
+) -> tuple[str, list[str]]:
+    active_budget = _backfill_budget(budget)
     manifest = load_selected_yaml(path)
     backfill_id = manifest.get("id")
     if not isinstance(backfill_id, str) or not backfill_id.strip():
@@ -2257,15 +2447,26 @@ def scan_backfill(path: Path) -> tuple[str, list[str]]:
         isinstance(item, str) for item in search_paths
     ):
         raise ValueError(f"{path}: search_paths must be a list of strings")
+    if len(raw_patterns) > MAX_BACKFILL_PATTERNS:
+        raise ValueError(f"{path}: forbidden_patterns exceeds its finite bound")
+    if len(search_paths) > MAX_BACKFILL_SEARCH_PATHS:
+        raise ValueError(f"{path}: search_paths exceeds its finite bound")
+    for pattern in raw_patterns:
+        if len(pattern.encode("utf-8", errors="strict")) > MAX_BACKFILL_PATTERN_LENGTH:
+            raise ValueError(f"{path}: forbidden pattern exceeds its length bound")
     patterns = [re.compile(re.escape(str(pattern))) for pattern in raw_patterns]
     findings: list[str] = []
     if not patterns:
         return backfill_id, findings
-    for file_path in iter_search_files(search_paths):
-        text = read_bounded_regular_file(file_path)
+    for candidate in iter_search_candidates(search_paths, active_budget):
+        text = read_bounded_regular_file(candidate, active_budget)
         for pattern in patterns:
+            active_budget.check_time()
             if pattern.search(text):
-                findings.append(f"{file_path}: matched {pattern.pattern}")
+                active_budget.consume("findings")
+                finding = f"{candidate.path}: matched {pattern.pattern}"
+                active_budget.consume("retained_bytes", len(finding.encode("utf-8")))
+                findings.append(finding)
     return backfill_id, findings
 
 
@@ -2279,9 +2480,16 @@ def cmd_backfills_check(_: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 1
+    if len(paths) > MAX_BACKFILL_MANIFESTS:
+        print(
+            "ERROR backfills: manifest count exceeds its finite bound",
+            file=sys.stderr,
+        )
+        return 1
+    budget = _backfill_budget()
     for path in paths:
         try:
-            backfill_id, findings = scan_backfill(path)
+            backfill_id, findings = scan_backfill(path, budget)
         except (OSError, TypeError, ValueError, re.error) as exc:
             failures += 1
             print(f"ERROR {path}: cannot scan backfill safely: {exc}", file=sys.stderr)
@@ -2326,8 +2534,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        validate_selected_roots()
-        return args.func(args)
+        with validation_session():
+            validate_selected_roots()
+            return args.func(args)
     except (configparser.Error, OSError, TypeError, ValueError) as exc:
         print(f"ERROR validation failed safely: {exc}", file=sys.stderr)
         return 1

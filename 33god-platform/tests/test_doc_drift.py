@@ -341,6 +341,18 @@ class TopologyScopeDriftTests(unittest.TestCase):
                 (ROOT / "33god-platform/components.yaml").read_text(encoding="utf-8"),
                 encoding="utf-8",
             )
+            for command in (
+                ("config", "user.name", "Drift Test"),
+                ("config", "user.email", "drift-test@example.invalid"),
+                ("add", "33god-platform/components.yaml"),
+                ("commit", "-qm", "published fixture"),
+            ):
+                subprocess.run(
+                    ["git", "-C", str(source), *command],
+                    check=True,
+                    text=True,
+                    capture_output=True,
+                )
             report = check_doc_drift.Reporter()
             output = io.StringIO()
             with redirect_stdout(output):
@@ -356,8 +368,8 @@ class AuthorityParityDriftTests(unittest.TestCase):
         *,
         workflow_files: dict[str, str] | None = None,
         description: str = (
-            "Bounded Lifecycle client for choosing only Lifecycle-legal work and "
-            "executing only Lifecycle-legal work."
+            "Bounded Lifecycle client for choosing and ranking only "
+            "Lifecycle-legal work and executing only Lifecycle-legal work."
         ),
     ) -> None:
         workflow_files = workflow_files or {
@@ -747,14 +759,14 @@ class AuthorityParityDriftTests(unittest.TestCase):
                     any("bounded Lifecycle client metadata" in item for item in errors)
                 )
 
-    def test_momo_legal_ranking_and_execution_metadata_is_supported(self) -> None:
+    def test_momo_legal_choice_ranking_and_execution_metadata_is_supported(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.write_momo_workflow_fixture(
                 root,
                 description=(
-                    "Bounded Lifecycle client for ranking only Lifecycle-legal work and "
-                    "executing only Lifecycle-legal work."
+                    "Bounded Lifecycle client for choosing and ranking only "
+                    "Lifecycle-legal work and executing only Lifecycle-legal work."
                 ),
             )
             self.assertEqual(check_doc_drift.ticket_lifecycle_surface_errors(root), [])

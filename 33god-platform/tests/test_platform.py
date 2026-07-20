@@ -878,7 +878,9 @@ class PlatformBackfillFailureTests(unittest.TestCase):
             original_open = os.open
 
             def selective_open(path: object, *args: object, **kwargs: object) -> int:
-                if Path(path) == target:
+                if Path(path) == target or (
+                    Path(path) == Path(target.name) and kwargs.get("dir_fd") is not None
+                ):
                     raise PermissionError("denied")
                 return original_open(path, *args, **kwargs)
 
@@ -1630,7 +1632,8 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
                 any(
                     ".gitmodules" in item and "regular committed file" in item
                     for item in errors
-                )
+                ),
+                errors,
             )
 
     def test_nonzero_duplicate_index_stages_cannot_mask_committed_inventory(
