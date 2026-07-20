@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-19
 
-**Type:** Four-part monorepo knowledge boundary
+**Type:** Six-component Lifecycle acceptance slice within a twelve-component product registry
 
 **Deployment maturity:** Integrated local stack live under root Compose
 
@@ -19,6 +19,11 @@ sources remain authoritative and are pinned by root gitlinks. Lifecycle owns
 project-lifecycle spec/state/reconcile/frontier/obligations/grants and all
 writes; root owns only the service topology.
 
+The acceptance slice is exactly Bloodbank, Lifecycle, Candystore, Momo,
+Holocene, and PJangler. The full registry also tracks Hermes Fleet, Skillex,
+Hindsight, Pipeline MCP Hub, Candybar, and HeyMa; registry membership alone is
+not acceptance-slice membership.
+
 ## Component and runtime model
 
 | Part | Purpose | Candidate boundary |
@@ -26,6 +31,7 @@ writes; root owns only the service topology.
 | Bloodbank | Event names, schemas, NATS streams, Dapr transport | Default NATS JetStream, one-shot stream init, Dapr placement |
 | Lifecycle | Deterministic project lifecycle authority | Dedicated PostgreSQL, one-shot migrate/bootstrap, exact-digest serve |
 | Candystore | Durable event history, query/session APIs, audit UI | Exactly one default PostgreSQL/app/daprd deployment |
+| Momo | Legal-work chooser and durable executor | Bounded Lifecycle client; never lifecycle truth |
 | Holocene | Dashboard/renderer and high-level operator actions | Default web plus preflight; API remains `holocene-api.service` on host port 4000 |
 | PJangler | Project identity, bootstrap, provider-neutral bindings, and CommonProject templates | Zero-replica CLI and stdio MCP definitions for explicit `run` in `tools`/`full` |
 

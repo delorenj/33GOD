@@ -1,24 +1,40 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project": "33GOD",
   "repository_type": "monorepo",
-  "scope_policy": "exact",
+  "scope_policy": "lifecycle-acceptance-slice-exact",
   "parts": [
     {
       "id": "bloodbank",
       "name": "Bloodbank",
       "root_path": "bloodbank",
       "project_type_id": "backend",
-      "role": "event-contract-and-transport-backbone",
+      "role": "schema-contract-and-transport",
       "languages": ["Python", "JSON Schema", "YAML", "Shell"]
+    },
+    {
+      "id": "lifecycle",
+      "name": "Lifecycle",
+      "root_path": "lifecycle",
+      "project_type_id": "backend",
+      "role": "sole-deterministic-lifecycle-authority",
+      "languages": ["Python", "SQL", "YAML"]
     },
     {
       "id": "candystore",
       "name": "Candystore",
       "root_path": "candystore",
       "project_type_id": "web",
-      "role": "durable-event-history-and-read-api",
+      "role": "append-only-audit-and-read-projection",
       "languages": ["Python", "SQL", "JavaScript"]
+    },
+    {
+      "id": "momo",
+      "name": "Momo",
+      "root_path": "momo",
+      "project_type_id": "worker",
+      "role": "legal-work-chooser-and-executor",
+      "languages": ["Python", "Markdown", "YAML"]
     },
     {
       "id": "holocene",
@@ -37,15 +53,34 @@
       "languages": ["TypeScript", "Python", "Shell", "Jinja"]
     }
   ],
+  "product_registry": {
+    "scope_policy": "exact",
+    "source": "33god-platform/components.yaml",
+    "components": [
+      "bloodbank",
+      "lifecycle",
+      "candystore",
+      "momo",
+      "holocene",
+      "pjangler",
+      "hermes-fleet",
+      "skillex",
+      "hindsight",
+      "pipeline-mcp-hub",
+      "candybar",
+      "heyma"
+    ]
+  },
   "integration_points": [
-    {"from": "pjangler", "to": "bloodbank", "type": "generated NATS consumers and event emitters", "status": "transitional"},
+    {"from": "pjangler", "to": "lifecycle", "type": "project identity and binding", "status": "implemented"},
+    {"from": "lifecycle", "to": "bloodbank", "type": "canonical commands, events, and durable outbox", "status": "implemented"},
     {"from": "bloodbank", "to": "candystore", "type": "Dapr JetStream subscription", "status": "implemented"},
-    {"from": "holocene", "to": "candystore", "type": "HTTP read-side query", "status": "implemented-but-misconfigured-by-default"},
-    {"from": "bloodbank", "to": "holocene", "type": "Redis hook-health projection and duplicated contract map", "status": "bypass-and-transitional"},
-    {"from": "pjangler", "to": "holocene", "type": "shared project and Hermes registry projections", "status": "indirect"}
+    {"from": "momo", "to": "lifecycle", "type": "bounded legal-work client", "status": "implemented"},
+    {"from": "holocene", "to": "lifecycle", "type": "high-level command client", "status": "implemented"},
+    {"from": "holocene", "to": "candystore", "type": "HTTP read projection", "status": "implemented"}
   ],
   "authority": {
-    "root_docs": "component relationships and deployment contracts",
+    "root_docs": "topology, exact pins, acceptance, and drift",
     "component_docs": "component internals",
     "precedence": ["live manifests", "live code", "tests and validation output", "root documentation", "component documentation", "historical planning prose"]
   }

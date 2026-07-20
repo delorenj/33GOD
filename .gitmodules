@@ -1,28 +1,31 @@
 [submodule "bloodbank"]
 	path = bloodbank
-	url = git@github.com:delorenj/bloodbank.git
+	url = https://github.com/delorenj/bloodbank.git
 [submodule "candybar"]
 	path = candybar
-	url = git@github.com:delorenj/candybar.git
+	url = https://github.com/delorenj/candybar.git
 [submodule "candystore"]
 	path = candystore
-	url = git@github.com:delorenj/candystore.git
+	url = https://github.com/delorenj/candystore.git
+[submodule "hermes-agent-template"]
+	path = hermes-agent-template
+	url = https://github.com/delorenj/hermes-agent-template.git
 [submodule "holocene"]
 	path = holocene
-	url = git@github.com:delorenj/holocene.git
+	url = https://github.com/delorenj/holocene.git
 [submodule "lifecycle"]
 	path = lifecycle
-	url = git@github.com:delorenj/lifecycle.git
+	url = https://github.com/delorenj/lifecycle.git
 [submodule "momo"]
 	path = momo
-	url = git@github.com:delorenj/momo.git
+	url = https://github.com/delorenj/momo.git
 [submodule "pjangler"]
 	path = pjangler
-	url = git@github.com:delorenj/pjangler.git
-[submodule "holyfields"]
-	path = holyfields
-	url = git@github.com:delorenj/holyfields.git
+	url = https://github.com/delorenj/pjangler.git
+[submodule "toad"]
+	path = toad
+	url = https://github.com/delorenj/toad.git
 [submodule "agents/hermes/pm/runtime"]
 	path = agents/hermes/pm/runtime
-	url = git@github.com:delorenj/agent-hm-33god-pm.git
+	url = https://github.com/delorenj/agent-hm-33god-pm.git
 	ignore = all

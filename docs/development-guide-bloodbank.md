@@ -1,18 +1,20 @@
 # Bloodbank Development Guide
 
+## Scope
+
+Bloodbank owns canonical event schemas, subject/type validation, agent event
+publication, NATS JetStream topology, and Dapr transport. Lifecycle is a
+separate repository and the sole deterministic lifecycle authority. Bloodbank
+does not host, reconcile, or write lifecycle state.
+
 ## Prerequisites
 
 - Docker Engine with Compose plugin
 - mise
-- Python 3.11 for repository checks; Python 3.12+ for lifecycle-controller development
-- `uv` for lifecycle dependencies
-- Optional NATS/Dapr CLIs for integration operations
+- Python 3.11+
+- Optional NATS and Dapr CLIs for focused transport operations
 
-## Safe Setup
-
-Inspect `bloodbank/mise.toml` before entering a mise-managed shell. Component tasks are the supported interface; avoid starting profiles you do not need.
-
-## Core Commands
+## Core commands
 
 ```bash
 cd bloodbank
@@ -23,31 +25,29 @@ mise run smoketest:schemas
 mise run repo-health
 ```
 
-Runtime commands include `mise run up`, `up:all`, `up:candystore`, `down`, and focused NATS/Dapr smoke tests. `down` removes volumes. The heartbeat profile is currently broken because its recorder build context is missing.
+Inspect `bloodbank/mise.toml` before running service tasks. Use only the focused
+NATS/Dapr profile needed for the check; root acceptance uses the normalized
+projection in `33god-platform/compose.yaml`.
 
-## Lifecycle Controller
+## Contract change workflow
 
-```bash
-cd bloodbank/services/lifecycle-controller
-mise x -- uv run ruff check .
-mise x -- uv run pytest -q
-PYTHONPATH=src mise x -- uv run python scripts/dogfood_drumjangler.py
-```
+1. Update the canonical event name and schema sources.
+2. Run schema syntax, contract consistency, subject/type equality, and hook
+   synchronization checks.
+3. Add a negative test for malformed subject or envelope semantics.
+4. Evaluate Lifecycle publication/consumption, Candystore projection, Momo
+   evidence, Holocene commands, and PJangler-generated contract impact.
+5. Record cross-component change evidence and run the root drift gate.
 
-The dogfood script demonstrates database reconciliation and staged outbox events; it does not demonstrate broker publication.
+## Transport boundary
 
-## Contract Change Workflow
+Bloodbank may validate and transport Lifecycle commands/events, but it may not
+derive legal work, reconcile state, grant capabilities, or publish a competing
+authoritative result. Current development inputs are `schemas/`,
+`docs/event-naming.md`, `compose/`, and `services/agent-hooks/`.
 
-1. Update event naming/schema sources.
-2. Run schema syntax, schema-contract consistency, naming tests, and hook synchronization.
-3. Add a negative test proving type/subject token equality.
-4. Evaluate Candystore ingest/query impact, Holocene type mapping, and PJangler-generated contracts.
-5. Add platform change evidence and run root drift parity.
+## Operational cautions
 
-## Testing Notes
-
-Schema and naming checks are stronger than current CI. Run them explicitly. Docker smoke tests create containers, networks, and volumes and should be used only in an authorized integration environment.
-
-## Operational Cautions
-
-The local topology lacks NATS auth/TLS, broker capacity limits, a broker DLQ, complete tracing, and guaranteed JetStream acknowledgement for hook publication. Never use embedded and standalone Candystore simultaneously.
+Local NATS remains a development topology without production auth/TLS or
+multi-tenant boundaries. Do not start Bloodbank's legacy Candystore profile
+alongside the root-owned Candystore projection.

@@ -4,6 +4,11 @@ This directory owns the normalized cross-component Compose projection,
 component registry, machine change ledger, and semantic gates for 33GOD.
 Component repositories remain authoritative for their internal behavior.
 
+The exact Lifecycle acceptance slice contains Bloodbank, Lifecycle,
+Candystore, Momo, Holocene, and PJangler. The product registry has twelve
+entries; registry-only components do not gain acceptance status or Lifecycle
+authority.
+
 ## Implemented local topology
 
 The default render contains twelve processes:
@@ -80,25 +85,28 @@ mode-0700 ephemeral directory and removes it after teardown. Narrow bootstrap
 identity, actor, capability, timestamp, and mode values have explicit
 `LIFECYCLE_BOOTSTRAP_*` inputs. Network and volume names are also
 caller-overridable, which gives every live-gate run exact independent resources.
-When set, `GOD_SOURCE_ROOT` explicitly selects the checked-out component
-sources used by Candystore and Holocene.
+`GOD_SOURCE_ROOT` selects exactly one 33GOD checkout and is authoritative when
+set. Every in-tree component descendant remains beneath that checkout. Missing
+repositories and leaves fail closed; no linked worktree borrows bytes through
+the primary checkout's Git common directory.
 
-For platform manifest commands, a non-empty `GOD_SOURCE_ROOT` is authoritative.
-When it is unset in a linked worktree, each existing target resolves from the
-active checkout first; missing targets fall back through the primary checkout's
-Git common directory. This keeps selected components local while resolving
-external siblings such as `../../skillex` and `../../HeyMa` beside the primary
-checkout.
+`GOD_EXTERNAL_ROOT` is the independent policy for true external siblings such
+as `../../skillex` and `../../HeyMa`. It never resolves an in-tree component,
+and both policies reject symlink escapes.
 
 ## Validation
 
 Read-only/static gates:
 
 ```bash
+primary_checkout="$(git rev-parse --path-format=absolute --git-common-dir)"
+primary_checkout="${primary_checkout%/.git}"
+export GOD_SOURCE_ROOT="$(cd .. && pwd)"
+export GOD_EXTERNAL_ROOT="${primary_checkout%/*}"
 python3 scripts/platform.py validate
 python3 scripts/platform.py components list
 python3 scripts/platform.py backfills check
-python3 scripts/validate-compose.py --source-root "${GOD_SOURCE_ROOT:-..}"
+python3 scripts/validate-compose.py --source-root "$GOD_SOURCE_ROOT"
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 

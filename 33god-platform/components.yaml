@@ -28,6 +28,8 @@ compose_projection:
   state: validated-local-and-isolated-live
   source_root_env: GOD_SOURCE_ROOT
   source_root_default: ..
+  external_root_env: GOD_EXTERNAL_ROOT
+  external_root_default: selected-source-root-parent
   semantic_validator: scripts/validate-compose.py
   prohibitions:
     - never use the Bloodbank legacy Candystore profile
@@ -36,6 +38,17 @@ compose_projection:
     - never expose a lifecycle surface for the cloud profile
     - never use docker compose down -v
     - never remove adopted or detached legacy volumes during migration
+
+acceptance_slice:
+  id: lifecycle-authority-v1
+  description: Exact component set exercised by the Lifecycle authority acceptance contract.
+  components:
+    - bloodbank
+    - lifecycle
+    - candystore
+    - momo
+    - holocene
+    - pjangler
 
 component_files:
   - components/bloodbank.yaml

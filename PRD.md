@@ -78,7 +78,8 @@ design.
 Current artifacts include:
 
 - `33god-platform/components.yaml`: product profiles, component manifest list,
-  contract paths, and change policy.
+  exact six-component Lifecycle acceptance slice, twelve-component product
+  registry, contract paths, and change policy.
 - `33god-platform/components/*.yaml`: per-component manifests.
 - `33god-platform/CHANGELOG.pipeline.md`: human-readable ecosystem changelog.
 - `33god-platform/changes/*.jsonl`: machine-readable cross-component change log.
@@ -121,7 +122,9 @@ Validation state as of this handoff:
 - Candidate semantic validation and the platform suite, including real-browser
   anti-synthetic gates, pass against the populated source root.
 - The root documentation drift gate invokes the candidate validator with
-  explicit `GOD_SOURCE_ROOT` while preserving all previous parity checks.
+  explicit `GOD_SOURCE_ROOT` and independent `GOD_EXTERNAL_ROOT` while
+  preserving all previous parity checks. Selected in-tree component roots are
+  atomic and missing descendants fail closed.
 - The isolated live gate passes all seven Lifecycle offline/restart/outage/
   persistence invariants, including a single deployed-writer command received
   through the canonical JetStream durable, blocked behind a PostgreSQL row
@@ -180,8 +183,9 @@ can remain while the product control plane coordinates their contracts.
 This PRD does not require open sourcing the platform. The target is private
 source with optional hosted subscription access.
 
-This PRD does not require replacing every legacy workflow in the first slice.
-Legacy projects can be backfilled in stages.
+Legacy project scaffolds can be backfilled in stages, but current acceptance
+permits only Momo's bounded Lifecycle client; no provider-backed sentinel or
+other component may act as an independent lifecycle engine.
 
 This slice does not define or run a hosted/cloud topology. The `cloud` profile
 remains render-only and unsupported.
@@ -197,7 +201,8 @@ product card, source-of-truth files, and backfill obligations.
 Acceptance criteria:
 
 - `platform:validate` fails when a referenced component manifest is missing.
-- `platform:components` lists every registered component and repo presence.
+- `platform:components` lists every registered component with acceptance scope,
+  initialized-checkout status, repository identity, and exact recorded revision.
 - Component manifests use stable IDs and explicit source-of-truth paths.
 - The registry distinguishes active product components from deprecated or
   legacy components.

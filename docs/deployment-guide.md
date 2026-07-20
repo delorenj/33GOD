@@ -53,7 +53,10 @@ successful digest-pinned `docker pull` with an empty credential directory.
 From the root checkout:
 
 ```bash
+primary_checkout="$(git rev-parse --path-format=absolute --git-common-dir)"
+primary_checkout="${primary_checkout%/.git}"
 export GOD_SOURCE_ROOT="$PWD"
+export GOD_EXTERNAL_ROOT="${primary_checkout%/*}"
 mise run platform:validate
 mise run platform:components
 mise run platform:backfills:check
@@ -61,6 +64,11 @@ mise run platform:compose:validate
 mise run platform:compose:test
 mise run docs:drift
 ```
+
+`GOD_SOURCE_ROOT` selects the exact checkout under test. Every in-tree
+component descendant remains beneath that checkout, and a missing repository or
+leaf fails closed. `GOD_EXTERNAL_ROOT` independently resolves true siblings
+such as Skillex and HeyMa; it is never an in-tree fallback.
 
 These commands render with `--no-env-resolution` and do not start services or
 print secret values.

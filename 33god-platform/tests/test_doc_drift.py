@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import hashlib
-import shutil
+import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -132,18 +134,161 @@ class BloodbankApiContractDriftTests(unittest.TestCase):
         )
 
 
+class TopologyScopeDriftTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.parts = json.loads(
+            (ROOT / "docs/project-parts.json").read_text(encoding="utf-8")
+        )
+        cls.platform = check_doc_drift.load_yaml(
+            ROOT / "33god-platform/components.yaml"
+        )
+        cls.scan = json.loads(
+            (ROOT / "docs/project-scan-report.json").read_text(encoding="utf-8")
+        )
+
+    def test_current_topology_declarations_pass(self) -> None:
+        self.assertEqual(
+            check_doc_drift.topology_declaration_errors(
+                self.parts, self.platform, self.scan
+            ),
+            [],
+        )
+
+    def test_lifecycle_omission_from_acceptance_slice_is_rejected(self) -> None:
+        parts = copy.deepcopy(self.parts)
+        parts["parts"] = [
+            item for item in parts["parts"] if item["id"] != "lifecycle"
+        ]
+        errors = check_doc_drift.topology_declaration_errors(
+            parts, self.platform, self.scan
+        )
+        self.assertTrue(any("Lifecycle acceptance slice" in item for item in errors))
+
+    def test_momo_omission_from_acceptance_slice_is_rejected(self) -> None:
+        platform = copy.deepcopy(self.platform)
+        platform["acceptance_slice"]["components"].remove("momo")
+        errors = check_doc_drift.topology_declaration_errors(
+            self.parts, platform, self.scan
+        )
+        self.assertTrue(any("Lifecycle acceptance slice" in item for item in errors))
+
+    def test_product_registry_omission_is_rejected_independently(self) -> None:
+        platform = copy.deepcopy(self.platform)
+        platform["component_files"].remove("components/heyma.yaml")
+        errors = check_doc_drift.topology_declaration_errors(
+            self.parts, platform, self.scan
+        )
+        self.assertTrue(any("twelve-component product registry" in item for item in errors))
+
+    def test_absolute_scan_root_is_rejected(self) -> None:
+        scan = copy.deepcopy(self.scan)
+        scan["project_root"] = "/primary/checkout/33GOD"
+        errors = check_doc_drift.topology_declaration_errors(
+            self.parts, self.platform, scan
+        )
+        self.assertTrue(any("reproducible {project-root}" in item for item in errors))
+
+    def test_malformed_topology_declarations_fail_closed(self) -> None:
+        errors = check_doc_drift.topology_declaration_errors(
+            {"parts": "six", "product_registry": []},
+            {"acceptance_slice": [], "component_files": "twelve"},
+            {"findings": [], "project_types": "six"},
+        )
+        self.assertTrue(any("Lifecycle acceptance slice" in item for item in errors))
+        self.assertTrue(any("twelve-component product registry" in item for item in errors))
+        self.assertTrue(any("project-scan-report" in item for item in errors))
+
+
 class AuthorityParityDriftTests(unittest.TestCase):
     @staticmethod
-    def copy_momo_workflow_fixture(root: Path) -> None:
-        for relative in (
-            Path("_bmad/custom/workflows/ticket-lifecycle"),
-            Path("_bmad/_config/custom/custom/workflows/ticket-lifecycle"),
-        ):
-            shutil.copytree(ROOT / "momo" / relative, root / "momo" / relative)
+    def write_momo_workflow_fixture(
+        root: Path,
+        *,
+        workflow_files: dict[str, str] | None = None,
+        description: str = "Bounded Lifecycle client for choosing and executing legal work.",
+    ) -> None:
+        workflow_files = workflow_files or {
+            "workflow.md": "Lifecycle bounded client protocol.\n"
+        }
+        roots = (
+            root / "momo/_bmad/custom/workflows/ticket-lifecycle",
+            root / "momo/_bmad/_config/custom/custom/workflows/ticket-lifecycle",
+        )
+        for workflow_root in roots:
+            for relative, content in workflow_files.items():
+                path = workflow_root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
         config = root / "momo/_bmad/_config"
         config.mkdir(parents=True, exist_ok=True)
-        for manifest in ("workflow-manifest.csv", "files-manifest.csv"):
-            shutil.copy2(ROOT / "momo/_bmad/_config" / manifest, config / manifest)
+        (config / "workflow-manifest.csv").write_text(
+            "name,description,module,path\n"
+            f'"ticket-lifecycle","{description}","custom",'
+            '"_bmad/custom/workflows/ticket-lifecycle/workflow.md"\n',
+            encoding="utf-8",
+        )
+        rows = ["type,name,module,path,hash"]
+        source_root = roots[0]
+        for relative in sorted(workflow_files):
+            path = source_root / relative
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            rows.append(
+                f'"md","{Path(relative).stem}","custom",'
+                f'"custom/workflows/ticket-lifecycle/{relative}","{digest}"'
+            )
+        (config / "files-manifest.csv").write_text(
+            "\n".join(rows) + "\n", encoding="utf-8"
+        )
+
+    @staticmethod
+    def git(cwd: Path, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(cwd), *args],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        return result.stdout.strip()
+
+    @classmethod
+    def init_repo(cls, path: Path) -> str:
+        path.mkdir(parents=True, exist_ok=True)
+        cls.git(path, "init", "-q")
+        cls.git(path, "config", "user.name", "Drift Test")
+        cls.git(path, "config", "user.email", "drift-test@example.invalid")
+        return path.as_posix()
+
+    @classmethod
+    def add_nested_gitlink(
+        cls, component: Path, relative: Path, *, initialized: bool
+    ) -> Path:
+        cls.init_repo(component)
+        nested = component / relative
+        if initialized:
+            cls.init_repo(nested)
+            runner = nested / "runner.sh"
+            runner.write_text("tp transition PJAN-1 completed\n", encoding="utf-8")
+            cls.git(nested, "add", "runner.sh")
+            cls.git(nested, "commit", "-qm", "nested surface")
+            revision = cls.git(nested, "rev-parse", "HEAD")
+        else:
+            nested.mkdir(parents=True)
+            revision = "1" * 40
+        (component / ".gitmodules").write_text(
+            '[submodule "runtime"]\n'
+            f"\tpath = {relative.as_posix()}\n"
+            "\turl = https://github.com/example/runtime.git\n",
+            encoding="utf-8",
+        )
+        cls.git(
+            component,
+            "update-index",
+            "--add",
+            "--cacheinfo",
+            f"160000,{revision},{relative.as_posix()}",
+        )
+        return nested
 
     def test_current_authority_json_artifacts_are_scanned(self) -> None:
         for relative in check_doc_drift.CURRENT_AUTHORITY_JSON_ARTIFACTS:
@@ -153,8 +298,8 @@ class AuthorityParityDriftTests(unittest.TestCase):
                 [],
             )
         stale = current.replace(
-            "Holocene web dashboard/renderer",
-            "Holocene web/control plane",
+            '"display_name": "Holocene"',
+            '"display_name": "Holocene control plane"',
         )
         self.assertNotEqual(stale, current)
         errors = check_doc_drift.authority_parity_text_errors(
@@ -183,6 +328,22 @@ class AuthorityParityDriftTests(unittest.TestCase):
                 self.assertTrue(
                     any("Holocene control-plane role" in item for item in errors)
                 )
+
+    def test_standalone_holocene_control_plane_branding_is_rejected(self) -> None:
+        errors = check_doc_drift.authority_parity_text_errors(
+            "source/holocene/.stitch/DESIGN.md",
+            'Eyebrow text: "33GOD Control\n  Plane"',
+        )
+        self.assertTrue(
+            any("standalone Holocene control-plane branding" in item for item in errors)
+        )
+
+    def test_cross_component_holocene_control_plane_claim_is_rejected(self) -> None:
+        errors = check_doc_drift.authority_parity_text_errors(
+            "source/bloodbank/services/agent-hooks/README.md",
+            "Publish the health snapshot to the Holocene control-plane dashboard.",
+        )
+        self.assertTrue(any("Holocene control-plane role" in item for item in errors))
 
     def test_momo_shared_reconcile_and_truth_claims_are_rejected(self) -> None:
         stale_claims = {
@@ -233,13 +394,28 @@ class AuthorityParityDriftTests(unittest.TestCase):
                 )
                 self.assertTrue(errors)
 
-    def test_current_ticket_lifecycle_surfaces_are_momo_only(self) -> None:
-        self.assertEqual(check_doc_drift.ticket_lifecycle_surface_errors(ROOT), [])
+    def test_lifecycle_release_promotion_variants_are_rejected(self) -> None:
+        for stale in (
+            "release-tag promotion remains future work",
+            "release tag promotion remains future work",
+            "release-promotion remains future work",
+        ):
+            with self.subTest(stale=stale):
+                errors = check_doc_drift.authority_parity_text_errors(
+                    "lifecycle/README.md", stale
+                )
+                self.assertTrue(any("release" in item for item in errors))
+
+    def test_clean_ticket_lifecycle_fixture_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(root)
+            self.assertEqual(check_doc_drift.ticket_lifecycle_surface_errors(root), [])
 
     def test_momo_source_mirror_byte_drift_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            self.copy_momo_workflow_fixture(root)
+            self.write_momo_workflow_fixture(root)
             mirror = (
                 root
                 / "momo/_bmad/_config/custom/custom/workflows/ticket-lifecycle/workflow.md"
@@ -254,7 +430,7 @@ class AuthorityParityDriftTests(unittest.TestCase):
     def test_momo_files_manifest_hash_drift_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            self.copy_momo_workflow_fixture(root)
+            self.write_momo_workflow_fixture(root)
             source = root / "momo/_bmad/custom/workflows/ticket-lifecycle/workflow.md"
             expected_hash = hashlib.sha256(source.read_bytes()).hexdigest()
             manifest = root / "momo/_bmad/_config/files-manifest.csv"
@@ -267,25 +443,50 @@ class AuthorityParityDriftTests(unittest.TestCase):
             errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
             self.assertTrue(any("files-manifest hash differs" in item for item in errors))
 
+    def test_momo_holocene_copy_claims_are_rejected(self) -> None:
+        stale_files = {
+            "workflow.md": "A copy is stored in Holocene for its PM client.\n",
+            "steps-v/step-01-validate.md": (
+                "Source/generated copies are byte-identical in Momo/Holocene.\n"
+            ),
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(root, workflow_files=stale_files)
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("Holocene copy claim" in item for item in errors))
+
+    def test_momo_manifest_must_describe_bounded_lifecycle_client(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(
+                root,
+                description=(
+                    "Autonomous multi-agent ticket lifecycle via Plane + Bloodbank."
+                ),
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(
+                any("bounded Lifecycle client metadata" in item for item in errors)
+            )
+
+    def test_malformed_momo_manifest_csv_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(root)
+            manifest = root / "momo/_bmad/_config/workflow-manifest.csv"
+            manifest.write_text(
+                manifest.read_text(encoding="utf-8").rstrip("\n")
+                + ",unexpected\n",
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("malformed CSV row" in item for item in errors))
+
     def test_registered_non_momo_ticket_lifecycle_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            source_workflow = root / "momo/_bmad/custom/workflows/ticket-lifecycle"
-            mirror_workflow = (
-                root
-                / "momo/_bmad/_config/custom/custom/workflows/ticket-lifecycle"
-            )
-            source_workflow.mkdir(parents=True)
-            mirror_workflow.mkdir(parents=True)
-            (source_workflow / "workflow.md").write_text("client", encoding="utf-8")
-            (mirror_workflow / "workflow.md").write_text("client", encoding="utf-8")
-            momo_config = root / "momo/_bmad/_config"
-            (momo_config / "workflow-manifest.csv").write_text(
-                "ticket-lifecycle\n", encoding="utf-8"
-            )
-            (momo_config / "files-manifest.csv").write_text(
-                "custom/workflows/ticket-lifecycle/workflow.md\n", encoding="utf-8"
-            )
+            self.write_momo_workflow_fixture(root)
             candystore_config = root / "candystore/_bmad/_config"
             candystore_config.mkdir(parents=True)
             (candystore_config / "workflow-manifest.csv").write_text(
@@ -299,6 +500,7 @@ class AuthorityParityDriftTests(unittest.TestCase):
     def test_pjangler_commonproject_lifecycle_surfaces_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            self.write_momo_workflow_fixture(root)
             commonproject = root / "pjangler/templates/commonproject"
             workflow = commonproject / "_bmad/custom/workflows/ticket-lifecycle"
             workflow.mkdir(parents=True)
@@ -329,6 +531,85 @@ class AuthorityParityDriftTests(unittest.TestCase):
             )
             self.assertTrue(any("command surface" in item for item in errors))
 
+    def test_direct_sentinel_provider_completion_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / "candystore/agents/hermes/pm/.scripts/sentinel.prompt.md"
+            path.parent.mkdir(parents=True)
+            path.write_text("tp transition CANDY-1 completed\n", encoding="utf-8")
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_backup_and_mirror_variants_are_rejected(self) -> None:
+        variants = (
+            "pjangler/agents/hermes/sentinel.prompt.md.bak",
+            "holocene/mirror/agents/hermes/ticket-runner.md",
+        )
+        for relative in variants:
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                path = root / relative
+                path.parent.mkdir(parents=True)
+                path.write_text(
+                    "Autonomously treat accepted ticket as done.\n", encoding="utf-8"
+                )
+                errors = check_doc_drift.non_momo_operational_surface_errors(root)
+                self.assertTrue(any(relative in item for item in errors))
+
+    def test_symlinked_provider_runner_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "candystore/provider-runner.sh"
+            target.parent.mkdir(parents=True)
+            target.write_text("tp transition CANDY-1 completed\n", encoding="utf-8")
+            link = root / "candystore/agents/hermes/pm/runner.sh"
+            link.parent.mkdir(parents=True)
+            link.symlink_to(target)
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("symlink" in item for item in errors))
+
+    def test_unresolvable_provider_runner_symlink_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            link = root / "candystore/agents/hermes/pm/runner.sh"
+            link.parent.mkdir(parents=True)
+            link.symlink_to(link)
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("cannot be resolved safely" in item for item in errors))
+
+    def test_adapter_and_runner_variants_are_rejected(self) -> None:
+        for name in ("ticket-adapter.py", "lifecycle_runner.sh"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                path = root / "bloodbank/agents/hermes/pm" / name
+                path.parent.mkdir(parents=True)
+                path.write_text("move work to started\n", encoding="utf-8")
+                errors = check_doc_drift.non_momo_operational_surface_errors(root)
+                self.assertTrue(any(name in item for item in errors))
+
+    def test_initialized_nested_gitlink_surface_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.add_nested_gitlink(
+                root / "holocene",
+                Path("agents/hermes/pm/runtime"),
+                initialized=True,
+            )
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("nested gitlink" in item for item in errors))
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_uninitialized_operational_nested_gitlink_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.add_nested_gitlink(
+                root / "holocene",
+                Path("agents/hermes/pm/runtime"),
+                initialized=False,
+            )
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("uninitialized nested gitlink" in item for item in errors))
+
     def test_stale_bloodbank_live_controller_inventory_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -340,6 +621,46 @@ class AuthorityParityDriftTests(unittest.TestCase):
             )
             errors = check_doc_drift.bloodbank_live_inventory_errors(root)
             self.assertTrue(any("README lists a live" in item for item in errors))
+
+    def test_current_root_bloodbank_controller_guidance_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            guide = root / "docs/development-guide-bloodbank.md"
+            guide.parent.mkdir(parents=True)
+            guide.write_text(
+                "cd bloodbank/services/lifecycle-controller\n", encoding="utf-8"
+            )
+            errors = check_doc_drift.root_current_guidance_errors(root)
+            self.assertTrue(any("current Bloodbank guidance" in item for item in errors))
+
+    def test_deleted_architecture_input_paths_are_rejected(self) -> None:
+        stale_paths = (
+            "holocene/_bmad/custom/workflows/ticket-lifecycle/workflow.md",
+            "bloodbank/services/lifecycle-controller/src/reconciler.py",
+        )
+        for stale in stale_paths:
+            with self.subTest(stale=stale), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                architecture = root / "_bmad-output/planning-artifacts/architecture.md"
+                architecture.parent.mkdir(parents=True)
+                architecture.write_text(
+                    f"---\ninputDocuments:\n  - {stale}\n---\n", encoding="utf-8"
+                )
+                errors = check_doc_drift.root_current_guidance_errors(root)
+                self.assertTrue(any("retired architecture input" in item for item in errors))
+
+    def test_stale_four_part_current_guidance_is_rejected(self) -> None:
+        for relative in check_doc_drift.CURRENT_TOPOLOGY_TEXT_ARTIFACTS:
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    "The exact four-part component boundary is current.\n",
+                    encoding="utf-8",
+                )
+                errors = check_doc_drift.root_current_guidance_errors(root)
+                self.assertTrue(any(relative in item for item in errors))
 
 
 if __name__ == "__main__":

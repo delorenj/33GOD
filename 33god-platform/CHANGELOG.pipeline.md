@@ -3,6 +3,24 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-07-20
+
+### Root topology and provenance enforcement
+
+- Made the selected `GOD_SOURCE_ROOT` atomic: every in-tree descendant remains
+  beneath it, missing repositories/leaves fail closed, and external Skillex or
+  HeyMa paths use the independent `GOD_EXTERNAL_ROOT` policy.
+- Separated the exact six-component Lifecycle acceptance slice from the exact
+  twelve-component product registry in executable validation and current docs.
+- Reconciled every root gitlink with a credential-free HTTPS mapping, preserved
+  the exact planned Toad and Hermes Template pins, and made repository status
+  verify the checkout's own top-level, origin identity, gitlink, and `HEAD`.
+- Expanded root drift fixtures and live scanning to cover semantic provider
+  completion surfaces, backups, mirrors, symlinks, adapters/runners,
+  operational nested gitlinks, Momo copy/manifest claims, Holocene branding,
+  retired Bloodbank guidance, stale architecture inputs, and Lifecycle
+  release-promotion variants.
+
 ## 2026-07-19
 
 ### Lifecycle authority parity

@@ -1,67 +1,89 @@
 # 33GOD Source Tree Analysis
 
-**Date:** 2026-07-15
+**Date:** 2026-07-20
 
-## Overview
+## Scope
 
-The root is a coordination workspace for four independently versioned component
-repositories. Root files own cross-component governance and a normalized
-deployment projection. The component repositories remain the implementation
-sources and are not generated from the root projection.
+The root is a coordination workspace for independently versioned repositories.
+Two boundaries are intentionally separate:
+
+- the exact Lifecycle acceptance slice is Bloodbank, Lifecycle, Candystore,
+  Momo, Holocene, and PJangler;
+- the product registry contains twelve entries, adding Hermes Fleet, Skillex,
+  Hindsight, Pipeline MCP Hub, Candybar, and HeyMa.
+
+Root files own cross-component topology, exact pins, acceptance, and drift.
+Component repositories remain authoritative for their implementations.
 
 ```text
 33GOD/
 ├── _bmad/                              # Root BMAD configuration
-├── docs/                               # Cross-component knowledge and validation record
+├── _bmad-output/planning-artifacts/    # Current root planning artifacts
+├── docs/                               # Cross-component knowledge
 ├── scripts/
-│   └── check-doc-drift.py              # Parity gate plus candidate validator invocation
+│   └── check-doc-drift.py              # Topology and semantic parity gate
 ├── 33god-platform/
-│   ├── components.yaml                 # Product/profile/projection policy
-│   ├── components/{bloodbank,candystore,holocene,pjangler}.yaml
-│   │                                   # Component ownership and projection declarations
-│   ├── compose.yaml                    # Root-owned normalized candidate
+│   ├── components.yaml                 # Six-slice plus twelve-registry policy
+│   ├── components/*.yaml               # Component ownership and pins
+│   ├── compose.yaml                    # Root-owned normalized local topology
+│   ├── scripts/platform.py             # Registry/provenance utility
 │   ├── scripts/validate-compose.py     # Four-model semantic validator
-│   ├── scripts/pjangler-tool-entrypoint.sh
-│   │                                   # Run-only CLI/MCP selector
-│   ├── tests/                          # Positive and adversarial validator tests
-│   ├── changes/*.jsonl                 # Machine-readable platform changes
-│   └── docs/integrated-compose-topology-audit.md
-│                                       # Evidence, decision, implemented outcome
-├── bloodbank/                          # Event contracts, NATS/Dapr source
-├── candystore/                         # PostgreSQL event history, app/UI, Dapr component
-├── holocene/                           # Next.js web and host Fastify API source
-└── pjangler/                           # Node CLI, stdio MCP, registry/templates
+│   ├── tests/                          # Positive and adversarial gates
+│   └── changes/*.jsonl                 # Machine-readable platform changes
+├── bloodbank/                          # Schemas and NATS/Dapr transport
+├── lifecycle/                          # Sole deterministic lifecycle authority
+├── candystore/                         # Audit history and read projections
+├── momo/                               # Legal-work chooser/executor client
+├── holocene/                           # Dashboard and high-level actions
+├── pjangler/                           # Project identity/bootstrap/bindings
+├── hermes-agent-template/              # Planned pinned fleet template gitlink
+└── toad/                               # Planned pinned delegating client gitlink
 ```
+
+The other registry repositories are either root-local directories or explicit
+external siblings. Their presence in the product registry does not add them to
+the Lifecycle acceptance slice.
+
+## Checkout and path policy
+
+`GOD_SOURCE_ROOT` selects exactly one 33GOD checkout. When it is set, it is
+authoritative. A selected in-tree component root is atomic: every descendant
+resolves beneath that root, and a missing repository or leaf fails closed.
+No path may borrow bytes from a primary checkout through a linked-worktree Git
+common directory.
+
+True external siblings such as Skillex and HeyMa use the independent
+`GOD_EXTERNAL_ROOT` policy. The external root is never used to resolve an
+in-tree component. Both selected and external paths reject symlink escapes.
 
 ## Projection boundaries
 
 | Root artifact | Reads from component source | Does not own |
 |---|---|---|
-| `compose.yaml` | Bloodbank stream init, Candystore build/Dapr components, Holocene source/env, PJangler dist/source | Component implementation or runtime state |
+| `compose.yaml` | Bloodbank transport, Lifecycle image contract, Candystore build/Dapr components, Holocene source/env, PJangler tools | Component implementation or runtime truth |
 | `validate-compose.py` | Required paths beneath explicit `--source-root` | Component correctness beyond the projected contract |
-| `check-doc-drift.py` | Component BMAD/config/contracts and root candidate validator | Lifecycle state or destructive remediation |
-| Component manifests | Native Compose/source paths and root projection metadata | Component-local release decisions |
+| `platform.py` | Root gitlinks, `.gitmodules`, component manifests, exact checkout identity/revision | Component mutation or pin advancement |
+| `check-doc-drift.py` | Acceptance roots, nested operational gitlinks, current docs, semantic surfaces | Lifecycle state or destructive remediation |
 
-`GOD_SOURCE_ROOT` separates the candidate checkout from the populated source
-checkout. It defaults to `.` in root mise tasks and to `..` inside Compose, but
-must be set explicitly when this worktree validates against
-`/home/delorenj/code/33GOD`.
+## Acceptance entrypoints
 
-## Runtime entrypoints
-
-| Part | Entrypoint | Candidate behavior |
+| Part | Entrypoint | Root acceptance role |
 |---|---|---|
-| Bloodbank | NATS image plus tracked `compose/nats/init.sh` | Default service/one-shot/placement trio |
-| Candystore | `python -m candystore.main` plus daprd | Default standalone triplet; app migrates on startup |
-| Holocene | Next.js `start`; API `apps/api/dist/server.js` | Web in candidate, API in existing user systemd |
-| PJangler | `dist/index.js`, `dist/mcp-server.js` | Explicit `run` only; read-only source mount, ephemeral dependencies |
+| Bloodbank | NATS image plus `compose/nats/init.sh` | Broker, canonical streams, Dapr placement |
+| Lifecycle | Immutable OCI digest | Dedicated database, migrate/bootstrap/serve |
+| Candystore | `python -m candystore.main` plus daprd | One audit/read-projection deployment |
+| Momo | Durable obligation actor and Lifecycle client | Choose and execute only Lifecycle-legal work |
+| Holocene | Next.js web plus host Fastify API | Render and submit high-level actions |
+| PJangler | Node CLI and stdio MCP | Project identity and binding inputs |
 
 ## Configuration boundaries
 
 - Root `_bmad` files use root-relative tokens.
-- Component env files, 1Password references, host systemd configuration,
-  registries, and provider credentials remain outside root ownership.
-- Three networks and five adopted volumes are declared external so Compose
-  cannot silently create replacement identities.
-- Detached Bloodbank legacy PostgreSQL volumes are intentionally absent from
-  the candidate and must not be removed during migration.
+- Component credentials, host systemd state, and provider configuration remain
+  outside root ownership.
+- Root validation checks a repository's own top-level, origin identity, root
+  gitlink revision, and checkout `HEAD`; an empty directory is uninitialized.
+- Mapped planned gitlinks may remain uninitialized, but are reported honestly
+  and may not satisfy the six-component acceptance slice.
+- External networks and volumes retain their exact identities; validation does
+  not create, remove, or migrate them.

@@ -31,6 +31,10 @@ machine-readable browser receipt independently against Lifecycle and
 Candystore; the harness does not submit the successful action. The cloud
 profile remains render-only and unsupported.
 
+This six-component acceptance slice is distinct from the twelve-component
+product registry in `33god-platform/components.yaml`. Registry-only entries do
+not gain Lifecycle authority or acceptance status.
+
 ## Ownership
 
 | Component | Sole concern in this slice |
@@ -71,7 +75,11 @@ cross-component relationships; component repositories govern their internals.
 ## Verification entrypoints
 
 ```bash
-GOD_SOURCE_ROOT="$PWD" mise run docs:drift
+primary_checkout="$(git rev-parse --path-format=absolute --git-common-dir)"
+primary_checkout="${primary_checkout%/.git}"
+export GOD_SOURCE_ROOT="$PWD"
+export GOD_EXTERNAL_ROOT="${primary_checkout%/*}"
+mise run docs:drift
 proof_dir="$(mktemp -d /tmp/33god-lifecycle-proof-XXXXXXXX)"
 python3 33god-platform/scripts/verify-lifecycle-live.py \
   --proof-dir "$proof_dir" \

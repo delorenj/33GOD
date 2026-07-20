@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only 33GOD four-part documentation and contract parity check."""
+"""Read-only 33GOD topology, documentation, and contract parity check."""
 
 from __future__ import annotations
 
@@ -20,7 +20,24 @@ except ImportError:  # The structural checks still run without PyYAML.
     yaml = None
 
 
-PARTS = ("bloodbank", "candystore", "holocene", "pjangler")
+LIFECYCLE_ACCEPTANCE_SLICE = (
+    "bloodbank",
+    "lifecycle",
+    "candystore",
+    "momo",
+    "holocene",
+    "pjangler",
+)
+PRODUCT_COMPONENT_IDS = (
+    *LIFECYCLE_ACCEPTANCE_SLICE,
+    "hermes-fleet",
+    "skillex",
+    "hindsight",
+    "pipeline-mcp-hub",
+    "candybar",
+    "heyma",
+)
+DOCUMENTED_COMPONENTS = ("bloodbank", "candystore", "holocene", "pjangler")
 REQUIRED_ROOT_DOCS = (
     "index.md",
     "project-overview.md",
@@ -147,8 +164,11 @@ DEPLOYMENT_CEREMONY_PATTERNS = {
     "root integration publication ceremony": re.compile(
         r"(?i)\broot integration publication\b"
     ),
-    "release-tag ceremony": re.compile(r"(?i)\brelease tag\b"),
-    "release-promotion ceremony": re.compile(r"(?i)\brelease promotion\b"),
+    "release-tag ceremony": re.compile(r"(?i)\brelease[- ]tag\b"),
+    "release-promotion ceremony": re.compile(r"(?i)\brelease[- ]promotion\b"),
+    "release-tag-promotion ceremony": re.compile(
+        r"(?i)\brelease[- ]tag[- ]promotion\b"
+    ),
 }
 TICKET_LIFECYCLE_COMMAND_SURFACES = (
     Path(".augment/commands/bmad/workflows/custom-ticket-lifecycle.md"),
@@ -258,37 +278,137 @@ def check_root_artifacts(source: Path, docs: Path, report: Reporter) -> None:
             report.fail("root-bmad", f"YAML parse failed: {exc}")
 
 
-def check_part_declaration(source: Path, docs: Path, report: Reporter) -> None:
-    path = docs / "project-parts.json"
-    if not path.is_file():
-        return
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        ids = tuple(item["id"] for item in data["parts"])
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        report.fail("four-part-scope", f"cannot parse declaration: {exc}")
-        return
-    if ids != PARTS or data.get("scope_policy") != "exact":
-        report.fail(
-            "four-part-scope", f"expected exact ordered parts {PARTS}; found {ids}"
-        )
-    else:
-        report.passed(
-            "four-part-scope",
-            "exact Bloodbank/Candystore/Holocene/PJangler declaration",
+def topology_declaration_errors(
+    parts_data: dict[str, Any],
+    platform_data: dict[str, Any],
+    scan_data: dict[str, Any],
+) -> list[str]:
+    """Validate the six-component slice separately from the product registry."""
+
+    errors: list[str] = []
+    parts = parts_data.get("parts")
+    if not isinstance(parts, list):
+        parts = []
+    part_ids = tuple(
+        str(item.get("id"))
+        for item in parts
+        if isinstance(item, dict)
+    )
+    acceptance_slice = platform_data.get("acceptance_slice")
+    if not isinstance(acceptance_slice, dict):
+        acceptance_slice = {}
+    acceptance_components = acceptance_slice.get("components")
+    if not isinstance(acceptance_components, list):
+        acceptance_components = []
+    platform_slice = tuple(
+        str(item)
+        for item in acceptance_components
+    )
+    if (
+        parts_data.get("scope_policy") != "lifecycle-acceptance-slice-exact"
+        or part_ids != LIFECYCLE_ACCEPTANCE_SLICE
+        or platform_slice != LIFECYCLE_ACCEPTANCE_SLICE
+    ):
+        errors.append(
+            "Lifecycle acceptance slice must be the exact ordered set "
+            f"{LIFECYCLE_ACCEPTANCE_SLICE}; project-parts={part_ids}, "
+            f"platform={platform_slice}"
         )
 
-    missing_roots = [part for part in PARTS if not (source / part).is_dir()]
+    product_registry = parts_data.get("product_registry")
+    if not isinstance(product_registry, dict):
+        product_registry = {}
+    registry_components = product_registry.get("components")
+    if not isinstance(registry_components, list):
+        registry_components = []
+    declared_registry = tuple(str(item) for item in registry_components)
+    component_files = platform_data.get("component_files")
+    if not isinstance(component_files, list):
+        component_files = []
+    platform_registry = tuple(
+        Path(str(item)).stem for item in component_files
+    )
+    if (
+        product_registry.get("scope_policy") != "exact"
+        or declared_registry != PRODUCT_COMPONENT_IDS
+        or platform_registry != PRODUCT_COMPONENT_IDS
+    ):
+        errors.append(
+            "twelve-component product registry must be the exact ordered set "
+            f"{PRODUCT_COMPONENT_IDS}; project-parts={declared_registry}, "
+            f"platform={platform_registry}"
+        )
+
+    findings = scan_data.get("findings")
+    if not isinstance(findings, dict):
+        findings = {}
+    classification = findings.get("project_classification")
+    if not isinstance(classification, dict):
+        classification = {}
+    project_types = scan_data.get("project_types")
+    if not isinstance(project_types, list):
+        project_types = []
+    scan_parts = tuple(
+        str(item.get("part_id"))
+        for item in project_types
+        if isinstance(item, dict)
+    )
+    if (
+        classification.get("acceptance_slice_count") != len(
+            LIFECYCLE_ACCEPTANCE_SLICE
+        )
+        or classification.get("product_registry_count") != len(
+            PRODUCT_COMPONENT_IDS
+        )
+        or scan_parts != LIFECYCLE_ACCEPTANCE_SLICE
+    ):
+        errors.append(
+            "project-scan-report must record six acceptance parts and twelve "
+            f"registry components; counts={classification!r}, parts={scan_parts}"
+        )
+    if scan_data.get("project_root") != "{project-root}":
+        errors.append(
+            "project-scan-report project_root must use the reproducible "
+            "{project-root} token"
+        )
+    return errors
+
+
+def check_part_declaration(source: Path, docs: Path, report: Reporter) -> None:
+    parts_path = docs / "project-parts.json"
+    scan_path = docs / "project-scan-report.json"
+    platform_path = source / "33god-platform/components.yaml"
+    try:
+        parts_data = json.loads(parts_path.read_text(encoding="utf-8"))
+        scan_data = json.loads(scan_path.read_text(encoding="utf-8"))
+        platform_data = load_yaml(platform_path)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        report.fail("topology-scope", f"cannot parse declaration: {exc}")
+        return
+    errors = topology_declaration_errors(parts_data, platform_data, scan_data)
+    if errors:
+        report.fail("topology-scope", "; ".join(errors))
+    else:
+        report.passed(
+            "topology-scope",
+            "exact six-component Lifecycle slice and twelve-component registry",
+        )
+
+    missing_roots = [
+        part for part in LIFECYCLE_ACCEPTANCE_SLICE if not (source / part).is_dir()
+    ]
     if missing_roots:
         report.fail(
             "component-roots", f"missing source directories: {', '.join(missing_roots)}"
         )
     else:
-        report.passed("component-roots", "all four live component roots exist")
+        report.passed(
+            "component-roots", "all six Lifecycle acceptance roots exist"
+        )
 
 
 def check_component_bmad(source: Path, docs: Path, report: Reporter) -> None:
-    for part in PARTS:
+    for part in DOCUMENTED_COMPONENTS:
         root = source / part
         configs = (root / "_bmad/core/config.yaml", root / "_bmad/bmm/config.yaml")
         missing = [
@@ -357,7 +477,10 @@ def check_component_bmad(source: Path, docs: Path, report: Reporter) -> None:
 
 def check_platform_manifest(source: Path, report: Reporter) -> None:
     platform = source / "33god-platform"
-    component_paths = {part: platform / "components" / f"{part}.yaml" for part in PARTS}
+    component_paths = {
+        part: platform / "components" / f"{part}.yaml"
+        for part in LIFECYCLE_ACCEPTANCE_SLICE
+    }
     if yaml is None:
         report.warn(
             "platform-manifests", "PyYAML unavailable; semantic parity was skipped"
@@ -468,7 +591,15 @@ def authority_parity_text_errors(path: str, text: str) -> list[str]:
         for label, pattern in AUTHORITY_PARITY_PATTERNS.items()
         if any(pattern.search(paragraph) for paragraph in paragraphs)
     ]
-    if path in CURRENT_DEPLOYMENT_ARTIFACTS:
+    normalized_path = path.casefold()
+    if (
+        "holocene/" in normalized_path
+        and re.search(r"(?i)\b33GOD\s+Control[-\s]+Plane\b", text)
+    ):
+        errors.append(f"{path} contains standalone Holocene control-plane branding")
+    if path in CURRENT_DEPLOYMENT_ARTIFACTS or normalized_path.startswith(
+        ("source/lifecycle/", "lifecycle/")
+    ):
         errors.extend(
             f"{path} contains {label}"
             for label, pattern in DEPLOYMENT_CEREMONY_PATTERNS.items()
@@ -477,10 +608,226 @@ def authority_parity_text_errors(path: str, text: str) -> list[str]:
     return errors
 
 
+OPERATIONAL_COMPONENTS = ("bloodbank", "candystore", "holocene", "pjangler")
+OPERATIONAL_PATH_MARKERS = (
+    "agents/hermes/",
+    "/sentinel",
+    "sentinel.",
+    "scrum-master",
+    "adapter",
+    "runner",
+    "mirror",
+    "_bmad/",
+    ".augment/",
+    ".claude/commands/",
+    ".gemini/commands/",
+    ".opencode/command/",
+)
+OPERATIONAL_NESTED_MARKERS = (
+    "agents/hermes/",
+    "templates/commonproject",
+    "templates/hermes-agent",
+    ".tmp/plugins",
+)
+PROVIDER_COMPLETION_PATTERNS = (
+    re.compile(
+        r"(?i)\b(?:tp|ticket[-_ ]?provider)\s+transition\b[^\n]{0,120}"
+        r"\b(?:completed|started|done)\b"
+    ),
+    re.compile(r"(?i)\bmove\s+work\b[^\n]{0,80}\bstarted\b"),
+    re.compile(
+        r"(?i)\bautonom(?:ous|ously)\b[^\n]{0,120}\b(?:treat|treated|treats)\b"
+        r"[^\n]{0,80}\b(?:done|completed)\b"
+    ),
+    re.compile(
+        r"(?i)\b(?:ticket provider|provider board)\b.{0,120}"
+        r"\b(?:authoritative|source of truth|SOT)\b"
+    ),
+    re.compile(r"(?i)\bunblocks?\s+dependents?\b"),
+)
+TICKET_LIFECYCLE_VARIANT = re.compile(r"(?i)ticket[-_ ]?lifecycle")
+MOMO_HOLOCENE_COPY_PATTERN = re.compile(
+    r"(?is)(?:\b(?:copy|copies|replica|mirror|byte[- ]identical|stored)\b.{0,100}"
+    r"\bHolocene\b|\bHolocene\b.{0,100}"
+    r"\b(?:copy|copies|replica|mirror|byte[- ]identical|stored)\b|"
+    r"\bMomo/Holocene\b)"
+)
+
+
+def is_own_checkout(repo: Path) -> bool:
+    if not repo.is_dir() or not (repo / ".git").exists():
+        return False
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--show-toplevel"],
+        text=True,
+        capture_output=True,
+    )
+    return not result.returncode and Path(result.stdout.strip()).resolve() == repo.resolve()
+
+
+def checkout_revision(repo: Path) -> str | None:
+    """Return HEAD only when ``repo`` is itself an initialized checkout."""
+
+    if not is_own_checkout(repo):
+        return None
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"],
+        text=True,
+        capture_output=True,
+    )
+    return result.stdout.strip() if not result.returncode else None
+
+
+def repository_gitlinks(repo: Path) -> dict[str, str]:
+    if not is_own_checkout(repo):
+        return {}
+    result = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "--stage", "-z"],
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        return {}
+    gitlinks: dict[str, str] = {}
+    for record in result.stdout.split("\0"):
+        if not record or "\t" not in record:
+            continue
+        metadata, relative = record.split("\t", 1)
+        fields = metadata.split()
+        if len(fields) >= 2 and fields[0] == "160000":
+            gitlinks[relative] = fields[1]
+    return gitlinks
+
+
+def repository_files(repo: Path) -> list[Path]:
+    if is_own_checkout(repo):
+        result = subprocess.run(
+            ["git", "-C", str(repo), "ls-files", "-z"],
+            text=True,
+            capture_output=True,
+        )
+        if not result.returncode:
+            return [repo / item for item in result.stdout.split("\0") if item]
+    if not repo.is_dir():
+        return []
+    return [
+        path
+        for path in repo.rglob("*")
+        if ".git" not in path.parts and (path.is_file() or path.is_symlink())
+    ]
+
+
+def path_is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def is_operational_path(relative: str) -> bool:
+    normalized = relative.casefold().replace("\\", "/")
+    return any(marker in normalized for marker in OPERATIONAL_PATH_MARKERS)
+
+
+def scan_operational_repository(
+    source: Path,
+    component: str,
+    repo: Path,
+    *,
+    nested_label: str | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    for path in repository_files(repo):
+        try:
+            relative_repo = path.relative_to(repo).as_posix()
+        except ValueError:
+            continue
+        if not is_operational_path(relative_repo):
+            continue
+        display = f"{component}/{relative_repo}"
+        symlink = path.is_symlink()
+        if symlink:
+            try:
+                resolved = path.resolve(strict=True)
+                resolved_repo = repo.resolve()
+            except (OSError, RuntimeError) as exc:
+                errors.append(
+                    f"{display} is an operational symlink that cannot be "
+                    f"resolved safely: {exc}"
+                )
+                continue
+            if not path_is_within(resolved, resolved_repo):
+                errors.append(f"{display} is an operational symlink escaping its repo")
+                continue
+        if not path.is_file():
+            continue
+        try:
+            if path.stat().st_size > 1_000_000:
+                continue
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        context = f"{nested_label}: " if nested_label else ""
+        qualifier = "symlink " if symlink else ""
+        if TICKET_LIFECYCLE_VARIANT.search(relative_repo) or (
+            TICKET_LIFECYCLE_VARIANT.search(text)
+            and ("workflow" in relative_repo.casefold() or "command" in relative_repo.casefold())
+        ):
+            errors.append(
+                f"{context}{display} retains a non-Momo ticket-lifecycle "
+                f"{qualifier}operational surface"
+            )
+        if any(pattern.search(text) for pattern in PROVIDER_COMPLETION_PATTERNS):
+            errors.append(
+                f"{context}{display} retains a provider completion surface "
+                f"through an operational {qualifier}adapter/runner/sentinel"
+            )
+    return errors
+
+
+def non_momo_operational_surface_errors(source: Path) -> list[str]:
+    """Reject semantic lifecycle engines beyond named workflow directories."""
+
+    errors: list[str] = []
+    for component in OPERATIONAL_COMPONENTS:
+        root = source / component
+        if not root.is_dir():
+            continue
+        errors.extend(scan_operational_repository(source, component, root))
+        for relative, recorded in repository_gitlinks(root).items():
+            normalized = relative.casefold().replace("\\", "/")
+            if not any(marker in normalized for marker in OPERATIONAL_NESTED_MARKERS):
+                continue
+            nested = root / relative
+            if not (nested / ".git").exists():
+                errors.append(
+                    f"{component} has uninitialized nested gitlink {relative} at "
+                    f"{recorded}; semantic absence cannot be proven"
+                )
+                continue
+            actual = checkout_revision(nested)
+            if actual != recorded:
+                errors.append(
+                    f"{component} nested gitlink {relative} checkout="
+                    f"{actual or 'unavailable'} expected={recorded}"
+                )
+                continue
+            errors.extend(
+                scan_operational_repository(
+                    source,
+                    component,
+                    nested,
+                    nested_label=f"{component} nested gitlink {relative}",
+                )
+            )
+    return sorted(set(errors))
+
+
 def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
     """Allow only Momo's canonical ticket-lifecycle client workflow."""
 
-    errors: list[str] = []
+    errors: list[str] = non_momo_operational_surface_errors(source)
     workflow_roots = (
         Path("_bmad/custom/workflows/ticket-lifecycle"),
         Path("_bmad/_config/custom/custom/workflows/ticket-lifecycle"),
@@ -550,30 +897,66 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
     if any(path.suffix == ".bak" for path in source_files | mirror_files):
         errors.append("Momo canonical ticket-lifecycle workflow retains .bak residue")
 
+    for relative in sorted(source_files):
+        path = source_workflow / relative
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        if MOMO_HOLOCENE_COPY_PATTERN.search(text):
+            errors.append(
+                "Momo canonical ticket-lifecycle workflow contains Holocene copy "
+                f"claim in {relative.as_posix()}"
+            )
+
     workflow_manifest = momo / manifest_paths[0]
-    workflow_rows = (
-        [
-            line
-            for line in workflow_manifest.read_text(encoding="utf-8").splitlines()
-            if "ticket-lifecycle" in line.casefold()
-        ]
-        if workflow_manifest.is_file()
-        else []
-    )
+    workflow_rows: list[dict[str, str]] = []
+    if workflow_manifest.is_file():
+        with workflow_manifest.open(encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                if None in row or any(value is None for value in row.values()):
+                    errors.append("Momo workflow-manifest contains a malformed CSV row")
+                    continue
+                row_text = " ".join(str(value) for value in row.values()).casefold()
+                if "ticket-lifecycle" in row_text:
+                    workflow_rows.append(row)
     if len(workflow_rows) != 1:
         errors.append(
             "Momo must register exactly one canonical ticket-lifecycle workflow"
         )
+    else:
+        row = workflow_rows[0]
+        description = row.get("description", "")
+        normalized = description.casefold()
+        metadata_valid = (
+            row.get("name") == "ticket-lifecycle"
+            and row.get("module") == "custom"
+            and row.get("path")
+            == "_bmad/custom/workflows/ticket-lifecycle/workflow.md"
+            and "lifecycle" in normalized
+            and "client" in normalized
+            and ("bounded" in normalized or "legal work" in normalized)
+            and "autonomous multi-agent ticket lifecycle" not in normalized
+            and "plane + bloodbank" not in normalized
+        )
+        if not metadata_valid:
+            errors.append(
+                "Momo workflow-manifest lacks bounded Lifecycle client metadata"
+            )
 
     files_manifest = momo / manifest_paths[1]
     file_rows = []
     if files_manifest.is_file():
         with files_manifest.open(encoding="utf-8", newline="") as handle:
-            file_rows = [
-                row
-                for row in csv.DictReader(handle)
-                if "ticket-lifecycle" in row.get("path", "").casefold()
-            ]
+            for row in csv.DictReader(handle):
+                if None in row or any(value is None for value in row.values()):
+                    errors.append("Momo files-manifest contains a malformed CSV row")
+                    continue
+                relative_path = row.get("path", "")
+                if isinstance(relative_path, str) and (
+                    "ticket-lifecycle" in relative_path.casefold()
+                ):
+                    file_rows.append(row)
     expected_manifest_paths = {
         f"custom/workflows/ticket-lifecycle/{relative.as_posix()}"
         for relative in source_files
@@ -614,6 +997,60 @@ def bloodbank_live_inventory_errors(source: Path) -> list[str]:
             r"(?i)lifecycle[- ]controller", line
         ):
             errors.append("Bloodbank README lists a live lifecycle controller service")
+    return errors
+
+
+CURRENT_TOPOLOGY_TEXT_ARTIFACTS = (
+    "PRD.md",
+    "33god-platform/README.md",
+    "docs/deployment-guide.md",
+    "docs/source-tree-analysis.md",
+    "docs/project-overview.md",
+    "docs/index.md",
+    "mise.toml",
+)
+STALE_TOPOLOGY_PATTERN = re.compile(
+    r"(?i)\b(?:exact\s+)?four[- ]part\b|"
+    r"\bfour\s+independently\s+versioned\s+component\b|"
+    r"\bfour\s+component\s+(?:roots?|trees?|knowledge)\b"
+)
+RETIRED_ARCHITECTURE_INPUT = re.compile(
+    r"(?im)^\s*-\s+(?:holocene/_bmad/custom/workflows/ticket-lifecycle/|"
+    r"bloodbank/services/lifecycle-controller/)"
+)
+
+
+def root_current_guidance_errors(docs_checkout: Path) -> list[str]:
+    """Reject root guidance that revives removed authority or stale topology."""
+
+    errors: list[str] = []
+    for relative in (
+        "docs/development-guide-bloodbank.md",
+        "docs/component-inventory-bloodbank.md",
+    ):
+        path = docs_checkout / relative
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if re.search(r"(?i)(?:bloodbank/)?services/lifecycle-controller", text):
+            errors.append(
+                f"{relative} contains current Bloodbank guidance to the removed "
+                "lifecycle-controller"
+            )
+
+    architecture = docs_checkout / "_bmad-output/planning-artifacts/architecture.md"
+    architecture_text = (
+        architecture.read_text(encoding="utf-8") if architecture.is_file() else ""
+    )
+    if RETIRED_ARCHITECTURE_INPUT.search(architecture_text):
+        errors.append(
+            "_bmad-output/planning-artifacts/architecture.md contains retired "
+            "architecture input paths"
+        )
+
+    for relative in CURRENT_TOPOLOGY_TEXT_ARTIFACTS:
+        path = docs_checkout / relative
+        text = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if STALE_TOPOLOGY_PATTERN.search(text):
+            errors.append(f"{relative} retains obsolete four-part topology guidance")
     return errors
 
 
@@ -757,13 +1194,8 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             )
 
     for name, expected in COMPONENT_REVISIONS.items():
-        result = subprocess.run(
-            ["git", "-C", str(source / name), "rev-parse", "HEAD"],
-            text=True,
-            capture_output=True,
-        )
-        actual = result.stdout.strip()
-        if result.returncode or actual != expected:
+        actual = checkout_revision(source / name)
+        if actual != expected:
             errors.append(
                 f"{name} checkout={actual or 'unavailable'} expected={expected}"
             )
@@ -791,16 +1223,8 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             errors.append(f"{name} component manifest does not pin {expected}")
 
     commonproject = source / "pjangler/templates/commonproject"
-    commonproject_result = subprocess.run(
-        ["git", "-C", str(commonproject), "rev-parse", "HEAD"],
-        text=True,
-        capture_output=True,
-    )
-    commonproject_actual = commonproject_result.stdout.strip()
-    if (
-        commonproject_result.returncode
-        or commonproject_actual != COMMONPROJECT_REVISION
-    ):
+    commonproject_actual = checkout_revision(commonproject)
+    if commonproject_actual != COMMONPROJECT_REVISION:
         errors.append(
             "CommonProject checkout="
             f"{commonproject_actual or 'unavailable'} expected={COMMONPROJECT_REVISION}"
@@ -891,6 +1315,26 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             *sorted((holocene_root / "packages").rglob("*.tsx")),
         ]
     )
+    bloodbank_root = source / "bloodbank"
+    current_paths.extend(
+        [
+            bloodbank_root / "README.md",
+            *sorted((bloodbank_root / "services/agent-hooks").rglob("*.md")),
+            *sorted((bloodbank_root / "docs").rglob("*.md")),
+        ]
+    )
+    lifecycle_root = source / "lifecycle"
+    current_paths.extend(
+        [
+            lifecycle_root / "README.md",
+            *sorted((lifecycle_root / "docs").rglob("*.md")),
+        ]
+    )
+    current_paths.extend(
+        sorted(
+            (source / "momo/_bmad/custom/workflows/ticket-lifecycle").rglob("*.md")
+        )
+    )
     ownership_patterns = {
         "Momo lifecycle authority": re.compile(
             r"(?i)\bMomo\s+(?:owns|calculates|persists|writes|drives)\s+(?:the\s+)?lifecycle"
@@ -948,6 +1392,7 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         else ""
     )
     errors.extend(bloodbank_api_contract_errors(bloodbank_api_text))
+    errors.extend(root_current_guidance_errors(docs_checkout))
 
     promoted = docs_checkout / "skills/momo"
     canonical = source / "momo/skill"

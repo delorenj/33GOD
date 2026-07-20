@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import configparser
 import glob
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -20,49 +22,47 @@ except ImportError as exc:  # pragma: no cover - environment guard
 
 ROOT = Path(__file__).resolve().parents[1]
 
-
-def discover_primary_checkout_root(checkout_root: Path) -> Path:
-    """Return the primary checkout that owns a linked worktree's common Git dir."""
-    checkout_root = checkout_root.expanduser().resolve()
-    git_entry = checkout_root / ".git"
-    if git_entry.is_dir():
-        return checkout_root
-    try:
-        gitdir_line = git_entry.read_text(encoding="utf-8").strip()
-    except OSError:
-        return checkout_root
-    if not gitdir_line.startswith("gitdir:"):
-        return checkout_root
-
-    linked_git_dir = Path(gitdir_line.removeprefix("gitdir:").strip())
-    if not linked_git_dir.is_absolute():
-        linked_git_dir = checkout_root / linked_git_dir
-    linked_git_dir = linked_git_dir.resolve()
-    try:
-        common_dir_value = (linked_git_dir / "commondir").read_text(
-            encoding="utf-8"
-        ).strip()
-    except OSError:
-        return checkout_root
-
-    common_git_dir = Path(common_dir_value)
-    if not common_git_dir.is_absolute():
-        common_git_dir = linked_git_dir / common_git_dir
-    common_git_dir = common_git_dir.resolve()
-    if common_git_dir.name != ".git":
-        return checkout_root
-    return common_git_dir.parent
-
-
+# The selected source root is exactly one checkout. An explicit GOD_SOURCE_ROOT
+# is authoritative; otherwise the checkout that contains this 33god-platform
+# directory is selected. Resolution never borrows component leaves from any
+# other checkout (including the primary checkout of a linked-worktree chain).
 _EXPLICIT_SOURCE_ROOT = os.environ.get("GOD_SOURCE_ROOT")
 SOURCE_ROOT_IS_EXPLICIT = bool(_EXPLICIT_SOURCE_ROOT)
 SOURCE_ROOT = (
     Path(_EXPLICIT_SOURCE_ROOT).expanduser().resolve()
     if _EXPLICIT_SOURCE_ROOT
-    else discover_primary_checkout_root(ROOT.parent)
+    else ROOT.parent.resolve()
 )
 SOURCE_PLATFORM_ROOT = SOURCE_ROOT / "33god-platform"
+
+# True external siblings (for example ../../skillex and ../../HeyMa) escape the
+# selected source root. They resolve only through this external-root policy:
+# an explicit GOD_EXTERNAL_ROOT when set, else the selected root's parent.
+_EXPLICIT_EXTERNAL_ROOT = os.environ.get("GOD_EXTERNAL_ROOT")
+EXTERNAL_ROOT_IS_EXPLICIT = bool(_EXPLICIT_EXTERNAL_ROOT)
+EXTERNAL_ROOT = (
+    Path(_EXPLICIT_EXTERNAL_ROOT).expanduser().resolve()
+    if _EXPLICIT_EXTERNAL_ROOT
+    else SOURCE_ROOT.parent
+)
 MAX_SCAN_FILE_BYTES = 1_000_000
+LIFECYCLE_ACCEPTANCE_SLICE = (
+    "bloodbank",
+    "lifecycle",
+    "candystore",
+    "momo",
+    "holocene",
+    "pjangler",
+)
+PRODUCT_COMPONENT_IDS = (
+    *LIFECYCLE_ACCEPTANCE_SLICE,
+    "hermes-fleet",
+    "skillex",
+    "hindsight",
+    "pipeline-mcp-hub",
+    "candybar",
+    "heyma",
+)
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -73,23 +73,62 @@ def load_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
+def is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def lexical_path(path: Path) -> Path:
+    """Normalize ``.``/``..`` without following symlinks."""
+
+    return Path(os.path.abspath(os.fspath(path)))
+
+
+def resolve_external_path(candidate: Path) -> Path:
+    """Resolve a selected path that escapes the source root.
+
+    External siblings (for example ../../skillex) resolve beneath
+    EXTERNAL_ROOT only; there is no fallback into any other checkout.
+    """
+    candidate = lexical_path(candidate)
+    try:
+        relative = candidate.relative_to(SOURCE_ROOT.parent)
+    except ValueError as exc:
+        raise ValueError(
+            f"external path escapes the supported sibling boundary: {candidate}"
+        ) from exc
+    mapped = lexical_path(EXTERNAL_ROOT / relative)
+    if not is_within(mapped, EXTERNAL_ROOT):
+        raise ValueError(f"external path escapes GOD_EXTERNAL_ROOT: {mapped}")
+    resolved = mapped.resolve()
+    if not is_within(resolved, EXTERNAL_ROOT):
+        raise ValueError(
+            f"external path resolves outside GOD_EXTERNAL_ROOT: {mapped} -> {resolved}"
+        )
+    return resolved
+
+
 def resolve_path(value: str | Path, base: Path = ROOT) -> Path:
     raw = os.path.expandvars(os.path.expanduser(str(value)))
     path = Path(raw)
     if not path.is_absolute():
-        if str(path).startswith(".."):
-            source_candidate = (SOURCE_PLATFORM_ROOT / path).resolve()
-            checkout_candidate = (ROOT / path).resolve()
-            if SOURCE_ROOT_IS_EXPLICIT:
-                return source_candidate
-            # Keep selected components and files in the active worktree. A
-            # missing target can still live in the primary checkout (including
-            # external siblings such as ../../skillex and ../../HeyMa).
-            return (
-                checkout_candidate
-                if checkout_candidate.exists()
-                else source_candidate
-            )
+        if path.parts and path.parts[0] == "..":
+            candidate = lexical_path(SOURCE_PLATFORM_ROOT / path)
+            if is_within(candidate, SOURCE_ROOT):
+                # In-tree component roots are atomic: every descendant stays
+                # beneath the selected checkout, so a missing leaf fails
+                # closed instead of being borrowed from another checkout.
+                resolved = candidate.resolve()
+                if not is_within(resolved, SOURCE_ROOT):
+                    raise ValueError(
+                        "selected in-tree path resolves outside GOD_SOURCE_ROOT: "
+                        f"{candidate} -> {resolved}"
+                    )
+                return resolved
+            return resolve_external_path(candidate)
         path = base / path
     return path.resolve()
 
@@ -112,11 +151,264 @@ def load_components() -> list[dict[str, Any]]:
     return components
 
 
+def recorded_revision(component: dict[str, Any]) -> str | None:
+    for field in ("source_revision", "gitlink_revision"):
+        value = component.get(field)
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
+def acceptance_slice_ids(cfg: dict[str, Any] | None = None) -> list[str]:
+    cfg = platform_config() if cfg is None else cfg
+    declaration = cfg.get("acceptance_slice") or {}
+    if not isinstance(declaration, dict):
+        return []
+    components = declaration.get("components") or []
+    if not isinstance(components, list):
+        return []
+    return [str(item) for item in components]
+
+
+def gitlink_entries(root: Path | None = None) -> dict[str, str]:
+    """Return root gitlink path -> recorded revision from the selected checkout."""
+
+    root = SOURCE_ROOT if root is None else root
+    result = subprocess.run(
+        ["git", "-C", str(root), "ls-files", "--stage", "-z"],
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        return {}
+    entries: dict[str, str] = {}
+    for record in result.stdout.split("\0"):
+        if not record or "\t" not in record:
+            continue
+        metadata, path = record.split("\t", 1)
+        fields = metadata.split()
+        if len(fields) >= 2 and fields[0] == "160000":
+            entries[path] = fields[1]
+    return entries
+
+
+def gitmodule_mappings(root: Path | None = None) -> dict[str, dict[str, str]]:
+    """Return submodule mappings keyed by path from the selected checkout."""
+
+    root = SOURCE_ROOT if root is None else root
+    path = root / ".gitmodules"
+    if not path.is_file():
+        return {}
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read(path, encoding="utf-8")
+    mappings: dict[str, dict[str, str]] = {}
+    for section in parser.sections():
+        if not section.startswith('submodule "'):
+            continue
+        mapped_path = parser.get(section, "path", fallback="").strip()
+        if not mapped_path:
+            continue
+        mappings[mapped_path] = {
+            "name": section.removeprefix('submodule "').removesuffix('"'),
+            "url": parser.get(section, "url", fallback="").strip(),
+        }
+    return mappings
+
+
+def normalize_repository_url(value: str) -> str:
+    normalized = value.strip().removesuffix("/").removesuffix(".git")
+    if normalized.startswith("git@github.com:"):
+        normalized = "https://github.com/" + normalized.removeprefix(
+            "git@github.com:"
+        )
+    elif normalized.startswith("ssh://git@github.com/"):
+        normalized = "https://github.com/" + normalized.removeprefix(
+            "ssh://git@github.com/"
+        )
+    return normalized.casefold()
+
+
+def root_relative_repo(repo: Path) -> str | None:
+    try:
+        relative = repo.resolve().relative_to(SOURCE_ROOT)
+    except ValueError:
+        return None
+    if relative == Path("."):
+        return None
+    return relative.as_posix()
+
+
+def git_checkout_revision(repo: Path) -> str | None:
+    """HEAD revision of an initialized Git checkout, else None.
+
+    An empty or plain directory is not an initialized checkout even when a
+    parent repository would answer `rev-parse` for it.
+    """
+    if not repo.is_dir() or not (repo / ".git").exists():
+        return None
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--show-toplevel", "HEAD"],
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        return None
+    lines = result.stdout.splitlines()
+    if len(lines) != 2 or Path(lines[0]).resolve() != repo.resolve():
+        return None
+    return lines[1].strip() or None
+
+
+def git_checkout_origin(repo: Path) -> str | None:
+    result = subprocess.run(
+        ["git", "-C", str(repo), "config", "--get", "remote.origin.url"],
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        return None
+    return result.stdout.strip() or None
+
+
+def component_repo_status(component: dict[str, Any]) -> tuple[str, str | None]:
+    """Classify a component's selected repo path.
+
+    Statuses: ``verified`` (initialized Git checkout at the exact recorded
+    revision), ``revision-mismatch``, ``uninitialized`` (recorded revision but
+    no Git checkout), ``not-a-git-checkout`` (non-empty directory without Git
+    identity), ``present`` (exists, no recorded revision), ``missing``.
+    """
+    repo = resolve_path(component["repo"])
+    recorded = recorded_revision(component)
+    if recorded is None:
+        return ("present", None) if repo.exists() else ("missing", None)
+
+    relative_repo = root_relative_repo(repo)
+    if relative_repo is not None:
+        gitlinks = gitlink_entries()
+        mappings = gitmodule_mappings()
+        gitlink_revision = gitlinks.get(relative_repo)
+        if gitlink_revision is None:
+            return ("gitlink-missing", None)
+        if gitlink_revision != recorded:
+            return ("gitlink-mismatch", gitlink_revision)
+        mapping = mappings.get(relative_repo)
+        if mapping is None:
+            return ("unmapped", gitlink_revision)
+
+    if not repo.exists():
+        return ("uninitialized", None)
+    revision = git_checkout_revision(repo)
+    if revision is None:
+        if not repo.is_dir() or any(repo.iterdir()):
+            return ("not-a-git-checkout", None)
+        return ("uninitialized", None)
+    if revision != recorded:
+        return ("revision-mismatch", revision)
+
+    if relative_repo is not None:
+        expected_url = gitmodule_mappings()[relative_repo]["url"]
+        actual_url = git_checkout_origin(repo)
+        if (
+            not actual_url
+            or normalize_repository_url(actual_url)
+            != normalize_repository_url(expected_url)
+        ):
+            return ("identity-mismatch", revision)
+    return ("verified", revision)
+
+
+def repo_is_populated(component: dict[str, Any]) -> bool:
+    status, _ = component_repo_status(component)
+    if recorded_revision(component) is None:
+        return status == "present"
+    return status == "verified"
+
+
+def validate_gitlink_inventory() -> list[str]:
+    errors: list[str] = []
+    try:
+        gitlinks = gitlink_entries()
+        mappings = gitmodule_mappings()
+    except (configparser.Error, OSError) as exc:
+        return [f".gitmodules: cannot parse root gitlink inventory safely: {exc}"]
+    missing = sorted(set(gitlinks) - set(mappings))
+    extra = sorted(set(mappings) - set(gitlinks))
+    if missing:
+        errors.append(".gitmodules: missing mappings for gitlinks: " + ", ".join(missing))
+    if extra:
+        errors.append(".gitmodules: mappings without root gitlinks: " + ", ".join(extra))
+    for path, mapping in sorted(mappings.items()):
+        url = mapping["url"]
+        if not url.startswith("https://"):
+            errors.append(
+                f".gitmodules: {path} must use a credential-free HTTPS URL, found {url!r}"
+            )
+    return errors
+
+
+def validate_acceptance_slice(components: list[dict[str, Any]]) -> list[str]:
+    errors: list[str] = []
+    cfg = platform_config()
+    declaration = cfg.get("acceptance_slice")
+    if not isinstance(declaration, dict) or not isinstance(
+        declaration.get("components"), list
+    ):
+        return ["components.yaml: acceptance_slice.components must be a list"]
+    slice_ids = [str(item) for item in declaration["components"]]
+    if not slice_ids:
+        errors.append("components.yaml: acceptance_slice.components is empty")
+    if len(set(slice_ids)) != len(slice_ids):
+        errors.append("components.yaml: acceptance_slice.components has duplicates")
+    if tuple(slice_ids) != LIFECYCLE_ACCEPTANCE_SLICE:
+        errors.append(
+            "components.yaml: acceptance_slice.components must be the exact ordered "
+            f"Lifecycle slice {LIFECYCLE_ACCEPTANCE_SLICE}; found {tuple(slice_ids)}"
+        )
+    configured_ids = tuple(
+        Path(str(item)).stem for item in platform_config().get("component_files", [])
+    )
+    if configured_ids != PRODUCT_COMPONENT_IDS:
+        errors.append(
+            "components.yaml: component_files must be the exact ordered product "
+            f"registry {PRODUCT_COMPONENT_IDS}; found {configured_ids}"
+        )
+    registry_ids = {
+        str(component.get("id")) for component in components if component.get("id")
+    }
+    unknown = [item for item in slice_ids if item not in registry_ids]
+    if unknown:
+        errors.append(
+            "components.yaml: acceptance_slice components missing from registry: "
+            + ", ".join(unknown)
+        )
+    for component in components:
+        if str(component.get("id")) in slice_ids and recorded_revision(component) is None:
+            errors.append(
+                f"{component['_path']}: acceptance-slice component must record an "
+                "exact source_revision or gitlink_revision"
+            )
+    return errors
+
+
 def validate_components() -> list[str]:
     errors: list[str] = []
     seen: set[str] = set()
     required = {"id", "name", "role", "repo", "description", "changelog"}
-    for component in load_components():
+    try:
+        components = load_components()
+    except (configparser.Error, OSError, TypeError, ValueError) as exc:
+        return [f"component registry cannot be loaded safely: {exc}"]
+    try:
+        errors.extend(validate_gitlink_inventory())
+    except (configparser.Error, OSError, TypeError, ValueError) as exc:
+        errors.append(f"root gitlink inventory cannot be loaded safely: {exc}")
+    try:
+        errors.extend(validate_acceptance_slice(components))
+    except (OSError, TypeError, ValueError) as exc:
+        errors.append(f"components.yaml: acceptance slice cannot be loaded safely: {exc}")
+    slice_ids = set(acceptance_slice_ids())
+    for component in components:
         path = component["_path"]
         missing = sorted(required - set(component))
         if missing:
@@ -128,19 +420,57 @@ def validate_components() -> list[str]:
             errors.append(f"{path}: duplicate component id {component_id!r}")
         seen.add(component_id)
 
-        repo = resolve_path(component["repo"])
-        if not repo.exists():
-            errors.append(f"{path}: repo path does not exist: {repo}")
+        try:
+            repo = resolve_path(component["repo"])
+            status, revision = component_repo_status(component)
+        except (configparser.Error, OSError, TypeError, ValueError) as exc:
+            errors.append(f"{path}: repo path cannot be resolved safely: {exc}")
+            continue
+        if component_id in slice_ids:
+            if status != "verified":
+                detail = status
+                if revision:
+                    detail = f"{status} at {revision}"
+                errors.append(
+                    f"{path}: acceptance-slice repo is not a verified initialized "
+                    f"Git checkout at its recorded revision: {repo} ({detail})"
+                )
+        elif status in {
+            "revision-mismatch",
+            "gitlink-mismatch",
+            "gitlink-missing",
+            "unmapped",
+            "identity-mismatch",
+            "not-a-git-checkout",
+        }:
+            errors.append(
+                f"{path}: repo verification failed for {repo}: {status}"
+                + (f" at {revision}" if revision else "")
+                + f"; recorded {recorded_revision(component)}"
+            )
 
         topics = component.get("changelog", {}).get("topics")
         if not isinstance(topics, list) or not topics:
             errors.append(f"{path}: changelog.topics must be a non-empty list")
 
-        compose = component.get("compose", {})
-        for compose_file in compose.get("files", []) or []:
-            resolved = resolve_path(compose_file)
-            if not resolved.exists():
-                errors.append(f"{path}: compose file does not exist: {resolved}")
+        if repo_is_populated(component):
+            compose = component.get("compose", {})
+            for compose_file in compose.get("files", []) or []:
+                try:
+                    resolved = resolve_path(compose_file)
+                except (OSError, ValueError) as exc:
+                    errors.append(
+                        f"{path}: compose path cannot be resolved safely: {exc}"
+                    )
+                    continue
+                if not is_within(resolved, repo):
+                    errors.append(
+                        f"{path}: compose file escapes selected component root "
+                        f"{repo}: {resolved}"
+                    )
+                    continue
+                if not resolved.exists():
+                    errors.append(f"{path}: compose file does not exist: {resolved}")
 
     return errors
 
@@ -230,20 +560,43 @@ def cmd_validate(_: argparse.Namespace) -> int:
 
 def cmd_components_list(_: argparse.Namespace) -> int:
     rows = []
-    for component in load_components():
-        repo = resolve_path(component["repo"])
+    try:
+        components = load_components()
+        slice_ids = set(acceptance_slice_ids())
+    except (configparser.Error, OSError, TypeError, ValueError) as exc:
+        print(f"ERROR component registry cannot be loaded safely: {exc}", file=sys.stderr)
+        return 1
+    for component in components:
+        try:
+            repo: Path | str = resolve_path(component["repo"])
+            status, revision = component_repo_status(component)
+        except (configparser.Error, OSError, TypeError, ValueError):
+            repo = str(component.get("repo", "<missing>"))
+            status, revision = "invalid", None
+        recorded = recorded_revision(component)
         compose_files = component.get("compose", {}).get("files", []) or []
         rows.append(
             (
                 component["id"],
                 component["role"],
-                "present" if repo.exists() else "missing",
+                "acceptance" if component["id"] in slice_ids else "registry",
+                status,
+                (revision or recorded or "-")[:12],
                 ",".join(component.get("compose", {}).get("profiles", []) or []),
                 str(repo),
                 str(len(compose_files)),
             )
         )
-    headers = ("id", "role", "repo", "profiles", "path", "compose")
+    headers = (
+        "id",
+        "role",
+        "scope",
+        "repo",
+        "revision",
+        "profiles",
+        "path",
+        "compose",
+    )
     widths = [
         max(len(str(row[i])) for row in [headers, *rows]) for i in range(len(headers))
     ]
@@ -251,7 +604,10 @@ def cmd_components_list(_: argparse.Namespace) -> int:
     print("  ".join("-" * width for width in widths))
     for row in rows:
         print("  ".join(str(row[i]).ljust(widths[i]) for i in range(len(row))))
-    return 0
+    errors = validate_components()
+    for error in errors:
+        print(f"ERROR {error}", file=sys.stderr)
+    return 1 if errors else 0
 
 
 def iter_search_files(search_paths: list[str]) -> list[Path]:
