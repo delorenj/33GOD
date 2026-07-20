@@ -2,6 +2,9 @@ id: skillex
 name: Skillex
 role: skill-distribution
 repo: ../../skillex
+repository_kind: external-git
+source_revision: 8b2f3d2f309c15f7bfcfe981c3dbeae87c50e371
+repository_origin: https://github.com/delorenj/skillex.git
 description: CLI-agnostic skill package manager and 33GOD skill hub source.
 compose:
   files: []

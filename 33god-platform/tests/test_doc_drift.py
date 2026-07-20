@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -184,6 +185,14 @@ class TopologyScopeDriftTests(unittest.TestCase):
         )
         self.assertTrue(any("twelve-component product registry" in item for item in errors))
 
+    def test_scan_report_product_registry_is_exact(self) -> None:
+        scan = copy.deepcopy(self.scan)
+        scan["findings"]["product_registry"][0] = "substituted"
+        errors = check_doc_drift.topology_declaration_errors(
+            self.parts, self.platform, scan
+        )
+        self.assertTrue(any("scan product registry" in item for item in errors))
+
     def test_absolute_scan_root_is_rejected(self) -> None:
         scan = copy.deepcopy(self.scan)
         scan["project_root"] = "/primary/checkout/33GOD"
@@ -258,6 +267,43 @@ class TopologyScopeDriftTests(unittest.TestCase):
                 output,
             )
             self.assertNotIn("Traceback", output)
+
+    def test_acceptance_component_root_symlink_escape_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            docs = root / "docs"
+            outside = root / "outside/lifecycle"
+            (source / "33god-platform").mkdir(parents=True)
+            docs.mkdir()
+            outside.mkdir(parents=True)
+            subprocess.run(
+                ["git", "-C", str(source), "init", "-q"],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            for component in check_doc_drift.LIFECYCLE_ACCEPTANCE_SLICE:
+                if component == "lifecycle":
+                    (source / component).symlink_to(outside, target_is_directory=True)
+                else:
+                    (source / component).mkdir()
+            (docs / "project-parts.json").write_text(
+                json.dumps(self.parts), encoding="utf-8"
+            )
+            (docs / "project-scan-report.json").write_text(
+                json.dumps(self.scan), encoding="utf-8"
+            )
+            (source / "33god-platform/components.yaml").write_text(
+                (ROOT / "33god-platform/components.yaml").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            report = check_doc_drift.Reporter()
+            output = io.StringIO()
+            with redirect_stdout(output):
+                check_doc_drift.check_part_declaration(source, docs, report)
+            self.assertGreaterEqual(report.failures, 1)
+            self.assertIn("escapes selected source root", output.getvalue())
 
 
 class AuthorityParityDriftTests(unittest.TestCase):
@@ -530,6 +576,39 @@ class AuthorityParityDriftTests(unittest.TestCase):
                 any("bounded Lifecycle client metadata" in item for item in errors)
             )
 
+    def test_negated_or_opposite_momo_policy_metadata_is_rejected(self) -> None:
+        descriptions = (
+            "Unbounded Lifecycle client for choosing and executing legal work.",
+            "Not a bounded Lifecycle client for choosing and executing legal work.",
+            "Bounded Lifecycle client for choosing and executing illegal work.",
+            "Bounded Lifecycle client that does not execute legal work.",
+        )
+        for description in descriptions:
+            with self.subTest(description=description), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.write_momo_workflow_fixture(root, description=description)
+                errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+                self.assertTrue(
+                    any("bounded Lifecycle client metadata" in item for item in errors)
+                )
+
+    def test_momo_workflow_symlink_escape_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(root)
+            outside = root / "outside-workflow.md"
+            outside.write_text("Lifecycle bounded client protocol.\n", encoding="utf-8")
+            paths = (
+                root / "momo/_bmad/custom/workflows/ticket-lifecycle/workflow.md",
+                root
+                / "momo/_bmad/_config/custom/custom/workflows/ticket-lifecycle/workflow.md",
+            )
+            for path in paths:
+                path.unlink()
+                path.symlink_to(outside)
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("workflow symlink" in item for item in errors))
+
     def test_malformed_momo_manifest_csv_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -542,6 +621,33 @@ class AuthorityParityDriftTests(unittest.TestCase):
             )
             errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
             self.assertTrue(any("malformed CSV row" in item for item in errors))
+
+    def test_momo_csv_duplicate_headers_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(root)
+            manifest = root / "momo/_bmad/_config/workflow-manifest.csv"
+            manifest.write_text(
+                manifest.read_text(encoding="utf-8").replace(
+                    "name,description,module,path", "name,name,module,path", 1
+                ),
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("workflow-manifest CSV schema" in item for item in errors))
+
+    def test_momo_csv_malformed_quoting_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.write_momo_workflow_fixture(root)
+            manifest = root / "momo/_bmad/_config/workflow-manifest.csv"
+            manifest.write_text(
+                "name,description,module,path\n"
+                '"ticket-lifecycle","unterminated,custom,path\n',
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.ticket_lifecycle_surface_errors(root)
+            self.assertTrue(any("malformed workflow-manifest CSV" in item for item in errors))
 
     def test_registered_non_momo_ticket_lifecycle_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -595,6 +701,15 @@ class AuthorityParityDriftTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             path = root / "candystore/agents/hermes/pm/.scripts/sentinel.prompt.md"
+            path.parent.mkdir(parents=True)
+            path.write_text("tp transition CANDY-1 completed\n", encoding="utf-8")
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_neutral_root_bin_provider_completion_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / "candystore/bin/issue-autonomous-review.sh"
             path.parent.mkdir(parents=True)
             path.write_text("tp transition CANDY-1 completed\n", encoding="utf-8")
             errors = check_doc_drift.non_momo_operational_surface_errors(root)
@@ -659,6 +774,84 @@ class AuthorityParityDriftTests(unittest.TestCase):
             self.assertTrue(any("nested gitlink" in item for item in errors))
             self.assertTrue(any("provider completion surface" in item for item in errors))
 
+    def test_arbitrary_path_nested_gitlink_surface_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.add_nested_gitlink(
+                root / "holocene", Path("vendor/runtime"), initialized=True
+            )
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("vendor/runtime" in item for item in errors))
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_second_level_nested_gitlink_surface_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            component = root / "holocene"
+            first = component / "vendor/runtime"
+            second = first / "deps/worker"
+            self.init_repo(component)
+            self.init_repo(first)
+            self.init_repo(second)
+            runner = second / "bin/close.sh"
+            runner.parent.mkdir()
+            runner.write_text("tp transition HOLO-1 completed\n", encoding="utf-8")
+            self.git(second, "add", "bin/close.sh")
+            self.git(second, "commit", "-qm", "provider surface")
+            second_revision = self.git(second, "rev-parse", "HEAD")
+            (first / ".gitmodules").write_text(
+                '[submodule "worker"]\n'
+                "\tpath = deps/worker\n"
+                "\turl = https://github.com/example/worker.git\n",
+                encoding="utf-8",
+            )
+            self.git(first, "add", ".gitmodules")
+            self.git(
+                first,
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                f"160000,{second_revision},deps/worker",
+            )
+            self.git(first, "commit", "-qm", "nested worker")
+            first_revision = self.git(first, "rev-parse", "HEAD")
+            (component / ".gitmodules").write_text(
+                '[submodule "runtime"]\n'
+                "\tpath = vendor/runtime\n"
+                "\turl = https://github.com/example/runtime.git\n",
+                encoding="utf-8",
+            )
+            self.git(
+                component,
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                f"160000,{first_revision},vendor/runtime",
+            )
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("deps/worker" in item for item in errors))
+            self.assertTrue(any("provider completion surface" in item for item in errors))
+
+    def test_nested_gitlink_symlink_cycle_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            component = root / "holocene"
+            self.init_repo(component)
+            (component / "tracked.txt").write_text("tracked\n", encoding="utf-8")
+            self.git(component, "add", "tracked.txt")
+            self.git(component, "commit", "-qm", "root")
+            revision = self.git(component, "rev-parse", "HEAD")
+            (component / "loop").symlink_to(".", target_is_directory=True)
+            self.git(
+                component,
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                f"160000,{revision},loop",
+            )
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(any("cycle" in item or "symlink" in item for item in errors))
+
     def test_uninitialized_operational_nested_gitlink_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -669,6 +862,94 @@ class AuthorityParityDriftTests(unittest.TestCase):
             )
             errors = check_doc_drift.non_momo_operational_surface_errors(root)
             self.assertTrue(any("uninitialized nested gitlink" in item for item in errors))
+
+    def test_published_tree_scan_ignores_untracked_wip(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repo = root / "candystore"
+            self.init_repo(repo)
+            (repo / "README.md").write_text("clean\n", encoding="utf-8")
+            self.git(repo, "add", "README.md")
+            self.git(repo, "commit", "-qm", "published")
+            untracked = repo / "bin/local-only.sh"
+            untracked.parent.mkdir()
+            untracked.write_text("tp transition CANDY-1 completed\n", encoding="utf-8")
+            self.assertEqual(check_doc_drift.non_momo_operational_surface_errors(root), [])
+
+    def test_missing_or_oversized_tracked_operational_files_fail_closed(self) -> None:
+        variants = ("missing", "oversized")
+        for variant in variants:
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                repo = root / "candystore"
+                self.init_repo(repo)
+                path = repo / "bin/close.sh"
+                path.parent.mkdir()
+                content = "tp transition CANDY-1 completed\n"
+                if variant == "oversized":
+                    content += "x" * 1_000_001
+                path.write_text(content, encoding="utf-8")
+                self.git(repo, "add", "bin/close.sh")
+                self.git(repo, "commit", "-qm", variant)
+                if variant == "missing":
+                    path.unlink()
+                errors = check_doc_drift.non_momo_operational_surface_errors(root)
+                self.assertTrue(any("cannot be inspected" in item for item in errors))
+
+    def test_git_file_enumeration_failure_is_explicit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / "repo"
+            repo.mkdir()
+            with (
+                patch.object(check_doc_drift, "is_own_checkout", return_value=True),
+                patch.object(
+                    check_doc_drift.subprocess,
+                    "run",
+                    return_value=subprocess.CompletedProcess(["git"], 1, "", "failed"),
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "tracked-file enumeration failed"):
+                    check_doc_drift.repository_files(repo)
+
+    def test_nonzero_duplicate_nested_index_stages_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repo = root / "holocene"
+            self.init_repo(repo)
+            blob = subprocess.run(
+                ["git", "-C", str(repo), "hash-object", "-w", "--stdin"],
+                input="stage\n",
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            subprocess.run(
+                ["git", "-C", str(repo), "update-index", "--index-info"],
+                input=(
+                    f"100755 {blob} 1\tbin/close.sh\n"
+                    f"100755 {blob} 2\tbin/close.sh\n"
+                ),
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            errors = check_doc_drift.non_momo_operational_surface_errors(root)
+            self.assertTrue(
+                any("nonzero or duplicate index stage" in item for item in errors)
+            )
+
+    def test_operational_git_timeout_is_explicit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / "repo"
+            repo.mkdir()
+            (repo / ".git").mkdir()
+            with patch.object(
+                check_doc_drift.subprocess,
+                "run",
+                side_effect=subprocess.TimeoutExpired(["git"], 10),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "tracked-file enumeration failed"):
+                    check_doc_drift.repository_files(repo)
 
     def test_stale_bloodbank_live_controller_inventory_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -692,6 +973,36 @@ class AuthorityParityDriftTests(unittest.TestCase):
             )
             errors = check_doc_drift.root_current_guidance_errors(root)
             self.assertTrue(any("current Bloodbank guidance" in item for item in errors))
+
+    def test_current_architecture_controller_hosting_claim_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            architecture = root / "_bmad-output/planning-artifacts/architecture.md"
+            architecture.parent.mkdir(parents=True)
+            architecture.write_text(
+                "Bloodbank is hosting the current controller embryo.\n",
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.root_current_guidance_errors(root)
+            self.assertTrue(any("current controller hosting" in item for item in errors))
+
+    def test_manifest_sha_elsewhere_does_not_satisfy_structural_pin(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            platform_root = Path(temporary)
+            components = platform_root / "components"
+            components.mkdir()
+            expected = check_doc_drift.COMPONENT_REVISIONS["bloodbank"]
+            (components / "bloodbank.yaml").write_text(
+                "id: bloodbank\n"
+                f"description: historical revision {expected}\n"
+                f"source_revision: {'0' * 40}\n",
+                encoding="utf-8",
+            )
+            errors = check_doc_drift.component_manifest_pin_errors(
+                platform_root,
+                {"bloodbank": ("source_revision", expected)},
+            )
+            self.assertTrue(any("source_revision" in item for item in errors))
 
     def test_deleted_architecture_input_paths_are_rejected(self) -> None:
         stale_paths = (

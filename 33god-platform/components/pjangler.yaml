@@ -2,6 +2,7 @@ id: pjangler
 name: PJangler
 role: project-identity-bootstrap-bindings
 repo: ../pjangler
+repository_kind: root-gitlink
 description: Project identity, bootstrap, and provider-neutral binding CLI/MCP tooling for 33GOD projects and agents.
 source_revision: 13be237eaa454f22525dd9b4e5dd804b4516c212
 commonproject_revision: 5dce335d10b44692414a5c67f12684ecc4fa5a41

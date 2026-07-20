@@ -2,6 +2,7 @@ id: candybar
 name: Candybar
 role: topology-visualization
 repo: ../candybar
+repository_kind: root-gitlink
 description: Desktop/web topology and Bloodbank event visualization surface.
 gitlink_revision: 509c03f350b5d41ec7a6779a3233dd61c9cbee91
 compose:

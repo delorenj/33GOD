@@ -2,6 +2,7 @@ id: hermes-fleet
 name: Hermes Fleet
 role: agent-runtime-fleet
 repo: ../hermes-agent-template
+repository_kind: root-gitlink
 description: Shared Hermes runtime, profiles, systemd units, and generated agent role scaffolds.
 gitlink_revision: 576327ede2bf0686338fa8eb2735d1e16d03e870
 compose:

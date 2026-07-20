@@ -2,6 +2,7 @@ id: candystore
 name: Candystore
 role: audit-and-read-projection
 repo: ../candystore
+repository_kind: root-gitlink
 description: Append-only Bloodbank audit history plus rebuildable Lifecycle read projections and query API; never a lifecycle writer.
 source_revision: 3c00080446bb9d4cb55c670477983306abcfe7ce
 compose:

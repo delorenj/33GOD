@@ -192,8 +192,9 @@ does not need to assume a regulated multi-tenant enterprise environment.
 
 - Lifecycle is the sole target authority for lifecycle spec, operational state,
   reconciliation, frontier, obligations, and capability validation.
-- Bloodbank remains the event-contract and event-transport authority; hosting
-  the current controller embryo does not make Bloodbank the target domain owner.
+- Bloodbank remains the event-contract and event-transport authority. Its
+  removed controller embryo is historical extraction provenance only; the
+  standalone Lifecycle component now hosts all deterministic lifecycle control.
 - Candystore remains the canonical durable event-history and read-model
   projection, not the operational lifecycle writer.
 - Holocene remains the operator-facing renderer and high-level command surface;

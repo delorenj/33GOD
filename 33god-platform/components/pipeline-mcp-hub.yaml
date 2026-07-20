@@ -2,6 +2,7 @@ id: pipeline-mcp-hub
 name: Pipeline MCP Hub
 role: tool-dispatch-gateway
 repo: ../pipeline-mcp-hub
+repository_kind: in-tree-source
 description: Small MCP surface that gates large domain toolsets behind discovery and dispatch.
 compose:
   files: []

@@ -2,6 +2,9 @@ id: heyma
 name: HeyMa
 role: voice-interface
 repo: ../../HeyMa
+repository_kind: external-git
+source_revision: c154bb8b1b4fb2909f6c5d91168a0c2a17298191
+repository_origin: https://github.com/delorenj/HeyMa.git
 description: Voice capture/transcription/TTS interface layer for 33GOD.
 compose:
   files:

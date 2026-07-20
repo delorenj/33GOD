@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import copy
 from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
 import io
+import os
 import subprocess
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -42,6 +45,57 @@ class PlatformRegistryContractTests(unittest.TestCase):
         self.assertEqual(configured, expected)
         self.assertEqual(len(set(configured)), 12)
         self.assertTrue(all(path.is_file() for path in platform.component_paths()))
+
+    def test_component_files_are_exact_canonical_ordered_paths(self) -> None:
+        config = copy.deepcopy(platform.platform_config())
+        config["component_files"][0] = "alternate/bloodbank.yaml"
+        components = platform.load_components()
+        with patch.object(platform, "platform_config", return_value=config):
+            errors = platform.validate_acceptance_slice(components)
+        self.assertTrue(any("exact ordered manifest paths" in item for item in errors))
+
+    def test_loaded_manifest_contract_binds_identity_role_repo_kind_and_pin(self) -> None:
+        mutations = {
+            "id": "lifecycle",
+            "role": "project-lifecycle-authority",
+            "repo": "/tmp/borrowed-bloodbank",
+            "repository_kind": "external-git",
+            "source_revision": "0" * 40,
+        }
+        for field, value in mutations.items():
+            with self.subTest(field=field):
+                components = copy.deepcopy(platform.load_components())
+                components[0][field] = value
+                errors = platform.validate_component_contracts(components)
+                self.assertTrue(any("bloodbank" in item for item in errors))
+
+    def test_external_and_non_git_repository_kinds_are_explicit(self) -> None:
+        components = {item["id"]: item for item in platform.load_components()}
+        self.assertEqual(components["skillex"]["repository_kind"], "external-git")
+        self.assertEqual(
+            components["skillex"]["source_revision"],
+            "8b2f3d2f309c15f7bfcfe981c3dbeae87c50e371",
+        )
+        self.assertEqual(
+            components["skillex"]["repository_origin"],
+            "https://github.com/delorenj/skillex.git",
+        )
+        self.assertEqual(components["heyma"]["repository_kind"], "external-git")
+        self.assertEqual(
+            components["heyma"]["source_revision"],
+            "c154bb8b1b4fb2909f6c5d91168a0c2a17298191",
+        )
+        self.assertEqual(
+            components["heyma"]["repository_origin"],
+            "https://github.com/delorenj/HeyMa.git",
+        )
+        self.assertEqual(components["hindsight"]["repository_kind"], "local-runtime")
+        self.assertEqual(
+            components["pipeline-mcp-hub"]["repository_kind"], "in-tree-source"
+        )
+
+    def test_publication_visibility_matches_public_repository(self) -> None:
+        self.assertEqual(platform.platform_config()["product"]["visibility"], "public-source")
 
     def test_lifecycle_acceptance_slice_is_exact_and_separate(self) -> None:
         configured = tuple(platform.acceptance_slice_ids())
@@ -168,6 +222,51 @@ class PlatformPathResolutionTests(unittest.TestCase):
                     platform.is_within(external_component, nested_checkout)
                 )
 
+    def test_external_root_may_not_equal_source_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            platform_root = source / "33god-platform"
+            platform_root.mkdir(parents=True)
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+                patch.object(platform, "EXTERNAL_ROOT", source),
+            ):
+                with self.assertRaisesRegex(ValueError, "must be outside GOD_SOURCE_ROOT"):
+                    platform.resolve_path("../../skillex")
+
+    def test_external_root_may_not_be_source_descendant(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            platform_root = source / "33god-platform"
+            external = source / "external"
+            platform_root.mkdir(parents=True)
+            external.mkdir()
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+                patch.object(platform, "EXTERNAL_ROOT", external),
+            ):
+                with self.assertRaisesRegex(ValueError, "must be outside GOD_SOURCE_ROOT"):
+                    platform.resolve_path("../../skillex")
+
+    def test_external_root_symlink_reentry_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            platform_root = source / "33god-platform"
+            external = root / "external"
+            platform_root.mkdir(parents=True)
+            external.mkdir()
+            (external / "skillex").symlink_to(source, target_is_directory=True)
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+                patch.object(platform, "EXTERNAL_ROOT", external),
+            ):
+                with self.assertRaisesRegex(ValueError, "re-enters GOD_SOURCE_ROOT"):
+                    platform.resolve_path("../../skillex")
+
     def test_embedded_traversal_is_remapped_through_external_root(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -257,6 +356,59 @@ class PlatformPathResolutionTests(unittest.TestCase):
                 self.assertFalse(source_repo.exists())
                 self.assertEqual(platform.resolve_path("../lifecycle"), source_repo)
 
+    def test_selected_platform_config_changes_and_backfills_are_atomic(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            invoking = root / "invoking/33god-platform"
+            selected = root / "selected"
+            selected_platform = selected / "33god-platform"
+            for path in (
+                invoking / "changes",
+                invoking / "backfills",
+                selected_platform / "changes",
+                selected_platform / "backfills",
+            ):
+                path.mkdir(parents=True)
+            (invoking / "components.yaml").write_text(
+                "product:\n  id: invoking\n", encoding="utf-8"
+            )
+            (selected_platform / "components.yaml").write_text(
+                "product:\n  id: selected\n", encoding="utf-8"
+            )
+            (invoking / "changes/bad.jsonl").write_text("[]\n", encoding="utf-8")
+            (selected_platform / "changes/good.jsonl").write_text("", encoding="utf-8")
+            with (
+                patch.object(platform, "ROOT", invoking),
+                patch.object(platform, "SOURCE_ROOT", selected),
+                patch.object(platform, "SOURCE_PLATFORM_ROOT", selected_platform),
+            ):
+                self.assertEqual(platform.platform_config()["product"]["id"], "selected")
+                self.assertEqual(platform.validate_changes(), [])
+                self.assertEqual(platform.validate_backfill_manifests(), [])
+
+    def test_relative_backfill_glob_symlink_escape_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            platform_root = source / "33god-platform"
+            outside = root / "outside"
+            platform_root.mkdir(parents=True)
+            outside.mkdir()
+            (outside / "secret.txt").write_text("outside\n", encoding="utf-8")
+            (platform_root / "linked").symlink_to(outside, target_is_directory=True)
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root),
+            ):
+                with self.assertRaisesRegex(ValueError, "backfill path escapes"):
+                    platform.iter_search_files(["linked/*.txt"])
+
+    def test_absolute_backfill_path_remains_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "live-runtime.conf"
+            path.write_text("runtime\n", encoding="utf-8")
+            self.assertEqual(platform.iter_search_files([str(path)]), [path])
+
 
 class PlatformValidationFailureTests(unittest.TestCase):
     @staticmethod
@@ -266,6 +418,7 @@ class PlatformValidationFailureTests(unittest.TestCase):
             "name": "Component",
             "role": "test",
             "repo": repo,
+            "repository_kind": "local-runtime",
             "description": "Validation fixture.",
             "changelog": {"topics": ["component"]},
             "compose": {"files": []},
@@ -310,6 +463,88 @@ class PlatformValidationFailureTests(unittest.TestCase):
             ):
                 errors = platform.validate_components()
             self.assertTrue(any("compose file does not exist" in item for item in errors))
+
+    def test_conflicting_revision_fields_are_rejected(self) -> None:
+        component = self.component("../component", revision="1" * 40)
+        component["source_revision"] = "2" * 40
+        with self.assertRaisesRegex(ValueError, "conflicting revision fields"):
+            platform.recorded_revision(component)
+
+    def test_malformed_nested_manifest_values_fail_closed(self) -> None:
+        malformed = self.component("../component")
+        malformed["changelog"] = []
+        malformed["compose"] = {"files": "compose.yml", "profiles": {"default": True}}
+        with (
+            patch.object(platform, "load_components", return_value=[malformed]),
+            patch.object(platform, "validate_gitlink_inventory", return_value=[]),
+            patch.object(platform, "validate_acceptance_slice", return_value=[]),
+            patch.object(platform, "validate_component_contracts", return_value=[]),
+            patch.object(platform, "acceptance_slice_ids", return_value=[]),
+        ):
+            errors = platform.validate_components()
+        self.assertTrue(any("changelog must be a mapping" in item for item in errors))
+        self.assertTrue(any("compose.files must be a list" in item for item in errors))
+        self.assertTrue(any("compose.profiles must be a list" in item for item in errors))
+
+    def test_jsonl_top_level_list_is_a_controlled_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            platform_root = Path(temporary) / "33god-platform"
+            changes = platform_root / "changes"
+            changes.mkdir(parents=True)
+            (changes / "malformed.jsonl").write_text("[]\n", encoding="utf-8")
+            with patch.object(platform, "SOURCE_PLATFORM_ROOT", platform_root):
+                errors = platform.validate_changes()
+        self.assertTrue(any("expected a JSON object" in item for item in errors))
+
+    def test_invalid_yaml_is_path_qualified(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "broken.yaml"
+            path.write_text("value: [unterminated\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, r"broken\.yaml: invalid YAML"):
+                platform.load_yaml(path)
+
+    def test_cli_uses_selected_checkout_and_never_tracebacks_on_bad_yaml(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            selected = Path(temporary) / "selected"
+            selected_platform = selected / "33god-platform"
+            selected_platform.mkdir(parents=True)
+            subprocess.run(
+                ["git", "-C", str(selected), "init", "-q"],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            (selected_platform / "components.yaml").write_text(
+                "component_files: [unterminated\n", encoding="utf-8"
+            )
+            env = os.environ.copy()
+            env["GOD_SOURCE_ROOT"] = str(selected)
+            result = subprocess.run(
+                [sys.executable, str(PLATFORM_SCRIPT), "validate"],
+                cwd=ROOT,
+                env=env,
+                text=True,
+                capture_output=True,
+            )
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(str(selected_platform / "components.yaml"), output)
+            self.assertNotIn("Traceback", output)
+
+    def test_components_list_rejects_scalar_compose_fields_without_traceback(self) -> None:
+        component = self.component("../component")
+        component["compose"] = {"files": "compose.yml", "profiles": "default"}
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            patch.object(platform, "load_components", return_value=[component]),
+            patch.object(platform, "acceptance_slice_ids", return_value=[]),
+            patch.object(platform, "validate_components", return_value=["invalid compose"]),
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            self.assertEqual(platform.cmd_components_list(None), 1)
+        self.assertIn("invalid compose", stderr.getvalue())
 
 
 class PlatformRepositoryProvenanceTests(unittest.TestCase):
@@ -365,18 +600,28 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
             child.mkdir()
             self.assertIsNone(platform.git_checkout_revision(child))
 
+    def test_selected_source_root_cannot_inherit_wrapper_git_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            wrapper = Path(temporary) / "wrapper"
+            wrapper.mkdir()
+            self.git(wrapper, "init", "-q")
+            selected = wrapper / "selected"
+            selected.mkdir()
+            with patch.object(platform, "SOURCE_ROOT", selected):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(any("its own Git checkout" in item for item in errors))
+
     def test_exact_gitlink_head_and_origin_are_verified(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "source"
             component = source / "component"
             url = "https://github.com/example/component.git"
-            revision = self.init_repo(
-                component, "git@github.com:example/component.git"
-            )
+            revision = self.init_repo(component, url)
             self.configure_superproject(source, component, revision, url)
             component_data = {
                 "id": "component",
                 "repo": "../component",
+                "repository_kind": "root-gitlink",
                 "gitlink_revision": revision,
             }
             with (
@@ -398,6 +643,93 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
                     ("revision-mismatch", advanced),
                 )
 
+    def test_exact_external_git_checkout_is_verified(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            external = root / "external/skillex"
+            origin = "https://github.com/example/skillex.git"
+            revision = self.init_repo(external, origin)
+            component = {
+                "id": "skillex",
+                "repo": "../../skillex",
+                "repository_kind": "external-git",
+                "source_revision": revision,
+                "repository_origin": origin,
+            }
+            with (
+                patch.object(platform, "SOURCE_ROOT", source),
+                patch.object(platform, "resolve_path", return_value=external),
+            ):
+                self.assertEqual(
+                    platform.component_repo_status(component), ("verified", revision)
+                )
+
+    def test_missing_external_git_checkout_is_honestly_uninitialized(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            missing = Path(temporary) / "missing"
+            component = {
+                "id": "skillex",
+                "repo": "../../skillex",
+                "repository_kind": "external-git",
+                "source_revision": "1" * 40,
+                "repository_origin": "https://github.com/example/skillex.git",
+            }
+            with patch.object(platform, "resolve_path", return_value=missing):
+                self.assertEqual(
+                    platform.component_repo_status(component), ("uninitialized", None)
+                )
+
+    def test_external_file_cannot_masquerade_as_repository(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            fake = Path(temporary) / "passwd"
+            fake.write_text("root:x:0:0\n", encoding="utf-8")
+            component = {
+                "id": "skillex",
+                "repo": "../../skillex",
+                "repository_kind": "external-git",
+                "source_revision": "1" * 40,
+                "repository_origin": "https://github.com/example/skillex.git",
+            }
+            with patch.object(platform, "resolve_path", return_value=fake):
+                self.assertEqual(
+                    platform.component_repo_status(component),
+                    ("not-a-git-checkout", None),
+                )
+
+    def test_local_runtime_and_in_tree_source_do_not_use_parent_git_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runtime = root / ".agents"
+            pipeline = root / "source/pipeline-mcp-hub"
+            runtime.mkdir()
+            pipeline.mkdir(parents=True)
+            with (
+                patch.object(platform, "SOURCE_ROOT", root / "source"),
+                patch.object(platform, "resolve_path", side_effect=[runtime, pipeline]),
+            ):
+                self.assertEqual(
+                    platform.component_repo_status(
+                        {
+                            "id": "hindsight",
+                            "repo": "~/.agents",
+                            "repository_kind": "local-runtime",
+                        }
+                    ),
+                    ("present", None),
+                )
+                self.assertEqual(
+                    platform.component_repo_status(
+                        {
+                            "id": "pipeline-mcp-hub",
+                            "repo": "../pipeline-mcp-hub",
+                            "repository_kind": "in-tree-source",
+                        }
+                    ),
+                    ("present", None),
+                )
+
     def test_exact_mapped_pin_can_be_honestly_uninitialized(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "source"
@@ -413,6 +745,7 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
             component_data = {
                 "id": "component",
                 "repo": "../component",
+                "repository_kind": "root-gitlink",
                 "gitlink_revision": revision,
             }
             with (
@@ -624,6 +957,118 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
                 )
             )
 
+    def test_gitmodule_symlink_escape_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            outside = root / "outside.gitmodules"
+            source.mkdir()
+            self.git(source, "init", "-q")
+            outside.write_text(
+                '[submodule "component"]\n'
+                "\tpath = component\n"
+                "\turl = https://github.com/example/component.git\n",
+                encoding="utf-8",
+            )
+            (source / ".gitmodules").symlink_to(outside)
+            with patch.object(platform, "SOURCE_ROOT", source):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(any(".gitmodules" in item and "symlink" in item for item in errors))
+
+    def test_nonzero_duplicate_index_stages_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            source.mkdir()
+            self.git(source, "init", "-q")
+            blob = subprocess.run(
+                ["git", "-C", str(source), "hash-object", "-w", "--stdin"],
+                input="stage\n",
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+            subprocess.run(
+                ["git", "-C", str(source), "update-index", "--index-info"],
+                input=(
+                    f"160000 {blob} 1\tcomponent\n"
+                    f"160000 {blob} 2\tcomponent\n"
+                ),
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            with patch.object(platform, "SOURCE_ROOT", source):
+                errors = platform.validate_gitlink_inventory()
+            self.assertTrue(any("nonzero or duplicate index stage" in item for item in errors))
+
+    def test_git_timeout_and_oserror_are_controlled_failures(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / "repo"
+            repo.mkdir()
+            (repo / ".git").mkdir()
+            failures = (
+                subprocess.TimeoutExpired(["git"], 10),
+                OSError("git unavailable"),
+            )
+            for failure in failures:
+                with self.subTest(failure=type(failure).__name__), patch.object(
+                    platform.subprocess, "run", side_effect=failure
+                ):
+                    with self.assertRaisesRegex(ValueError, "Git command failed safely"):
+                        platform.git_checkout_revision(repo)
+
+    def test_repository_urls_require_credential_free_hostful_https(self) -> None:
+        self.assertEqual(
+            platform.normalize_repository_url(
+                "https://github.com/Example/Component.git/"
+            ),
+            "https://github.com/example/component",
+        )
+        invalid = (
+            "git@github.com:example/component.git",
+            "https:///example/component.git",
+            "https://user:secret@github.com/example/component.git",
+            "https://github.com/example/component.git?token=secret",
+            "https://github.com/example/component.git#fragment",
+            "https://github.com",
+        )
+        for value in invalid:
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, "credential-free hostful HTTPS"):
+                    platform.normalize_repository_url(value)
+
+    def test_invalid_credential_url_is_never_echoed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            component = source / "component"
+            credential_url = (
+                "https://user:do-not-print-this@github.com/example/component.git"
+            )
+            revision = self.init_repo(component, credential_url)
+            self.configure_superproject(source, component, revision, credential_url)
+            with patch.object(platform, "SOURCE_ROOT", source):
+                output = "\n".join(platform.validate_gitlink_inventory())
+            self.assertIn("credential-free hostful HTTPS", output)
+            self.assertNotIn("do-not-print-this", output)
+            self.assertNotIn("user:", output)
+
+    def test_checkout_origin_uses_repository_local_configuration_only(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repo = root / "repo"
+            repo.mkdir()
+            self.git(repo, "init", "-q")
+            global_config = root / "global.gitconfig"
+            global_config.write_text(
+                '[remote "origin"]\n'
+                "\turl = https://github.com/example/inherited.git\n",
+                encoding="utf-8",
+            )
+            with patch.dict(
+                os.environ, {"GIT_CONFIG_GLOBAL": str(global_config)}, clear=False
+            ):
+                self.assertIsNone(platform.git_checkout_origin(repo))
+
     def test_live_root_inventory_excludes_private_runtime_and_verifies_sources(
         self,
     ) -> None:
@@ -663,9 +1108,11 @@ class PlatformRepositoryProvenanceTests(unittest.TestCase):
             )
             self.assertEqual(
                 platform.normalize_repository_url(
+                    mappings[path]["url"]
+                ),
+                platform.normalize_checkout_origin(
                     platform.git_checkout_origin(checkout) or ""
                 ),
-                platform.normalize_repository_url(mappings[path]["url"]),
             )
 
         self.assertEqual(

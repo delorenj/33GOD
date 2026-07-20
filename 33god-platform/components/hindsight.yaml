@@ -2,6 +2,7 @@ id: hindsight
 name: Hindsight
 role: persistent-memory
 repo: ~/.agents
+repository_kind: local-runtime
 description: Persistent memory hooks and bank routing for agent sessions.
 compose:
   files: []

@@ -2,6 +2,7 @@ id: lifecycle
 name: Lifecycle
 role: project-lifecycle-authority
 repo: ../lifecycle
+repository_kind: root-gitlink
 description: Sole deterministic lifecycle specification, state, reconcile, frontier, obligation, grant, and write authority.
 gitlink_revision: cda59658bef6d586c8aa01cacd88bc4e3ee867e0
 image_source_revision: cda59658bef6d586c8aa01cacd88bc4e3ee867e0

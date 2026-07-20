@@ -3,7 +3,7 @@ product:
   id: 33god
   name: 33GOD Productized Development Environment
   mode: local-first-cloud-blocked
-  visibility: private-source
+  visibility: public-source
   summary: >
     Event-driven agentic development platform composed from independently
     versioned repos and coordinated by this control plane.

@@ -2,6 +2,7 @@ id: bloodbank
 name: Bloodbank
 role: schema-contract-transport
 repo: ../bloodbank
+repository_kind: root-gitlink
 description: Canonical event schemas/contracts plus NATS JetStream and Dapr transport for all 33GOD inter-service traffic.
 source_revision: aacd88564ea299924b8298165933ba821640bdba
 compose:

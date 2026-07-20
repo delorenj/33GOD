@@ -24,6 +24,14 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
   operational nested gitlinks, Momo copy/manifest claims, Holocene branding,
   retired Bloodbank guidance, stale architecture inputs, and Lifecycle
   release-promotion variants.
+- Closed the independent rereview findings by binding all platform inputs to
+  one selected checkout, enforcing exact ordered manifest identities/roles/
+  paths/kinds/pins, and pinning present external Git repositories to exact
+  credential-free public identities without changing their local worktrees.
+- Made root validation fail closed on Git stage/command faults, malformed
+  YAML/JSONL/Compose/CSV structures, relative backfill escapes, recursive
+  nested gitlink drift, operational files that cannot be inspected, and Momo
+  workflow symlink or opposite-policy metadata evasions.
 
 ## 2026-07-19
 
