@@ -11,7 +11,7 @@ import os
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -48,6 +48,9 @@ EXTERNAL_ROOT = (
 )
 MAX_SCAN_FILE_BYTES = 1_000_000
 GIT_TIMEOUT_SECONDS = 10
+MAX_GIT_OUTPUT_CHARS = 16_000_000
+BACKFILL_EXCLUDED_PARTS = {".git", "__pycache__"}
+BACKFILL_EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 FULL_GIT_REVISION = re.compile(r"[0-9a-f]{40}")
 LIFECYCLE_ACCEPTANCE_SLICE = (
     "bloodbank",
@@ -167,16 +170,92 @@ COMPONENT_CONTRACTS: dict[str, dict[str, str | None]] = {
         "repository_origin": "https://github.com/delorenj/HeyMa.git",
     },
 }
+ROOT_GITLINK_CONTRACTS: dict[str, tuple[str, str]] = {
+    "bloodbank": (
+        "https://github.com/delorenj/bloodbank.git",
+        "aacd88564ea299924b8298165933ba821640bdba",
+    ),
+    "candybar": (
+        "https://github.com/delorenj/candybar.git",
+        "509c03f350b5d41ec7a6779a3233dd61c9cbee91",
+    ),
+    "candystore": (
+        "https://github.com/delorenj/candystore.git",
+        "3c00080446bb9d4cb55c670477983306abcfe7ce",
+    ),
+    "hermes-agent-template": (
+        "https://github.com/delorenj/hermes-agent-template.git",
+        "576327ede2bf0686338fa8eb2735d1e16d03e870",
+    ),
+    "holocene": (
+        "https://github.com/delorenj/holocene.git",
+        "2beee67b433f1bd66abf7bce552d90e89413ae27",
+    ),
+    "lifecycle": (
+        "https://github.com/delorenj/lifecycle.git",
+        "cda59658bef6d586c8aa01cacd88bc4e3ee867e0",
+    ),
+    "momo": (
+        "https://github.com/delorenj/momo.git",
+        "8eeff1ce839c3bcffc2d3943322bc1dd8ef63fee",
+    ),
+    "pjangler": (
+        "https://github.com/delorenj/pjangler.git",
+        "13be237eaa454f22525dd9b4e5dd804b4516c212",
+    ),
+    "toad": (
+        "https://github.com/delorenj/toad.git",
+        "34bd4e17ebf5cf7844bf0162b4d83b6ba1e422c5",
+    ),
+}
 
 
 class GitValidationError(ValueError):
     """A deterministic, secret-free Git provenance failure."""
 
 
+class DuplicateYamlKeyError(ValueError):
+    """A YAML mapping repeated a key at some nesting level."""
+
+
+class _UniqueKeyLoader(yaml.SafeLoader):
+    pass
+
+
+def _construct_unique_mapping(
+    loader: _UniqueKeyLoader, node: Any, deep: bool = False
+) -> dict[Any, Any]:
+    loader.flatten_mapping(node)
+    mapping: dict[Any, Any] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        try:
+            duplicate = key in mapping
+        except TypeError as exc:
+            raise yaml.constructor.ConstructorError(
+                "while constructing a mapping",
+                node.start_mark,
+                "found an unhashable mapping key",
+                key_node.start_mark,
+            ) from exc
+        if duplicate:
+            raise DuplicateYamlKeyError("duplicate YAML mapping key")
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _construct_unique_mapping,
+)
+
+
 def load_yaml(path: Path) -> dict[str, Any]:
     try:
         with path.open("r", encoding="utf-8") as handle:
-            data = yaml.safe_load(handle)
+            data = yaml.load(handle, Loader=_UniqueKeyLoader)
+    except DuplicateYamlKeyError as exc:
+        raise ValueError(f"{path}: duplicate YAML mapping key") from exc
     except yaml.YAMLError as exc:
         raise ValueError(f"{path}: invalid YAML") from exc
     if data is None:
@@ -198,6 +277,59 @@ def lexical_path(path: Path) -> Path:
     """Normalize ``.``/``..`` without following symlinks."""
 
     return Path(os.path.abspath(os.fspath(path)))
+
+
+def contained_platform_input(relative: str | Path, *, kind: str) -> Path:
+    """Resolve one real, symlink-free input inside the selected platform tree."""
+
+    relative_path = PurePosixPath(str(relative))
+    if (
+        relative_path.is_absolute()
+        or not relative_path.parts
+        or any(part in {"", ".", ".."} for part in relative_path.parts)
+    ):
+        raise ValueError(f"33god-platform input path is not canonical: {relative}")
+    platform_lexical = lexical_path(SOURCE_PLATFORM_ROOT)
+    candidate = lexical_path(platform_lexical / Path(*relative_path.parts))
+    if not is_within(candidate, platform_lexical):
+        raise ValueError(f"33god-platform input escapes selected tree: {relative}")
+    try:
+        platform_resolved = SOURCE_PLATFORM_ROOT.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError("selected 33god-platform root cannot be resolved") from exc
+    if SOURCE_PLATFORM_ROOT.is_symlink() or not SOURCE_PLATFORM_ROOT.is_dir():
+        raise ValueError("selected 33god-platform root must be a real directory")
+    cursor = SOURCE_PLATFORM_ROOT
+    for part in relative_path.parts:
+        cursor /= part
+        if cursor.is_symlink():
+            raise ValueError(
+                f"33god-platform input must not traverse a symlink: {relative}"
+            )
+    try:
+        resolved = candidate.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError(
+            f"33god-platform input is missing or unreadable: {relative}"
+        ) from exc
+    if not is_within(resolved, platform_resolved):
+        raise ValueError(f"33god-platform input escapes selected tree: {relative}")
+    if kind == "file" and not candidate.is_file():
+        raise ValueError(f"33god-platform input must be a real file: {relative}")
+    if kind == "directory" and not candidate.is_dir():
+        raise ValueError(f"33god-platform input must be a real directory: {relative}")
+    if kind not in {"file", "directory"}:
+        raise ValueError("invalid contained platform input kind")
+    return resolved
+
+
+def contained_platform_files(directory: str, pattern: str) -> list[Path]:
+    root = contained_platform_input(directory, kind="directory")
+    paths: list[Path] = []
+    for candidate in sorted(root.glob(pattern)):
+        relative = candidate.relative_to(SOURCE_PLATFORM_ROOT.resolve()).as_posix()
+        paths.append(contained_platform_input(relative, kind="file"))
+    return paths
 
 
 def resolve_external_path(candidate: Path) -> Path:
@@ -243,9 +375,7 @@ def resolve_path(value: str | Path, base: Path | None = None) -> Path:
 
     selected_base = SOURCE_PLATFORM_ROOT if base is None else base
     anchor = (
-        SOURCE_PLATFORM_ROOT
-        if path.parts and path.parts[0] == ".."
-        else selected_base
+        SOURCE_PLATFORM_ROOT if path.parts and path.parts[0] == ".." else selected_base
     )
     candidate = lexical_path(anchor / path)
     if not is_within(candidate, SOURCE_ROOT):
@@ -264,7 +394,7 @@ def resolve_path(value: str | Path, base: Path | None = None) -> Path:
 
 
 def platform_config() -> dict[str, Any]:
-    return load_yaml(SOURCE_PLATFORM_ROOT / "components.yaml")
+    return load_yaml(contained_platform_input("components.yaml", kind="file"))
 
 
 def component_paths() -> list[Path]:
@@ -279,7 +409,7 @@ def component_paths() -> list[Path]:
             "components.yaml: component_files must be the exact ordered manifest "
             f"paths {COMPONENT_FILE_PATHS}; found {tuple(declared)}"
         )
-    return [resolve_path(item, base=SOURCE_PLATFORM_ROOT) for item in declared]
+    return [contained_platform_input(item, kind="file") for item in declared]
 
 
 def load_components() -> list[dict[str, Any]]:
@@ -326,13 +456,21 @@ def _run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
             capture_output=True,
             timeout=GIT_TIMEOUT_SECONDS,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except (OSError, subprocess.TimeoutExpired, UnicodeError) as exc:
         raise GitValidationError(
             f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
         ) from exc
     if result.returncode:
         raise GitValidationError(
             f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
+        )
+    if (
+        len(result.stdout) > MAX_GIT_OUTPUT_CHARS
+        or len(result.stderr) > MAX_GIT_OUTPUT_CHARS
+    ):
+        raise GitValidationError(
+            f"Git command output exceeded its safe bound for {repo}: "
+            f"{args[0] if args else 'git'}"
         )
     return result
 
@@ -365,59 +503,103 @@ def validate_selected_roots() -> None:
         )
     if is_within(EXTERNAL_ROOT.resolve(), source_resolved):
         raise ValueError("GOD_EXTERNAL_ROOT must be outside GOD_SOURCE_ROOT")
+    contained_platform_input("components.yaml", kind="file")
+    contained_platform_input("changes", kind="directory")
+    contained_platform_input("backfills", kind="directory")
 
 
-def gitlink_entries(root: Path | None = None) -> dict[str, str]:
-    """Return root gitlink path -> recorded revision from the selected checkout."""
+def root_commit_revision(root: Path) -> str:
+    revision = _run_git(root, "rev-parse", "HEAD").stdout.strip()
+    if not FULL_GIT_REVISION.fullmatch(revision):
+        raise GitValidationError("root Git checkout returned an invalid HEAD revision")
+    if _run_git(root, "cat-file", "-t", revision).stdout.strip() != "commit":
+        raise GitValidationError("root Git HEAD is missing or is not a commit")
+    return revision
 
-    root = SOURCE_ROOT if root is None else root
+
+def root_tree_entries(root: Path) -> dict[str, tuple[str, str, str]]:
+    """Read the exact root commit tree, independent of index/worktree state."""
+
     if own_checkout_root(root) is None:
         raise GitValidationError(
             f"{root}: selected source root must be its own Git checkout"
         )
-    result = _run_git(root, "ls-files", "--stage", "-z")
-    entries: dict[str, str] = {}
-    seen_paths: set[str] = set()
-    for record in result.stdout.split("\0"):
-        if not record:
-            continue
+    revision = root_commit_revision(root)
+    result = _run_git(root, "ls-tree", "-z", "--full-tree", revision)
+    entries: dict[str, tuple[str, str, str]] = {}
+    records = result.stdout.split("\0")
+    if records[-1:] != [""]:
+        raise GitValidationError("root Git commit tree returned malformed data")
+    for record in records[:-1]:
         if "\t" not in record:
-            raise GitValidationError("root Git index contains a malformed stage record")
+            raise GitValidationError("root Git commit tree contains a malformed record")
         metadata, path = record.split("\t", 1)
-        fields = metadata.split()
-        if len(fields) != 3:
-            raise GitValidationError("root Git index contains a malformed stage record")
-        mode, revision, stage = fields
-        if stage != "0" or path in seen_paths:
+        fields = metadata.split(" ")
+        if len(fields) != 3 or any(not field for field in fields):
+            raise GitValidationError("root Git commit tree contains a malformed record")
+        mode, object_type, object_id = fields
+        if (
+            not path
+            or "/" in path
+            or any(ord(character) < 32 or ord(character) == 127 for character in path)
+            or path in entries
+            or mode not in {"040000", "100644", "100755", "120000", "160000"}
+            or not FULL_GIT_REVISION.fullmatch(object_id)
+        ):
+            raise GitValidationError("root Git commit tree contains invalid metadata")
+        expected_type = {
+            "040000": "tree",
+            "100644": "blob",
+            "100755": "blob",
+            "120000": "blob",
+            "160000": "commit",
+        }[mode]
+        if object_type != expected_type:
             raise GitValidationError(
-                f"root Git index has a nonzero or duplicate index stage for {path}"
+                "root Git commit tree contains invalid object type"
             )
-        seen_paths.add(path)
-        if not FULL_GIT_REVISION.fullmatch(revision):
-            raise GitValidationError(f"root Git index has an invalid object ID for {path}")
-        if mode == "160000":
-            entries[path] = fields[1]
+        entries[path] = (mode, object_type, object_id)
     return entries
 
 
+def gitlink_entries(root: Path | None = None) -> dict[str, str]:
+    """Return root gitlinks from the exact selected HEAD commit tree."""
+
+    root = SOURCE_ROOT if root is None else root
+    return {
+        path: object_id
+        for path, (mode, _kind, object_id) in root_tree_entries(root).items()
+        if mode == "160000"
+    }
+
+
 def gitmodule_mappings(root: Path | None = None) -> dict[str, dict[str, str]]:
-    """Return submodule mappings keyed by path from the selected checkout."""
+    """Return mappings from the exact committed, regular ``.gitmodules`` blob."""
 
     root = SOURCE_ROOT if root is None else root
     if own_checkout_root(root) is None:
         raise GitValidationError(
             f"{root}: selected source root must be its own Git checkout"
         )
-    path = root / ".gitmodules"
-    if not path.exists() and not path.is_symlink():
+    tree_entries = root_tree_entries(root)
+    tree_entry = tree_entries.get(".gitmodules")
+    if tree_entry is None:
         return {}
-    if path.is_symlink():
-        raise ValueError(f"{path}: .gitmodules must not be a symlink")
-    resolved_path = path.resolve(strict=True)
-    if not path.is_file() or not is_within(resolved_path, root.resolve()):
-        raise ValueError(f"{path}: .gitmodules escapes the selected source root")
+    mode, object_type, object_id = tree_entry
+    if mode != "100644" or object_type != "blob":
+        raise GitValidationError(".gitmodules must be a regular committed file")
+    try:
+        size_text = _run_git(root, "cat-file", "-s", object_id).stdout.strip()
+        if not size_text.isdigit() or int(size_text) > MAX_SCAN_FILE_BYTES:
+            raise GitValidationError(".gitmodules exceeds its safe size bound")
+        content = _run_git(root, "cat-file", "blob", object_id).stdout
+    except (OSError, UnicodeError, ValueError) as exc:
+        raise GitValidationError(".gitmodules cannot be read safely") from exc
     parser = configparser.ConfigParser(interpolation=None)
-    parser.read(path, encoding="utf-8")
+    try:
+        parser.read_string(content, source="<committed .gitmodules>")
+    except (configparser.Error, UnicodeError) as exc:
+        raise GitValidationError(".gitmodules is malformed") from exc
     mappings: dict[str, dict[str, str]] = {}
     for section in parser.sections():
         if not section.startswith('submodule "'):
@@ -428,15 +610,13 @@ def gitmodule_mappings(root: Path | None = None) -> dict[str, dict[str, str]]:
         mapped = Path(mapped_path)
         lexical_checkout = lexical_path(root / mapped)
         if mapped.is_absolute() or not is_within(lexical_checkout, root):
-            raise ValueError(
-                f"{path}: submodule path {mapped_path!r} escapes the selected root"
+            raise GitValidationError(
+                ".gitmodules contains a submodule path that escapes the selected root"
             )
         name = section.removeprefix('submodule "').removesuffix('"')
         if mapped_path in mappings:
-            previous = mappings[mapped_path]["name"]
-            raise ValueError(
-                f"{path}: ambiguous duplicate submodule path {mapped_path!r} "
-                f"in sections {previous!r} and {name!r}"
+            raise GitValidationError(
+                ".gitmodules contains an ambiguous duplicate submodule path"
             )
         mappings[mapped_path] = {
             "name": name,
@@ -487,6 +667,15 @@ def normalize_checkout_origin(value: str) -> str:
     checkout; no other userinfo or transport is accepted.
     """
 
+    if (
+        not isinstance(value, str)
+        or not value
+        or value != value.strip()
+        or any(ord(character) < 32 for character in value)
+    ):
+        raise ValueError(
+            "checkout origin must identify a credential-free hostful HTTPS repository"
+        )
     try:
         return normalize_repository_url(value)
     except ValueError:
@@ -498,6 +687,7 @@ def normalize_checkout_origin(value: str) -> str:
         )
     try:
         parsed = urlsplit(value)
+        port = parsed.port
     except ValueError as exc:
         raise ValueError(
             "checkout origin must identify a credential-free hostful HTTPS repository"
@@ -507,13 +697,12 @@ def normalize_checkout_origin(value: str) -> str:
         and parsed.username == "git"
         and parsed.password is None
         and parsed.hostname
+        and port is None
         and parsed.path not in {"", "/"}
         and not parsed.query
         and not parsed.fragment
     ):
-        return normalize_repository_url(
-            f"https://{parsed.hostname}{parsed.path}"
-        )
+        return normalize_repository_url(f"https://{parsed.hostname}{parsed.path}")
     raise ValueError(
         "checkout origin must identify a credential-free hostful HTTPS repository"
     )
@@ -559,7 +748,7 @@ def git_checkout_origin(repo: Path) -> str | None:
             capture_output=True,
             timeout=GIT_TIMEOUT_SECONDS,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except (OSError, subprocess.TimeoutExpired, UnicodeError) as exc:
         raise GitValidationError(
             f"Git command failed safely for {repo}: config"
         ) from exc
@@ -567,6 +756,13 @@ def git_checkout_origin(repo: Path) -> str | None:
         return None
     if result.returncode:
         raise GitValidationError(f"Git command failed safely for {repo}: config")
+    if (
+        len(result.stdout) > MAX_GIT_OUTPUT_CHARS
+        or len(result.stderr) > MAX_GIT_OUTPUT_CHARS
+    ):
+        raise GitValidationError(
+            f"Git command output exceeded its safe bound for {repo}: config"
+        )
     return result.stdout.strip() or None
 
 
@@ -582,7 +778,9 @@ def validate_component_contracts(
         )
     for index, component_id in enumerate(PRODUCT_COMPONENT_IDS):
         if index >= len(components):
-            errors.append(f"components/{component_id}.yaml: canonical manifest is missing")
+            errors.append(
+                f"components/{component_id}.yaml: canonical manifest is missing"
+            )
             continue
         component = components[index]
         contract = COMPONENT_CONTRACTS[component_id]
@@ -671,6 +869,13 @@ def component_repo_status(component: dict[str, Any]) -> tuple[str, str | None]:
         mapping = mappings.get(relative_repo)
         if mapping is None:
             return ("unmapped", gitlink_revision)
+        canonical_contract = ROOT_GITLINK_CONTRACTS.get(relative_repo)
+        if canonical_contract is not None:
+            canonical_origin, canonical_revision = canonical_contract
+            if recorded != canonical_revision:
+                return ("gitlink-contract-mismatch", gitlink_revision)
+            if mapping["url"] != canonical_origin:
+                return ("identity-mismatch", gitlink_revision)
     elif relative_repo is not None:
         return ("path-policy-mismatch", None)
 
@@ -685,7 +890,13 @@ def component_repo_status(component: dict[str, Any]) -> tuple[str, str | None]:
         return ("revision-mismatch", revision)
 
     if repository_kind == "root-gitlink":
-        expected_url = gitmodule_mappings()[relative_repo]["url"]
+        mapping_url = gitmodule_mappings()[relative_repo]["url"]
+        canonical_contract = ROOT_GITLINK_CONTRACTS.get(relative_repo)
+        expected_url = (
+            canonical_contract[0] if canonical_contract is not None else mapping_url
+        )
+        if canonical_contract is not None and mapping_url != expected_url:
+            return ("identity-mismatch", revision)
         actual_url = git_checkout_origin(repo)
         if not actual_url:
             return ("identity-mismatch", revision)
@@ -723,14 +934,33 @@ def validate_gitlink_inventory() -> list[str]:
     try:
         gitlinks = gitlink_entries()
         mappings = gitmodule_mappings()
-    except (configparser.Error, OSError, ValueError) as exc:
+    except GitValidationError as exc:
         return [f".gitmodules: cannot parse root gitlink inventory safely: {exc}"]
+    except (configparser.Error, OSError, ValueError):
+        return [".gitmodules: cannot parse root gitlink inventory safely"]
+    expected_paths = tuple(ROOT_GITLINK_CONTRACTS)
+    actual_gitlink_paths = tuple(gitlinks)
+    actual_mapping_paths = tuple(sorted(mappings))
+    if actual_gitlink_paths != expected_paths:
+        errors.append(
+            "root gitlink inventory must be the exact ordered canonical nine paths; "
+            f"found {actual_gitlink_paths}"
+        )
+    if actual_mapping_paths != expected_paths:
+        errors.append(
+            ".gitmodules must map the exact ordered canonical nine paths; "
+            f"found {actual_mapping_paths}"
+        )
     missing = sorted(set(gitlinks) - set(mappings))
     extra = sorted(set(mappings) - set(gitlinks))
     if missing:
-        errors.append(".gitmodules: missing mappings for gitlinks: " + ", ".join(missing))
+        errors.append(
+            ".gitmodules: missing mappings for gitlinks: " + ", ".join(missing)
+        )
     if extra:
-        errors.append(".gitmodules: mappings without root gitlinks: " + ", ".join(extra))
+        errors.append(
+            ".gitmodules: mappings without root gitlinks: " + ", ".join(extra)
+        )
     for path, mapping in sorted(mappings.items()):
         url = mapping["url"]
         try:
@@ -739,10 +969,28 @@ def validate_gitlink_inventory() -> list[str]:
             errors.append(
                 f".gitmodules: {path} repository URL must be credential-free hostful HTTPS"
             )
+        canonical = ROOT_GITLINK_CONTRACTS.get(path)
+        if canonical is None:
+            errors.append(
+                f".gitmodules: {path} has no canonical public origin contract"
+            )
+        elif url != canonical[0]:
+            errors.append(
+                f".gitmodules: {path} URL must equal its canonical public HTTPS origin"
+            )
     for path, expected_revision in sorted(gitlinks.items()):
         mapping = mappings.get(path)
         if mapping is None:
             continue
+        canonical = ROOT_GITLINK_CONTRACTS.get(path)
+        if canonical is None:
+            errors.append(f"root gitlink {path}: no canonical revision contract")
+            continue
+        canonical_origin, canonical_revision = canonical
+        if expected_revision != canonical_revision:
+            errors.append(
+                f"root gitlink {path}: commit revision does not match canonical contract"
+            )
         checkout = lexical_path(SOURCE_ROOT / path)
         if not is_within(checkout, SOURCE_ROOT):
             errors.append(
@@ -761,17 +1009,16 @@ def validate_gitlink_inventory() -> list[str]:
         if actual_revision is None:
             errors.append(
                 f"root gitlink {path}: checkout is not initialized as its own "
-                f"Git repository at index revision {expected_revision}"
+                f"Git repository at commit revision {expected_revision}"
             )
             continue
         if actual_revision != expected_revision:
             errors.append(
                 f"root gitlink {path}: checkout HEAD {actual_revision} does not "
-                f"match index revision {expected_revision}"
+                f"match commit revision {expected_revision}"
             )
 
         actual_origin = git_checkout_origin(checkout)
-        expected_origin = mapping["url"]
         if not actual_origin:
             errors.append(
                 f"root gitlink {path}: initialized checkout has no origin; "
@@ -781,13 +1028,13 @@ def validate_gitlink_inventory() -> list[str]:
             try:
                 matches = normalize_checkout_origin(
                     actual_origin
-                ) == normalize_repository_url(expected_origin)
+                ) == normalize_repository_url(canonical_origin)
             except ValueError:
                 matches = False
             if not matches:
                 errors.append(
-                    f"root gitlink {path}: checkout origin does not match .gitmodules "
-                    "URL identity or is not credential-free"
+                    f"root gitlink {path}: checkout origin does not match canonical "
+                    "public identity or is not credential-free"
                 )
     return errors
 
@@ -854,11 +1101,15 @@ def validate_components() -> list[str]:
     try:
         errors.extend(validate_acceptance_slice(components))
     except (OSError, TypeError, ValueError) as exc:
-        errors.append(f"components.yaml: acceptance slice cannot be loaded safely: {exc}")
+        errors.append(
+            f"components.yaml: acceptance slice cannot be loaded safely: {exc}"
+        )
     try:
         errors.extend(validate_component_contracts(components))
     except (OSError, TypeError, ValueError) as exc:
-        errors.append(f"components.yaml: component contracts cannot be loaded safely: {exc}")
+        errors.append(
+            f"components.yaml: component contracts cannot be loaded safely: {exc}"
+        )
     slice_ids = set(acceptance_slice_ids())
     for component in components:
         path = component["_path"]
@@ -891,6 +1142,7 @@ def validate_components() -> list[str]:
         elif status in {
             "revision-mismatch",
             "gitlink-mismatch",
+            "gitlink-contract-mismatch",
             "gitlink-missing",
             "unmapped",
             "identity-mismatch",
@@ -971,7 +1223,11 @@ def validate_changes() -> list[str]:
         "docs",
     }
     ids: set[str] = set()
-    for path in sorted((SOURCE_PLATFORM_ROOT / "changes").glob("*.jsonl")):
+    try:
+        paths = contained_platform_files("changes", "*.jsonl")
+    except (OSError, ValueError) as exc:
+        return [f"changes: cannot enumerate selected inputs safely: {exc}"]
+    for path in paths:
         try:
             handle = path.open("r", encoding="utf-8")
         except OSError as exc:
@@ -998,9 +1254,15 @@ def validate_changes() -> list[str]:
                     errors.append(
                         f"{path}:{line_no}: missing required keys: {', '.join(missing)}"
                     )
+                for key in ("id", "date", "component", "kind", "summary"):
+                    value = item.get(key)
+                    if not isinstance(value, str) or not value.strip():
+                        errors.append(
+                            f"{path}:{line_no}: {key} must be a non-empty string"
+                        )
                 change_id = item.get("id")
-                if not isinstance(change_id, str) or not change_id:
-                    errors.append(f"{path}:{line_no}: id must be a non-empty string")
+                if not isinstance(change_id, str) or not change_id.strip():
+                    pass
                 elif change_id in ids:
                     errors.append(
                         f"{path}:{line_no}: duplicate change id {change_id!r}"
@@ -1031,7 +1293,11 @@ def validate_backfill_manifests() -> list[str]:
         "remediation",
     }
     ids: set[str] = set()
-    for path in sorted((SOURCE_PLATFORM_ROOT / "backfills").glob("*.yaml")):
+    try:
+        paths = contained_platform_files("backfills", "*.yaml")
+    except (OSError, ValueError) as exc:
+        return [f"backfills: cannot enumerate selected inputs safely: {exc}"]
+    for path in paths:
         try:
             item = load_yaml(path)
         except (OSError, ValueError) as exc:
@@ -1041,9 +1307,12 @@ def validate_backfill_manifests() -> list[str]:
         if missing:
             errors.append(f"{path}: missing required keys: {', '.join(missing)}")
         backfill_id = item.get("id")
-        if backfill_id in ids:
+        if not isinstance(backfill_id, str) or not backfill_id.strip():
+            errors.append(f"{path}: id must be a non-empty string")
+        elif backfill_id in ids:
             errors.append(f"{path}: duplicate backfill id {backfill_id!r}")
-        ids.add(backfill_id)
+        else:
+            ids.add(backfill_id)
         search_paths = item.get("search_paths")
         forbidden_patterns = item.get("forbidden_patterns")
         if not isinstance(search_paths, list):
@@ -1082,7 +1351,9 @@ def cmd_components_list(_: argparse.Namespace) -> int:
         components = load_components()
         slice_ids = set(acceptance_slice_ids())
     except (configparser.Error, OSError, TypeError, ValueError) as exc:
-        print(f"ERROR component registry cannot be loaded safely: {exc}", file=sys.stderr)
+        print(
+            f"ERROR component registry cannot be loaded safely: {exc}", file=sys.stderr
+        )
         return 1
     for component in components:
         component_id = component.get("id")
@@ -1176,7 +1447,9 @@ def _relative_backfill_pattern(item: str) -> tuple[str, Path]:
         mapped = lexical_path(EXTERNAL_ROOT / relative)
         allowed_root = EXTERNAL_ROOT.resolve()
         if not is_within(mapped, EXTERNAL_ROOT):
-            raise ValueError(f"relative backfill path escapes GOD_EXTERNAL_ROOT: {item}")
+            raise ValueError(
+                f"relative backfill path escapes GOD_EXTERNAL_ROOT: {item}"
+            )
     prefix = _glob_static_prefix(mapped)
     resolved_prefix = prefix.resolve()
     if not is_within(resolved_prefix, allowed_root):
@@ -1184,6 +1457,31 @@ def _relative_backfill_pattern(item: str) -> tuple[str, Path]:
     if is_within(resolved_prefix, source_resolved) and allowed_root != source_resolved:
         raise ValueError(f"relative backfill path re-enters GOD_SOURCE_ROOT: {item}")
     return str(mapped), allowed_root
+
+
+def _validate_governed_backfill_path(
+    path: Path, governed_root: Path, item: str, *, directory: bool
+) -> Path:
+    try:
+        resolved = path.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError(
+            f"relative backfill path cannot be resolved safely: {item}"
+        ) from exc
+    governed_resolved = governed_root.resolve()
+    source_resolved = SOURCE_ROOT.resolve()
+    if not is_within(resolved, governed_resolved):
+        raise ValueError(f"relative backfill path escapes its governed root: {item}")
+    if governed_resolved != source_resolved:
+        if is_within(resolved, source_resolved):
+            raise ValueError(
+                f"relative backfill path re-enters GOD_SOURCE_ROOT: {item}"
+            )
+        if directory and is_within(source_resolved, resolved):
+            raise ValueError(
+                f"relative backfill directory is an ancestor of GOD_SOURCE_ROOT: {item}"
+            )
+    return resolved
 
 
 def iter_search_files(search_paths: list[str]) -> list[Path]:
@@ -1206,34 +1504,38 @@ def iter_search_files(search_paths: list[str]) -> list[Path]:
         for match in matches:
             path = Path(match)
             if governed_root is not None:
-                resolved_match = path.resolve()
-                if not is_within(resolved_match, governed_root):
-                    raise ValueError(
-                        f"relative backfill path escapes its governed root: {item}"
-                    )
-                if governed_root != SOURCE_ROOT.resolve() and is_within(
-                    resolved_match, SOURCE_ROOT.resolve()
-                ):
-                    raise ValueError(
-                        f"relative backfill path re-enters GOD_SOURCE_ROOT: {item}"
-                    )
-            if path.is_file():
+                _validate_governed_backfill_path(
+                    path, governed_root, item, directory=path.is_dir()
+                )
+            path_excluded = (
+                any(part in BACKFILL_EXCLUDED_PARTS for part in path.parts)
+                or path.suffix.casefold() in BACKFILL_EXCLUDED_SUFFIXES
+            )
+            if path.is_file() and not path_excluded:
                 files.append(path)
             elif path.is_dir():
                 for child in path.rglob("*"):
-                    if governed_root is not None and not is_within(
-                        child.resolve(), governed_root
-                    ):
-                        raise ValueError(
-                            f"relative backfill path escapes its governed root: {item}"
+                    if governed_root is not None:
+                        _validate_governed_backfill_path(
+                            child,
+                            governed_root,
+                            item,
+                            directory=child.is_dir(),
                         )
-                    if child.is_file() and ".git" not in child.parts:
+                    child_excluded = (
+                        any(part in BACKFILL_EXCLUDED_PARTS for part in child.parts)
+                        or child.suffix.casefold() in BACKFILL_EXCLUDED_SUFFIXES
+                    )
+                    if child.is_file() and not child_excluded:
                         files.append(child)
     return sorted(set(files))
 
 
 def scan_backfill(path: Path) -> tuple[str, list[str]]:
     manifest = load_yaml(path)
+    backfill_id = manifest.get("id")
+    if not isinstance(backfill_id, str) or not backfill_id.strip():
+        raise ValueError(f"{path}: id must be a non-empty string")
     raw_patterns = manifest.get("forbidden_patterns")
     search_paths = manifest.get("search_paths")
     if not isinstance(raw_patterns, list) or not all(
@@ -1244,29 +1546,38 @@ def scan_backfill(path: Path) -> tuple[str, list[str]]:
         isinstance(item, str) for item in search_paths
     ):
         raise ValueError(f"{path}: search_paths must be a list of strings")
-    patterns = [
-        re.compile(re.escape(str(pattern)))
-        for pattern in raw_patterns
-    ]
+    patterns = [re.compile(re.escape(str(pattern))) for pattern in raw_patterns]
     findings: list[str] = []
     if not patterns:
-        return manifest["id"], findings
+        return backfill_id, findings
     for file_path in iter_search_files(search_paths):
         try:
             if file_path.stat().st_size > MAX_SCAN_FILE_BYTES:
-                continue
-            text = file_path.read_text(encoding="utf-8", errors="ignore")
-        except OSError:
-            continue
+                raise ValueError(f"{file_path}: exceeds the backfill scan size limit")
+            text = file_path.read_text(encoding="utf-8", errors="strict")
+        except OSError as exc:
+            raise ValueError(
+                f"{file_path}: cannot be read for backfill scanning"
+            ) from exc
+        except UnicodeError as exc:
+            raise ValueError(f"{file_path}: is not valid UTF-8") from exc
         for pattern in patterns:
             if pattern.search(text):
                 findings.append(f"{file_path}: matched {pattern.pattern}")
-    return manifest["id"], findings
+    return backfill_id, findings
 
 
 def cmd_backfills_check(_: argparse.Namespace) -> int:
     failures = 0
-    for path in sorted((SOURCE_PLATFORM_ROOT / "backfills").glob("*.yaml")):
+    try:
+        paths = contained_platform_files("backfills", "*.yaml")
+    except (OSError, ValueError) as exc:
+        print(
+            f"ERROR backfills: cannot enumerate selected inputs safely: {exc}",
+            file=sys.stderr,
+        )
+        return 1
+    for path in paths:
         try:
             backfill_id, findings = scan_backfill(path)
         except (OSError, TypeError, ValueError, re.error) as exc:

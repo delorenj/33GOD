@@ -12,7 +12,7 @@ import re
 import subprocess
 import sys
 import tomllib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 try:
@@ -38,6 +38,9 @@ PRODUCT_COMPONENT_IDS = (
     "candybar",
     "heyma",
 )
+COMPONENT_FILE_PATHS = tuple(
+    f"components/{component_id}.yaml" for component_id in PRODUCT_COMPONENT_IDS
+)
 DOCUMENTED_COMPONENTS = ("bloodbank", "candystore", "holocene", "pjangler")
 REQUIRED_ROOT_DOCS = (
     "index.md",
@@ -58,8 +61,7 @@ LIFECYCLE_IMAGE = (
     "sha256:b216be4e1b796236309ee0b39120b0f353b62ee9f3c677901b2441a2c7aef210"
 )
 LIFECYCLE_TAG = (
-    "ghcr.io/delorenj/lifecycle:"
-    "sha-cda59658bef6d586c8aa01cacd88bc4e3ee867e0"
+    "ghcr.io/delorenj/lifecycle:sha-cda59658bef6d586c8aa01cacd88bc4e3ee867e0"
 )
 COMPONENT_REVISIONS = {
     "bloodbank": "aacd88564ea299924b8298165933ba821640bdba",
@@ -150,10 +152,10 @@ AUTHORITY_PARITY_PATTERNS = {
     ),
 }
 DEPLOYMENT_CEREMONY_PATTERNS = {
-    "safe-coexistence ceremony": re.compile(r"(?i)\b(?:safe[- ]?)?coexist(?:ence|s|ing)?\b"),
-    "Momo-offline safety ceremony": re.compile(
-        r"(?i)\bMomo[- ]offline\s+safety\b"
+    "safe-coexistence ceremony": re.compile(
+        r"(?i)\b(?:safe[- ]?)?coexist(?:ence|s|ing)?\b"
     ),
+    "Momo-offline safety ceremony": re.compile(r"(?i)\bMomo[- ]offline\s+safety\b"),
     "promotion boundary": re.compile(r"(?im)^##\s+Promotion boundary\s*$"),
     "separate owner decision": re.compile(r"(?i)\bseparate owner decision\b"),
     "destructive-looking acceptance ceremony": re.compile(
@@ -185,12 +187,52 @@ CURRENT_DEPLOYMENT_ARTIFACTS = {
     "33god-platform/README.md",
     "_bmad-output/planning-artifacts/sprint-change-proposal-2026-07-18.md",
 }
-CURRENT_AUTHORITY_JSON_ARTIFACTS = (
-    "docs/project-scan-report.json",
-)
+CURRENT_AUTHORITY_JSON_ARTIFACTS = ("docs/project-scan-report.json",)
 GIT_TIMEOUT_SECONDS = 10
 MAX_GITLINK_DEPTH = 16
 MAX_OPERATIONAL_FILE_BYTES = 1_000_000
+MAX_GIT_TREE_ENTRIES = 100_000
+MAX_GIT_TREE_OUTPUT_BYTES = 16_000_000
+MAX_GIT_BATCH_OUTPUT_BYTES = 16_000_000
+MAX_GIT_TEXT_OUTPUT_CHARS = 16_000_000
+FULL_GIT_REVISION = re.compile(r"[0-9a-f]{40}")
+VALID_GIT_TREE_MODES = {"100644", "100755", "120000", "160000"}
+
+
+class DuplicateYamlKeyError(ValueError):
+    """A YAML mapping repeated a key at some nesting level."""
+
+
+if yaml is not None:
+
+    class _UniqueKeyLoader(yaml.SafeLoader):
+        pass
+
+    def _construct_unique_mapping(
+        loader: _UniqueKeyLoader, node: Any, deep: bool = False
+    ) -> dict[Any, Any]:
+        loader.flatten_mapping(node)
+        mapping: dict[Any, Any] = {}
+        for key_node, value_node in node.value:
+            key = loader.construct_object(key_node, deep=deep)
+            try:
+                duplicate = key in mapping
+            except TypeError as exc:
+                raise yaml.constructor.ConstructorError(
+                    "while constructing a mapping",
+                    node.start_mark,
+                    "found an unhashable mapping key",
+                    key_node.start_mark,
+                ) from exc
+            if duplicate:
+                raise DuplicateYamlKeyError("duplicate YAML mapping key")
+            mapping[key] = loader.construct_object(value_node, deep=deep)
+        return mapping
+
+    _UniqueKeyLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        _construct_unique_mapping,
+    )
 
 
 class Reporter:
@@ -223,7 +265,9 @@ def load_yaml(path: Path) -> dict[str, Any]:
         raise RuntimeError("PyYAML unavailable")
     try:
         with path.open(encoding="utf-8") as handle:
-            value = yaml.safe_load(handle)
+            value = yaml.load(handle, Loader=_UniqueKeyLoader)
+    except DuplicateYamlKeyError as exc:
+        raise ValueError(f"{path}: duplicate YAML mapping key") from exc
     except yaml.YAMLError as exc:
         raise ValueError(f"{path}: invalid YAML") from exc
     if value is None:
@@ -298,21 +342,14 @@ def topology_declaration_errors(
     parts = parts_data.get("parts")
     if not isinstance(parts, list):
         parts = []
-    part_ids = tuple(
-        str(item.get("id"))
-        for item in parts
-        if isinstance(item, dict)
-    )
+    part_ids = tuple(str(item.get("id")) for item in parts if isinstance(item, dict))
     acceptance_slice = platform_data.get("acceptance_slice")
     if not isinstance(acceptance_slice, dict):
         acceptance_slice = {}
     acceptance_components = acceptance_slice.get("components")
     if not isinstance(acceptance_components, list):
         acceptance_components = []
-    platform_slice = tuple(
-        str(item)
-        for item in acceptance_components
-    )
+    platform_slice = tuple(str(item) for item in acceptance_components)
     if (
         parts_data.get("scope_policy") != "lifecycle-acceptance-slice-exact"
         or part_ids != LIFECYCLE_ACCEPTANCE_SLICE
@@ -332,20 +369,21 @@ def topology_declaration_errors(
         registry_components = []
     declared_registry = tuple(str(item) for item in registry_components)
     component_files = platform_data.get("component_files")
-    if not isinstance(component_files, list):
-        component_files = []
-    platform_registry = tuple(
-        Path(str(item)).stem for item in component_files
+    platform_manifest_paths = (
+        tuple(component_files)
+        if isinstance(component_files, list)
+        and all(isinstance(item, str) for item in component_files)
+        else ()
     )
     if (
         product_registry.get("scope_policy") != "exact"
         or declared_registry != PRODUCT_COMPONENT_IDS
-        or platform_registry != PRODUCT_COMPONENT_IDS
+        or platform_manifest_paths != COMPONENT_FILE_PATHS
     ):
         errors.append(
             "twelve-component product registry must be the exact ordered set "
             f"{PRODUCT_COMPONENT_IDS}; project-parts={declared_registry}, "
-            f"platform={platform_registry}"
+            f"platform-paths={platform_manifest_paths}"
         )
 
     findings = scan_data.get("findings")
@@ -358,17 +396,11 @@ def topology_declaration_errors(
     if not isinstance(project_types, list):
         project_types = []
     scan_parts = tuple(
-        str(item.get("part_id"))
-        for item in project_types
-        if isinstance(item, dict)
+        str(item.get("part_id")) for item in project_types if isinstance(item, dict)
     )
     if (
-        classification.get("acceptance_slice_count") != len(
-            LIFECYCLE_ACCEPTANCE_SLICE
-        )
-        or classification.get("product_registry_count") != len(
-            PRODUCT_COMPONENT_IDS
-        )
+        classification.get("acceptance_slice_count") != len(LIFECYCLE_ACCEPTANCE_SLICE)
+        or classification.get("product_registry_count") != len(PRODUCT_COMPONENT_IDS)
         or scan_parts != LIFECYCLE_ACCEPTANCE_SLICE
     ):
         errors.append(
@@ -394,10 +426,53 @@ def topology_declaration_errors(
     return errors
 
 
+def canonical_platform_manifest_path_errors(source: Path) -> list[str]:
+    """Require every platform declaration to be a real canonical in-tree file."""
+
+    errors: list[str] = []
+    source_resolved = source.resolve()
+    platform = source / "33god-platform"
+    try:
+        platform_resolved = platform.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return ["33god-platform is missing or cannot be resolved safely"]
+    if (
+        platform.is_symlink()
+        or not platform.is_dir()
+        or not path_is_within(platform_resolved, source_resolved)
+    ):
+        return ["33god-platform must be a real directory inside the selected source"]
+
+    required = ("components.yaml", *COMPONENT_FILE_PATHS)
+    for relative in required:
+        candidate = platform / relative
+        cursor = platform
+        traverses_symlink = False
+        for part in PurePosixPath(relative).parts:
+            cursor /= part
+            if cursor.is_symlink():
+                traverses_symlink = True
+                break
+        if traverses_symlink:
+            errors.append(f"33god-platform/{relative} must not traverse a symlink")
+            continue
+        try:
+            resolved = candidate.resolve(strict=True)
+        except (OSError, RuntimeError):
+            errors.append(f"33god-platform/{relative} is missing or unreadable")
+            continue
+        if not candidate.is_file() or not path_is_within(resolved, platform_resolved):
+            errors.append(
+                f"33god-platform/{relative} must be a real file inside 33god-platform"
+            )
+    return errors
+
+
 def check_part_declaration(source: Path, docs: Path, report: Reporter) -> None:
     parts_path = docs / "project-parts.json"
     scan_path = docs / "project-scan-report.json"
     platform_path = source / "33god-platform/components.yaml"
+    path_errors = canonical_platform_manifest_path_errors(source)
     try:
         parts_data = json.loads(parts_path.read_text(encoding="utf-8"))
         scan_data = json.loads(scan_path.read_text(encoding="utf-8"))
@@ -415,7 +490,10 @@ def check_part_declaration(source: Path, docs: Path, report: Reporter) -> None:
     except (OSError, ValueError, KeyError, TypeError) as exc:
         report.fail("topology-scope", f"cannot parse declaration: {exc}")
         return
-    errors = topology_declaration_errors(parts_data, platform_data, scan_data)
+    errors = [
+        *path_errors,
+        *topology_declaration_errors(parts_data, platform_data, scan_data),
+    ]
     if errors:
         report.fail("topology-scope", "; ".join(errors))
     else:
@@ -440,13 +518,9 @@ def check_part_declaration(source: Path, docs: Path, report: Reporter) -> None:
         ):
             root_errors.append(f"{part} escapes selected source root")
     if root_errors:
-        report.fail(
-            "component-roots", "; ".join(root_errors)
-        )
+        report.fail("component-roots", "; ".join(root_errors))
     else:
-        report.passed(
-            "component-roots", "all six Lifecycle acceptance roots exist"
-        )
+        report.passed("component-roots", "all six Lifecycle acceptance roots exist")
 
 
 def check_component_bmad(source: Path, docs: Path, report: Reporter) -> None:
@@ -519,6 +593,10 @@ def check_component_bmad(source: Path, docs: Path, report: Reporter) -> None:
 
 def check_platform_manifest(source: Path, report: Reporter) -> None:
     platform = source / "33god-platform"
+    path_errors = canonical_platform_manifest_path_errors(source)
+    if path_errors:
+        report.fail("platform-manifests", "; ".join(path_errors))
+        return
     component_paths = {
         part: platform / "components" / f"{part}.yaml"
         for part in LIFECYCLE_ACCEPTANCE_SLICE
@@ -625,8 +703,7 @@ def authority_parity_text_errors(path: str, text: str) -> list[str]:
     """Reject current prose or manifest language that transfers authority."""
 
     paragraphs = [
-        re.sub(r"\s+", " ", paragraph)
-        for paragraph in re.split(r"\n\s*\n", text)
+        re.sub(r"\s+", " ", paragraph) for paragraph in re.split(r"\n\s*\n", text)
     ]
     errors = [
         f"{path} contains {label}"
@@ -634,9 +711,8 @@ def authority_parity_text_errors(path: str, text: str) -> list[str]:
         if any(pattern.search(paragraph) for paragraph in paragraphs)
     ]
     normalized_path = path.casefold()
-    if (
-        "holocene/" in normalized_path
-        and re.search(r"(?i)\b33GOD\s+Control[-\s]+Plane\b", text)
+    if "holocene/" in normalized_path and re.search(
+        r"(?i)\b33GOD\s+Control[-\s]+Plane\b", text
     ):
         errors.append(f"{path} contains standalone Holocene control-plane branding")
     if path in CURRENT_DEPLOYMENT_ARTIFACTS or normalized_path.startswith(
@@ -733,6 +809,40 @@ def run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
             capture_output=True,
             timeout=GIT_TIMEOUT_SECONDS,
         )
+    except (OSError, subprocess.TimeoutExpired, UnicodeError) as exc:
+        raise RuntimeError(
+            f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
+        ) from exc
+    if result.returncode:
+        raise RuntimeError(
+            f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
+        )
+    if (
+        len(result.stdout) > MAX_GIT_TEXT_OUTPUT_CHARS
+        or len(result.stderr) > MAX_GIT_TEXT_OUTPUT_CHARS
+    ):
+        raise RuntimeError(
+            f"Git command output exceeded its safe bound for {repo}: "
+            f"{args[0] if args else 'git'}"
+        )
+    return result
+
+
+def run_git_bytes(
+    repo: Path,
+    *args: str,
+    input_bytes: bytes | None = None,
+    max_output_bytes: int,
+) -> bytes:
+    """Run bounded Git and return raw stdout without exposing stderr."""
+
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo), *args],
+            input=input_bytes,
+            capture_output=True,
+            timeout=GIT_TIMEOUT_SECONDS,
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise RuntimeError(
             f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
@@ -741,7 +851,14 @@ def run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
         raise RuntimeError(
             f"Git command failed safely for {repo}: {args[0] if args else 'git'}"
         )
-    return result
+    stdout = bytes(result.stdout)
+    stderr = bytes(result.stderr)
+    if len(stdout) > max_output_bytes or len(stderr) > MAX_GIT_BATCH_OUTPUT_BYTES:
+        raise RuntimeError(
+            f"Git command output exceeded its safe bound for {repo}: "
+            f"{args[0] if args else 'git'}"
+        )
+    return stdout
 
 
 def is_own_checkout(repo: Path) -> bool:
@@ -766,59 +883,164 @@ def checkout_revision(repo: Path) -> str | None:
     return revision
 
 
-def repository_index_entries(repo: Path) -> list[tuple[str, str, str]]:
-    if not is_own_checkout(repo):
-        return []
-    result = run_git(repo, "ls-files", "--stage", "-z")
-    entries: list[tuple[str, str, str]] = []
+def _parse_git_tree_records(repo: Path, raw: bytes) -> list[tuple[str, str, str, str]]:
+    """Parse canonical ``git ls-tree -rz`` records without trusting path bytes."""
+
+    if len(raw) > MAX_GIT_TREE_OUTPUT_BYTES:
+        raise RuntimeError(f"{repo}: exact Git tree exceeds its safe output bound")
+    entries: list[tuple[str, str, str, str]] = []
     seen: set[str] = set()
-    for record in result.stdout.split("\0"):
-        if not record:
-            continue
-        if "\t" not in record:
-            raise RuntimeError(f"{repo}: malformed Git index stage record")
-        metadata, relative = record.split("\t", 1)
-        fields = metadata.split()
-        if len(fields) != 3:
-            raise RuntimeError(f"{repo}: malformed Git index stage record")
-        mode, revision, stage = fields
-        if stage != "0" or relative in seen:
-            raise RuntimeError(
-                f"{repo}: nonzero or duplicate index stage for {relative}"
+    records = raw.split(b"\0")
+    if records[-1:] != [b""]:
+        raise RuntimeError(f"{repo}: malformed exact Git tree record stream")
+    for record in records[:-1]:
+        if len(entries) >= MAX_GIT_TREE_ENTRIES:
+            raise RuntimeError(f"{repo}: exact Git tree exceeds its entry bound")
+        if b"\t" not in record:
+            raise RuntimeError(f"{repo}: malformed exact Git tree record")
+        metadata, raw_relative = record.split(b"\t", 1)
+        fields = metadata.split(b" ")
+        if len(fields) != 3 or any(not field for field in fields):
+            raise RuntimeError(f"{repo}: malformed exact Git tree record")
+        try:
+            mode, object_type, object_id = (
+                field.decode("ascii", errors="strict") for field in fields
             )
+            relative = raw_relative.decode("utf-8", errors="strict")
+        except UnicodeError as exc:
+            raise RuntimeError(f"{repo}: malformed exact Git tree data") from exc
+        raw_parts = relative.split("/")
+        relative_path = PurePosixPath(relative)
+        if (
+            not relative
+            or len(raw_relative) > 4096
+            or relative_path.is_absolute()
+            or any(part in {"", ".", ".."} for part in raw_parts)
+            or any(
+                ord(character) < 32 or ord(character) == 127 for character in relative
+            )
+        ):
+            raise RuntimeError(f"{repo}: malformed exact Git tree path")
+        if mode not in VALID_GIT_TREE_MODES:
+            raise RuntimeError(f"{repo}: exact Git tree contains an invalid mode")
+        expected_type = "commit" if mode == "160000" else "blob"
+        if object_type != expected_type or not FULL_GIT_REVISION.fullmatch(object_id):
+            raise RuntimeError(
+                f"{repo}: exact Git tree contains invalid object metadata"
+            )
+        if relative in seen:
+            raise RuntimeError(f"{repo}: exact Git tree contains a duplicate path")
         seen.add(relative)
-        if not re.fullmatch(r"[0-9a-f]{40}", revision):
-            raise RuntimeError(f"{repo}: invalid Git index object for {relative}")
-        entries.append((mode, revision, relative))
+        entries.append((mode, object_type, object_id, relative))
     return entries
 
 
-def repository_gitlinks(repo: Path) -> dict[str, str]:
+def _git_blob_sizes(repo: Path, object_ids: list[str]) -> dict[str, int]:
+    unique_ids = list(dict.fromkeys(object_ids))
+    if not unique_ids:
+        return {}
+    if len(unique_ids) > MAX_GIT_TREE_ENTRIES:
+        raise RuntimeError(f"{repo}: exact Git tree exceeds its object bound")
+    payload = b"".join(f"{object_id}\n".encode("ascii") for object_id in unique_ids)
+    raw = run_git_bytes(
+        repo,
+        "cat-file",
+        "--batch-check=%(objectname) %(objecttype) %(objectsize)",
+        input_bytes=payload,
+        max_output_bytes=MAX_GIT_BATCH_OUTPUT_BYTES,
+    )
+    lines = raw.splitlines()
+    if len(lines) != len(unique_ids):
+        raise RuntimeError(
+            f"{repo}: exact Git blob verification returned malformed data"
+        )
+    sizes: dict[str, int] = {}
+    for expected, line in zip(unique_ids, lines, strict=True):
+        try:
+            fields = line.decode("ascii", errors="strict").split(" ")
+        except UnicodeError as exc:
+            raise RuntimeError(
+                f"{repo}: exact Git blob verification returned malformed data"
+            ) from exc
+        if (
+            len(fields) != 3
+            or fields[0] != expected
+            or fields[1] != "blob"
+            or not fields[2].isdigit()
+        ):
+            raise RuntimeError(
+                f"{repo}: exact Git tree references a missing or invalid blob"
+            )
+        sizes[expected] = int(fields[2])
+    return sizes
+
+
+def repository_tree_entries(
+    repo: Path, revision: str
+) -> list[tuple[str, str, str, str, int | None]]:
+    """Enumerate and verify every object reachable from one exact commit tree."""
+
+    if not is_own_checkout(repo):
+        return []
+    if not FULL_GIT_REVISION.fullmatch(revision):
+        raise RuntimeError(f"{repo}: invalid exact Git commit revision")
+    if run_git(repo, "cat-file", "-t", revision).stdout.strip() != "commit":
+        raise RuntimeError(f"{repo}: exact Git revision is missing or is not a commit")
+    raw = run_git_bytes(
+        repo,
+        "ls-tree",
+        "-r",
+        "-z",
+        "--full-tree",
+        revision,
+        max_output_bytes=MAX_GIT_TREE_OUTPUT_BYTES,
+    )
+    entries = _parse_git_tree_records(repo, raw)
+    blob_sizes = _git_blob_sizes(
+        repo,
+        [
+            object_id
+            for mode, _kind, object_id, _relative in entries
+            if mode != "160000"
+        ],
+    )
+    return [
+        (
+            mode,
+            object_type,
+            object_id,
+            relative,
+            None if mode == "160000" else blob_sizes[object_id],
+        )
+        for mode, object_type, object_id, relative in entries
+    ]
+
+
+def repository_gitlinks(repo: Path, revision: str | None = None) -> dict[str, str]:
     if not is_own_checkout(repo):
         return {}
-    gitlinks: dict[str, str] = {}
-    for mode, revision, relative in repository_index_entries(repo):
-        if mode == "160000":
-            gitlinks[relative] = revision
-    return gitlinks
+    exact_revision = checkout_revision(repo) if revision is None else revision
+    if exact_revision is None:
+        raise RuntimeError(f"{repo}: exact Git revision is unavailable")
+    return {
+        relative: object_id
+        for mode, _kind, object_id, relative, _size in repository_tree_entries(
+            repo, exact_revision
+        )
+        if mode == "160000"
+    }
 
 
-def repository_file_entries(repo: Path) -> list[tuple[Path, str]]:
-    if is_own_checkout(repo):
-        return [
-            (repo / relative, mode)
-            for mode, _revision, relative in repository_index_entries(repo)
-            if mode != "160000"
-        ]
+def _filesystem_file_entries(repo: Path) -> list[tuple[Path, str]]:
     if not repo.is_dir():
         return []
     return [
         (
             path,
-            "100755"
-            if path.is_file() and path.stat().st_mode & 0o111
-            else "120000"
+            "120000"
             if path.is_symlink()
+            else "100755"
+            if path.is_file() and path.stat().st_mode & 0o111
             else "100644",
         )
         for path in repo.rglob("*")
@@ -828,9 +1050,22 @@ def repository_file_entries(repo: Path) -> list[tuple[Path, str]]:
 
 def repository_files(repo: Path) -> list[Path]:
     try:
-        return [path for path, _mode in repository_file_entries(repo)]
+        if is_own_checkout(repo):
+            revision = checkout_revision(repo)
+            if revision is None:
+                raise RuntimeError(f"{repo}: exact Git revision is unavailable")
+            return [
+                repo / relative
+                for mode, _kind, _object_id, relative, _size in repository_tree_entries(
+                    repo, revision
+                )
+                if mode != "160000"
+            ]
+        return [path for path, _mode in _filesystem_file_entries(repo)]
     except RuntimeError as exc:
-        raise RuntimeError(f"tracked-file enumeration failed for {repo}: {exc}") from exc
+        raise RuntimeError(
+            f"tracked-file enumeration failed for {repo}: {exc}"
+        ) from exc
 
 
 def path_is_within(path: Path, root: Path) -> bool:
@@ -869,13 +1104,93 @@ def scan_operational_repository(
     *,
     nested_label: str | None = None,
     tracked_prefix: str | None = None,
+    revision: str | None = None,
 ) -> list[str]:
+    del source
     errors: list[str] = []
     try:
-        entries = repository_file_entries(repo)
+        repo_is_checkout = is_own_checkout(repo)
+        if repo_is_checkout:
+            exact_revision = checkout_revision(repo) if revision is None else revision
+            if exact_revision is None:
+                raise RuntimeError(f"{repo}: exact Git revision is unavailable")
+            tree_entries = repository_tree_entries(repo, exact_revision)
+            filesystem_entries: list[tuple[Path, str]] = []
+        else:
+            tree_entries = []
+            filesystem_entries = _filesystem_file_entries(repo)
     except RuntimeError as exc:
         return [f"{component}: tracked-file enumeration failed: {exc}"]
-    for path, mode in entries:
+
+    for mode, _kind, object_id, relative_repo, object_size in tree_entries:
+        if mode == "160000":
+            continue
+        if tracked_prefix is not None:
+            prefix = tracked_prefix.rstrip("/") + "/"
+            if not relative_repo.startswith(prefix):
+                continue
+            display_relative = relative_repo.removeprefix(prefix)
+        else:
+            display_relative = relative_repo
+        if not is_operational_candidate(display_relative, mode):
+            continue
+        display = f"{component}/{display_relative}"
+        context = f"{nested_label}: " if nested_label else ""
+        if mode == "120000":
+            errors.append(
+                f"{context}{display} is an operational symlink in the exact "
+                "published tree; semantic absence cannot be proven"
+            )
+            continue
+        if object_size is None:
+            errors.append(f"{context}{display} has invalid exact Git blob metadata")
+            continue
+        if object_size > MAX_OPERATIONAL_FILE_BYTES:
+            errors.append(
+                f"{context}{display} is tracked but cannot be inspected: oversized"
+            )
+            continue
+        try:
+            blob = run_git_bytes(
+                repo,
+                "cat-file",
+                "blob",
+                object_id,
+                max_output_bytes=MAX_OPERATIONAL_FILE_BYTES,
+            )
+        except RuntimeError as exc:
+            errors.append(
+                f"{context}{display} exact published blob cannot be inspected: {exc}"
+            )
+            continue
+        if len(blob) != object_size:
+            errors.append(
+                f"{context}{display} exact published blob size changed while reading"
+            )
+            continue
+        try:
+            text = blob.decode("utf-8", errors="strict")
+        except UnicodeError:
+            errors.append(f"{context}{display} exact published blob is not valid UTF-8")
+            continue
+        if TICKET_LIFECYCLE_VARIANT.search(display_relative) or (
+            TICKET_LIFECYCLE_VARIANT.search(text)
+            and (
+                "workflow" in display_relative.casefold()
+                or "command" in display_relative.casefold()
+            )
+        ):
+            errors.append(
+                f"{context}{display} retains a non-Momo ticket-lifecycle "
+                "operational surface"
+            )
+        if any(pattern.search(text) for pattern in PROVIDER_COMPLETION_PATTERNS):
+            errors.append(
+                f"{context}{display} retains a provider completion surface "
+                "through an operational adapter/runner/sentinel"
+            )
+
+    for path, mode in filesystem_entries:
         try:
             relative_repo = path.relative_to(repo).as_posix()
         except ValueError:
@@ -909,7 +1224,9 @@ def scan_operational_repository(
             continue
         try:
             if path.stat().st_size > MAX_OPERATIONAL_FILE_BYTES:
-                errors.append(f"{display} is tracked but cannot be inspected: oversized")
+                errors.append(
+                    f"{display} is tracked but cannot be inspected: oversized"
+                )
                 continue
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
@@ -950,7 +1267,9 @@ def scan_gitlink_tree(
             f"{component} nested gitlink traversal exceeded depth {MAX_GITLINK_DEPTH}"
         ]
     if repo.is_symlink():
-        return [f"{component} nested gitlink checkout is a symlink and cannot be trusted"]
+        return [
+            f"{component} nested gitlink checkout is a symlink and cannot be trusted"
+        ]
     if not (repo / ".git").exists():
         return [
             f"{component} has uninitialized nested gitlink at {expected_revision}; "
@@ -971,8 +1290,10 @@ def scan_gitlink_tree(
     try:
         actual = checkout_revision(repo)
     except RuntimeError as exc:
+        seen.remove(key)
         return [f"{component} nested gitlink Git failure: {exc}"]
     if actual != expected_revision:
+        seen.remove(key)
         return [
             f"{component} nested gitlink checkout={actual or 'unavailable'} "
             f"expected={expected_revision}"
@@ -983,10 +1304,11 @@ def scan_gitlink_tree(
             component,
             repo,
             nested_label=f"{component} nested gitlink",
+            revision=expected_revision,
         )
     )
     try:
-        nested_gitlinks = repository_gitlinks(repo)
+        nested_gitlinks = repository_gitlinks(repo, expected_revision)
     except RuntimeError as exc:
         errors.append(f"{component} nested gitlink enumeration failed: {exc}")
         seen.remove(key)
@@ -998,7 +1320,9 @@ def scan_gitlink_tree(
         nested = repo / relative_path
         lexical = Path(os.path.abspath(nested))
         if relative_path.is_absolute() or not path_is_within(lexical, repo_lexical):
-            errors.append(f"{component} nested gitlink path {relative} escapes its repo")
+            errors.append(
+                f"{component} nested gitlink path {relative} escapes its repo"
+            )
             continue
         try:
             nested_resolved = nested.resolve(strict=True)
@@ -1036,15 +1360,16 @@ def non_momo_operational_surface_errors(source: Path) -> list[str]:
         return [f"selected source Git identity cannot be verified: {exc}"]
     if source_is_checkout:
         try:
-            root_gitlinks = repository_gitlinks(source)
+            root_revision = checkout_revision(source)
+            if root_revision is None:
+                raise RuntimeError("selected source exact Git revision is unavailable")
+            root_gitlinks = repository_gitlinks(source, root_revision)
         except RuntimeError as exc:
             return [f"root gitlink enumeration failed: {exc}"]
         for relative, recorded in sorted(root_gitlinks.items()):
             if relative == "momo":
                 continue
-            errors.extend(
-                scan_gitlink_tree(relative, source / relative, recorded)
-            )
+            errors.extend(scan_gitlink_tree(relative, source / relative, recorded))
         if (source / "pipeline-mcp-hub").is_dir():
             errors.extend(
                 scan_operational_repository(
@@ -1052,6 +1377,7 @@ def non_momo_operational_surface_errors(source: Path) -> list[str]:
                     "pipeline-mcp-hub",
                     source,
                     tracked_prefix="pipeline-mcp-hub",
+                    revision=root_revision,
                 )
             )
         return sorted(set(errors))
@@ -1068,9 +1394,7 @@ def non_momo_operational_surface_errors(source: Path) -> list[str]:
             continue
         for relative, recorded in sorted(nested_gitlinks.items()):
             errors.extend(
-                scan_gitlink_tree(
-                    f"{component}/{relative}", root / relative, recorded
-                )
+                scan_gitlink_tree(f"{component}/{relative}", root / relative, recorded)
             )
     return sorted(set(errors))
 
@@ -1101,7 +1425,9 @@ def canonical_workflow_files(
         try:
             resolved = path.resolve(strict=True)
         except (OSError, RuntimeError) as exc:
-            errors.append(f"Momo {label} workflow path cannot be resolved safely: {exc}")
+            errors.append(
+                f"Momo {label} workflow path cannot be resolved safely: {exc}"
+            )
             continue
         if not path_is_within(resolved, root_resolved):
             errors.append(f"Momo {label} workflow path escapes its canonical root")
@@ -1173,15 +1499,18 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
     for component, root in non_momo_roots.items():
         for relative in workflow_roots:
             path = root / relative
-            if path.is_dir() and any(candidate.is_file() for candidate in path.rglob("*")):
+            if path.is_dir() and any(
+                candidate.is_file() for candidate in path.rglob("*")
+            ):
                 errors.append(
                     f"{component} retains non-Momo ticket-lifecycle workflow at {relative}"
                 )
         for relative in manifest_paths:
             path = root / relative
-            if path.is_file() and "ticket-lifecycle" in path.read_text(
-                encoding="utf-8"
-            ).casefold():
+            if (
+                path.is_file()
+                and "ticket-lifecycle" in path.read_text(encoding="utf-8").casefold()
+            ):
                 errors.append(
                     f"{component} registers non-Momo ticket-lifecycle workflow in {relative}"
                 )
@@ -1251,8 +1580,9 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
     workflow_rows = [
         row
         for row in workflow_manifest_rows
-        if "ticket-lifecycle"
-        in " ".join(str(value) for value in row.values()).casefold()
+        if TICKET_LIFECYCLE_VARIANT.search(
+            " ".join(str(value) for value in row.values())
+        )
     ]
     if len(workflow_rows) != 1:
         errors.append(
@@ -1266,20 +1596,29 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
             r"\bunbounded\b|\bnot\s+(?:a\s+)?bounded\b|"
             r"\bnot\s+(?:a\s+)?(?:lifecycle\s+)?client\b|"
             r"\billegal\s+work\b|\b(?:does\s+not|never)\s+"
-            r"(?:choose|chooses|execute|executes)\b",
+            r"(?:choose|chooses|rank|ranks|execute|executes)\b|"
+            r"\b(?:choos(?:e|es|ing)|rank(?:s|ed|ing)?|execut(?:e|es|ing))\b"
+            r".{0,60}\b(?:all|any|arbitrary|unbounded)\s+work\b|"
+            r"\b(?:choos(?:e|es|ing)|rank(?:s|ed|ing)?|execut(?:e|es|ing))\b"
+            r".{0,60}\billegal\b.{0,30}\bwork\b",
+            normalized,
+        )
+        legal_choice_or_rank = re.search(
+            r"\b(?:choos(?:e|es|ing)|rank(?:s|ed|ing)?)\b.{0,100}"
+            r"\blegal[- ]+work\b",
+            normalized,
+        )
+        legal_execution = re.search(
+            r"\bexecut(?:e|es|ing)\b.{0,100}\blegal[- ]+work\b",
             normalized,
         )
         metadata_valid = (
             row.get("name") == "ticket-lifecycle"
             and row.get("module") == "custom"
-            and row.get("path")
-            == "_bmad/custom/workflows/ticket-lifecycle/workflow.md"
+            and row.get("path") == "_bmad/custom/workflows/ticket-lifecycle/workflow.md"
             and re.search(r"\bbounded\s+lifecycle\s+client\b", normalized)
-            and re.search(
-                r"\b(?:choos(?:e|es|ing)|execut(?:e|es|ing))\b.{0,100}"
-                r"\blegal\s+work\b",
-                normalized,
-            )
+            and legal_choice_or_rank
+            and legal_execution
             and opposite_policy is None
             and "autonomous multi-agent ticket lifecycle" not in normalized
             and "plane + bloodbank" not in normalized
@@ -1300,7 +1639,7 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
     file_rows = [
         row
         for row in files_manifest_rows
-        if "ticket-lifecycle" in row.get("path", "").casefold()
+        if TICKET_LIFECYCLE_VARIANT.search(row.get("path", ""))
     ]
     expected_manifest_paths = {
         f"custom/workflows/ticket-lifecycle/{relative.as_posix()}"
@@ -1330,8 +1669,7 @@ def ticket_lifecycle_surface_errors(source: Path) -> list[str]:
             continue
         if row.get("hash") != expected_hash:
             errors.append(
-                "Momo ticket-lifecycle files-manifest hash differs for "
-                f"{relative_path}"
+                f"Momo ticket-lifecycle files-manifest hash differs for {relative_path}"
             )
     return errors
 
@@ -1345,9 +1683,7 @@ def bloodbank_live_inventory_errors(source: Path) -> list[str]:
     readme = source / "bloodbank/README.md"
     readme_text = readme.read_text(encoding="utf-8") if readme.is_file() else ""
     for line in readme_text.splitlines():
-        if "`services/`" in line and re.search(
-            r"(?i)lifecycle[- ]controller", line
-        ):
+        if "`services/`" in line and re.search(r"(?i)lifecycle[- ]controller", line):
             errors.append("Bloodbank README lists a live lifecycle controller service")
     return errors
 
@@ -1677,10 +2013,7 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
     current_paths = [
         docs_checkout / "AGENTS.md",
         docs_checkout / "PRD.md",
-        *(
-            docs_checkout / relative
-            for relative in CURRENT_AUTHORITY_JSON_ARTIFACTS
-        ),
+        *(docs_checkout / relative for relative in CURRENT_AUTHORITY_JSON_ARTIFACTS),
         *sorted((docs_checkout / "docs").rglob("*.md")),
         *sorted((docs_checkout / "_bmad-output/planning-artifacts").glob("*.md")),
         *sorted(platform.rglob("*.md")),
@@ -1728,9 +2061,7 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         ]
     )
     current_paths.extend(
-        sorted(
-            (source / "momo/_bmad/custom/workflows/ticket-lifecycle").rglob("*.md")
-        )
+        sorted((source / "momo/_bmad/custom/workflows/ticket-lifecycle").rglob("*.md"))
     )
     ownership_patterns = {
         "Momo lifecycle authority": re.compile(
@@ -1768,9 +2099,7 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
             display_path = f"source/{path.relative_to(source).as_posix()}"
         for image in LIFECYCLE_DIGEST_REFERENCE.findall(text):
             if image != LIFECYCLE_IMAGE:
-                errors.append(
-                    f"{display_path} retains non-current Lifecycle digest"
-                )
+                errors.append(f"{display_path} retains non-current Lifecycle digest")
         for label, pattern in ownership_patterns.items():
             if pattern.search(text):
                 errors.append(f"{display_path} contains {label}")
@@ -1841,14 +2170,18 @@ def lifecycle_current_truth_errors(source: Path, docs_checkout: Path) -> list[st
         }
         for label, snippet in required_worker_contract.items():
             if snippet not in worker_text:
-                errors.append(f"Momo worker lacks structural source prerequisite: {label}")
+                errors.append(
+                    f"Momo worker lacks structural source prerequisite: {label}"
+                )
         ordered_worker_contract = [
             required_worker_contract["completion PubAck marker"],
             required_worker_contract["invocation ACK confirmation"],
             required_worker_contract["receipt write"],
         ]
         if all(snippet in worker_text for snippet in ordered_worker_contract):
-            positions = [worker_text.index(snippet) for snippet in ordered_worker_contract]
+            positions = [
+                worker_text.index(snippet) for snippet in ordered_worker_contract
+            ]
             if positions != sorted(positions):
                 errors.append(
                     "Momo worker structural source prerequisites do not retain "
@@ -1946,7 +2279,10 @@ def main() -> int:
         ("component-bmad", lambda: check_component_bmad(source, docs, report)),
         ("platform-manifest", lambda: check_platform_manifest(source, report)),
         ("high-risk-contracts", lambda: check_high_risk_contracts(source, report)),
-        ("root-compose", lambda: check_compose_candidate(source, docs_checkout, report)),
+        (
+            "root-compose",
+            lambda: check_compose_candidate(source, docs_checkout, report),
+        ),
         ("docs", lambda: check_docs(docs, report)),
     )
     for label, check in checks:
