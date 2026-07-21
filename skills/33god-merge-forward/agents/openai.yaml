@@ -1,0 +1,4 @@
+interface:
+  display_name: "33GOD Merge Forward"
+  short_description: "Ship verified monorepo slices straight to main"
+  default_prompt: "Use $33god-merge-forward to deliver this 33GOD change as the smallest verified slice and merge it to main immediately."

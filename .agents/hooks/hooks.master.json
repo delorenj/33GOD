@@ -1,0 +1,61 @@
+{
+  "$comment": "SINGLE SOURCE OF TRUTH for 33GOD project-scoped hooks. Hand-edit this file, then run `mise run hooks-sync`. Generated/injected client configs are not hand-edited.",
+  "version": 1,
+  "marker": "33god-project-hooks",
+  "hooks": [
+    {
+      "id": "merge-forward-session-rebalance",
+      "lifecycle": "session_close",
+      "script": "merge-forward/session-end.sh",
+      "timeout_s": 3,
+      "reads_stdin": true,
+      "description": "After a 33GOD session becomes idle or closes, asynchronously tune the repo-scoped merge-forward skill from concrete session evidence."
+    }
+  ],
+  "agents": {
+    "claude": {
+      "enabled": true,
+      "dialect": "claude_settings",
+      "config_target": ".claude/settings.json",
+      "base_dir": "$CLAUDE_PROJECT_DIR/.agents/hooks",
+      "timeout_unit": "s",
+      "lifecycle_events": {
+        "session_close": "SessionEnd"
+      }
+    },
+    "codex": {
+      "enabled": true,
+      "dialect": "codex_hooks",
+      "config_target": "~/.codex/hooks.json",
+      "base_dir": "{repo}/.agents/hooks",
+      "timeout_unit": "ms",
+      "lifecycle_events": {
+        "session_close": "Stop"
+      },
+      "notes": "Codex exposes Stop rather than a true project SessionEnd event. The hook worker debounces Stop events and runs only after the session has been quiet."
+    },
+    "kimi": {
+      "enabled": true,
+      "dialect": "kimi_config",
+      "config_target": "~/.kimi-code/config.toml",
+      "config_home_env": "KIMI_CODE_HOME",
+      "base_dir": "{repo}/.agents/hooks",
+      "timeout_unit": "s",
+      "lifecycle_events": {
+        "session_close": "SessionEnd"
+      }
+    },
+    "hermes": {
+      "enabled": true,
+      "dialect": "hermes_config",
+      "config_target": "agents/hermes/pm/runtime/config.yaml",
+      "allowlist_target": "agents/hermes/pm/runtime/shell-hooks-allowlist.json",
+      "base_dir": "{repo}/.agents/hooks",
+      "timeout_unit": "s",
+      "lifecycle_events": {
+        "session_close": "on_session_end"
+      },
+      "notes": "The runtime is local operational state. Fan-out merges the hook only when that runtime exists and never creates or sources a runtime gitlink."
+    }
+  }
+}

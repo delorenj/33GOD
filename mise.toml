@@ -11,6 +11,10 @@ enter = [
   "{{config_root}}/.mise/scripts/link-agentfiles.sh",
   "op inject -i .env.op > .env",
   "codegraph sync",
+  "{{config_root}}/.agents/hooks/sync.py --install --quiet",
+]
+leave = [
+  "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet",
 ]
 
 [tasks."platform:validate"]
@@ -57,9 +61,25 @@ run = "python3 scripts/check-doc-drift.py --source-root \"${GOD_SOURCE_ROOT:-.}\
 patterns = ["AGENTS.md"]
 task = "link-agentfiles"
 
+[[watch_files]]
+patterns = [".agents/hooks/hooks.master.json"]
+task = "hooks-sync"
+
 [tasks.link-agentfiles]
 description = "Symlink all agent files to AGENTS.md"
 run = "{{config_root}}/.mise/scripts/link-agentfiles.sh"
+
+[tasks.hooks-sync]
+description = "Fan the project hook master out to supported agent clients"
+run = "{{config_root}}/.agents/hooks/sync.py --install"
+
+[tasks.hooks-check]
+description = "Check the committed Claude hook projection against the master"
+run = "{{config_root}}/.agents/hooks/sync.py --check --target claude"
+
+[tasks.hooks-uninstall]
+description = "Remove per-user 33GOD hook injections"
+run = "{{config_root}}/.agents/hooks/sync.py --uninstall"
 
 # >>> mise-versioning >>>  (managed block — do not edit by hand; re-run init to update)
 [tasks."version"]

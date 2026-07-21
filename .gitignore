@@ -8,6 +8,9 @@
 **/pr-review-*/
 
 # Claude Flow generated files
+!.claude/
+.claude/*
+!.claude/settings.json
 .claude/settings.local.json
 .mcp.json
 claude-flow.config.json
@@ -88,3 +91,8 @@ HeyMa/training/
 # Added by code-review-graph
 .code-review-graph/
 .codegraph
+
+# Project-scoped agent hook preferences and generated local client mirror
+.agents/local.json
+.kimi-code/
+*.33god-bak

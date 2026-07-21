@@ -1,7 +1,7 @@
 ---
 name: 33god-ecosystem
 description: |
-  Router / skill-set hub for the 33GOD / DeLoNET project platform. Routes user intent to the right member skill: project bootstrap (33god-projects), pjangler implementation (project-jangler), agent hook/skill fan-out (agent-config-fanout), Hermes fleet operations (agent-fleet-operations), Plane ticket operations (project-lifecycle), Bloodbank events (bloodbank-integration), host conventions (delonet-conventions), versioning (mise-versioning), task authoring (mise-tasks), and memory (hindsight). Use when the request spans multiple 33GOD components or when you are unsure which member skill owns a 33GOD task. Triggers: 33god, 33GOD, DeLoNET, project platform, pjangler, CommonProject, Hermes, Plane, Bloodbank, agent hooks, skill fan-out, fleet, project bootstrap. Does NOT implement procedures; it loads the member skill that does.
+  Router / skill-set hub for the 33GOD / DeLoNET project platform. Routes user intent to the right member skill: incremental monorepo delivery (33god-merge-forward), project bootstrap (33god-projects), pjangler implementation (project-jangler), agent hook/skill fan-out (agent-config-fanout), Hermes fleet operations (agent-fleet-operations), Plane ticket operations (project-lifecycle), Bloodbank events (bloodbank-integration), host conventions (delonet-conventions), versioning (mise-versioning), task authoring (mise-tasks), and memory (hindsight). Use when the request spans multiple 33GOD components or when you are unsure which member skill owns a 33GOD task. Triggers: 33god, 33GOD, DeLoNET, monorepo integration, Docker Compose, component pin, merge to main, project platform, pjangler, CommonProject, Hermes, Plane, Bloodbank, agent hooks, skill fan-out, fleet, project bootstrap. Does NOT implement procedures; it loads the member skill that does.
 ---
 
 # 33GOD Ecosystem
@@ -20,6 +20,7 @@ Thin router for the 33GOD / DeLoNET platform. Load this skill when a request tou
 
 | User intent | Primary skill | Optional secondary |
 |---|---|---|
+| Deliver a cross-component slice, add a component to root Compose, advance source/image pins, or keep integration branches short-lived | `33god-merge-forward` | Relevant domain skill for the component contract |
 | Create a new 33GOD project / bootstrap CommonProject / add a PM or Ticket Sentinel | `33god-projects` | `agent-fleet-operations` only for live agent provisioning details; `project-lifecycle` only for live board actions |
 | Change CommonProject template or pjangler CLI/MCP | `project-jangler` | `33god-projects` for project-facing contract |
 | Add a PM or scrum-master agent to this repo | `33god-projects` | `agent-fleet-operations` for runtime/template/systemd details |
@@ -37,6 +38,7 @@ Thin router for the 33GOD / DeLoNET platform. Load this skill when a request tou
 
 | Domain | Owner skill | Durable source |
 |---|---|---|
+| Incremental monorepo delivery / Compose integration | `33god-merge-forward` | component `main`; root `main`; root exact pins/digests; root `tasks.md` |
 | Project registry / repo bootstrap | `33god-projects` | `~/.config/pjangler/projects.yaml` or `PJ_PROJECT_REGISTRY`; `templates/commonproject`; repo `.project.json` |
 | PJangler code | `project-jangler` | `/home/delorenj/code/pjangler/src`, `templates/commonproject` |
 | Agent hook/skill fan-out | `agent-config-fanout` | Bloodbank global: `~/code/33GOD/bloodbank/services/agent-hooks/hooks.master.json`; project-scoped: `.agents/hooks/hooks.master.json`, lock files |
@@ -49,6 +51,8 @@ Thin router for the 33GOD / DeLoNET platform. Load this skill when a request tou
 | Memory operations | `hindsight` | Hindsight memory banks |
 
 ## Common Combinations
+
+**Monorepo delivery:** `33god-merge-forward` → the relevant component domain skill for contract details. Merge the component to its `main`, then immediately advance and merge root `main` before selecting another slice.
 
 **Project bootstrap:** `33god-projects` → `project-lifecycle` (only for live board work) → `agent-fleet-operations` (only for live agent provisioning).
 
