@@ -253,9 +253,6 @@ def install_kimi(master: dict) -> None:
         return
     original = path.read_text() if path.exists() else ""
     body, _ = strip_kimi(original, master)
-    if re.search(r"(?m)^\s*\[\[hooks\]\]", body):
-        warn("kimi: foreign [[hooks]] entries exist; refusing ambiguous injection")
-        return
     body = re.sub(r"(?m)^\s*hooks\s*=\s*\[\s*\]\s*\n?", "", body).rstrip("\n")
     updated = (body + "\n\n" if body else "") + kimi_block(master)
     if updated == original:
