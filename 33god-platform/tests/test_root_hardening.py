@@ -504,6 +504,88 @@ class PolicyAndTraversalHardeningTests(GitFixtureMixin, unittest.TestCase):
                     )
                 )
 
+    def test_holocene_copy_policy_production_matrix(self) -> None:
+        cases = (
+            ("required_mixed", True, "Momo does not own lifecycle truth and stores a copy in Holocene."),
+            ("positive_comma", True, "Momo does not own lifecycle truth, yet stores a copy in Holocene."),
+            ("positive_colon", True, "Momo does not own lifecycle truth: stores a copy in Holocene."),
+            ("positive_semicolon", True, "Momo does not own lifecycle truth; stores a copy in Holocene."),
+            ("positive_em_dash", True, "Momo does not own lifecycle truth — stores a copy in Holocene."),
+            ("positive_fullwidth", True, "Ｍｏｍｏ doesn’t own lifecycle truth；stores a copy in Ｈｏｌｏｃｅｎｅ．"),
+            ("positive_passive", True, "A copy is stored in Holocene by Momo."),
+            ("positive_double_negative", True, "Momo does not not store a copy in Holocene."),
+            ("positive_unicode_quote", True, "“Momo does not own lifecycle truth,” yet Ｍｏｍｏ stores a copy in Ｈｏｌｏｃｅｎｅ．"),
+            ("positive_shared_transition", True, "Momo does not store locally or mirror locally, yet persists a copy in Holocene."),
+            ("prohibit_direct", False, "Momo does not store a copy in Holocene."),
+            ("prohibit_shared_or", False, "Momo does not store or persist a copy in Holocene."),
+            ("prohibit_shared_list", False, "Momo does not store, mirror, or persist a copy in Holocene."),
+            ("prohibit_neither_nor", False, "Momo neither stores nor persists a copy in Holocene."),
+            ("prohibit_passive", False, "A copy is not stored in Holocene by Momo."),
+            ("prohibit_unicode", False, "Ｍｏｍｏ doesn’t store a copy in Ｈｏｌｏｃｅｎｅ．"),
+            ("prohibit_modal_may", False, "A copy may not be stored in Holocene by Momo."),
+            ("prohibit_modal_might", False, "A copy might not be stored in Holocene by Momo."),
+            ("prohibit_not_allowed", False, "Momo is not allowed to store a copy in Holocene."),
+            ("prohibit_not_permitted", False, "Momo is not permitted to store a copy in Holocene."),
+            ("prohibit_no_longer", False, "Momo no longer stores a copy in Holocene."),
+            ("prohibit_stores_no_state", False, "Momo stores no lifecycle state in Holocene."),
+            ("prohibit_interrupted_comma", False, "Momo does not, under policy, store a copy in Holocene."),
+            ("prohibit_then_adverb", False, "Momo does not then store a copy in Holocene."),
+            ("prohibit_shared_unrelated_or", False, "Momo does not own lifecycle truth or store a copy in Holocene."),
+            ("prohibit_shared_unrelated_nor", False, "Momo neither owns lifecycle truth nor stores a copy in Holocene."),
+            ("prohibit_matrix_clause", False, "It is not true that Momo stores a copy in Holocene."),
+            ("prohibit_quoted_wording", False, "The sentence “Momo stores a copy in Holocene” is forbidden."),
+            ("prohibit_colon_scope", False, "The policy prohibits this: Momo stores a copy in Holocene."),
+            ("prohibit_reinforcing_negation", False, "Momo does not store a copy in Holocene because it never retains lifecycle state."),
+            ("positive_unsplit_slash", True, "Momo does not store / it mirrors a copy in Holocene."),
+            ("positive_unsplit_parenthesis", True, "Momo does not store (instead it mirrors a copy in Holocene)."),
+            ("positive_unsplit_dash", True, "Momo does not store—rather it mirrors a copy in Holocene."),
+            ("positive_exception", True, "Momo does not store a copy in Holocene except that it does."),
+            ("positive_gerund_persist", True, "Momo is persisting lifecycle state in Holocene."),
+            ("positive_gerund_copy", True, "Momo is copying lifecycle state to Holocene."),
+            ("positive_target_contrast", False, "Unlike Holocene, Momo stores a copy in Candystore."),
+            ("positive_local_render", False, "Momo stores lifecycle truth locally, and Holocene renders it."),
+            ("unrelated_prohibition", True, "Momo prohibits deletion as it stores a copy in Holocene."),
+            ("five_word_unrelated_prohibition", True, "Momo prohibits deleting stale artifacts as it stores a copy in Holocene."),
+            ("mixed_negated_then_affirmative", True, "Momo does not store because it mirrors a copy in Holocene."),
+            ("prohibited_action_then_pairing", True, "Momo does not store a copy elsewhere, and Momo/Holocene remain paired."),
+            ("ignorable_holocene_zwsp", True, "Momo stores a copy in Holo\u200bcene."),
+            ("ignorable_holocene_word_joiner", True, "Momo stores a copy in Holo\u2060cene."),
+            ("ignorable_momo_zwsp", True, "Mo\u200bmo stores a copy in Holocene."),
+            ("gerund_mirror", True, "Momo is mirroring lifecycle state in Holocene."),
+            ("gerund_store", True, "Momo is storing lifecycle state in Holocene."),
+            ("must_not_create_replica", False, "Momo must not create a replica in Holocene."),
+            ("active_modal_may_not", False, "Momo may not store a copy in Holocene."),
+            ("active_modal_might_not", False, "Momo might not persist lifecycle state in Holocene."),
+            ("interrupted_adverbs", False, "Momo does not, even indirectly, store a copy in Holocene."),
+            ("explicitly_forbidden_quote", False, "The wording “Momo stores a copy in Holocene” is explicitly forbidden."),
+            ("ambiguous_fail_closed", True, "Momo may or may not store a copy in Holocene."),
+            ("holocene_semicolon_pronoun", True, "Holocene does not store lifecycle truth; it mirrors a copy."),
+            ("holocene_sentence_pronoun", True, "Holocene does not store lifecycle truth. It persists a replica."),
+            ("holocene_but_fragment", True, "Holocene does not store lifecycle truth, but mirrors a copy."),
+            ("holocene_colon_label", True, "Holocene: stores a copy of lifecycle truth."),
+            ("holocene_em_dash_label", True, "Holocene — stores a copy."),
+            ("holocene_semicolon_label", True, "Holocene; stores a copy."),
+            ("holocene_no_space_dash", True, "Holocene does not store lifecycle truth—rather it mirrors a copy."),
+            ("holocene_slash", True, "Holocene does not store lifecycle truth / it mirrors a copy."),
+            ("holocene_parenthesis", True, "Holocene does not store lifecycle truth (instead it mirrors a copy)."),
+            ("holocene_newline_label", True, "Holocene:\n- stores a copy of lifecycle truth."),
+            ("dashboard_continuation", True, "Holocene renders Lifecycle state. The dashboard stores a copy."),
+            ("renderer_continuation", True, "Holocene is the renderer; it persists a replica."),
+            ("candystore_reset", False, "Holocene renders Lifecycle state; Candystore persists audit history."),
+            ("other_target_reset", False, "Holocene renders Lifecycle state; Momo stores its execution artifact locally."),
+            ("legitimate_boundary", False, "Momo stores its execution artifact locally, and Holocene renders Lifecycle's authoritative state."),
+            ("pairing_after_prohibition", True, "Momo does not store a copy in Holocene; Momo/Holocene remain paired."),
+            ("colon_prohibition_label", False, "Holocene:\n- must not store a copy of lifecycle truth."),
+        )
+        self.assertEqual(len(cases), 70)
+        for name, expected_claim, workflow_text in cases:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.write_momo_fixture(root, workflow_text)
+                errors = drift.ticket_lifecycle_surface_errors(root)
+                actual_claim = any("Holocene copy claim" in item for item in errors)
+                self.assertEqual(actual_claim, expected_claim, errors)
+
     def test_exact_promoted_prefix_rejects_blob_symlink_and_gitlink_modes(self) -> None:
         for prefix in ("agents/hermes/pm", "pipeline-mcp-hub"):
             for mode in ("blob", "symlink", "gitlink"):
