@@ -53,7 +53,7 @@ contract_paths:
   - ../bloodbank/services/agent-hooks/hooks.master.json
   - ../candystore/migrations
   - ../holocene/docs
-  - ../pipeline-mcp-hub/README.md
+  - ../mcp-hub/README.md
   - ../pjangler/templates
   - ../../skillex/all-skills
   - ../hermes-agent-template

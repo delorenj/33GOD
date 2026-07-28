@@ -1,5 +1,6 @@
 # iMi-managed directories (per-component)
 **/.iMi/
+worktrees/
 **/feat-*/
 **/fix-*/
 **/pr-*/
@@ -96,3 +97,6 @@ HeyMa/training/
 .agents/local.json
 .kimi-code/
 *.33god-bak
+
+# Hermes agent runtime — pure-local state, never tracked (degit-runtime).
+agents/hermes/*/runtime/

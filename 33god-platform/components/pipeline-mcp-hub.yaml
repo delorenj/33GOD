@@ -1,17 +1,17 @@
 id: pipeline-mcp-hub
 name: Pipeline MCP Hub
 role: tool-dispatch-gateway
-repo: ../pipeline-mcp-hub
+repo: ../mcp-hub
 description: Small MCP surface that gates large domain toolsets behind discovery and dispatch.
 compose:
   files: []
   profiles: [integrations]
 health:
   commands:
-    - cd ../pipeline-mcp-hub && python -m pipeline_hub --help
+    - cd ../mcp-hub && python -m mcp_hub --help
 source_of_truth:
-  - ../pipeline-mcp-hub/pipeline_hub
-  - ../pipeline-mcp-hub/README.md
+  - ../mcp-hub/mcp_hub
+  - ../mcp-hub/README.md
 changelog:
   topics: [mcp, tools, plane, domains]
 public_card:

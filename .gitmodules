@@ -13,10 +13,15 @@
 [submodule "pjangler"]
 	path = pjangler
 	url = git@github.com:delorenj/pjangler.git
-[submodule "holyfields"]
-	path = holyfields
-	url = git@github.com:delorenj/holyfields.git
-[submodule "agents/hermes/pm/runtime"]
-	path = agents/hermes/pm/runtime
-	url = git@github.com:delorenj/agent-hm-33god-pm.git
-	ignore = all
+[submodule "hermes-agent-template"]
+	path = hermes-agent-template
+	url = git@github.com:delorenj/hermes-agent-template.git
+[submodule "mcp-hub"]
+	path = mcp-hub
+	url = git@github.com:delorenj/33god-mcp-hub.git
+[submodule "momo"]
+	path = momo
+	url = git@github.com:delorenj/momo.git
+[submodule "toad"]
+	path = toad
+	url = git@github.com:delorenj/toad.git
