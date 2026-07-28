@@ -260,7 +260,7 @@ If an automated policy forces extra work, state exactly which external rule requ
 ## Agent orchestration limits
 
 - Execute a straightforward slice directly or assign one worker.
-- Use parallel workers only for genuinely independent slices that can each merge separately.
+- Use parallel workers only for genuinely independent slices that can each merge separately. If the user interrupts or changes the objective, stop workers serving the old slice, treat late results as stale, and define the replacement slice before continuing.
 - Do not create a manager-of-managers hierarchy unless the user explicitly asks for it and at least three independent deliverables justify it.
 - Update the root task entry immediately when a worker starts and when it finishes.
 - On agent quota or provider failure, retry once or switch tools once. Then continue locally; do not build a resume chain.
