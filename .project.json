@@ -7,14 +7,21 @@
     "type": "plane",
     "workspace": "33god",
     "identifier": "PROJ",
-    "board_id": "",
-    "board_url": "",
-    "state": "planned"
+    "board_id": "f6746659-7698-4b5a-b509-9666e35fab09",
+    "state": "planned",
+    "board_url": "https://plane.delo.sh/33god/projects/f6746659-7698-4b5a-b509-9666e35fab09/issues/"
   },
   "agents": {
     "33god-pm": {
       "role": "pm",
       "role_dir": "agents/hermes/pm"
+    }
+  },
+  "automation": {
+    "reconcile": {
+      "enabled": false,
+      "grace_hours": 0,
+      "auto_review": true
     }
   }
 }

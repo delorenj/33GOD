@@ -23,6 +23,9 @@ else
 [fleet]
 hermes_bin = "~/.hermes/hermes-agent/.venv/bin/hermes"
 hermes_repo = "~/.hermes/hermes-agent"
+hermes_git_url = "https://github.com/delorenj/hermes-agent.git"
+hermes_git_ref = "feature/PJAN-19-routing-publication"
+hermes_git_sha = "113e1b182b6d72a7dd02a191f134a41668ceaf0e"
 fleet_env = "~/.hermes/fleet.env"
 registry_file = "~/.hermes/agents-registry.yaml"
 canonical_skills_dir = "/home/delorenj/.agents/skills"

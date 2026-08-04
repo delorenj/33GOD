@@ -73,25 +73,45 @@ A repo that adopts the project-scoped agent layer (see
 CommonProject):
 
 ```toml
-[hooks]
-enter = [
-  "{{config_root}}/.mise/scripts/link-agentfiles.sh",
-  "{{config_root}}/.mise/scripts/link-skills.sh",                  # ./skills/* -> .agents/skills/
-  "{{config_root}}/.mise/scripts/link-project-skills-to-clis.sh",  # .agents/skills/* -> each CLI
-  "{{config_root}}/.agents/hooks/sync.py --install --quiet",       # hooks SSOT -> claude/codex/hermes
-]
-leave = [
-  "{{config_root}}/.mise/scripts/unlink-project-skills-from-clis.sh",
-  "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet",
-]
+# NOTE: hooks are an array of [[hooks.enter]] tables (NOT enter = [ ... ]).
+[[hooks.enter]]
+script = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
+[[hooks.enter]]
+# packs[] -> .agents/skills/ (resolve + verify; transactional)
+script = "python3 '{{config_root}}/.mise/scripts/provision-packs.py'"
+[[hooks.enter]]
+# .agents/skills.json (packs[] + skills[]) -> the six supported local CLI skill dirs
+script = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project"
+[[hooks.enter]]
+script = "'{{config_root}}/.agents/hooks/sync.py' --install --quiet"   # hooks SSOT -> claude/codex/hermes
+[[hooks.leave]]
+script = "'{{config_root}}/.agents/hooks/sync.py' --uninstall --quiet"
 
+[[watch_files]]
+patterns = [".agents/skills.json"]               # re-provision + re-fan-out on manifest change
+task = "skills-sync"
 [[watch_files]]
 patterns = [".agents/hooks/hooks.master.json"]   # re-fan-out on SSOT change
 task = "hooks-sync"
 
-# tasks: hooks-sync, hooks-check (CI drift gate), hooks-uninstall,
-#        skills-relink, hindsight-setup (op-inject the shared Hindsight key into .env)
+[tasks.skills-provision-packs]
+description = "Provision every Skillex pack declared in .agents/skills.json"
+run = "python3 '{{config_root}}/.mise/scripts/provision-packs.py'"
+
+[tasks.skills-sync]
+description = "Sync skills from manifest to local CLI dirs"
+depends = ["skills-provision-packs"]             # provision ALWAYS runs before sync
+run = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project"
+
+# other tasks: hooks-sync, hooks-check (CI drift gate), hooks-uninstall,
+#              hindsight-setup (op-inject the shared Hindsight key into .env)
 ```
+
+`skills-provision-packs` replaces the retired `skills-provision-bmad` task, and
+`.mise/scripts/provision-packs.py` replaces `provision-bmad-skills.py`. `pj audit` reports either
+legacy name; `pj migrate` writes the new script and removes the old one. Pack mechanics
+(`packs[]`, `pack.toml`, `SHA256SUMS`, sealing) → **`agent-config-fanout`** →
+`references/skill-packs.md`.
 
 `enter`/`leave` hook commands must never hard-fail the shell (the engine exits 0 on internal
 error); only `hooks-check` returns nonzero, for CI. `.gitignore` must add `.agents/local.json`
@@ -102,5 +122,5 @@ error); only `hooks-check` returns nonzero, for CI. `.gitignore` must add `.agen
 - `mise trust` — trust the repo's mise config (required once per repo/clone).
 - `mise tasks` — list tasks. `mise run <task>` — run one.
 - `mise run init-project` — (CommonProject) bootstrap a new project (see project-creation.md).
-- `mise run hooks-sync` / `hooks-check` / `skills-relink` / `hindsight-setup` — (adopted layer)
-  fan out the hooks SSOT + skills; gate drift; provision the Hindsight key.
+- `mise run hooks-sync` / `hooks-check` / `skills-sync` / `hindsight-setup` — (adopted layer)
+  fan out the hooks SSOT + skills manifest; gate drift; provision the Hindsight key.

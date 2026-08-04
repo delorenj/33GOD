@@ -1,6 +1,6 @@
 # 33GOD Orchestration Tasks
 
-- [ ] Extract lifecycle truth into a separately versioned `lifecycle` authority; reconcile BMAD boundaries; integrate schema-first with Bloodbank, Momo, Holocene, Candystore, PJangler, and the Docker Compose stack; publish remotely fetchable component/root pins; pass independent AC-gated review. **CLAIMED by Team Moirai (Session: team-moirai; Branch: epic/lifecycle-component)**
+- [ ] Extract lifecycle truth into a separately versioned `lifecycle` authority,`Krebs`; reconcile BMAD boundaries; integrate schema-first with Bloodbank, Momo, Holocene, Candystore, PJangler, mcp-hub, Flume, Hermes Agent Template (Fleet, working name), CommonProject, and the Docker Compose stack; publish remotely fetchable component/root pins; pass independent AC-gated review. **CLAIMED by Team Moirai (Session: team-moirai; Branch: epic/lifecycle-component)**
   - [ ] Produce and apply the BMAD course-correction proposal: Holocene renders, Momo chooses, `lifecycle` determines truth.
   - [ ] Bootstrap and publish the standalone `lifecycle` component, preserving the tested Bloodbank controller lineage.
   - [ ] Implement deterministic state/spec/reconcile, frontier/obligations, capability and optimistic-version command gates, persistence/migrations/outbox, and Bloodbank contracts.

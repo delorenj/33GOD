@@ -30,6 +30,12 @@ in_progress (fail, retries left) | blocked (retries exhausted). done/blocked ter
 
 Knobs to load at runtime from the repo's `_bmad/custom/workflows/ticket-lifecycle/workflow.yaml`
 (do not hardcode — the operator may edit them via that workflow's edit mode):
+- **Attachments-inspected precondition** (runs BEFORE the AC rubric, gates Ready the same
+  as a rubric failure): every attachment on the ticket has been opened and reconciled
+  against the ACs — a video framed + transcribed, images/PDFs read. A recording outranks
+  the written ACs; when they conflict, rewrite the AC. Never scope from a transcribed call
+  alone while an attachment sits unopened (card #158: the attached bug-demo video was never
+  opened → the whole ticket was mis-scoped).
 - **AC rubric** (all 4, no short-circuit): `non_empty ∧ testable ∧ enumerated ∧ fr_coverage`.
 - **QA retries**: `qa.max_retries` (default 3); on retry re-verify only previously-failed AC.
 - **Staleness (minutes)**: triage 10, refining 30, in_progress 120, review 15, qa 60.

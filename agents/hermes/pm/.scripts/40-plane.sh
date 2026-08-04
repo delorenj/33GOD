@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Create a Plane project in the 33god workspace (one project per agent).
+# Create a Plane project in the configured workspace (one project per agent).
+# Workspace + base URL come from role.yaml / config.toml (see _lib.sh).
 # shellcheck source=_lib.sh
 source "$(dirname "$0")/_lib.sh"
 load_role_env

@@ -44,6 +44,7 @@ component_files:
   - components/skillex.yaml
   - components/hindsight.yaml
   - components/pipeline-mcp-hub.yaml
+  - components/krebs.yaml
   - components/candybar.yaml
   - components/heyma.yaml
 

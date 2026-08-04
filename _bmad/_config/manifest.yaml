@@ -1,0 +1,13 @@
+installation:
+  version: 6.10.1-next.41
+  installDate: 2026-07-28T20:42:11.653Z
+  lastUpdated: 2026-08-02T05:23:25.110Z
+modules:
+  - name: core
+    version: 6.10.1-next.41
+    installDate: 2026-07-28T20:42:11.653Z
+    lastUpdated: 2026-08-02T05:23:25.110Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+ides: []

@@ -1,0 +1,23 @@
+id: krebs
+name: Krebs
+role: ticket-lifecycle-engine
+repo: ../krebs
+description: Canonical ticket-lifecycle state machine, ticket-provider abstraction, webhook normalization, and fan-out for all task platforms.
+compose:
+  files: []
+  profiles: [integrations]
+health:
+  commands:
+    - cd ../krebs && python -m json.tool spec/lifecycle.schema.json >/dev/null
+source_of_truth:
+  - ../krebs/spec/lifecycle.v1.yaml
+  - ../krebs/spec/lifecycle.schema.json
+  - ../krebs/spec/event-schemas.md
+  - ../krebs/adapters/tp
+  - ../krebs/webhooks
+changelog:
+  topics: [lifecycle, tickets, plane, linear, trello, webhooks, events]
+public_card:
+  title: Ticket Lifecycle Engine
+  promise: One lifecycle state machine and normalized event stream across Plane, Linear, Trello, and future trackers.
+backfills: []

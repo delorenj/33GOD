@@ -13,8 +13,13 @@
 [fleet]
 # Absolute path to the shared Hermes executable every agent launcher execs.
 hermes_bin = "~/.hermes/hermes-agent/.venv/bin/hermes"
-# Checkout of the hermes-agent repo. Its .venv is used to install nats-py, etc.
+# Checkout of the shared hermes-agent repo.
 hermes_repo = "~/.hermes/hermes-agent"
+# Reviewed fleet runtime publication. Provisioning metadata and clean installs
+# must agree on this fork/ref/SHA; do not substitute upstream main.
+hermes_git_url = "https://github.com/delorenj/hermes-agent.git"
+hermes_git_ref = "feature/PJAN-19-routing-publication"
+hermes_git_sha = "113e1b182b6d72a7dd02a191f134a41668ceaf0e"
 # Fallback runtime scaffold dir — used only when an agent's vendored
 # ./.runtime-scaffold is missing.
 runtime_scaffold_dir = "~/code/hermes-agent-template/runtime-scaffold"
@@ -45,17 +50,12 @@ symlinked_runtime_skills = [
 ]
 
 [github]
-# Owner of the per-agent runtime repos (creates <owner>/agent-hm-<repo>-<role>).
-runtime_repo_owner = "delorenj"
+# LEGACY INERT COMPATIBILITY METADATA ONLY. Older role manifests may still
+# carry this owner field. Current provisioning does not create, attach,
+# synchronize, restore, archive, or remove runtime storage from this value.
+runtime_repo_owner = ""
 
 [plane]
 # Plane instance base URL and workspace slug (one project per agent).
 base = "https://plane.delo.sh"
 workspace = "33god"
-
-[bloodbank]
-# NATS endpoint the consumer connects to.
-nats_host = "127.0.0.1"
-nats_port = 4222
-# Where the bloodbank docker compose lives (used only for a hint message). ~ ok.
-compose_dir = "~/code/33GOD/bloodbank"

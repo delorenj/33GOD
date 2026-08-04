@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launcher for 33god-pm. Resolves HERMES_HOME to the runtime submodule.
+# Launcher for 33god-pm. Resolves HERMES_HOME to the local runtime.
 
 set -euo pipefail
 
@@ -12,18 +12,32 @@ if [[ -f "$FLEET_ENV" ]]; then
   source "$FLEET_ENV"
 fi
 
-HERMES_BIN="${HERMES_BIN:-${HERMES_FLEET_BIN:-/home/delorenj/code/hermes-agent/.venv/bin/hermes}}"
-HERMES_OAUTH_FILE="${HERMES_OAUTH_FILE:-${HERMES_FLEET_OAUTH_FILE:-$HOME/.hermes/auth.json}}"
+HERMES_BIN="${HERMES_BIN:-${HERMES_FLEET_BIN:-$HOME/.hermes/hermes-agent/.venv/bin/hermes}}"
 CODEX_HOME="${CODEX_HOME:-${HERMES_FLEET_CODEX_HOME:-$HOME/.codex}}"
 
 FLEET_HOME="${HERMES_FLEET_HOME:-$HOME/.hermes}"
 PROFILE_NAME="${HERMES_PROFILE_NAME:-33god-pm}"
-HERMES_HOME="$RUNTIME_HOME"
+
+# Singleton-runtime contract: HERMES_HOME MUST be the named profile dir, never
+# the raw runtime path. Hermes treats any HERMES_HOME that is neither under
+# ~/.hermes nor a child of a "profiles" dir as its own standalone root, which
+# makes get_active_profile_name() report "default" and _global_auth_file_path()
+# return None -- silently disabling shared fleet auth and giving every agent a
+# divergent config.yaml. The profile dir is a REAL dir whose shared entries
+# (config.yaml, .env, skills) symlink to the fleet root and whose person-owned
+# entries (memories, sessions, state.db, workspace) symlink into $RUNTIME_HOME.
+HERMES_HOME="$FLEET_HOME/profiles/$PROFILE_NAME"
 
 if [[ ! -d "$RUNTIME_HOME" ]]; then
-  echo "hermes: runtime submodule not initialized at $RUNTIME_HOME" >&2
-  echo "  fix: git submodule update --init --recursive" >&2
+  echo "hermes: local runtime not provisioned at $RUNTIME_HOME" >&2
+  echo "  fix: run the role's .scripts/20-runtime-repo.sh" >&2
   exit 1
 fi
 
-exec env HERMES_HOME="$HERMES_HOME" HERMES_FLEET_ENV="$FLEET_ENV"   HERMES_OAUTH_FILE="$HERMES_OAUTH_FILE" CODEX_HOME="$CODEX_HOME"   "$HERMES_BIN" "$@"
+if [[ ! -d "$HERMES_HOME" ]]; then
+  echo "hermes: profile not provisioned at $HERMES_HOME" >&2
+  echo "  fix: pj migrate hermes.runtime-singleton" >&2
+  exit 1
+fi
+
+exec env HERMES_HOME="$HERMES_HOME" HERMES_FLEET_ENV="$FLEET_ENV"   CODEX_HOME="$CODEX_HOME"   "$HERMES_BIN" "$@"

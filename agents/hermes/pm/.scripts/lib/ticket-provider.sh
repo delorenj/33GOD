@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Ticket-provider adapter dispatcher — the single seam between the heartbeat
-# sentinel engine and a concrete ticket system (Plane | Trello).
+# sentinel engine and a concrete ticket system (Linear | Plane | Trello).
 #
 # The engine NEVER calls a provider directly. It calls `tp <op> [args...]`,
 # which dispatches to providers/<provider>.sh. Swapping providers is a one-line
@@ -64,7 +64,7 @@ PY
 )"
     [ -n "$name" ] && { printf '%s\n' "$name"; return 0; }
   fi
-  printf 'plane\n'
+  printf 'linear\n'
 }
 
 # Directory holding provider implementations (sibling of this lib).
@@ -81,10 +81,6 @@ tp() {
 
   local name impl
   name="$(tp_provider_name)"
-  case "$name" in
-    plane|trello) ;;
-    *) echo "tp: unsupported ticket provider '$name' (expected plane|trello)" >&2; return 2 ;;
-  esac
   impl="$(tp_providers_dir)/${name}.sh"
 
   if [ ! -f "$impl" ]; then

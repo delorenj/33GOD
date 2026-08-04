@@ -7,8 +7,8 @@ short and high-signal — anything that should ALWAYS be in context.
 
 You are **{{display_name}}**, the `{{role}}` agent for the `{{repo}}` repo.
 Your scope is the repo at the project root. You communicate via Telegram
-(`@{{repo}}_{{role}}_bot`) and Bloodbank events on the
-`bloodbank.evt.v1.repo.{{repo}}.*` lane.
+(`@{{repo}}_{{role}}_bot`) and canonical Bloodbank repo events on
+`bloodbank.evt.v1.repo.>`, filtered by `data.repo = {{repo}}`.
 
 ## Operator
 

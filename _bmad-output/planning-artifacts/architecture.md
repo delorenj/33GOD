@@ -65,10 +65,10 @@ inputDocuments:
   - /home/delorenj/code/skillex/README.md
   - /home/delorenj/code/skillex/pyproject.toml
   - /home/delorenj/code/skillex/_skf-learn/architecture.md
-workflowType: 'architecture'
-project_name: '33GOD'
-user_name: 'Jarad'
-date: '2026-07-15T20:33:09-04:00'
+workflowType: "architecture"
+project_name: "33GOD"
+user_name: "Jarad"
+date: "2026-07-15T20:33:09-04:00"
 ---
 
 # Architecture Decision Document
@@ -99,21 +99,14 @@ The current root PRD defines twelve functional requirement groups:
 The architecture must extend this four-component baseline to cover the following
 additional product boundaries:
 
-- **Momo:** PM/EM orchestration agent, heartbeat-driven decision system, ticket
-  abstraction, delegation workflows, and Hindsight-backed project memory.
-- **Toad:** on-demand Project Custodian agent that composes PJangler operations;
-  it is not itself a runtime service or competing MCP implementation.
-- **Hermes Template/Fleet:** versioned agent-generation contract, runtime
-  configuration contract, fleet reconciliation, and host survival services.
-- **CommonProject:** independently versioned project-scaffold contract consumed
-  by PJangler; it generates projects rather than running as a platform daemon.
-- **Voxxy:** independently deployable voice service with CPU core, optional GPU
-  engines, HTTP/MCP contracts, PostgreSQL dependency, and persistent media.
-- **PJangler:** project/fleet provisioning control plane exposed through CLI and
-  stdio MCP; it requires reproducible packaging but not an always-running HTTP
-  service.
-- **Skillex:** a possible external capability-distribution dependency. Its
-  inclusion in the runtime stack is not yet justified.
+- **Momo:** PM/EM orchestration agent, heartbeat-driven decision system, ticket abstraction, delegation workflows, and Hindsight-backed project memory.
+- **Toad:** on-demand Project Custodian agent that composes PJangler operations; it is not itself a runtime service or competing MCP implementation.
+- **Hermes Template/Fleet:** versioned agent-generation contract, runtime configuration contract, fleet reconciliation, and host survival services.
+- **CommonProject:** independently versioned project-scaffold contract consumed by PJangler; it generates projects rather than running as a platform daemon.
+- **Voxxy:** independently deployable voice service with CPU core, optional GPU engines, HTTP/MCP contracts, PostgreSQL dependency, and persistent media.
+- **PJangler:** project/fleet provisioning control plane exposed through CLI and stdio MCP; it requires reproducible packaging but not an always-running HTTP service.
+- **Skillex:** a skill registry and distribution service. Reliable framework that provides a single source of truth for skills distributed across the 33GOD stack.
+- **Krebs**: Encapsulates the 33GOD stack's development lifecycle by providing a contract between ticket-provider and fleet-orhestrators (Hermes PMs)
 
 The requested progression introduces a new functional requirement: every stage
 of unification must declare an AC-gated feature inventory. A stage is complete

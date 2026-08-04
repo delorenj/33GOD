@@ -1,0 +1,128 @@
+spec_version: 1.0.0
+schema: ./lifecycle.schema.json
+description: >-
+  Canonical ticket-lifecycle state machine for all pjangler CommonProject repos.
+  Provider LABELS are NOT here — they live in the tp adapter's normalized-state
+  map. This file speaks only phases and the five tp bands.
+
+states:
+  - phase: backlog
+    tp_band: backlog
+    terminal: false
+    description: Operator's queue; a stop signal, not a work lane.
+
+  - phase: triage
+    tp_band: unstarted
+    terminal: false
+    staleness_minutes: 10
+    description: Evaluate acceptance criteria against the 4-criterion rubric.
+
+  - phase: refining
+    tp_band: unstarted
+    terminal: false
+    staleness_minutes: 30
+    description: AC repair; re-evaluate when done.
+
+  - phase: ready
+    tp_band: unstarted
+    terminal: false
+    description: AC is sufficient; eligible to pull under WIP=1.
+
+  - phase: in_progress
+    tp_band: started
+    terminal: false
+    staleness_minutes: 120
+    description: Exactly one implementer worker active (WIP=1).
+
+  - phase: review
+    tp_band: in_review
+    terminal: false
+    staleness_minutes: 15
+    description: Spec-compliance and quality gates; reviewer != implementer.
+
+  - phase: qa
+    tp_band: in_review
+    terminal: false
+    staleness_minutes: 60
+    description: Adversarial review + close gate; retryable.
+
+  - phase: done
+    tp_band: completed
+    terminal: true
+    description: All acceptance criteria pass.
+
+  - phase: blocked
+    terminal: true
+    description: Loop-terminal; requires operator action to reopen.
+
+transitions:
+  - from: backlog
+    to: triage
+    guard: acquired
+
+  - from: triage
+    to: ready
+    guard: ac_rubric_pass
+
+  - from: triage
+    to: refining
+    guard: ac_rubric_fail
+
+  - from: refining
+    to: ready
+    guard: ac_rubric_pass
+
+  - from: refining
+    to: blocked
+    guard: ac_still_insufficient
+
+  - from: ready
+    to: in_progress
+    guard: wip_slot_free
+
+  - from: in_progress
+    to: review
+    guard: worker_done
+    precondition: set_board_review
+
+  - from: in_progress
+    to: blocked
+    guard: ac_ambiguity
+
+  - from: review
+    to: qa
+    guard: gates_pass
+
+  - from: review
+    to: in_progress
+    guard: gate_fail
+
+  - from: qa
+    to: done
+    guard: all_ac_pass
+
+  - from: qa
+    to: in_progress
+    guard: qa_fail_retries_left
+
+  - from: qa
+    to: blocked
+    guard: qa_retries_exhausted
+
+guards:
+  ac_rubric:
+    require_non_empty: true
+    require_testable_assertions: true
+    require_enumerated_items: true
+    require_fr_coverage: true
+    short_circuit: false
+  qa:
+    max_retries: 3
+    reverify_failed_only: true
+  reviewer_independence: true
+  wip: 1
+
+events:
+  topic_prefix: ticket
+  include_project_id: true
+  include_ticket_id: true

@@ -101,28 +101,27 @@ Caveat to document: `leave` fires per-shell, so multi-shell users can race the
 codex uninstall — acceptable for a solo/small team; the absolute-path marker keeps
 re-install trivially idempotent.
 
-### 3. Sibling layer — skill fan-out with global-deference
+### 3. Sibling layer — manifest-driven skill fan-out
 
-The same repo also fans **skills** out (not just hook configs), reusing the exact
-`local.json` + mise-enter machinery. SSOT is `.agents/skills/` (the project's
-enabled set: committed inherited skills + on-enter `./skills/*` app-skill links).
-A table-driven linker symlinks each skill into every CLI that doesn't read
-`.agents/` natively, with a per-target **scope**:
+The same repo also fans **skills** out (not just hook configs), using a manifest file
+(`.agents/skills.json`) instead of `local.json` + `mise-enter` symlink machinery. The SSOT is
+the project's manifest — `packs[]` (whole skill packs) plus `skills[]` (individual skills) — and
+the engine is `provision-packs.py` followed by `sync-skills.py --scope project`, always in that
+order (`skills-sync` `depends = ["skills-provision-packs"]`).
 
-- **global** dir (e.g. `~/.codex/skills`, shared across projects): link ours in,
-  never clobber foreign entries, remove ours on leave.
-- **local** dir (e.g. `./.kimi-code/skills`, a project-scoped mirror): fully
-  managed — replace stale real copies/foreign links with symlinks, prune disabled.
+- **local dir only**: the engine resolves skills to the six supported project-scoped CLI dirs
+  (`.claude`, `.codex`, `.gemini`, `.copilot`, `.opencode`, `.kimi-code` — each `/skills`). It
+  NEVER touches global CLI directories, maintaining strict project isolation. `.augment`,
+  `.hermes`, `.openclaw`, `.kimi`, `.crush`, and `.cursor` skill dirs are **retired**: never
+  written to, never auto-deleted (`--prune-retired` opts in to removing managed symlinks only).
 
-The reusable idea here is **`defer_to_global`**: when one dev runs a *machine-global*
-skill system (`~/.agents/skills`) and a teammate doesn't, the project must provide
-the full set to the teammate **without** duplicating-into / colliding-with the
-global dev's per-CLI dirs. Solution — a per-dev `local.json` flag that, when set,
-makes the linker **skip (and yield the slot for) any skill whose name also exists
-in the global SSOT**. Auto-detected (membership test against `~/.agents/skills`),
-so it needs no hand-maintained list; the teammate omits the flag and inherits
-everything. This is the general answer to "share a curated set with someone whose
-environment is a strict superset of the shared set."
+The reusable idea here is **`inherit_global: true`**: when one dev runs a *machine-global*
+skill system (`~/.agents/skills.json`) and a teammate doesn't, the project manifest provides
+the option to inherit the global loadout seamlessly. If the dev has a global manifest, those
+skills are resolved from their local cache alongside the project-specific ones. This removes
+the need for `defer_to_global` flags or complicated bash deduplication scripts. Local project
+skills with the same name automatically shadow/override the global ones, safely mixing global 
+context with project-scoped requirements.
 
 ## Adding a new agent CLI to this variant
 

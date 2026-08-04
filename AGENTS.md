@@ -1,69 +1,29 @@
-# 33GOD — Monorepo Knowledge Base
+# 33GOD
 
-**Generated:** 2026-07-11
+**An Event-Driven, Agentic Development Pipeline**
 
-## OVERVIEW
+33GOD is a sophisticated platform for orchestrating software development, knowledge management, and automated workflows through multi-agent teams. Built on an event-driven architecture, it enables AI agents and microservices to collaborate asynchronously across multiple projects simultaneously.
 
-Event-driven agentic development pipeline. Multi-agent teams coordinate asynchronously via Bloodbank (NATS/dapr). Candystore persists everything; Holocene as control plane and dashboard.
+> _Everything is an event._ All significant state changes—Git commits, PRs, transcripts, agent decisions, meetings—are emitted as events, allowing autonomous agents to coordinate seamlessly.
+
+> **Product control plane:** the current productized-platform map lives in
+> [`33god-platform/`](33god-platform/). Use its component manifests,
+> pipeline changelog, and backfill checks before relying on older prose in this
+> README.
+
+---
 
 ## Components
 
-```
-./
-├── bloodbank/      # NATs Event bus / dapr
-├── candystore/     # Event persistence + audit trail
-├── holocene/       # Control plane
-├── pjangler/       # Project registry, management, and bootstrapping
-├── flume/          # Agent hierarchy, role assignment, and company org chart
-├── hermes-fleet/   # System-wide registry of project-scoped PM agents
-├── plane/          # Open Source ticketing platform and kanban task management
-├── n8n/            # Open Source node-based automation platform
-├── hindsight/      # Memory framework for agents
-├── voxxy/          # Multi-engine TTS service
-├── skillex/        # Custom skill framework for agents
-├── momo/           # Agentic Ticketing Workflow and Project Lifecycle System
-├── bmad/           # Open Source project planning and documentation framework.
-```
+### Infrastructure & Core
 
-## Current Working Document
-
-Use ./PRD.md to track state right now, until we initialize BMAD
-
-<!-- code-review-graph MCP tools -->
-## MCP Tools: code-review-graph
-
-**IMPORTANT: This project has a knowledge graph. ALWAYS use the
-code-review-graph MCP tools BEFORE using Grep/Glob/Read to explore
-the codebase.** The graph is faster, cheaper (fewer tokens), and gives
-you structural context (callers, dependents, test coverage) that file
-scanning cannot.
-
-### When to use graph tools FIRST
-
-- **Exploring code**: `semantic_search_nodes_tool` or `query_graph_tool` instead of Grep
-- **Understanding impact**: `get_impact_radius_tool` instead of manually tracing imports
-- **Code review**: `detect_changes_tool` + `get_review_context_tool` instead of reading entire files
-- **Finding relationships**: `query_graph_tool` with callers_of/callees_of/imports_of/tests_for
-- **Architecture questions**: `get_architecture_overview_tool` + `list_communities_tool`
-
-Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
-
-### Key Tools
-
-| Tool | Use when |
-| ------ | ---------- |
-| `detect_changes_tool` | Reviewing code changes — gives risk-scored analysis |
-| `get_review_context_tool` | Need source snippets for review — token-efficient |
-| `get_impact_radius_tool` | Understanding blast radius of a change |
-| `get_affected_flows_tool` | Finding which execution paths are impacted |
-| `query_graph_tool` | Tracing callers, callees, imports, tests, dependencies |
-| `semantic_search_nodes_tool` | Finding functions/classes by name or keyword |
-| `get_architecture_overview_tool` | Understanding high-level codebase structure |
-| `refactor_tool` | Planning renames, finding dead code |
-
-### Workflow
-
-1. The graph auto-updates on file changes (via hooks).
-2. Use `detect_changes_tool` for code review.
-3. Use `get_affected_flows_tool` to understand impact.
-4. Use `query_graph_tool` pattern="tests_for" to check coverage.
+| Component                     | Description                                                                                                                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[Bloodbank](bloodbank/)**   | Central event bus providing RabbitMQ-based messaging infrastructure. All services communicate through Bloodbank events with topic exchanges, schema validation, and correlation tracking.           |
+| **[Holyfields](holyfields/)** | Schema registry and microservice contract system. Maintains canonical event definitions using JSON Schema as source of truth, generating type-safe code for Python (Pydantic) and TypeScript (Zod). |
+| **[Candystore](services/)**   | Event Store Manager that persists all events to PostgreSQL for audit and replay.                                                                                                                    |
+| **[Perth](perth/)**           | Customized Zellij terminal multiplexer distribution optimized for the 33GOD workflow.                                                                                                               |
+| **[Holocene](holocene/)**     | The Hive Mind. Central repository housing agent definitions in `.claude/agents`, collective intelligence, and mission control dashboard for portfolio visibility.                                   |
+| **[Candybar](candybar/)**     | Service registry hub and topology visualization dashboard. Built with Next.js + Tauri, displays real-time service health, event flows, and system architecture.                                     |
+| **[HeyMa](HeyMa/)**           | Voice interface system integrating WhisperLiveKit for transcription and ElevenLabs for text-to-speech. Includes Chrome extension support.                                                           |
+| **[BMAD](bmad/)**             | Business, Management, Architecture, Development methodology configuration. Contains orchestrator configs and agent overrides to enforce consistent process across the ecosystem.                    |

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Auto-checkpoint commit for the agent's runtime submodule.
+# Legacy checkpoint compatibility for installations whose runtime is still a
+# nested Git repository. Pure-local runtimes intentionally skip this script.
 # Idempotent — exits 0 with no commit if there are no changes.
 #
 # Secret-scan gate (PJAN): before committing, the staged diff is scanned for
@@ -11,7 +12,7 @@ set -euo pipefail
 RUNTIME_DIR="$(cd "$(dirname "$0")/../runtime" && pwd)"
 cd "$RUNTIME_DIR"
 
-# Skip if not a git repo (e.g. submodule not initialized)
+# Skip when the pure-local runtime has no Git metadata.
 [[ -d .git || -f .git ]] || exit 0
 
 # Returns 0 when the staged diff looks clean, 1 when a likely secret is present.

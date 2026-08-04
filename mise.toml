@@ -3,19 +3,6 @@
 [env]
 _.path = [".mise/scripts", "agents/hermes/pm", "agents/hermes/pm/hermes"]
 _.file = [".env"]
-# TODO: Ensure this works for all levels of nesting.
-# i.e. All linked agent files MUST be siblings at
-# any given level of nesting.
-[hooks]
-enter = [
-  "{{config_root}}/.mise/scripts/link-agentfiles.sh",
-  "op inject -i .env.op > .env",
-  "codegraph sync",
-  "{{config_root}}/.agents/hooks/sync.py --install --quiet",
-]
-leave = [
-  "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet",
-]
 
 [tasks."platform:validate"]
 description = "Validate the 33GOD product control-plane manifests and changelog"
@@ -58,16 +45,8 @@ description = "Read-only parity check for four-part BMAD docs and live contracts
 run = "python3 scripts/check-doc-drift.py --source-root \"${GOD_SOURCE_ROOT:-.}\" --docs-root ."
 
 [[watch_files]]
-patterns = ["AGENTS.md"]
-task = "link-agentfiles"
-
-[[watch_files]]
 patterns = [".agents/hooks/hooks.master.json"]
 task = "hooks-sync"
-
-[tasks.link-agentfiles]
-description = "Symlink all agent files to AGENTS.md"
-run = "{{config_root}}/.mise/scripts/link-agentfiles.sh"
 
 [tasks.hooks-sync]
 description = "Fan the project hook master out to supported agent clients"
@@ -81,29 +60,64 @@ run = "{{config_root}}/.agents/hooks/sync.py --check --target claude"
 description = "Remove per-user 33GOD hook injections"
 run = "{{config_root}}/.agents/hooks/sync.py --uninstall"
 
+# This block will handle the linking of
+# agent files to the main AGENTS.md file.
+#
+# TODO: Ensure this works for all levels of nesting.
+# i.e. All linked agent files MUST be siblings at
+# any given level of nesting.
+[[hooks.enter]]
+script = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
+[[hooks.enter]]
+script = "op inject -i .env.op > .env"
+[[hooks.enter]]
+script = "sync-skills.py --scope project"
+[[hooks.enter]]
+script = "codegraph sync"
+[[hooks.enter]]
+script = "{{config_root}}/.agents/hooks/sync.py --install --quiet"
+[[hooks.leave]]
+script = "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet"
+
+[[watch_files]]
+patterns = ["AGENTS.md"]
+task = "link-agentfiles"
+
+[[watch_files]]
+patterns = [".agents/skills.json"]
+task = "skills-sync"
+
+[tasks.link-agentfiles]
+description = "Symlink all agent files to AGENTS.md"
+run = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
+
+[tasks.skills-sync]
+description = "Sync skills from manifest to local CLI dirs"
+run = "sync-skills.py --scope project"
+
 # >>> mise-versioning >>>  (managed block — do not edit by hand; re-run init to update)
 [tasks."version"]
 description = "Print the current version (vX.Y.Z)"
-run = "{{config_root}}/.mise/scripts/versioning.sh current"
+run = "'{{config_root}}/.mise/scripts/versioning.sh' current"
 
 [tasks."version:bump"]
 description = "Bump patch version: vX.Y.Z -> vX.Y.(Z+1)"
 alias = "version:bump-patch"
-run = "{{config_root}}/.mise/scripts/versioning.sh bump patch"
+run = "'{{config_root}}/.mise/scripts/versioning.sh' bump patch"
 
 [tasks."version:bump-minor"]
 description = "Bump minor version: vX.Y.Z -> vX.(Y+1).0"
-run = "{{config_root}}/.mise/scripts/versioning.sh bump minor"
+run = "'{{config_root}}/.mise/scripts/versioning.sh' bump minor"
 
 [tasks."version:bump-major"]
 description = "Bump major version: vX.Y.Z -> v(X+1).0.0"
-run = "{{config_root}}/.mise/scripts/versioning.sh bump major"
+run = "'{{config_root}}/.mise/scripts/versioning.sh' bump major"
 
 [tasks."version:check"]
 description = "Verify every versioned file is in parity"
-run = "{{config_root}}/.mise/scripts/versioning.sh check"
+run = "'{{config_root}}/.mise/scripts/versioning.sh' check"
 
 [tasks."version:sync"]
 description = "Force every versioned file up to the highest version"
-run = "{{config_root}}/.mise/scripts/versioning.sh sync"
+run = "'{{config_root}}/.mise/scripts/versioning.sh' sync"
 # <<< mise-versioning <<<

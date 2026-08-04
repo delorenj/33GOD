@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://33god.dev/schemas/krebs/lifecycle.v1",
+  "title": "Krebs Lifecycle Spec v1",
+  "description": "JSON Schema for the canonical ticket-lifecycle state machine.",
+  "type": "object",
+  "required": ["spec_version", "states", "transitions", "guards", "events"],
+  "properties": {
+    "spec_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["phase", "terminal"],
+        "properties": {
+          "phase": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "tp_band": {
+            "type": "string",
+            "enum": ["backlog", "unstarted", "started", "in_review", "completed"]
+          },
+          "terminal": {
+            "type": "boolean"
+          },
+          "staleness_minutes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "guard"],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "guard": {
+            "type": "string"
+          },
+          "precondition": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "guards": {
+      "type": "object",
+      "required": ["ac_rubric", "qa", "reviewer_independence", "wip"],
+      "properties": {
+        "ac_rubric": {
+          "type": "object",
+          "required": ["require_non_empty", "require_testable_assertions", "require_enumerated_items", "require_fr_coverage", "short_circuit"],
+          "properties": {
+            "require_non_empty": { "type": "boolean" },
+            "require_testable_assertions": { "type": "boolean" },
+            "require_enumerated_items": { "type": "boolean" },
+            "require_fr_coverage": { "type": "boolean" },
+            "short_circuit": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "qa": {
+          "type": "object",
+          "required": ["max_retries", "reverify_failed_only"],
+          "properties": {
+            "max_retries": { "type": "integer", "minimum": 0 },
+            "reverify_failed_only": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "reviewer_independence": {
+          "type": "boolean"
+        },
+        "wip": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "object",
+      "required": ["topic_prefix", "include_project_id", "include_ticket_id"],
+      "properties": {
+        "topic_prefix": { "type": "string" },
+        "include_project_id": { "type": "boolean" },
+        "include_ticket_id": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
