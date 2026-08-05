@@ -1,23 +1,23 @@
 ---
 name: 33god-projects
 description: |
-  Create, wire, and maintain 33god/DeLoNET projects. Covers pjangler/CommonProject bootstrap, repo-local `.project.json`, Hermes PM and scrum-master/Ticket Sentinel provisioning requests, mise/.env.op, BMAD, Hindsight/Bloodbank hook wiring, and project-scoped hook + skill fan-out adoption. Use when running `pjangler init`, `pjangler hermes-agent`, or `mise run init-project`; adding PM/sentinel agents; wiring mise/op inject; installing BMAD; configuring hooks; or adopting `.agents/local.json`, `defer_to_global`, and `hooks.master.json`. Do NOT use for developing pjangler (project-jangler), generic fan-out mechanics (agent-config-fanout), fleet updates/backfills (agent-fleet-operations), live Plane issues, Bloodbank schemas, or host conventions.
+  Create, wire, and maintain 33god/DeLoNET projects. Covers pjangler/CommonProject bootstrap, repo-local `.project.json`, Hermes PM provisioning requests (sentinel duties fold into the PM heartbeat), mise/.env.op, BMAD, Hindsight/Bloodbank hook wiring, and project-scoped hook + skill fan-out adoption. Use when running `pjangler init`, `pjangler hermes-agent`, or `mise run init-project`; adding PM/sentinel agents; wiring mise/op inject; installing BMAD; configuring hooks; or adopting `.agents/local.json`, `defer_to_global`, and `hooks.master.json`. Do NOT use for developing pjangler (project-jangler), generic fan-out mechanics (agent-config-fanout), fleet updates/backfills (agent-fleet-operations), live Plane issues, Bloodbank schemas, or host conventions.
 pipeline-status: new
 ---
 
 # 33god Project Creation & Wiring
 
-Every 33god/DeLoNET repo is assembled by **pjangler** out of two copier templates it vendors as submodules under `~/code/pjangler/templates/`:
+Every 33god/DeLoNET repo is assembled by **pjangler** out of two copier templates it vendors as submodules under `~/code/33GOD/pjangler/templates/`:
 
 - **CommonProject** (`templates/commonproject`) — the base skeleton: `.project.json`, `mise.toml`, `.mise/scripts/`, BMAD, the ticket board.
-- **hermes-agent-template** (`templates/hermes-agent`) — Hermes agent roles (PM, scrum-master/Ticket Sentinel, dev, …) provisioned into `agents/hermes/<role>/`.
+- **hermes-agent-template** (`templates/hermes-agent`) — the Hermes **PM** role provisioned into `agents/hermes/pm/` (unified single-PM model — the retired scrum-master's sentinel duties run on the PM heartbeat).
 
 `.project.json` at the repo root is the **single source of truth** for project + board identity. There is **one ticket board per repo**; every agent binds to it.
 
 ## Operating Principles
 
 - **`.project.json` is canonical.** Board binding (`ticket_provider` block), `repo_path`, `project_slug`, and the `agents` map live there. Never reintroduce a separate `.plane.json`.
-- **One board per repo.** The PM owns it; the Scrum Master sentinel watches the same board. Board name = the project name (no role suffix); identifier = `slug[:4]` uppercased.
+- **One board per repo.** The PM owns it; the sentinel pass on the PM's heartbeat watches the same board. Board name = the project name (no role suffix); identifier = `slug[:4]` uppercased.
 - **Agent config is inherited by default for new fleet agents.** pjangler creates `~/.hermes/profiles/<repo>-<role>` as a named profile that points at the role's `agents/hermes/<role>/runtime/` repo and opts `config.yaml` into inheriting from the fleet default profile. Local agent `config.yaml` files contain only overrides.
 - **mise is mandatory and uniform.** Every repo gets the same `mise.toml` contract.
 - **Agents are memory- and event-wired by default.** Hindsight recall/retain + Bloodbank emit/consume are part of provisioning. Machine-global Hindsight scripts live in one folder (`~/.agents/hooks/hindsight`), and machine-global Bloodbank lifecycle hooks invoke one publisher (`~/.agents/hooks/bloodbank/publish.py --client <agent> --hook <event>`).
@@ -42,8 +42,8 @@ Every 33god/DeLoNET repo is assembled by **pjangler** out of two copier template
 
 ```
 1. CommonProject  →  mise run init-project        # repo skeleton + Plane board + .project.json + BMAD
-2. pjangler hermes-agent (role: pm, +companion)   # PM agent, inherited profile, repo board
-   └─ companion provisions the scrum-master (Ticket Sentinel) on the SAME board
+2. pjangler hermes-agent (role: pm)               # PM agent, inherited profile, repo board
+   └─ sentinel duties ride the PM heartbeat timer (no separate scrum-master)
 3. mise trust && direnv-style `enter`             # links AGENTS.md, op-injects .env.op → .env
 ```
 

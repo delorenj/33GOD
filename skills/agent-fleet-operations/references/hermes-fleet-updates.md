@@ -5,8 +5,14 @@ pipeline-status:
 # Hermes Fleet Updates
 
 Use this workflow when updating Hermes itself, changing shared non-secret
-defaults, or changing how future PM/scrum-master agents are provisioned. First
+defaults, or changing how future PM agents are provisioned. First
 classify the update, then touch the narrowest source of truth.
+
+> **Service model (canonical, 2026-08):** per agent, ONLY a chat gateway
+> service and a heartbeat timer exist. Bloodbank command ingress is the single
+> fleet-shared `hermes-fleet-bloodbank-gateway.service`. Per-agent consumer
+> units and checkpoint timers are retired — treat any sighting as drift and
+> converge it with `pj migrate hermes.registry-parity`.
 
 ## Classify the update
 
@@ -17,7 +23,7 @@ Pick one lane before editing files or restarting services:
   as `model.default`, provider, display, terminal, or tool settings.
 - **Template/provisioning update:** future-agent behavior in
   `hermes-agent-template` or pjangler's vendored template submodule.
-- **Runtime contract migration:** existing PM/scrum-master agents need a
+- **Runtime contract migration:** existing PM agents need a
   one-time backfill because the runtime/profile contract changed.
 
 Do not use a template update when a core checkout update or one shared config
@@ -74,9 +80,8 @@ Restart long-running user services after the code update:
 
 ```bash
 systemctl --user daemon-reload
-systemctl --user try-restart 'hermes-*-gateway.service' 'hermes-*-consumer.service'
-systemctl --user try-restart 'hermes-gateway*.service'
-systemctl --user try-restart 'hermes-*-continuous-ticket-sentinel.timer'
+systemctl --user try-restart 'hermes-*-gateway.service'
+systemctl --user try-restart 'hermes-fleet-bloodbank-gateway.service'
 ```
 
 Interactive `hermes` commands pick up the new code on their next launch.
@@ -89,7 +94,7 @@ For shared non-secret settings, edit only the fleet default profile:
 HERMES_HOME="$HOME/.hermes" hermes config set model.default gpt-5.4
 ```
 
-Inherited PM and scrum-master profiles pick this up automatically through
+Inherited PM profiles pick this up automatically through
 `runtime/profile.yaml`:
 
 ```yaml
@@ -105,18 +110,18 @@ such as `terminal.cwd`.
 ## Update future-agent provisioning
 
 pjangler runs the vendored template submodule at
-`~/code/pjangler/templates/hermes-agent` unless `PJANGLER_HERMES_TEMPLATE`
+`~/code/33GOD/pjangler/templates/hermes-agent` unless `PJANGLER_HERMES_TEMPLATE`
 points at a development checkout.
 
 For durable future-agent changes:
 
-1. Patch the template source of truth, usually
-   `~/code/hermes-agent-template`.
-2. Test with `PJANGLER_HERMES_TEMPLATE=~/code/hermes-agent-template` or a safe
+1. Patch the template source of truth,
+   `~/code/33GOD/hermes-agent-template`.
+2. Test with `PJANGLER_HERMES_TEMPLATE=~/code/33GOD/hermes-agent-template` or a safe
    `copier copy -T --trust ... /tmp/...` render.
 3. Push the template repo.
 4. Bump pjangler's vendored submodule pointer:
-   `git -C ~/code/pjangler submodule update --remote templates/hermes-agent`.
+   `git -C ~/code/33GOD/pjangler submodule update --remote templates/hermes-agent`.
 5. Commit the pjangler submodule pointer.
 
 Future agents receive the new behavior. Existing agents do not change unless
@@ -137,8 +142,13 @@ missing inherited-profile wiring. Preferred repair targets:
 - `runtime/config.yaml` contains only local overrides.
 
 If the Hermes checkout has `scripts/migrate-repo-agents-inherited-config.py`,
-prefer it for conventional PM and scrum-master migrations. Otherwise, patch the
+prefer it for conventional PM migrations. Otherwise, patch the
 items above manually and restart the affected user services.
+
+For fleet-bloodbank-standard drift (missing registry `bloodbank:` block, legacy
+`consumer_unit`/`checkpoint_timer` keys, leftover consumer unit files), run
+`pj audit` / `pj migrate hermes.registry-parity` in the repo instead of hand
+patching — the parity rule converges all three.
 
 ## Update Bloodbank hook fan-out
 
@@ -166,7 +176,6 @@ source ~/.hermes/fleet.env
 test -x "$HERMES_FLEET_BIN"
 HERMES_HOME="$HOME/.hermes" hermes config get model.default
 hermes -p <repo>-pm config get model.default
-hermes -p <repo>-scrum-master config get model.default
 hermes profile create inherited-test --inherit-config --no-alias
 hermes profile show inherited-test
 hermes -p inherited-test config get model.default
@@ -177,14 +186,15 @@ For daemon-backed agents, also check:
 
 ```bash
 systemctl --user status hermes-<repo>-pm-gateway.service
-systemctl --user status hermes-<repo>-scrum-master-continuous-ticket-sentinel.timer
-journalctl --user -u hermes-<repo>-scrum-master-continuous-ticket-sentinel.service -n 80 --no-pager
+systemctl --user status hermes-<repo>-pm-heartbeat.timer
+systemctl --user status hermes-fleet-bloodbank-gateway.service
+journalctl --user -u hermes-<repo>-pm-heartbeat.service -n 80 --no-pager
 ```
 
-Continuous-ticket sentinels are one-minute oneshot services. A `try-restart` can
+Heartbeats are one-minute oneshot services. A `try-restart` can
 surface an existing provider/quota failure as a transient failed service even
 when the timer remains healthy. Check the runtime log under
-`agents/hermes/<role>/runtime/logs/continuous-ticket-sentinel.log`; repeated
+`agents/hermes/pm/runtime/logs/heartbeat.log`; repeated
 `HTTP 429: Insufficient balance or no resource package` means the sentinel
 workload reached the provider, not that the Hermes update failed. Wait for one
 timer tick and confirm the service returns to `inactive (dead)` with the timer

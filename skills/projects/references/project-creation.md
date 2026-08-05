@@ -96,29 +96,27 @@ sessions, skills, gateway state, cron, and runtime files remain profile-local
 inside the runtime repo. Treat inherited config as maintenance convenience, not
 as a security boundary.
 
-## 3. Create the Ticket Sentinel (Hermes scrum-master)
+## 3. The Ticket Sentinel (folded into the PM heartbeat)
 
-The Ticket Sentinel is a Hermes **scrum-master** agent: a systemd `--user` timer (1-min
-cadence) running `continuous-ticket-sentinel.sh`, which reconciles the board, evidence, and
-worker state through the provider-agnostic adapter (`lib/ticket-provider.sh` +
-`providers/{plane,linear,trello}.sh`).
+There is **no separate scrum-master role** — it was retired in the unified
+single-PM model (June 2026). The sentinel duties (board reconciliation,
+evidence checks, worker-state supervision through the provider-agnostic
+adapter `lib/ticket-provider.sh` + `providers/{plane,linear,trello}.sh`) run
+**inside the PM's heartbeat**: `hermes-<agent_id>-heartbeat.timer` fires
+`.scripts/heartbeat.sh` (~1-min cadence), which runs the sentinel pass
+out-of-band when `role.yaml` `reconcile.enabled: true` and otherwise ticks
+checkpoint-only. Provisioning the PM installs everything; there is nothing
+extra to provision.
 
-Two equivalent paths — **same end state** (both bind to the one repo board):
-
-- **Companion (recommended):** answer *yes* to "Also provision the paired Scrum Master?" when
-  creating the PM. `90-chain-scrum-master.sh` chains a `role=scrum-master` provision into
-  `agents/hermes/scrum-master/` with the same `target_repo` and `ticket_provider`.
-- **Separately:** `pjangler hermes-agent` again, choose *Scrum Master (Ticket Sentinel)*.
-  It binds to the same `.project.json` board.
-
-The sentinel install (`75-scrum-master.sh`) creates
-`hermes-<agent_id>-continuous-ticket-sentinel.{service,timer}` (launchd on macOS) and enables
-the timer.
+Per-agent systemd units are ONLY the gateway service and the heartbeat timer.
+Bloodbank command ingress is the single fleet-shared
+`hermes-fleet-bloodbank-gateway.service` — never a per-agent consumer. Drift is
+converged with `pj migrate hermes.registry-parity`.
 
 ## Where the templates live
 
 - pjangler resolution order for the hermes template: `PJANGLER_HERMES_TEMPLATE` env →
-  vendored `templates/hermes-agent` → `~/code/hermes-agent-template` → `gh:delorenj/hermes-agent-template`.
-- For live template development, point `PJANGLER_HERMES_TEMPLATE=~/code/hermes-agent-template`;
+  vendored `templates/hermes-agent` → `~/code/33GOD/hermes-agent-template` → `gh:delorenj/hermes-agent-template`.
+- For live template development, point `PJANGLER_HERMES_TEMPLATE=~/code/33GOD/hermes-agent-template`;
   otherwise the vendored submodule (version-locked) is used. After pushing template changes,
-  bump the submodule pointer: `git -C ~/code/pjangler submodule update --remote`.
+  bump the submodule pointer: `git -C ~/code/33GOD/pjangler submodule update --remote`.

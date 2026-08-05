@@ -4,7 +4,15 @@ pipeline-status:
 ---
 # Fleet self-check workflow
 
-Use this lane when the operator asks for a Hermes fleet self-check, especially when PM/scrum-master agents disagree with other CLIs or when MCP servers fail only in repo-backed daemons.
+Use this lane when the operator asks for a Hermes fleet self-check, especially when PM agents disagree with other CLIs or when MCP servers fail only in repo-backed daemons.
+
+> **Canonical service model (2026-08):** per agent, only `hermes-<agent>-gateway.service`
+> (chat ingress) and `hermes-<agent>-heartbeat.timer` (sentinel/checkpoint tick).
+> Bloodbank commands enter through the single fleet-shared
+> `hermes-fleet-bloodbank-gateway.service`. The scrum-master role is retired
+> (folded into the PM heartbeat), and per-agent consumer/checkpoint units are
+> drift — flag them, don't debug them; `pj migrate hermes.registry-parity`
+> removes them.
 
 ## Goal
 
@@ -20,11 +28,10 @@ Do not stop at "MCP failed". Identify which layer owns each failure and route fo
 1. Repo board binding
 - Read the repo root `.project.json`
 - Treat `ticket_provider` as the board source of truth
-- Confirm PM and scrum-master both bind to the same board
+- Confirm the PM binds to that board (one PM per repo; no scrum-master role)
 
 2. Inherited profile contract
 - Read `agents/hermes/pm/runtime/profile.yaml`
-- Read `agents/hermes/scrum-master/runtime/profile.yaml`
 - Expect:
   - `config.inherit_from: default`
   - `config.save_mode: delta`
@@ -49,7 +56,6 @@ Do not stop at "MCP failed". Identify which layer owns each failure and route fo
 1. Confirm live CLI/runtime view
 - `hermes mcp list`
 - `./agents/hermes/pm/hermes mcp list`
-- `./agents/hermes/scrum-master/hermes mcp list`
 
 2. Confirm shared config entries
 - Parse `~/.hermes/config.yaml` `mcp_servers`
@@ -57,10 +63,11 @@ Do not stop at "MCP failed". Identify which layer owns each failure and route fo
 
 3. Check daemon health
 - `systemctl --user status hermes-<repo>-pm-gateway.service`
-- `systemctl --user status hermes-<repo>-pm-consumer.service`
-- `systemctl --user status hermes-<repo>-scrum-master-gateway.service`
-- `systemctl --user status hermes-<repo>-scrum-master-consumer.service`
-- `systemctl --user status hermes-<repo>-scrum-master-continuous-ticket-sentinel.timer`
+- `systemctl --user status hermes-<repo>-pm-heartbeat.timer`
+- `systemctl --user status hermes-fleet-bloodbank-gateway.service`
+- Any `hermes-<repo>-pm-consumer.service` or `*-checkpoint.timer` sighting is
+  drift, not something to debug — record it and converge with
+  `pj migrate hermes.registry-parity`
 
 4. Pull runtime evidence
 - Search PM and scrum-master logs for:
@@ -123,13 +130,16 @@ Interpretation:
 - Usually PATH drift
 - Prefer absolute executable paths for daemon-launched MCP servers, or explicitly export PATH in the unit/runtime env
 
-3. Gateway dead, consumer alive
-- Messaging ingress may be broken even while background consumers still run
-- Do not claim the agent is healthy if the gateway is down
+3. Gateway dead, heartbeat alive
+- Chat ingress may be broken even while the heartbeat sentinel still ticks —
+  and Bloodbank command routing (fleet gateway) is independent of both
+- Do not claim the agent is healthy if its gateway is down; do not claim it is
+  unreachable without checking the fleet Bloodbank gateway
 
-4. Duplicate gateways share one Slack token
-- Two external gateways for one repo can create avoidable startup collisions
-- For PM + scrum-master repos, default to PM as ingress and treat scrum-master as an internal worker unless the architecture explicitly requires dual ingress
+4. Duplicate gateways share one chat token
+- Two gateways consuming one Telegram/Slack credential create startup
+  collisions; the fleet gateway refuses to start the duplicate
+- One dedicated bot credential per agent profile, always
 
 5. Stale systemd units
 - Timeout and env warnings usually mean template/backfill drift, not repo application drift
@@ -176,7 +186,7 @@ Minimum acceptance checks for closure:
 
 - Repo board / profile inheritance verified from live files
 - Shared `mcp_servers` entries inspected from `~/.hermes/config.yaml`
-- Gateway/consumer/timer status checked from systemd
+- Gateway / heartbeat timer / fleet-bloodbank-gateway status checked from systemd
 - Historical log evidence gathered for each failing server
 - Repo-local server artifact smoke-tested where applicable
 - Every suggested fix routed to a specific board

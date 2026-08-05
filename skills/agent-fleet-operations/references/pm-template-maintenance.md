@@ -53,11 +53,12 @@ Detailed checklist and acceptance criteria:
 - PM workflow skill path: `/home/delorenj/.agents/skills/subagent-driven-development/SKILL.md`
 - Fleet self-check reference: `/home/delorenj/.agents/skills/hermes-pm-template-maintenance/references/fleet-self-check.md`
 - Fleet registry source of truth: `/home/delorenj/.hermes/agents-registry.yaml`
-- Template repo: `/home/delorenj/code/hermes-agent-template` (also vendored as a pjangler submodule at `~/code/pjangler/templates/hermes-agent`; push the template repo, then bump the submodule pointer)
+- Template repo: `/home/delorenj/code/33GOD/hermes-agent-template` (also vendored as a pjangler submodule at `~/code/33GOD/pjangler/templates/hermes-agent`; push the template repo, then bump the submodule pointer)
+- Canonical service model: per agent only `hermes-<agent>-gateway.service` + `hermes-<agent>-heartbeat.timer`; Bloodbank command ingress is the single fleet-shared `hermes-fleet-bloodbank-gateway.service` (no per-agent consumers/checkpoint timers — `pj migrate hermes.registry-parity` converges drift)
 - Provisioning/board model (how agents bind to the repo's one board via `.project.json`): see the `33god-projects` skill
 - Shared Hermes install: `~/.hermes/hermes-agent`, reached by generated agents
   through `~/.hermes/fleet.env`
-- Shared inherited config: `~/.hermes/config.yaml`; PM/scrum-master runtime
+- Shared inherited config: `~/.hermes/config.yaml`; PM runtime
   `config.yaml` files must stay override-only
 
 ## Procedure

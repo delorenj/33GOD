@@ -40,7 +40,16 @@ PJangler has no HTTP server. CLI and stdio MCP are its public control surfaces. 
 
 Templates may mutate repositories, user profiles, systemd, external providers, and remote services. Copier is invoked with trust. Current template gitlinks are dirty, and Hermes resolution uses `HEAD`, breaking parent-commit reproducibility.
 
-Generated Bloodbank integration uses core NATS and inbox files, violates canonical subject routing, and spools sentinel events locally. Candystore and Holocene are indirect downstream consumers, not direct API dependencies.
+> **Superseded 2026-08-04 (PJAN-19 landed):** Bloodbank command ingress is now the
+> single fleet-shared `hermes-fleet-bloodbank-gateway.service` routing
+> `data.target_agent_id` through the fleet registry. Provisioning writes the
+> registry `bloodbank: {gateway_scope: fleet, target_agent_id}` block and installs
+> NO per-agent consumer, checkpoint timer, or inbox files; `pj audit` /
+> `pj migrate hermes.registry-parity` enforce this. Canon:
+> `hermes-agent-template/docs/architecture.md` § "Bloodbank wiring". The
+> paragraph below records the pre-PJAN-19 state this scan observed.
+
+Generated Bloodbank integration (as of the July 2026 scan) used core NATS and inbox files, violated canonical subject routing, and spooled sentinel events locally. Candystore and Holocene are indirect downstream consumers, not direct API dependencies.
 
 ## Deployment Architecture
 

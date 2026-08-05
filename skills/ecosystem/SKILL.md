@@ -23,7 +23,7 @@ Thin router for the 33GOD / DeLoNET platform. Load this skill when a request tou
 | Deliver a cross-component slice, add a component to root Compose, advance source/image pins, or keep integration branches short-lived | `33god-merge-forward` | Relevant domain skill for the component contract |
 | Create a new 33GOD project / bootstrap CommonProject / add a PM or Ticket Sentinel | `33god-projects` | `agent-fleet-operations` only for live agent provisioning details; `project-lifecycle` only for live board actions |
 | Change CommonProject template or pjangler CLI/MCP | `project-jangler` | `33god-projects` for project-facing contract |
-| Add a PM or scrum-master agent to this repo | `33god-projects` | `agent-fleet-operations` for runtime/template/systemd details |
+| Add a PM agent to this repo (sentinel rides the PM heartbeat) | `33god-projects` | `agent-fleet-operations` for runtime/template/systemd details |
 | Update Hermes model/profile/default config or fleet self-check | `agent-fleet-operations` | `33god-projects` only if repo projection changes |
 | Fix inherited Hermes config after upstream update | `agent-fleet-operations` | none unless repo-local agent projections changed |
 | Create or move Plane tickets | `project-lifecycle` | `33god-projects` to resolve project binding from `.project.json` |

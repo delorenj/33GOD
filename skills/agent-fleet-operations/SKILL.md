@@ -8,10 +8,32 @@ description: |
 
 Route here for anything that touches the shared Hermes fleet, the agent template, or the runtime provisioning contract — not the project that happens to host an agent.
 
+## The Canonical PM Deploy Standard (2026-08, enforced)
+
+One PM per repo, and exactly TWO per-agent systemd user units:
+
+1. `hermes-<agent>-gateway.service` — chat-platform ingress (Telegram/Slack).
+2. `hermes-<agent>-heartbeat.timer` → `.service` — the fused sentinel/checkpoint
+   tick (`.scripts/heartbeat.sh`).
+
+Bloodbank command ingress is **fleet-shared**: `hermes-fleet-bloodbank-gateway.service`
+(profile `fleet-bloodbank-gateway`, adapter `bloodbank/services/hermes-gateway`)
+subscribes once to `bloodbank.cmd.v1.agent.invocation.start` and routes
+`data.target_agent_id` → Hermes profile via the registry's `profile_name`.
+There is **no per-agent consumer unit, no checkpoint timer, no filesystem
+inbox** — any of those is drift, not an alternative deployment style. Every
+registry entry advertises `bloodbank: {gateway_scope: fleet, target_agent_id: <id>}`.
+Canonical command envelopes need an `actor` object and
+`schemaref: bloodbank.v1.agent.invocation.start.v1` or the gateway terminally
+rejects them. Enforcement: pjangler `pj audit` / `pj migrate hermes.registry-parity`
+detects and converges violations. Canon: `hermes-agent-template/docs/architecture.md`
+§ "Bloodbank wiring". The retired scrum-master role's duties folded into the PM
+heartbeat (see Krebs lifecycle: `~/code/33GOD/krebs/spec/lifecycle.v1.yaml`).
+
 ## Operating Principles
 
 - **Fleet truth lives in `~/.hermes/`.** `fleet.env`, `config.yaml`, and `agents-registry.yaml` are the shared sources; repo-local `agents/hermes/<role>/runtime/` contains only overrides and local state.
-- **Inherited profiles keep fleet defaults automatic.** New PM/scrum-master agents inherit from the `default` profile with `save_mode: delta`. Change the fleet default once; do not backfill every runtime `config.yaml` for shared settings.
+- **Inherited profiles keep fleet defaults automatic.** New PM agents inherit from the `default` profile with `save_mode: delta`. Change the fleet default once; do not backfill every runtime `config.yaml` for shared settings.
 - **Template changes affect future agents; backfills affect existing ones.** Do not backfill for a simple shared default or core update.
 - **One board owns the shared fleet/template contract.** Fleet-wide fixes route to the Hermes Agent PM board, not the repo board.
 - **Project identity is owned by `33god-projects` / PJangler.** This skill provisions against that identity; it does not create or rename projects.
@@ -23,7 +45,7 @@ Route here for anything that touches the shared Hermes fleet, the agent template
 | Update Hermes core, shared config, or future-agent provisioning | [references/hermes-fleet-updates.md](references/hermes-fleet-updates.md) | the matching lane inside it |
 | Run a fleet self-check or debug MCP failures that differ across repo-backed daemons | [references/fleet-self-check.md](references/fleet-self-check.md) | hermes-fleet-updates for remediation lanes |
 | Capture a governance rule/workflow in the PM template and propagate to existing PM agents | [references/pm-template-maintenance.md](references/pm-template-maintenance.md) | hermes-fleet-updates for backfill vs shared-config classification |
-| Provision a new PM or scrum-master agent into a repo | → **33god-projects** `references/project-creation.md` | this skill only for runtime/template details |
+| Provision a new PM agent into a repo | → **33god-projects** `references/project-creation.md` | this skill only for runtime/template details |
 
 ## Cross-Cutting Rules
 

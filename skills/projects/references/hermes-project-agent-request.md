@@ -9,8 +9,8 @@ When a 33god project asks for a Hermes agent, the project side owns only the req
 ## What the project side provides
 
 - A repo with a valid `.project.json` including the `ticket_provider` block.
-- A target role: `pm`, `scrum-master`, `dev`, `ops`, `review`, or `qa`.
-- Optional companion request: the PM role may request its scrum-master (Ticket Sentinel) companion.
+- A target role: `pm` (the unified single-PM model — the retired scrum-master's
+  sentinel duties run on the PM heartbeat, so there is no companion to request).
 - A request that the agent bind to the repo's **one** board — no role-suffixed boards.
 
 ## What pjangler writes

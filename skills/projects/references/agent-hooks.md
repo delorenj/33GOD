@@ -62,16 +62,22 @@ bloodbank:
   producer: "hermes-agent:<agent_id>"
 ```
 
-**Consume:** `60-bloodbank.sh` installs (and re-renders if needed) `bloodbank-consumer.py` into
-the agent's `runtime/` submodule, subscribing to the subjects above. It is idempotent and
-re-renders if `{{agent_id}}`/`{{repo}}`/`{{role}}` placeholders are ever found unrendered.
+**Consume:** there is intentionally **no per-agent consumer**. Command ingress
+is the single fleet-shared `hermes-fleet-bloodbank-gateway.service`, which
+subscribes once to `bloodbank.cmd.v1.agent.invocation.start` and routes
+`data.target_agent_id` → the agent's Hermes profile via the fleet registry.
+`60-bloodbank.sh` is a compatibility checkpoint only — it installs no files or
+services. A `bloodbank-consumer.py` or `hermes-<agent>-consumer.service`
+sighting is drift (`pj migrate hermes.registry-parity` removes it).
 
-**Emit:** agents publish through the envelope helper. The scrum-master sentinel emits via
-`.scripts/scrum-master/bin/emit-event.py`; producer identity is `hermes-agent:<agent_id>`.
+**Emit:** agents publish through the envelope helper. The PM's sentinel pass
+emits via `.scripts/sentinel/bin/emit-event.py`; producer identity is
+`hermes-agent:<agent_id>`.
 
 **Subject scheme:**
-- `bloodbank.evt.v1.repo.<repo>.>` — repo-scoped events (the lane all agents on a repo watch).
-- `bloodbank.cmd.v1.agent.<agent_id>.>` — direct commands to a specific agent.
+- `bloodbank.evt.v1.repo.<repo>.>` — repo-scoped events.
+- `bloodbank.cmd.v1.agent.invocation.start` — the single command subject; the
+  target agent travels in `data.target_agent_id`, never in the subject.
 
 Skipping (e.g. local-only provisioning): `SKIP_BLOODBANK=1` makes `60-bloodbank.sh` a no-op.
 
