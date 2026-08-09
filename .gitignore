@@ -100,3 +100,4 @@ HeyMa/training/
 
 # Hermes agent runtime — pure-local state, never tracked (degit-runtime).
 agents/hermes/*/runtime/
+runtime/
