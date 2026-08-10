@@ -56,7 +56,7 @@ plane:
   # Empty -> resolved from ~/.config/hermes-agent-template/config.toml [plane].workspace
   workspace: ""
   # identifier is set by .scripts/42-ticket-provider.sh after creation (plane only)
-  identifier: "PROJ"
+  identifier: "33GPM"
 # Bloodbank ingress is owned by one fleet-shared Hermes gateway. The gateway
 # reads the fleet registry and routes canonical commands by target_agent_id;
 # this profile does not install its own NATS consumer or inbox bridge.

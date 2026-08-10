@@ -1,15 +1,14 @@
 {
   "project_name": ".",
   "project_description": "",
-  "project_slug": "project",
+  "project_slug": "33god",
   "repo_path": "/home/delorenj/code/33GOD",
   "ticket_provider": {
     "type": "plane",
     "workspace": "33god",
-    "identifier": "PROJ",
+    "identifier": "33GPM",
     "board_id": "f6746659-7698-4b5a-b509-9666e35fab09",
-    "state": "planned",
-    "board_url": "https://plane.delo.sh/33god/projects/f6746659-7698-4b5a-b509-9666e35fab09/issues/"
+    "state": "linked"
   },
   "agents": {
     "33god-pm": {

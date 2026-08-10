@@ -67,10 +67,10 @@ api() {
   method="$1"; path="$2"; body="${3:-}"
   if [ -n "$body" ]; then
     curl -fsS -X "$method" "$API/$path" \
-      -H "X-API-Key: $PLANE_API_KEY" -H "Content-Type: application/json" \
+      -H "X-API-Key: ${PLANE_API_KEY}" -H "Content-Type: application/json" \
       -d "$body"
   else
-    curl -fsS -X "$method" "$API/$path" -H "X-API-Key: $PLANE_API_KEY"
+    curl -fsS -X "$method" "$API/$path" -H "X-API-Key: ${PLANE_API_KEY}"
   fi
 }
 
