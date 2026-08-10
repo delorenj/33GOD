@@ -69,9 +69,11 @@ run = "{{config_root}}/.agents/hooks/sync.py --uninstall"
 [[hooks.enter]]
 script = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
 [[hooks.enter]]
-script = "op inject -i .env.op > .env"
+script = "[ -f '{{config_root}}/.env.op' ] && command -v op >/dev/null 2>&1 && { CDPATH= cd '{{config_root}}' && umask 077 && t=$(mktemp .env.inject.XXXXXX) && op inject -i .env.op -o $t --force && mv $t .env || rm -f $t; } || true"
 [[hooks.enter]]
-script = "sync-skills.py --scope project"
+script = "python3 '{{config_root}}/.mise/scripts/provision-packs.py'"
+[[hooks.enter]]
+script = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project"
 [[hooks.enter]]
 script = "codegraph sync"
 [[hooks.enter]]
@@ -93,7 +95,12 @@ run = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
 
 [tasks.skills-sync]
 description = "Sync skills from manifest to local CLI dirs"
-run = "sync-skills.py --scope project"
+depends = ["skills-provision-packs"]
+run = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project"
+
+[tasks.skills-provision-packs]
+description = "Provision every Skillex pack declared in .agents/skills.json"
+run = "python3 '{{config_root}}/.mise/scripts/provision-packs.py'"
 
 # >>> mise-versioning >>>  (managed block — do not edit by hand; re-run init to update)
 [tasks."version"]
