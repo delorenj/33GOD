@@ -1,0 +1,16 @@
+diff --git a/.gitignore b/.gitignore
+index d1500c6..763785c 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -100,3 +100,4 @@ HeyMa/training/
+ 
+ # Hermes agent runtime — pure-local state, never tracked (degit-runtime).
+ agents/hermes/*/runtime/
++runtime/
+diff --git a/pjangler b/pjangler
+index 1889bc3..3d49012 160000
+--- a/pjangler
++++ b/pjangler
+@@ -1 +1 @@
+-Subproject commit 1889bc33aa6c2b5b2b139a6f6db13940b9af0b7d
++Subproject commit 3d49012a5c6258e04cf460ec29295c48f2eeaf0b
