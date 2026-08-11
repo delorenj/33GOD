@@ -1,0 +1,33 @@
+id: toad
+name: Toad
+role: project-custodian-agent
+repo: ../toad
+description: >-
+  Portable Project Custodian agent exposing a `toad` CLI and a `toad-mcp` stdio
+  MCP server. Composes PJangler operations to create, wire, audit, and migrate
+  projects. It is an agent bundle, not a competing provisioning implementation.
+compose:
+  files: []
+  profiles: [agents]
+  execution: run-only-cli-and-stdio-mcp
+  listeners: none
+  ownership: >-
+    Toad owns custodian workflow and agent-spec fanout. PJangler remains the
+    deterministic provisioning authority Toad delegates to.
+health:
+  commands:
+    - cd ../toad && mise run build
+    - cd ../toad && npm test
+source_of_truth:
+  - ../toad/src
+  - ../toad/AGENTS.md
+  - ~/.agents/skills/toad/SKILL.md
+safety:
+  live_actions_gated_by: TOAD_ALLOW_LIVE=1
+  default_mode: dry-run
+changelog:
+  topics: [project-custody, provisioning, agent-fanout, mcp]
+public_card:
+  title: Project Custodian
+  promise: Create, adopt, and audit projects through one guarded custodian agent.
+backfills: []

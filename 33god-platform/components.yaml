@@ -45,6 +45,8 @@ component_files:
   - components/hindsight.yaml
   - components/pipeline-mcp-hub.yaml
   - components/krebs.yaml
+  - components/momo.yaml
+  - components/toad.yaml
   - components/candybar.yaml
   - components/heyma.yaml
 

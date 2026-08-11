@@ -1,0 +1,34 @@
+id: momo
+name: Momo
+role: pm-em-orchestration-agent
+repo: ../momo
+description: >-
+  Interactive PM/EM orchestration agent for pjangler CommonProject repos. Holds
+  roadmap, dependencies, and next-action context; delegates every code change to
+  worker agents. The human-drivable twin of the autonomous Hermes PM, sharing the
+  same Plane board and Hindsight bank.
+compose:
+  files: []
+  profiles: [agents]
+  execution: agent-skill-not-a-service
+  ownership: >-
+    Momo owns orchestration policy and the operator-facing skill. It owns no
+    ticket, fleet, or project-registry truth.
+health:
+  commands:
+    - cd ../momo && python3 -m pytest skill/scripts/tests -q
+source_of_truth:
+  - ../momo/spec/momo-agent.spec.yaml
+  - ../momo/PILLARS.md
+  - ../momo/skill
+  - ../momo/adapter/RENDER_MAP.md
+consumes:
+  - krebs/spec/lifecycle.v1.yaml
+  - krebs/adapters/tp
+changelog:
+  topics: [orchestration, delegation, decisions, board-awareness, pillars]
+public_card:
+  title: Project Manager Agent
+  promise: One orchestrator that holds the plan, picks the next move, and delegates the work.
+backfills:
+  - momo-lifecycle-duplicate-v1

@@ -3,6 +3,47 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-08-10
+
+### Trunk Checkpoint
+
+- Folded every piece of in-flight work to `main` across the family and advanced
+  all nine submodule pins to their `origin/main` tips — the first checkpoint
+  where that has been true simultaneously.
+- Pruned six worktrees. Four held branches already contained in `origin/main`;
+  two more (`feature/PJAN-19-hermes-bloodbank-gateway`,
+  `codex/reporting-contracts`) looked like thousands of lines of unmerged work
+  but were stale pre-rebase duplicates. Content comparison, not commit count,
+  is the test: the gateway branch was byte-poorer than `main` and missing
+  `execution_state.py`, and merging the contracts branch would have deleted the
+  `curator` domain, the `skill` entity, and five schemas `main` already had.
+- Recorded FR14 (trunk discipline) so this state is a gate, not an accident.
+
+### Skill Ownership Relocation
+
+- Moved skill sources of truth out of root `skills/` and into the components
+  whose contracts they describe: Bloodbank owns event-integration skills,
+  PJangler owns provisioning and mise skills, Krebs owns lifecycle and triage
+  skills, and `33god-platform/` owns cross-cutting skills.
+- Root `skills/` is now a link farm with no divergent copies.
+- Split Skillex pack provisioning from skill fan-out in `mise.toml` so packs
+  declared in `.agents/skills.json` resolve before sync runs.
+
+### Registry Expansion
+
+- Registered Momo (PM/EM orchestration agent) and Toad (project custodian
+  agent), bringing the active component list to thirteen.
+- Required every component to declare a runtime mode, so non-service components
+  state an execution model rather than carrying an empty compose block.
+
+### Lifecycle Authority
+
+- Declared Krebs the single ticket-lifecycle authority (PRD FR12). One machine,
+  five normalized `tp` bands, per-repo variation limited to label maps.
+- Opened `momo-lifecycle-duplicate-v1`: `momo/lifecycle/` still carries the
+  pre-promotion copy and both its spec and schema have drifted from
+  `krebs/spec/`, while Momo's own agent spec already points at Krebs.
+
 ## 2026-07-15
 
 ### Root Compose Cutover

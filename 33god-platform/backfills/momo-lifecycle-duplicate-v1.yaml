@@ -1,0 +1,20 @@
+id: momo-lifecycle-duplicate-v1
+title: Retire the pre-promotion lifecycle copy inside Momo
+owner_component: krebs
+kind: check-only
+summary: >
+  Krebs owns the canonical ticket-lifecycle machine at krebs/spec/lifecycle.v1.yaml.
+  momo/lifecycle/ still carries the older pre-promotion copy and has drifted from
+  the canonical spec, while momo/spec/momo-agent.spec.yaml already points its
+  lifecycle_pointer at Krebs. Two machines that disagree is the failure this
+  component split was meant to remove.
+search_paths:
+  - ../momo/lifecycle
+forbidden_patterns:
+  - momo/lifecycle/lifecycle.v1.yaml
+  - momo/lifecycle/lifecycle.schema.json
+remediation: >
+  Delete momo/lifecycle/ once every consumer resolves the machine through
+  krebs/spec/lifecycle.v1.yaml. Per-repo differences belong in the tp adapter's
+  normalized-state map and the per-repo state map, never in a forked machine.
+  Verify with: cmp krebs/spec/lifecycle.v1.yaml momo/lifecycle/lifecycle.v1.yaml
