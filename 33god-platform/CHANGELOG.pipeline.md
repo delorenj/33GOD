@@ -3,6 +3,47 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-08-11
+
+### Company-Reporter Split Resolved
+
+The company-reporter work spanned two repositories and had to be separated
+rather than merged or dropped wholesale.
+
+Kept, into `hermes-agent-template`:
+
+- the `reporter` role in `copier.yml` and `SOUL.md.jinja`;
+- a least-privilege reporter runtime contract — delta save mode, disabled
+  toolsets, `no_mcp` platform toolsets, spawn depth 1, no MCP inheritance;
+- reporters never inherit the staging profile's `.env`;
+- reporters skip systemd gateway/consumer installation;
+- `secret-scan.py`, now run against the rendered scaffold before anything is
+  copied into the runtime;
+- `reporter-watchdog.py`, the one file on the parent branch with no counterpart
+  anywhere. Every deployment constant it hardcoded is now a `REPORTER_*`
+  environment override.
+
+Dropped:
+
+- the parent's generated `agents/hermes/reporter/` profile, regenerable from the
+  template now that the reporter role exists;
+- its tracked `runtime` submodule and `.gitmodules` entry — the exact FR4
+  violation;
+- its `.done-*` provisioning markers;
+- its `scrum-master/` tooling, already renamed to `sentinel/` upstream;
+- its standalone `continuous-ticket-sentinel.sh` runner and second systemd
+  timer, superseded by the fused `heartbeat.sh` and `sentinel.prompt.md.jinja`;
+- `gh repo create` remote-runtime provisioning, `target_repo`-qualified review
+  subjects, and a re-hoisted `already_done` that would have regressed main's
+  legacy-consumer remediation ordering.
+
+`test_runtime_bootstrap_scans_before_commit_and_push` asserted on `git add -A`
+and `git push -u origin main` — code main deleted when runtimes moved local. It
+was replaced with the equivalent local invariant plus a guard that provisioning
+never resurrects a per-agent runtime remote. 60/60 template tests pass.
+
+No worktrees remain in the family.
+
 ## 2026-08-10
 
 ### Trunk Checkpoint
@@ -13,10 +54,13 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 - Pruned six worktrees. Four held branches already contained in `origin/main`;
   two more (`feature/PJAN-19-hermes-bloodbank-gateway`,
   `codex/reporting-contracts`) looked like thousands of lines of unmerged work
-  but were stale pre-rebase duplicates. Content comparison, not commit count,
-  is the test: the gateway branch was byte-poorer than `main` and missing
-  `execution_state.py`, and merging the contracts branch would have deleted the
-  `curator` domain, the `skill` entity, and five schemas `main` already had.
+  but were stale pre-rebase duplicates. Content comparison against the merge
+  base, not commit count, is the test. The gateway branch was byte-poorer than
+  `main` and missing `execution_state.py`; every file conflicted add/add.
+  Every one of the eight files the contracts branch added is byte-identical to
+  `main`'s copy, so its work had already landed; its only live deltas are
+  `validate.py` and `docs/event-naming.md`, both of which predate the `curator`
+  domain and `skill` entity and would regress those allowlists if applied.
 - Recorded FR14 (trunk discipline) so this state is a gate, not an accident.
 
 ### Skill Ownership Relocation

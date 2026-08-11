@@ -492,14 +492,10 @@ These issues are the first things the director must triage.
    session. It is currently producing correct commits, but an unattended writer
    on the release branch needs an explicit owner and an audit trail.
 
-8. **Triage two remaining unmerged branches.** `33GOD/codex/company-reporter`
-   adds a generated `agents/hermes/reporter/` profile *and* a tracked runtime
-   submodule, which FR4 now explicitly forbids; its companion
-   `hermes-agent-template/codex/company-reporter` contains genuinely unmerged
-   template hardening (`secret-scan.py`, credential-inheritance prevention,
-   least-privilege reporter profiles) that is worth salvaging independently.
-   `candystore/impl/candystore-audit-trail` is from May and every file differs
-   from a main that has moved 21 commits past it.
+8. **Triage `candystore/impl/candystore-audit-trail`.** From May 25; every file
+   differs from a `main` that has moved 21 commits past it. The branch ref is
+   preserved and its worktree is removed. Decide whether any of the CANPM-T1/T2
+   events-migration work is still wanted before deleting the ref.
 
 **Resolved 2026-07-15:** Candybar remains active. Holyfields and Hookd are
 legacy definitions and are excluded from the active component list until their
@@ -511,6 +507,15 @@ integrated local stack; root Compose owns its lifecycle.
 **Resolved 2026-08-10:** Root repo dirt is reconciled. Every submodule pin
 equals its `origin/main` tip, skills have component owners, and Momo, Toad, and
 Krebs are registered components.
+
+**Resolved 2026-08-11:** The company-reporter split is closed. The Hermes
+template absorbed the reporter role, its least-privilege runtime contract,
+`secret-scan.py`, and the salvaged reporter health watchdog. The parent branch
+was deleted rather than merged: its generated `agents/hermes/reporter/` profile
+is regenerable from the template, its `scrum-master/` tooling had already been
+renamed to `sentinel/` upstream, its standalone sentinel runner was superseded
+by the fused `heartbeat.sh`, and it carried a tracked runtime submodule that
+FR4 forbids. No worktrees remain anywhere in the family.
 
 ## MVP plan
 
