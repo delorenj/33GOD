@@ -4,7 +4,13 @@
   "title": "Krebs Lifecycle Spec v1",
   "description": "JSON Schema for the canonical ticket-lifecycle state machine.",
   "type": "object",
-  "required": ["spec_version", "states", "transitions", "guards", "events"],
+  "required": [
+    "spec_version",
+    "states",
+    "transitions",
+    "guards",
+    "events"
+  ],
   "properties": {
     "spec_version": {
       "type": "string",
@@ -21,7 +27,10 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["phase", "terminal"],
+        "required": [
+          "phase",
+          "terminal"
+        ],
         "properties": {
           "phase": {
             "type": "string",
@@ -29,7 +38,13 @@
           },
           "tp_band": {
             "type": "string",
-            "enum": ["backlog", "unstarted", "started", "in_review", "completed"]
+            "enum": [
+              "backlog",
+              "unstarted",
+              "started",
+              "in_review",
+              "completed"
+            ]
           },
           "terminal": {
             "type": "boolean"
@@ -50,7 +65,11 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["from", "to", "guard"],
+        "required": [
+          "from",
+          "to",
+          "guard"
+        ],
         "properties": {
           "from": {
             "type": "string"
@@ -63,6 +82,10 @@
           },
           "precondition": {
             "type": "string"
+          },
+          "on_fail": {
+            "type": "string",
+            "description": "shared funnel step every failure edge routes through (e.g. blocked_funnel)"
           }
         },
         "additionalProperties": false
@@ -70,26 +93,55 @@
     },
     "guards": {
       "type": "object",
-      "required": ["ac_rubric", "qa", "reviewer_independence", "wip"],
+      "required": [
+        "ac_rubric",
+        "qa",
+        "reviewer_independence",
+        "wip"
+      ],
       "properties": {
         "ac_rubric": {
           "type": "object",
-          "required": ["require_non_empty", "require_testable_assertions", "require_enumerated_items", "require_fr_coverage", "short_circuit"],
+          "required": [
+            "require_non_empty",
+            "require_testable_assertions",
+            "require_enumerated_items",
+            "require_fr_coverage",
+            "short_circuit"
+          ],
           "properties": {
-            "require_non_empty": { "type": "boolean" },
-            "require_testable_assertions": { "type": "boolean" },
-            "require_enumerated_items": { "type": "boolean" },
-            "require_fr_coverage": { "type": "boolean" },
-            "short_circuit": { "type": "boolean" }
+            "require_non_empty": {
+              "type": "boolean"
+            },
+            "require_testable_assertions": {
+              "type": "boolean"
+            },
+            "require_enumerated_items": {
+              "type": "boolean"
+            },
+            "require_fr_coverage": {
+              "type": "boolean"
+            },
+            "short_circuit": {
+              "type": "boolean"
+            }
           },
           "additionalProperties": false
         },
         "qa": {
           "type": "object",
-          "required": ["max_retries", "reverify_failed_only"],
+          "required": [
+            "max_retries",
+            "reverify_failed_only"
+          ],
           "properties": {
-            "max_retries": { "type": "integer", "minimum": 0 },
-            "reverify_failed_only": { "type": "boolean" }
+            "max_retries": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reverify_failed_only": {
+              "type": "boolean"
+            }
           },
           "additionalProperties": false
         },
@@ -105,11 +157,21 @@
     },
     "events": {
       "type": "object",
-      "required": ["topic_prefix", "include_project_id", "include_ticket_id"],
+      "required": [
+        "topic_prefix",
+        "include_project_id",
+        "include_ticket_id"
+      ],
       "properties": {
-        "topic_prefix": { "type": "string" },
-        "include_project_id": { "type": "boolean" },
-        "include_ticket_id": { "type": "boolean" }
+        "topic_prefix": {
+          "type": "string"
+        },
+        "include_project_id": {
+          "type": "boolean"
+        },
+        "include_ticket_id": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": false
     }

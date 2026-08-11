@@ -5,6 +5,39 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 
 ## 2026-08-11
 
+### One Lifecycle Machine
+
+`momo/lifecycle/` is deleted. Krebs is now the only ticket-lifecycle machine,
+satisfying FR12.
+
+This was not a plain delete. Comparing the two specs semantically rather than
+textually showed Krebs was **missing** content the Momo copy carried:
+
+- `blocked -> backlog` via `operator_reopen`. The rationale doc is explicit that
+  `blocked` is "terminal for the loop, re-openable by operator" — without this
+  edge a blocked ticket could never return to the board.
+- `on_fail: blocked_funnel` on all three failure edges into `blocked`, the
+  "single blocked funnel" the rationale calls a promoted gotcha fix. Krebs's
+  schema also had to gain `transitions[].on_fail`, since it set
+  `additionalProperties: false`.
+
+Both were ported into Krebs first; transition parity is now 14/14 and
+`lifecycle.v1.yaml` validates against `lifecycle.schema.json`. Krebs keeps its
+own `acquired` guard name, which is what PJangler's CommonProject steps already
+call; Momo's `picked_up` was a local rename with no other consumer.
+
+The copy's rationale (15K) and changelog moved to
+`krebs/spec/lifecycle-rationale.md` and `krebs/spec/lifecycle-CHANGELOG.md`,
+repointed to Krebs paths with a provenance banner.
+
+Momo's `SKILL.md`, `board-clearing-loop.md`, and `docs/fleet-normalization.md`
+all named `momo/lifecycle/` as the SSOT and now name `krebs/spec/`. Its
+`lifecycle_pointer` already targeted Krebs.
+
+`momo-lifecycle-duplicate-v1` passes and is retained as a reintroduction guard:
+it scans all of Momo for the old path and for the fork's self-identifying
+`kind: momo.ticket-lifecycle` marker. All five backfills now report OK.
+
 ### Company-Reporter Split Resolved
 
 The company-reporter work spanned two repositories and had to be separated

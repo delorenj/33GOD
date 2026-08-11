@@ -461,38 +461,33 @@ Acceptance criteria:
 
 These issues are the first things the director must triage.
 
-1. **Retire `momo/lifecycle/`.** It is a drifted pre-promotion copy of the Krebs
-   machine; both `lifecycle.v1.yaml` and `lifecycle.schema.json` differ from
-   `krebs/spec/`. Momo's own spec already points at Krebs, so the copy has no
-   consumer justification. Tracked by `momo-lifecycle-duplicate-v1`.
-
-2. **Decide Krebs's repository home.** Krebs is tracked in-tree while every other
+1. **Decide Krebs's repository home.** Krebs is tracked in-tree while every other
    first-class component is an independently versioned repo. It needs either its
    own repository and release train or an explicit decision that specs live in
    the root.
 
-3. **Decide whether CommonProject and Voxxy become registered components.** Both
+2. **Decide whether CommonProject and Voxxy become registered components.** Both
    are named in the architecture document; neither has a checkout or manifest.
    Apply the same rule used for Flume: register only after the repo exists and
    the manifest has real health, source-of-truth, and changelog fields.
 
-4. **Decide whether Flume belongs in the active product registry.** Unchanged
+3. **Decide whether Flume belongs in the active product registry.** Unchanged
    from the previous revision; still no repository.
 
-5. **Migrate Bloodbank, Holocene, and Candybar PM runtimes from
+4. **Migrate Bloodbank, Holocene, and Candybar PM runtimes from
    `IGNORE_ALL_YELLOW` to `DELINKED_GREEN`.** Candybar's only working-tree delta
    is its tracked Hermes PM runtime pointer, which proves the cost of the
    current model.
 
-6. **Define the `forever-ago` backup wrapper or enhancement for tiered
+5. **Define the `forever-ago` backup wrapper or enhancement for tiered
    retention.**
 
-7. **Reconcile the root auto-checkpoint writer.** Something in the environment
+6. **Reconcile the root auto-checkpoint writer.** Something in the environment
    commits submodule pin bumps to the root repository outside an interactive
    session. It is currently producing correct commits, but an unattended writer
    on the release branch needs an explicit owner and an audit trail.
 
-8. **Triage `candystore/impl/candystore-audit-trail`.** From May 25; every file
+7. **Triage `candystore/impl/candystore-audit-trail`.** From May 25; every file
    differs from a `main` that has moved 21 commits past it. The branch ref is
    preserved and its worktree is removed. Decide whether any of the CANPM-T1/T2
    events-migration work is still wanted before deleting the ref.
@@ -507,6 +502,14 @@ integrated local stack; root Compose owns its lifecycle.
 **Resolved 2026-08-10:** Root repo dirt is reconciled. Every submodule pin
 equals its `origin/main` tip, skills have component owners, and Momo, Toad, and
 Krebs are registered components.
+
+**Resolved 2026-08-11:** FR12 is satisfied. `momo/lifecycle/` is deleted and
+Krebs is the only ticket-lifecycle machine. Reconciliation was not a plain
+delete: Krebs was missing the `blocked -> backlog` operator escape hatch and the
+`on_fail: blocked_funnel` routing on every failure edge, both documented
+behaviours. Those were ported first, the rationale and changelog were migrated
+to `krebs/spec/`, and Momo's three SSOT references were repointed.
+`momo-lifecycle-duplicate-v1` now passes and stands as a reintroduction guard.
 
 **Resolved 2026-08-11:** The company-reporter split is closed. The Hermes
 template absorbed the reporter role, its least-privilege runtime contract,

@@ -1,20 +1,26 @@
 id: momo-lifecycle-duplicate-v1
-title: Retire the pre-promotion lifecycle copy inside Momo
+title: Momo must not carry a second ticket-lifecycle machine
 owner_component: krebs
 kind: check-only
+status: remediated-2026-08-11
 summary: >
   Krebs owns the canonical ticket-lifecycle machine at krebs/spec/lifecycle.v1.yaml.
-  momo/lifecycle/ still carries the older pre-promotion copy and has drifted from
-  the canonical spec, while momo/spec/momo-agent.spec.yaml already points its
-  lifecycle_pointer at Krebs. Two machines that disagree is the failure this
-  component split was meant to remove.
+  Momo previously carried a drifted pre-promotion copy at momo/lifecycle/. That copy
+  is deleted, its two unique behaviours were ported into Krebs (the blocked ->
+  backlog operator escape hatch, and on_fail: blocked_funnel on every failure edge),
+  and its rationale and changelog were migrated to krebs/spec/lifecycle-rationale.md
+  and krebs/spec/lifecycle-CHANGELOG.md. This check now guards against reintroduction.
 search_paths:
-  - ../momo/lifecycle
+  - ../momo
 forbidden_patterns:
-  - momo/lifecycle/lifecycle.v1.yaml
-  - momo/lifecycle/lifecycle.schema.json
+  # any consumer resolving the machine from a Momo-local path again
+  - momo/lifecycle/
+  # the forked machine's own self-identifying marker, if the file is recreated
+  - "kind: momo.ticket-lifecycle"
 remediation: >
-  Delete momo/lifecycle/ once every consumer resolves the machine through
-  krebs/spec/lifecycle.v1.yaml. Per-repo differences belong in the tp adapter's
-  normalized-state map and the per-repo state map, never in a forked machine.
-  Verify with: cmp krebs/spec/lifecycle.v1.yaml momo/lifecycle/lifecycle.v1.yaml
+  Do not reintroduce a lifecycle machine inside Momo. Consume
+  krebs/spec/lifecycle.v1.yaml by pointer via momo/spec/momo-agent.spec.yaml
+  lifecycle_pointer.spec. Per-repo differences are label maps in the tp adapter's
+  normalized-state map and knob overlays in the per-repo state map — never a fork
+  of the machine. Verify parity with:
+  python3 -c "import yaml;d=yaml.safe_load(open('krebs/spec/lifecycle.v1.yaml'));print(len(d['transitions']),'transitions')"

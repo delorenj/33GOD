@@ -75,6 +75,7 @@ transitions:
   - from: refining
     to: blocked
     guard: ac_still_insufficient
+    on_fail: blocked_funnel
 
   - from: ready
     to: in_progress
@@ -88,6 +89,7 @@ transitions:
   - from: in_progress
     to: blocked
     guard: ac_ambiguity
+    on_fail: blocked_funnel
 
   - from: review
     to: qa
@@ -108,6 +110,14 @@ transitions:
   - from: qa
     to: blocked
     guard: qa_retries_exhausted
+    on_fail: blocked_funnel
+
+  # `blocked` is terminal for the autonomous loop but re-openable by a human.
+  # This edge is the operator escape hatch; without it a blocked ticket can
+  # never return to the board.
+  - from: blocked
+    to: backlog
+    guard: operator_reopen
 
 guards:
   ac_rubric:
