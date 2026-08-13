@@ -19,6 +19,24 @@ projects on the host.
 | Visual Topology | Candybar | Event and service topology inspection. |
 | Voice Interface | HeyMa | Voice, meeting, transcription, and TTS integration path. |
 
+## Planned integration layer
+
+These boundaries are part of the target product but are not active component
+registry members. They enter `components.yaml` only after a real repository or
+immutable deployment contract, lifecycle owner, health check, source-of-truth
+paths, and validation gates exist.
+
+| Product capability | Boundary | Intended role |
+|---|---|---|
+| Workforce and Delegation | Flume | Corporate hierarchy, authority, task delegation, escalation, and budget policy above agent runtimes. |
+| Agent Session Broker | LiteLLM Agent Control Plane | Experimental normalized session/runtime API and developer lab beneath Flume and above canonical Bloodbank dispatch. |
+| Model Gateway | DeLoNET LiteLLM | Provider credentials, model catalog, budgets, aliases, and fallback policy for every approved runtime. |
+| Executive Surface | DeLoHQ | Mobile status, approvals, exceptions, budgets, and coarse controls; currently projected through Holocene's `/hq` surface. |
+| Research Read Model | OpenNotebook | Searchable project corpus and synthesis over canonical Git/BMAD evidence; never an architectural source of truth. |
+
+The approved ownership and pilot design lives in
+[`litellm-agent-control-plane-integration.md`](litellm-agent-control-plane-integration.md).
+
 ## Product layers
 
 1. **Runtime core:** Bloodbank, Dapr, NATS, Candystore.
@@ -26,6 +44,8 @@ projects on the host.
 3. **Provisioning:** PJangler, CommonProject, Hermes agent templates.
 4. **Agent capability:** Skillex, Hindsight, canonical hooks.
 5. **Operator experience:** Candybar, HeyMa, product docs.
+6. **Planned execution integration:** Flume policy -> ACP sessions -> Bloodbank
+   commands -> Hermes fleet, with DeLoNET LiteLLM owning model routing.
 
 ## Local-first rule
 

@@ -3,6 +3,36 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-08-13
+
+### Agent session broker boundary
+
+Approved the LiteLLM Agent Control Plane for a gated evaluation as 33GOD's
+subordinate agent execution/session broker. ACP is explicitly not the 33GOD
+control plane: Flume retains workforce and delegation policy; PJangler and the
+fleet registry retain permanent identity; Bloodbank retains command ingress;
+Candystore retains audit history; Hindsight retains durable memory; DeLoNET
+LiteLLM retains provider credentials, budgets, aliases, and fallbacks; Holocene
+and DeLoHQ retain operator experience.
+
+The decision defines the `33god-hermes` adapter mapping, the missing correlated
+assistant-message contract, a removable four-stage pilot, security and shutdown
+gates, and BMAD deliverables owned by `33god-pm`. ACP, Flume, DeLoHQ, and
+OpenNotebook remain integration boundaries rather than active component
+registry members until each satisfies the normal repository/deployment,
+lifecycle, health, source-of-truth, and validation gates.
+
+### 33GOD research custody
+
+Declared OpenNotebook a searchable research/read model over canonical Git and
+BMAD evidence. The deterministic project corpus is named
+`33GOD - Platform Architecture and Control Plane`. Notebook sources, chats,
+summaries, and insights are non-authoritative until promoted into Git/BMAD.
+Secrets and runtime state are excluded from ingestion. Source custody may begin
+without embeddings while the new OpenNotebook deployment has no configured
+model provider; provider credentials must not be added until its tracked
+encryption/database secret debt is removed.
+
 ## 2026-08-11
 
 ### One Lifecycle Machine

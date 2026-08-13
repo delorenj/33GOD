@@ -2,7 +2,7 @@
 
 Status: Integrated local Compose stack live; component set expanded to thirteen
 Owner: 33GOD Director
-Last updated: August 10, 2026
+Last updated: August 13, 2026
 
 ## Summary
 
@@ -106,6 +106,31 @@ PJangler renders from; Voxxy is a design target. Both are excluded from the
 active registry until a repository and contract exist, matching the rule applied
 to Flume, Holyfields, and Hookd.
 
+### Planned external integration boundaries
+
+The target product now includes additional integration boundaries without
+promoting them into the active thirteen-component registry:
+
+- **Flume** owns workforce hierarchy, delegation, authority, escalation, and
+  budget policy. It remains a planned protocol/product boundary until a real
+  repository and contract exist.
+- **LiteLLM Agent Control Plane (ACP)** is an experimental session/runtime
+  broker beneath Flume. It may normalize ephemeral and managed-agent sessions,
+  but it cannot replace PJangler identity, the Hermes fleet, Bloodbank command
+  ingress, Hindsight memory, or Holocene mission control.
+- **DeLoNET LiteLLM** is the external model gateway and sole owner of provider
+  credentials, model aliases, budgets, and fallback policy.
+- **OpenNotebook** is the searchable research/read model for 33GOD source
+  material. Git and BMAD artifacts remain authoritative; notebook summaries and
+  chats become decisions only after promotion back into Git/BMAD.
+
+**DeLoHQ** is the bounded mobile executive surface for status, approvals,
+exceptions, budgets, and coarse controls. It is currently represented by
+Holocene's `/hq` surface rather than a separate active component.
+
+The complete ownership and pilot decision is recorded in
+`33god-platform/docs/litellm-agent-control-plane-integration.md`.
+
 ## Current control-plane state
 
 `33god-platform/` is the product control-plane directory and root-owned
@@ -187,6 +212,8 @@ The product must make the whole 33GOD pipeline feel like one maintained system.
    skill owned by the component whose contract it describes.
 8. Keep exactly one ticket-lifecycle state machine across every consumer.
 9. Preserve a path to hosted, private, subscription-based deployment.
+10. Add a removable normalized agent-session layer without creating a second
+    project, fleet, event, memory, model, or operator source of truth.
 
 ## Non-goals
 
@@ -437,6 +464,31 @@ Acceptance criteria:
 - Local-only assumptions remain visible in the render-only cloud model until a
   separate hosted architecture removes them.
 
+### FR16. Normalized agent sessions and research custody
+
+The platform must support a gated normalized session broker and searchable
+research corpus without moving canonical ownership into either system.
+
+Acceptance criteria:
+
+- ACP is deployed only as a pinned, protected, removable lab service until the
+  managed-agent adapter passes its gates.
+- Permanent identity remains in `.project.json`, PJangler, and the Hermes fleet
+  registry; ACP may own only disposable runtime/session identity.
+- Managed ACP turns publish schema-valid
+  `bloodbank.v1.agent.invocation.start` commands through the fleet-shared
+  gateway using `data.target_agent_id`, correlation, and idempotency.
+- Assistant text/artifacts return through a governed correlated Bloodbank
+  message or response contract before ACP chat is called complete.
+- DeLoNET LiteLLM retains every provider credential and fallback rule; ACP gets
+  only a scoped virtual key.
+- Hindsight remains durable memory, Candystore remains durable audit, Holocene
+  remains mission control, and DeLoHQ exposes only bounded executive controls.
+- The deterministic OpenNotebook project corpus indexes canonical sources with
+  provenance and never ingests secrets or becomes the decision record.
+- Stopping ACP leaves every existing PM, heartbeat, gateway, and Bloodbank route
+  operational.
+
 ## Non-functional requirements
 
 - **Private source:** The platform is not designed as open source by default.
@@ -491,6 +543,12 @@ These issues are the first things the director must triage.
    differs from a `main` that has moved 21 commits past it. The branch ref is
    preserved and its worktree is removed. Decide whether any of the CANPM-T1/T2
    events-migration work is still wanted before deleting the ref.
+
+8. **Run the ACP BMAD alignment and isolated pilot.** Reconcile the approved
+   ownership decision into product brief, PRD, architecture, epics, and Plane
+   stories. Do not register or deploy ACP as a permanent component until the
+   removable lab, canonical Bloodbank bridge, assistant-response contract,
+   secret boundary, and shutdown-independence gates are evidenced.
 
 **Resolved 2026-07-15:** Candybar remains active. Holyfields and Hookd are
 legacy definitions and are excluded from the active component list until their
@@ -568,6 +626,11 @@ Make the platform operable by agents and humans.
 - Promote pipeline changelog use into the default change workflow.
 - Add baseline ledger generation.
 - Surface stack health in Holocene.
+- Run the ACP isolated lab and managed-Hermes adapter spike after BMAD
+  alignment; project only approved session health into Holocene and bounded
+  approvals/status into DeLoHQ.
+- Establish `33GOD - Platform Architecture and Control Plane` as the
+  deterministic OpenNotebook read model over canonical Git/BMAD evidence.
 - Create backfill apply flows only after dry-run checks are reliable.
 
 ### Phase 6. Prepare hosted deployment

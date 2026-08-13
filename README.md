@@ -56,6 +56,20 @@ specs, templates, CLIs, and agent bundles are first-class.
 Skillex, Hindsight, and HeyMa live outside this checkout; their manifests point
 at their real paths and `platform:components` reports presence.
 
+### Planned integrations
+
+Flume, the LiteLLM Agent Control Plane, DeLoNET LiteLLM, DeLoHQ, and
+OpenNotebook are target integration boundaries, not active registry members.
+The accepted direction keeps ACP subordinate: Flume owns workforce policy,
+ACP normalizes sessions, Bloodbank dispatches canonical commands, Hermes runs
+managed agents, and DeLoNET LiteLLM owns model credentials and fallback policy.
+Holocene remains mission control; DeLoHQ is the bounded executive surface;
+OpenNotebook is a searchable read model over canonical Git/BMAD evidence.
+
+See the
+[`LiteLLM Agent Control Plane integration decision`](33god-platform/docs/litellm-agent-control-plane-integration.md)
+for the ownership matrix, contracts, pilot gates, and BMAD handoff.
+
 ---
 
 ## Quick start
