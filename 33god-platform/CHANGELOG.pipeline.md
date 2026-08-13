@@ -33,6 +33,12 @@ without embeddings while the new OpenNotebook deployment has no configured
 model provider; provider credentials must not be added until its tracked
 encryption/database secret debt is removed.
 
+The notebook is now live with ID `notebook:5n0x8mn63mvijhj7b2zl`. All 11
+provenance-stamped initial sources completed processing with embeddings off and
+no configured model provider. The exact source IDs, revisions, classifications,
+and ingestion hashes are recorded in
+`knowledge/open-notebook-33god.yaml`.
+
 ## 2026-08-11
 
 ### One Lifecycle Machine

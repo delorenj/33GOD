@@ -1,0 +1,95 @@
+version: 1
+kind: open-notebook-corpus-receipt
+generated_at: 2026-08-13T21:25:58Z
+service:
+  ui: https://notebooklm.delo.sh
+  api: https://notebooklm.delo.sh:8443
+  access: google-authenticated
+notebook:
+  id: "notebook:5n0x8mn63mvijhj7b2zl"
+  name: "33GOD - Platform Architecture and Control Plane"
+  archived: false
+  source_count: 11
+  note_count: 0
+custody:
+  authority: read-model-only
+  canonical_sources: git-and-bmad
+  promotion_rule: notebook output becomes a decision only after review and promotion to Git/BMAD
+  secret_ingestion: forbidden
+processing:
+  all_sources_completed: true
+  embeddings_enabled: false
+  embedded_chunks: 0
+  configured_model_providers: 0
+  rationale: source custody can begin without sending content to an unconfigured model provider
+sources:
+  - id: "source:8fy1tv2g38q6zc3x81yv"
+    title: "[CURRENT] ACP integration decision - 2026-08-13"
+    authority: canonical
+    original_path: /home/delorenj/code/33GOD/33god-platform/docs/litellm-agent-control-plane-integration.md
+    revision: d9997a9fdc750ee239911789acb765b94e0e9536
+    ingest_sha256: cb5f9a65f2e2e57696056b9d08bc243558f26e03ef919f2fb9277bcf873e6bec
+  - id: "source:jk0b29m0lwxuyuxz2ti6"
+    title: "[CURRENT] 33GOD root PRD - 2026-08-13"
+    authority: canonical
+    original_path: /home/delorenj/code/33GOD/PRD.md
+    revision: d9997a9fdc750ee239911789acb765b94e0e9536
+    ingest_sha256: 5889b9a128fd5dc471845d69b58c86cd4deb13a058fd2c833e444a98b1257597
+  - id: "source:ao49apxb19k9pfsdmif7"
+    title: "[CURRENT] 33GOD BMAD architecture - 2026-08-13 snapshot"
+    authority: canonical-bmad
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/architecture.md
+    revision: d9997a9fdc750ee239911789acb765b94e0e9536
+    ingest_sha256: 185ebab55226302b839d032b6bb7c3cadb3693590d8e91a9d67864797c11055c
+  - id: "source:h5tllhdkft2jqf5zgqi9"
+    title: "[CURRENT] 33GOD platform product map - 2026-08-13"
+    authority: canonical-projection
+    original_path: /home/delorenj/code/33GOD/33god-platform/docs/product-map.md
+    revision: d9997a9fdc750ee239911789acb765b94e0e9536
+    ingest_sha256: 2712227b362e510b38efc87987c2c63cfb2a1bf8f7b32a210781257ebea5700d
+  - id: "source:opt59wmi7mh4z52nuxos"
+    title: "[CURRENT] Bloodbank Hermes gateway contract - 2026-08-13 snapshot"
+    authority: canonical-component-contract
+    original_path: /home/delorenj/code/33GOD/bloodbank/services/hermes-gateway/README.md
+    revision: bloodbank@d894ee8f55a7eedbd285210c1056543abbbc2aaf
+    root_projection: d9997a9fdc750ee239911789acb765b94e0e9536
+    ingest_sha256: 0e180c6b6c413df44c1ddce4512b8691df3b52bb549cde7e970b7f189e4e813b
+  - id: "source:l4ukm2iyltygucqsl4sv"
+    title: "[CURRENT] Bloodbank agent invocation start schema v1"
+    authority: canonical-schema
+    original_path: /home/delorenj/code/33GOD/bloodbank/schemas/bloodbank/v1/agent/invocation.start.v1.json
+    revision: bloodbank@d894ee8f55a7eedbd285210c1056543abbbc2aaf
+    root_projection: d9997a9fdc750ee239911789acb765b94e0e9536
+    ingest_sha256: ff198b20e48340424cd0929bee3e74f851393d103cd36b62a9d9e9fa4a66a06b
+  - id: "source:a1jo2cqhx7vl3xh2ja0u"
+    title: "[CURRENT] Hermes fleet operations contract - 2026-08-13 snapshot"
+    authority: live-operations-contract
+    original_path: /home/delorenj/code/33GOD/pjangler/skills/agent-fleet-operations/SKILL.md
+    revision: unversioned-deployed-skill-fanout-snapshot
+    source_content_sha256: 3a7b26adfa138491a6bd92bad65f893e7e5e503e8ca2800c070bafd058ddccfe
+    ingest_sha256: fe3dfc0ae6541aa321dd4183199105eba18cc1f3ef89d87dc5c3a4ac3fdc22d7
+  - id: "source:so3tkpnqrd2p0uqoezgb"
+    title: "[CURRENT] Holocene org model implementation - 2026-08-13 snapshot"
+    authority: live-implementation
+    original_path: /home/delorenj/code/33GOD/holocene/packages/org-model/src/index.ts
+    revision: holocene@4fd42681e7e878f34b41f881713b0173bb08957a
+    root_projection: d9997a9fdc750ee239911789acb765b94e0e9536
+    ingest_sha256: d0192d64f9434ae8731bb7091c3fa99df4ff9e4c920239d0988380dd4710b4a1
+  - id: "source:l487m2gqcs2tse7wuwxh"
+    title: "[CURRENT] DeLoNET LiteLLM gateway policy - 2026-08-13"
+    authority: canonical-stack-policy
+    original_path: /home/delorenj/docker/stacks/ai/litellm/README.md
+    revision: 586c4a1ace2e49a679ce99a8888be2033e18b39b
+    ingest_sha256: 07386d6392257f36dd436907e39c759400526e7a3f98d8506c5e20c3b998e43e
+  - id: "source:gkn9eb9s4xwcja9if9tx"
+    title: "[HISTORICAL NON-CANONICAL] Flume PRD - vault snapshot"
+    authority: historical-design-input
+    original_path: /home/delorenj/code/DeLoDocs/Projects/33GOD/Flume/PRD.md
+    revision: unversioned-vault-snapshot
+    ingest_sha256: 62e167256a746c4462a0192569e1eed091b1c2365bada7c82bf9b98aa6c2fe32
+  - id: "source:loq2r4o42wbum8t2qltv"
+    title: "[HISTORICAL NON-CANONICAL] Flume and Yi architecture - vault snapshot"
+    authority: historical-design-input
+    original_path: /home/delorenj/code/DeLoDocs/Projects/33GOD/Flume/flume-yi-architecture.md
+    revision: unversioned-vault-snapshot
+    ingest_sha256: c5f414d357e32dac7eba61db7ba4022834018f12190a00d344fc8b83d682ab21

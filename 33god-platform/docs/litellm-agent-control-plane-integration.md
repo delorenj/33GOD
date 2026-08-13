@@ -213,6 +213,12 @@ The deterministic project notebook is:
 
 `33GOD - Platform Architecture and Control Plane`
 
+It is live at `https://notebooklm.delo.sh` with ID
+`notebook:5n0x8mn63mvijhj7b2zl`. The initial 11-source corpus completed
+processing on 2026-08-13 with embeddings disabled and no configured model
+provider. Its machine-readable custody and ingestion receipt is
+[`../knowledge/open-notebook-33god.yaml`](../knowledge/open-notebook-33god.yaml).
+
 It indexes canonical and upstream evidence, including this decision, the root
 PRD, the platform product map, the Bloodbank command contract, the fleet
 operations contract, the DeLoNET LiteLLM gateway policy, and the pinned ACP
