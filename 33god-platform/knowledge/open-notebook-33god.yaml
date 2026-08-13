@@ -1,6 +1,6 @@
 version: 1
 kind: open-notebook-corpus-receipt
-generated_at: 2026-08-13T21:25:58Z
+generated_at: 2026-08-13T22:40:00Z
 service:
   ui: https://notebooklm.delo.sh
   api: https://notebooklm.delo.sh:8443
@@ -9,7 +9,9 @@ notebook:
   id: "notebook:5n0x8mn63mvijhj7b2zl"
   name: "33GOD - Platform Architecture and Control Plane"
   archived: false
-  source_count: 11
+  source_count: 22
+  active_source_count: 20
+  superseded_source_count: 2
   note_count: 0
 custody:
   authority: read-model-only
@@ -18,17 +20,28 @@ custody:
   secret_ingestion: forbidden
 processing:
   all_sources_completed: true
+  completed_source_count: 22
   embeddings_enabled: false
   embedded_chunks: 0
   configured_model_providers: 0
   rationale: source custody can begin without sending content to an unconfigured model provider
+freshness:
+  audited_at: 2026-08-13T22:40:00Z
+  policy: compare canonical source content to the receipt; supersede changed snapshots and retain their provenance
+  reviewed_bmad_sources_added: 8
+  operational_receipts_added: 1
+  canonical_snapshots_superseded: 2
+  historical_noncanonical_snapshots_retained: 2
+  stage_1_go_no_go: re-run this audit because a completed ingestion status alone does not prove continued freshness
 sources:
   - id: "source:8fy1tv2g38q6zc3x81yv"
-    title: "[CURRENT] ACP integration decision - 2026-08-13"
-    authority: canonical
+    title: "[SUPERSEDED @ d9997a9] ACP integration decision - 2026-08-13"
+    authority: superseded-canonical-snapshot
     original_path: /home/delorenj/code/33GOD/33god-platform/docs/litellm-agent-control-plane-integration.md
     revision: d9997a9fdc750ee239911789acb765b94e0e9536
     ingest_sha256: cb5f9a65f2e2e57696056b9d08bc243558f26e03ef919f2fb9277bcf873e6bec
+    lifecycle: superseded
+    superseded_by: "source:rk14rk9znopuzyci8xgu"
   - id: "source:jk0b29m0lwxuyuxz2ti6"
     title: "[CURRENT] 33GOD root PRD - 2026-08-13"
     authority: canonical
@@ -36,11 +49,13 @@ sources:
     revision: d9997a9fdc750ee239911789acb765b94e0e9536
     ingest_sha256: 5889b9a128fd5dc471845d69b58c86cd4deb13a058fd2c833e444a98b1257597
   - id: "source:ao49apxb19k9pfsdmif7"
-    title: "[CURRENT] 33GOD BMAD architecture - 2026-08-13 snapshot"
-    authority: canonical-bmad
+    title: "[SUPERSEDED @ d9997a9] 33GOD BMAD architecture - 2026-08-13"
+    authority: superseded-canonical-bmad-snapshot
     original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/architecture.md
     revision: d9997a9fdc750ee239911789acb765b94e0e9536
     ingest_sha256: 185ebab55226302b839d032b6bb7c3cadb3693590d8e91a9d67864797c11055c
+    lifecycle: superseded
+    superseded_by: "source:9cjjbyxydscqg37eqmjd"
   - id: "source:h5tllhdkft2jqf5zgqi9"
     title: "[CURRENT] 33GOD platform product map - 2026-08-13"
     authority: canonical-projection
@@ -93,3 +108,82 @@ sources:
     original_path: /home/delorenj/code/DeLoDocs/Projects/33GOD/Flume/flume-yi-architecture.md
     revision: unversioned-vault-snapshot
     ingest_sha256: c5f414d357e32dac7eba61db7ba4022834018f12190a00d344fc8b83d682ab21
+  - id: "source:rk14rk9znopuzyci8xgu"
+    title: "[CURRENT] ACP integration decision - Stage 0 traceable - 2026-08-13"
+    authority: canonical
+    original_path: /home/delorenj/code/33GOD/33god-platform/docs/litellm-agent-control-plane-integration.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: 48748d1cd7fb5c2ea256de2e45180e77b9f02d5c51b0b34e34861376423a0c2b
+    ingest_sha256: 9007ddafcde3de11ed2cf1e63e59b8edb4a806e3c4161930307f4737ce4c695a
+    supersedes: "source:8fy1tv2g38q6zc3x81yv"
+  - id: "source:9cjjbyxydscqg37eqmjd"
+    title: "[CURRENT] 33GOD BMAD architecture - 2026-08-13 refreshed"
+    authority: canonical-bmad
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/architecture.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: 20dba762c68ccb7399aea707854094b7256a2867e7083fe63c5422b857a3ca7b
+    ingest_sha256: 4a1f184195c823a4d7688046cd77534dafb1248b4a70a062f3c0e0461034f32a
+    supersedes: "source:ao49apxb19k9pfsdmif7"
+  - id: "source:ohmkmzz003rpzp8ezrer"
+    title: "[CURRENT BMAD] ACP planning memlog - 2026-08-13"
+    authority: canonical-bmad-session-log
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/.memlog.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: b9963469e7bc9613461c462c714c51c1b7680394ccc2c114ca58839017081514
+    ingest_sha256: 835c5db56b9f9b08bc844750cb0e425402998f59576a039c8038a5191b983f8c
+  - id: "source:sj3mjx5svaabx8dj08zd"
+    title: "[CURRENT BMAD] ACP product brief delta - 2026-08-13"
+    authority: canonical-bmad-product
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/product-brief-delta.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: adac5127dab358bc6d50c3b1081626ac5924b1f819513c9b64b0f7d5339ddcc0
+    ingest_sha256: 695808ebb11f4f258a36427b6715413a5e0856c775e8fab02e200069f6ee745d
+  - id: "source:b8ka14vkfby0tjbn9ugm"
+    title: "[CURRENT BMAD] ACP PRD reconciliation - 2026-08-13"
+    authority: canonical-bmad-prd
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/prd-reconciliation.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: fa075bacaa9c164ea39094baafac560a7d8e78f0793fc1fbebb950825c664bea
+    ingest_sha256: 4e8f4707c1eb08eb8d4255c9992da4bafaaed79eabdd4c5bc8141066b5349b41
+  - id: "source:7t4ajmz5w3ifcfccv519"
+    title: "[CURRENT BMAD] ACP architecture spine - 2026-08-13"
+    authority: canonical-bmad-architecture
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/ARCHITECTURE-SPINE.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: 3bef8532e72f874883be90d428b704d5cde0d18b91f7c1d9de9b1e8d8f2fd572
+    ingest_sha256: 64fbece01897f7eecb78a36ba55181428373a72c9df6970ea2b4e3ec958e638c
+  - id: "source:cri5a0mobrk23eovr3v5"
+    title: "[CURRENT BMAD] ACP epics and stories - 2026-08-13"
+    authority: canonical-bmad-plan
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/epics-and-stories.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: 29f8d0fd8a0bcfaf18d1699fd5258adbb8c21979439a04f7280f095e40649122
+    ingest_sha256: 2e618bd03ee52d7d5f05ed08757377542cc1346b6c25a7804ddd0f67cb361645
+  - id: "source:83wsn6c8v4vfqz4hlao9"
+    title: "[CURRENT BMAD] ACP implementation readiness - 2026-08-13"
+    authority: canonical-bmad-readiness
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/implementation-readiness-assessment.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: 601e439ca205a6b1d048dd0220e3c1ce014339c7a70b847a508a0c48641d603a
+    ingest_sha256: 29a44df3889a5095618e0933171ac2ceb7a888206d8674fd30bd78ac466fa18a
+  - id: "source:bzawh8j8frnu20jepq9u"
+    title: "[CURRENT BMAD] ACP dependency and ownership ledger - 2026-08-13"
+    authority: canonical-bmad-ledger
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/dependency-and-ownership-ledger.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: 5037958a2b478426cb85e0c3a4c9e8e4e9b03162e6df0dc805d14c8401d89948
+    ingest_sha256: fb63eec7d55fd95927a78d344c42bf1bacf5fbadf07b2fd5ccf960b905ec8f70
+  - id: "source:79w4jhi6j7jcka2bd5bw"
+    title: "[CURRENT BMAD] ACP evidence and decision ledger - 2026-08-13"
+    authority: canonical-bmad-ledger
+    original_path: /home/delorenj/code/33GOD/_bmad-output/planning-artifacts/litellm-agent-control-plane/evidence-and-decision-ledger.md
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: d3f198006dc34a8e299b9bfc7d87c8000739a389736c64c1799bfef7cf2b0c9a
+    ingest_sha256: dce5ae281a56a740f031a8674c6a0c156a00941b0e76c559244d098a41d84cb9
+  - id: "source:2kryjqz316x6aey9w9gy"
+    title: "[CURRENT RECEIPT] ACP PM and Plane dispatch - 2026-08-13"
+    authority: canonical-operational-receipt
+    original_path: /home/delorenj/code/33GOD/33god-platform/knowledge/33god-pm-litellm-acp-dispatch.yaml
+    revision: 457f605fcbf60301134ad5bdfdaedc73d0b817d4
+    source_content_sha256: c9eaa3e2dc207ebcab8a98f86dcaed40e1811e78cf4d299d3b3f151790537d53
+    ingest_sha256: f908a56d1c02a6ce03e55da05038d05c1c70c224542a6a7d21c36f69df70ff09

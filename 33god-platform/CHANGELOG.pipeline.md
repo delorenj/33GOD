@@ -20,6 +20,13 @@ links passed authoritative readback. Bloodbank thread and command lineage, every
 real Plane ID, and the operator approval boundary are preserved in
 `knowledge/33god-pm-litellm-acp-dispatch.yaml`.
 
+The dispatch exposed a credential-loader defect: the upstream Plane adapter
+sourced the entire shared fleet dotenv, allowing unrelated command substitutions
+or credential helpers to execute. `PJAN-58` is complete. The generated 33GOD PM
+adapter reads only `PLANE_<WORKSPACE>_API_KEY` as inert data; the canonical Hermes
+template (`7f32bd2`) and PJangler projection (`4959e45`) carry the same fix. A
+regression test proves unrelated dotenv commands are never evaluated.
+
 ### Agent session broker boundary
 
 Approved the LiteLLM Agent Control Plane for a gated evaluation as 33GOD's
@@ -53,6 +60,13 @@ provenance-stamped initial sources completed processing with embeddings off and
 no configured model provider. The exact source IDs, revisions, classifications,
 and ingestion hashes are recorded in
 `knowledge/open-notebook-33god.yaml`.
+
+The ACP BMAD handoff expanded the corpus to 22 sources: eight reviewed BMAD
+artifacts, the PM/Plane receipt, refreshed current copies of the integration
+decision and parent BMAD architecture, and two explicitly labeled superseded
+snapshots retained for provenance. All 22 sources report completed processing;
+20 are active/current-or-historical inputs and two are superseded snapshots.
+Embeddings remain off and no model provider is configured.
 
 ## 2026-08-11
 
