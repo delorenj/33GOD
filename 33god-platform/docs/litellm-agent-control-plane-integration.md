@@ -216,7 +216,8 @@ The deterministic project notebook is:
 It is live at `https://notebooklm.delo.sh` with ID
 `notebook:5n0x8mn63mvijhj7b2zl`. The initial 11-source corpus completed
 processing on 2026-08-13 with embeddings disabled and no configured model
-provider. Its machine-readable custody and ingestion receipt is
+provider. The reviewed BMAD package and PM/Plane dispatch receipt form the
+next deterministic expansion. The machine-readable custody and ingestion receipt is
 [`../knowledge/open-notebook-33god.yaml`](../knowledge/open-notebook-33god.yaml).
 
 It indexes canonical and upstream evidence, including this decision, the root
@@ -240,24 +241,30 @@ Custody rules:
 
 ## Pilot plan
 
-### Stage 0 - BMAD alignment
+### Stage 0 - BMAD alignment (complete)
 
-The `33god-pm` agent owns the BMAD flow. It must:
+The `33god-pm` agent owns the BMAD flow. It completed these requirements:
 
 1. reconcile this decision into the root product brief/PRD/architecture;
 2. decide whether ACP is an external integration, a new repository, or a
    component only after the registry gates can be satisfied;
 3. define epics and ticket-sized stories across Bloodbank, Holocene, Flume,
    DeLoHQ, LiteLLM, and the ACP adapter;
-4. create or update traceable Plane work on the `33GPM` board;
+4. create traceable Plane work on the active `33GOD Platform` board;
 5. record dependencies, owners, acceptance tests, security gates, and rollback;
 6. keep Flume described as a planned protocol/product boundary until a real
    repository and contract exist;
 7. distinguish the existing HeyMa validation drift from ACP-caused work;
 8. commit and push all resulting planning artifacts.
 
-Stage 0 approves work; it does not authorize production deployment or provider
-credential duplication.
+Stage 0 evidence is the reviewed package under
+[`../../_bmad-output/planning-artifacts/litellm-agent-control-plane/`](../../_bmad-output/planning-artifacts/litellm-agent-control-plane/)
+and the machine-readable
+[`33god-pm-litellm-acp-dispatch.yaml`](../knowledge/33god-pm-litellm-acp-dispatch.yaml)
+receipt. Plane keys `33GOD-4` through `33GOD-32` cover one initiative container,
+seven epics, and 21 stories; all 28 requested parent links passed authoritative
+readback. Stage 0 approves the planning baseline; it does not authorize production
+deployment or provider credential duplication.
 
 ### Stage 1 - isolated lab
 

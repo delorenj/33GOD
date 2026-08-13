@@ -17,6 +17,8 @@
 #   transition <id> <normalized>  -> moves issue; normalized in
 #                                     backlog|unstarted|started|in_review|completed
 #   create_board <name> <id> <d>  -> JSON {board_id, board_url}
+#   create_issue [--if-absent] <title> [description]
+#                                  -> JSON {issue_id,key,issue_url,created}
 #
 # Each provider reads its credentials from the environment (see providers/*.sh
 # headers) and the board binding from role.yaml under `ticket_provider:`.

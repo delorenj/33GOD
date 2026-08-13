@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Plane ticket-provider adapter.
 #
-# Credentials:  PLANE_API_KEY   (X-API-Key header)
+# Credentials:  PLANE_API_KEY or PLANE_<WORKSPACE>_API_KEY (X-API-Key header)
 # Endpoint:     PLANE_BASE       (default https://plane.delo.sh)
 # Board binding (role.yaml `ticket_provider:`):
 #   name: plane
@@ -21,8 +21,16 @@ ROLE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 ROLE_YAML="$ROLE_DIR/role.yaml"
 BASE="${PLANE_BASE:-https://plane.delo.sh}"
 
+FLEET_ENV="${HERMES_FLEET_ENV:-$HOME/.hermes/fleet.env}"
+
 die() { echo "plane: $*" >&2; exit 1; }
 need_key() { [ -n "${PLANE_API_KEY:-}" ] || die "PLANE_API_KEY is not set"; }
+
+workspace_key() {
+  key="$(printf '%s' "${1:-default}" | tr '[:lower:]' '[:upper:]' | sed 's/[^A-Z0-9]/_/g')"
+  [ -n "$key" ] || key="DEFAULT"
+  printf 'PLANE_%s_API_KEY' "$key"
+}
 
 tp_cfg() {
   [ -f "$ROLE_YAML" ] || return 0
@@ -60,6 +68,38 @@ PROJ="$(pj_cfg board_id)"; [ -n "$PROJ" ] || PROJ="$(tp_cfg project)"
 SM_IN_REVIEW="$(tp_cfg in_review)"; SM_IN_REVIEW="${SM_IN_REVIEW:-In Review}"
 SM_DONE="$(tp_cfg completed)"; SM_DONE="${SM_DONE:-Done}"
 API="$BASE/api/v1/workspaces/$WS"
+
+if [ -z "${PLANE_API_KEY:-}" ]; then
+  KEY="$(workspace_key "$WS")"
+  eval "PLANE_API_KEY=\${$KEY:-}"
+  if [ -z "${PLANE_API_KEY:-}" ] && [ -f "$FLEET_ENV" ]; then
+    # Read only the requested dotenv key as data. Sourcing the shared fleet
+    # file would execute unrelated command substitutions and credential helpers.
+    PLANE_API_KEY="$(python3 - "$FLEET_ENV" "$KEY" <<'PY'
+import pathlib, sys
+
+path = pathlib.Path(sys.argv[1])
+key = sys.argv[2]
+value = ""
+for raw in path.read_text(encoding="utf-8").splitlines():
+    line = raw.strip()
+    if not line or line.startswith("#"):
+        continue
+    if line.startswith("export "):
+        line = line[7:].lstrip()
+    name, sep, candidate = line.partition("=")
+    if sep and name.strip() == key:
+        candidate = candidate.strip()
+        if len(candidate) >= 2 and candidate[0] == candidate[-1] and candidate[0] in "'\"":
+            candidate = candidate[1:-1]
+        value = candidate
+        break
+print(value, end="")
+PY
+)"
+  fi
+  export PLANE_API_KEY
+fi
 
 # api METHOD PATH [JSON_BODY] — call Plane REST, print response body.
 api() {
@@ -196,6 +236,40 @@ print(pid)')"
     fi
     [ -n "$PID" ] || die "create_board failed"
     printf '{"board_id":"%s","board_url":"%s/%s/projects/%s/issues/"}\n' "$PID" "$BASE" "$WS" "$PID"
+    ;;
+
+  create_issue)
+    # File a new ticket on the bound board. Pass --if-absent to reuse an
+    # existing exact, case-insensitive title match.
+    IF_ABSENT=0
+    case "${1:-}" in --if-absent) IF_ABSENT=1; shift ;; esac
+    TITLE="${1:?usage: create_issue [--if-absent] <title> [description]}"; DESC="${2:-}"
+    [ -n "$WS" ] || die "workspace not set (.project.json ticket_provider.workspace or PLANE_WORKSPACE)"
+    [ -n "$PROJ" ] || die "project not set (.project.json ticket_provider.board_id; run 42-ticket-provider.sh)"
+    IID=""; SEQ=""; CREATED=true
+    if [ "$IF_ABSENT" = 1 ]; then
+      HIT="$(api GET "projects/$PROJ/issues/?per_page=200" | TITLE="$TITLE" python3 -c 'import sys,json,os
+d=json.load(sys.stdin); rows=d if isinstance(d,list) else d.get("results", []) if isinstance(d,dict) else []
+want=os.environ["TITLE"].strip().lower()
+m=next((i for i in rows if (i.get("name") or "").strip().lower()==want), None)
+print((str(m.get("id","")) + " " + str(m.get("sequence_id","") or "")) if m else "")')"
+      if [ -n "$HIT" ]; then IID="${HIT%% *}"; SEQ="${HIT#* }"; CREATED=false; fi
+    fi
+    if [ -z "$IID" ]; then
+      NEW="$(api POST "projects/$PROJ/issues/" \
+        "$(python3 -c 'import html,json,sys
+body={"name": sys.argv[1]}
+desc=sys.argv[2]
+if desc: body["description_html"]="<p>"+html.escape(desc)+"</p>"
+print(json.dumps(body))' "$TITLE" "$DESC")" \
+        | python3 -c 'import sys,json
+d=json.load(sys.stdin)
+print(str(d.get("id","")) + " " + str(d.get("sequence_id","") or ""))')"
+      IID="${NEW%% *}"; SEQ="${NEW#* }"
+    fi
+    [ -n "$IID" ] || die "create_issue failed"
+    printf '{"issue_id":"%s","key":"%s","issue_url":"%s/%s/projects/%s/issues/%s","created":%s}\n' \
+      "$IID" "$SEQ" "$BASE" "$WS" "$PROJ" "$IID" "$CREATED"
     ;;
 
   *) die "unknown op: $OP" ;;

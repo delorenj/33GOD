@@ -1,0 +1,93 @@
+version: 1
+kind: bmad-plane-dispatch-receipt
+generated_at: 2026-08-13T22:27:00Z
+initiative:
+  stable_key: ACP-INIT
+  name: LiteLLM Agent Control Plane Integration
+  authority: git-and-bmad
+  implementation_authorized: false
+plane:
+  base_url: https://plane.delo.sh
+  workspace: 33god
+  project_name: 33GOD Platform
+  project_identifier: 33GOD
+  project_id: 15258893-0206-4e8f-aea6-340eb217988c
+  board_url: https://plane.delo.sh/33god/projects/15258893-0206-4e8f-aea6-340eb217988c/issues/
+  api_generation: legacy-issues
+  native_initiatives_available: false
+dispatch:
+  owner: 33god-pm
+  transport: bloodbank.cmd.v1.agent.invocation.start
+  thread_id: bmad:33god:litellm-acp
+  correlation_id: c46b02ea-6175-5743-8fef-fa75e5d7dd6f
+  final_turn_id: planning:2026-08-13:finalize-v4
+  final_stream_sequence: 1365
+  operator_effect_boundary:
+    reason: Hermes smart approval assessor timed out before the delegated batch write
+    executor: authorized Codex operator
+    implementation: PM-authored idempotent dispatcher
+    credential_handling: workspace-scoped runtime injection; never logged or persisted here
+  attempts:
+    - stream_sequence: 1362
+      turn_id: planning:2026-08-13:architecture-v1
+      outcome: provider-exhausted-no-artifacts
+    - stream_sequence: 1363
+      turn_id: planning:2026-08-13:resume-v2
+      outcome: artifacts-authored-and-adversarially-reviewed
+    - stream_sequence: 1364
+      turn_id: planning:2026-08-13:finalize-v3
+      outcome: blocked-before-plane-effects
+    - stream_sequence: 1365
+      turn_id: planning:2026-08-13:finalize-v4
+      outcome: dispatcher-authored-and-validated; operator-completed-effect
+summary:
+  item_count: 29
+  initiative_count: 1
+  epic_count: 7
+  story_count: 21
+  created_count: 29
+  reused_count: 0
+  sequence_min: 4
+  sequence_max: 32
+  parent_links_requested: 28
+  parent_links_verified: 28
+  description_only_links: 0
+idempotency:
+  strategy: exact stable-key-prefixed Plane title
+  retry_behavior: reuse and update matching title, then verify authoritative readback
+items:
+  - {stable_key: ACP-INIT, source_key: ACP-INIT, kind: initiative, plane_key: 33GOD-4, id: e8583b90-9fc2-4f69-b480-0369f4dcb4fd, parent: null, linkage: root, disposition: created}
+  - {stable_key: ACP-E1, source_key: ACP-E0, kind: epic, plane_key: 33GOD-5, id: 94622cee-55e3-4d7f-b457-282ee0f3621d, parent: ACP-INIT, linkage: linked, disposition: created}
+  - {stable_key: ACP-S1.1, source_key: ACP-E0.1, kind: story, plane_key: 33GOD-6, id: a43b3fb6-d8c1-4487-a669-76a535182713, parent: ACP-E1, linkage: linked, disposition: created}
+  - {stable_key: ACP-E2, source_key: ACP-E1, kind: epic, plane_key: 33GOD-7, id: a982eafe-0172-40d9-94df-7df925dfe460, parent: ACP-INIT, linkage: linked, disposition: created}
+  - {stable_key: ACP-S2.1, source_key: ACP-E1.1, kind: story, plane_key: 33GOD-8, id: 8ab578ec-76d2-466b-b581-8fa818ca724e, parent: ACP-E2, linkage: linked, disposition: created}
+  - {stable_key: ACP-S2.2, source_key: ACP-E1.2, kind: story, plane_key: 33GOD-9, id: 81e6de25-7aba-4008-90f2-c78b7c3e6f06, parent: ACP-E2, linkage: linked, disposition: created}
+  - {stable_key: ACP-S2.3, source_key: ACP-E1.3, kind: story, plane_key: 33GOD-10, id: 2ad19f48-5ef2-40dc-9b26-cf65ae9aa4f0, parent: ACP-E2, linkage: linked, disposition: created}
+  - {stable_key: ACP-S2.4, source_key: ACP-E1.4, kind: story, plane_key: 33GOD-11, id: 9c255c3d-e76f-41d3-a8f4-25f49ae16e4f, parent: ACP-E2, linkage: linked, disposition: created}
+  - {stable_key: ACP-S2.5, source_key: ACP-E1.5, kind: story, plane_key: 33GOD-12, id: aab170a0-9c2c-4e56-a104-6df164c82c4e, parent: ACP-E2, linkage: linked, disposition: created}
+  - {stable_key: ACP-E3, source_key: ACP-E2, kind: epic, plane_key: 33GOD-13, id: 81bd6a04-03ca-4537-9453-2bd10fdc5fda, parent: ACP-INIT, linkage: linked, disposition: created}
+  - {stable_key: ACP-S3.1, source_key: ACP-E2.1, kind: story, plane_key: 33GOD-14, id: 1060857c-93cb-4887-9e11-af1c1ed0cfdb, parent: ACP-E3, linkage: linked, disposition: created}
+  - {stable_key: ACP-S3.2, source_key: ACP-E2.2, kind: story, plane_key: 33GOD-15, id: aaf9bf73-cf70-46fd-841d-93f6ced6af5f, parent: ACP-E3, linkage: linked, disposition: created}
+  - {stable_key: ACP-S3.3, source_key: ACP-E2.3, kind: story, plane_key: 33GOD-16, id: 0fc5f444-bb0c-424d-b874-4c65d57609f6, parent: ACP-E3, linkage: linked, disposition: created}
+  - {stable_key: ACP-S3.4, source_key: ACP-E2.4, kind: story, plane_key: 33GOD-17, id: 3c770215-f39a-45e0-b177-af4b2f7d5010, parent: ACP-E3, linkage: linked, disposition: created}
+  - {stable_key: ACP-S3.5, source_key: ACP-E2.5, kind: story, plane_key: 33GOD-18, id: 6e54e543-6d3b-4ea8-8638-b4143a89450d, parent: ACP-E3, linkage: linked, disposition: created}
+  - {stable_key: ACP-E4, source_key: ACP-E3, kind: epic, plane_key: 33GOD-19, id: cef47633-2d41-4163-9e53-a73031d90ffc, parent: ACP-INIT, linkage: linked, disposition: created}
+  - {stable_key: ACP-S4.1, source_key: ACP-E3.1, kind: story, plane_key: 33GOD-20, id: a06dff34-3b28-47f2-b7ed-1fb516ca79df, parent: ACP-E4, linkage: linked, disposition: created}
+  - {stable_key: ACP-S4.2, source_key: ACP-E3.2, kind: story, plane_key: 33GOD-21, id: b6056548-812f-4403-8a6f-0da88f081f6a, parent: ACP-E4, linkage: linked, disposition: created}
+  - {stable_key: ACP-S4.3, source_key: ACP-E3.3, kind: story, plane_key: 33GOD-22, id: 672eae56-c0ab-4c3d-ad0b-a818b3623653, parent: ACP-E4, linkage: linked, disposition: created}
+  - {stable_key: ACP-E5, source_key: ACP-E4, kind: epic, plane_key: 33GOD-23, id: b378f4a9-df12-498a-a118-42b40876f91d, parent: ACP-INIT, linkage: linked, disposition: created}
+  - {stable_key: ACP-S5.1, source_key: ACP-E4.1, kind: story, plane_key: 33GOD-24, id: 69f5040d-fd8f-4765-88fc-dde9c5ec611f, parent: ACP-E5, linkage: linked, disposition: created}
+  - {stable_key: ACP-S5.2, source_key: ACP-E4.2, kind: story, plane_key: 33GOD-25, id: 0d3cdd51-4042-4ed3-9dd4-8a04f6a4b6e7, parent: ACP-E5, linkage: linked, disposition: created}
+  - {stable_key: ACP-E6, source_key: ACP-E5, kind: epic, plane_key: 33GOD-26, id: be155f8d-d2a3-4b43-a8c4-8f659e806ebf, parent: ACP-INIT, linkage: linked, disposition: created}
+  - {stable_key: ACP-S6.1, source_key: ACP-E5.1, kind: story, plane_key: 33GOD-27, id: 51054699-5d53-411a-9aa5-fd8cd10f9db5, parent: ACP-E6, linkage: linked, disposition: created}
+  - {stable_key: ACP-S6.2, source_key: ACP-E5.2, kind: story, plane_key: 33GOD-28, id: f6178fc5-9e9c-4de4-b119-4a71c1c2805e, parent: ACP-E6, linkage: linked, disposition: created}
+  - {stable_key: ACP-E7, source_key: ACP-E6, kind: epic, plane_key: 33GOD-29, id: b8413b9a-0d2b-4b0a-931e-f70ebd1fba74, parent: ACP-INIT, linkage: linked, disposition: created}
+  - {stable_key: ACP-S7.1, source_key: ACP-E6.1, kind: story, plane_key: 33GOD-30, id: 64be4b03-cedd-4ca5-9dab-782c4cdd3e66, parent: ACP-E7, linkage: linked, disposition: created}
+  - {stable_key: ACP-S7.2, source_key: ACP-E6.2, kind: story, plane_key: 33GOD-31, id: 505bd7b3-918f-460a-a38c-8575dcdc18e3, parent: ACP-E7, linkage: linked, disposition: created}
+  - {stable_key: ACP-S7.3, source_key: ACP-E6.3, kind: story, plane_key: 33GOD-32, id: a023c7a1-2e45-4d33-8ca6-702734bc6429, parent: ACP-E7, linkage: linked, disposition: created}
+verification:
+  authoritative_readback: passed
+  all_items_on_expected_project: true
+  all_parent_links_verified: true
+  secret_scan_scope: receipt-only
+  secrets_present: false

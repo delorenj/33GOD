@@ -5,6 +5,21 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 
 ## 2026-08-13
 
+### ACP BMAD and Plane traceability
+
+The delegated `33god-pm` BMAD flow produced and adversarially reviewed the ACP
+product delta, PRD reconciliation, architecture spine, seven epics, 21 stories,
+readiness assessment, dependency/ownership ledger, evidence ledger, and session
+memlog. Git/BMAD remains authoritative; this completes Stage 0 planning only and
+does not prove or authorize an ACP deployment.
+
+The stale archived `33GPM` board binding was replaced with the active `33GOD
+Platform` binding. Plane now contains `33GOD-4` through `33GOD-32`: one ordinary-
+issue initiative container, seven epics, and 21 stories. All 28 non-root parent
+links passed authoritative readback. Bloodbank thread and command lineage, every
+real Plane ID, and the operator approval boundary are preserved in
+`knowledge/33god-pm-litellm-acp-dispatch.yaml`.
+
 ### Agent session broker boundary
 
 Approved the LiteLLM Agent Control Plane for a gated evaluation as 33GOD's

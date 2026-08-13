@@ -37,8 +37,8 @@ slack:
 # swapping providers is a one-line change here. Filled in by 42-ticket-provider.sh.
 ticket_provider:
   name: plane
-  board_id: "f6746659-7698-4b5a-b509-9666e35fab09"
-  board_url: "https://plane.delo.sh/33god/projects/f6746659-7698-4b5a-b509-9666e35fab09/issues/"
+  board_id: "15258893-0206-4e8f-aea6-340eb217988c"
+  board_url: "https://plane.delo.sh/33god/projects/15258893-0206-4e8f-aea6-340eb217988c/issues/"
   workspace: "33god"
   project: ""     # Plane project uuid (set by 42-ticket-provider.sh)
   # Optional normalized-state name overrides for non-standard boards.
@@ -56,7 +56,7 @@ plane:
   # Empty -> resolved from ~/.config/hermes-agent-template/config.toml [plane].workspace
   workspace: ""
   # identifier is set by .scripts/42-ticket-provider.sh after creation (plane only)
-  identifier: "33GPM"
+  identifier: "33GOD"
 # Bloodbank ingress is owned by one fleet-shared Hermes gateway. The gateway
 # reads the fleet registry and routes canonical commands by target_agent_id;
 # this profile does not install its own NATS consumer or inbox bridge.
