@@ -46,17 +46,17 @@ run = "python3 scripts/check-doc-drift.py --source-root \"${GOD_SOURCE_ROOT:-.}\
 
 [[watch_files]]
 patterns = [".agents/hooks/hooks.master.json"]
-task = "hooks-sync"
+task = "hooks:sync"
 
-[tasks.hooks-sync]
-description = "Fan the project hook master out to supported agent clients"
+[tasks."hooks:sync"]
+description = "Install hooks.master.json into each agent client's config (reaps stale copies)"
 run = "{{config_root}}/.agents/hooks/sync.py --install"
 
-[tasks.hooks-check]
-description = "Check the committed Claude hook projection against the master"
-run = "{{config_root}}/.agents/hooks/sync.py --check --target claude"
+[tasks."hooks:check"]
+description = "Verify each agent client's INSTALLED hook config matches hooks.master.json"
+run = "{{config_root}}/.agents/hooks/sync.py --check --target all"
 
-[tasks.hooks-uninstall]
+[tasks."hooks:uninstall"]
 description = "Remove per-user 33GOD hook injections"
 run = "{{config_root}}/.agents/hooks/sync.py --uninstall"
 
@@ -83,22 +83,22 @@ script = "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet"
 
 [[watch_files]]
 patterns = ["AGENTS.md"]
-task = "link-agentfiles"
+task = "link:agentfiles"
 
 [[watch_files]]
 patterns = [".agents/skills.json"]
-task = "skills-sync"
+task = "skills:sync"
 
-[tasks.link-agentfiles]
+[tasks."link:agentfiles"]
 description = "Symlink all agent files to AGENTS.md"
 run = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
 
-[tasks.skills-sync]
+[tasks."skills:sync"]
 description = "Sync skills from manifest to local CLI dirs"
-depends = ["skills-provision-packs"]
+depends = ["skills:provision:packs"]
 run = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project"
 
-[tasks.skills-provision-packs]
+[tasks."skills:provision:packs"]
 description = "Provision every Skillex pack declared in .agents/skills.json"
 run = "python3 '{{config_root}}/.mise/scripts/provision-packs.py'"
 

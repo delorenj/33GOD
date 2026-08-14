@@ -246,6 +246,64 @@ def strip_kimi(text: str, master: dict) -> tuple[str, bool]:
     return updated, count > 0
 
 
+# A [[hooks]] array-of-tables entry: the header plus every following line up to
+# the next top-level [ header (or EOF). MULTILINE only — with DOTALL the inner
+# `.` would cross newlines and the first match would swallow the rest of the
+# file, taking every unrelated hook and section with it.
+KIMI_HOOK_SECTION = re.compile(r"(?m)^\[\[hooks\]\][ \t]*\n(?:(?!\[).*\n?)*")
+
+
+def strip_kimi_orphans(text: str, master: dict) -> tuple[str, int]:
+    """Drop [[hooks]] entries we own that live OUTSIDE the marker block.
+
+    Every earlier fan-out that ran before the marker block existed (or under a
+    different repo-name marker) left a full copy behind. Because the old check
+    only asked whether the marker block was present as a substring, those
+    copies were invisible and the hook fired once per stray copy per session.
+    """
+    marker = hook_marker()
+    removed = 0
+
+    def drop(match: re.Match[str]) -> str:
+        nonlocal removed
+        if marker in match.group(0):
+            removed += 1
+            return ""
+        return match.group(0)
+
+    return KIMI_HOOK_SECTION.sub(drop, text), removed
+
+
+def kimi_owned_commands(text: str) -> list[str]:
+    """Every command in the file that this fan-out owns, block or not."""
+    marker = hook_marker()
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - py<3.11
+        return [
+            line.split("=", 1)[1].strip().strip('"').strip("'")
+            for line in text.splitlines()
+            if line.strip().startswith("command") and marker in line
+        ]
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        warn(f"kimi: config is not valid TOML ({exc}); falling back to text scan")
+        return [
+            line.split("=", 1)[1].strip().strip('"').strip("'")
+            for line in text.splitlines()
+            if line.strip().startswith("command") and marker in line
+        ]
+    hooks = data.get("hooks")
+    if not isinstance(hooks, list):
+        return []
+    return [
+        entry["command"]
+        for entry in hooks
+        if isinstance(entry, dict) and marker in str(entry.get("command", ""))
+    ]
+
+
 def install_kimi(master: dict) -> None:
     path = kimi_target(master)
     if not path.parent.exists():
@@ -253,6 +311,7 @@ def install_kimi(master: dict) -> None:
         return
     original = path.read_text() if path.exists() else ""
     body, _ = strip_kimi(original, master)
+    body, orphans = strip_kimi_orphans(body, master)
     body = re.sub(r"(?m)^\s*hooks\s*=\s*\[\s*\]\s*\n?", "", body).rstrip("\n")
     updated = (body + "\n\n" if body else "") + kimi_block(master)
     if updated == original:
@@ -260,6 +319,8 @@ def install_kimi(master: dict) -> None:
         return
     backup_once(path)
     path.write_text(updated)
+    if orphans:
+        log(f"kimi: reaped {orphans} orphaned copy(ies) of our hook outside the marker block")
     log(f"kimi: installed into {path}")
 
 
@@ -276,9 +337,28 @@ def uninstall_kimi(master: dict) -> None:
 def check_kimi(master: dict) -> bool:
     path = kimi_target(master)
     if not path.exists():
-        return True
-    if kimi_block(master).strip() not in path.read_text():
-        warn("DRIFT: kimi hook projection differs from hooks.master.json")
+        # Match check_json: a configured client whose config is gone is drift,
+        # not a pass. Only an absent config HOME means "this client isn't here".
+        if not path.parent.exists():
+            log("kimi: config home absent, skipping")
+            return True
+        warn(f"DRIFT: kimi target missing: {path}")
+        return False
+    text = path.read_text()
+    # Compare the FULL SET of commands we own, not just "is the block present".
+    # A substring test passes while stray copies of the same hook sit outside
+    # the block, silently multiplying how often it fires.
+    actual = sorted(kimi_owned_commands(text))
+    wanted = sorted(item[2]["command"] for item in desired_commands(master, "kimi"))
+    if actual != wanted:
+        extra = len(actual) - len(wanted)
+        if extra > 0 and set(actual) == set(wanted):
+            warn(f"DRIFT: kimi has {extra} duplicate copy(ies) of our hook (it would fire {len(actual)}x per session)")
+        else:
+            warn("DRIFT: kimi hook projection differs from hooks.master.json")
+        return False
+    if kimi_block(master).strip() not in text:
+        warn("DRIFT: kimi hooks are present but not inside the managed marker block")
         return False
     log("kimi: in sync")
     return True
@@ -404,6 +484,26 @@ def check_hermes(master: dict) -> bool:
     return True
 
 
+def check_hook_scripts(master: dict) -> bool:
+    """Verify each hook actually points at something runnable.
+
+    Every per-client check below compares wiring text to wiring text, so all
+    four can report "in sync" while the single script they all invoke does not
+    exist on disk. Validate the target before trusting the projection.
+    """
+    ok = True
+    for hook in master["hooks"]:
+        script = HOOK_DIR / hook["script"]
+        if not script.exists():
+            warn(f"DRIFT: hook script missing: {script} (hook id: {hook['id']})")
+            warn("       every client's projection points at it — restore the script or drop the hook from hooks.master.json")
+            ok = False
+        elif not os.access(script, os.X_OK):
+            warn(f"DRIFT: hook script not executable: {script} (hook id: {hook['id']})")
+            ok = False
+    return ok
+
+
 def selected(target: str) -> list[str]:
     return ["claude", "codex", "kimi", "hermes"] if target == "all" else [target]
 
@@ -424,6 +524,8 @@ def main() -> int:
         master = load_master()
         disabled = load_disabled_agents()
         ok = True
+        if args.check:
+            ok &= check_hook_scripts(master)
         for agent in selected(args.target):
             if not master["agents"][agent].get("enabled", True):
                 continue
