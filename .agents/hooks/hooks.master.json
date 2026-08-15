@@ -1,5 +1,5 @@
 {
-  "$comment": "SINGLE SOURCE OF TRUTH for 33GOD project-scoped hooks. Hand-edit this file, then run `mise run hooks-sync`. Generated/injected client configs are not hand-edited.",
+  "$comment": "SINGLE SOURCE OF TRUTH for 33GOD project-scoped hooks. Hand-edit this file, then run `mise run hooks:sync`. Generated/injected client configs are not hand-edited.",
   "version": 1,
   "marker": "33god-project-hooks",
   "hooks": [
