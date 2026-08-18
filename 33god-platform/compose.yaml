@@ -106,7 +106,7 @@ services:
       APP_HOST: 0.0.0.0
       DATABASE_URL: postgresql://candystore:candystore@postgres:5432/candystore
       SUBSCRIBE_PUBSUB: bloodbank-pubsub
-      SUBSCRIBE_TOPIC: bloodbank.evt.v1.>
+      SUBSCRIBE_TOPIC: bloodbank.evt.>
       SUBSCRIBE_ROUTE: /events/all
     ports:
       - target: 3001
