@@ -1,0 +1,53 @@
+{
+  "specversion": "1.0",
+  "id": "8a74f581-20d4-4032-bab8-f1a76c0d864f",
+  "source": "urn:33god:agent:33god-pm",
+  "type": "bloodbank.v1.reporting.report.completed",
+  "subject": "bloodbank.evt.v1.reporting.report.completed",
+  "time": "2026-08-18T16:04:47.417566Z",
+  "datacontenttype": "application/json",
+  "dataschema": "apicurio://holyfields/bloodbank.v1.reporting.report.completed/versions/1",
+  "correlationid": "0634cfc8-39a5-4cdd-8c13-574016df43ef",
+  "causationid": null,
+  "producer": "33god-pm",
+  "service": "33god-pm",
+  "domain": "reporting",
+  "kind": "event",
+  "schemaref": "bloodbank.v1.reporting.report.completed.v1",
+  "actor": {
+    "type": "agent_cli",
+    "agent_id": "bloodbank.agent.33god-pm",
+    "cli": "hermes",
+    "provider": "nous_research",
+    "model": null
+  },
+  "ordering_key": "report:dev-journal:2026-08-17",
+  "data": {
+    "schema_version": 1,
+    "run_id": "dev-journal-2026-08-17-160447",
+    "report_date": "2026-08-17",
+    "started_at": "2026-08-18T16:04:47.417566Z",
+    "completed_at": "2026-08-18T16:04:47.417566Z",
+    "outcome": {
+      "status": "complete",
+      "sections": {
+        "overview": "complete",
+        "needle-movers": "complete",
+        "decisions": "complete",
+        "operational-notes": "complete"
+      }
+    },
+    "artifacts": {
+      "report_artifact_id": "/home/delorenj/code/33GOD/_bmad-output/daily-journals/2026-08-17/journal.txt",
+      "markdown_artifact_id": "/home/delorenj/code/33GOD/_bmad-output/daily-journals/2026-08-17/journal.txt",
+      "commit_marker_id": "none"
+    },
+    "delivery": {
+      "status": "delivered",
+      "channel": "file",
+      "destination_alias": "daily-journals",
+      "attempts": 1,
+      "delivered_at": "2026-08-18T16:04:47.417566Z"
+    }
+  }
+}

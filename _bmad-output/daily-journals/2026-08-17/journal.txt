@@ -1,0 +1,345 @@
+DEVELOPER JOURNAL — 2026-08-17
+Generated from the Candystore audit trail (17598 events, 380 sessions)
+
+OVERVIEW
+--------
+17598 Bloodbank events were recorded across 380 unique sessions.
+The busiest project and CLI breakdowns are below.
+
+Top CLIs:
+  claude        12145
+  codex          5080
+  hermes          165
+  unknown         128
+  antigravity      80
+
+Top projects:
+  james-brennan            6159
+  pjangler                 5910
+  deckard                  1627
+  intelliforia              797
+  project-fuckudeer         659
+  33GOD                     383
+  unknown                   353
+  surface                   280
+  mirror                    218
+  pjan-activity             186
+  slowburns                 178
+  PoopToTheMoon             133
+  legofirst                  81
+  hermes-agent-template      72
+  hermes-agent               72
+  candystore                 60
+  plugin                     57
+  m0-pipe                    52
+  planning-artifacts         43
+  scripts                    35
+
+Peak activity hour: 2026-08-17T23:00:00Z (326 events)
+
+DECISIONS CAPTURED
+------------------
+43 repo decisions were recorded:
+
+  [pjangler] PJAN-67: Hold PJAN-67 after eighth independent SPEC found live-format, writer, and parser-attestation gaps
+  [voxxy] (no issue): ignore-generated-agent-projections
+  [deckard] DECK-18: Pull DECK-18 (StateStore + embedded backend) rather than DECK-22, and confirm DECK-22's sequencing gate is NOT tripped by it
+  [pjangler] PJAN-67: Standardize Hermes fleet.env as assignment-only data and reject executable shell syntax
+  [deckard] DECK-17: ACCEPT DECK-17. effective_state() reconciliation landed dependency-free and survived 25 independently designed mutations, 25 caught
+  [pjangler] PJAN-67: Hold PJAN-67 after seventh independent SPEC found mutable helper resolution and non-atomic fleet import
+  [deckard] DECK-17: Pull DECK-17 (effective_state reconciliation). Directed the implementer to architecture 3.3's signature over the ticket AC's literal parameter list, and to DECK-16's dependency-free enumeration route for the property tests
+  [pjangler] PJAN-67: Pin PJAN-67 to the exact tested Hermes template main merge because the submodule contract requires tip equality
+  [pjangler] PJAN-67: Publish the isolated fleet-import correction, then merge it into concurrent Hermes template main without broadening the pjangler gitlink
+  [pjangler] PJAN-67: Hold PJAN-67 after sixth independent SPEC found readonly fleet controls surviving template scrub
+  [pjangler] PJAN-67: Hold PJAN-67 after fifth independent SPEC found uncontained loader and Bash startup-control families
+  [deckard] DECK-16: ACCEPT DECK-16. AgentState vocabulary and worst() precedence landed dependency-free; 17 adversarial mutations applied, 17 caught
+  [pjangler] PJAN-67: Extend PJAN-67 hardening to every MCP-reachable child-process site
+  [deckard] DECK-16: Pull DECK-16 (deckard-core state vocabulary + worst() precedence) as the next Sprint 1 ticket
+  [deckard] DECK-14: ACCEPT DECK-14 after five adversarial rounds. Cargo workspace scaffolded and the INV-1 purity guard hardened against roughly 40 attack shapes with four fail-opens found and closed
+  [deckard] DECK-14: HOLD DECK-14 round 4 on a SIGPIPE/pipefail fail-open in core_reaches(); apply the reviewer-verified one-line fix, then accept. Escalate DECK-22 (cargo-deny) and gate it ahead of deckard-core taking its first shared dependency
+  [deckard] DECK-21: Moved DECK-21 (unattributed board key idea) from Todo to Backlog and flagged its provenance to the operator rather than absorbing or deleting it
+  [deckard] DECK-14: HOLD DECK-14 round 3 on a fail-open bug in check 1b; fix it, then accept on mechanical re-verification. Route the structural answer (cargo-deny) to its own ticket rather than hardening a shell script further inside a scaffolding ticket
+  [pjangler] PJAN-73: Queue PJAN-73 without expanding the active PJAN-67 correction
+  [pjangler] PJAN-67: Keep PJAN-67 open after final-head SPEC exposed outer-effect ordering and deferred child environment gaps
+  [deckard] DECK-14: HOLD DECK-14 round 2. Fix the workspace-feature-unification bypass, extend the ban list, and stop the header claiming a categorical guarantee the mechanism cannot deliver
+  [deckard] DECK-14: HOLD DECK-14. Independent review found a CRITICAL bypass in the INV-1 purity guard: a cfg-gated dependency defeats both of its checks and reports a green PASS
+  [deckard] DECK-14: Pull DECK-14 (cargo workspace + six crate skeletons) as the next Sprint 1 ticket now that the M0 gate cleared GO
+  [deckard] DECK-15: M0 GATE = GO. Accepted DECK-15 autonomously after independent adversarial review reproduced the result; push-based state stands as the primary source and no downstream epic is invalidated
+  [pjangler] PJAN-67: Reopen PJAN-67 after fresh SPEC exposed two fail-closed authority gaps
+  [deckard] DECK-15: Pull DECK-15 (M0 spike) as the first ticket of Sprint 1, ahead of DECK-14 (workspace scaffold)
+  [pjangler] PJAN-67: Pull PJAN-67 into the shared WIP slot after accepted PJAN-66 landed
+  [pjangler] PJAN-66: Land PJAN-66 at aa5ade7 after independently approved integration with PJAN-71
+  [33god] daily-journal-automation: Codified the daily developer journal as a skill and scheduled a Hermes cron job to run every day at 6 AM.
+  [pjangler] PJAN-66: Accept PJAN-66 after independent spec and quality gates; treat as done in the deferred-QA lane and advance to PJAN-67
+
+COMMITS BY PROJECT
+------------------
+54 sessions produced git commits:
+
+  deckard (claude, 7 turns): 2 commit(s)
+  deckard (claude, 29 turns): 1 commit(s)
+  deckard (claude, 6 turns): 2 commit(s)
+  deckard (claude, 25 turns): 1 commit(s)
+  deckard (claude, 4 turns): 1 commit(s)
+  deckard (claude, 3 turns): 1 commit(s)
+  legofirst (claude, 9 turns): 1 commit(s)
+  deckard (claude, 28 turns): 1 commit(s)
+  33GOD (claude, 70 turns): 1 commit(s)
+  deckard (claude, 29 turns): 1 commit(s)
+  deckard (claude, 20 turns): 1 commit(s)
+  deckard (claude, 23 turns): 1 commit(s)
+  project-fuckudeer (claude, 19 turns): 1 commit(s)
+  james-brennan (claude, 5 turns): 1 commit(s)
+  james-brennan (claude, 57 turns): 2 commit(s)
+  project-fuckudeer (claude, 44 turns): 1 commit(s)
+  project-fuckudeer (claude, 54 turns): 1 commit(s)
+  project-fuckudeer (claude, 13 turns): 1 commit(s)
+  33GOD (claude, 29 turns): 1 commit(s)
+  james-brennan (claude, 124 turns): 3 commit(s)
+  33GOD (claude, 63 turns): 1 commit(s)
+  project-fuckudeer (claude, 99 turns): 2 commit(s)
+  project-fuckudeer (claude, 107 turns): 1 commit(s)
+  deckard (claude, 42 turns): 3 commit(s)
+  pjangler (claude, 150 turns): 1 commit(s)
+  intelliforia (claude, 22 turns): 2 commit(s)
+  intelliforia (claude, 24 turns): 2 commit(s)
+  pjangler (claude, 67 turns): 1 commit(s)
+  infra (antigravity, 16 turns): 1 commit(s)
+  james-brennan (claude, 31 turns): 2 commit(s)
+
+GIT LOGS
+--------
+=== pjan-activity ===
+(no .git in /home/delorenj/code/pjan-activity)
+
+=== PoopToTheMoon ===
+  722b267 docs(gdd): cap piles at moon completion
+  df93a6b docs(gdd): require exact pile persistence
+  4cd7e13 docs(gdd): set family-safe geometry gates
+  e862eaf docs(gdd): define role traversal envelope
+  fd92e2e docs(gdd): add placement undo window
+  b65c2f5 docs(gdd): define preview collision fallback
+  39a1167 docs(gdd): define preview role scoring
+  aef54b6 docs(gdd): require banked blob placement
+
+=== 33GOD ===
+  2792ac1 chore(fleet): pin momo scaffold + lifecycle parity fix at merged main
+  a6ec117 chore(fleet): pin pjangler and hermes-agent-template at merged main
+  eb1428b chore(fleet): pin pjangler parity rules for base+delta profiles
+  6c39e7a chore(fleet): pin pjangler skill-source tracking + fleet extension-points
+  c171143 chore(fleet): pin hermes-agent-template profile inheritance + memory namespaces
+  703408f chore(PJAN-65): pin pjangler describe implementation
+
+=== mirror ===
+(no .git in /home/delorenj/code/mirror)
+
+=== hindsight ===
+(no .git in /home/delorenj/code/hindsight)
+
+=== profiles ===
+(no .git in /home/delorenj/code/profiles)
+
+=== surface ===
+(no .git in /home/delorenj/code/surface)
+
+=== voxxy ===
+(no commits)
+
+=== agent-hooks ===
+(no .git in /home/delorenj/code/agent-hooks)
+
+=== orca ===
+(no .git in /home/delorenj/code/orca)
+
+=== ipm-surface-modes-2026-08-16 ===
+(no .git in /home/delorenj/code/ipm-surface-modes-2026-08-16)
+
+=== project ===
+(no .git in /home/delorenj/code/project)
+
+=== docs ===
+(no .git in /home/delorenj/code/docs)
+
+=== src ===
+(no .git in /home/delorenj/code/src)
+
+=== deckard ===
+  54e0b8f merge: DECK-17 effective_state() reconciliation + Grace windows
+  37c8394 chore(momo): DECK-17 accepted — evidence + 25-mutation review
+  4bf05f5 feat(core): DECK-17 effective_state() reconciliation + Grace windows
+  32cdb66 merge: DECK-16 AgentState vocabulary + worst() precedence
+  bcf6534 chore(momo): DECK-16 accepted — evidence + mutation-tested review
+  b0c5ab9 feat(core): DECK-16 AgentState vocabulary + worst() precedence collapse
+  c74b964 docs(planning): DECK-14 accepted; sprint-status updated
+  68fff1b merge: DECK-14 cargo workspace + hardened INV-1 purity guard
+  2a8cc49 chore(momo): DECK-14 accepted — evidence + five review rounds
+  0ceca72 fix(daemon): stop check 1b failing open on SIGPIPE under pipefail
+  d7fccbd fix(daemon): make check 1b fail closed on an ambiguous crate spec
+  c0dba05 chore(momo): preserve DECK-14 round-2 review (HOLD) before round 3
+  259e199 fix(daemon): close the unification bypass; stop overclaiming in the guard
+  4b03494 chore(momo): preserve DECK-14 round-1 review (HOLD) before re-review
+  f8b93a5 fix(daemon): close the cfg-gated bypass in the core purity guard
+  a444a86 docs: correct an untrue CI claim in AGENTS.md; add DECK-14 evidence
+  88ba384 feat(daemon): scaffold the cargo workspace and the INV-1 purity guard
+  7de2b8b docs(planning): close the M0 gate — R1/R2 resolved, R19-R22 opened
+  c6e7fd2 merge: DECK-15 M0 gate spike — GO (push-based state validated at 21ms)
+  c8f7cd6 chore(momo): DECK-15 evidence, independent review report, close-gate accept
+  2a7ddc4 spike(mux): DECK-15 M0 pipe gate — GO, plugin->external NDJSON at 21ms median
+  544f4ea docs(architecture): prose polish pass from the authoring agent
+  36dd527 chore(momo): record repo-hygiene decision for the skill symlink farms
+  0a54319 feat(planning): BMAD planning spine, DECK board bring-up, deckard-pm agent
+  48b5a0a chore(repo): stop tracking generated skill symlink farms
+  acd3052 chore: initialize project
+
+=== project-fuckudeer ===
+(no .git in /home/delorenj/code/project-fuckudeer)
+
+=== hermes-agent-template ===
+(no .git in /home/delorenj/code/hermes-agent-template)
+
+=== harness ===
+(no .git in /home/delorenj/code/harness)
+
+=== slowburns ===
+(no commits)
+
+=== intelliforia ===
+  be2310bd feat(portal): dialog and multi-select behaviour (Epic 37 phase 3)
+  12a1f75c fix(local): publish port 3000 on IPv4 only so http://localhost:3000 works
+  289460a8 feat(portal): add the design-system shell and stylesheet (Epic 37 phase 2)
+  2988d794 fix(local): pin postgres 17 so the local stack can open its own volume
+  64385d1f test(portal): smoke-cover every admin page that renders a template
+  1d12eb76 design: specify cadence-aware nudging, and record why the log can't explain it
+  f44710e2 design: settle the screen topology — Notes and Providers, not one screen with a toggle
+
+=== issue-evidence ===
+(no .git in /home/delorenj/code/issue-evidence)
+
+=== planning-artifacts ===
+(no .git in /home/delorenj/code/planning-artifacts)
+
+=== pjangler ===
+(no .git in /home/delorenj/code/pjangler)
+
+=== wax ===
+(no commits)
+
+=== .scripts ===
+(no .git in /home/delorenj/code/.scripts)
+
+=== skills ===
+(no commits)
+
+=== memory ===
+(no .git in /home/delorenj/code/memory)
+
+=== candystore ===
+(no .git in /home/delorenj/code/candystore)
+
+=== james-brennan ===
+  6617123 chore(ledger): decision events from the Aurora-to-t4g migration pass
+  6d89593 chore(evidence): JIMB-151 — record the close-gate pass
+  275a059 fix(mirror): JIMB-151 — a night belongs to the tenant's clock, and to no other
+  1152afb docs(evidence): JIMB-150 — the scheduler read the rotated parameter too
+  ac264dd docs(evidence): JIMB-150 — the rotation, and the door that had to be built to do it
+  b42ac41 feat(mirror): JIMB-150 — rotate the app role from inside the VPC, and keep the password out of argv
+  9e42429 chore(evidence): record the final close-gate pass for all four tickets
+  c068174 docs(evidence): JIMB-140/147 — correct what two adversarial verifiers found
+  c51868f docs(evidence): JIMB-149 — evidence for the daily-sync boundary ruling
+  f81fd69 feat(mirror): JIMB-148 — confirm GorillaDesk's rate limit and capture the header that proves the window
+  7c3edd1 feat(mirror): JIMB-140 — the nightly moves into AWS and the database goes private
+  8b21e9f checkpoint: 2026-08-17T16:48:25Z auto-commit
+  7784fcb feat(mirror): JIMB-147 — move the database from Aurora Serverless v2 to RDS db.t4g.micro
+  380d29a docs(design): JIMB-149 — record the daily-sync boundary as a control, not a cadence
+  84c1d29 docs(evidence): complete the handbacks so the close gate reads them honestly
+  230bf0f docs(evidence): unsquat JIMB-142 — real-data-by-default is JIMB-145
+  f0374f7 docs(evidence): JIMB-137 — say what the daemon log says about mirror-db
+  bf998d2 docs(evidence): JIMB-137 — Aurora proven by a nightly nobody touched
+  4da6002 feat(mirror): the data moves to Aurora — the box keeps only the schedule
+  75e0e7a docs(evidence): JIMB-144 — both publishers run for real, deployed, and verified on the origin
+  5dc16f0 docs(surface): close the audit blockers — verified at HEAD, and the two the rewire re-opened
+  62fb3e0 fix(surface): add the four new modules 08563ff referenced but did not contain
+  30d2c13 docs(evidence): JIMB-142 — real data by default, with the seed deleted rather than repointed
+  08563ff feat(surface): real data by default — the fixture becomes an injected override
+  129414a docs(evidence): unsquat JIMB-140 — relay.surface is JIMB-141
+  0234130 docs(evidence): JIMB-140 — the relay's queue reaches Jim's screen, and one item deliberately does not
+  069f0f1 feat(relay): the surface publisher — Jim's real queue, not three invented ones
+  6c02061 docs(evidence): unsquat JIMB-137 — the repair pass is JIMB-139, surface-publish is JIMB-138
+  3073641 docs(evidence): JIMB-138 — the mirror's surface publisher, proven end to end
+  a50bed9 feat(mirror): surface-publish — read the mirror, write the Cockpit's inventory:v1
+  c7bd282 docs(evidence): JIMB-137 — the repair pass, with the contrast figure measured rather than asserted
+  e376805 docs(surface): reconcile the SPEC and the design of record with what actually ships
+  5f444b6 fix(surface): the room is a floor, never a ceiling — stop clipping Jim's amber queue
+  197dc59 checkpoint: 2026-08-17T05:39:38Z auto-commit
+  e8541d0 docs(evidence): JIMB-137 — modes wired, deployed, and verified on the served origin
+  164ef4a docs(evidence): JIMB-136 — say 'undeclared key', so the close gate stops reading a term of art as a hedge
+  686a11f feat(surface): wire the modes together — the way out of a broken room stays lit
+  f55bcfb feat(surface): Mode 2 — the Cockpit, built to mode-cockpit.html
+  cfd3841 docs(design,spec): close the Cockpit gate — the amber test, the sampled-figure rule, a failure page, and a way to seed it
+  1f947a5 feat(surface): Mode 1 — the Quiet Room, built to chair-c-calm.html
+  b6eb32a docs(spec,design): close the doc gate — the Cockpit is buildable and the SPEC is no longer 90 seconds stale
+  6a22ecc docs(design): rewrite the IPM surface design of record as the modes architecture
+  6897f7f docs(spec): reconcile IPM Operations Surface SPEC with the modes architecture and shipped code
+  4cabd03 checkpoint: 2026-08-17T03:37:13Z auto-commit
+  8875118 docs(evidence): JIMB-134 — the action was live, the data was not
+  40197df fix(surface): JIMB-134 — a demonstration board renders no navigable action
+  ef8d255 test(surface): the verdict must fit in a text message
+
+=== honcho ===
+(no commits)
+
+=== infra ===
+  468c069 docs(deckard): product brief and PRD for the zellij agent-state Stream Deck daemon
+  0c4ef20 feat: prototype streamdeck agent keyboard controller
+
+=== legofirst ===
+  6618ff2 docs(kit): correct the 2026-27 costs and pin the Founders/Future split
+
+=== spec ===
+(no .git in /home/delorenj/code/spec)
+
+=== hermes-agent ===
+(no .git in /home/delorenj/code/hermes-agent)
+
+=== m0-pipe ===
+(no .git in /home/delorenj/code/m0-pipe)
+
+=== codex-desktop ===
+(no .git in /home/delorenj/code/codex-desktop)
+
+=== plugin ===
+(no .git in /home/delorenj/code/plugin)
+
+=== memories ===
+(no .git in /home/delorenj/code/memories)
+
+=== scripts ===
+(no .git in /home/delorenj/code/scripts)
+
+OPERATIONAL NOTES
+-----------------
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [wax] updated: (no detail)
+  [unknown] failed: service-account key not found at /app/secrets/tiller-sa-key.json — create one in GCP, enable the Sheets API, and share the sheet with its client_email
+  [unknown] started: (no detail)
+
+BOTTOM LINE
+-----------
+Review the recorded decisions, commit summaries, and operational notes above.
+Follow up on any failed syncs, container exits, or blocked external-access items.
