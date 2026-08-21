@@ -22,6 +22,3 @@
 [submodule "momo"]
 	path = momo
 	url = git@github.com:delorenj/momo.git
-[submodule "toad"]
-	path = toad
-	url = git@github.com:delorenj/toad.git

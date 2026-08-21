@@ -1,0 +1,1 @@
+{"id":"chg_2026_08_21_toad_retirement","date":"2026-08-21","component":"33god-platform","kind":"platform.component.retired","summary":"Retire Toad and reject recursive skill fanout topology before mutation.","affects":["33god-platform","pjangler","commonproject","skillex","toad"],"required_backfills":[],"docs":["PRD.md","README.md","components.yaml","CHANGELOG.pipeline.md"]}

@@ -20,7 +20,7 @@ asynchronously across multiple projects simultaneously.
 
 ## Components
 
-Thirteen components are registered in
+Twelve components are registered in
 [`33god-platform/components.yaml`](33god-platform/components.yaml). Not every
 component is a service — runtime mode is part of each component's contract, and
 specs, templates, CLIs, and agent bundles are first-class.
@@ -39,7 +39,6 @@ specs, templates, CLIs, and agent bundles are first-class.
 | Component                                       | Runtime mode             | Description                                                                                                                                     |
 | ----------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **[PJangler](pjangler/)**                       | run-only CLI + stdio MCP | Deterministic project and fleet provisioning. `pjangler project create` is the canonical way to start a new repo.                               |
-| **[Toad](toad/)**                               | CLI + stdio MCP          | Project Custodian. Creates, adopts, audits, and migrates projects by composing PJangler. Dry-run by default; live actions need `TOAD_ALLOW_LIVE=1`. |
 | **[Momo](momo/)**                               | Agent skill              | PM/EM orchestrator. Holds roadmap and next action, delegates every code change. The interactive twin of the autonomous Hermes PM.                |
 | **[Hermes Agent Template](hermes-agent-template/)** | Template + host systemd | Versioned agent-generation contract, runtime configuration, fleet reconciliation, and host survival services.                                    |
 

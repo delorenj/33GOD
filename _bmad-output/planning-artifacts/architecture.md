@@ -39,9 +39,6 @@ inputDocuments:
   - 33god-platform/docs/changelog-process.md
   - 33god-platform/docs/product-map.md
   - 33god-platform/docs/integrated-compose-topology-audit.md
-  - toad/_bmad-output/planning-artifacts/PRD.md
-  - toad/_bmad-output/planning-artifacts/architecture.md
-  - toad/_bmad-output/planning-artifacts/product-brief.md
   - hermes-agent-template/docs/architecture.md
   - hermes-agent-template/docs/fleet-control-plane/architecture.md
   - hermes-agent-template/docs/fleet-control-plane/prd.md
@@ -100,7 +97,6 @@ The architecture must extend this four-component baseline to cover the following
 additional product boundaries:
 
 - **Momo:** PM/EM orchestration agent, heartbeat-driven decision system, ticket abstraction, delegation workflows, and Hindsight-backed project memory.
-- **Toad:** on-demand Project Custodian agent that composes PJangler operations; it is not itself a runtime service or competing MCP implementation.
 - **Hermes Template/Fleet:** versioned agent-generation contract, runtime configuration contract, fleet reconciliation, and host survival services.
 - **CommonProject:** independently versioned project-scaffold contract consumed by PJangler; it generates projects rather than running as a platform daemon.
 - **Voxxy:** independently deployable voice service with CPU core, optional GPU engines, HTTP/MCP contracts, PostgreSQL dependency, and persistent media.
@@ -137,9 +133,9 @@ Additional implications from the expanded scope are:
 - GPU-backed Voxxy engines require capability-aware placement and cannot be
   assumed available on every 33GOD host.
 - CommonProject and Voxxy must preserve standalone consumption outside 33GOD.
-- Momo and Toad must have distinct ownership boundaries: Momo governs ongoing
-  project execution; Toad governs project creation, adoption, and portfolio
-  custody.
+- Momo and PJangler must have distinct ownership boundaries: Momo governs
+  ongoing project execution; PJangler governs deterministic project lifecycle
+  operations.
 - Skillex must be separated into two questions: whether 33GOD consumes skills,
   and whether the Skillex product itself belongs in the deployed stack.
 
@@ -172,20 +168,16 @@ does not need to assume a regulated multi-tenant enterprise environment.
   PJangler, not a competing bootstrap mechanism.
 - Hermes Template owns generated agent-role structure; mutable runtime state must
   remain outside immutable template artifacts.
-- Toad delegates deterministic lifecycle work to PJangler.
 - Momo must not duplicate ticket-provider, fleet, or project-registry truth.
 - Voxxy already owns Dockerfiles for its CPU core and GPU engines and already
   supports independent Compose deployment.
 - Current root Compose still builds Candystore locally and bind-mounts/builds
   Holocene at startup; this conflicts with the desired registry-pinned end state.
-- PJangler, CommonProject, Toad, and Hermes Template are not naturally persistent
+- PJangler, CommonProject, and Hermes Template are not naturally persistent
   services, so their inclusion must use run-only or artifact-consumption models.
 - Several existing documents still describe the system as a four-part candidate
   rather than the live and expanding platform. Those statements are historical
   evidence, not target architecture.
-- Toad currently names Skillex as its distribution owner, while the operator is
-  questioning whether Skillex belongs in 33GOD. The architecture must resolve
-  this without conflating an external dependency with a deployed stack member.
 
 ### Cross-Cutting Concerns Identified
 
@@ -199,8 +191,7 @@ does not need to assume a regulated multi-tenant enterprise environment.
 4. **Acceptance-gated progression:** every integration stage needs static,
    startup, contract, feature, and observability checks.
 5. **Dependency ordering:** project scaffolding precedes agent provisioning;
-   provisioning precedes Toad workflows; fleet contracts precede Momo's
-   autonomous orchestration.
+   fleet contracts precede Momo's autonomous orchestration.
 6. **Event consistency:** cross-component lifecycle and decision events must use
    Bloodbank contracts and remain queryable through Candystore.
 7. **Control-plane visibility:** Holocene must surface component version,
@@ -326,7 +317,6 @@ This rule applies to runtime units, not every conceptual component:
   configuration artifacts; custom runtime code requires its own image.
 - CommonProject: no runtime image required.
 - Hermes Template: no runtime image required for the template itself.
-- Toad: no runtime image required for the agent bundle.
 - Skillex: no stack image required unless a network service is introduced.
 
 **Image Publication:**

@@ -1,14 +1,14 @@
 # 33GOD productized development environment PRD
 
-Status: Integrated local Compose stack live; component set expanded to thirteen
+Status: Integrated local Compose stack live; twelve active components
 Owner: 33GOD Director
-Last updated: August 13, 2026
+Last updated: August 21, 2026
 
 ## Summary
 
 33GOD is a private, local-first development environment made from multiple
 active repositories that already behave like one pipeline. The current problem
-is coordination: Bloodbank, Candystore, Holocene, PJangler, Krebs, Momo, Toad,
+is coordination: Bloodbank, Candystore, Holocene, PJangler, Krebs, Momo,
 Hermes Fleet, Pipeline MCP Hub, Skillex, Hindsight, Candybar, and HeyMa change
 independently, but their contracts affect one another.
 
@@ -70,7 +70,7 @@ boundaries, managed storage, cloud secrets, and subscription packaging.
 
 ## Component inventory
 
-Thirteen components are registered in `33god-platform/components.yaml`. Not all
+Twelve components are registered in `33god-platform/components.yaml`. Not all
 are services; the runtime mode is part of the contract.
 
 | Component        | Role                       | Location                | Runtime mode              | Profile      |
@@ -81,7 +81,6 @@ are services; the runtime mode is part of the contract.
 | PJangler         | provisioning control plane | `pjangler/` submodule   | run-only CLI + stdio MCP  | tools, full  |
 | Krebs            | ticket-lifecycle engine    | `krebs/` in-tree        | spec + adapters, no daemon| integrations |
 | Momo             | PM/EM orchestration agent  | `momo/` submodule       | agent skill, not a service| agents       |
-| Toad             | project custodian agent    | `toad/` submodule       | CLI + stdio MCP           | agents       |
 | Hermes Fleet     | agent runtime fleet        | `hermes-agent-template/`| host systemd + template   | agents       |
 | Pipeline MCP Hub | tool dispatch gateway      | `mcp-hub/` submodule    | hosted MCP endpoint       | integrations |
 | Skillex          | skill distribution         | `~/code/skillex`        | external registry         | skills       |
@@ -187,7 +186,6 @@ the first checkpoint where that has been true across the whole family.
 | Holocene              | `4fd42681e7` | `platform-baseline-2026-07-08-9-g4fd4268`   | `IGNORE_ALL_YELLOW` | PM runtime still tracked as a submodule with `ignore = all`.             |
 | PJangler              | `46e1b44cd3` | `PJAN-44-v1.2.26-7-g46e1b44`                | clean               | OIDC trusted publishing (PJAN-45). Owns seven skills.                    |
 | Momo                  | `8e90551c65` | —                                           | clean               | Hardened orchestration: lane gate, tree lock, findings ledger. 16 tests. |
-| Toad                  | `ca69373db0` | —                                           | clean               | Dry-run by default; live actions gated by `TOAD_ALLOW_LIVE=1`.           |
 | Hermes Agent Template | `a3c60f0f0e` | —                                           | clean               | Template checkout-path fix.                                              |
 | Pipeline MCP Hub      | `967e41758a` | —                                           | clean               | Served at `https://mcp.delo.sh/mcp`.                                     |
 | Candybar              | `9af829d0b6` | `bloodbank-integrated-7-g9af829d`           | `IGNORE_ALL_YELLOW` | Only delta is untracked Hermes PM runtime state.                         |
@@ -420,19 +418,17 @@ Acceptance criteria:
 - Krebs normalizes provider webhooks to Bloodbank events rather than
   maintaining a private dispatch graph.
 
-### FR13. Orchestration and custody boundaries
+### FR13. Orchestration and provisioning boundaries
 
-Momo and Toad must have distinct, non-overlapping ownership.
+Momo and PJangler must have distinct, non-overlapping ownership.
 
 Acceptance criteria:
 
 - Momo governs ongoing project execution: roadmap, next action, delegation,
   review, and closure. It delegates every code change and edits no code itself.
-- Toad governs project creation, adoption, audit, and migration, delegating
-  deterministic work to PJangler.
+- PJangler governs deterministic project creation, adoption, audit, and
+  migration.
 - Neither duplicates ticket-provider, fleet, or project-registry truth.
-- Toad's networked and irreversible actions are dry-run by default and gated by
-  `TOAD_ALLOW_LIVE=1`.
 - `momo/PILLARS.md` is referenced by every agent carrier, never copied.
 
 ### FR14. Trunk discipline
@@ -560,6 +556,12 @@ integrated local stack; root Compose owns its lifecycle.
 **Resolved 2026-08-10:** Root repo dirt is reconciled. Every submodule pin
 equals its `origin/main` tip, skills have component owners, and Momo, Toad, and
 Krebs are registered components.
+
+**Resolved 2026-08-21:** Toad is retired from the active platform. PJangler is
+the sole deterministic project lifecycle authority; its fanout now rejects any
+skill projection that would resolve into its own source tree. Historical Toad
+events and decisions remain evidence, but no live component, submodule, or skill
+projection may reference the retired checkout.
 
 **Resolved 2026-08-11:** FR12 is satisfied. `momo/lifecycle/` is deleted and
 Krebs is the only ticket-lifecycle machine. Reconciliation was not a plain

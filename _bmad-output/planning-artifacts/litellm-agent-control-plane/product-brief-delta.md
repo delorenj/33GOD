@@ -1,7 +1,7 @@
 # Product Brief Delta — LiteLLM Agent Control Plane (ACP)
 
 **Status:** Approved planning baseline — Stage 0 traceability complete; implementation gated
-**Parent Brief:** [canonical Toad product brief at root-pinned submodule revision](https://github.com/delorenj/toad/blob/ca69373db0dec42fa325cea0d3dd58adc76c57a8/_bmad-output/planning-artifacts/product-brief.md) (the Toad submodule is uninitialized in this worktree; local link not verified)
+**Parent baseline:** [`33GOD PRD`](../../../PRD.md)
 **Reconciliation date:** 2026-08-13
 **Decision document:** [`33god-platform/docs/litellm-agent-control-plane-integration.md`](../../../33god-platform/docs/litellm-agent-control-plane-integration.md)
 
@@ -10,7 +10,7 @@
 The 33GOD product brief previously named ACP only as a planned integration
 boundary. This delta promotes ACP from "observed external project" to
 "approved gated integration with defined ownership boundaries and pilot plan."
-The brief's existing thirteen-component registry, non-goals, and MVP phases are
+The brief's existing twelve-component registry, non-goals, and MVP phases are
 unchanged.
 
 ## 2. The problem this solves (within 33GOD)

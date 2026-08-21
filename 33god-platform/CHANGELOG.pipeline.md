@@ -3,6 +3,24 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-08-21
+
+### Toad retirement and recursive fanout guard
+
+Toad is retired from the active 33GOD component graph. Its submodule,
+component manifest, catalog entries, and projected agent skills were removed;
+the remote repository remains the recovery boundary. PJangler is now the sole
+deterministic project lifecycle authority, with Momo retaining ongoing project
+orchestration.
+
+CommonProject `4d1b8dd` adds a fail-before-mutation topology check to skill
+fanout. It rejects any projected destination that is equal to or nested inside
+the resolved skill source, including catalog aliases that resolve to a project
+root. PJangler `ff29bfc` pins that guard. The focused topology suite and the
+full CommonProject suite pass; the repository-wide PJangler suite reaches an
+unrelated pre-existing PJAN-57 fixture incompatibility with the installed
+`mise` parser after all fanout and security checks pass.
+
 ## 2026-08-13
 
 ### ACP BMAD and Plane traceability

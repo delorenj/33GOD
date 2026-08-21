@@ -34,20 +34,16 @@ all-skills/  CATALOG     one real directory per skill; the single source of trut
 
 ### `all-skills/` — the CATALOG
 
-164 visible children today, and they are **not** all skills. Verified breakdown (`ls -1 | wc -l` = 164):
+Visible children are **not** all skills. The directory also contains support
+directories, manifests, and aliases, so raw `ls` counts are not a stable catalog
+metric. A resolvable bare-name entry must be either a real directory containing
+`SKILL.md` or a symlink that resolves to such a directory.
 
-| Kind | Count | Notes |
-|---|---|---|
-| Real directory **with** a `SKILL.md` | **143** | the actual catalog |
-| Real directory **without** a `SKILL.md` | 4 | `_profiles`, `bin`, `delonet-workflow-router`, `rabbitmq-management` — support dirs and half-authored skills, not catalog entries |
-| **Symlink** | 14 | 13 point into `/home/delorenj/code/33GOD/skills/…` (the `33god-*` names), plus `toad` → `/home/delorenj/code/33GOD/toad` |
-| Regular file | 3 | `skills.manifest.yaml`, `skill-tree.md`, `mcp-server-trello-release` |
-
-(Three dotfiles — `.env`, `.gitignore`, `.lastagent` — are excluded from the 164 and from every inventory.)
-
-So the catalog proper is **143 skills**, not 164. Only those 143 are resolvable by bare-name shorthand.
-
-A skill *authored here* exists here **once**; everything else references it. The 14 symlinks are the exception, and a deliberate one: those skills are authored in `/home/delorenj/code/33GOD/skills/` and merely *surfaced* in the catalog under an aliased name, so the rule is "one real copy, referenced everywhere" — not "every entry is a real directory". Never duplicate skill *content* into a skill-set or a pack that also lives here — copy or symlink, never fork.
+A skill *authored here* exists here **once**; everything else references it.
+Aliases may surface skills authored in `/home/delorenj/code/33GOD/skills/`, but
+an alias must never resolve to a repository root or to an ancestor of a fanout
+destination. Never duplicate skill *content* into a skill-set or a pack that
+also lives here — copy or symlink, never fork.
 
 Referenced from a manifest by bare-string shorthand: `"foo"` expands to `all-skills/foo` (see [manifest.md](./manifest.md#skills-entry-forms)).
 
