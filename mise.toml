@@ -4,6 +4,27 @@
 _.path = [".mise/scripts", "agents/hermes/pm", "agents/hermes/pm/hermes"]
 _.file = [".env"]
 
+# This block will handle the linking of
+# agent files to the main AGENTS.md file.
+#
+# TODO: Ensure this works for all levels of nesting.
+# i.e. All linked agent files MUST be siblings at
+# any given level of nesting.
+[[hooks.enter]]
+script = "'{{config_root}}/.mise/scripts/link-agentfiles.sh' '{{config_root}}'"
+[[hooks.enter]]
+script = "python3 '{{config_root}}/.mise/scripts/provision-packs.py' --root '{{config_root}}'"
+[[hooks.enter]]
+script = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project --root '{{config_root}}'"
+[[hooks.enter]]
+script = "'{{config_root}}/.mise/scripts/materialize-env.sh'"
+[[hooks.enter]]
+script = "codegraph sync"
+[[hooks.enter]]
+script = "{{config_root}}/.agents/hooks/sync.py --install --quiet"
+[[hooks.leave]]
+script = "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet"
+
 [tasks."platform:validate"]
 description = "Validate the 33GOD product control-plane manifests and changelog"
 run = "python3 33god-platform/scripts/platform.py validate"
@@ -60,27 +81,6 @@ run = "{{config_root}}/.agents/hooks/sync.py --check --target all"
 description = "Remove per-user 33GOD hook injections"
 run = "{{config_root}}/.agents/hooks/sync.py --uninstall"
 
-# This block will handle the linking of
-# agent files to the main AGENTS.md file.
-#
-# TODO: Ensure this works for all levels of nesting.
-# i.e. All linked agent files MUST be siblings at
-# any given level of nesting.
-[[hooks.enter]]
-script = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
-[[hooks.enter]]
-script = "[ -f '{{config_root}}/.env.op' ] && command -v op >/dev/null 2>&1 && { CDPATH= cd '{{config_root}}' && umask 077 && t=$(mktemp .env.inject.XXXXXX) && op inject -i .env.op -o $t --force && mv $t .env || rm -f $t; } || true"
-[[hooks.enter]]
-script = "python3 '{{config_root}}/.mise/scripts/provision-packs.py'"
-[[hooks.enter]]
-script = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project"
-[[hooks.enter]]
-script = "codegraph sync"
-[[hooks.enter]]
-script = "{{config_root}}/.agents/hooks/sync.py --install --quiet"
-[[hooks.leave]]
-script = "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet"
-
 [[watch_files]]
 patterns = ["AGENTS.md"]
 task = "link:agentfiles"
@@ -91,16 +91,16 @@ task = "skills:sync"
 
 [tasks."link:agentfiles"]
 description = "Symlink all agent files to AGENTS.md"
-run = "'{{config_root}}/.mise/scripts/link-agentfiles.sh'"
+run = "'{{config_root}}/.mise/scripts/link-agentfiles.sh' '{{config_root}}'"
 
 [tasks."skills:sync"]
 description = "Sync skills from manifest to local CLI dirs"
 depends = ["skills:provision:packs"]
-run = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project"
+run = "python3 '{{config_root}}/.mise/scripts/sync-skills.py' --scope project --root '{{config_root}}'"
 
 [tasks."skills:provision:packs"]
 description = "Provision every Skillex pack declared in .agents/skills.json"
-run = "python3 '{{config_root}}/.mise/scripts/provision-packs.py'"
+run = "python3 '{{config_root}}/.mise/scripts/provision-packs.py' --root '{{config_root}}'"
 
 # >>> mise-versioning >>>  (managed block — do not edit by hand; re-run init to update)
 [tasks."version"]

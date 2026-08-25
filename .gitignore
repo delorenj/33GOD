@@ -101,3 +101,25 @@ HeyMa/training/
 # Hermes agent runtime — pure-local state, never tracked (degit-runtime).
 agents/hermes/*/runtime/
 runtime/
+
+# PJAN-82: the project skill projection is GENERATED (sync-skills.py +
+# provision-packs.py + bmad-method) and must never be tracked. 168 paths were,
+# including 38 files of content from BMAD skills that no longer exist and 130
+# symlinks whose targets move with every re-sync. Note that adding this pattern
+# does not untrack anything already in the index -- those needed
+# `git rm -r --cached .agents/skills`. No trailing slash: the projection can be
+# a symlink as well as a directory.
+/.agents/skills
+
+# PJAN-82: generated skill projections are never tracked
+# sync-skills.py, provision-packs.py and bmad-method rewrite these on every
+# run. No trailing slash: some CLIs get a real directory here, some a symlink.
+.claude/skills
+.codex/skills
+.gemini/skills
+.copilot/skills
+.opencode/skills
+.kimi-code/skills
+.crush/skills
+.cursor/skills
+.agents/skills

@@ -1,6 +1,11 @@
 {
+  "$comment": "PER-DEV LOCAL OVERRIDES — copy this file to .agents/local.json (gitignored) and edit. Lets you opt out of individual hooks or whole injected agents without touching committed config. Hooks self-skip at RUNTIME via .agents/hooks/lib/hook-guard.sh (so even Claude's committed hooks honor it); codex/hermes injections additionally skip at INSTALL time. Re-run `mise run hooks:sync` (or re-cd into the repo) after editing.",
   "hooks": {
+    "$disabled_help": "Hook ids from .agents/hooks/hooks.master.json: skill-check-reminder, hindsight-recall, hindsight-retain, hindsight-session-end. Listed ids are skipped at runtime across ALL agents.",
     "disabled": [],
-    "disabled_agents": []
+    "$disabled_agents_help": "Agent keys: claude, codex, kimi, hermes. Listed agents are NOT installed (codex/kimi/hermes injections are skipped/removed). Claude's hooks are committed and can't be fully removed per-dev — disable them individually via `disabled` instead.",
+    "disabled_agents": [],
+    "$defer_to_global_help": "Set true if you already run these hooks from a GLOBAL agent system (~/.agents/hooks). When true, sync.py suppresses AND removes the shared per-user injections (codex/kimi/hermes) so a project never double-injects into ~/.codex / ~/.kimi-code; Claude's committed repo settings are left in place. On a machine with a global install, pjangler skips scaffolding this whole layer, so you rarely need to set this by hand.",
+    "defer_to_global": false
   }
 }
