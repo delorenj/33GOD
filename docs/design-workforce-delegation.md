@@ -90,7 +90,14 @@ hand results back to) is already in the envelope contract.
 
 ### 3.3 Task state — JetStream KV, not Redis
 
-The riffed design put task state in Redis. Recommend **JetStream KV** instead:
+**Decided: JetStream KV.** Rationale, since KV is the less familiar option:
+
+JetStream KV is a key/value store built *on top of* a JetStream stream — the
+same NATS server, the same auth, the same ops surface already carrying the
+command lane. A bucket is a stream; a key is a subject within it; `put`/`get`/
+`delete` are publishes and lookups. It gives you last-value-wins semantics,
+optional history depth, per-key TTL, and atomic compare-and-set — which is
+enough for "one task record per correlationid, expiring on its own."
 
 - JetStream is already the command transport. KV rides the same server, same
   auth, same ops surface.
@@ -100,20 +107,18 @@ The riffed design put task state in Redis. Recommend **JetStream KV** instead:
 
 Redis is fine as a **cache**. It should not be the record.
 
-### 3.4 Ticketing — opt-in, by task class
+### 3.4 Ticketing — cut
 
-The riffed design created a short-lived Plane ticket per dispatch, labelled
-sub/contractor. Recommend **opt-in via an envelope field**, not automatic:
+**Decided: no ticketing for ephemeral tasks.** The original motivation was an
+audit trail, and Candystore already provides one for free by projecting the
+event stream. A Plane ticket per dispatch would have round-tripped
+Plane → n8n → HMAC → NATS for work already in-band on the bus, added board
+noise proportional to spawn rate, and put ticket-creation latency in front of
+a subagent that may return in two minutes.
 
-- Automatic ticketing round-trips Plane → n8n → HMAC → NATS for work already
-  in-band on the bus.
-- It adds board noise and a cleanup burden proportional to spawn rate.
-- It puts ticket-creation latency in front of a subagent that may return in
-  two minutes.
-
-Ticketing earns its cost for **durable, human-visible, resumable** work. For
-"read these files and summarize," the event stream already *is* the audit
-trail — that is what Candystore is for. Make the caller declare which it is.
+Durable, human-visible, resumable work still gets a ticket — but that work is
+what Plane is already for, and it enters through the existing ingress. It is
+not the ephemeral-contractor path this document describes.
 
 ### 3.5 Provider pools as data
 
@@ -159,7 +164,7 @@ the coupling this design removes.
 | 3 | **Provider pool registry** — quota/health as queryable data | M | The actual motivating problem (provider arbitrage). Useful standalone, before any orchestrator exists. |
 | 4 | **workforce-orchestrator** consumer — select, spawn, track in JetStream KV, emit lifecycle + reply | L | Only worth building on top of a proven 1–3. |
 | 5 | Skill: `workforce-delegation` — teach agents the routing call (in-process vs bus) | S | The piece that actually changes agent behavior. Cheap; do it as soon as 4 lands. |
-| 6 | Optional: opt-in ticketing, zellij read-side pane | M | Polish. |
+| 6 | Optional: zellij read-side pane fed by `bloodbank.evt.v1.agent.*` | M | Polish. |
 
 Steps 1–2 are small and unblock a system that is already built and running.
 **Do those regardless of whether 3–6 ever happen.**
@@ -236,7 +241,153 @@ already fills that role.
 
 ---
 
-## 7. Open questions
+---
+
+## 7. Control surface — inventory and correction
+
+Surveyed on big-chungus 2026-08-27. Every claim below was verified directly
+(`systemctl`, `ss`, `curl`, NATS monitoring endpoints, filesystem).
+
+### 7.1 Correction: n8n is not containerized
+
+An earlier read in this design assumed n8n ran in Docker and therefore could
+not reach the host's systemd user session. **That is wrong.** n8n runs on the
+host as a node process under PM2/mise. Its environment already carries
+`XDG_RUNTIME_DIR=/run/user/1000` and `DBUS_SESSION_BUS_ADDRESS`, lingering is
+enabled (`Linger=yes`), and the Execute Command node inherits `process.env`.
+
+**n8n can start, stop, and inspect every `systemd --user` unit and every
+docker container today, with zero new code** — and already does, via active
+workflows running `systemctl restart tailscaled`, `docker compose restart
+ssbnk-web`, and a lease-gated `gpu-gaming-mode` CLI.
+
+So the missing piece is not *access*. It is **restraint and typing**.
+
+### 7.2 Fix the security posture before adding lifecycle controls
+
+Three verified facts compose into a LAN-reachable root shell:
+
+| Fact | Verified |
+|---|---|
+| `delorenj ALL=(ALL) NOPASSWD: ALL` | `/etc/sudoers.d/` |
+| n8n listens on `0.0.0.0:5678` | `N8N_LISTEN_ADDRESS=0.0.0.0` |
+| Code nodes can read process env | `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` |
+
+Anyone reaching n8n on the LAN can execute arbitrary commands as root. Adding
+a lifecycle control surface on top of this ships convenience over an open root
+shell. **Correct order: narrow sudoers to the shim binary, bind n8n to
+127.0.0.1 behind Traefik, set `N8N_BLOCK_ENV_ACCESS_IN_NODE=true` — then add
+lifecycle nodes.**
+
+Separately: `~/.config/systemd/user/bloodbank-http.service:12` carries a
+plaintext `Environment=RABBITMQ_PASS=`. Rotate it and replace with an
+`op://DeLoSecrets` reference via `EnvironmentFile`.
+
+### 7.3 The real inventory problem
+
+**Five consumers, five start mechanisms, four repos.** Two are defined outside
+both surveyed repos entirely:
+
+| Consumer | Delivery | Started by |
+|---|---|---|
+| `candystore-events` | durable | docker compose (`33god-platform/compose.yaml`) |
+| `bloodbank-event-toaster` | ephemeral core sub | docker compose (a *different* project) |
+| `bloodbank-hermes-gateway-v1` | durable | `systemd --user` |
+| `curator-drain` | durable | `systemd --user`, script symlinked out of skillex |
+| `deckard` | ephemeral core sub | `systemd --user` template unit, Rust binary in `code/deckard` |
+
+`hook-hub.service` is routinely mistaken for a sixth; it dispatches and does
+not touch the bus.
+
+There is **no uniform way to enumerate consumers and their state.**
+`components/*.yaml` has no field for subject, durable name, delivery mode, or
+start mechanism. `bb doctor` only checks that scaffold files exist. Holocene's
+`/api/modules/systems/inventory` — the one attempted unified view — returns
+**HTTP 500**, shelling out to a `bgls` binary that does not exist.
+
+Ephemeral consumers are invisible when stopped: they appear only as live rows
+in `connz`, so a survey cannot distinguish "never existed" from "died an hour
+ago."
+
+### 7.4 The fleet has the same shape, worse
+
+- **29 gateway units, 15 heartbeat timers, zero sockets**, all generated by
+  `70-systemd.sh` from `role.yaml`. `agents-registry.yaml` is written
+  *post hoc* by `80-registry.sh` and **nothing reads it back to drive
+  systemd** — that split is the whole "hanging around" feeling.
+- **The registry under-records reality**: 14 heartbeat timers fire every 60s,
+  only 9 are declared. Anything reconciling from the registry silently leaves
+  five running.
+- **And over-records**: `delonet-director` advertises two units that were
+  never installed. `systemctl start` on them fails with NoSuchUnit.
+- **Seven orphan profile dirs**, including a case-duplicate
+  `OptionJangler-pm` / `optionjangler-pm` pair.
+- **No fleet CLI exists.** `hermes` has 60+ subcommands but no `fleet`, and
+  all are scoped to one profile. Raw `systemctl --user` is the entire
+  documented control surface — and it requires an agent-id that the registry
+  stores but no command prints.
+- **26 gateways carry a `10-versioned-runtime.conf` drop-in overriding
+  ExecStart, with no generator anywhere on disk** and no commit that ever
+  contained the string. Unexplained provenance on almost every unit.
+
+### 7.5 The status commands lie
+
+This is the finding that most justifies building something.
+
+`hermes-33god-pm-gateway.service` has restarted **10,427 times**, exiting
+`status=78/CONFIG` every ~11s (no Telegram bot token). Because
+`Restart=on-failure` keeps re-arming it, it reports as `activating`, **never
+`failed`** — so it does not appear in the status commands the runbook
+recommends.
+
+Meanwhile the *only* unit `--state=failed` returns is
+`hermes-plane-webhook-bridge.service`, whose **unit file does not exist**;
+systemd is holding a failed job for a phantom.
+
+**The fleet's single failure signal points at a unit that isn't there, while
+its loudest genuine breakage is invisible.** Note this is the 33GOD PM — the
+agent this document would be handed to.
+
+### 7.6 What to build
+
+Not access. A **registry and a boundary**:
+
+1. **A consumer/agent registry** — `name → subject → durable|ephemeral →
+   start mechanism → definition path`. This is the single highest-value
+   missing artifact; it is what makes a lifecycle node's dropdown finite and
+   safe, and what lets anything reconcile intent against reality.
+2. **An allowlist shim** — a ~200-line near-clone of the existing
+   `gpu-gaming-mode` CLI, whose entire security value is refusing units
+   outside a fixed list (`readonly -a UNITS=(...)`). Copy that pattern
+   verbatim, including its lease-awareness: the difference between a button
+   that stops a service and a controller that knows whether stopping is safe
+   and what to restore.
+3. **A joined state read** — `systemctl show -p ActiveState,SubState,NRestarts`
+   gives process state; NATS `jsz` gives bus-binding state. Nothing joins
+   them, so *a consumer whose unit is active while its JetStream consumer is
+   unbound looks healthy and is not.* The `status` verb must return both.
+4. **A failure signal** — no `WatchdogSec`, no `sd_notify` anywhere, so a
+   flapping consumer emits nothing a workflow can trigger on. `NRestarts` is
+   the cheapest available flap signal; the proper answer publishes a
+   `service-state-changed` event so a Bloodbank trigger drives the onError
+   branch natively. This is what would have surfaced the 10,427 restarts.
+
+n8n then becomes the control surface the way it already is for GPU mode: a
+typed node per consumer, backed by the registry, calling the allowlisted shim.
+
+### 7.7 Two correctness bugs found in passing
+
+- **Subject coverage seam.** `BLOODBANK_EVENTS` accepts `bloodbank.evt.v1.>`
+  plus `bloodbank.evt.v2.repo.maintenance.failed`, but the toaster's filter is
+  `bloodbank.evt.v1.>` — it silently never sees the v2 subject. Nothing checks
+  that the union of consumer filters covers the stream's subject set.
+- **Commands expire silently.** `BLOODBANK_COMMANDS` is `retention=workqueue,
+  max_age=1d`, and no dead-letter handling is implemented. An unhandled
+  command is dropped after a day with no signal. That directly affects §3.
+
+---
+
+## 8. Open questions
 
 - **Ephemeral agent identity.** The gateway resolves `target_agent_id` through
   the fleet registry with default-deny. Ephemeral contractors have no registry
@@ -247,7 +398,7 @@ already fills that role.
 - **Nested delegation.** May an orchestrator-spawned agent itself dispatch?
   `causationid` supports the chain; runaway-fan-out policy is undefined.
 
-## 8. Provenance
+## 9. Provenance
 
 Every "live/dead" claim in §2 and §6 was verified directly on `big-chungus`
 on 2026-08-27 — `systemctl` state, listening ports, `git log`/`git blame`
