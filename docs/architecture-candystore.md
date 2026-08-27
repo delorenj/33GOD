@@ -20,7 +20,12 @@ Vertical full-stack read model. One Python process applies migrations, receives 
 
 ## Ingestion Flow
 
-The Dapr sidecar subscribes to `bloodbank.evt.v1.>` using durable `candystore-events` and queue group `candystore`. Accepted events are deduplicated by UUID and projected into indexed columns plus JSONB. Permanent failures return 200 `DROP`; transient failures return 500 `RETRY`.
+The Dapr sidecar subscribes to `bloodbank.evt.>` using durable
+`candystore-events` and queue group `candystore`. The broad durable-history
+filter covers the stream's v1 wildcard and explicitly admitted v2 subjects; it
+does not broaden what Bloodbank stores. Accepted events are deduplicated by UUID
+and projected into indexed columns plus JSONB. Permanent failures return 200
+`DROP`; transient failures return 500 `RETRY`.
 
 Candystore validates eight truthy fields plus UUID/time parsing, weaker than Bloodbank’s canonical contract. It does not enforce canonical type/subject equality, actor/order/schema metadata, or full domain/action rules.
 

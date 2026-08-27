@@ -97,7 +97,7 @@ EXPECTED_SERVICE_NETWORKS = {
 
 EXPECTED_CANDYSTORE_EVENT_ENV = {
     "SUBSCRIBE_PUBSUB": "bloodbank-pubsub",
-    "SUBSCRIBE_TOPIC": "bloodbank.evt.v1.>",
+    "SUBSCRIBE_TOPIC": "bloodbank.evt.>",
     "SUBSCRIBE_ROUTE": "/events/all",
 }
 

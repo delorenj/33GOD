@@ -1,9 +1,26 @@
 ---
 name: task-triage
-description: Facilitates a single point of ingress for any and all tasks. Used when pulling a new `inbox` task from the 33god plane workspace, or any prompt that explicitly or implicitly describes a non-trivial task. Triggered by `add a feature`, `task.inbox.new` event.
+description: Facilitates a single point of ingress for any and all tasks. Used when pulling a new inbox/backlog task from a self-hosted Plane workspace, consuming the normalized `bloodbank.v1.repo.task.created` fact (`data.provider_event_type=plane.ticket.created`), or handling any prompt that explicitly or implicitly describes a non-trivial task. Triggered by `add a feature`, `bloodbank.evt.v1.repo.task.created`, or an equivalent provider-neutral task-created fact.
 ---
 
 # Task Triage Skill
+
+## Canonical event ingress
+
+Plane does not publish a `task.inbox.new` wire event. A Plane issue creation
+travels through the signed n8n ingress and becomes
+`bloodbank.v1.repo.task.created` on
+`bloodbank.evt.v1.repo.task.created`. Use `data.provider_event_type` to confirm
+`plane.ticket.created`, `data.repo` for canonical project identity, and
+`data.workspace` plus `data.board_id` for provider provenance. Check the raw
+ticket/state payload to decide whether the item is actually in the
+inbox/backlog band; creation alone does not imply a particular lane.
+
+Do not route by workspace alone. `33god` and `automaticai` are tenant slugs on
+the same self-hosted `plane.delo.sh` instance, and one workspace can contain many
+boards. Board mapping comes from `.project.json` reconciled into the shared
+Hermes registry. For the full transport and consumer journey, load
+`bloodbank-integration` → `references/event-journey.md`.
 
 There’s a large amount of friction when deciding:
 

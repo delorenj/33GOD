@@ -8,7 +8,37 @@ implementation. Authority order is executable manifests/runtime configuration,
 code, tests/validation, root integration docs, component docs, then historical
 plans.
 
-## Validated target
+The canonical end-to-end facts/intent map is [33GOD Event and Command
+Journey](./event-journey.md). Its editable Excalidraw source contains the
+platform context, focused Plane ingress, and both message traces.
+
+## Current live topology
+
+Verified on 2026-08-27 UTC, Compose project `33god-platform` owns the running
+Bloodbank NATS, Candystore app/sidecar/PostgreSQL, event toaster, and Holocene
+web containers. The host owns the Holocene API and Hermes Bloodbank gateway;
+n8n owns the public Plane provenance boundary.
+
+```text
+Plane --signed raw HTTPS--> n8n Plane → Bloodbank --fact--> BLOODBANK_EVENTS
+                                                             |
+                                                             +--> Candystore
+                                                             |       |
+                                                             |       +--> Holocene
+                                                             +--> Event toaster
+
+Momo / UI / CLI --intent--> BLOODBANK_COMMANDS --> Hermes gateway
+                                                     | registry-gated dispatch
+                                                     +--> Hermes target
+                                                     +--> lifecycle facts --> EVENTS
+```
+
+The active Plane workflow is `iMw484J1ZCqKME2C`; both `33god` and
+`automaticai` are Plane workspace tenants on this same personal infrastructure.
+The `automaticai` slug is routing identity, not a second service or ownership
+boundary. Port `8477` is retired.
+
+## Root composition model
 
 ```text
 Bloodbank NATS --healthy--> NATS init --completed--------------------+
@@ -27,9 +57,9 @@ PJangler CLI / stdio MCP: tools/full, zero replicas, explicit run only
 Cloud: render-only unsupported local-bind model
 ```
 
-The candidate is statically validated, not deployed. Fixed container names mean
-the target cannot coexist with current component-managed containers during a
-cutover.
+The local core of this model is deployed. The `cloud` model remains render-only
+and unsupported, and fixed container names still forbid starting a second
+component-managed copy beside the root-owned services.
 
 ## Contract matrix
 
@@ -55,6 +85,12 @@ no ports.
 
 - `nats-init` must finish before the durable Candystore sidecar starts.
 - Candystore readiness includes PostgreSQL; app liveness alone is insufficient.
+- Plane ingress must verify HMAC over the exact raw request body, select a
+  1Password secret reference by `webhook_id`, and resolve a project route before
+  publication. Unknown identity, bad signature, or missing route means no event.
+- A healthy Hermes gateway is not proof of dispatch eligibility. The fleet
+  registry is a separate default-deny gate; the current snapshot has no enabled
+  Bloodbank routes.
 - The host API preflight establishes reachability, not application auth safety.
 - Holocene history remains a direct HTTP read-side exception to Bloodbank.
 - PJangler recipes requiring host files, systemd, or provider credentials remain
@@ -75,4 +111,6 @@ legacy volumes remain preserved and unmounted.
 Any event, template, port, network, secret-source, storage, service-cardinality,
 profile, or host-boundary change requires a machine change record, pipeline
 changelog entry, relevant semantic-validator update, root documentation update,
-and owner review. See [Drift Governance](./drift-governance.md).
+and owner review. A pipeline journey change additionally requires live rejection
+and durable-delivery evidence. See [Drift Governance](./drift-governance.md) and
+[Event and Command Journey](./event-journey.md).

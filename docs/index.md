@@ -1,18 +1,21 @@
 # 33GOD Documentation Index
 
-**Type:** Four-part monorepo knowledge boundary
+**Type:** Multi-component platform knowledge boundary
 
-**Architecture:** Event-driven local-first platform with a validated integrated Compose target
+**Architecture:** Event-driven local-first platform with a live integrated core
 
-**Last updated:** 2026-07-15
+**Last updated:** 2026-08-26
 
 ## Current state
 
-33GOD combines Bloodbank, Candystore, Holocene, and PJangler. The root-owned
-`33god-platform/compose.yaml` is now a statically validated normalized
-projection of their local topology. It is a target, not proof of a live
-cutover: existing component projects and the host `holocene-api.service` remain
-untouched.
+33GOD combines a root-managed Bloodbank/Candystore/Holocene core with PJangler,
+Hermes Fleet, Momo, Krebs, Skillex, Hindsight, and provider/integration
+boundaries including Plane and n8n. Component implementation remains in the
+owning repository; root documentation governs the journey between them.
+
+The normalized core is live under Compose project `33god-platform`; privileged
+Holocene and Hermes gateway processes remain host services by design. The
+hosted/cloud model is still render-only and unsupported.
 
 Default services are Bloodbank NATS/init/placement, exactly one standalone
 Candystore PostgreSQL/app/Dapr sidecar, a Holocene host-API preflight, and
@@ -26,7 +29,7 @@ cross-component relationships, the normalized projection, and deployment
 gates; component repositories govern their internals. Contradictions are
 recorded in [Drift Governance](./drift-governance.md).
 
-| Part | Role | Root | Runtime boundary in the target |
+| Core part | Role | Root | Runtime boundary in the target |
 |---|---|---|---|
 | Bloodbank | Event contracts and transport | `bloodbank/` | Default NATS, initializer, placement |
 | Candystore | Durable history and read API | `candystore/` | Exactly one default PostgreSQL/app/daprd |
@@ -38,6 +41,9 @@ recorded in [Drift Governance](./drift-governance.md).
 - [Project Overview](./project-overview.md)
 - [Source Tree Analysis](./source-tree-analysis.md)
 - [Integration Architecture](./integration-architecture.md)
+- [Event and Command Journey](./event-journey.md)
+- [Skill Event-Journey Audit](./skill-event-journey-audit.md)
+- [Editable Excalidraw Architecture and Message Traces](./diagrams/33god-event-pipeline.excalidraw)
 - [Deployment Guide](./deployment-guide.md)
 - [Drift Governance](./drift-governance.md)
 - [Validation Report](./validation-report.md)
@@ -65,4 +71,5 @@ GOD_SOURCE_ROOT=/home/delorenj/code/33GOD mise run docs:drift
 
 The gate retains all component/document checks and also renders and
 semantically validates default, `tools`, `full`, and `cloud`. A green result
-proves candidate consistency, not runtime health or cutover completion.
+proves projection consistency, not current runtime health; live proof is
+recorded separately in [Event and Command Journey](./event-journey.md).

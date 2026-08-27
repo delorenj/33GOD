@@ -15,11 +15,12 @@ Full onboarding workflow for new projects in Plane, including absurd art generat
 ### Step 1: Project Discovery
 
 ```
-1. Check for existing `.plane.json` in project root
-2. If not found, search Plane for project by:
+1. Check repo-root `.project.json.ticket_provider`
+2. If its Plane `board_id` is empty, search Plane for project by:
    - Directory name match
    - Git remote URL patterns
-3. If project doesn't exist, prompt to create
+3. If the project does not exist, create it through the ticket-provider adapter
+4. Persist the returned board identity in `.project.json`; never create `.plane.json`
 ```
 
 ### Step 2: Art Theme Generation

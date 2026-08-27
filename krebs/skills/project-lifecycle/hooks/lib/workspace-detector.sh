@@ -3,9 +3,9 @@
 # Workspace Detector Library
 #
 # Automatically detects which Plane workspace to use based on:
-# 1. Local .plane.json config (highest priority)
-# 2. Git remote URL patterns
-# 3. Current directory path
+# 1. Nearest ancestor .project.json ticket_provider (highest priority)
+# 2. Git remote URL patterns (legacy fallback)
+# 3. Current directory path (legacy fallback)
 # 4. Environment variable
 # 5. Default workspace (fallback)
 #
@@ -14,21 +14,38 @@ set -euo pipefail
 
 WORKSPACE_CONFIG_FILE="${HOME}/.claude/plane-workspaces.json"
 
+# Function: Find the nearest canonical project manifest
+# Returns an absolute .project.json path or non-zero when outside a project.
+find_project_manifest() {
+  local dir="$PWD"
+  while [ "$dir" != "/" ]; do
+    if [ -f "$dir/.project.json" ]; then
+      printf '%s\n' "$dir/.project.json"
+      return 0
+    fi
+    dir=${dir%/*}
+    [ -n "$dir" ] || dir="/"
+  done
+  return 1
+}
+
 # Function: Get current workspace
 # Returns workspace name based on detection priority
 get_current_workspace() {
-  if [ ! -f "$WORKSPACE_CONFIG_FILE" ]; then
-    echo "default"
-    return
-  fi
-
-  # 1. Check for project-local .plane.json (highest priority)
-  if [ -f ".plane.json" ]; then
-    local ws=$(jq -r '.workspace // empty' .plane.json 2>/dev/null)
+  # 1. Check the nearest canonical .project.json (highest priority)
+  local manifest
+  if manifest=$(find_project_manifest); then
+    local ws
+    ws=$(jq -r '.ticket_provider.workspace // empty' "$manifest" 2>/dev/null)
     if [ -n "$ws" ]; then
       echo "$ws"
       return
     fi
+  fi
+
+  if [ ! -f "$WORKSPACE_CONFIG_FILE" ]; then
+    echo "${PLANE_WORKSPACE:-default}"
+    return
   fi
 
   # 2. Detect from git remote URL
@@ -100,7 +117,7 @@ get_workspace_api_key() {
   local api_key_env=$(echo "$config" | jq -r '.api_key_env // "PLANE_API_KEY"')
 
   # Get value from environment (zsh-compatible indirect expansion)
-  eval echo "\${$api_key_env:-}"
+  printenv "$api_key_env" 2>/dev/null || true
 }
 
 # Function: Get workspace base URL
@@ -114,7 +131,7 @@ get_workspace_base_url() {
   fi
 
   local config=$(get_workspace_config "$workspace")
-  echo "$config" | jq -r '.base_url // "plane.so"'
+  echo "$config" | jq -r '.base_url // "plane.delo.sh"'
 }
 
 # Function: Get git repository name (not directory name)
@@ -145,9 +162,11 @@ get_workspace_project_id() {
     workspace=$(get_current_workspace)
   fi
 
-  # Check local .plane.json first
-  if [ -f ".plane.json" ]; then
-    local local_project=$(jq -r '.project_id // empty' .plane.json 2>/dev/null)
+  # Check the nearest canonical .project.json first
+  local manifest
+  if manifest=$(find_project_manifest); then
+    local local_project
+    local_project=$(jq -r '.ticket_provider.board_id // empty' "$manifest" 2>/dev/null)
     if [ -n "$local_project" ]; then
       echo "$local_project"
       return
@@ -258,9 +277,12 @@ debug_workspace_detection() {
   jq -r '.detection.priority[]' "$WORKSPACE_CONFIG_FILE" | sed 's/^/  - /'
   echo ""
 
-  echo "1. Local .plane.json:"
-  if [ -f ".plane.json" ]; then
-    echo "  ✓ Found: $(jq -r '.workspace // "no workspace field"' .plane.json)"
+  echo "1. Nearest .project.json:"
+  local manifest
+  if manifest=$(find_project_manifest); then
+    echo "  ✓ Found: $manifest"
+    echo "  Workspace: $(jq -r '.ticket_provider.workspace // "no workspace field"' "$manifest")"
+    echo "  Board: $(jq -r '.ticket_provider.board_id // "no board_id field"' "$manifest")"
   else
     echo "  ✗ Not found"
   fi

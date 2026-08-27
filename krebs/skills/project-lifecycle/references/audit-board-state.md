@@ -4,8 +4,8 @@ Analyzes current Plane board state and recommends optimization strategies.
 
 ## Input
 
-- Workspace: intelliforia
-- Project ID: dfb05f73-cab7-4447-a4a1-360bb7ca7177
+- Workspace: from `.project.json.ticket_provider.workspace`
+- Project ID: from `.project.json.ticket_provider.board_id`
 - Audit depth: quick | standard | comprehensive
 
 ## Process

@@ -69,7 +69,7 @@ We've just deployed **{{TOTAL_TICKETS}} tickets** ({{TOTAL_POINTS}} story points
 ## 🔗 Links
 
 - **Sprint Plan:** {{SPRINT_PLAN_URL}}
-- **Plane Board:** https://plane.internal.intelliforia.com/intelliforia/projects/{{PROJECT_ID}}
+- **Plane Board:** https://plane.delo.sh/{{PLANE_WORKSPACE}}/projects/{{PROJECT_ID}}
 - **Production:** {{PRODUCTION_URL}}
 - **Staging:** {{STAGING_URL}}
 
@@ -114,9 +114,9 @@ Thanks to everyone who contributed to this release:
 Questions? Reply to this email or check Plane for detailed ticket information.
 
 Best,
-**IntelliForia Development Team**
-(via Claude Code Automation)
+**33GOD Development Pipeline**
+(via agent automation)
 
 ---
 
-*This changelog was automatically generated from Plane tickets. [View Sprint Board](https://plane.internal.intelliforia.com/intelliforia/projects/{{PROJECT_ID}})*
+*This changelog was automatically generated from Plane tickets. [View Sprint Board](https://plane.delo.sh/{{PLANE_WORKSPACE}}/projects/{{PROJECT_ID}})*

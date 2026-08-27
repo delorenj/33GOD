@@ -10,6 +10,7 @@ description: |
   - Promoting completed tickets to production and generating changelogs
   - Managing sprint workflows with status tracking and WIP limits
   - Working with multiple Plane workspaces (auto-detects from git remote or directory)
+  - Understanding the canonical Plane CRUD → n8n HMAC → Bloodbank → Candystore event side effect
   - **Board orchestration** in 33GOD projects: this skill handles direct Plane ticket CRUD and state management. For higher-level orchestration — "what's next", "clear the board", "orchestrate this ticket" — route to the **`momo`** skill, which surveys the board, triages, decides, and delegates implementation to subagents.
 
   Triggers: "create ticket", "board audit", "what should I work on", "next ticket", "promote to production", "changelog", "sprint status", "WIP limit", plane ticket operations
@@ -21,19 +22,17 @@ pipeline-status:
 
 ## Plane Configuration
 
-**Connection:** Plane MCP server or direct Plane REST API via `curl`
+**Connection:** Plane MCP server or direct Plane REST API at `https://plane.delo.sh`
 
 **Premium Features Limitation:** Cycles (sprints) are a premium-only feature. Use sprint labels as a workaround:
 - Create labels: `sprint-1`, `sprint-2`, `sprint-3`, etc.
 - Filter views by sprint label to simulate cycle boards
 - Use label colors to visually distinguish sprints (e.g., teal for current sprint)
 
-**Multi-Workspace Support:** Automatically detects workspace from:
-1. Local `.plane.json` in project root (highest priority)
-2. Git remote URL patterns
-3. Current directory path
-4. `PLANE_WORKSPACE` environment variable
-5. Default workspace from `~/.claude/plane-workspaces.json`
+**Multi-Workspace Support:** Resolve the nearest repo-root `.project.json` and
+read `.ticket_provider`. It is the single source of truth for provider type,
+workspace tenant slug, project identifier, and Plane `board_id`. Never add or
+consult a separate `.plane.json`.
 
 **Plane REST API Endpoints:**
 - `GET /api/v1/workspaces/{workspace}/projects/{project}/issues/` - List issues
@@ -43,6 +42,30 @@ pipeline-status:
 - `GET /api/v1/workspaces/{workspace}/projects/{project}/labels/` - List labels
 
 **Authentication:** `X-Api-Key` header with value from workspace-specific env var (e.g., `PLANE_API_KEY`)
+
+## Event side effect of Plane writes
+
+Every successful Plane project/issue/comment write is independently reported by
+Plane to the one active n8n workflow at
+`https://n8n.delo.sh/webhook/plane`. n8n verifies the exact raw-body HMAC using
+the secret selected by `webhook_id`, resolves `board_id` through the Hermes
+registry, normalizes provider actions, and publishes canonical Bloodbank facts:
+
+| Plane activity | Canonical event |
+|---|---|
+| project created | `bloodbank.v1.repo.board.created` |
+| issue created | `bloodbank.v1.repo.task.created` |
+| issue updated, transitioned, or deleted | `bloodbank.v1.repo.task.updated` |
+| issue comment created | `bloodbank.v1.repo.task.appended` |
+
+These events are retained in `BLOODBANK_EVENTS` and projected by Candystore.
+Do not manually emit a second ticket lifecycle event after Plane CRUD. Explicit
+PM judgments remain separate `repo.decision.recorded` events.
+
+The Plane workspace `automaticai` is a tenant slug on the same self-hosted
+personal `plane.delo.sh` instance. It is not a separate infrastructure or
+credential boundary. Load `bloodbank-integration` → `references/event-journey.md`
+when tracing beyond the board operation.
 
 ## Core Workflows
 
@@ -112,7 +135,7 @@ Parse input for discrete tasks, extract metadata, check duplicates, create via A
 ```
 ✓ Ticket Created: [CWS-015] Fix API authentication bug
 Priority: urgent | Points: 3 | Sprint: 1 | Labels: security, backend
-URL: https://plane.internal.intelliforia.com/.../CWS-015
+URL: https://plane.delo.sh/<workspace>/projects/<board-id>/issues/<ticket-id>
 ```
 
 See [references/create-ticket-from-story.md](references/create-ticket-from-story.md) for full workflow.
@@ -212,69 +235,37 @@ Runs at session end to update ticket.
 | `/captain:health` | on-demand | Board health and decomposition check |
 | `/captain:prune` | weekly | Backlog cleanup recommendations |
 
-## Multi-Workspace Configuration
+## Registering a project and workspace
 
-**Config file:** `~/.claude/plane-workspaces.json`
-
-```json
-{
-  "workspaces": {
-    "intelliforia": {
-      "api_key_env": "PLANE_API_KEY",
-      "base_url": "plane.internal.intelliforia.com",
-      "projects": { "default": "dfb05f73-cab7-4447-a4a1-360bb7ca7177" },
-      "wip_limits": { "individual": 3, "team": 7 }
-    }
-  },
-  "detection": {
-    "git_remote_patterns": { "intelliforia": "intelliforia" },
-    "directory_patterns": { "/home/delorenj/code/intelliforia": "intelliforia" }
-  },
-  "default_workspace": "intelliforia"
-}
-```
-
-## Registering a Project
-
-Every project that uses Plane tickets needs two things: a `.plane.json` in the project root and an entry in the global workspace config.
-
-### 1. Create `.plane.json` in the project root
-
-This is the primary detection mechanism (highest priority in the resolution chain). Place it at the repo root alongside `CLAUDE.md`.
-
-See [references/plane-json-template.json](references/plane-json-template.json) for the template.
+Every project that uses a ticket board records the binding in repo-root
+`.project.json`:
 
 ```json
 {
-  "workspace": "33god",
-  "base_url": "plane.delo.sh",
-  "project_id": "ce150fc4-bfd9-4b6f-9f14-6468c18616e3"
+  "project_slug": "33god",
+  "ticket_provider": {
+    "type": "plane",
+    "workspace": "33god",
+    "identifier": "33GOD",
+    "board_id": "15258893-0206-4e8f-aea6-340eb217988c",
+    "state": "linked"
+  },
+  "agents": {}
 }
 ```
 
-| Field | Description |
+| Field | Meaning |
 |---|---|
-| `workspace` | Workspace slug matching a key in `~/.claude/plane-workspaces.json` |
-| `base_url` | Plane instance hostname (no protocol, no trailing slash) |
-| `project_id` | UUID of the project in Plane (find via API or Plane UI URL) |
+| `project_slug` | Canonical repo identity and Hindsight/event `data.repo` value |
+| `ticket_provider.workspace` | Plane tenant slug, such as `33god` or `automaticai` |
+| `ticket_provider.identifier` | Human-facing project identifier |
+| `ticket_provider.board_id` | Plane project UUID and webhook routing key |
+| `ticket_provider.state` | `planned` until linked, then `linked` |
 
-### 2. Register in global workspace config
-
-Add the project to `~/.claude/plane-workspaces.json` under the workspace's `projects` map:
-
-```json
-{
-  "workspaces": {
-    "33god": {
-      "projects": {
-        "ssbnk": "ce150fc4-bfd9-4b6f-9f14-6468c18616e3"
-      }
-    }
-  }
-}
-```
-
-The key (e.g., `ssbnk`) is a human-friendly alias used for lookups when `.plane.json` is absent.
+Credentials remain workspace-scoped runtime secrets. PJangler reconciles this
+manifest into the shared fleet registry; webhook routing reads the registry on
+every execution. Do not persist `base_url`, `board_url`, or credentials in the
+manifest.
 
 ### Finding the project ID
 

@@ -1,6 +1,6 @@
 ---
 name: 33god-hub
-description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Bloodbank, Candystore, Holocene, PJangler, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, HeyMa, hooks, changelogs, backfills, or local/cloud platform composition.
+description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Plane/n8n ingress, Bloodbank events or commands, Candystore, Holocene, PJangler, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, HeyMa, hooks, changelogs, backfills, or local/cloud platform composition, especially when tracing a message end-to-end.
 ---
 
 # 33GOD Hub
@@ -18,6 +18,7 @@ changelog, skill routing, and backfill coordination.
 
 | Need | Component |
 |---|---|
+| Signed Plane webhook ingress and provider normalization | n8n integration boundary + Bloodbank custom node |
 | Event schemas, NATS/Dapr, agent lifecycle events | Bloodbank |
 | Durable event history, sessions, event summaries | Candystore |
 | Dashboard, live status, tool health | Holocene |
@@ -28,6 +29,24 @@ changelog, skill routing, and backfill coordination.
 | Compact MCP tool gateway | Pipeline MCP Hub |
 | Topology/event visualization | Candybar |
 | Voice/transcription/TTS interface | HeyMa |
+
+## Event and command spine
+
+- **Events are facts.** Producers publish `bloodbank.evt.*`; the
+  `BLOODBANK_EVENTS` stream retains them, Candystore projects them durably, and
+  Holocene/toaster consume read-side views.
+- **Commands are intent.** Producers publish `bloodbank.cmd.*`; a targeted
+  consumer acts, then emits lifecycle events. The command itself is not the
+  durable audit record.
+- **Plane uses one authenticated boundary.** Both self-hosted workspaces target
+  `https://n8n.delo.sh/webhook/plane`; raw-body HMAC and `webhook_id` select the
+  per-webhook 1Password secret before provider-neutral publication. The
+  `automaticai` workspace is a tenant slug, not another infrastructure owner.
+- **Identity is declared, not guessed.** `.project.json` → PJangler → the shared
+  Hermes registry supplies board-to-repo and agent-to-profile routing.
+
+Load [references/event-journey.md](references/event-journey.md) before changing
+any producer, consumer, webhook, subject, projection, or command route.
 
 ## Operating procedure
 

@@ -21,7 +21,7 @@ The builder also emits subject, schema references, trace context, and nonempty c
 
 | Stream | Subjects | Retention | Maximum age |
 |---|---|---|---|
-| `BLOODBANK_EVENTS` | `bloodbank.evt.v1.>` | limits | 7 days |
+| `BLOODBANK_EVENTS` | `bloodbank.evt.v1.>` plus explicitly registered v2 subjects such as `bloodbank.evt.v2.repo.maintenance.failed` | limits | 7 days |
 | `BLOODBANK_COMMANDS` | `bloodbank.cmd.v1.>`, `bloodbank.rpy.v1.>` | work queue | 1 day |
 
 No broker-level DLQ or capacity ceiling is configured. Replay metadata exists as headers/conventions, but operator trace/replay CLI commands remain stubs.
@@ -39,4 +39,8 @@ No broker-level DLQ or capacity ceiling is configured. Replay metadata exists as
 
 ## Consumers
 
-Candystore subscribes to event wildcard and enforces only a subset. Holocene has no functioning direct Bloodbank client. PJangler generators contain noncanonical subject patterns. These mismatches are governed in [Drift Governance](./drift-governance.md).
+Candystore subscribes to the cross-version event wildcard `bloodbank.evt.>` and
+enforces only a subset; the JetStream stream remains the admission boundary.
+Holocene has no functioning direct Bloodbank client. PJangler generators
+contain noncanonical subject patterns. These mismatches are governed in [Drift
+Governance](./drift-governance.md).

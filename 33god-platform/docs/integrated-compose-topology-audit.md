@@ -237,10 +237,16 @@ Captured results:
   messages, and one consumer.
 - `BLOODBANK_COMMANDS` was file-backed work-queue retention with a one-day
   maximum age and no consumer.
-- The one `BLOODBANK_EVENTS` consumer was durable
+- At this July snapshot, the one `BLOODBANK_EVENTS` consumer was durable
   `candystore-events`, filtered on `bloodbank.evt.v1.>`, with explicit
   acknowledgement, zero pending messages, and zero acknowledgement-pending
   messages.
+
+The current component-owned and root Compose contract has since broadened the
+Candystore filter to `bloodbank.evt.>` so durable history also receives exact v2
+subjects admitted by `BLOODBANK_EVENTS`. The stream subject list, not the
+consumer wildcard, remains the event-admission boundary. See the current
+[Event and Command Journey](../../docs/event-journey.md).
 
 This is direct evidence that the live audit path currently has exactly one
 durable Candystore consumer. The target must preserve that cardinality.

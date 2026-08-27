@@ -64,7 +64,7 @@ Creates a Plane ticket from a BMAD story document or user requirements.
 - Sprint: Sprint 1
 - Labels: security, backend, critical
 
-**Plane URL:** https://plane.internal.intelliforia.com/intelliforia/projects/.../issues/CWS-015
+**Plane URL:** https://plane.delo.sh/<workspace>/projects/<board-id>/issues/<ticket-id>
 
 **Acceptance Criteria:**
 - [ ] Revoke exposed credentials

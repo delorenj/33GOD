@@ -3,6 +3,44 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-08-26
+
+### Canonical event journey and skill dependency reconciliation
+
+Documented and live-verified the full facts and intent journeys: Plane workspace
+tenants use one raw-body HMAC n8n provenance boundary; n8n publishes canonical
+facts to Bloodbank; Candystore durably projects them; Holocene reads the
+projection; command producers publish intent to the Bloodbank work queue; and
+the Hermes gateway validates, registry-gates, journals, dispatches, and returns
+correlated lifecycle facts.
+
+The active workflow `iMw484J1ZCqKME2C` was reconciled after its trust/routing
+parameters drifted. The restored active version selects 1Password references by
+`webhook_id`, rejects invalid HMAC before publication, and resolves canonical
+project identity before publishing. A signed test event was observed on
+JetStream and read back from Candystore as
+`6f51892f-14c4-5883-9885-c40602fdba7b`; the paired invalid-signature test
+published nothing. Port `8477` remains retired.
+
+Audited 184 Skillex packages and 67 activated 33GOD skill packages, then updated
+the eight direct dependency owners across Bloodbank, Skillex, 33god-platform,
+PJangler, Krebs, and Momo. Stale `.plane.json`, `task.inbox.new`, duplicate
+ticket-fact emission, per-agent command consumers, and Plane `/event` guidance
+were removed or explicitly prohibited. The root editable Excalidraw source now
+contains platform context, Plane component focus, event/producer trace, and
+command/consumer trace views.
+
+The command success path remains historically proven by five completed journal
+entries, but current fleet configuration has zero enabled Bloodbank routes.
+That default-deny present state is now explicit everywhere; service health is
+not reported as dispatch eligibility.
+
+Reconciled the root semantic gate and component architecture with the live
+Candystore durable subscription: `bloodbank.evt.>` receives every subject
+admitted by `BLOODBANK_EVENTS`, including its v1 wildcard and explicit v2
+maintenance subject. The stream remains the admission boundary; broadening the
+durable-history consumer does not authorize arbitrary event versions.
+
 ## 2026-08-21
 
 ### Toad retirement and recursive fanout guard

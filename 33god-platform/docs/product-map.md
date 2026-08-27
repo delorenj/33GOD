@@ -3,8 +3,8 @@
 33GOD is a private, local-first development environment. Component
 implementations remain split across repos; this control plane provides one
 root-owned, normalized Compose target and one product-governance surface. The
-target is statically validated but has not replaced the existing component
-projects on the host.
+root-managed Bloodbank, Candystore, and Holocene core is live on the host; the
+hosted/cloud projection remains validation-only.
 
 | Product card | Component | What subscribers get |
 |---|---|---|
@@ -18,6 +18,19 @@ projects on the host.
 | Tool Gateway | Pipeline MCP Hub | Compact MCP access to Plane, Bloodbank, lifecycle, and future domains. |
 | Visual Topology | Candybar | Event and service topology inspection. |
 | Voice Interface | HeyMa | Voice, meeting, transcription, and TTS integration path. |
+
+## Integration spines
+
+| Journey | Path | Meaning |
+|---|---|---|
+| External fact | Plane → signed n8n ingress → Bloodbank EVENTS → Candystore → Holocene | A ticket-provider fact is authenticated, normalized, transported, durably stored, and then displayed. |
+| Agent intent | Momo/UI/CLI → Bloodbank COMMANDS → Hermes gateway → fleet-registry gate → Hermes profile | Work is requested; the command itself is not evidence that work completed. |
+| Lifecycle proof | Hermes gateway/profile → Bloodbank EVENTS → Candystore → Holocene | Started, completed, failed, or rejected facts close the command correlation loop. |
+| Memory context | Agent runtime ↔ Hindsight | Recall/retain augments decisions but never replaces ticket, event, or command authority. |
+
+The complete authority map, security boundary, current proof, and editable
+architecture/message-trace diagrams are in [Event and Command
+Journey](../../docs/event-journey.md).
 
 ## Planned integration layer
 
@@ -49,8 +62,8 @@ The approved ownership and pilot design lives in
 
 ## Local-first rule
 
-The laptop product must work before the hosted product exists. The current
-default target covers Bloodbank core, one standalone Candystore, Holocene API
+The laptop product must work before the hosted product exists. The current live
+default stack covers Bloodbank core, one standalone Candystore, Holocene API
 preflight, and Holocene web. PJangler remains run-only CLI/stdio MCP tooling in
 `tools` and `full`; it has no service port or daemon contract.
 

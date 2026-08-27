@@ -1,17 +1,18 @@
 # 33GOD Project Overview
 
-**Date:** 2026-07-15
+**Date:** 2026-08-26
 
-**Type:** Four-part monorepo knowledge boundary
+**Type:** Multi-component platform knowledge boundary
 
 **Deployment maturity:** Integrated local stack live under root Compose
 
 ## Executive summary
 
-33GOD is a private, local-first agentic development environment made from four
-independently owned components: Bloodbank, Candystore, Holocene, and PJangler.
-They exchange CloudEvents over NATS/Dapr, persist an audit read model, expose a
-local mission-control UI/API, and provision projects and agents.
+33GOD is a private, local-first agentic development environment. Bloodbank,
+Candystore, and Holocene form the live event/audit/operator core; PJangler,
+Hermes Fleet, Momo, Krebs, Skillex, and Hindsight add provisioning, execution,
+lifecycle, capability, and memory boundaries. Plane and n8n provide the current
+external ticket-fact ingress.
 
 Implementation base `c4f78bb` turns the former root readiness scaffold into a
 normalized Compose target. The root owns this projection, its semantic
@@ -19,7 +20,7 @@ validator, and the live Bloodbank/Candystore/Holocene-web lifecycle. Component
 sources remain authoritative and are pinned by root gitlinks. The Holocene API
 remains an active host service by design.
 
-## Component and runtime model
+## Core component and runtime model
 
 | Part | Purpose | Candidate boundary |
 |---|---|---|
@@ -33,6 +34,17 @@ networks, and five adopted volume identities. It excludes Bloodbank's legacy
 Candystore profile, so the canonical `candystore-events` durable consumer cannot
 be duplicated by the projection.
 
+## Orchestration and integration roles
+
+| Boundary | Role in the pipeline |
+|---|---|
+| Plane + n8n | Ticket authority plus one raw-body HMAC provenance adapter into Bloodbank |
+| Hermes Fleet + gateway | Registry-gated durable command consumption and agent dispatch |
+| Momo | PM/EM decisions and command production without duplicating provider facts |
+| Krebs | Canonical ticket-lifecycle machine and provider-normalized transitions |
+| Skillex | Single-source skill registry and distribution topology |
+| Hindsight | Project/session recall and retention, never event or ticket authority |
+
 ## Profile truth
 
 - No profile: the local Bloodbank/Candystore/Holocene-web target.
@@ -44,6 +56,8 @@ be duplicated by the projection.
 ## Architecture highlights
 
 - Bloodbank-local schemas and naming rules own event identity.
+- Events carry facts; commands carry intent. Hermes lifecycle events provide
+  the correlated durable completion/rejection evidence.
 - Candystore is the durable read model; Holocene reads it over the host API's
   loopback boundary.
 - Holocene web and API remain separate trust zones. Compose preflights the host
@@ -80,6 +94,8 @@ reproducibility/safe-default risks remain tracked in
 
 - [Documentation Index](./index.md)
 - [Integration Architecture](./integration-architecture.md)
+- [Event and Command Journey](./event-journey.md)
+- [Skill Event-Journey Audit](./skill-event-journey-audit.md)
 - [Deployment Guide](./deployment-guide.md)
 - [Drift Governance](./drift-governance.md)
 - [Validation Report](./validation-report.md)
