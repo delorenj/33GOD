@@ -112,7 +112,7 @@ class ComposeSemanticValidationTests(unittest.TestCase):
     def test_candystore_subscription_mutations_are_rejected(self) -> None:
         mutations = {
             "SUBSCRIBE_PUBSUB": "other-pubsub",
-            "SUBSCRIBE_TOPIC": "bloodbank.evt.v1.agent.>",
+            "SUBSCRIBE_TOPIC": "bloodbank.evt.agent.>",
             "SUBSCRIBE_ROUTE": "/events/partial",
         }
         for key, value in mutations.items():
