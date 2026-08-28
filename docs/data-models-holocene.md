@@ -14,7 +14,7 @@ The org model deterministically merges `~/.hermes/org.yaml`, registry entries, a
 
 ## Tooling and Systems Projections
 
-Tooling definitions join local hook configuration with Redis health snapshots. Systems join bgls inventory/action metadata with Prometheus history. Containers project Traefik Deathwatch targets. These models are recomputed or polled rather than persisted.
+Tooling definitions join local hook configuration with Redis health snapshots. Systems join srvls inventory/action metadata with Prometheus history. Containers project Traefik Deathwatch targets. These models are recomputed or polled rather than persisted.
 
 ## Browser State
 

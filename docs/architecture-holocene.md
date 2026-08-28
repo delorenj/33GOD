@@ -22,7 +22,7 @@ Split-deployment control plane with stateless snapshot projections and client po
 
 - Fleet projection: Hermes registry/runtime/systemd state plus Candystore history.
 - Tooling projection: local hook configuration and Redis health snapshots.
-- Systems projection: bgls inventory/actions and Prometheus history.
+- Systems projection: srvls inventory/actions and Prometheus history.
 - Containers projection: Traefik Deathwatch targets.
 - Clock: n8n webhook proxy plus local UI state.
 - HQ: Telegram Mini App org tree derived from org config, registry, and fleet state.

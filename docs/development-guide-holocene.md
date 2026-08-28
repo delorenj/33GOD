@@ -6,7 +6,7 @@
 - Node compatible with the workspace; reconcile Node 20/22/26 before release claims
 - Docker Compose for the web
 - User systemd for the live API
-- External Hermes, Redis, Prometheus, Traefik, bgls, n8n, Telegram, and Candystore dependencies as features require
+- External Hermes, Redis, Prometheus, Traefik, srvls, n8n, Telegram, and Candystore dependencies as features require
 
 ## Workspace Commands
 
