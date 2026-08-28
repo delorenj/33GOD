@@ -9,5 +9,5 @@ Krebs exposes its capabilities to agents through the Pipeline MCP Hub.
 - `krebs.webhooks` — inspect ingress health and recent normalized events
 - `krebs.observability` — query staleness, transition counts, provider lag
 
-All domain tools emit repo-scoped `bloodbank.v1.repo.task.*` events on mutations.
+All domain tools emit repo-scoped `bloodbank.repo.task.*` events on mutations.
 See `spec/event-schemas.md` for event payloads.

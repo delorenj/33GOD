@@ -4,12 +4,18 @@
 
 | Field | Shape | Authority |
 |---|---|---|
-| CloudEvents `type` | `bloodbank.v1.<domain>.<entity>.<action>` | `bloodbank/docs/event-naming.md` |
-| NATS/Dapr topic | `bloodbank.<evt|cmd|rpy>.v1.<domain>.<entity>.<action>` | Same naming contract |
+| CloudEvents `type` | `bloodbank.<domain>.<entity>.<action>` (4 tokens) | `bloodbank/docs/event-naming.md` |
+| NATS/Dapr topic | `bloodbank.<evt|cmd|rpy>.<domain>.<entity>.<action>` (5 tokens) | Same naming contract |
 | Envelope `kind` | `event`, `command`, or `reply` | Canonical envelope |
 | Command target | `data.target_agent_id` or domain payload | Never extra subject tokens |
 
 The three body tokens must match between type and subject. Event actions are past tense; command actions imperative; replies mirror commands.
+
+**There is no version token in `type` or in the subject.** The schema-revision
+axis lives only in `dataschema` (`apicurio://holyfields/<type>/versions/<n>`)
+and `schemaref` (`<type>.v<N>`) — a trailing `.v1` on a `schemaref` is correct
+and must not be stripped. A breaking payload change gets a new action or a new
+entity, never a version segment in the wire name.
 
 ## Required Runtime Envelope
 
@@ -21,8 +27,12 @@ The builder also emits subject, schema references, trace context, and nonempty c
 
 | Stream | Subjects | Retention | Maximum age |
 |---|---|---|---|
-| `BLOODBANK_EVENTS` | `bloodbank.evt.v1.>` plus explicitly registered v2 subjects such as `bloodbank.evt.v2.repo.maintenance.failed` | limits | 7 days |
-| `BLOODBANK_COMMANDS` | `bloodbank.cmd.v1.>`, `bloodbank.rpy.v1.>` | work queue | 1 day |
+| `BLOODBANK_EVENTS` | `bloodbank.evt.>` | limits | 7 days |
+| `BLOODBANK_COMMANDS` | `bloodbank.cmd.>`, `bloodbank.rpy.>` | work queue | 1 day |
+
+Subject filters are plain wildcards over the 5-token subject space; see
+`bloodbank/compose/nats/streams.json`. There is no versioned wildcard and no
+per-version subject registration.
 
 No broker-level DLQ or capacity ceiling is configured. Replay metadata exists as headers/conventions, but operator trace/replay CLI commands remain stubs.
 
@@ -33,9 +43,22 @@ No broker-level DLQ or capacity ceiling is configured. Replay metadata exists as
 - Raw NATS core `PUB`: used by hooks; connection/PING does not prove JetStream persistence.
 - `bb verify-envelope`: implemented local validation.
 
-## Known Contract Failure
+## Subject/type equality is enforced
 
-`assert_contract()` checks subject regex and kind marker but does not call `assert_subject_matches()`. A semantically different subject with the correct kind can pass. Downstream systems must not assume live validation proves type/topic equality until fixed and covered by a negative test.
+`assert_contract()` checks the subject regex and the kind marker **and** calls
+`assert_subject_matches()`, so a semantically different subject is rejected even
+when it is well-formed and carries the right kind marker. Verified against
+`bloodbank/services/agent-hooks/core/validate.py`:
+
+```
+type=bloodbank.repo.task.created  subject=bloodbank.evt.repo.board.created
+-> ContractViolation: subject 'bloodbank.evt.repo.board.created' does not match
+   expected 'bloodbank.evt.repo.task.created'
+```
+
+`forward_envelope.py` independently pins all five subject tokens at the
+transport door, so a producer that regresses to the retired 6-token shape fails
+loudly rather than being forwarded silently.
 
 ## Consumers
 

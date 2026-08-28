@@ -2,37 +2,26 @@
 name: project-lifecycle
 description: |
   Multi-workspace Plane sprint board management with intelligent automation, ticket creation, and BMAD workflow integration.
-
   Use this skill when:
-  - Creating tickets from BMAD stories, task descriptions, or audit findings
+  - Creating tickets, task descriptions, or audit findings
   - Auditing board organization (ticket clustering, label optimization, status bottlenecks)
-  - Selecting the next optimal ticket to work on (priority scoring algorithm)
+  - Selecting the next optimal ticket to work on
   - Promoting completed tickets to production and generating changelogs
-  - Managing sprint workflows with status tracking and WIP limits
-  - Working with multiple Plane workspaces (auto-detects from git remote or directory)
+  - Working with multiple Plane workspaces
   - Understanding the canonical Plane CRUD → n8n HMAC → Bloodbank → Candystore event side effect
-  - **Board orchestration** in 33GOD projects: this skill handles direct Plane ticket CRUD and state management. For higher-level orchestration — "what's next", "clear the board", "orchestrate this ticket" — route to the **`momo`** skill, which surveys the board, triages, decides, and delegates implementation to subagents.
+  - For higher-level orchestration — "what's next", "clear the board", "orchestrate this ticket" — route to the **`momo`** skill, which surveys the board, triages, decides, and delegates implementation to subagents.
 
   Triggers: "create ticket", "board audit", "what should I work on", "next ticket", "promote to production", "changelog", "sprint status", "WIP limit", plane ticket operations
 pipeline-status:
   - new
 ---
 
-# Managing Tickets and Tasks in Plane
+# Managing Tickets in Plane
 
 ## Plane Configuration
 
 **Connection:** Plane MCP server or direct Plane REST API at `https://plane.delo.sh`
 
-**Premium Features Limitation:** Cycles (sprints) are a premium-only feature. Use sprint labels as a workaround:
-- Create labels: `sprint-1`, `sprint-2`, `sprint-3`, etc.
-- Filter views by sprint label to simulate cycle boards
-- Use label colors to visually distinguish sprints (e.g., teal for current sprint)
-
-**Multi-Workspace Support:** Resolve the nearest repo-root `.project.json` and
-read `.ticket_provider`. It is the single source of truth for provider type,
-workspace tenant slug, project identifier, and Plane `board_id`. Never add or
-consult a separate `.plane.json`.
 
 **Plane REST API Endpoints:**
 - `GET /api/v1/workspaces/{workspace}/projects/{project}/issues/` - List issues
@@ -53,10 +42,10 @@ registry, normalizes provider actions, and publishes canonical Bloodbank facts:
 
 | Plane activity | Canonical event |
 |---|---|
-| project created | `bloodbank.v1.repo.board.created` |
-| issue created | `bloodbank.v1.repo.task.created` |
-| issue updated, transitioned, or deleted | `bloodbank.v1.repo.task.updated` |
-| issue comment created | `bloodbank.v1.repo.task.appended` |
+| project created | `bloodbank.repo.board.created` |
+| issue created | `bloodbank.repo.task.created` |
+| issue updated, transitioned, or deleted | `bloodbank.repo.task.updated` |
+| issue comment created | `bloodbank.repo.task.appended` |
 
 These events are retained in `BLOODBANK_EVENTS` and projected by Candystore.
 Do not manually emit a second ticket lifecycle event after Plane CRUD. Explicit

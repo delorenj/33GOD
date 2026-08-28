@@ -20,19 +20,19 @@ more normalized Krebs events.
 Provider-specific events are mapped to the canonical repo-scoped task events
 documented in `spec/event-schemas.md`:
 
-- issue/card creation → `bloodbank.v1.repo.task.created`
-- issue/card update → `bloodbank.v1.repo.task.updated`
-- comment creation → `bloodbank.v1.repo.task.appended`
-- staleness detected by the Krebs sentinel → `bloodbank.v1.repo.task.flagged`
+- issue/card creation → `bloodbank.repo.task.created`
+- issue/card update → `bloodbank.repo.task.updated`
+- comment creation → `bloodbank.repo.task.appended`
+- staleness detected by the Krebs sentinel → `bloodbank.repo.task.flagged`
 
 ## Fan-out
 
 Krebs publishes normalized events to Bloodbank subjects:
 
-- `bloodbank.evt.v1.repo.task.created`
-- `bloodbank.evt.v1.repo.task.updated`
-- `bloodbank.evt.v1.repo.task.appended`
-- `bloodbank.evt.v1.repo.task.flagged`
+- `bloodbank.evt.repo.task.created`
+- `bloodbank.evt.repo.task.updated`
+- `bloodbank.evt.repo.task.appended`
+- `bloodbank.evt.repo.task.flagged`
 
 Sync adapters (e.g., keep Plane and Linear in parity) consume these events and
 write back to other providers via `adapters/tp/`.

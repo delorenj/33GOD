@@ -247,7 +247,7 @@ def check_high_risk_contracts(source: Path, report: Reporter) -> None:
     if noncanonical:
         report.fail("pjangler-bloodbank-routing", "generated subjects embed repo/agent routing identifiers")
     else:
-        report.passed("pjangler-bloodbank-routing", "generated subjects follow fixed six-token routing")
+        report.passed("pjangler-bloodbank-routing", "generated subjects follow fixed five-token routing")
 
 
 def check_compose_candidate(source: Path, docs_checkout: Path, report: Reporter) -> None:

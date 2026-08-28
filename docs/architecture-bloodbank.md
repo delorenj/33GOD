@@ -22,9 +22,9 @@ Contract-first event backbone with NATS stream routing, Dapr pub/sub adaptation,
 
 ## Contract Architecture
 
-CloudEvents type is `bloodbank.v1.<domain>.<entity>.<action>`. NATS subject is `bloodbank.<evt|cmd|rpy>.v1.<domain>.<entity>.<action>`. The `(domain, entity, action)` tokens must match. Commands place target identifiers in `data`, never additional subject tokens.
+CloudEvents type is `bloodbank.<domain>.<entity>.<action>` (4 tokens). NATS subject is `bloodbank.<evt|cmd|rpy>.<domain>.<entity>.<action>` (5 tokens). The `(domain, entity, action)` tokens must match. Neither carries a version token — schema revisions live in `dataschema`/`schemaref` only. Commands place target identifiers in `data`, never additional subject tokens.
 
-The live `assert_contract()` validates type shape, tense, kind, required fields, domain agreement, subject regex, and subject kind marker. It does not call the existing `assert_subject_matches()`, so semantically mismatched type/subject tokens pass. This is critical implementation drift.
+The live `assert_contract()` validates type shape, tense, kind, required fields, domain agreement, subject regex, subject kind marker, **and** subject/type token equality via `assert_subject_matches()`. A mismatched subject raises `ContractViolation`.
 
 ## Runtime Components
 
