@@ -11,7 +11,7 @@ purpose: "pm agent for 33god"
 # Inference target (empty = inherit from global ~/.hermes/config.yaml)
 model:
   provider: ""
-  name: "plane"
+  name: ""
 # Hermes profile name. ~/.hermes/profiles/<name> symlinks to ./runtime/, so both
 # HERMES_HOME and `hermes --profile <name>` resolve to the local runtime.
 profile: 33god-pm
