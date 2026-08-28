@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 # Append this agent's entry to the global fleet registry.
+
+if [[ "${SKIP_HOST_STATE:-0}" == "1" ]]; then
+  printf '%s\n' '[80] fleet registry — DEFERRED (SKIP_HOST_STATE=1)' >&2
+  exit 0
+fi
+
 # shellcheck source=_lib.sh
 source "$(dirname "$0")/_lib.sh"
 load_role_env
@@ -29,7 +35,8 @@ python3 - "$REGISTRY_FILE" "$AGENT_ID" "$REPO" "$ROLE" "$DISPLAY_NAME" \
   "$(yaml_get slack.provisioning_status)" "$(yaml_get slack.team_id)" \
   "$(yaml_get slack.team_name)" "$(yaml_get slack.bot_user_id)" \
   "$(yaml_get slack.bot_id)" "$(yaml_get slack.bot_username)" \
-  "$(yaml_get bloodbank.gateway_scope)" "$(yaml_get bloodbank.target_agent_id)" \
+  "$(yaml_get bloodbank.enabled)" "$(yaml_get bloodbank.gateway_scope)" \
+  "$(yaml_get bloodbank.target_agent_id)" \
   "$PLANE_WORKSPACE" "$PLANE_PROJECT_ID" "$(yaml_get plane.identifier)" \
   "$RUNTIME_REPO" "$HERMES_BIN" "$HERMES_AGENT_REPO" "$HERMES_RUNTIME_GIT_URL" \
   "$HERMES_RUNTIME_GIT_REF" "$HERMES_RUNTIME_GIT_SHA" "$FLEET_ENV" \
@@ -47,13 +54,21 @@ except ImportError:
 (path, agent_id, repo, role, display, project, role_dir, profile,
  telegram_status, bot, telegram_bot_id,
  slack_status, slack_team_id, slack_team_name, slack_user_id, slack_bot_id,
- slack_username, bloodbank_scope, bloodbank_target, plane_ws, plane_id,
+ slack_username, bloodbank_enabled, bloodbank_scope, bloodbank_target, plane_ws, plane_id,
  plane_ident, runtime_repo, hermes_bin, hermes_repo, hermes_git_url,
- hermes_git_ref, hermes_git_sha, fleet_env, gw, heartbeat) = sys.argv[1:32]
+ hermes_git_ref, hermes_git_sha, fleet_env, gw, heartbeat) = sys.argv[1:33]
 p = pathlib.Path(path)
 if p.is_symlink():
     raise SystemExit(f"refusing to update registry symlink: {p}")
 data = yaml.safe_load(p.read_text()) or {"schema_version": 1, "agents": {}}
+if bloodbank_enabled == "":
+    bloodbank_enabled_value = False
+elif bloodbank_enabled == "true":
+    bloodbank_enabled_value = True
+elif bloodbank_enabled == "false":
+    bloodbank_enabled_value = False
+else:
+    raise SystemExit("bloodbank.enabled must be the strict YAML boolean true or false")
 data.setdefault("agents", {})[agent_id] = {
   "repo": repo, "role": role, "display_name": display,
   "project_path": project, "role_dir": role_dir,
@@ -72,6 +87,7 @@ data.setdefault("agents", {})[agent_id] = {
     "bot_username": slack_username,
   },
   "bloodbank": {
+    "enabled": bloodbank_enabled_value,
     "gateway_scope": bloodbank_scope,
     "target_agent_id": bloodbank_target,
   },

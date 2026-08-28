@@ -7,3 +7,5 @@ runtime/
 # Provisioning logs are host-local as well.
 .scripts/.provision.log
 .scripts/.last-run
+.scripts/.done-*
+.scripts/.plane-project-id

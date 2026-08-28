@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
-# Stage the per-agent runtime config/secrets via a TRANSIENT Hermes profile.
-# HERMES_HOME is the ignored ./runtime directory; this profile dir is a staging area
-# (cred-stripped .env + SOUL) that 20-runtime-repo.sh folds into the runtime and
-# then replaces with a symlink ~/.hermes/profiles/<name> -> ./runtime. That
-# symlink is load-bearing: hermes resolves `--profile <name>` invocations
-# through it (recreating it wrongly if it goes missing).
+# Create the initial named Hermes profile and sanitize cloned chat credentials.
+# The directory remains REAL. Step 20 delegates final shared-vs-owned link
+# topology to `pj migrate hermes.runtime-singleton`; no template step may
+# replace the profile itself with a symlink.
+
+if [[ "${SKIP_HOST_STATE:-0}" == "1" ]]; then
+  printf '%s\n' '[10] Hermes profile — DEFERRED (SKIP_HOST_STATE=1)' >&2
+  exit 0
+fi
+
 # shellcheck source=_lib.sh
 source "$(dirname "$0")/_lib.sh"
 load_role_env
@@ -13,9 +17,6 @@ already_done 10-hermes-profile && { log "[10] profile already created — skippi
 
 log "[10] creating hermes profile: $PROFILE_NAME"
 PROFILE_HOME="$HOME/.hermes/profiles/$PROFILE_NAME"
-
-# Set repo path to directory where .git is
-REPO_PATH="$(cd "$ROLE_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo "$ROLE_DIR")"
 
 if [[ -d "$PROFILE_HOME" ]]; then
   log "    profile dir already exists; reusing"
@@ -112,9 +113,57 @@ PYEOF
   fi
 fi
 
-# Apply role-specific config overrides.
-log "    setting terminal.cwd = $REPO_PATH"
-env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config set terminal.cwd "$REPO_PATH"
+# Never persist a project-specific terminal.cwd through the named profile.
+# The generated launchers pass TERMINAL_CWD process-locally instead.
+#
+# config.yaml is GENERATED, never hand-written and never a symlink to the fleet
+# base. It is deep_merge(~/.hermes/config.yaml, <profile>/config.delta.yaml).
+# The old symlink-to-base topology was actively harmful: Hermes' atomic writes
+# use os.replace, which REPLACES a symlink with a regular file, so the first
+# in-agent write (/model, onboarding, a config migration) silently detached the
+# profile onto a frozen copy of an old base — and a symlink gave the profile no
+# way to override anything in the first place.
+#
+# Seed an EMPTY delta: a new agent should be identical to the fleet base, and
+# every line here is an override someone must justify later.
+PROFILE_DELTA="$PROFILE_HOME/config.delta.yaml"
+if [[ ! -f "$PROFILE_DELTA" ]]; then
+  log "    seeding empty config.delta.yaml (override-only SSOT)"
+  cat > "$PROFILE_DELTA" <<'DELTA_EOF'
+# Override-only delta for this Hermes profile.
+# Merged over ~/.hermes/config.yaml to produce config.yaml (which is GENERATED).
+# Empty == identical to the fleet base. Add ONLY what must differ.
+{}
+DELTA_EOF
+  chmod 600 "$PROFILE_DELTA"
+fi
+
+# Pin the identity-memory bank explicitly rather than relying on the fleet
+# bank_id_template (agent-{profile}). {profile} resolves through Hermes'
+# get_active_profile_name(), which calls Path.resolve() on HERMES_HOME and
+# requires a lowercase id sitting directly under profiles/. A symlinked profile
+# dir or an uppercase name silently yields the literal "custom" — which would
+# merge this agent's PRIVATE memory into a bank shared with every other agent
+# that also failed to resolve.
+PROFILE_MEM_CFG="$PROFILE_HOME/hindsight/config.json"
+mkdir -p "$(dirname "$PROFILE_MEM_CFG")"
+if [[ ! -f "$PROFILE_MEM_CFG" ]]; then
+  log "    pinning identity-memory bank: agent-$PROFILE_NAME"
+  printf '{\n  "bank_id": "agent-%s"\n}\n' "$PROFILE_NAME" > "$PROFILE_MEM_CFG"
+  chmod 600 "$PROFILE_MEM_CFG"
+fi
+
+# Render config.yaml from base + delta when the renderer is available. Without
+# it the profile still boots (Hermes reads whatever config.yaml exists), but it
+# is not yet under inheritance and `pj audit` will say so.
+PROFILE_RENDERER="${PROFILE_RENDERER:-$HOME/code/33GOD/hermes-agent-template/scripts/hermes-profile-config.py}"
+if [[ -x "$PROFILE_RENDERER" || -f "$PROFILE_RENDERER" ]]; then
+  log "    rendering config.yaml from fleet base + delta"
+  python3 "$PROFILE_RENDERER" render --profile "$PROFILE_NAME" >/dev/null 2>&1 \
+    || warn "    render failed; run hermes-profile-config.py render --profile $PROFILE_NAME"
+else
+  warn "    profile renderer not found at $PROFILE_RENDERER — config.yaml not rendered"
+fi
 
 # Canonical shared-skill source of truth + local PM fallback sync.
 CANONICAL_SKILLS_DIR="${CANONICAL_SKILLS_DIR:-$(config_get fleet.canonical_skills_dir '/home/delorenj/.agents/skills')}"
@@ -122,8 +171,18 @@ CANONICAL_PM_SKILL_SRC="$CANONICAL_SKILLS_DIR/subagent-driven-development"
 LOCAL_PM_SKILL_DST="$PROFILE_HOME/skills/software-development/subagent-driven-development"
 
 if [[ -d "$CANONICAL_SKILLS_DIR" ]]; then
-  log "    setting skills.external_dirs[0] = $CANONICAL_SKILLS_DIR"
-  env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config set skills.external_dirs.0 "$CANONICAL_SKILLS_DIR"
+  # skills.external_dirs is a FLEET setting and already lives in
+  # ~/.hermes/config.yaml, so every rendered profile inherits it. Writing it
+  # per-profile here would (a) be redundant, and (b) write into the GENERATED
+  # config.yaml, where the next render discards it — the classic "I set it and
+  # it reverted" trap. Verify inheritance instead of re-asserting it.
+  if ! env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config get skills.external_dirs 2>/dev/null \
+       | grep -qF "$CANONICAL_SKILLS_DIR"; then
+    warn "    skills.external_dirs does not include $CANONICAL_SKILLS_DIR"
+    warn "    add it to the FLEET base (~/.hermes/config.yaml), then: hermes-profile-config.py render --all"
+  else
+    log "    skills.external_dirs inherited from fleet base: $CANONICAL_SKILLS_DIR"
+  fi
 
   # Ensure key PM/local-ops skills are symlinked into runtime/profile skills root.
   # This preserves canonical ownership and keeps updates instant across agents.

@@ -38,6 +38,23 @@ secret_scan_ok() {
   return 0
 }
 
+# A checkpoint on a DETACHED HEAD belongs to no branch: `git push origin HEAD`
+# cannot resolve a destination, so every commit stays local forever. One runtime
+# reached 232 orphaned commits this way before anyone noticed.
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)"
+if [ "$BRANCH" = "HEAD" ]; then
+  printf '[checkpoint] ABORT: %s is on a DETACHED HEAD — refusing to create commits that can never be pushed.\n' "$RUNTIME_DIR" >&2
+  printf '[checkpoint] Fix: git -C %s switch -c main && git -C %s push -u origin main\n' "$RUNTIME_DIR" "$RUNTIME_DIR" >&2
+  exit 4
+fi
+
+# Report an existing backlog BEFORE adding to it, so a broken push is visible on
+# the very next tick instead of compounding silently for months.
+backlog="$(git rev-list --count "origin/$BRANCH..HEAD" 2>/dev/null || echo 0)"
+if [ "$backlog" -ge 10 ]; then
+  printf '[checkpoint] WARNING: %s already has %s UNPUSHED commit(s) on %s.\n' "$RUNTIME_DIR" "$backlog" "$BRANCH" >&2
+fi
+
 git add -A
 if git diff --cached --quiet; then
   exit 0
@@ -51,4 +68,15 @@ if ! secret_scan_ok; then
 fi
 
 git -c commit.gpgsign=false commit -m "checkpoint $(date -Iseconds)" >/dev/null
-git push origin HEAD 2>&1 | tail -1 || true
+
+# The push MUST be observable. This line used to be
+#   git push origin HEAD 2>&1 | tail -1 || true
+# where `|| true` swallowed every failure — diverged branch, auth, network —
+# and the pipe masked git's exit status on top of it. Run hourly, that turns a
+# broken push into an invisible, unbounded pile of local-only commits.
+if ! git push origin "$BRANCH" >/dev/null 2>&1; then
+  ahead="$(git rev-list --count "origin/$BRANCH..HEAD" 2>/dev/null || echo '?')"
+  printf '[checkpoint] PUSH FAILED for %s (%s commit(s) exist ONLY on this disk).\n' "$RUNTIME_DIR" "$ahead" >&2
+  printf '[checkpoint] Diagnose: git -C %s push origin %s\n' "$RUNTIME_DIR" "$BRANCH" >&2
+  exit 5
+fi

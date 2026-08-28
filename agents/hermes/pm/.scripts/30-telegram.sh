@@ -46,13 +46,26 @@ path.write_text(text[: match.start("body")] + body + text[match.end("body") :], 
 PYEOF
 }
 
-already_done 30-telegram && { log "[30] telegram already wired — skipping"; exit 0; }
+telegram_status="$(yaml_get telegram.provisioning_status)"
 
 if [[ "${SKIP_TELEGRAM:-0}" == "1" ]]; then
-  telegram_yaml_update provisioning_status disabled
-  log "[30] telegram — SKIPPED (SKIP_TELEGRAM=1)"
-  mark_done 30-telegram
+  if [[ "$telegram_status" == "verified" ]] && already_done 30-telegram; then
+    log "[30] telegram — SKIPPED; existing verified wiring preserved"
+  else
+    telegram_yaml_update provisioning_status disabled
+    clear_done 30-telegram
+    log "[30] telegram — DEFERRED (SKIP_TELEGRAM=1; completion marker cleared)"
+  fi
   exit 0
+fi
+
+if already_done 30-telegram; then
+  if [[ "$telegram_status" == "verified" ]]; then
+    log "[30] telegram already wired — skipping"
+    exit 0
+  fi
+  clear_done 30-telegram
+  log "[30] stale deferred completion marker cleared — reconciling Telegram"
 fi
 
 RUNTIME="$ROLE_DIR/runtime"
@@ -81,6 +94,7 @@ fi
 
 if [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
   telegram_yaml_update provisioning_status deferred
+  clear_done 30-telegram
   warn "    no token provided; Telegram step deferred"
   warn "    re-run later with a profile-dedicated TELEGRAM_BOT_TOKEN invocation"
   exit 0

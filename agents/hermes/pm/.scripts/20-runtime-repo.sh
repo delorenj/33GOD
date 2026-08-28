@@ -6,8 +6,13 @@
 source "$(dirname "$0")/_lib.sh"
 load_role_env
 
-already_done 20-runtime-repo && { log "[20] local runtime already set up — skipping"; exit 0; }
-[[ "${SKIP_RUNTIME_REPO:-0}" == "1" ]] && { log "[20] local runtime — SKIPPED (SKIP_RUNTIME_REPO=1)"; mark_done 20-runtime-repo; exit 0; }
+already_done 20-runtime-repo \
+  && log "[20] local runtime scaffold already set up — re-auditing singleton profile wiring"
+if [[ "${SKIP_RUNTIME_REPO:-0}" == "1" ]]; then
+  clear_done 20-runtime-repo
+  log "[20] local runtime — DEFERRED (SKIP_RUNTIME_REPO=1; completion marker cleared)"
+  exit 0
+fi
 
 PROFILE_HOME="$HOME/.hermes/profiles/$PROFILE_NAME"
 RUNTIME_LOCAL="$ROLE_DIR/runtime"
@@ -62,34 +67,95 @@ for path in root.rglob("*"):
         except UnicodeDecodeError:
             pass
 PYEOF
+# Never let a literal secret reach the runtime. The scaffold is rendered from
+# templates, so a leaked credential shows up here before anything is copied.
+python3 "$(dirname "$0")/secret-scan.py" "$TMP"
 cp -an "$TMP/." "$RUNTIME_LOCAL/"
 
 # Seed mutable identity/config only when no local value exists.
-CANONICAL_PM_CONFIG="$(config_get fleet.canonical_pm_config "$HOME/.hermes/config.yaml")"
-if [[ -f "$CANONICAL_PM_CONFIG" && ! -e "$RUNTIME_LOCAL/config.yaml" ]]; then
-  cp "$CANONICAL_PM_CONFIG" "$RUNTIME_LOCAL/config.yaml"
+if [[ "$ROLE" == "reporter" ]]; then
+  # Generate a delta-only runtime config for least-privilege reporters. Never copy the shared PM
+  # config: it may carry dashboard credentials, write-capable MCPs, or broad tools.
+  MODEL_PROVIDER="$(yaml_get model.provider)"
+  MODEL_NAME="$(yaml_get model.name)"
+  CANONICAL_SKILLS_DIR="${CANONICAL_SKILLS_DIR:-$(config_get fleet.canonical_skills_dir "$HOME/.agents/skills")}"
+  if [[ ! -e "$RUNTIME_LOCAL/config.yaml" ]]; then
+    python3 - "$RUNTIME_LOCAL/config.yaml" "$PROJECT_PATH" "${HERMES_TIMEZONE:-America/New_York}" \
+      "$MODEL_PROVIDER" "$MODEL_NAME" "$CANONICAL_SKILLS_DIR" "$ROLE" <<'PYEOF'
+import json, pathlib, re, sys
+path, cwd, timezone, provider, model, skills, role = sys.argv[1:8]
+if not re.fullmatch(r"[A-Za-z_]+(?:/[A-Za-z_]+)*", timezone):
+    raise SystemExit("unsafe timezone")
+config = {
+    "timezone": timezone,
+    "terminal": {"cwd": cwd},
+    "skills": {"external_dirs": [skills]},
+}
+if provider or model:
+    config["model"] = {}
+    if provider:
+        config["model"]["provider"] = provider
+    if model:
+        config["model"]["default"] = model
+config["platform_toolsets"] = {
+    "cli": ["web", "delegation", "no_mcp"],
+    "cron": ["web", "delegation", "no_mcp"],
+}
+config["agent"] = {
+    "disabled_toolsets": [
+        "browser", "terminal", "file", "code_execution", "cronjob",
+        "kanban", "homeassistant", "computer_use", "project", "skills",
+    ]
+}
+config["delegation"] = {"max_spawn_depth": 1, "inherit_mcp_toolsets": False}
+pathlib.Path(path).write_text(json.dumps(config, indent=2) + "\n")
+PYEOF
+  fi
+  if [[ ! -e "$RUNTIME_LOCAL/profile.yaml" ]]; then
+    cat > "$RUNTIME_LOCAL/profile.yaml" <<'YAML'
+config:
+  inherit_from: default
+  save_mode: delta
+YAML
+  fi
+else
+  CANONICAL_PM_CONFIG="$(config_get fleet.canonical_pm_config "$HOME/.hermes/config.yaml")"
+  if [[ -f "$CANONICAL_PM_CONFIG" && ! -e "$RUNTIME_LOCAL/config.yaml" ]]; then
+    cp "$CANONICAL_PM_CONFIG" "$RUNTIME_LOCAL/config.yaml"
+  fi
 fi
 if [[ ! -e "$RUNTIME_LOCAL/SOUL.md" ]]; then
   cp "$ROLE_DIR/SOUL.md" "$RUNTIME_LOCAL/SOUL.md"
 fi
 
-# Fold the two supported staging-profile files into the runtime without
-# deleting unknown profile content. Unknown content blocks the symlink so an
-# operator can reconcile it explicitly instead of losing state.
-if [[ -d "$PROFILE_HOME" && ! -L "$PROFILE_HOME" ]]; then
-  log "    migrating supported staging profile state into the local runtime"
-  for file_name in .env config.yaml; do
-    [[ -f "$PROFILE_HOME/$file_name" && ! -e "$RUNTIME_LOCAL/$file_name" ]] && cp "$PROFILE_HOME/$file_name" "$RUNTIME_LOCAL/$file_name"
-    [[ -f "$PROFILE_HOME/$file_name" ]] && rm -f -- "$PROFILE_HOME/$file_name"
-  done
-  if ! rmdir "$PROFILE_HOME" 2>/dev/null; then
-    die "staging profile contains unrecognized state and was preserved: $PROFILE_HOME"
-  fi
+# Named-profile topology belongs exclusively to PJangler. Preview first, then
+# apply the one idempotent rule. This script never removes or replaces a real
+# profile directory and never creates the obsolete profile -> runtime symlink.
+if [[ "$PJANGLER_BIN" != */* ]]; then
+  PJANGLER_BIN="$(command -v "$PJANGLER_BIN" 2>/dev/null || true)"
 fi
-ln -sfn "$RUNTIME_LOCAL" "$PROFILE_HOME"
-log "    profile symlink $PROFILE_HOME -> $RUNTIME_LOCAL"
+[[ -n "$PJANGLER_BIN" && -x "$PJANGLER_BIN" ]] \
+  || die "PJángler CLI not found; install 'pj' or set PJANGLER_BIN"
+"$PJANGLER_BIN" migrate hermes.runtime-singleton "$PROJECT_PATH" --dry-run --json >/dev/null \
+  || die "singleton-runtime audit failed; profile was left untouched"
+"$PJANGLER_BIN" migrate hermes.runtime-singleton "$PROJECT_PATH" --json >/dev/null \
+  || die "singleton-runtime migration failed; inspect with: pj migrate hermes.runtime-singleton '$PROJECT_PATH' --dry-run"
+[[ -d "$PROFILE_HOME" && ! -L "$PROFILE_HOME" ]] \
+  || die "PJángler did not establish a real named profile at $PROFILE_HOME"
+log "    singleton profile verified by pj migrate hermes.runtime-singleton: $PROFILE_HOME"
 
-env HERMES_HOME="$RUNTIME_LOCAL" "$HERMES_BIN" config set terminal.cwd "$PROJECT_PATH" >/dev/null 2>&1 || true
+# Never persist a project-specific terminal.cwd through the named profile.
+# config.yaml is fleet-shared in the singleton topology.  The manual and
+# service launchers pass TERMINAL_CWD process-locally for this role instead.
+
+profile_config_set() {
+  local key="$1"
+  [[ -x "$HERMES_BIN" ]] \
+    || die "Hermes CLI is not executable; cannot configure named profile: $HERMES_BIN"
+  if ! env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config set "$@" >/dev/null; then
+    die "required Hermes config write failed for named profile $PROFILE_NAME: $key"
+  fi
+}
 
 if [[ "$ROLE" == "pm" ]]; then
   VOXXY_PLUGIN_DIR="${VOXXY_PLUGIN_DIR:-$(config_get fleet.voxxy_plugin_dir "$HOME/code/voxxy/plugins/tts/voxxy")}"
@@ -101,14 +167,10 @@ if [[ "$ROLE" == "pm" ]]; then
     warn "    Voxxy plugin dir missing: $VOXXY_PLUGIN_DIR"
   fi
 
-  if [[ -x "$HERMES_BIN" ]]; then
-    env HERMES_HOME="$RUNTIME_LOCAL" "$HERMES_BIN" config set plugins.enabled.0 tts/voxxy >/dev/null 2>&1 || true
-    env HERMES_HOME="$RUNTIME_LOCAL" "$HERMES_BIN" config set tts.provider voxxy >/dev/null 2>&1 || true
-    env HERMES_HOME="$RUNTIME_LOCAL" "$HERMES_BIN" config set tts.voice rick >/dev/null 2>&1 || true
-    log "    set PM runtime TTS provider -> voxxy"
-  else
-    warn "    Hermes bin missing; skipped PM Voxxy config"
-  fi
+  profile_config_set plugins.enabled.0 tts/voxxy
+  profile_config_set tts.provider voxxy
+  profile_config_set tts.voice rick
+  log "    set PM named-profile TTS provider -> voxxy"
 fi
 
 mark_done 20-runtime-repo

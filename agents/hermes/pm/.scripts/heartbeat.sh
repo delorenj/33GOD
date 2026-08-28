@@ -15,16 +15,29 @@ set -euo pipefail
 
 ROLE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # agents/hermes/<role>
 RUNTIME="$ROLE_DIR/runtime"
+RUN_HOME="${HERMES_HOME:-$RUNTIME}"
 PROMPT_FILE="$ROLE_DIR/.scripts/sentinel.prompt.md"
 STATE_FILE="$RUNTIME/continuous-ticket-sentinel-state.json"
 LOCK_FILE="$RUNTIME/continuous-ticket-sentinel.lock"
 ROLE_YAML="$ROLE_DIR/role.yaml"
+FLEET_ENV="${HERMES_FLEET_ENV:-$HOME/.hermes/fleet.env}"
+FLEET_ENV_LIBRARY="$ROLE_DIR/.scripts/lib/fleet-env.sh"
+FLEET_ENV_PARSER="$ROLE_DIR/.scripts/lib/parse-fleet-env.py"
 LOG_FILE="$RUNTIME/logs/heartbeat.log"
 CHECKPOINT_BIN="$ROLE_DIR/.scripts/checkpoint.sh"
 CHECKPOINT_STAMP="$RUNTIME/.last-checkpoint"
 
+if [[ ! -f "$FLEET_ENV_LIBRARY" || -L "$FLEET_ENV_LIBRARY" \
+   || ! -f "$FLEET_ENV_PARSER" || -L "$FLEET_ENV_PARSER" ]]; then
+  echo "heartbeat: trusted fleet environment loader unavailable" >&2
+  exit 1
+fi
+# shellcheck source=lib/fleet-env.sh
+builtin source "$FLEET_ENV_LIBRARY"
+load_fleet_environment "$FLEET_ENV" "$FLEET_ENV_PARSER"
+
 # Hermes binary: explicit env > ~/.config/hermes-agent/hermes-bin > PATH.
-HERMES_BIN="${HERMES_BIN:-}"
+HERMES_BIN="${HERMES_BIN:-${HERMES_FLEET_BIN:-}}"
 if [[ -z "$HERMES_BIN" ]]; then
   if [[ -r "$HOME/.config/hermes-agent/hermes-bin" ]]; then
     HERMES_BIN="$(cat "$HOME/.config/hermes-agent/hermes-bin")"
@@ -242,7 +255,7 @@ trap 'python3 "$ROLE_DIR/.scripts/momo-wip-lock.py" release "$WIP_LOCK" "hermes:
 
 prompt="$(<"$PROMPT_FILE")"
 set +e
-env HERMES_HOME="$RUNTIME" "$HERMES_BIN" chat -Q --source cron --max-turns 90 -q "$prompt"
+env HERMES_HOME="$RUN_HOME" "$HERMES_BIN" chat -Q --source cron --max-turns 90 -q "$prompt"
 status=$?
 set -e
 

@@ -46,19 +46,63 @@ PYEOF
 # Apply a sed substitution to role.yaml in-place. Used to record IDs after
 # external provisioning steps return them.
 yaml_set() {
-  # yaml_set KEY VALUE   (only updates the first match; key must already exist)
+  # yaml_set KEY VALUE   (supports flat and one-level nested keys)
   local key="$1" val="$2"
   python3 - "$ROLE_YAML" "$key" "$val" <<'PYEOF'
-import sys, re, pathlib
+import json, pathlib, re, sys
+
 path, key, val = sys.argv[1:4]
-p = pathlib.Path(path); text = p.read_text()
-# Match `<indent><key>:<...>` and rewrite the value (last leaf only).
-leaf = key.split(".")[-1]
-new = re.sub(rf'(?m)^(\s*{re.escape(leaf)}:\s*)("?)[^"\n]*("?)\s*$',
-             lambda m: f'{m.group(1)}"{val}"', text, count=1)
-if new == text:
-    sys.exit(f"yaml_set: leaf '{leaf}' not found in {path}")
-p.write_text(new)
+p = pathlib.Path(path)
+text = p.read_text(encoding="utf-8")
+parts = key.split(".")
+if len(parts) not in (1, 2) or any(
+    not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", part) for part in parts
+):
+    sys.exit(f"yaml_set: unsupported key '{key}'")
+
+lines = text.splitlines(keepends=True)
+start, end, parent_indent = 0, len(lines), -1
+if len(parts) == 2:
+    parent, leaf = parts
+    parents = []
+    for index, raw in enumerate(lines):
+        line = raw.rstrip("\r\n")
+        match = re.fullmatch(rf"( *){re.escape(parent)}:\s*(?:#.*)?", line)
+        if match and len(match.group(1)) == 0:
+            parents.append(index)
+    if len(parents) != 1:
+        sys.exit(f"yaml_set: parent '{parent}' not found uniquely in {path}")
+    parent_index = parents[0]
+    parent_indent = 0
+    start = parent_index + 1
+    for index in range(start, len(lines)):
+        candidate = lines[index].rstrip("\r\n")
+        if not candidate.strip() or candidate.lstrip().startswith("#"):
+            continue
+        indent = len(candidate) - len(candidate.lstrip(" "))
+        if indent <= parent_indent:
+            end = index
+            break
+else:
+    leaf = parts[0]
+
+targets = []
+for index in range(start, end):
+    raw = lines[index]
+    line = raw.rstrip("\r\n")
+    match = re.match(rf"^( *){re.escape(leaf)}:\s*", line)
+    if not match:
+        continue
+    indent = len(match.group(1))
+    if (parent_indent < 0 and indent == 0) or (parent_indent >= 0 and indent > parent_indent):
+        targets.append((index, match.group(1)))
+if len(targets) != 1:
+    sys.exit(f"yaml_set: key '{key}' not found uniquely in {path}")
+
+index, indent = targets[0]
+ending = "\r\n" if lines[index].endswith("\r\n") else "\n" if lines[index].endswith("\n") else ""
+lines[index] = f"{indent}{leaf}: {json.dumps(val, ensure_ascii=False)}{ending}"
+p.write_text("".join(lines), encoding="utf-8")
 PYEOF
 }
 
@@ -137,13 +181,57 @@ already_done() {
 mark_done() {
   touch "$ROLE_DIR/.scripts/.done-$1"
 }
+clear_done() {
+  # Remove only the marker for the explicitly deferred step.  This lets a
+  # later activation reconcile that phase without disturbing completed,
+  # unrelated provisioning state.
+  rm -f -- "$ROLE_DIR/.scripts/.done-$1"
+}
+
+# The parser protocol, unsafe-family scrub, complete framing validation, and
+# atomic environment apply live in one reusable library shared by provisioners,
+# launchers, and maintenance commands.
+FLEET_ENV_LIBRARY="$ROLE_DIR/.scripts/lib/fleet-env.sh"
+FLEET_ENV_PARSER="$ROLE_DIR/.scripts/lib/parse-fleet-env.py"
+if [[ ! -f "$FLEET_ENV_LIBRARY" || -L "$FLEET_ENV_LIBRARY" ]]; then
+  builtin printf 'fleet environment loader rejected: trusted library is unavailable\n' >&2
+  return 1
+fi
+# shellcheck source=lib/fleet-env.sh
+builtin source "$FLEET_ENV_LIBRARY"
 
 # Fleet source-of-truth (shared across all wrappers/provisioners).
 # Every default below resolves as: env var > fleet.env > config.toml > fallback.
+# Invocation authority is not fleet configuration. Capture the caller's board
+# gate before importing fleet.env so that file cannot weaken an MCP/CLI
+# SKIP_PLANE decision or re-enable credentials by assigning SKIP_PLANE=0.
+PJANGLER_INVOCATION_SKIP_PLANE="${SKIP_PLANE:-0}"
 FLEET_ENV="${HERMES_FLEET_ENV:-$(config_get fleet.fleet_env "$HOME/.hermes/fleet.env")}"
-if [[ -f "$FLEET_ENV" ]]; then
-  # shellcheck disable=SC1090
-  source "$FLEET_ENV"
+
+# A direct CLI caller may not have passed through the MCP parent boundary. The
+# shared loader hardens both before parser startup and again after atomic import.
+if ! load_fleet_environment "$FLEET_ENV" "$FLEET_ENV_PARSER"; then
+  return 1
+fi
+SKIP_PLANE="$PJANGLER_INVOCATION_SKIP_PLANE"
+unset PJANGLER_INVOCATION_SKIP_PLANE
+scrub_subprocess_interpreter_injection
+
+# fleet.env is allowed to supply provider credentials only for an explicitly
+# board-authorized invocation. A no-board/deferred phase must remove every
+# supported provider alias after sourcing and before any Python, Hermes,
+# systemd, provider, or other child process can inherit it.
+scrub_ticket_provider_authority() {
+  local key
+  unset PLANE_API_KEY TRELLO_KEY TRELLO_TOKEN LINEAR_API_KEY
+  while IFS= read -r key; do
+    case "$key" in
+      PLANE_*_API_KEY) unset "$key" ;;
+    esac
+  done < <(compgen -A variable PLANE_)
+}
+if [[ "$SKIP_PLANE" == "1" ]]; then
+  scrub_ticket_provider_authority
 fi
 # Identity-bearing chat credentials are never fleet-scoped. Platform wiring
 # steps capture explicit invocation values before sourcing this library and
@@ -151,11 +239,12 @@ fi
 unset TELEGRAM_BOT_TOKEN SLACK_BOT_TOKEN SLACK_APP_TOKEN
 
 # Tools we expect on the host
-HERMES_BIN="${HERMES_BIN:-${HERMES_FLEET_BIN:-$(config_get fleet.hermes_bin "$HOME/.hermes/hermes-agent/.venv/bin/hermes")}}"
-HERMES_AGENT_REPO="${HERMES_AGENT_REPO:-${HERMES_FLEET_REPO:-$(config_get fleet.hermes_repo "$HOME/.hermes/hermes-agent")}}"
+HERMES_BIN="${HERMES_BIN:-${HERMES_FLEET_BIN:-$(config_get fleet.hermes_bin "$HOME/.local/share/hermes-agent/releases/0408fec7a153e6c32c064acd2b8053917f1525f1/.venv/bin/hermes")}}"
+HERMES_AGENT_REPO="${HERMES_AGENT_REPO:-${HERMES_FLEET_REPO:-$(config_get fleet.hermes_repo "$HOME/.local/share/hermes-agent/releases/0408fec7a153e6c32c064acd2b8053917f1525f1")}}"
+PJANGLER_BIN="${PJANGLER_BIN:-$(config_get fleet.pjangler_bin "pj")}"
 HERMES_RUNTIME_GIT_URL="${HERMES_RUNTIME_GIT_URL:-$(config_get fleet.hermes_git_url 'https://github.com/delorenj/hermes-agent.git')}"
-HERMES_RUNTIME_GIT_REF="${HERMES_RUNTIME_GIT_REF:-$(config_get fleet.hermes_git_ref 'feature/PJAN-19-routing-publication')}"
-HERMES_RUNTIME_GIT_SHA="${HERMES_RUNTIME_GIT_SHA:-$(config_get fleet.hermes_git_sha '113e1b182b6d72a7dd02a191f134a41668ceaf0e')}"
+HERMES_RUNTIME_GIT_REF="${HERMES_RUNTIME_GIT_REF:-$(config_get fleet.hermes_git_ref 'main')}"
+HERMES_RUNTIME_GIT_SHA="${HERMES_RUNTIME_GIT_SHA:-$(config_get fleet.hermes_git_sha '0408fec7a153e6c32c064acd2b8053917f1525f1')}"
 HERMES_OAUTH_FILE="${HERMES_OAUTH_FILE:-${HERMES_FLEET_OAUTH_FILE:-$(config_get fleet.oauth_file "$HOME/.hermes/auth.json")}}"
 CODEX_HOME="${CODEX_HOME:-${HERMES_FLEET_CODEX_HOME:-$(config_get fleet.codex_home "$HOME/.codex")}}"
 # Prefer a scaffold vendored into this agent directory; fall back to the configured template path.
@@ -183,7 +272,7 @@ fleet_lock_acquire() {
 fleet_lock_release() {
   if [[ "${FLEET_LOCK_FD:-}" =~ ^[0-9]+$ ]]; then
     flock -u "$FLEET_LOCK_FD" 2>/dev/null || true
-    eval "exec ${FLEET_LOCK_FD}>&-"
+    exec {FLEET_LOCK_FD}>&-
   fi
   FLEET_LOCK_FD=""
 }
@@ -195,13 +284,18 @@ BLOODBANK_COMPOSE_DIR="${BLOODBANK_COMPOSE_DIR:-$(config_get bloodbank.compose_d
 
 # Plane
 PLANE_BASE="${PLANE_BASE:-$(config_get plane.base 'https://plane.delo.sh')}"
-PLANE_API_KEY="${PLANE_API_KEY:-${PLANE_33GOD_API_KEY:-}}"
+if [[ "$SKIP_PLANE" != "1" ]]; then
+  PLANE_API_KEY="${PLANE_API_KEY:-${PLANE_33GOD_API_KEY:-}}"
+fi
 
-export FLEET_ENV HERMES_BIN HERMES_AGENT_REPO HERMES_RUNTIME_GIT_URL \
+export FLEET_ENV HERMES_BIN HERMES_AGENT_REPO PJANGLER_BIN HERMES_RUNTIME_GIT_URL \
        HERMES_RUNTIME_GIT_REF HERMES_RUNTIME_GIT_SHA HERMES_OAUTH_FILE CODEX_HOME \
        RUNTIME_SCAFFOLD_DIR REGISTRY_FILE \
        BLOODBANK_NATS_HOST BLOODBANK_NATS_PORT BLOODBANK_COMPOSE_DIR \
-       PLANE_BASE PLANE_API_KEY
+       PLANE_BASE SKIP_PLANE
+if [[ "$SKIP_PLANE" != "1" ]]; then
+  export PLANE_API_KEY
+fi
 
 # systemd --user health check. Accept running/degraded/starting — only one
 # broken unit shouldn't disqualify the rest of the user manager.
@@ -248,6 +342,19 @@ systemctl_user_unit_state() {
 # Resolve project repo path (the repo that holds agents/hermes/<role>/).
 # Walk up from $ROLE_DIR until we find a git root that isn't us.
 project_repo_path() {
+  # Structured provisioners know the project root even before a fresh target
+  # receives its own .git directory. Accept only a root that contains this
+  # exact role path; otherwise fail closed instead of walking into a parent
+  # checkout and mutating its manifest.
+  if [[ -n "${PJANGLER_PROJECT_ROOT:-}" ]]; then
+    local explicit role_real
+    explicit="$(cd "$PJANGLER_PROJECT_ROOT" 2>/dev/null && pwd -P)" || return 1
+    role_real="$(cd "$ROLE_DIR" 2>/dev/null && pwd -P)" || return 1
+    case "$role_real" in
+      "$explicit"/agents/hermes/*) printf '%s\n' "$explicit"; return 0 ;;
+      *) return 1 ;;
+    esac
+  fi
   local d="$ROLE_DIR"
   [[ -d "$d/.git" || -f "$d/.git" ]] && { echo "$d"; return 0; }
   for _ in 1 2 3 4 5; do
