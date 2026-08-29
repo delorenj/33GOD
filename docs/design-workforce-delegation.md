@@ -43,12 +43,12 @@ wrong**, and the correction matters because it changes the build from
 
 | Component | State | Evidence |
 |---|---|---|
-| Event lane `bloodbank.evt.v1.>` | **live** | hooks → NATS → toaster + Candystore |
+| Event lane `bloodbank.evt.>` | **live** | hooks → NATS → toaster + Candystore |
 | Candystore projection | **live** | listening `127.0.0.1:8683` |
-| `hermes-fleet-bloodbank-gateway.service` | **live, 5 days** | `active (running) since 2026-08-22`; durable JetStream pull consumer on `bloodbank.cmd.v1.agent.invocation.start` (`bloodbank_hermes_gateway/contract.py:21`) |
+| `hermes-fleet-bloodbank-gateway.service` | **live, 5 days** | `active (running) since 2026-08-22`; durable `bloodbank-hermes-gateway` pull consumer filtered on `bloodbank.cmd.agent.invocation.start` (`bloodbank_hermes_gateway/contract.py:21`, `COMMAND_SUBJECT`; the type at `:20` is the 4-token `bloodbank.agent.invocation.start`) |
 | `hook-hub.service` + `.socket` | **live** | successor to the original "universal hook fan-out" idea |
 | Command **routability** | **0 of 30 agents** | none pass `bloodbank.enabled AND gateway_scope==fleet AND target_agent_id AND profile_name` |
-| Reply lane `bloodbank.rpy.v1.*` | convention only | no publisher, no consumer |
+| Reply lane `bloodbank.rpy.agent.invocation.*` | convention only | no publisher, no consumer |
 | `hookd_bridge` | **does not exist** | deleted 2026-05-11 in `38fd18b`; see §6 |
 
 **The command lane works. Nothing is authorized to use it.** The blocker is
@@ -64,14 +64,14 @@ registry eligibility, not missing infrastructure.
 caller (any CLI/session)
   │  publish CloudEvents command envelope
   ▼
-bloodbank.cmd.v1.agent.invocation.start        [JetStream, durable]
+bloodbank.cmd.agent.invocation.start           [JetStream, durable]
   │
   ├──▶ hermes-fleet-bloodbank-gateway   (EXISTS) → registry-resolved Hermes agents
   └──▶ workforce-orchestrator           (NEW)    → ephemeral/contractor tasks
          │  selects provider from pool by quota + health
          │  spawns, tracks, emits lifecycle events
          ▼
-bloodbank.rpy.v1.agent.invocation.completed    correlationid = originating command id
+bloodbank.rpy.agent.invocation.complete        correlationid = originating command id
   │
   ▼  caller (or its successor) resolves the result
 ```
@@ -146,7 +146,7 @@ the coupling this design removes.
 
 - **A zellij equivalent of tmux teammates.** It reproduces the original flaw:
   a pane-hosted agent has no return channel. If agent visibility is wanted,
-  build a **read-side** pane subscribed to `bloodbank.evt.v1.agent.*`. The
+  build a **read-side** pane subscribed to `bloodbank.evt.agent.>`. The
   pane must never own a process.
 - **Replacing in-process subagents.** They are correct for fast, contextual,
   short work and now return results properly. This system is for long,
@@ -160,11 +160,11 @@ the coupling this design removes.
 | # | Step | Size | Why first |
 |---|---|---|---|
 | 1 | Make **one** agent fleet-routable; publish one command; verify in toaster **and** Candystore | S | Everything above is speculative until one command executes end-to-end. `0/30` is the real blocker. |
-| 2 | Implement the **reply lane** — publish `bloodbank.rpy.v1.agent.invocation.completed` carrying `correlationid` | S | Without it there is no hand-back and no way to close the loop. |
+| 2 | Implement the **reply lane** — publish `bloodbank.rpy.agent.invocation.complete` carrying `correlationid` (replies mirror the *command* action, so it is `complete`, not `completed` — `validate.py::assert_action_tense`) | S | Without it there is no hand-back and no way to close the loop. |
 | 3 | **Provider pool registry** — quota/health as queryable data | M | The actual motivating problem (provider arbitrage). Useful standalone, before any orchestrator exists. |
 | 4 | **workforce-orchestrator** consumer — select, spawn, track in JetStream KV, emit lifecycle + reply | L | Only worth building on top of a proven 1–3. |
 | 5 | Skill: `workforce-delegation` — teach agents the routing call (in-process vs bus) | S | The piece that actually changes agent behavior. Cheap; do it as soon as 4 lands. |
-| 6 | Optional: zellij read-side pane fed by `bloodbank.evt.v1.agent.*` | M | Polish. |
+| 6 | Optional: zellij read-side pane fed by `bloodbank.evt.agent.>` | M | Polish. |
 
 Steps 1–2 are small and unblock a system that is already built and running.
 **Do those regardless of whether 3–6 ever happen.**
@@ -179,9 +179,11 @@ Anyone implementing §5 will follow the skill docs and hit this immediately.
 
 > "HTTP client that needs to issue a COMMAND envelope → POST to hookd_bridge
 > :18790/hooks/agent. See `bloodbank/hookd_bridge/`; command subject is
-> `bloodbank.cmd.v1.agent.invocation.start`."
+> `bloodbank.cmd.agent.invocation.start`."
 
-Every clause is false:
+(The subject in that line has since been corrected off the retired versioned
+form; the hookd_bridge routing around it has not.) Every clause about the
+bridge is false:
 
 - **`bloodbank/hookd_bridge/` does not exist.** Deleted 2026-05-11 in
   `38fd18b` ("collapse v3 scaffold to canonical bloodbank"), as part of the v2
@@ -189,7 +191,7 @@ Every clause is false:
 - **It was never a consumer or a bridge.** It was an HTTP→**RabbitMQ** ingress
   *producer*: `POST /hooks/agent` → hand-rolled envelope → SQLite outbox →
   exchange `bloodbank.events.v1`, routing key `command.{agent}.{action}`.
-- **It never published `bloodbank.cmd.v1.*` and structurally could not** — it
+- **It never published on the `bloodbank.cmd.>` lane and structurally could not** — it
   emitted no `specversion`, `subject`, `kind`, or `domain`, all of which
   `services/agent-hooks/forward_envelope.py:44-53` requires.
 - **The docs were written 2026-08-10** (`4f394a4`), *three months after the
@@ -209,7 +211,7 @@ to the 2026-08-10 producer docs.
 
 1. `SKILL.md:57` — replace the hookd_bridge branch: publish the
    schema-validated command envelope directly to
-   `bloodbank.cmd.v1.agent.invocation.start`; the fleet gateway consumes it.
+   `bloodbank.cmd.agent.invocation.start`; the fleet gateway consumes it.
 2. `SKILL.md:32` — drop `hookd_bridge` from the routing table.
 3. `references/producers/README.md:23,55` — delete the row and bullet.
 4. `references/producers/methods.md:130-145` — delete section 6.
@@ -377,10 +379,14 @@ typed node per consumer, backed by the registry, calling the allowlisted shim.
 
 ### 7.7 Two correctness bugs found in passing
 
-- **Subject coverage seam.** `BLOODBANK_EVENTS` accepts `bloodbank.evt.v1.>`
-  plus `bloodbank.evt.v2.repo.maintenance.failed`, but the toaster's filter is
-  `bloodbank.evt.v1.>` — it silently never sees the v2 subject. Nothing checks
-  that the union of consumer filters covers the stream's subject set.
+- **Subject coverage seam.** ~~`BLOODBANK_EVENTS` admitted a v1 wildcard plus
+  one explicit v2 subject the toaster's v1-filtered consumer could never see.~~
+  **Closed by the version-token retirement.** Live today: `BLOODBANK_EVENTS`
+  subjects are exactly `["bloodbank.evt.>"]`, the toaster runs
+  `SUBJECT_FILTER=bloodbank.evt.>`, and the `candystore-events` durable filters
+  `bloodbank.evt.>` — the union covers the stream. The underlying gap remains:
+  nothing *checks* that consumer filters cover the stream's subject set, so a
+  narrower filter could reopen it.
 - **Commands expire silently.** `BLOODBANK_COMMANDS` is `retention=workqueue,
   max_age=1d`, and no dead-letter handling is implemented. An unhandled
   command is dropped after a day with no signal. That directly affects §3.

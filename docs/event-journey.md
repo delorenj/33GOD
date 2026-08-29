@@ -107,7 +107,7 @@ sequenceDiagram
     W->>V: Preserve raw body
     V->>V: Select 1Password ref by webhook_id
     V->>V: Verify HMAC and resolve workspace/board route
-    V->>B: Publish bloodbank.evt.v1.repo.task.created
+    V->>B: Publish bloodbank.evt.repo.task.created
     B->>C: Durable delivery → POST /events/all
     C->>H: Query selected durable history
     W-->>P: 200 { ok: true, routed: true }
@@ -121,7 +121,7 @@ sequenceDiagram
 ## Command consumption and agent dispatch
 
 The command gateway has one durable pull consumer for
-`bloodbank.cmd.v1.agent.invocation.start`. It validates the actor, envelope,
+`bloodbank.cmd.agent.invocation.start`. It validates the actor, envelope,
 prompt, and target; resolves `data.target_agent_id` through the fleet registry;
 journals the decision; dispatches an eligible Hermes profile; and emits
 correlated lifecycle facts back to the event stream.
@@ -137,7 +137,7 @@ sequenceDiagram
     participant E as Bloodbank EVENTS
     participant D as Candystore
 
-    P->>C: bloodbank.cmd.v1.agent.invocation.start
+    P->>C: bloodbank.cmd.agent.invocation.start
     C->>G: Durable work-queue delivery
     G->>G: Validate actor, schema, prompt, target
     G->>R: Resolve target_agent_id and enabled route
@@ -165,9 +165,9 @@ Verified on 2026-08-27 UTC:
 
 - Root Compose project `33god-platform` owns the running Bloodbank NATS,
   Candystore app/sidecar/PostgreSQL, event toaster, and Holocene web containers.
-- `BLOODBANK_EVENTS` covers `bloodbank.evt.v1.>` plus explicitly admitted v2
-  subjects; Candystore's durable `bloodbank.evt.>` subscription captures every
-  event the stream admits.
+- `BLOODBANK_EVENTS` covers exactly `bloodbank.evt.>` — one wildcard, no
+  version token in the subject at all; Candystore's durable `bloodbank.evt.>`
+  subscription captures every event the stream admits.
 - `BLOODBANK_COMMANDS` covers command/reply subjects with work-queue retention.
 - The signed ingress integration test passed, including exact provenance and
   subject assertions.

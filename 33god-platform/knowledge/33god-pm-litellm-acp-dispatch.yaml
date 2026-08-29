@@ -17,7 +17,7 @@ plane:
   native_initiatives_available: false
 dispatch:
   owner: 33god-pm
-  transport: bloodbank.cmd.v1.agent.invocation.start
+  transport: bloodbank.cmd.agent.invocation.start
   thread_id: bmad:33god:litellm-acp
   correlation_id: c46b02ea-6175-5743-8fef-fa75e5d7dd6f
   final_turn_id: planning:2026-08-13:finalize-v4
