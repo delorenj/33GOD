@@ -34,6 +34,42 @@ FORBIDDEN_MARKERS = re.compile(
 )
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
+# The hermes-agent generator materializes these trees into every provisioned
+# repo, and _lib.sh prefers a repo's own vendored copy over the template's, so
+# each copy is an independent generator source and all of them must be scanned.
+# One file used to be scanned here; a file is not a target, a generator is.
+GENERATED_SCAFFOLDS = (
+    "pjangler/templates/hermes-agent/runtime-scaffold",
+    "pjangler/templates/hermes-agent/template/.runtime-scaffold",
+    "agents/hermes/pm/.runtime-scaffold",
+    "bloodbank/agents/hermes/pm/.runtime-scaffold",
+    "candystore/agents/hermes/pm/.runtime-scaffold",
+    "holocene/agents/hermes/pm/.runtime-scaffold",
+    "pjangler/agents/hermes/pm/.runtime-scaffold",
+    "candybar/agents/hermes/pm/.runtime-scaffold",
+)
+
+# A generated subject must never carry a repo or agent identifier as a subject
+# token: routing is fixed at five tokens and targets travel in `data`. The
+# version segment is irrelevant to that defect, so the prefix is any run of
+# literal tokens -- `bloodbank.evt.v1.repo.{REPO}` and `bloodbank.evt.repo.{REPO}`
+# are the same bug and both must be caught. The grammar metavariables
+# domain/entity/action/kind are placeholders for tokens, not for identifiers, so
+# prose like `bloodbank.evt.<domain>.<entity>.<action>` is exempt.
+ROUTING_IDENTIFIER_SUBJECT = re.compile(
+    r"""
+    bloodbank\.
+    (?:[a-z0-9_]+\.)+                      # any literal token run: evt. / evt.v1.repo. / v1.repo.
+    (?:
+        \{(?!(?i:domain|entity|action|kind)\})[A-Za-z_][A-Za-z0-9_]*\}
+      | \{\{(?!\s*(?i:domain|entity|action|kind)\s*\}\})\s*[^}\n]+\}\}
+      | <(?!(?i:domain|entity|action|kind)>)[A-Za-z_][A-Za-z0-9_]*>
+      | \$\{?(?!(?i:domain|entity|action|kind)\b)[A-Za-z_][A-Za-z0-9_]*\}?
+    )
+    """,
+    re.VERBOSE,
+)
+
 
 class Reporter:
     def __init__(self) -> None:
@@ -192,7 +228,11 @@ def check_platform_manifest(source: Path, report: Reporter) -> None:
         except Exception as exc:
             report.fail(f"platform-{part}", f"manifest parse/parity failed: {exc}")
 
-    pjangler_text = component_paths["pjangler"].read_text(encoding="utf-8")
+    pjangler_manifest = component_paths["pjangler"]
+    if not pjangler_manifest.is_file():
+        report.fail("pjangler-health", f"missing {pjangler_manifest}; test-command parity cannot be checked")
+        return
+    pjangler_text = pjangler_manifest.read_text(encoding="utf-8")
     if "bun test" in pjangler_text:
         report.fail("pjangler-health", "platform health uses Bun, but live project is npm-based")
     elif "npm test" in pjangler_text:
@@ -217,37 +257,76 @@ def check_high_risk_contracts(source: Path, report: Reporter) -> None:
 
     heartbeat = source / "bloodbank/services/heartbeat-recorder"
     compose = source / "bloodbank/compose/docker-compose.yml"
-    compose_text = compose.read_text(encoding="utf-8") if compose.is_file() else ""
-    if "services/heartbeat-recorder" in compose_text and not heartbeat.is_dir():
-        report.fail("bloodbank-heartbeat", "Compose references missing services/heartbeat-recorder")
+    if not compose.is_file():
+        report.fail("bloodbank-heartbeat", f"missing {compose}; build-context parity cannot be checked")
     else:
-        report.passed("bloodbank-heartbeat", "heartbeat build context is internally consistent")
+        compose_text = compose.read_text(encoding="utf-8")
+        if "services/heartbeat-recorder" in compose_text and not heartbeat.is_dir():
+            report.fail("bloodbank-heartbeat", "Compose references missing services/heartbeat-recorder")
+        else:
+            report.passed("bloodbank-heartbeat", "heartbeat build context is internally consistent")
 
     candy_compose = source / "candystore/compose.yml"
+    candy_pubsub = source / "candystore/dapr-components/pubsub.yaml"
     candy_text = candy_compose.read_text(encoding="utf-8") if candy_compose.is_file() else ""
-    if "MUTUAL EXCLUSION" in candy_text and "candystore-events" in (source / "candystore/dapr-components/pubsub.yaml").read_text(encoding="utf-8"):
+    pubsub_text = candy_pubsub.read_text(encoding="utf-8") if candy_pubsub.is_file() else ""
+    if "MUTUAL EXCLUSION" in candy_text and "candystore-events" in pubsub_text:
         report.passed("candystore-deployment-mode", "standalone manifest declares legacy-profile mutual exclusion")
     else:
         report.fail("candystore-deployment-mode", "mutual-exclusion declaration or durable identity is missing")
 
     fleet = source / "holocene/apps/api/src/fleet.ts"
-    fleet_text = fleet.read_text(encoding="utf-8") if fleet.is_file() else ""
-    if '"http://candystore:8080"' in fleet_text:
+    if not fleet.is_file():
+        report.fail("holocene-candystore-url", f"missing {fleet}; the default history URL cannot be checked")
+    elif re.search(r"https?://candystore:8080", fleet.read_text(encoding="utf-8")):
         report.fail("holocene-candystore-url", "default URL contradicts standalone Candystore port/topology")
     else:
         report.passed("holocene-candystore-url", "default history URL no longer uses candystore:8080")
 
-    consumer = source / "pjangler/templates/hermes-agent/runtime-scaffold/bloodbank-consumer.py"
-    consumer_text = consumer.read_text(encoding="utf-8") if consumer.is_file() else ""
-    noncanonical = re.search(
-        r"bloodbank\.(?:evt\.v1\.repo|cmd\.v1\.agent)\."
-        r"(?:\{(?:REPO|AGENT_ID)\}|\{\{[^}]+\}\}|<(?:repo|agent_id)>)",
-        consumer_text,
-    )
-    if noncanonical:
-        report.fail("pjangler-bloodbank-routing", "generated subjects embed repo/agent routing identifiers")
+    check_generated_routing(source, report)
+
+
+def check_generated_routing(source: Path, report: Reporter) -> None:
+    """Fail if any generated agent scaffold embeds a routing identifier in a subject.
+
+    Absence is never a pass. This check previously read one file that had already
+    been deleted, so its regex searched an empty string and reported green while
+    guarding nothing.
+    """
+    roots = [source / rel for rel in GENERATED_SCAFFOLDS]
+    present = [root for root in roots if root.is_dir()]
+    if not present:
+        report.fail(
+            "pjangler-bloodbank-routing",
+            "no generated runtime scaffold exists to scan (looked for "
+            + ", ".join(GENERATED_SCAFFOLDS)
+            + "); the check has no target and is guarding nothing",
+        )
+        return
+
+    hits = []
+    for root in present:
+        for path in sorted(root.rglob("*")):
+            if not path.is_file() or path.is_symlink():
+                continue
+            try:
+                content = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            match = ROUTING_IDENTIFIER_SUBJECT.search(content)
+            if match:
+                hits.append(f"{path.relative_to(source)} -> {match.group(0)}")
+
+    if hits:
+        report.fail(
+            "pjangler-bloodbank-routing",
+            "generated subjects embed repo/agent routing identifiers: " + "; ".join(hits),
+        )
     else:
-        report.passed("pjangler-bloodbank-routing", "generated subjects follow fixed five-token routing")
+        report.passed(
+            "pjangler-bloodbank-routing",
+            f"{len(present)} generated scaffolds carry no identifier-embedding subjects",
+        )
 
 
 def check_compose_candidate(source: Path, docs_checkout: Path, report: Reporter) -> None:
