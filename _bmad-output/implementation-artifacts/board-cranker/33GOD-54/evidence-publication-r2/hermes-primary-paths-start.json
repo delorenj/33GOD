@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "git",
+    "ls-files",
+    "-z",
+    "--cached",
+    "--others",
+    "--exclude-standard"
+  ],
+  "attempt": 1,
+  "command": "git ls-files -z --cached --others --exclude-standard",
+  "completed": "2026-09-05T11:28:19Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-paths-start.log",
+  "name": "hermes-primary-paths-start",
+  "sha256": "b9bd728695ead5ba0035d4fb356d01108de82069a529616672410972eeb52a95",
+  "started": "2026-09-05T11:28:19Z",
+  "worktree": "/home/delorenj/.hermes/hermes-agent"
+}

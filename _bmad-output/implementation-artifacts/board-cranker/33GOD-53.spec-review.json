@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "spec-compliance",
+  "status": "FAIL",
+  "summary": "The repair substantively resolves F001/F002/F003 with verified source + passing-test evidence, the 42-test focused suite reproduces green, Ruff is clean on the actual changed files, the 8-node differential rerun shows identical node IDs and error classes at head and baseline, all 19 claimed evidence hashes match, the handback is schema-valid, and git/push/worktree hygiene is verified. However the gate FAILS on AC-8 scope and check executability: the actual full range changes {gateway/platforms/base.py, gateway/run.py, tests/gateway/test_contractor_turns.py} and the repair delta changes {gateway/run.py, tests/gateway/test_contractor_turns.py}, while the specification's allowlist is {gateway/run.py, tests/gateway/test_contractor_turn_execution.py, tests/gateway/test_run_context.py} for the full range and {gateway/run.py, tests/gateway/test_contractor_turn_execution.py} for the repair delta. tests/gateway/test_contractor_turn_execution.py and tests/gateway/test_run_context.py do not exist at HEAD or anywhere in git history (find + git log --all), so the mandated focused pytest command exits 4 with 'file or directory not found' and runs zero tests, and the mandated ruff command warns it cannot lint them. The actual change is confined to the contractor seam and matches the 33GOD-51 quality gate's allowlist {gateway/platforms/base.py, gateway/run.py, tests/gateway/test_contractor_turns.py}; if the specification's file names are a controller-side error, correcting them and re-running this review is expected to pass on the evidence already gathered.",
+  "reviewer": {
+    "agent_id": "auggie-33god-53-spec-review-r1",
+    "role": "spec-reviewer",
+    "provider": "augment",
+    "model": "kimi-k3",
+    "independent_of_implementer": true
+  },
+  "git": {
+    "platform_base_sha": "97f3229dfdc06779f348ab8e7bee043262c3aaa7",
+    "review_base_sha": "c61c87117c5eb234c4f84ce8cd1933790d8025b5",
+    "head_sha": "00346416144c0e42897b79129be2021908830d1d",
+    "worktree": "/tmp/hermes-board-cranker-53-spec-review-r1",
+    "platform_commit_count": 4,
+    "repair_commit_count": 1,
+    "repair_commit": "00346416144c0e42897b79129be2021908830d1d",
+    "remote_branch_verified": true
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "status": "PASS",
+      "evidence": "Disjoint registry-derived route accepted: gateway/run.py:21294-21315 resolves profile_home and context.project_root independently with resolve(strict=True)+is_dir() and NO containment check (the c61c871 project_root.is_relative_to(profile_home) rejection was removed by 0034641); test_contractor_turn_accepts_disjoint_typed_project_root passes (my rerun: 42 passed in 2.67s). Real topology verified disjoint: ~/.hermes/agents-registry.yaml binds 33god-pm to project_path=/home/delorenj/code/33GOD while profile 33god-pm home resolves to /home/delorenj/code/33GOD/agents/hermes/pm/runtime (role.yaml: profile->runtime symlink), so the project root is an ancestor of, not contained in, the profile home. Rejections before runner/skill execution verified at run.py:21274-21285 (invalid context type, non-internal event, profile mismatch, missing command id) and 21306-21315 (missing/non-directory project root revalidated post-construction, defeating TOCTOU file replacement) with tests test_contractor_handler_rejects_untrusted_context_before_skills[3 cases] and test_contractor_turn_revalidates_project_directory_before_skills[missing,file] asserting skill loader and executor never start. Registry/wire/symlink authorization of unregistered targets is Bloodbank-side per the AC-2 ownership split; Hermes does not infer cross-process trust from directory containment."
+    },
+    {
+      "id": "AC-2",
+      "status": "PASS",
+      "evidence": "grep -rn 'import bloodbank|from bloodbank' over gateway/, run_agent.py, cli.py, model_tools.py returns nothing; no 'bloodbank' string in gateway/run.py. gateway/platforms/base.py:2515-2520 (ContractorTurnContext docstring) assigns registry resolution and context construction to the Bloodbank adapter; Hermes revalidates the frozen typed payload (base.py:2531-2564: canonical strings, memory_policy=='none', continuity is False, non-empty unique skill tuple, absolute strict-resolved existing directory) plus filesystem facts at execution time (run.py:21294-21315). Line-by-line review of the full 97f3229..0034641 diff (446 changed lines in run.py, 89 in base.py) shows no registry client, no wire validation, and no new authority introduced in Hermes. Bloodbank consumer bloodbank/services/agent-hooks/clients/hermes.py is a generic hook publisher and contains no contractor-context construction, consistent with 33GOD-52 owning the Bloodbank-side integration."
+    },
+    {
+      "id": "AC-3",
+      "status": "PASS",
+      "evidence": "run.py:9060 service_tier: Any = _SERVICE_TIER_UNSET (sentinel pre-existing at gateway/session_state.py:48 in base 97f3229); run.py:9114-9115 falls back to getattr(self, '_service_tier', None) ONLY on omission; run.py:9116-9120 explicit None takes the normal-tier path and never touches shared state. test_null_contractor_service_tier_is_distinct_from_ordinary_omission passes: with runner._service_tier='priority', explicit None yields request_overrides {'extra_body': {...}} while omission yields the priority override. Contractor worker resolves tier locally via _resolve_session_service_tier(source=None, session_key=None) (run.py:21142-21150) and passes it explicitly. Concurrent-turn contamination covered by test_concurrent_contractor_turns_leave_runner_config_unchanged (ThreadPoolExecutor, 2 turns) — passes."
+    },
+    {
+      "id": "AC-4",
+      "status": "PASS",
+      "evidence": "run.py:2470 ContractorTurnCleanupFailed(ContractorTurnRejected). Success+cleanup-error path raises it at run.py:21412-21416; primary-failure path keeps ContractorTurnRejected authoritative and attaches cleanup via add_note at run.py:21401-21411; worker finally (run.py:21247-21264) runs _cleanup_agent_resources(agent, reraise=True) on every path, captures cleanup_error, and add_note's any in-flight primary exception. Platform observes FAILURE via base.py:7315-7316 on_processing_complete(ProcessingOutcome.FAILURE). Tests pass: test_cleanup_failure_raises_from_public_contractor_handler, test_cleanup_failure_marks_platform_processing_failed (asserts FAILURE not SUCCESS), test_contractor_cleanup_failure_is_observed_on_successful_turn, test_contractor_cleanup_failure_is_observed_on_failed_turn (primary RuntimeError('model call failed') preserved with cleanup note in __notes__). Cancellation cleanup still runs: CancelledError -> cancel_event.set() + _interrupt_contractor_agent (run.py:21389-21392) with the worker finally executing cleanup; test_cancellation_signals_worker_before_requesting_hard_interrupt passes."
+    },
+    {
+      "id": "AC-5",
+      "status": "PASS",
+      "evidence": "grep for 'self\\._service_tier ='/'self\\._reasoning_config =' in gateway/run.py shows writes only at __init__ (7609-7610) and ordinary session paths (6013, 25961-25962) — none in the contractor path. _run_contractor_agent_sync keeps reasoning_config/service_tier in locals (run.py:21137-21150; comment '#33GOD-51' at 21146-21147) and passes them explicitly into _resolve_turn_agent_config and AIAgent. Tests test_contractor_turn_does_not_mutate_shared_runner_state and test_concurrent_contractor_turns_leave_runner_config_unchanged both pass in my independent 42-test rerun."
+    },
+    {
+      "id": "AC-6",
+      "status": "PASS",
+      "evidence": "All 42 focused tests in tests/gateway/test_contractor_turns.py pass at HEAD in my independent rerun (42 passed in 2.67s), including the 33GOD-50/51-era behaviors: required-skill fail-closed (test_missing_required_skill_fails_before_agent_or_tool_execution, test_all_required_skills_resolve_before_any_skill_preprocessing), memory:none enforcement and memory/session_search tool-leak rejection (test_agent_is_fresh_memoryless_unpersisted_and_uses_configured_runtime, test_memory_or_history_tool_leak_fails_before_model_execution), cancellation signaling, registry eviction after success and failure, and ordinary-turn negatives. _cleanup_agent_resources default reraise=False (run.py:12394-12463) preserves ordinary-turn silent best-effort cleanup; environment/runtime resolution unchanged outside the seam per the full-range hunk review."
+    },
+    {
+      "id": "AC-7",
+      "status": "PASS",
+      "evidence": "RED is authentic and pre-repair: red.log shows 5 failed/37 passed with tracebacks executing the c61c871 containment code (old run.py:21302 'contractor project root is outside the authorized profile boundary'), the explicit-None priority leak, DID-NOT-RAISE on cleanup failure, and platform SUCCESS instead of FAILURE — the named security/isolation/cleanup defects. GREEN: green.log '42 passed, 2 warnings' independently reproduced (42 passed in 2.67s with the review worktree's locked .venv). Ruff: 'All checks passed!' on gateway/run.py + gateway/platforms/base.py + tests/gateway/test_contractor_turns.py. Full-suite logs: hermes-gateway-head.log and hermes-gateway-base.log each contain exactly 8 FAILED lines with the same node IDs (grep -c FAILED = 8/8) and matching error classes per hermes-gateway-differential.json (whose sha256 matches the handback claim). Independent differential rerun of all 8 node IDs with the review .venv: at head 2 failed (test_session_store_default_db_uses_runtime_hermes_home, test_profile_command_reports_source_stamped_profile — both AssertionError) and 6 passed; at baseline the identical 2 failed with the identical AssertionError classes/lines and the same 6 passed; zero branch-only, zero base-only, zero error-class changes. (The 6 suite-order-sensitive failures pass in isolation at BOTH revisions; head==base under both conditions.)"
+    },
+    {
+      "id": "AC-8",
+      "status": "FAIL",
+      "evidence": "Git/handback items all verified: HEAD==00346416144c0e42897b79129be2021908830d1d; both base SHAs are ancestors; full range count==4; repair delta count==1 (sole commit 0034641 'fix(gateway): repair contractor trust seams (33GOD-53)'); git ls-remote delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns == 0034641 (push verified); implementation worktree /tmp/hermes-board-cranker-50 clean at 0034641, review and baseline worktrees clean; implementation handback validates against board-cranker-33god-53-implementation.schema.json (jsonschema: HANDBACK_SCHEMA_VALID); all 19 prior_evidence sha256 hashes recomputed and match. SCOPE FAILS against the specified allowlist: actual full range changes {gateway/platforms/base.py, gateway/run.py, tests/gateway/test_contractor_turns.py} and actual repair delta changes {gateway/run.py, tests/gateway/test_contractor_turns.py}, while the specification allows only {gateway/run.py, tests/gateway/test_contractor_turn_execution.py, tests/gateway/test_run_context.py} full-range and {gateway/run.py, tests/gateway/test_contractor_turn_execution.py} for the delta. tests/gateway/test_contractor_turn_execution.py and tests/gateway/test_run_context.py do not exist at HEAD or in any revision (find + git log --all empty); the mandated focused pytest command exits 4 ('file or directory not found', no tests ran) and the mandated ruff command warns it cannot lint them. The actual change matches the 33GOD-51 quality gate's allowlist and stays inside the contractor seam, so this is a specification/implementation scope-reference mismatch, not observed sprawl — but per the stated verdict rules it is an out-of-scope mutation relative to the specified allowlist plus an unexecutable required check."
+    }
+  ],
+  "prior_findings": [
+    {
+      "id": "F001",
+      "status": "RESOLVED",
+      "evidence": "Source: 0034641 removes the c61c871 project_root.is_relative_to(profile_home) containment rejection and resolves profile_home and project_root independently with strict resolution + is_dir (gateway/run.py:21294-21315). Tests: test_contractor_turn_accepts_disjoint_typed_project_root passes (disjoint profile-home vs authorized-project fixture, worker receives the resolved disjoint root), test_contractor_turn_accepts_project_root_under_profile_home still passes, and test_contractor_turn_revalidates_project_directory_before_skills[missing,file] closes the file-replacement gap the RED run exposed (red.log shows [file] reaching skill loading pre-repair). Real route verified accepted: agents-registry.yaml 33god-pm project_path=/home/delorenj/code/33GOD with profile home .../agents/hermes/pm/runtime — disjoint (reverse-nested) and no longer rejected. RED captured the defect (red.log: ContractorTurnRejected 'outside the authorized profile boundary' from old run.py:21302); GREEN passes (green.log + my rerun)."
+    },
+    {
+      "id": "F002",
+      "status": "RESOLVED",
+      "evidence": "Source: _resolve_turn_agent_config signature changed to service_tier=_SERVICE_TIER_UNSET (gateway/run.py:9060) with the shared-state fallback gated on 'is _SERVICE_TIER_UNSET' (run.py:9114-9115); explicit None remains None and takes the normal-tier path (9116-9120). Test: test_null_contractor_service_tier_is_distinct_from_ordinary_omission passes — with runner._service_tier='priority', explicit None yields no priority override while omission inherits it; RED showed the leak (red.log: left contained {'service_tier': 'priority'}). Sibling contamination covered by the concurrent-turn test."
+    },
+    {
+      "id": "F003",
+      "status": "RESOLVED",
+      "evidence": "Source: _handle_contractor_turn no longer discards cleanup_error — post-success cleanup failure raises ContractorTurnCleanupFailed (gateway/run.py:2470, 21412-21416) which the platform lifecycle records as ProcessingOutcome.FAILURE (gateway/platforms/base.py:7315-7316), and primary-failure results raise ContractorTurnRejected with the cleanup error attached via add_note (run.py:21401-21411); worker-level primary exceptions also get the cleanup note (run.py:21257-21262). Tests pass: test_cleanup_failure_raises_from_public_contractor_handler, test_cleanup_failure_marks_platform_processing_failed (RED showed SUCCESS recorded; GREEN asserts FAILURE), test_contractor_cleanup_failure_is_observed_on_successful_turn, test_contractor_cleanup_failure_is_observed_on_failed_turn."
+    }
+  ],
+  "scope": {
+    "status": "FAIL",
+    "full_range_files": [
+      "gateway/platforms/base.py",
+      "gateway/run.py",
+      "tests/gateway/test_contractor_turns.py"
+    ],
+    "repair_delta_files": [
+      "gateway/run.py",
+      "tests/gateway/test_contractor_turns.py"
+    ],
+    "forbidden_files": [
+      "gateway/platforms/base.py",
+      "tests/gateway/test_contractor_turns.py"
+    ],
+    "evidence": "git diff --name-only 97f3229..0034641 = gateway/platforms/base.py, gateway/run.py, tests/gateway/test_contractor_turns.py; git diff --name-only c61c871..0034641 = gateway/run.py, tests/gateway/test_contractor_turns.py. Measured against the specified allowlist (full range: gateway/run.py, tests/gateway/test_contractor_turn_execution.py, tests/gateway/test_run_context.py; repair delta: gateway/run.py, tests/gateway/test_contractor_turn_execution.py), gateway/platforms/base.py (full range) and tests/gateway/test_contractor_turns.py (both ranges) are outside it, and the two specified test files do not exist at HEAD or in git history. Context: the implementer's hermes-diff-scope.log used the 33GOD-51 quality gate's three-file allowlist {gateway/platforms/base.py, gateway/run.py, tests/gateway/test_contractor_turns.py}, which the actual diff satisfies exactly; the line-by-line full-range review found every hunk confined to the contractor seam (typed context, dispatch, sentinel, cleanup reraise)."
+  },
+  "baseline_disposition": {
+    "status": "DONE_WITH_CONCERNS",
+    "head_summary": "Implementer full suite at head: 8 failed, 7713 passed, 19 skipped, 2 xfailed (hermes-gateway-head.log; sha256 verified). Independent rerun of the 8 differential node IDs with review .venv at head: 2 failed (test_session_store_default_db_uses_runtime_hermes_home [AssertionError, test_session_store_prune.py:44], test_profile_command_reports_source_stamped_profile [AssertionError, test_status_command.py:459]), 6 passed.",
+    "baseline_summary": "Implementer full suite at immutable base 97f3229: 8 failed, 7671 passed, 19 skipped, 2 xfailed (hermes-gateway-base.log; sha256 verified). Independent rerun of the same 8 node IDs from /tmp/hermes-board-cranker-50-baseline with the review .venv: identical 2 failures with identical AssertionError classes at identical lines, identical 6 passes.",
+    "common_failure_count": 8,
+    "branch_only_failures": [],
+    "base_only_failures": [],
+    "error_class_changes": [],
+    "nonblocking_inherited_failures": true,
+    "evidence": "hermes-gateway-differential.json (sha256 eb6c2832... matches handback) records identical 8 failed node IDs and error classes at base and head with zero branch-only/base-only/error-class changes. My independent 8-node reruns confirm the differential property directly: head and baseline produce the same failure node IDs and the same error classes under the same interpreter; the 6 suite-order-sensitive nodes pass in isolation at BOTH revisions (they fail only under full-suite pollution, identically at base and head), so no failure is unique to the candidate."
+  },
+  "tests": [
+    {
+      "command": "cd /tmp/hermes-board-cranker-53-spec-review-r1 && .venv/bin/python -m pytest -q -o 'addopts=' tests/gateway/test_contractor_turn_execution.py tests/gateway/test_run_context.py",
+      "status": "FAIL",
+      "summary": "Mandated focused check unexecutable as specified: pytest exit 4, 'ERROR: file or directory not found: tests/gateway/test_contractor_turn_execution.py', 'no tests ran in 0.00s'; neither specified file exists at HEAD or in git history (find + git log --all)."
+    },
+    {
+      "command": "cd /tmp/hermes-board-cranker-53-spec-review-r1 && .venv/bin/ruff check gateway/run.py tests/gateway/test_contractor_turn_execution.py tests/gateway/test_run_context.py",
+      "status": "FAIL",
+      "summary": "Mandated ruff exited 0 for gateway/run.py but warned 'Failed to lint tests/gateway/test_contractor_turn_execution.py: No such file or directory' and likewise for test_run_context.py — two of the three specified files could not be linted because they do not exist."
+    },
+    {
+      "command": "cd /tmp/hermes-board-cranker-53-spec-review-r1 && .venv/bin/python -m pytest -q -o 'addopts=' tests/gateway/test_contractor_turns.py",
+      "status": "PASS",
+      "summary": "Real focused suite at HEAD: 42 passed in 2.67s (exit 0) — independently reproduces green.log's 42-test GREEN and covers the F001/F002/F003 regression tests plus all prior 33GOD-50/51 contractor tests."
+    },
+    {
+      "command": "cd /tmp/hermes-board-cranker-53-spec-review-r1 && .venv/bin/ruff check gateway/run.py gateway/platforms/base.py tests/gateway/test_contractor_turns.py",
+      "status": "PASS",
+      "summary": "Ruff on the actual changed files: All checks passed! (exit 0)."
+    },
+    {
+      "command": "cd /tmp/hermes-board-cranker-53-spec-review-r1 && .venv/bin/python -m pytest -q -o 'addopts=' <the 8 node IDs from hermes-gateway-differential.json>",
+      "status": "PASS",
+      "summary": "Head rerun: 2 failed (test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home, test_status_command.py::test_profile_command_reports_source_stamped_profile; both AssertionError at the same lines as baseline), 6 passed. No head-unique failure."
+    },
+    {
+      "command": "cd /tmp/hermes-board-cranker-50-baseline && /tmp/hermes-board-cranker-53-spec-review-r1/.venv/bin/python -m pytest -q -o 'addopts=' <the same 8 node IDs>",
+      "status": "PASS",
+      "summary": "Baseline rerun with the review worktree's interpreter: identical 2 failures with identical AssertionError classes/lines and identical 6 passes as head — confirms identical node IDs/error classes, zero branch-only, zero base-only, zero error-class changes."
+    },
+    {
+      "command": "cd /tmp/hermes-board-cranker-53-spec-review-r1 && git rev-parse HEAD; git merge-base --is-ancestor <97f3229> <0034641>; git merge-base --is-ancestor <c61c871> <0034641>; git rev-list --count <both ranges>; git diff --name-only <both ranges>; git ls-remote delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+      "status": "PASS",
+      "summary": "HEAD==0034641; both bases are ancestors; full range==4 commits; repair delta==1 commit (0034641); remote branch head==0034641; implementation/review/baseline worktrees all clean after every check (.pytest_cache gitignored)."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "HIGH",
+      "category": "scope",
+      "description": "AC-8 scope mismatch: the actual full platform range changes {gateway/platforms/base.py, gateway/run.py, tests/gateway/test_contractor_turns.py} and the repair delta changes {gateway/run.py, tests/gateway/test_contractor_turns.py}, but the specification's allowlist is {gateway/run.py, tests/gateway/test_contractor_turn_execution.py, tests/gateway/test_run_context.py} (full range) and {gateway/run.py, tests/gateway/test_contractor_turn_execution.py} (repair delta). tests/gateway/test_contractor_turns.py (changed in both ranges) and gateway/platforms/base.py (full range) are outside the specified allowlist, and the two specified test files never existed in git history. The change is nonetheless confined to the contractor seam and matches the 33GOD-51 quality gate's allowlist, so this reads as a specification file-reference error rather than implementation sprawl; the controller should correct the allowlist/filenames and re-run this review.",
+      "evidence": "git diff --name-only 97f3229dfdc06779f348ab8e7bee043262c3aaa7..00346416144c0e42897b79129be2021908830d1d => gateway/platforms/base.py, gateway/run.py, tests/gateway/test_contractor_turns.py; git diff --name-only c61c87117c5eb234c4f84ce8cd1933790d8025b5..00346416144c0e42897b79129be2021908830d1d => gateway/run.py, tests/gateway/test_contractor_turns.py; find . -name test_contractor_turn_execution.py -o -name test_run_context.py => empty; git log --all -- <those paths> => empty.",
+      "file": "tests/gateway/test_contractor_turns.py",
+      "line": 1,
+      "blocking": true
+    },
+    {
+      "severity": "HIGH",
+      "category": "test-executability",
+      "description": "A mandated required check is unexecutable as specified: the focused pytest command references tests/gateway/test_contractor_turn_execution.py and tests/gateway/test_run_context.py, which do not exist, so pytest exits 4 (usage error) after running zero tests; the mandated ruff command likewise cannot lint them (warnings only). Per the verdict rules an unexecutable required check fails the gate. The real focused suite exists at tests/gateway/test_contractor_turns.py and passes 42/42 when run directly.",
+      "evidence": ".venv/bin/python -m pytest -q -o 'addopts=' tests/gateway/test_contractor_turn_execution.py tests/gateway/test_run_context.py => PYTEST_EXIT=4, 'ERROR: file or directory not found: tests/gateway/test_contractor_turn_execution.py', 'no tests ran in 0.00s'. .venv/bin/ruff check <same 3 files> => 'warning: Failed to lint ... No such file or directory' for both test files.",
+      "file": "tests/gateway/test_contractor_turn_execution.py",
+      "line": 1,
+      "blocking": true
+    },
+    {
+      "severity": "INFO",
+      "category": "evidence-path",
+      "description": "The review material's cited fleet registry path /home/delorenj/code/33GOD/hermes-agent-template/config/fleet/agents.yaml does not exist (no config/fleet directory; no agents.yaml anywhere under 33GOD). The live fleet registry is ~/.hermes/agents-registry.yaml (per 33god-platform/components/hermes-fleet.yaml source_of_truth); the 33god-pm disjoint project_path/profile topology was verified there, so AC-1 verification was completed against the real registry.",
+      "evidence": "ls /home/delorenj/code/33GOD/hermes-agent-template/config/fleet/agents.yaml => not found; find /home/delorenj/code/33GOD -name agents.yaml => empty; sed -n '1,60p' /home/delorenj/.hermes/agents-registry.yaml shows 33god-pm project_path=/home/delorenj/code/33GOD with profile_name 33god-pm (home .../agents/hermes/pm/runtime via ~/.hermes/profiles symlink).",
+      "file": "/home/delorenj/code/33GOD/hermes-agent-template/config/fleet/agents.yaml",
+      "line": 1,
+      "blocking": false
+    },
+    {
+      "severity": "INFO",
+      "category": "differential-nuance",
+      "description": "The implementer's full-suite logs show 8 failures at both revisions, but 6 of the 8 are suite-order-sensitive: run in isolation they pass at BOTH head and base (the 2 environment-independent failures — test_session_store_prune, test_status_command — fail identically with AssertionError at both). The inherited-failure disposition still holds (identical node IDs/error classes at both revisions under both conditions), but the 8-failure count should not be read as 8 stable failures.",
+      "evidence": "My 8-node rerun: head '2 failed, 6 passed in 1.23s', baseline '2 failed, 6 passed in 2.42s', same node IDs, same AssertionError classes/lines; implementer logs: '8 failed' at both revisions (grep -c FAILED = 8/8).",
+      "file": "tests/gateway/test_session_store_prune.py",
+      "line": 44,
+      "blocking": false
+    }
+  ],
+  "source_tree_clean_after": true
+}

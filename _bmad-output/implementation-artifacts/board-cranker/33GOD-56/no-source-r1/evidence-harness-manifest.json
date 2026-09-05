@@ -1,0 +1,38 @@
+{
+  "at": "2026-09-05T13:10:49.012577Z",
+  "files": [
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/audit.py",
+      "sha256": "086ee00d2383fb741ecf06655c1dd56d825f7bd16c8be08c6ef26d8b73645a28"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/build_handback.py",
+      "sha256": "49607f5ad83836f9e37cef418389355bd78bccc4edd5a829b61f27ed3d67fc94"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/evidence.py",
+      "sha256": "680beb752977cbc0e564faba2fa9033f1ea37a3980f16a0110d6a478134d9ae1"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/evidence_plugin.py",
+      "sha256": "cdca12088aea9759fe1959ad8e8c71783501fadac530a4647ab2433504285958"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr_metadata.py",
+      "sha256": "1d899ce01ec1f631602f2db464e5bd6331aa06a7c8c666e793e59d9f0d853993"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/preflight.py",
+      "sha256": "764114971045d3a7d93d446024fa1bf6b1d9ce7a40078ab5a5951496bd4e2fdb"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/publish.py",
+      "sha256": "2830ea35d45b3a2429c82b82c398c71b081dedbefbef486a03f1ad8f82b1769b"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/run_gates.py",
+      "sha256": "42ce770b26d574b679c16f63bf6ac1f4c4709ce6c8a80db99c9c7230008f3026"
+    }
+  ],
+  "note": "evidence.py received an optional publication-only environment override after run_gates.py started; the running supervisor retained the originally loaded function. Its process supervision and test environment logic are unchanged. No product sources were edited."
+}

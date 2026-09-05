@@ -1,0 +1,11 @@
+{
+  "name": "travel-head",
+  "command": "PYTHONDONTWRITEBYTECODE=1 python3 git/hooks/_travels.py HEAD",
+  "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+  "started_at": "2026-09-05T09:58:20.617411+00:00",
+  "finished_at": "2026-09-05T09:58:20.642674+00:00",
+  "stdout": "",
+  "stderr": "",
+  "exit_code": 0,
+  "status": "PASS"
+}

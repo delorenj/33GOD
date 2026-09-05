@@ -1,0 +1,20 @@
+== remote refs (read-only ls-remote) ==
+54aca968fd16e428fe1378f6f401c068d17e5c4a	refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry
+02481c8df4cedbdc11081fe41fcf01859a399566	refs/heads/main
+== tree equivalence (from r2 worktree object store) ==
+merge_commit_tree=7d122550387e1459794acf81ae37bbeef879de07
+reviewed_head_tree=7d122550387e1459794acf81ae37bbeef879de07
+== r2 worktree state ==
+r2_head=02481c8df4cedbdc11081fe41fcf01859a399566
+r2_detached=DETACHED
+r2_status:
+(empty = clean)
+== feature worktree state ==
+(empty = clean)
+54aca968fd16e428fe1378f6f401c068d17e5c4a
+== quality-review worktree state ==
+(empty = clean)
+54aca968fd16e428fe1378f6f401c068d17e5c4a
+== primary checkout /home/delorenj/.agents ==
+ M git/hooks/_guard.sh
+guard_sha256=4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c

@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "branch",
+    "--show-current"
+  ],
+  "attempt": 1,
+  "command": "git branch --show-current",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-branch-preflight.log",
+  "name": "base-branch-preflight",
+  "sha256": "bfc1035f307e553676c872658ba1a254ee56bfa7caefab2b6201f679d96d7796",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

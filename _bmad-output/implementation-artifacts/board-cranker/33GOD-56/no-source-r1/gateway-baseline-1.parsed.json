@@ -1,0 +1,300 @@
+{
+  "collection_errors": [],
+  "exit_status": 1,
+  "failed_nodes": {
+    "tests/gateway/test_api_server.py::TestDisconnectedAgentReap::test_stop_run_reaps_owned_processes": [
+      {
+        "error_class": "builtins.AttributeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_active_work_drain.py::TestDrainWaitsForApiWork::test_drain_waits_for_real_queued_run_before_agent_creation": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_declared_conversation.py::TestRealRunAgentSettlement::test_runs_explicit_unkeyed_session_stays_unbound": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_declared_conversation.py::TestRunsHandlerPrecedence::test_declared_key_selects_the_conversation": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_declared_conversation.py::TestRunsHandlerPrecedence::test_explicit_body_session_outranks_the_header_key": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestHostedRoomRuns::test_room_approval_requires_and_resolves_exact_request_id": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestHostedRoomRuns::test_scoped_grant_admits_group_session_run_without_peer_api_key": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunEvents::test_approval_resolve_all_is_scoped_to_target_run": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunEvents::test_events_stream_returns_completed": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_capacity_rejection_does_not_reserve_key": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_changed_payload_conflicts": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_concurrent_duplicate_starts_once": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_dead_owner_nonterminal_status_becomes_interrupted": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_direct_status_hydrates_after_adapter_restart": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_invalid_body_does_not_consume_idempotency_key": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_memory_scope_participates_in_fingerprint": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_missing_key_preserves_legacy_new_run_behavior": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_no_session_id_does_not_load_session_history": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_replay_bypasses_concurrency_limit_and_preserves_session_header": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_sequential_duplicate_reuses_original": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunLifecycleSweep::test_expired_live_run_drops_transport_but_keeps_control_state": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunOwnershipAcrossProfiles::test_session_chat_stream_run_is_owned_by_creating_profile": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunStatus::test_status_reflects_explicit_session_id": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestRunsProviderAuthFailure::test_status_reports_provider_auth_failure_distinctly": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_binds_chat_id_for_delegation_wake_target": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_passes_request_model_provider_options_to_create_agent": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_returns_202": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestSteerRun::test_pending_steer_preserved_on_run_completed": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestSteerRun::test_steer_running_agent": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestSteerRun::test_stop_then_steer_rejects_retained_agent_ref": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestStopRun::test_completion_wins_before_uncooperative_stop_is_acknowledged": [
+      {
+        "error_class": "aiohttp.client_exceptions.ContentTypeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestStopRun::test_stop_running_agent": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_api_server_runs.py::TestStopRun::test_stop_sends_sentinel_to_events_stream": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg": [
+      {
+        "error_class": "builtins.AttributeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments": [
+      {
+        "error_class": "builtins.AttributeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg": [
+      {
+        "error_class": "builtins.AttributeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_platform_base.py::TestMediaDeliveryDiagnosability::test_rejected_path_appears_in_log": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_scale_to_zero.py::test_suspend_self_non_2xx_is_false_not_raise": [
+      {
+        "error_class": "builtins.OSError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_scale_to_zero.py::test_suspend_self_posts_suspend_for_this_machine": [
+      {
+        "error_class": "builtins.OSError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_shutdown_watchdog.py::test_loop_tick_witness_arms_on_posix": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_teams_pipeline_runtime_wiring.py::test_build_pipeline_runtime_skips_sender_when_adapter_layer_is_unavailable": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent": [
+      {
+        "error_class": "builtins.AssertionError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_wecom_callback.py::TestWecomCallbackEventConstruction::test_build_event_extracts_text_message": [
+      {
+        "error_class": "builtins.AttributeError",
+        "phase": "call"
+      }
+    ],
+    "tests/gateway/test_wecom_callback.py::TestWecomCallbackPollLoop::test_poll_loop_dispatches_handle_message": [
+      {
+        "error_class": "builtins.AttributeError",
+        "phase": "call"
+      }
+    ]
+  },
+  "name": "gateway-baseline-1",
+  "passed": 7642,
+  "reports_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-baseline-1.reports.json",
+  "reports_sha256": "4ee713d342d50296a6afd9562377e5e6872bd283cf75cb9892045d43d60d53bd",
+  "skipped": 46,
+  "tests_collected": 7736
+}

@@ -1,0 +1,61 @@
+{
+  "argv": [
+    "gh",
+    "pr",
+    "edit",
+    "102409",
+    "--repo",
+    "NousResearch/hermes-agent",
+    "--title",
+    "feat(gateway): stateless contractor turns (33GOD-54, 33GOD-56; b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d)",
+    "--body-file",
+    "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-body.md"
+  ],
+  "command": "gh pr edit 102409 --repo NousResearch/hermes-agent --title 'feat(gateway): stateless contractor turns (33GOD-54, 33GOD-56; b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d)' --body-file /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-body.md",
+  "command_finished_at": "2026-09-05T14:04:12.870147Z",
+  "exit_code": 1,
+  "finished_at": "2026-09-05T14:04:12.981071Z",
+  "finished_monotonic_ns": 1345835569334930,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-metadata-update.log",
+  "name": "pr-metadata-update",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "gh",
+          "pr",
+          "edit",
+          "102409",
+          "--repo",
+          "NousResearch/hermes-agent",
+          "--title",
+          "feat(gateway): stateless contractor turns (33GOD-54, 33GOD-56; b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d)",
+          "--body-file",
+          "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-body.md"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 217838,
+        "pid": 217838,
+        "ppid": 217129,
+        "session": 217838,
+        "start_ticks": "134583495",
+        "state": "S"
+      }
+    ],
+    "pid": 217838,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 217129
+  },
+  "sequence_index": 0,
+  "sha256": "84ddd16bf41776ac0a8a081916e8ce6f59a063e15e3d7085af50e2e285424886",
+  "started_at": "2026-09-05T14:04:12.364970Z",
+  "started_monotonic_ns": 1345834953203487,
+  "status": "FAIL",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

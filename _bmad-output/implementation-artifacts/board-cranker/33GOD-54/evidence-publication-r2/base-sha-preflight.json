@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse HEAD",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-sha-preflight.log",
+  "name": "base-sha-preflight",
+  "sha256": "6ea940225cf91f5b88c4ff1563a5e3614509c63dd59b17e80edd7f88bc6707fa",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

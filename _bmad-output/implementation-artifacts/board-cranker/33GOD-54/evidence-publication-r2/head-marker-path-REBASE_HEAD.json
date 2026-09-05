@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "REBASE_HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path REBASE_HEAD",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-REBASE_HEAD.log",
+  "name": "head-marker-path-REBASE_HEAD",
+  "sha256": "563f0a7ed7ca6f50ca31621e03a9e965fb59886ac9385e8c738318a652ffa136",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

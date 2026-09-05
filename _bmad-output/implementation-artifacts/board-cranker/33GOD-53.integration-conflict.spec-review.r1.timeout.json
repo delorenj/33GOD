@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "spec-compliance",
+  "review_cycle": "integration-conflict-r1",
+  "status": "TIMEOUT_NO_VERDICT",
+  "reviewer": {
+    "agent_id": "codex-33god-53-integration-spec-review-r1",
+    "provider": "openai-codex",
+    "model": "gpt-5.6-terra",
+    "attempt": 1
+  },
+  "immutable_review_range": "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "started_at": "2026-09-05T00:40:17Z",
+  "deadline_at": "2026-09-05T01:10:17Z",
+  "finished_at": "2026-09-05T01:10:17Z",
+  "hard_timeout_seconds": 1800,
+  "exit_code": 125,
+  "processes_alive_after": false,
+  "canonical_handback_present": false,
+  "final_turn_completed": false,
+  "provisional_agent_messages": 4,
+  "transport_disposition": "REJECTED: multiple explicitly incomplete provisional objects and no final turn; no field was repaired and no verdict was consumed",
+  "worktree": "/tmp/hermes-board-cranker-53-integration-spec-review-r1",
+  "worktree_head": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "worktree_clean": true,
+  "baseline_worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+  "baseline_head": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+  "baseline_clean": true,
+  "evidence": {
+    "exit": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r1.exit.json",
+      "sha256": "d0bceb28ec831e7408cada8f2960f62fb3fad77940f85916286adad87d27e291",
+      "size": 518
+    },
+    "pids": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r1.pids.json",
+      "sha256": "2dc5f9daa92b36ff032b9d706e27995731d39a028b627c091d77bf7b19a5f9a1",
+      "size": 416
+    },
+    "raw": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r1.raw.jsonl",
+      "sha256": "cb85b303340ee29f42cf6556d15f4af24713cc4eb2e8a8207dce0c3223d8d381",
+      "size": 597139
+    },
+    "stderr": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r1.stderr.log",
+      "sha256": "314142b2b0a03da0fef5ccd024d10284d4996170bf85fa01b71248fb436c7a0a",
+      "size": 286
+    },
+    "prompt": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r1.prompt.md",
+      "sha256": "f9c341702e089cbc1df4a0ff003258ee45efe28339380f54df39512bf2d0ec72",
+      "size": 9358
+    },
+    "schema": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r1.schema.json",
+      "sha256": "008a41027ff641fcb8faee556ed31578f0034be351d167ed26a545b7ffc09374",
+      "size": 7985
+    }
+  },
+  "recorded_at": "2026-09-05T03:05:52Z"
+}

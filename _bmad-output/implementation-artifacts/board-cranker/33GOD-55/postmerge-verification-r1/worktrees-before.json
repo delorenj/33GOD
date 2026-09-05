@@ -1,0 +1,183 @@
+{
+  "captured_at": "2026-09-05T09:57:17.418642+00:00",
+  "worktrees": {
+    "postmerge": {
+      "path": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+      "status": {
+        "argv": [
+          "git",
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "HEAD"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+        "exit_code": 0,
+        "stdout": "02481c8df4cedbdc11081fe41fcf01859a399566\n",
+        "stderr": ""
+      },
+      "branch": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--abbrev-ref",
+          "HEAD"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+        "exit_code": 0,
+        "stdout": "HEAD\n",
+        "stderr": ""
+      }
+    },
+    "feature": {
+      "path": "/tmp/agents-board-cranker-55",
+      "status": {
+        "argv": [
+          "git",
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55",
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "HEAD"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55",
+        "exit_code": 0,
+        "stdout": "54aca968fd16e428fe1378f6f401c068d17e5c4a\n",
+        "stderr": ""
+      },
+      "branch": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--abbrev-ref",
+          "HEAD"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55",
+        "exit_code": 0,
+        "stdout": "feat/33GOD-55-git-travel-guard-remote-ancestry\n",
+        "stderr": ""
+      }
+    },
+    "quality_review": {
+      "path": "/tmp/agents-board-cranker-55-quality-review-r1",
+      "status": {
+        "argv": [
+          "git",
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55-quality-review-r1",
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "HEAD"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55-quality-review-r1",
+        "exit_code": 0,
+        "stdout": "54aca968fd16e428fe1378f6f401c068d17e5c4a\n",
+        "stderr": ""
+      },
+      "branch": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--abbrev-ref",
+          "HEAD"
+        ],
+        "cwd": "/tmp/agents-board-cranker-55-quality-review-r1",
+        "exit_code": 0,
+        "stdout": "HEAD\n",
+        "stderr": ""
+      }
+    },
+    "primary": {
+      "path": "/home/delorenj/.agents",
+      "status": {
+        "argv": [
+          "git",
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "cwd": "/home/delorenj/.agents",
+        "exit_code": 0,
+        "stdout": " M git/hooks/_guard.sh\n",
+        "stderr": ""
+      },
+      "head": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "HEAD"
+        ],
+        "cwd": "/home/delorenj/.agents",
+        "exit_code": 0,
+        "stdout": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f\n",
+        "stderr": ""
+      },
+      "branch": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "--abbrev-ref",
+          "HEAD"
+        ],
+        "cwd": "/home/delorenj/.agents",
+        "exit_code": 0,
+        "stdout": "main\n",
+        "stderr": ""
+      },
+      "guard_sha256": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c"
+    }
+  },
+  "refs": {
+    "argv": [
+      "git",
+      "for-each-ref",
+      "--format=%(refname) %(objectname)"
+    ],
+    "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+    "exit_code": 0,
+    "stdout": "refs/heads/checkpoint/2026-07-22 ed2d67dc9dce9fe8486c8739ddcdb9fbf6ed4171\nrefs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry 54aca968fd16e428fe1378f6f401c068d17e5c4a\nrefs/heads/main 36d3ed6627b1ee1819952617d7d4ebfcebc2708f\nrefs/heads/wip/agents-doc-update 7a6d47cf8799c7bba838e98f84caf542c83dfc81\nrefs/remotes/origin/HEAD 02481c8df4cedbdc11081fe41fcf01859a399566\nrefs/remotes/origin/feat/33GOD-55-git-travel-guard-remote-ancestry 54aca968fd16e428fe1378f6f401c068d17e5c4a\nrefs/remotes/origin/main 02481c8df4cedbdc11081fe41fcf01859a399566\nrefs/remotes/origin/wip/agents-doc-update 7a6d47cf8799c7bba838e98f84caf542c83dfc81\n",
+    "stderr": ""
+  },
+  "invariants": {
+    "all_commands_exit_zero": true,
+    "postmerge_at_merge": true,
+    "postmerge_detached": true,
+    "postmerge_clean": true,
+    "feature_clean": true,
+    "quality_review_clean": true,
+    "primary_only_expected_change": true,
+    "primary_guard_hash_matches": true
+  }
+}

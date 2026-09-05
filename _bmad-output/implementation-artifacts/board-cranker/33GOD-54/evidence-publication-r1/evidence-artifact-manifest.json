@@ -1,0 +1,734 @@
+[
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/adjacent-head.json",
+    "sha256": "7981bf6e1830b49aadbc1bff43a80dd1b9caf7d4efaa0d46e04b5c08a26887ef"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/adjacent-head.log",
+    "sha256": "99a64ef6f5e0b7054342fa0151e289756472873d663fcea3287fbcebac9180eb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-branch-final.json",
+    "sha256": "ef17b30ed5d8f6a16e34846c6bda8a5934b3b198271e5c8f024c6b8cfc2e86bd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-branch-final.log",
+    "sha256": "b06674b810db03626c55267c9ab0f7cb14775508460beb549fadd2794359b109"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-branch-preflight.json",
+    "sha256": "99467d05191841ca8aa99153eb80404bcdbc253c05d1d717027a0353393f63e7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-branch-preflight.log",
+    "sha256": "4f9bea1b9968748641fd1ad9f47036e6fad9b0c1389d47d035e2af5ad49bf7ba"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-cache-ignore.json",
+    "sha256": "72938341c3eb58fc795abb6ad726addc97d82b642f410548d7293d0c347daa9c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-cache-ignore.log",
+    "sha256": "fd002e16035e0ce0475aa9369fbbdc7ce4b14324104cb2a7aaed0611d8d82892"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-final.json",
+    "sha256": "888b95788fedc972b1002f213fe7725ecbffa69152d8e0acbdd22fe077b0c795"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-final.log",
+    "sha256": "533b1d7bebad48457abde9311faaf47ec35f908609297d345ecedc771e272015"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-preflight.json",
+    "sha256": "88ec6b5bb5f8fdfc4b4dc787351ac0c55f3a411e48fdcf737ff854c6272407ea"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-preflight.log",
+    "sha256": "d6b7f57030562ac152db530181894037646cb4258786fb99b5a8a238669f7ff6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-prepublication.json",
+    "sha256": "040f7786fa1222141ee88e34e1632ffe1ce01d1eb0c642db37c8fda60408f4d6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-prepublication.log",
+    "sha256": "3d498fba456d86ea0ec8ae47c7e9cdd8a545da5c22010e6f70615a65977bd52c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-common-dir-preflight.json",
+    "sha256": "dcd548f866514f56ab97163df8b22dd9499f0e0f93687b554fe753759b5a1ca2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-common-dir-preflight.log",
+    "sha256": "381353b6742063cafaa9aaf2eaf235567161db7bca3678ff2c4e67717dc051bd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-BISECT_START.json",
+    "sha256": "ff591b3993cf414d5a86ce136d230859c5137c899f60db13ae36555ee0d00f9f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-BISECT_START.log",
+    "sha256": "859078d2749795ac2c75cefea83227bb2d056ceaada09278a4d981ba1f794a53"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-CHERRY_PICK_HEAD.json",
+    "sha256": "c7378717d73b1fdce12197afefe5106502e6a7406a84889ad6b05373b0686d58"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-CHERRY_PICK_HEAD.log",
+    "sha256": "162a6e429eb682fe2b07e8d82fdfdf9d9bf4e8952f0fc1ec73b7b71da3bbb631"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-MERGE_HEAD.json",
+    "sha256": "49f3c4e0daaea266dafaaef7f99034fcb8db0437be8e878c5c35c90b28c4f843"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-MERGE_HEAD.log",
+    "sha256": "74194d5af9fcd114c49f21722eefb1495c01dc1183ea0f0472d488932017ab0b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-REBASE_HEAD.json",
+    "sha256": "56ed49a467e5ad8c336c74a2151f44bdc44fb3bad5baddff72691b2eb921d611"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-REBASE_HEAD.log",
+    "sha256": "53bde0a40e49cd5e9b036b0f453c1ccfd7d1c2e8b1c2bc9b26433631101288e2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-REVERT_HEAD.json",
+    "sha256": "7b66c6cb8965d56989c74a8d973a9042a7095ca1c13915d8dec60b627176b4d9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-REVERT_HEAD.log",
+    "sha256": "4242bff357504b883cea4d003d689bc8c7e54cc04e56e0a38d5319a1a07a02d6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-index.lock.json",
+    "sha256": "27b6eac421d8f3f7b6b32ffefeb29c64156fffd94aadcf3e58efb071ab377166"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-index.lock.log",
+    "sha256": "136a88a045d15d27fa0cbf942abae22be6e841ec824eca7333a7c4f609d117ab"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-rebase-apply.json",
+    "sha256": "75a5e15b931bbbad6b6596dd48f54fbc17a3d793c6e6d6f2e02ee38c4741e2ce"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-rebase-apply.log",
+    "sha256": "e9486369396c6ad46f63e7d62db27f0fa5f9647da09d88b3507ba374d24c9c35"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-rebase-merge.json",
+    "sha256": "f240cd7904d0f701c23fd764849fda27a96aa9bec3f09eda1d76bcdddfccbd6c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-rebase-merge.log",
+    "sha256": "f65872292b2c6fc8092563ae1929f3cc849dc6340ba19f036ed618c832d44d3a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-sequencer.json",
+    "sha256": "fc624b90e6599f8533bd9aac893ad7b18ed73d86ca125dd898ee55f3d0d6d013"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-marker-path-sequencer.log",
+    "sha256": "0084b54d3db867cdc5f79c0b66d707af9acc70ec3b3d26072d98aa8c9f9b2260"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-operation-markers.json",
+    "sha256": "410d4bfd4ad82b075dc3d10cf3ae28122cad05be3de322a62a1736ecd92a170c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-sha-final.json",
+    "sha256": "475974ee6185cb760d379c1ee920bd2729d103bea3d469a4e463fadfea7bea82"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-sha-final.log",
+    "sha256": "1d6c69cd78c4adcaedd4a30f482a0cf2273a4bb547678e18291a0914fe84ac99"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-sha-preflight.json",
+    "sha256": "5d04e88062672a0de392bbc8a2181ea784e2faeeecfff1ad69878cffeca3f38a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-sha-preflight.log",
+    "sha256": "3ff70cca92b77f67906b635b6907ab2b2083a27dc404490e3d64dee74c7a9fed"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-sha-prepublication.json",
+    "sha256": "7cb6e6ef80d2a7850121913052dca0ef4dd1aa9913dd48bfac7fa682e0cb1149"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-sha-prepublication.log",
+    "sha256": "8df7929acf9b338217b9d986f6fdd9070586a9a018fcc9424d590e00a162ac15"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/build_handback.py",
+    "sha256": "9e251302677f09e5f206bbd9e4254994f24bac1eb69d675dc5c3d2019ff40afb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/command-manifest.json",
+    "sha256": "0e8a4c2530d48ef2c27709765cd61f07fe7c8422e959204b2c5b0af76c0aa8bc"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/comparison-finalization.json",
+    "sha256": "f4dda381a1d764ba8fa54fb6fda959f2800fd10fda79201d7eb98cf50b0225e0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/comparison-finalization.log",
+    "sha256": "3dcc68fabfbe6c0db0edc009dc83604d4a3ab52562364edc190d7a2aaa43734a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/compile-head.json",
+    "sha256": "3c8f183f5de69cdf217c167862f37d1ca00063b1d7baf6ff92db7e568b7e9422"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/compile-head.log",
+    "sha256": "684af0f9ec88a352ea98328070d8c4e9233e61ab2a69330c5a48f68b39d92553"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/diff-check-head.json",
+    "sha256": "a69a6fc1ff6dd892cf127aeb93ad75ca64b8ee354b77197a761705735905dd9b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/diff-check-head.log",
+    "sha256": "7cbdbe8d720474954425c633dd246b1237fa435f61b0cffda5c20d9c1eddc3fe"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/differential_parser.py",
+    "sha256": "59790e8c49982ade9c386cd3756a0afd01f833fb508243253a7e69e1f0e8b739"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/execution-policy.json",
+    "sha256": "c57b7073610cad354e292be65b4f3d402601e2f0de81eb209fdafd63735b5254"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/final-audit.json",
+    "sha256": "429278ac09cd8a9577b168dab48bdae9542a803766ee3a942c2a7dba50550f6c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/final-audit.log",
+    "sha256": "9ecdfdf740fbb0e41024fa61855aab1b7b7000eb3c16cffc36d8c2324f07eead"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/final_audit.py",
+    "sha256": "55340b4900955566f34d2f990f2e91cfa9c08a0dd95db892d2d365aedcf5edf9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/finish_comparison.py",
+    "sha256": "ac4faa39d638628f2b96a74aca47272fd8ae0849ea5d40b8bb4f6a7c9b42ee73"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/focused-head.json",
+    "sha256": "4f9b8b105055f383169bc321f7a547147940b7ebd8351fcbf3d2de374db0a05d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/focused-head.log",
+    "sha256": "1bccc29c550e1e0bcbb9260a68f211fc54df092a7502de594b9f641be05c6510"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/forbidden-scope-audit.json",
+    "sha256": "035b1082b0607f81f77c06ea7b2d66c2cd7d9ee533099a5f48a7b7b119d5813a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/fork-url.json",
+    "sha256": "6d001747fb36f1c81c2e73ef2e91fe5cb7ddd8c00ab3f50f9d719728179bcb49"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/fork-url.log",
+    "sha256": "962f017e60836137e8d677facd6734fe8ab6bd67e46e1c248b5019b4783fe56a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/full-comparison.json",
+    "sha256": "ee2b9a3cf8921063e31efdbd471b7fad57123ff419f9daade023ff15fb45175d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-base-1.json",
+    "sha256": "5613e5ccd670320280e47fb4816742cca5f18f2e3fb8f60accbeac5db6504702"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-base-1.log",
+    "sha256": "1d83e6cf0d0faa59cdd83ee6cf27c93cfad8c67608f5ed889f6a0ac4e3d8319b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-differential-1.json",
+    "sha256": "a000b25b39de602ab4239c08b5627c88f8225f08fadfd6477a3820f4cb1ed81d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-head-1-failures.json",
+    "sha256": "7e91b7fdef49d2e172656634d52e87cf52a2220b226b7a0de6fefa13044e8b19"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-head-1.json",
+    "sha256": "96a2164ed917c9a02a7585db0af418bd6e995668c1ae3a7ca51b4ba10b30fb96"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-head-1.log",
+    "sha256": "97d90d03c732a3455a020bd05378d4d1458dad01fa44e522cd858253985c9437"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-branch-final.json",
+    "sha256": "b0389033901e85a970769122a8d0ad55468f8983cf22f5a823f6eed9bea8b5eb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-branch-final.log",
+    "sha256": "0385345f6804097f97390f89b763f3ba999f8dace8fd9bd1f0d9b991aa7a2935"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-branch-preflight.json",
+    "sha256": "e42328ef9ea52306090a80c1b3f54dc6e3ea92ce0c7f6ef5fec4a7d6f970e2f9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-branch-preflight.log",
+    "sha256": "da0c083030b6657efe2337d29d3c157a5e4d01f2c8171a560e63397235aa4ed6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-cache-ignore.json",
+    "sha256": "49241b3a54584d3b884faf7ed25e5b1b755ac9f25a756a18031e2b3adaf35080"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-cache-ignore.log",
+    "sha256": "6142e98fcb50dad84b841517084157c3846958ea5f5b78c4074976a6238a18ae"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-clean-final.json",
+    "sha256": "6924ab4cad2d0d92909906caf6912c47dc97483454909d266506e4ddf265b516"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-clean-final.log",
+    "sha256": "905e8d38e3b1ece8e8882b6f638ec53f5bd5c9897f850b9ee8c52a5991896301"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-clean-preflight.json",
+    "sha256": "98fdefecec5b6a3633401257beb3a2e986469bdb84c825c92bd682d3ba027687"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-clean-preflight.log",
+    "sha256": "0de54d9713cb22844590747262375c656ad2dbc62fcd1f33d46884df0c537836"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-clean-prepublication.json",
+    "sha256": "0cc288567009a2f9db79c8980684021edf81889f28da4ceee5e0dabf8b5388a2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-clean-prepublication.log",
+    "sha256": "656f3b75d2e20427812b8472018c9346092c1a2582e9bfb56b211f1b96053751"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-common-dir-preflight.json",
+    "sha256": "68e71afa48aa016ed3af039ff3101db2e3c24d8140d54ceb4d7cd1f541215792"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-common-dir-preflight.log",
+    "sha256": "58538180670d3189c12dc3f2c0078a15055e3cafe57c389912d6fcdc9cefe78d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-diff-files-final.json",
+    "sha256": "1c466d29a32aaf7fe8e140ea5a19722059a935338f95433d829e0de1a9980c88"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-diff-files-final.log",
+    "sha256": "aadc72e0f22dbe8533c885191f3f5ee41ec5674fef7c402b350d637a46cdda83"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-diff-files.json",
+    "sha256": "21b05f8b8421c76d95f5009e691eb531e51fd16a1ad417b1bdd2a38cb82e3db0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-diff-files.log",
+    "sha256": "820a5bb06197df7d81cbbe039e1bc7a98d50d06f188f3e4e087d91003b3914fa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-first-parent-ancestor.json",
+    "sha256": "f2daf695b5331e1f71246e5eda9bbade2780106baa62b25275ef706a8cbad1fd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-first-parent-ancestor.log",
+    "sha256": "f890e7cc15d0e6f3deb910e77aebeb998b920634b036e634b3bf4c1d07f85463"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-BISECT_START.json",
+    "sha256": "9228cd3a3b8b2bacf2d2a7246c7265fb8690b5e652183ba4e3dd6232fa495079"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-BISECT_START.log",
+    "sha256": "0f025c09ef1ca2c3974916ee340b977a34df491e22a712fb1705abe7820ecd26"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-CHERRY_PICK_HEAD.json",
+    "sha256": "d4639dca1627e1d2932eb16b0414af19cdb146ba31d5222185a9b139c5d43fcd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-CHERRY_PICK_HEAD.log",
+    "sha256": "b84203432a9d971ebadc675c3895a15343c9d20a15789fdbd2c5b826b2f0658b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-MERGE_HEAD.json",
+    "sha256": "8dc02034c8195577f6a74d2504f0bc683f6f1da33413cb615d37033590353498"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-MERGE_HEAD.log",
+    "sha256": "5fbc3d9fb854855372ae626055aa9afabb5e1fe3fa91eca7f43a9eedd6265527"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-REBASE_HEAD.json",
+    "sha256": "39351c8d9ef12fec209e847bc60860f348c826173c68d51ef5ea0cb671417c33"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-REBASE_HEAD.log",
+    "sha256": "e03aa3ecba1af15f80957cb29017748690410cc9950fcd6aa62d7f2139008f45"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-REVERT_HEAD.json",
+    "sha256": "66e55678bfd5d6a94e53d6a56667bc6815833231b25c898a8469ab3601fc3050"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-REVERT_HEAD.log",
+    "sha256": "0b0bc12b461de22025045456649c809fc1e53014f72e896597ecbbcdef967971"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-index.lock.json",
+    "sha256": "6c4b06d748e63e50d399428bccb117a3eed5ae1e4ebdc964e47b741c15415fa6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-index.lock.log",
+    "sha256": "0b4029f7f14424769eddb0c0c052dc87f4e3b7559d5fd03066b897cf24d92b77"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-rebase-apply.json",
+    "sha256": "787f9ab02aa44628f8d6bf8ca1896bd682e7558c61eff0c0735eab26d5d797d7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-rebase-apply.log",
+    "sha256": "f42eb7cd3d4081d8b4917241750455cf9d2dc2c435fc2d6004f3ed57ce79ec70"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-rebase-merge.json",
+    "sha256": "020243bd2c362912e8431779c55b29c714e0c55b0f66375925a340b8acc9f52b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-rebase-merge.log",
+    "sha256": "49b0d05fe96ed3f626e1203cf14dc5cd4319974c180feb57087e95fcc667935c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-sequencer.json",
+    "sha256": "232fb13e823ee82338b8046a8427afb6020458eb37893878dfc0f55b11ca918c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-sequencer.log",
+    "sha256": "42bf51851743687c834c3fb3d7148fdddb7b9122739cfe2238ad9e8f5d1ec849"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-operation-markers.json",
+    "sha256": "70ce6eb4b1c716e7ab263973aa480e49f68c6d09bb68d1e08f3f46ea8574a323"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-ordered-parents.json",
+    "sha256": "eaea4a1418d3265daa2b0e6929197603c6afe6e7222252a9fd257822446d39fa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-ordered-parents.log",
+    "sha256": "2914878c829d73bd62554afa76587ffa7e645ac5a7d099ccd501869f820ffc3e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-parents-final.json",
+    "sha256": "2915ee05ffaf9aad821842bd065e835c265b024f930f55929ce029642565fa36"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-parents-final.log",
+    "sha256": "a8e6999e7c1419cf8c6e276c0485f45c770d274de6adc4d6b6ef35364578c674"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-final.json",
+    "sha256": "5fd134b9c00964f0680492b90b42b3b96332c53a33bc7b50c907fb8660b334f1"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-final.log",
+    "sha256": "f1be116b764698af8283b4fee88fcc86efa66e425725091e942493c083a6e8c7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-preflight.json",
+    "sha256": "dc976ab60fde734c0dcc9810486b2e9fa75cd31fde8a814d5e3a0df92fcd90d1"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-preflight.log",
+    "sha256": "a3d9fe2c2af77fde82ba7504979b31c81dd01cb2aaaca1c1673e054243458018"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-prepublication.json",
+    "sha256": "b042810026f9f24a647eb4a28ac89030d2c14ad83115e1537bdf454c2d8c4023"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-prepublication.log",
+    "sha256": "04b39c96e54bba13620db54cafaf132d95aefe526491a987e3effd654f560fc9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-upstream-ancestor.json",
+    "sha256": "98a7c5df62e4d205758df44b692836c4c7a439f12c6185d9f2fe361979da5e5c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-upstream-ancestor.log",
+    "sha256": "dfa33e063c15151935f7650b833c78b4d93aa6f6aeacc4f8a2c4bc2eb52c1e7c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/immutable-ground.json",
+    "sha256": "d483ed7e930add1244a7603e29f8c49d41ae53e51b043b7111d9c2648e82a906"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/import-paths-base.json",
+    "sha256": "2a38fc9f69de2b5a431fdb44208a753719c02c2867bea6d8bda5ff4b3b1079b3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/import-paths-base.log",
+    "sha256": "7f9fb0167a108ec6b1c9682f88e59653364981867773fbd1085bb3d5dea16fa0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/import-paths-head.json",
+    "sha256": "da2a6701355d8b3311f42fc83007ea37b1c32dd458de20a9c6d56ac1ce6ba852"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/import-paths-head.log",
+    "sha256": "fd50f0f0c9266ef05a69c38884fecda1e17b3d5d9b23a868ab6941770459a56d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-final.json",
+    "sha256": "28179ba25b00bd0e256273d522d85ec37fd0c56081298202485be1a4a3488751"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-final.log",
+    "sha256": "41dab70e1fa3404ba7972946e70a6249dd24ab77b7390f39701a0f7e4979540f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-preflight.json",
+    "sha256": "d373f9f9ca18aea54f5f5866f51decb1a174dc093f6cfb101371f6938e9c621f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-preflight.log",
+    "sha256": "3f9af0220e23d3eeabf782918c250f423f9b76f097e6fb8fe50b5a9a5426416f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-prepublication.json",
+    "sha256": "02acd23695e06905d9dcf2c00034c929676d6fa0692415573c3c12c05d84c3c2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-prepublication.log",
+    "sha256": "76a074d9c72e75ce8678fd35b0de742a560419dd166bd4afa2ed4ff914130d05"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/parser-prior-validation.json",
+    "sha256": "ccc37218b18d8c6a11e350e59755feb46a6c1087a181acc7fe39662842095b2a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/parser-prior-validation.log",
+    "sha256": "2a3e10b92d8546c4f6d84ef68e80fb49a0211c45eebc94b7272a5e2bf9831ade"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-after-blocked-push-readback.json",
+    "sha256": "f44927616e3eb708b7e5c5fd9047346016e814c506fe9c1678432640934e61b5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-after-blocked-push.json",
+    "sha256": "0c2ed633b199ac6a1bd91555fc6d12513074dde0df67ee3317e4008acb061149"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-after-blocked-push.log",
+    "sha256": "296a7048218d351db61e43a3d419afe85f7fc6dee5a3d27e2bd54271b20d0706"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-preflight-network-readback.json",
+    "sha256": "f44927616e3eb708b7e5c5fd9047346016e814c506fe9c1678432640934e61b5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-preflight-network.json",
+    "sha256": "9068c654daeb6735c3de926015014e278fe1376639f5b3ecb47cf293be83e9a7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-preflight-network.log",
+    "sha256": "992389f76e76f3580ff417f31e255a077f9d05f3012a1c5c3ba26008de229178"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-prepublication-readback.json",
+    "sha256": "f44927616e3eb708b7e5c5fd9047346016e814c506fe9c1678432640934e61b5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-prepublication.json",
+    "sha256": "249f56799b42026147b297d64ab8cbefafe47bfce618ab58a227a7108f8ec951"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-prepublication.log",
+    "sha256": "2c6d579a3d054938cb1afeb5ddb4c9aa53dc343fa048f893957859b0127980fe"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-template.json",
+    "sha256": "3a59d462c9d63b2cf4b39df4ab1cc0797ca407b728b3a4564f1659196f7ddf1f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-template.log",
+    "sha256": "3356bcacfae1d0cc5e728073556469a97d17194a42199e5c8f97f3d0b4927a70"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/preserved-evidence-final.json",
+    "sha256": "6c61866f8ad4dcdcb6463c764d05d779f00c446fd1398fea21b744e127ab8088"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/preserved-evidence.json",
+    "sha256": "dd525d145af8e57ca98d5f91c1309db1856164fef7c6cb83e18f08c5d0fea95d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/publication-blocked.json",
+    "sha256": "79b88d83501fba15fca832867b5c9f8c61a2441826dd73f5269f0b3e00366b63"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/publication-workflow.json",
+    "sha256": "036c4fdbab09fe1365a641b966cd7a251613a882d25f28b1072959383f50c5e3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/publication-workflow.log",
+    "sha256": "95265aeabb6caab9ae6c712061dfb97d23cd9a79a2859a0d291e108f590ed9ae"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/publication.py",
+    "sha256": "712c9b2e583d9114f02a06375eb14840d8369239891bbb8aefa8df18d23db7af"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.json",
+    "sha256": "2329eb0fe2d2bf36844bf18d718f2822c4ab775897faad8cab407d52970ea376"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log",
+    "sha256": "0fa893d26942b46417137042016d99b517f243c83a34825f7f15afac9d079f72"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-environment-final.json",
+    "sha256": "8be58cad70545a215fbf2f128b29c4fa8f839be016e47c245f759b2364deeb56"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-environment-final.log",
+    "sha256": "3cf34218283d3f9a220d2095ba9c8f10a911e20fecaf97708746f09256f491f1"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-environment.json",
+    "sha256": "a4914ee6dc43e95e8e5fba286dea3b41f74d2d1da057db9222d97320789ac8fc"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-environment.log",
+    "sha256": "df5b27380c4309739d3d02e7051ceee93bf9b453c20ad134f38ac731523e1d6e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-version.json",
+    "sha256": "63a20b76d642ff644f9220e1ef2162b2766a242cf27177073220b18dfced7b9b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-version.log",
+    "sha256": "129c077796e394ae0bdb16f3edd2e8ec53deda85c2953d8492eafe4c20708099"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/receipt_runner.py",
+    "sha256": "df7401768d5417e5bd6e6ec095a293966dbe268acf1c8db8d88ff2ddf94a48fa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-after-blocked-push.json",
+    "sha256": "d32f51c55694b7bc3521acf50acc2ade2773ec52ccdc8cce57fb3bde7f55076a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-after-blocked-push.log",
+    "sha256": "7e6287a324973bc25e712d147cf4ac33975cf2647235b4185f7db999192976c7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-preflight-network.json",
+    "sha256": "70444b20cc66c119f5826a7550ae0c1bd38d8542913a504b62b59e153ff641ba"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-preflight-network.log",
+    "sha256": "32684ee16f42d46a1c4afb0259001981bc43448863bb8b214bb5d3df15192ca8"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-preflight.json",
+    "sha256": "32be644d50d0046f98fc6121037b508c9df7d21072c46f5e126199157fbc7676"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-preflight.log",
+    "sha256": "5363e52fc17c51a24f7e039abe2cbec46aadba7f0a4131b0290614ed84a8f322"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-prepublication.json",
+    "sha256": "3dff03a26a80d0cd91e0e249a29ab2d0b54cf592df1499285d05c3f484f7852e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-prepublication.log",
+    "sha256": "840ce7702ecbe0826945e5edc4422bb7de257838b81d838287477a61647baf1d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/ruff-head.json",
+    "sha256": "fb0c1a4b57f63cb1778e82412fb9f835a058f2ebcb67a0c45a6491dd46cc9455"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/ruff-head.log",
+    "sha256": "32a38adcb34b9db354388cfe8d6c818cf1bdce55ef19ccb431e0119ad7c04c60"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/ruff-version.json",
+    "sha256": "2866dc2134a5b09162c5f4071e8e2d79fb710b4f304fc4ffbf0f47249bbc91cd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/ruff-version.log",
+    "sha256": "02ccf11d8dae441d8011cc0a523bc8c12a99a37cc2ac8a05b01589e8c937e31c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/run_checks.py",
+    "sha256": "526368bca6ed0d1490c20b5bd34240e9e568c4730458f9edea61e9aa3232d863"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/support-tool-exit-receipts.json",
+    "sha256": "3f12aac8c002a1dabd546fef5db198c5f8b5ca489a406197130fcafdbb5b4b32"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-1.json",
+    "sha256": "4b1788972505454fffb1103b8f9e4ce5e3a305e38e087a391e013ca804cf8b51"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-1.log",
+    "sha256": "f51192a4798ae8026a8a3a297813dcf5d4c0b6cdecf1256469b3c2da8dc97625"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-2.json",
+    "sha256": "2e72ca72adee68507c367327593734e72eeed77a7a3d200904e45b6d683932b9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-2.log",
+    "sha256": "c28b3400e9bdbfb3cee73046acc932895f201c50e55ee355b17e8e9daae22640"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-3.json",
+    "sha256": "ace5adf2de423b08e20efae6ef39da18ffa28b45ca5198b49472c8a184e1d72e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-3.log",
+    "sha256": "64b6e881c7f1d5e795f4984e5c2351beb3d447d442cfc29d8ed31d6ec10a72ae"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-1.json",
+    "sha256": "3a05fb3cbe7d33fb734713f630fec68ca78e876d8546b63e25a2c4e8fdbb74a7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-1.log",
+    "sha256": "0848cecd7ffcc399c8aaa954e514333f0ff9da9d65fa18afe2a0594ba785f6b3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-2.json",
+    "sha256": "16783f1439cb0e51d75bab31e8b593280cb880782f34a8b28c01b924100f4d26"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-2.log",
+    "sha256": "b18584d8c2685b91d53471593f7da223d205795fbb2e8b7474c2c6e93b8965fe"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-3.json",
+    "sha256": "dec609886fbda4141902d7d9660c3daf624f0795865e09c64c325aec47dd7fcc"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-3.log",
+    "sha256": "d99463ceac6bb71b77a923b522e80e6ae1fab7e8d46d3d3e250f6e714edd6b5b"
+  }
+]

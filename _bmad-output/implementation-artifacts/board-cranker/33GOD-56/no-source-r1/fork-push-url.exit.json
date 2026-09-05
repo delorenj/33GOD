@@ -1,0 +1,45 @@
+{
+  "argv": [
+    "git",
+    "remote",
+    "get-url",
+    "--push",
+    "delorenj"
+  ],
+  "command": "git remote get-url --push delorenj",
+  "command_finished_at": "2026-09-05T14:02:59.082130Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:02:59.190284Z",
+  "finished_monotonic_ns": 1345761778546370,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/fork-push-url.log",
+  "name": "fork-push-url",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [],
+        "cwd": null,
+        "pgrp": 191731,
+        "pid": 191731,
+        "ppid": 190821,
+        "session": 191731,
+        "start_ticks": "134576142",
+        "state": "Z"
+      }
+    ],
+    "pid": 191731,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 190821
+  },
+  "sequence_index": 0,
+  "sha256": "37a906a732c642cacffa1cc53914eba56f7e0a16518531aec6bbd56c9c49e51f",
+  "started_at": "2026-09-05T14:02:58.832490Z",
+  "started_monotonic_ns": 1345761420724091,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

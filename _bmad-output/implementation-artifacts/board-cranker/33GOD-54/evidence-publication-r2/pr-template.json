@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "cat",
+    ".github/PULL_REQUEST_TEMPLATE.md"
+  ],
+  "attempt": 1,
+  "command": "cat .github/PULL_REQUEST_TEMPLATE.md",
+  "completed": "2026-09-05T11:28:20Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/pr-template.log",
+  "name": "pr-template",
+  "sha256": "ad4b81f1f40d1c9044f24a407d6bc248af8034ab0f4711ca7521f448d89be797",
+  "started": "2026-09-05T11:28:20Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

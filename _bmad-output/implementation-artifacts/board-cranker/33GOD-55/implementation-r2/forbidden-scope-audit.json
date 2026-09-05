@@ -1,0 +1,43 @@
+{
+  "head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+  "remote_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+  "branch": "feat/33GOD-55-git-travel-guard-remote-ancestry",
+  "end_clean": true,
+  "status": "",
+  "changed_files": [
+    "git/README.md",
+    "git/hooks/_travels.py",
+    "git/hooks/pre-push",
+    "git/tests/test_pre_push.py"
+  ],
+  "commit_count": 1,
+  "primary_before": {
+    "status": " M git/hooks/_guard.sh\n",
+    "guard_sha256": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c"
+  },
+  "primary_after": {
+    "status": " M git/hooks/_guard.sh\n",
+    "head": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "guard_sha256": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c"
+  },
+  "prior_preflight_files_unchanged": true,
+  "blocker_artifact_hashes_unchanged": true,
+  "owner_agent_id": "33god-pm",
+  "forbidden_files_touched": [],
+  "history_rewritten": false,
+  "plane_touched": false,
+  "bloodbank_touched": false,
+  "client_board_touched": false,
+  "hermes_candidate_published": false,
+  "hook_bypass_used": false,
+  "force_push_used": false,
+  "review_or_merge_performed": false,
+  "all_file_writes": "Four allowed source files; isolated Git metadata for one commit and normal push; disposable test/object stores; implementation-r2 evidence only. No primary source or index changes.",
+  "general_checkpoint_inventory": {
+    "command": "git unpushed",
+    "exit_code": 1,
+    "reported_paths": 503,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/git-unpushed.log",
+    "interpretation": "Global inventory is not clean. The explicit story permits only four source paths and its evidence directory; other repository work and campaign artifacts remain outside the implementation commit. The required isolated branch is clean and fully pushed."
+  }
+}

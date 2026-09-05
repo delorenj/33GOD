@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "classification": "single-balanced-object-transport-normalization",
+  "normalized_at": "2026-09-03T18:36:09.833136+00:00",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-quality-review-r2.raw.txt",
+  "raw_sha256": "853336be216fc5e74e228bebf1e81dbb247eb48d36e170d3e505e7312db9ff92",
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-quality-review-r2.schema.json",
+  "schema_sha256": "9bfd83860ca880f9430ab51e4e5fd41e4a27da53556ad3c7bca1a00472e78976",
+  "candidate_count": 1,
+  "schema_valid": true,
+  "fields_changed": false,
+  "handback_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.quality-review.json",
+  "handback_sha256": "716d412593c6d6e20941e57c85027bff973743a47570d9e14be8d52d39d96052",
+  "discarded_transport": {
+    "preamble": "📂 Adding workspace: /tmp/hermes-board-cranker-50-baseline\n📂 Adding workspace: /home/delorenj/code/33GOD\n",
+    "trailer": "\n\n\nRequest ID: 6694951d-4976-484b-a66e-73a2488a290f\n"
+  }
+}

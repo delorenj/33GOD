@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-B",
+    "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/publication.py"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/publication.py",
+  "completed": "2026-09-05T05:04:28Z",
+  "exit_code": 1,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/publication-workflow.log",
+  "name": "publication-workflow",
+  "sha256": "95265aeabb6caab9ae6c712061dfb97d23cd9a79a2859a0d291e108f590ed9ae",
+  "started": "2026-09-05T05:03:40Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "git",
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all"
+  ],
+  "attempt": 1,
+  "command": "git status --porcelain=v1 --untracked-files=all",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-clean-preflight.log",
+  "name": "head-clean-preflight",
+  "sha256": "59ccbc902f29cbe70b7a819a356f41f1e406e20d9a44220a482ec2bc69d853d0",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

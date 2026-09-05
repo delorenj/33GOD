@@ -1,0 +1,69 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-B",
+    "-c",
+    "import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"version\":sys.version,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))"
+  ],
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B -c 'import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"version\":sys.version,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))'",
+  "command_finished_at": "2026-09-05T12:53:44.045126Z",
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONPYCACHEPREFIX": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/bytecode",
+    "PYTHONUTF8": "1",
+    "RUFF_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/cache/ruff",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/tmp",
+    "TZ": "UTC",
+    "UV_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/cache/uv",
+    "XDG_CACHE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/cache",
+    "XDG_CONFIG_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/config",
+    "XDG_DATA_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/data",
+    "XDG_STATE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/python-environment/state"
+  },
+  "exit_code": 0,
+  "finished_at": "2026-09-05T12:53:44.045468Z",
+  "finished_monotonic_ns": 1341606633724532,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/python-environment.log",
+  "name": "python-environment",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+          "-B",
+          "-c",
+          "import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"version\":sys.version,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 208,
+        "pid": 208,
+        "ppid": 2,
+        "session": 208,
+        "start_ticks": "134160623",
+        "state": "R"
+      }
+    ],
+    "pid": 208,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 2
+  },
+  "sequence_index": 0,
+  "sha256": "ff78338ec14b6c54ad8f3998a274e7a0e49ab9fbf2526eb7edf73a2c9b21e77e",
+  "started_at": "2026-09-05T12:53:43.644123Z",
+  "started_monotonic_ns": 1341606232345988,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

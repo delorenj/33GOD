@@ -1,0 +1,1057 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "reports": [
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_base_platform_exposes_explicit_stateless_turn_contract",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_base_platform_exposes_explicit_stateless_turn_contract",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_base_platform_exposes_explicit_stateless_turn_contract",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[True-False-True]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[True-False-True]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[True-False-True]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[False-True-True]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[False-True-True]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[False-True-True]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[False-False-False]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[False-False-False]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_platform_clears_session_after_each_stateless_turn[False-False-False]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_stateless_contractor_unwind_preserves_command_owned_guard",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_stateless_contractor_unwind_preserves_command_owned_guard",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_stateless_contractor_unwind_preserves_command_owned_guard",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides0-contractor_id]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides0-contractor_id]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides0-contractor_id]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides1-contractor_version]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides1-contractor_version]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides1-contractor_version]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides2-contractor_version]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides2-contractor_version]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides2-contractor_version]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides3-memory_policy]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides3-memory_policy]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides3-memory_policy]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides4-continuity]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides4-continuity]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides4-continuity]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides5-required_skills]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides5-required_skills]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides5-required_skills]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides6-required_skills]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides6-required_skills]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides6-required_skills]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides7-required_skills]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides7-required_skills]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides7-required_skills]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides8-profile_name]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides8-profile_name]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides8-profile_name]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides9-project_root]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides9-project_root]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_invalid_or_widening_values[overrides9-project_root]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_non_directory_project_root[missing]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_non_directory_project_root[missing]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_non_directory_project_root[missing]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_non_directory_project_root[file]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_non_directory_project_root[file]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_typed_context_rejects_non_directory_project_root[file]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[invalid-type-invalid type]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[invalid-type-invalid type]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[invalid-type-invalid type]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[external-event-internal events]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[external-event-internal events]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[external-event-internal events]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[profile-mismatch-profile]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[profile-mismatch-profile]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_handler_rejects_untrusted_context_before_skills[profile-mismatch-profile]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_event_bypasses_session_resume_and_transcript_loading",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_event_bypasses_session_resume_and_transcript_loading",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_event_bypasses_session_resume_and_transcript_loading",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_event_bypasses_all_ordinary_session_bookkeeping",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_event_bypasses_all_ordinary_session_bookkeeping",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_event_bypasses_all_ordinary_session_bookkeeping",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_ordinary_event_stays_on_existing_session_path",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_ordinary_event_stays_on_existing_session_path",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_ordinary_event_stays_on_existing_session_path",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_missing_required_skill_fails_before_agent_or_tool_execution",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_missing_required_skill_fails_before_agent_or_tool_execution",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_missing_required_skill_fails_before_agent_or_tool_execution",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_all_required_skills_resolve_before_any_skill_preprocessing",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_all_required_skills_resolve_before_any_skill_preprocessing",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_all_required_skills_resolve_before_any_skill_preprocessing",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_required_skills_keep_order_and_registry_cwd_is_task_scoped",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_required_skills_keep_order_and_registry_cwd_is_task_scoped",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_required_skills_keep_order_and_registry_cwd_is_task_scoped",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cancellation_signals_worker_before_requesting_hard_interrupt",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cancellation_signals_worker_before_requesting_hard_interrupt",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cancellation_signals_worker_before_requesting_hard_interrupt",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cancelled_worker_stops_before_agent_construction",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cancelled_worker_stops_before_agent_construction",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cancelled_worker_stops_before_agent_construction",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_agent_is_fresh_memoryless_unpersisted_and_uses_configured_runtime",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_agent_is_fresh_memoryless_unpersisted_and_uses_configured_runtime",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_agent_is_fresh_memoryless_unpersisted_and_uses_configured_runtime",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_memory_or_history_tool_leak_fails_before_model_execution",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_memory_or_history_tool_leak_fails_before_model_execution",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_memory_or_history_tool_leak_fails_before_model_execution",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_accepts_disjoint_typed_project_root",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_accepts_disjoint_typed_project_root",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_accepts_disjoint_typed_project_root",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_revalidates_project_directory_before_skills[missing]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_revalidates_project_directory_before_skills[missing]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_revalidates_project_directory_before_skills[missing]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_revalidates_project_directory_before_skills[file]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_revalidates_project_directory_before_skills[file]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_revalidates_project_directory_before_skills[file]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_accepts_project_root_under_profile_home",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_accepts_project_root_under_profile_home",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_accepts_project_root_under_profile_home",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_null_contractor_service_tier_is_distinct_from_ordinary_omission",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_null_contractor_service_tier_is_distinct_from_ordinary_omission",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_null_contractor_service_tier_is_distinct_from_ordinary_omission",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_does_not_mutate_shared_runner_state",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_does_not_mutate_shared_runner_state",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_turn_does_not_mutate_shared_runner_state",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_concurrent_contractor_turns_leave_runner_config_unchanged",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_concurrent_contractor_turns_leave_runner_config_unchanged",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_concurrent_contractor_turns_leave_runner_config_unchanged",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_cleanup_failure_is_observed_on_successful_turn",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_cleanup_failure_is_observed_on_successful_turn",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_cleanup_failure_is_observed_on_successful_turn",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cleanup_failure_raises_from_public_contractor_handler",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cleanup_failure_raises_from_public_contractor_handler",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cleanup_failure_raises_from_public_contractor_handler",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cleanup_failure_marks_platform_processing_failed",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cleanup_failure_marks_platform_processing_failed",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_cleanup_failure_marks_platform_processing_failed",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_cleanup_failure_is_observed_on_failed_turn",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_cleanup_failure_is_observed_on_failed_turn",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_cleanup_failure_is_observed_on_failed_turn",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_agent_registry_is_evicted_after_successful_turn",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_agent_registry_is_evicted_after_successful_turn",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_agent_registry_is_evicted_after_successful_turn",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_agent_registry_is_evicted_after_failed_turn",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_agent_registry_is_evicted_after_failed_turn",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_contractor_turns.py::test_contractor_agent_registry_is_evicted_after_failed_turn",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/stop]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/stop]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/stop]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/new]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/new]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/new]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/reset]",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/reset]",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestAdapterSessionCancellation::test_command_cancels_active_task_and_unblocks_follow_up[/reset]",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestStaleSessionLockSelfHeal::test_stale_lock_with_done_task_is_healed_on_next_message",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestStaleSessionLockSelfHeal::test_stale_lock_with_done_task_is_healed_on_next_message",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestStaleSessionLockSelfHeal::test_stale_lock_with_done_task_is_healed_on_next_message",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestStaleSessionLockSelfHeal::test_cleanup_releases_and_deletes_when_guard_matches",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestStaleSessionLockSelfHeal::test_cleanup_releases_and_deletes_when_guard_matches",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestStaleSessionLockSelfHeal::test_cleanup_releases_and_deletes_when_guard_matches",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestRunnerSessionGenerationGuard::test_release_with_stale_generation_blocks",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestRunnerSessionGenerationGuard::test_release_with_stale_generation_blocks",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestRunnerSessionGenerationGuard::test_release_with_stale_generation_blocks",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestOldTaskCannotClobberNewerGuard::test_release_session_guard_matches_on_event_identity",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestOldTaskCannotClobberNewerGuard::test_release_session_guard_matches_on_event_identity",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_split_brain_11016.py::TestOldTaskCannotClobberNewerGuard::test_release_session_guard_matches_on_event_identity",
+      "outcome": "passed",
+      "phase": "teardown"
+    }
+  ],
+  "tests_collected": 50
+}

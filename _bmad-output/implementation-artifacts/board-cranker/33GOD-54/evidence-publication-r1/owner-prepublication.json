@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "cat",
+    "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json"
+  ],
+  "attempt": 1,
+  "command": "cat /home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+  "completed": "2026-09-05T05:03:40Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-prepublication.log",
+  "name": "owner-prepublication",
+  "sha256": "76a074d9c72e75ce8678fd35b0de742a560419dd166bd4afa2ed4ff914130d05",
+  "started": "2026-09-05T05:03:40Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

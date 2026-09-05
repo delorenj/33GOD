@@ -1,0 +1,34 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-m",
+    "py_compile",
+    "gateway/platforms/base.py",
+    "gateway/run.py",
+    "tests/gateway/test_contractor_turns.py",
+    "tests/gateway/test_session_split_brain_11016.py"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m py_compile gateway/platforms/base.py gateway/run.py tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+  "completed": "2026-09-05T04:33:08Z",
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/compile-head/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONUTF8": "1",
+    "RUFF_NO_CACHE": "true",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/compile-head",
+    "TZ": "UTC"
+  },
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/compile-head.log",
+  "name": "compile-head",
+  "sha256": "684af0f9ec88a352ea98328070d8c4e9233e61ab2a69330c5a48f68b39d92553",
+  "started": "2026-09-05T04:33:08Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

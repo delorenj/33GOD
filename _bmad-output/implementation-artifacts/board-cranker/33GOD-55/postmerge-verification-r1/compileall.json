@@ -1,0 +1,11 @@
+{
+  "name": "compileall",
+  "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-postmerge-verification-r1-pycache python3 -m compileall -q git/hooks/_travels.py git/tests",
+  "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+  "started_at": "2026-09-05T09:58:20.593609+00:00",
+  "finished_at": "2026-09-05T09:58:20.615727+00:00",
+  "stdout": "",
+  "stderr": "",
+  "exit_code": 0,
+  "status": "PASS"
+}

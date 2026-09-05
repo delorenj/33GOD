@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "index.lock"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path index.lock",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-index.lock.log",
+  "name": "head-marker-path-index.lock",
+  "sha256": "0b4029f7f14424769eddb0c0c052dc87f4e3b7559d5fd03066b897cf24d92b77",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

@@ -1,0 +1,1434 @@
+[
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-_7nyikdc/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  historical.js\n      imports  historical-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add historical-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 the outgoing commits do not build from a clone\u001b[0m\n  (the missing files are listed above)\n  \n  Your suite is green because those files are in your working tree. Add them\n  and amend, or commit them, before this reaches anyone else.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-0nwmria4/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 1111111111111111111111111111111111111111\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_advertised_but_unfetchable_base_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-dsznbnwb/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "",
+    "stdin": "refs/heads/feature 0000000000000000000000000000000000000000 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_branch_deletion_is_no_scan_success",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-e_9hu26u/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*-.   7f25f4d remove credential\n|\\ \\  \n| | * c9d94af published integration\n| * | 7620bb8 local credential\n|/ /  \n* / fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 2 unpublished commit(s)\n+ACCESS_TOKEN=<REDACTED>=<REDACTED>\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 a credential is in the outgoing commits\u001b[0m\n  (shown above, redacted)\n  Remove the value from unpublished history before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 7f25f4dcefc9a0c60be5c77777f9841c774b44e7 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_credential_in_local_parent_removed_by_merge_is_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-6f4wfiad/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   584dbc5 credential resolution\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n+ACCESS_TOKEN=<REDACTED>=<REDACTED>\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 a credential is in the outgoing commits\u001b[0m\n  (shown above, redacted)\n  Remove the value from unpublished history before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 584dbc5b4ca425d0f08cb06324111f5da2865218 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_credential_in_merge_resolution_is_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-rct13met/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* 85280c2 credential fixture\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n+ACCESS_TOKEN=<REDACTED>=<REDACTED>\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 a credential is in the outgoing commits\u001b[0m\n  (shown above, redacted)\n  Remove the value from unpublished history before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85280c24f76baa54c329d3d4fb7eedcffc79fb65 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_credential_scan_preserved",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-y3vsxoi9/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* 0e936d3 unpublished root\n* fe48160 published feature\n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  root.js\n      imports  root-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add root-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 0e936d37c2577014805f4a72b1ab293cd8e5d690 refs/heads/feature 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_empty_remote_new_root_is_scanned",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-bh3zedck/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "",
+    "stdin": "",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_empty_stdin_chains_successfully",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-6m02gn74/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-84ymyzgz/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: advertised remote base does not match pre-push stdin\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 82f6ac04c12090444a1e6892c93334e2664c5cea\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_incorrect_advertised_base_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-4v53mp1w/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 17,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "",
+    "stdin": "refs/heads/feature 0000000000000000000000000000000000000000 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_local_hook_chain_preserves_arguments_and_consumed_stdin",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-1_wsggz3/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*-.   a802421 octopus merge\n|\\ \\  \n| | * c9d94af published integration\n| * | 9603c72 local side\n|/ /  \n* / fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 2 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  side.js\n      imports  side-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add side-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature a80242103cde2cfe71917ada70b74b6fe9a31819 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_local_only_merged_parent_missing_import_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-xv5784lu/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: invalid pre-push stdin\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "incomplete\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_malformed_stdin_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-_fh4xb55/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   da28206 bad resolution\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  resolution.js\n      imports  resolution-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add resolution-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature da28206bd6d1abab9fc1f15691da30af9bae5630 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_merge_resolution_missing_import_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-i5a61fxs/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 11bf3fa056f452182c34fc48b1e8f6174a49e795\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_missing_advertised_object_resolved_without_ref_mutation",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-0rpm1f70/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_missing_upstream_tip_resolves_known_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-0_y_ftw8/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\ngit-travel: refs/heads/other: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  bad.js\n      imports  multi-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add multi-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\nrefs/heads/other 9f9a76b159c0858be58321e5b1fae1c60b35a1d8 refs/heads/other 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_multiple_updates_do_not_skip_second_broken_ref",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-eusndd9f/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/new-feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/new-feature 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_new_ref_clean_merge_excludes_remote_known_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-hjmmnxla/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* 6cd522b novel broken import\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  bad.js\n      imports  normal-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add normal-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 6cd522bce8b384b49e851fb84b27876bcebddef7 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_normal_unpublished_missing_import_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-crn7qg5h/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   737c2a8 inherit remote content\n|\\  \n| * f08b7db published credential fixture\n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 737c2a851fe5c25e2903aee9e3b05731651ceea8 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_remote_known_credential_fixture_is_not_novel_merge_content",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-gxfqmj8h/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_same_remote_two_refs_exclude_integration_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-esggr6zm/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   615112a merge onto advanced feature\n|\\  \n| * c9d94af published integration\n* | ed5505e remote advancement\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 615112af33052cdb61f3daeced341620ced675f9 refs/heads/feature ed5505e7de7ec5ae9e91863375b8202ef8ae38b9\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_stale_tracking_ref_honors_exact_advertised_sha",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-ypf2y_v7/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* f5617f7 not really published\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/new: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  bad.js\n      imports  hidden-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add hidden-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature f5617f77d889b45b169aaf621c3edc95905763d0 refs/heads/new 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_stale_unverified_remote_tracking_cannot_hide_local_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-9zvejabi/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 17,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_successful_scan_chains_local_hook_with_consumed_stdin",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-e14j5z9i/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_unreachable_remote_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-khwj5z5a/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: advertised remote base does not match pre-push stdin\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 1111111111111111111111111111111111111111\n",
+    "stdout": "",
+    "test": "test_pre_push.MergeTopologyTests.test_unreadable_remote_base_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-it372g1p/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 1111111111111111111111111111111111111111\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_advertised_but_unfetchable_base_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-apbcwq1d/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "",
+    "stdin": "refs/heads/feature 0000000000000000000000000000000000000000 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_branch_deletion_is_no_scan_success",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-oxqopvm2/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*-.   7f25f4d remove credential\n|\\ \\  \n| | * c9d94af published integration\n| * | 7620bb8 local credential\n|/ /  \n* / fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 2 unpublished commit(s)\n+ACCESS_TOKEN=<REDACTED>=<REDACTED>\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 a credential is in the outgoing commits\u001b[0m\n  (shown above, redacted)\n  Remove the value from unpublished history before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 7f25f4dcefc9a0c60be5c77777f9841c774b44e7 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_credential_in_local_parent_removed_by_merge_is_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-l2gt8okk/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   584dbc5 credential resolution\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n+ACCESS_TOKEN=<REDACTED>=<REDACTED>\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 a credential is in the outgoing commits\u001b[0m\n  (shown above, redacted)\n  Remove the value from unpublished history before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 584dbc5b4ca425d0f08cb06324111f5da2865218 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_credential_in_merge_resolution_is_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-6wdv7cmi/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* 85280c2 credential fixture\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n+ACCESS_TOKEN=<REDACTED>=<REDACTED>\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 a credential is in the outgoing commits\u001b[0m\n  (shown above, redacted)\n  Remove the value from unpublished history before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85280c24f76baa54c329d3d4fb7eedcffc79fb65 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_credential_scan_preserved",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-unedz4mn/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* 0e936d3 unpublished root\n* fe48160 published feature\n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  root.js\n      imports  root-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add root-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 0e936d37c2577014805f4a72b1ab293cd8e5d690 refs/heads/feature 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_empty_remote_new_root_is_scanned",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-xsd4ol1s/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "",
+    "stdin": "",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_empty_stdin_chains_successfully",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-3xu9rtw1/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-fx47ybzq/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: advertised remote base does not match pre-push stdin\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 82f6ac04c12090444a1e6892c93334e2664c5cea\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_incorrect_advertised_base_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-2eabwiw_/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 17,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "",
+    "stdin": "refs/heads/feature 0000000000000000000000000000000000000000 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_local_hook_chain_preserves_arguments_and_consumed_stdin",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-5ztgixj5/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*-.   a802421 octopus merge\n|\\ \\  \n| | * c9d94af published integration\n| * | 9603c72 local side\n|/ /  \n* / fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 2 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  side.js\n      imports  side-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add side-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature a80242103cde2cfe71917ada70b74b6fe9a31819 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_local_only_merged_parent_missing_import_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-y2735703/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: invalid pre-push stdin\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "incomplete\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_malformed_stdin_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-1cnwmvd4/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   da28206 bad resolution\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  resolution.js\n      imports  resolution-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add resolution-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature da28206bd6d1abab9fc1f15691da30af9bae5630 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_merge_resolution_missing_import_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-094216mu/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 11bf3fa056f452182c34fc48b1e8f6174a49e795\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_missing_advertised_object_resolved_without_ref_mutation",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-4h73by0f/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_missing_upstream_tip_resolves_known_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-oklan5sk/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\ngit-travel: refs/heads/other: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  bad.js\n      imports  multi-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add multi-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\nrefs/heads/other 9f9a76b159c0858be58321e5b1fae1c60b35a1d8 refs/heads/other 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_multiple_updates_do_not_skip_second_broken_ref",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-5r_xyd1a/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/new-feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/new-feature 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_new_ref_clean_merge_excludes_remote_known_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-jc6lia42/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* 6cd522b novel broken import\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  bad.js\n      imports  normal-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add normal-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 6cd522bce8b384b49e851fb84b27876bcebddef7 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_normal_unpublished_missing_import_rejected",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-x3r6h3am/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   737c2a8 inherit remote content\n|\\  \n| * f08b7db published credential fixture\n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 737c2a851fe5c25e2903aee9e3b05731651ceea8 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_remote_known_credential_fixture_is_not_novel_merge_content",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-abvjpfwt/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_same_remote_two_refs_exclude_integration_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-avq65j4i/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   615112a merge onto advanced feature\n|\\  \n| * c9d94af published integration\n* | ed5505e remote advancement\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 615112af33052cdb61f3daeced341620ced675f9 refs/heads/feature ed5505e7de7ec5ae9e91863375b8202ef8ae38b9\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_stale_tracking_ref_honors_exact_advertised_sha",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-2rq_k8_h/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* f5617f7 not really published\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/new: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  bad.js\n      imports  hidden-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add hidden-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature f5617f77d889b45b169aaf621c3edc95905763d0 refs/heads/new 0000000000000000000000000000000000000000\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_stale_unverified_remote_tracking_cannot_hide_local_parent",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-xnnn2yhy/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 17,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_successful_scan_chains_local_hook_with_consumed_stdin",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-08323nyv/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_unreachable_remote_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  },
+  {
+    "args": [
+      "origin",
+      "/home/delorenj/.claude/tmp/travel-topology-1e_787_i/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: advertised remote base does not match pre-push stdin\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature 1111111111111111111111111111111111111111\n",
+    "stdout": "",
+    "test": "__main__.MergeTopologyTests.test_unreadable_remote_base_fails_closed",
+    "source_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log"
+  }
+]

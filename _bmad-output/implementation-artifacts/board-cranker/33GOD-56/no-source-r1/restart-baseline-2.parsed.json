@@ -1,0 +1,11 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "failed_nodes": {},
+  "name": "restart-baseline-2",
+  "passed": 1,
+  "reports_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-2.reports.json",
+  "reports_sha256": "17dfc2119e24cf3713a23876ff8c503cd65c3706f1510d5609671eb4fccfdb2a",
+  "skipped": 0,
+  "tests_collected": 1
+}

@@ -1,0 +1,14 @@
+{
+  "existing": [],
+  "paths": {
+    "BISECT_START": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/BISECT_START",
+    "CHERRY_PICK_HEAD": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/CHERRY_PICK_HEAD",
+    "MERGE_HEAD": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/MERGE_HEAD",
+    "REBASE_HEAD": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/REBASE_HEAD",
+    "REVERT_HEAD": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/REVERT_HEAD",
+    "index.lock": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/index.lock",
+    "rebase-apply": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/rebase-apply",
+    "rebase-merge": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/rebase-merge",
+    "sequencer": "/home/delorenj/.hermes/hermes-agent/.git/worktrees/hermes-board-cranker-53-upstream-baseline/sequencer"
+  }
+}

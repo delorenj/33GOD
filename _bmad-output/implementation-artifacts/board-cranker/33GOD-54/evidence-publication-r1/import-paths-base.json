@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-c",
+    "import importlib.util,json,sys; print(json.dumps({\"executable\":sys.executable,\"modules\":{n:importlib.util.find_spec(n).origin for n in [\"gateway.run\",\"gateway.platforms.base\",\"pytest\"]}},indent=2))"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -c 'import importlib.util,json,sys; print(json.dumps({\"executable\":sys.executable,\"modules\":{n:importlib.util.find_spec(n).origin for n in [\"gateway.run\",\"gateway.platforms.base\",\"pytest\"]}},indent=2))'",
+  "completed": "2026-09-05T04:38:30Z",
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/import-paths-base/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONUTF8": "1",
+    "RUFF_NO_CACHE": "true",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/import-paths-base",
+    "TZ": "UTC"
+  },
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/import-paths-base.log",
+  "name": "import-paths-base",
+  "sha256": "7f9fb0167a108ec6b1c9682f88e59653364981867773fbd1085bb3d5dea16fa0",
+  "started": "2026-09-05T04:38:30Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-o",
+    "addopts=",
+    "tests/gateway/test_contractor_turns.py",
+    "tests/gateway/test_session_split_brain_11016.py"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+  "completed": "2026-09-05T11:35:16Z",
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/focused-head/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONUTF8": "1",
+    "RUFF_NO_CACHE": "true",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/focused-head",
+    "TZ": "UTC"
+  },
+  "exit_code": 2,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/focused-head.log",
+  "name": "focused-head",
+  "sha256": "ea2f0ed1a29b6a2389a6584b310eca307abc210a7c052d972ec1dd2ac02f9d3c",
+  "started": "2026-09-05T11:31:06Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

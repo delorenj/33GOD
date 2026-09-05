@@ -1,0 +1,55 @@
+{
+  "argv": [
+    "gh",
+    "api",
+    "--method",
+    "PATCH",
+    "repos/NousResearch/hermes-agent/pulls/102409",
+    "--input",
+    "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-rest-payload.json"
+  ],
+  "command": "gh api --method PATCH repos/NousResearch/hermes-agent/pulls/102409 --input /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-rest-payload.json",
+  "command_finished_at": "2026-09-05T14:06:53.933063Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:06:54.037427Z",
+  "finished_monotonic_ns": 1345996625686890,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-metadata-update-rest.log",
+  "name": "pr-metadata-update-rest",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "gh",
+          "api",
+          "--method",
+          "PATCH",
+          "repos/NousResearch/hermes-agent/pulls/102409",
+          "--input",
+          "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-rest-payload.json"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 266813,
+        "pid": 266813,
+        "ppid": 266207,
+        "session": 266813,
+        "start_ticks": "134599526",
+        "state": "S"
+      }
+    ],
+    "pid": 266813,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 266207
+  },
+  "sequence_index": 0,
+  "sha256": "75d815758254a71b789081677d6de1ac6f01334eca87d36bc3a0179524018f9e",
+  "started_at": "2026-09-05T14:06:52.675722Z",
+  "started_monotonic_ns": 1345995263953409,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

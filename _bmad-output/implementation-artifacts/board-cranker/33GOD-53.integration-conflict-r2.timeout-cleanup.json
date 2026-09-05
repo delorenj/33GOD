@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "campaign": "board-cranker",
+  "ticket": "33GOD-53",
+  "phase": "implementation",
+  "action": "terminate_expired_worker_orphan_process_groups",
+  "owner_agent_id": "33god-pm",
+  "expired_worker_id": "codex-33god-53-integration-conflict-r2",
+  "expired_worker_exit_receipt": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-conflict-r2.exit.json",
+  "expired_worker_exit_code": 125,
+  "canonical_handback_present": false,
+  "local_merge_head_preserved": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "worktree_clean_before_cleanup": true,
+  "process_groups": [
+    {
+      "pid": 2545885,
+      "pgid": 2545885,
+      "command_sha256": "35fd86813e045d460183b7eae6886a23ca62943ad9c34cf9030080a2eb096926",
+      "command_class": "codex-linux-sandbox",
+      "sandbox_policy_cwd": "/tmp/hermes-board-cranker-50"
+    },
+    {
+      "pid": 2793338,
+      "pgid": 2793338,
+      "command_sha256": "1dbc4c20263dbee419c29b27a1854831aee7ec8fb295770df899aea8cc196dd6",
+      "command_class": "codex-linux-sandbox",
+      "sandbox_policy_cwd": "/tmp/hermes-board-cranker-50"
+    },
+    {
+      "pid": 2874600,
+      "pgid": 2874600,
+      "command_sha256": "6c367681913c93ab7db093b6e6f789f58b5b37733fcbb131d22d62186e13a30a",
+      "command_class": "codex-linux-sandbox",
+      "sandbox_policy_cwd": "/tmp/hermes-board-cranker-50"
+    },
+    {
+      "pid": 2977175,
+      "pgid": 2977175,
+      "command_sha256": "21cc8ecad84fd1c593ffcb5d5d345edd0376cc07e563d3b1e72ecd2cacacbde5",
+      "command_class": "codex-linux-sandbox",
+      "sandbox_policy_cwd": "/tmp/hermes-board-cranker-50"
+    },
+    {
+      "pid": 3011233,
+      "pgid": 3011233,
+      "command_sha256": "c26e4bd24d5b4e18678517dbff9470deb9133ff14281c15bb16f20895f017c10",
+      "command_class": "codex-linux-sandbox",
+      "sandbox_policy_cwd": "/tmp/hermes-board-cranker-50"
+    },
+    {
+      "pid": 3077271,
+      "pgid": 3077271,
+      "command_sha256": "d3c59ec2ca89132d08fd4684c39f1ca10505f6be0394887fc435bcc6b20f2083",
+      "command_class": "codex-linux-sandbox",
+      "sandbox_policy_cwd": "/tmp/hermes-board-cranker-50"
+    }
+  ],
+  "sigterm_sent": [
+    2545885,
+    2793338,
+    2874600,
+    2977175,
+    3011233,
+    3077271
+  ],
+  "sigkill_required": [],
+  "remaining_processes": [],
+  "replacement_dispatched": false,
+  "disposition": "retain 33GOD-53 as sole WIP; defer the one recovery implementer dispatch to the next controller tick",
+  "completed_at": "2026-09-04T23:07:54Z"
+}

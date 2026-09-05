@@ -1,0 +1,310 @@
+[
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/ancillary-command-receipts.json",
+    "sha256": "230e576ff264fd600661575a229930556fcbe5ab3caef2de29d72bccc8a8e34e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/command-manifest.json",
+    "sha256": "aab5c5b0341551b3cd91243d2fc9ca1f77ca711f5a1e79d5ca79f8a5058d6a3c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/commit-0.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/commit-1.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/commit-2.log",
+    "sha256": "6aff9fb9411d59fd62cfbf052a99fdc8b4689b039a592033d4eaa3e59c95ac84"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/commit-commands.json",
+    "sha256": "e0f23857c637a2fafb635fa2b70dba5b4816f39615ff828d67bc7e5919de2616"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-checks.json",
+    "sha256": "7e282afc9489de745bd59a1e36f9bc4794e81e234052668ce96399c2fe565e9e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log",
+    "sha256": "cb66f5ffc6fdaf35f6312ab58c24a78dabaebc0086f36b66636251e449cc243d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-4.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-5.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log",
+    "sha256": "641c2dfd91d0558fc8c5c68084ec8f73269e52441770b50410d248b4db2cfbdc"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-7.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-checks.json",
+    "sha256": "9362f493c80fc9b706d0f6a619a33132141793a091ec6412856e1210653c7edd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-gate-1.log",
+    "sha256": "2081062aadd8a1cba72d27a85859c26a3d5bab3917314a8d43ac42d658aea731"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-gate-2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-gate-3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-gate-4.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-gate-5.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-gate-6.log",
+    "sha256": "5d73ff69b41fc173ae534b7bfa06e746d7fee19205acfec438d0fb6722ec6b2c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/corrected-precommit-gate-7.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-after.json",
+    "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-before.json",
+    "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-commands.json",
+    "sha256": "d6204617a05f9dc00c48fdab810796b2846fe97a51bc91ca55283d47b5e2cdf9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-hook.log",
+    "sha256": "bdc0aa31d7a091a0715ab4d4ce52cbc0ccc85a641b923f2b2df5ad1297bcc373"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-receipt.json",
+    "sha256": "a5492a185d8e77e18c56eabe275f0c4baf14468be7289f4a72ba76f48bd6c2f3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-corrected-precommit-after.json",
+    "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-corrected-precommit-before.json",
+    "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-corrected-precommit-commands.json",
+    "sha256": "08c24b69c139f8d1e0778df4621d0ff4c915653f6ff5a18ecb20e0db3360382d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-corrected-precommit-hook.log",
+    "sha256": "bdc0aa31d7a091a0715ab4d4ce52cbc0ccc85a641b923f2b2df5ad1297bcc373"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-corrected-precommit-receipt.json",
+    "sha256": "6ea0ef39ab6c92091e9b918d20f7b4f196cc814a1a4c99c7cede08562a25f70e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-precommit-after.json",
+    "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-precommit-before.json",
+    "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-precommit-commands.json",
+    "sha256": "f0b1d722d05cc45d4f835406c83a73e2ff1a0416e8a77a7df93bea1507b5f3f7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-precommit-hook.log",
+    "sha256": "932b63ecbb5bd41da4ff799ed5cd119872db0b051529ba9d5c17c3dbe42076dd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-precommit-receipt.json",
+    "sha256": "6b19b8432f71dd04b9184016489488e0c780a880b68cde45b0f3af7ced0758b5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-preflight-detached-baseline-commands.json",
+    "sha256": "507b5a7079b0386ddf627cbe09f2ae4f60d30d544adc5829c1e998eb1a98ce6b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact_33god_54.py",
+    "sha256": "7f529d922c4fcafbf393377f66419a778be6ec17a89132f271a5a6d2d4edef50"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-checks.json",
+    "sha256": "b37fc7b4d23330a5b3e0ebd5ce78847e94fd1ddd32b000b1207b1aa7ab08cdac"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-1.log",
+    "sha256": "95168d9a81613c35a5f9097b98ebacb3a7861c1583247703c567e2629bafec37"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-4.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-5.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-6.log",
+    "sha256": "394cc4bf4760019536e69ce2bfd79c6eee249e5e244ac7e35491442550d1c1a3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-7.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/forbidden-scope-audit.json",
+    "sha256": "2be969d07f23c20e6756d53aa541bfa5890b7f3fb4fe0fe5c7d466a04eac9a62"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/git-unpushed-command.json",
+    "sha256": "0a5f470644aaef8dde45568e820c86bc1c85f44732dc37e313c62fb6b78205fd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/git-unpushed.log",
+    "sha256": "6b6c7190b3545b61140d59d18a48877a2dacad66a7d51c234b70b9d81f4065f8"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/green-expanded.log",
+    "sha256": "1e12476abea1f604cabb51341e0bb63233cbbd90861a671e29dea7e37ce752ce"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/green-initial-command.json",
+    "sha256": "c6e075378d26b049066e2f581c720d07efd4da992d2df14b5a2ee14c41266899"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/green-initial.log",
+    "sha256": "0767fb6bbf31d22eb246d986913dbc8ef2a9a9dbe3ba8260d8f290765949554c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/hermes-origin-advertisement.log",
+    "sha256": "f9bacbd49bcaafd7378f5d2301440d90292bd00aee3f2f837c1d5045be87a623"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/merge-topology-fixtures.json",
+    "sha256": "edcbd9e42e033d14cdab78f516f7ae1591d22144d520979247010900291e4c6d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-audit.json",
+    "sha256": "343ef5fa657c56de557dedc0bcf9414dc931743b2f4bf907e738ed01c4df9abb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-checks.json",
+    "sha256": "4d3cd725a3b9c463b98f08ff9dd6bfb5f405d7c555089f30d1d44d82b92b2b91"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-gate-1.log",
+    "sha256": "883c6528bc879611a8d873c3bcb4a4b7495ac00c5c88ea5bcc6b22c3dfb5ffc5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-gate-2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-gate-3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-gate-4.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-gate-5.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-gate-6.log",
+    "sha256": "b46b272491c69609470b07cd5cb683c55eb22e8c50518e8a1773e233722d44fa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/precommit-gate-7.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/preflight-remote.json",
+    "sha256": "e00594ced41002fa3c3d5f7771352dd819ebedea16f1382910968d9fa239515a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/preflight.json",
+    "sha256": "f9b6242487c37220debdee93d3fac6b47a80a1e755cff480957033e00e141c2e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/push-command.json",
+    "sha256": "8bc5bb8e3fd234d0670c22b7fafc6099bc3af2665b2613e8651a40f1f423009e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/push.log",
+    "sha256": "ad996c2bfb1d74d54579f1eb3aeeeef12d3ec7c221709b246fab8eb745c22327"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red-command.json",
+    "sha256": "32bdfce869deca6822cad5dcaf7e83b4f76e1c9a23a7be0574c3df7415be5382"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red-credential-boundary.log",
+    "sha256": "0826384cddc5739040d057eb5c2c5f107d35a4e6b66b5ba25892ca23736f3319"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red-credential-command.json",
+    "sha256": "2864263c177f15a72cceeb90318c2cdc92b71b8ebddcd9a288f4ff7e5609d272"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red.log",
+    "sha256": "535cdd3c20874e2752accf0ebebbedcffda28db937446de97f452d1b55e84ca9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/remote-verification.json",
+    "sha256": "a5e9eee36f5cb40d66294af92fc5bc1ccd955bb40b257b875661391bfb2c64b4"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/run_gates.py",
+    "sha256": "1a3011f0c257d4cebcc72ef4ed8a62b56b6f0e6400ae0f695dbb70004e067a1b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/source-hashes.json",
+    "sha256": "21a9b6fb3c280853066a7e023f7580b5294c29a83b7553ff6c57ca68d65623ed"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/test-import-error-command.json",
+    "sha256": "7fdcba1221b53e71776a46c26f544587ebae8a3fbb0382dfdbdbdc821cc56eeb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/test-import-error.log",
+    "sha256": "1813779c45ba72c603ce3bbebee7bb67a53947739a6f2dae472457b991c364b5"
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "classification": "single-balanced-object-transport-normalization",
+  "normalized_at": "2026-09-05T10:02:55.320098+00:00",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-postmerge-verification-r1.raw.txt",
+  "raw_sha256": "5f1e3f74badcf2af6b16728f04899e26d573bef19f716201db89c29cd389476e",
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-postmerge-verification-r1.schema.json",
+  "schema_sha256": "faea105b46ec8d24f9842c930fc4c1448e5a5963b6325d1853e9c0034931a1ac",
+  "candidate_count": 1,
+  "schema_valid": true,
+  "fields_changed": false,
+  "handback_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json.candidate.verify-r1.3054613",
+  "handback_sha256": "397ee916a0b506fca9eff2a5712153d97ab0317dc367ef5dbf7a4a2abe9f744c",
+  "discarded_transport": {
+    "preamble": "",
+    "trailer": ""
+  }
+}

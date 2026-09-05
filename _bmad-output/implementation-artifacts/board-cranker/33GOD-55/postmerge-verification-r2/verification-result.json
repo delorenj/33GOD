@@ -1,0 +1,153 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-55",
+  "phase": "integration",
+  "status": "INTEGRATED",
+  "summary": "r2 recovery reran the immutable post-merge proof with gh-CLI-supported commands. All five code gates PASS from the detached r2 worktree at merge 02481c8 (exactly 25 unittest tests OK, compileall, bash -n, _travels.py HEAD, and git diff --check all exit 0). PR delorenj/agents#1 is MERGED, title and body name 33GOD-55, head OID equals reviewed head 54aca96, merge commit equals 02481c8, and its only reported check (GitGuardian Security Checks) is COMPLETED/SUCCESS. gh pr checks exits 0 with the single check reporting pass; gh pr checks --required exits 1 with 'no required checks reported', proving an empty required set, so required_checks_green=true. origin/main is the merge SHA, the remote feature ref is the reviewed head, and both trees are 7d12255. r2 (detached), feature, and quality-review worktrees are clean; the primary checkout retains only the known _guard.sh change with its fixed hash. The archived prior receipt, mismatch file, and r1 result all match their fixed actual SHA-256 values.",
+  "verification_worker": {
+    "agent_id": "kimi-33god-55-postmerge-verification-r2",
+    "role": "post-merge-verification-worker",
+    "provider": "kimi-code",
+    "model": "k3",
+    "attempt": 2,
+    "source_mutation_authorized": false,
+    "approval_performed": false
+  },
+  "immutable_review": {
+    "base_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "reviewed_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "merge_commit_sha": "02481c8df4cedbdc11081fe41fcf01859a399566"
+  },
+  "prior_receipt": {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json",
+    "sha256": "477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550",
+    "archive_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/prior-integration-handback.json",
+    "mismatch_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pr-checks-poll.json",
+    "declared_sha256": "1a8f9c1a6a3d3b3e7b63e08bb2d12a7b2d3b7b4c6e3a1f1b0e4f4d3c2b1a0987",
+    "actual_sha256": "2f01f4291333b61258ab7863686b8f97bc3e48f27056a75324a54d7c7d02606a"
+  },
+  "prior_attempt": {
+    "result_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r1/verification-result.json",
+    "sha256": "397ee916a0b506fca9eff2a5712153d97ab0317dc367ef5dbf7a4a2abe9f744c",
+    "status": "BLOCKED",
+    "failure_class": "UNSUPPORTED_GH_JSON_ENVIRONMENT",
+    "environment_failure": true,
+    "substantive_verdict_consumed": false
+  },
+  "pr": {
+    "number": 1,
+    "url": "https://github.com/delorenj/agents/pull/1",
+    "state": "MERGED",
+    "title": "33GOD-55: Make the global Git travel guard merge-aware for remote-known ancestry",
+    "title_names_ticket": true,
+    "body_names_ticket": true,
+    "base_ref": "main",
+    "head_ref": "feat/33GOD-55-git-travel-guard-remote-ancestry",
+    "head_oid": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "merge_commit_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "all_reported_checks_green": true,
+    "ordinary_checks_exit_zero": true,
+    "required_check_set_empty": true,
+    "required_checks_green": true
+  },
+  "git": {
+    "remote_main_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "remote_feature_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "reviewed_head_tree": "7d122550387e1459794acf81ae37bbeef879de07",
+    "remote_main_tree": "7d122550387e1459794acf81ae37bbeef879de07",
+    "tree_equivalent": true,
+    "postmerge_worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2",
+    "postmerge_detached": true,
+    "postmerge_clean": true,
+    "feature_clean": true,
+    "quality_review_clean": true,
+    "primary_unrelated_change_preserved": true,
+    "primary_guard_sha256": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c",
+    "history_rewritten": false
+  },
+  "gates": [
+    {
+      "name": "unittest-25",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-postmerge-verification-r2-pycache python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-unittest-25.txt",
+      "sha256": "31d9e2c4066a136f6909cd3a7c4cab14d57a907ca585e65a5eabc78c9955fd81"
+    },
+    {
+      "name": "compileall",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-postmerge-verification-r2-pycache python3 -m compileall -q git/hooks/_travels.py git/tests",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-compileall.txt",
+      "sha256": "ec8db59017a972f74dd485b6529f6fc6ad77e4c0840841c340983b638b8fba7b"
+    },
+    {
+      "name": "bash-syntax",
+      "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-bash-syntax.txt",
+      "sha256": "104472df93422392121cc0795181316dd3d75f55e2e9d5b6ca8e854da88cd752"
+    },
+    {
+      "name": "travel-head",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 git/hooks/_travels.py HEAD",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-travel-head.txt",
+      "sha256": "b7ededef2a248a536d56b6d0ffe1d309ca8e7d64893c27687ec3f746a5a5a82a"
+    },
+    {
+      "name": "diff-check",
+      "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...02481c8df4cedbdc11081fe41fcf01859a399566",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-diff-check.txt",
+      "sha256": "45cc08c26eb9206c77d846234c7b1a43909b130190caa01b69b908e2ccc73a5c"
+    }
+  ],
+  "proofs": [
+    {
+      "name": "owner-and-fixed-hashes",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/owner-and-fixed-hashes.txt",
+      "sha256": "d830d783725a5d362204f63117db4d951c74169b722e5ea5035b3a194e3243ee"
+    },
+    {
+      "name": "pr-view",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/pr-view.json",
+      "sha256": "f147cdafaa30c665dd2622f1ae2d9add82c0e1f63117edf185e801e645fbc560"
+    },
+    {
+      "name": "pr-checks-ordinary",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/pr-checks.txt",
+      "sha256": "e152d27b56e809e0deab45adcc49c5dc3be679af11868493e9199bcba3263fa2"
+    },
+    {
+      "name": "pr-checks-required-empty",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/pr-checks-required.txt",
+      "sha256": "d0792bdb999feabeec25b5874010fb35dcdabf9d1b01e1d468287fc9d1703ad7"
+    },
+    {
+      "name": "remote-refs-and-worktrees",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/remote-refs-and-worktrees.txt",
+      "sha256": "0df5fe1a03ebac5676bc3d6436efcb9ceba3a19f8312379eb1fe51008e32c4dd"
+    },
+    {
+      "name": "hash-recheck",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/hash-manifest.txt",
+      "sha256": "eb1abaa133a0e06d8697361f9bc1a4f42c273a60054ba818a3de15b0e1d5f94e"
+    }
+  ],
+  "evidence_integrity": {
+    "all_declared_hashes_match": true,
+    "verified_file_count": 15
+  },
+  "blocker": {
+    "present": false,
+    "classification": "NONE",
+    "description": "No blocker. All five code gates passed, all PR/ref/tree/worktree/hash invariants held, and the required-check set is provably empty via the installed gh CLI.",
+    "evidence": [],
+    "next": "Controller validates this result against the r2 schema and atomically replaces the canonical handback."
+  }
+}

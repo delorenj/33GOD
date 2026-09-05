@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "spec-compliance",
+  "review_cycle": "integration-conflict-r2",
+  "status": "PRE_EXECUTION_TRANSPORT_FAILURE",
+  "classification": "CONTROLLER_LAUNCHER_CONTRACT_ERROR",
+  "reviewer": {
+    "agent_id": "copilot-33god-53-integration-spec-review-r2",
+    "provider": "github-copilot",
+    "model": "auto",
+    "review_attempt": 2,
+    "transport_attempt": 1
+  },
+  "immutable_review_range": "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "process_session": "proc_1d0da76c9f24",
+  "launcher_pid": 3318161,
+  "timeout_pid": 3319427,
+  "reviewer_pid": 3319429,
+  "heartbeat_pid": 3319462,
+  "started_at": "2026-09-05T03:11:32Z",
+  "finished_at": "2026-09-05T03:11:36Z",
+  "exit_code": 1,
+  "processes_alive_after": false,
+  "source_review_started": false,
+  "counts_as_substantive_verdict": false,
+  "canonical_handback_present": false,
+  "raw_output_bytes": 0,
+  "error": "Model auto does not support reasoning effort configuration requested as high",
+  "required_correction": "Remove the incompatible --effort high option while keeping the same immutable range, provider, schema, clean executable worktree, and 1800-second timeout.",
+  "worktree": "/tmp/hermes-board-cranker-53-integration-spec-review-r2",
+  "worktree_head": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "worktree_clean": true,
+  "review_environment": {
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/review-env-spec-r2.log",
+    "sha256": "d5f0951d442c6b824e881a59a5ffccb4eaab98a2186917838f10094cdc3a432c"
+  },
+  "evidence": {
+    "exit": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r2.exit.json",
+      "sha256": "490581c997bf7a64355d8a0d564c0752d6c4e430cdf758e7be46cca2d66f45db"
+    },
+    "stderr": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r2.stderr.log",
+      "sha256": "89fe9add42e70d3222fa4deff604dd06be65f8cfe6ef4f865280141ff5db9eb4"
+    },
+    "raw": {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r2.raw.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

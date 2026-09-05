@@ -1,0 +1,6 @@
+{
+  "command": "git ls-remote origin refs/heads/main refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry",
+  "exit_code": 0,
+  "stdout": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f\trefs/heads/main\n",
+  "stderr": ""
+}

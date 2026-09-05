@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "CHERRY_PICK_HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-CHERRY_PICK_HEAD.log",
+  "name": "head-marker-path-CHERRY_PICK_HEAD",
+  "sha256": "b84203432a9d971ebadc675c3895a15343c9d20a15789fdbd2c5b826b2f0658b",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

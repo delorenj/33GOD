@@ -1,0 +1,212 @@
+{
+  "all_test_and_static_commands_nonoverlapping": true,
+  "at": "2026-09-05T13:56:18.136727Z",
+  "checks": [
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/adjacent-candidate.reports.json",
+      "exception_records_sha256": "ecbe8e062fcedcefad42c17635190738f04a91a53b3b8ca9983b5ff03253220f",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/adjacent-candidate.log",
+      "log_sha256": "604ffe1859eab011f5a14d7f37acd0ca7797298e2b7096f3fb918b4be2577efd",
+      "name": "adjacent-candidate",
+      "summary": "24 passed in 1.67s",
+      "terminal_counts": {
+        "passed": 24
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/focused-candidate.reports.json",
+      "exception_records_sha256": "18ebd2462fddd50a7f3fe50cce61dea75292336506e66cd5fef7b9b132b9841d",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/focused-candidate.log",
+      "log_sha256": "746f482abc7d9c12cb2064c3dc10354717c5396c77ca1efc9696da705f3f7539",
+      "name": "focused-candidate",
+      "summary": "50 passed in 4.18s",
+      "terminal_counts": {
+        "passed": 50
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-baseline-1.reports.json",
+      "exception_records_sha256": "4ee713d342d50296a6afd9562377e5e6872bd283cf75cb9892045d43d60d53bd",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-baseline-1.log",
+      "log_sha256": "9761aef03b6819adb33a1fa094dc82afa01219caf05483f5f5068f78b21433e5",
+      "name": "gateway-baseline-1",
+      "summary": "48 failed, 7642 passed, 45 skipped, 2 xfailed, 167 warnings in 872.69s (0:14:32)",
+      "terminal_counts": {
+        "failed": 48,
+        "passed": 7642,
+        "skipped": 45,
+        "warnings": 167,
+        "xfailed": 2
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-baseline-2.reports.json",
+      "exception_records_sha256": "4878a2fadfa0cb2976782e7419b595517b90d22daff68c3ec17aaacb2638b8e0",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-baseline-2.log",
+      "log_sha256": "3258ac508aa532221f3214f3da57a59f8090cd13e891a7474aa48863e91218c2",
+      "name": "gateway-baseline-2",
+      "summary": "48 failed, 7642 passed, 45 skipped, 2 xfailed, 167 warnings in 865.95s (0:14:25)",
+      "terminal_counts": {
+        "failed": 48,
+        "passed": 7642,
+        "skipped": 45,
+        "warnings": 167,
+        "xfailed": 2
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-candidate-1.reports.json",
+      "exception_records_sha256": "39f37231a2fcc105e11f775c5f859b696dcba3098fdcdbd505ce122f5e4c7ada",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-candidate-1.log",
+      "log_sha256": "d031a8de9cce50f984e12e59968a054d90802b4d7594a4ad281cb7eab1af8ebb",
+      "name": "gateway-candidate-1",
+      "summary": "49 failed, 7684 passed, 45 skipped, 2 xfailed, 167 warnings in 876.28s (0:14:36)",
+      "terminal_counts": {
+        "failed": 49,
+        "passed": 7684,
+        "skipped": 45,
+        "warnings": 167,
+        "xfailed": 2
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-candidate-2.reports.json",
+      "exception_records_sha256": "a0fd4ef8193ccf8e0742f3a99a0e137e97eea1c0d0cae8509284b23ebc7a6711",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gateway-candidate-2.log",
+      "log_sha256": "7d1accccbef31b6f16bc848b1ea7f2ec1fb3c1aca6a197d81051b8a60a665a6d",
+      "name": "gateway-candidate-2",
+      "summary": "48 failed, 7685 passed, 45 skipped, 2 xfailed, 167 warnings in 866.66s (0:14:26)",
+      "terminal_counts": {
+        "failed": 48,
+        "passed": 7685,
+        "skipped": 45,
+        "warnings": 167,
+        "xfailed": 2
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-1.reports.json",
+      "exception_records_sha256": "17dfc2119e24cf3713a23876ff8c503cd65c3706f1510d5609671eb4fccfdb2a",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-1.log",
+      "log_sha256": "1e56676d3fadeba99af9e0599555116afe976d72ea513427e92dec551a2d0eaf",
+      "name": "restart-baseline-1",
+      "summary": "1 passed in 0.79s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-2.reports.json",
+      "exception_records_sha256": "17dfc2119e24cf3713a23876ff8c503cd65c3706f1510d5609671eb4fccfdb2a",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-2.log",
+      "log_sha256": "c57cbb2ea75292cb7c65c4cff042298661f360ad01552dd79046fe079f807725",
+      "name": "restart-baseline-2",
+      "summary": "1 passed in 0.78s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-3.reports.json",
+      "exception_records_sha256": "17dfc2119e24cf3713a23876ff8c503cd65c3706f1510d5609671eb4fccfdb2a",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-3.log",
+      "log_sha256": "1016d49f9054d99662b74c74e74b58373b27236238e9c1a608a25f79080468bd",
+      "name": "restart-baseline-3",
+      "summary": "1 passed in 0.78s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-candidate-1.reports.json",
+      "exception_records_sha256": "17dfc2119e24cf3713a23876ff8c503cd65c3706f1510d5609671eb4fccfdb2a",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-candidate-1.log",
+      "log_sha256": "8f7b41fbfe2efd91b8202a81d317458cf518971fb25f38e381d1cb61df9a892f",
+      "name": "restart-candidate-1",
+      "summary": "1 passed in 0.76s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-candidate-2.reports.json",
+      "exception_records_sha256": "17dfc2119e24cf3713a23876ff8c503cd65c3706f1510d5609671eb4fccfdb2a",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-candidate-2.log",
+      "log_sha256": "80e8447742ffaac96a804c4db632622631313b0c8f868796c8ef387487cdf97e",
+      "name": "restart-candidate-2",
+      "summary": "1 passed in 0.77s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-candidate-3.reports.json",
+      "exception_records_sha256": "17dfc2119e24cf3713a23876ff8c503cd65c3706f1510d5609671eb4fccfdb2a",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-candidate-3.log",
+      "log_sha256": "1de01bb1e6eeb612611cc50877df6f2b80130c16ebce0659f338a0128d04fbcf",
+      "name": "restart-candidate-3",
+      "summary": "1 passed in 0.79s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/systemd-baseline.reports.json",
+      "exception_records_sha256": "d4aa18c9939d42ca7d52f23a76b9c8ff548ce955ac701d96f6a3deacb906e0b6",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/systemd-baseline.log",
+      "log_sha256": "e43aa6021d46024e21b3c1e0637bd4354a3c671b35132b91639ea5985052f0fe",
+      "name": "systemd-baseline",
+      "summary": "1 passed in 0.34s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    },
+    {
+      "exception_records": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/systemd-candidate.reports.json",
+      "exception_records_sha256": "d4aa18c9939d42ca7d52f23a76b9c8ff548ce955ac701d96f6a3deacb906e0b6",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/systemd-candidate.log",
+      "log_sha256": "e6eee446f3643c3f54d0b5a3e50c0eda21d6e17cd5f48babf5b7538c8af65e85",
+      "name": "systemd-candidate",
+      "summary": "1 passed in 0.34s",
+      "terminal_counts": {
+        "passed": 1
+      },
+      "terminal_failed_nodes_match_instrumentation": true
+    }
+  ],
+  "scope": "Evidence consistency validation only; not specification or quality/security review.",
+  "sequence": [
+    "gateway-candidate-1",
+    "gateway-baseline-1",
+    "gateway-candidate-2",
+    "gateway-baseline-2",
+    "focused-candidate",
+    "adjacent-candidate",
+    "ruff-candidate",
+    "compile-candidate",
+    "diff-check-candidate",
+    "restart-candidate-1",
+    "restart-candidate-2",
+    "restart-candidate-3",
+    "restart-baseline-1",
+    "restart-baseline-2",
+    "restart-baseline-3",
+    "systemd-candidate",
+    "systemd-baseline"
+  ],
+  "skip_count_note": "Raw plugin skipped totals are pre-final-wrapper report counts. Terminal summaries above are authoritative for skipped/xfail presentation; failure nodes and passed counts are cross-checked exactly.",
+  "status": "PASS"
+}

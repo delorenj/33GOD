@@ -1,0 +1,69 @@
+{
+  "argv": [
+    "git",
+    "diff",
+    "--check",
+    "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+  ],
+  "command": "git diff --check b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "command_finished_at": "2026-09-05T13:55:01.190259Z",
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONPYCACHEPREFIX": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/bytecode",
+    "PYTHONUTF8": "1",
+    "RUFF_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/cache/ruff",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/tmp",
+    "TZ": "UTC",
+    "UV_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/cache/uv",
+    "XDG_CACHE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/cache",
+    "XDG_CONFIG_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/config",
+    "XDG_DATA_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/data",
+    "XDG_STATE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/diff-check-candidate/state"
+  },
+  "exit_code": 0,
+  "finished_at": "2026-09-05T13:55:01.295766Z",
+  "finished_monotonic_ns": 1345283884029350,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/diff-check-candidate.log",
+  "name": "diff-check-candidate",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "git",
+          "diff",
+          "--check",
+          "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 45641,
+        "pid": 45641,
+        "ppid": 3070488,
+        "session": 45641,
+        "start_ticks": "134528352",
+        "state": "R"
+      }
+    ],
+    "pid": 45641,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 3070488
+  },
+  "sequence_index": 9,
+  "sha256": "f8eadfe9f5e907732eb1f3fefab937d6fec7b1687a3ab12941cb1eef3a132866",
+  "started_at": "2026-09-05T13:55:00.937185Z",
+  "started_monotonic_ns": 1345283525414834,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

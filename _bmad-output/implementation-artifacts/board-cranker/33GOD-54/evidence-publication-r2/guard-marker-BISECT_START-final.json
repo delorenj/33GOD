@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "BISECT_START"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-BISECT_START-final.log",
+  "name": "guard-marker-BISECT_START-final",
+  "sha256": "14e0bb36e403b84c2952f530355f5e78a561d7a4bdbfdc6a478f12298a45fd0a",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

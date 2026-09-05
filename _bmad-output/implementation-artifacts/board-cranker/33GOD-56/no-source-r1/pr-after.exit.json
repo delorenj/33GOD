@@ -1,0 +1,48 @@
+{
+  "argv": [
+    "gh",
+    "pr",
+    "view",
+    "102409",
+    "--repo",
+    "NousResearch/hermes-agent",
+    "--json",
+    "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt"
+  ],
+  "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt",
+  "command_finished_at": "2026-09-05T14:06:56.014734Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:06:56.127771Z",
+  "finished_monotonic_ns": 1345998716043024,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-after.log",
+  "name": "pr-after",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [],
+        "cwd": null,
+        "pgrp": 267264,
+        "pid": 267264,
+        "ppid": 266207,
+        "session": 267264,
+        "start_ticks": "134599759",
+        "state": "Z"
+      }
+    ],
+    "pid": 267264,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 266207
+  },
+  "sequence_index": 0,
+  "sha256": "d86d41e2f53adcf4505d6578a92d5708b0c3785a7fbc1f032d94c58c158d5a7a",
+  "started_at": "2026-09-05T14:06:55.004959Z",
+  "started_monotonic_ns": 1345997593194320,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

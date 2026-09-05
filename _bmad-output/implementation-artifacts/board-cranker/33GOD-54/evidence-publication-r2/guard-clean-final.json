@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "git",
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all"
+  ],
+  "attempt": 1,
+  "command": "git status --porcelain=v1 --untracked-files=all",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-clean-final.log",
+  "name": "guard-clean-final",
+  "sha256": "bc915265c6020755f0b90c0d8448043757123c0896ed8b74df9ee595c6fd8dc9",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

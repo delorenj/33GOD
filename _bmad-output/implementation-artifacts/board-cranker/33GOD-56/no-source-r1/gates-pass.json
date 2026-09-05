@@ -1,0 +1,16 @@
+{
+  "adjacent_passes": 24,
+  "at": "2026-09-05T13:55:13.870394Z",
+  "baseline_disposition": "DONE_WITH_CONCERNS",
+  "focused_passes": 50,
+  "full_pairs_run": 2,
+  "restart_passes": 6,
+  "sequential_differential_sha256": "298e0939f299995857b65e42e9e7b540ae294eab3cd21f245e0f99979ad1ab93",
+  "static_gates": [
+    "ruff",
+    "py_compile",
+    "git diff --check"
+  ],
+  "status": "PASS",
+  "systemd_passes": 2
+}

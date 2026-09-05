@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-B",
+    "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/diagnose_base_only.py"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/diagnose_base_only.py",
+  "completed": "2026-09-05T11:55:17Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-only-diagnostic-workflow.log",
+  "name": "base-only-diagnostic-workflow",
+  "sha256": "16267d8c26b82ac0fac9e07e02204cc15b946d050665f8150d4d81c5ce35d2f3",
+  "started": "2026-09-05T11:55:16Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

@@ -1,0 +1,23 @@
+{
+  "preflight_completed": true,
+  "protected_primary_hash": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c",
+  "protected_primary_status": " M git/hooks/_guard.sh\n",
+  "allowed_changed_files": [
+    "git/README.md",
+    "git/hooks/_travels.py",
+    "git/hooks/pre-push",
+    "git/tests/test_pre_push.py"
+  ],
+  "forbidden_files_touched": [],
+  "self_review": {
+    "coverage": "25 focused tests, complete suite and static gates passed; exact immutable candidate hook exit 0",
+    "ancestry": "Live advertised branch/tag IDs from actual push URL and every configured fetch remote; checked SHA-only fetch into temporary ODB; no stale refs used as proof",
+    "merge_parents": "rev-list subtracts all verified remote commit tips; combined diff inspects resolution against all parents; unpublished side parents scanned in their own trees",
+    "credentials": "Existing patterns unchanged; novel ordinary changes and merge-resolution lines scanned; inherited verified remote content excluded; removed local credentials still rejected",
+    "failure_handling": "Git read/fetch/identity errors and shallow/replaced/grafted histories fail closed; malformed stdin rejected; no swallowed scan failures",
+    "shell_safety": "No shell eval or interpolation of refs/URLs; subprocess argument vectors and option terminators; OIDs validated; credentials remain in memory rather than diff files",
+    "cleanup": "TemporaryDirectory with HUP/TERM exit handlers; no FETCH_HEAD/refmap/tags/submodules/maintenance writes; tests assert temporary directory and persistent metadata preservation",
+    "scope": "Only four allowed paths; helper extension required to share commit-tree scanner and verified object context; shared guard untouched",
+    "review_boundary": "Implementation self-audit only; no independent review, approval or merge performed"
+  }
+}

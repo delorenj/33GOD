@@ -1,0 +1,6 @@
+{
+  "candidate_count": 1,
+  "discarded_prefix": "📂 Adding workspace: /tmp/hermes-board-cranker-50-baseline\n📂 Adding workspace: /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker\nAll verification steps are complete. Both worktrees are clean after checks, the head is not merged, and every artifact hash matches. Compiling the final verdict.\n\n",
+  "discarded_suffix": "\n\n\nRequest ID: e45e0265-8b41-4633-85b4-10951538d097\n",
+  "normalized_without_field_changes": true
+}

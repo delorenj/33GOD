@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "campaign": "board-cranker",
+  "repo": "33god",
+  "parent": {
+    "identifier": "33GOD-50",
+    "id": "f0d196c5-6634-45fc-9655-f58deb9ccb53",
+    "state": "Backlog",
+    "implementation_attempts_exhausted": 2
+  },
+  "status": "DECOMPOSED",
+  "decided_at": "2026-09-03T08:40:17Z",
+  "owner": {
+    "owner_agent_id": "33god-pm",
+    "marker": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "verified": true
+  },
+  "reason": "The cross-repository implementation exhausted its two-attempt recovery budget without a canonical handback. The candidate commits, clean worktrees, and RED-to-GREEN evidence remain valid inputs, so recovery is split by owning repository rather than discarded or retried as one broad ticket.",
+  "children": [
+    {
+      "identifier": "33GOD-51",
+      "id": "c003588b-a156-4749-b09c-ef5da927cfa3",
+      "title": "Integrate canonical Hermes stateless contractor turns",
+      "state": "Todo",
+      "parent_id": "f0d196c5-6634-45fc-9655-f58deb9ccb53",
+      "owning_repo": "/home/delorenj/code/hermes-agent",
+      "base_sha": "97f3229dfdc06779f348ab8e7bee043262c3aaa7",
+      "candidate_head_sha": "abaaa84b4849f397b06ef1ae225ea1a30050422b",
+      "candidate_worktree": "/tmp/hermes-board-cranker-50",
+      "external_id": "board-cranker:33god-50:hermes-split:v1",
+      "next_eligible": true
+    },
+    {
+      "identifier": "33GOD-52",
+      "id": "c4d8ae46-88f1-4307-aa95-3a52b36501fc",
+      "title": "Integrate Bloodbank contractor context and idempotent gateway execution",
+      "state": "Backlog",
+      "parent_id": "f0d196c5-6634-45fc-9655-f58deb9ccb53",
+      "owning_repo": "/home/delorenj/code/bloodbank",
+      "base_sha": "3dd7fc072965c00af7f7317745a1fc99a5567998",
+      "candidate_head_sha": "34096047235ab69bb3da0d6e1a43191fcaf66576",
+      "candidate_worktree": "/tmp/bloodbank-board-cranker-50",
+      "external_id": "board-cranker:33god-50:bloodbank-split:v1",
+      "next_eligible": false,
+      "blocked_by": "33GOD-51"
+    }
+  ],
+  "dependency": {
+    "blocking": "33GOD-51",
+    "blocked": "33GOD-52",
+    "plane_relation_readback": {
+      "blocking_issue_id": "c4d8ae46-88f1-4307-aa95-3a52b36501fc",
+      "verified": true
+    },
+    "landing_order": [
+      "33GOD-51",
+      "33GOD-52",
+      "33GOD-50 live-proof closure",
+      "33GOD-44"
+    ]
+  },
+  "plane": {
+    "workspace": "33god",
+    "project_id": "15258893-0206-4e8f-aea6-340eb217988c",
+    "module": {
+      "id": "c7f35604-95af-452f-853f-e021aa595b53",
+      "name": "Gateways and Control Planes",
+      "children_membership_readback_verified": true
+    },
+    "parent_comment_id": "27757795-ade6-4871-8243-3a10c1b2aac0",
+    "parent_comment_readback_verified": true
+  },
+  "preserved_evidence": {
+    "attempt_1_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-50.implementation.attempt-1.json",
+    "hermes_red": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-50/hermes-red.log",
+    "hermes_green": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-50/hermes-green.log",
+    "hermes_full_suite": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-50/hermes-gateway-suite.log",
+    "hermes_baseline_reproduction": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-50/hermes-base-failures-proof.log",
+    "bloodbank_red": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-50/bloodbank-red.log",
+    "bloodbank_green": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-50/bloodbank-green.log",
+    "worktrees_clean_and_remote_synced": true,
+    "saved_worker_processes_dead": true,
+    "canonical_parent_handback_absent": true
+  },
+  "decision_event": {
+    "id": "11ade6a5-d83a-4b7b-9b09-4ca7601a8eac",
+    "type": "bloodbank.repo.decision.recorded",
+    "subject": "bloodbank.evt.repo.decision.recorded",
+    "published_live": true,
+    "candystore_projection_verified": true,
+    "candystore_event_url": "http://127.0.0.1:8683/events/11ade6a5-d83a-4b7b-9b09-4ca7601a8eac",
+    "local_trail": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/bloodbank-events.jsonl",
+    "basis": [
+      "evidence-over-status",
+      "reality-over-theater",
+      "one-workstream-at-a-time"
+    ]
+  },
+  "worker_dispatched": false,
+  "next": "Claim 33GOD-51 as the sole WIP item and dispatch one recovery implementer to inspect the preserved Hermes candidate, rerun its focused and immutable-base differential gates, and write a 33GOD-51 machine-readable handback."
+}

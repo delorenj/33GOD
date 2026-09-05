@@ -1,0 +1,34 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-o",
+    "addopts=",
+    "tests/gateway"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway",
+  "completed": "2026-09-05T05:01:44Z",
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/gateway-base-1/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONUTF8": "1",
+    "RUFF_NO_CACHE": "true",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/gateway-base-1",
+    "TZ": "UTC"
+  },
+  "exit_code": 1,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-base-1.log",
+  "name": "gateway-base-1",
+  "sha256": "1d83e6cf0d0faa59cdd83ee6cf27c93cfad8c67608f5ed889f6a0ac4e3d8319b",
+  "started": "2026-09-05T04:47:04Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

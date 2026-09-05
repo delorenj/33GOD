@@ -1,0 +1,16 @@
+{
+  "pid": 641267,
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-o",
+    "addopts=",
+    "tests/gateway/test_contractor_turns.py",
+    "tests/gateway/test_session_split_brain_11016.py"
+  ],
+  "signal": "SIGINT",
+  "reason": "Focused subprocess made no progress for over three minutes; interrupt to capture pytest stack and preserve the run before an equivalent host execution.",
+  "exit_code": 0
+}

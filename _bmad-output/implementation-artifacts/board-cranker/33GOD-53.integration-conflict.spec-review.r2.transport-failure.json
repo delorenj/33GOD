@@ -1,0 +1,266 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "spec-compliance",
+  "review_cycle": "integration-conflict-r2",
+  "status": "BLOCKED",
+  "classification": "SCHEMA_INVALID_REVIEW_TRANSPORT_ATTEMPTS_EXHAUSTED",
+  "recorded_at": "2026-09-05T03:46:16Z",
+  "reviewer": {
+    "agent_id": "copilot-33god-53-integration-spec-review-r2",
+    "provider": "github-copilot",
+    "model": "auto",
+    "review_attempt": 2,
+    "max_review_attempts": 2
+  },
+  "immutable_review_range": "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "processes": {
+    "saved_pids": [
+      3624049,
+      3625177,
+      3625179,
+      3625203
+    ],
+    "all_saved_pids_dead": true,
+    "matching_live_processes": [],
+    "exit_code": 0,
+    "transport_exit_code": 1,
+    "finished_at": "2026-09-05T03:29:32Z"
+  },
+  "transport": {
+    "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r2.raw.txt",
+    "raw_sha256": "810947e2682de67c037421153c944ed3c0bad108a45f4a93c1b386736d92fff4",
+    "candidate_count": 1,
+    "candidate_status": "FAIL",
+    "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r2.schema.json",
+    "schema_sha256": "7a428953f3508619100898f03992319b10ce545c95270b6c373b42d35eeb221d",
+    "schema_valid": false,
+    "schema_error_count": 32,
+    "schema_errors": [
+      {
+        "path": [],
+        "message": "'adjacent_gate_disposition' is a required property"
+      },
+      {
+        "path": [],
+        "message": "'checks' is a required property"
+      },
+      {
+        "path": [],
+        "message": "'review_cycle' is a required property"
+      },
+      {
+        "path": [],
+        "message": "Additional properties are not allowed ('scope', 'tests' were unexpected)"
+      },
+      {
+        "path": [
+          "acceptance_criteria"
+        ],
+        "message": "[{'id': 'AC-1', 'status': 'PASS', 'evidence': ['gateway/platforms/base.py:1491-1535 defines typed ContractorTurnContext and strictly resolves an existing absolute project_root directory.', 'gateway/run.py:3587-3622 rejects invalid context type, non-internal events, profile mismatch, missing command identity, missing paths, and non-directories before skill loading or model execution.', 'gateway/run.py:3614-3622 independently resolves profile_home and project_root without requiring project_root to be nested under profile_home.', 'scripts/run_tests.sh tests/gateway/test_contractor_turns.py passed 43 tests.']}, {'id': 'AC-2', 'status': 'PASS', 'evidence': ['gateway/run.py:3602-3622 performs only process-local typed-context and strict filesystem validation.', 'No Bloodbank import was introduced in the changed files; the trust-boundary comments assign registry and canonical-root authorization outside Hermes.', 'The changed-file diff contains no second writable project-root authority or fleet-registry lookup.']}, {'id': 'AC-3', 'status': 'PASS', 'evidence': ['gateway/run.py:3273-3289 uses SERVICE_TIER_UNSET so omission follows ordinary shared-state behavior while explicit None remains distinct.', 'gateway/run.py:3470-3475 resolves the contractor tier locally and passes it explicitly to the agent.', 'Focused contractor tests include explicit-null versus omission and passed.']}, {'id': 'AC-4', 'status': 'PASS', 'evidence': ['gateway/run.py:3560-3577 runs cleanup in finally, records cleanup failure, and attaches it to an active primary exception without replacing that exception.', 'gateway/run.py:3704-3717 raises ContractorTurnCleanupFailed for cleanup failure after otherwise successful execution.', 'Focused tests covering public cleanup failure, platform failure reporting, and primary-exception precedence passed.']}, {'id': 'AC-5', 'status': 'PASS', 'evidence': ['gateway/run.py:3465-3475 and 3483-3519 keep contractor reasoning and service tier local and construct a fresh persistence-isolated agent.', 'gateway/run.py:3512-3518 disables gateway session persistence and memory paths.', 'Focused contractor tests include shared-state immutability and concurrent sibling turns; the contractor file passed 43 tests.']}, {'id': 'AC-6', 'status': 'PASS', 'evidence': ['gateway/run.py:3453-3458 disables memory and session_search toolsets, and gateway/run.py:3540-3549 rejects forbidden memory/history tools before execution.', 'gateway/run.py:3652-3679 fails closed for unavailable or empty required skills.', 'gateway/run.py:3692-3695 signals cancellation and interrupts the contractor agent.', 'Focused contractor and split-brain checks passed: 43 and 7 tests respectively.']}, {'id': 'AC-7', 'status': 'FAIL', 'evidence': ['Preserved gateway-differential.json reports 45 failures at head versus 44 at immutable base, with branch-only node tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape.', 'The mandatory independent isolated rerun through scripts/run_tests.sh passed that exact node at head and at base, so the allegedly branch-only full-suite failure was not reproduced at base and cannot be disposed as inherited under the required baseline rule.', 'The focused contractor and split-brain checks passed and Ruff passed, but those facts do not explain or dispose the candidate-only full-suite failure.']}, {'id': 'AC-8', 'status': 'FAIL', 'evidence': ['The candidate is the required two-parent merge commit with parents cc00fe6ef855e506ad1bf8166473eecf725af8a8 and b0ab2e163a50d4e6c36507eba955a6067fde6abc.', 'git diff --name-status base..head lists exactly gateway/platforms/base.py, gateway/run.py, and tests/gateway/test_contractor_turns.py.', 'The worktree is clean and the commit message names 33GOD-53.', 'git ls-remote delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns observed cc00fe6ef855e506ad1bf8166473eecf725af8a8, which does not equal candidate 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d. The required push is absent.']}] is not of type 'object'"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "'base_suite_summary' is a required property"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "'classification' is a required property"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "'evidence' is a required property"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "'head_suite_summary' is a required property"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "'outside_changed_behavior' is a required property"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "'reported_branch_only_node' is a required property"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "'same_error_class' is a required property"
+      },
+      {
+        "path": [
+          "baseline_disposition"
+        ],
+        "message": "Additional properties are not allowed ('base_only_failures', 'base_summary', 'branch_only_failures', 'disposition_reason', 'error_class_changes', 'head_summary' were unexpected)"
+      },
+      {
+        "path": [
+          "baseline_disposition",
+          "status"
+        ],
+        "message": "'INSUFFICIENT_EVIDENCE' is not one of ['PASS', 'FAIL']"
+      },
+      {
+        "path": [
+          "findings",
+          0
+        ],
+        "message": "'file' is a required property"
+      },
+      {
+        "path": [
+          "findings",
+          0
+        ],
+        "message": "'line' is a required property"
+      },
+      {
+        "path": [
+          "findings",
+          0
+        ],
+        "message": "Additional properties are not allowed ('classification', 'id', 'status' were unexpected)"
+      },
+      {
+        "path": [
+          "findings",
+          0,
+          "evidence"
+        ],
+        "message": "['integration-conflict-r3/gateway-differential.json', 'integration-conflict-r3/gateway-head.log', 'integration-conflict-r3/gateway-baseline.log', 'integration-conflict-r3/branch-only-head-rerun.log', 'integration-conflict-r3/branch-only-baseline-rerun.log'] is not of type 'string'"
+      },
+      {
+        "path": [
+          "findings",
+          0,
+          "severity"
+        ],
+        "message": "'high' is not one of ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']"
+      },
+      {
+        "path": [
+          "findings",
+          1
+        ],
+        "message": "'file' is a required property"
+      },
+      {
+        "path": [
+          "findings",
+          1
+        ],
+        "message": "'line' is a required property"
+      },
+      {
+        "path": [
+          "findings",
+          1
+        ],
+        "message": "Additional properties are not allowed ('classification', 'id', 'status' were unexpected)"
+      },
+      {
+        "path": [
+          "findings",
+          1,
+          "evidence"
+        ],
+        "message": "['git ls-remote delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns', 'local HEAD 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d'] is not of type 'string'"
+      },
+      {
+        "path": [
+          "findings",
+          1,
+          "severity"
+        ],
+        "message": "'high' is not one of ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']"
+      },
+      {
+        "path": [
+          "git"
+        ],
+        "message": "'diff_files' is a required property"
+      },
+      {
+        "path": [
+          "git"
+        ],
+        "message": "'head_parent_1' is a required property"
+      },
+      {
+        "path": [
+          "git"
+        ],
+        "message": "'head_parent_2' is a required property"
+      },
+      {
+        "path": [
+          "git"
+        ],
+        "message": "'remote_branch_matches_head' is a required property"
+      },
+      {
+        "path": [
+          "git"
+        ],
+        "message": "'worktree_clean_after' is a required property"
+      },
+      {
+        "path": [
+          "git"
+        ],
+        "message": "'worktree_clean_before' is a required property"
+      },
+      {
+        "path": [
+          "git"
+        ],
+        "message": "Additional properties are not allowed ('baseline_worktree', 'baseline_worktree_clean', 'changed_files', 'commit_message', 'head_parents', 'merge_parent_order_exact', 'remote_head_equals_candidate', 'review_worktree_clean', 'scope_exact' were unexpected)"
+      },
+      {
+        "path": [
+          "prior_findings"
+        ],
+        "message": "[{'id': 'F001', 'status': 'RESOLVED', 'evidence': 'Disjoint project-root acceptance is implemented at gateway/run.py:3614-3622 and covered by the passing contractor focused suite.'}, {'id': 'F002', 'status': 'RESOLVED', 'evidence': 'Explicit null versus omitted service tier is separated by the SERVICE_TIER_UNSET sentinel at gateway/run.py:3273-3289 and covered by passing focused tests.'}, {'id': 'F003', 'status': 'RESOLVED', 'evidence': 'Cleanup failure propagation and primary-exception precedence are implemented at gateway/run.py:3560-3577 and 3704-3717 and covered by passing focused tests.'}] is not of type 'object'"
+      }
+    ],
+    "stderr_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r2.stderr.log",
+    "stderr_sha256": "6fc6b1a916d0d7259f3844285b7dd761b3b68b75545dcabd40255ed9ed725698",
+    "exit_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-spec-review-r2.exit.json",
+    "exit_sha256": "ef204eb239197e5d58208dbbc1d990466ae91ae88994111b89d092786a93ddd9",
+    "fields_repaired": false,
+    "canonical_handback_present": false,
+    "verdict_consumed": false
+  },
+  "git": {
+    "review_worktree": "/tmp/hermes-board-cranker-53-integration-spec-review-r2",
+    "feature_worktree": "/tmp/hermes-board-cranker-50",
+    "baseline_worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+    "review_head_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "baseline_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "all_worktrees_clean": true,
+    "remote_branch": "delorenj/feat/33GOD-50-stateless-contractor-turns",
+    "remote_head_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "remote_matches_candidate": false
+  },
+  "disposition": {
+    "review_verdict_consumed": false,
+    "third_reviewer_permitted": false,
+    "third_implementer_permitted": false,
+    "shared_wip_retained": true,
+    "next": "Split or explicitly escalate 33GOD-53 before authorizing any further implementation or specification-review attempt."
+  }
+}

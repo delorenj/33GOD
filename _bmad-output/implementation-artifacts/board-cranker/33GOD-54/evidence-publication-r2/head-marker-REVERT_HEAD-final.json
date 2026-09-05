@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "REVERT_HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path REVERT_HEAD",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-REVERT_HEAD-final.log",
+  "name": "head-marker-REVERT_HEAD-final",
+  "sha256": "a116905f5603467f1e30cc6bb681f8cf4a9d7bfe111d02c7623432a785f0e48d",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

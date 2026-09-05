@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0",
+  "campaign": "board-cranker",
+  "repo": "33god",
+  "status": "DECOMPOSED",
+  "decided_at": "2026-09-05T12:22:33Z",
+  "reason": "33GOD-54 exhausted its two permitted implementation attempts. Attempt 2 produced a schema-valid and hash-consistent BLOCKED handback: the immutable candidate has no candidate-only failed node or changed error class, but the worker ran the two complete gateway suites concurrently and induced one base-only Linux abstract-socket collision. Because no push or PR update occurred, the ticket is not implementation-complete. A third attempt on the same ticket is forbidden, so the strictly sequential no-source evidence and publication slice is isolated into child 33GOD-56.",
+  "owner": {
+    "marker": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "owner_agent_id": "33god-pm",
+    "verified": true
+  },
+  "parent": {
+    "id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+    "identifier": "33GOD-54",
+    "title": "Resolve Hermes gateway differential and publish the integrated contractor candidate",
+    "state": "Backlog",
+    "source_mutation_authorized": false,
+    "implementation_attempts_consumed": 2,
+    "verified_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+    "verified_handback_sha256": "79e286285266284134e34a6f7dd0814b682abe180517be3813946f0ba6878209",
+    "verified_handback_status": "BLOCKED",
+    "handback_schema": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.schema.json",
+    "handback_schema_sha256": "9e9cc37da63189abbac6dbb23a49db2b73264d541b619e1cd16e9a313bbe0e5a",
+    "launcher_exit_receipt": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.exit.json",
+    "launcher_exit_receipt_sha256": "cd7bb078fa8e3f6863e77a9190bbc2526ffc5bca5fcbbd51d855738e4afb4470"
+  },
+  "attempt_2_ground_truth": {
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "integrated_guard_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "candidate_worktree_clean": true,
+    "baseline_worktree_clean": true,
+    "guard_worktree_clean": true,
+    "candidate_failures": 48,
+    "baseline_failures": 49,
+    "candidate_only_failures": [],
+    "base_only_failures": [
+      "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+    ],
+    "error_class_changes": [],
+    "collision": "[Errno 98] Address already in use on hermes-test-notify while the full suites were scheduled concurrently",
+    "isolated_collision_node_passed_at_candidate": true,
+    "isolated_collision_node_passed_at_base": true,
+    "focused_tests": "50 passed",
+    "adjacent_tests": "24 passed",
+    "ruff": "PASS",
+    "py_compile": "PASS",
+    "publication_attempted": false,
+    "remote_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "pr": "https://github.com/NousResearch/hermes-agent/pull/102409",
+    "evidence_root": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2",
+    "referenced_hashes_checked": 32,
+    "referenced_hash_mismatches": 0
+  },
+  "child": {
+    "id": "c7317691-a9ad-4139-94cd-38cbc9affe24",
+    "identifier": "33GOD-56",
+    "title": "Prove the Hermes differential sequentially and publish the immutable candidate",
+    "parent_id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+    "priority": "high",
+    "state": "Todo",
+    "external_id": "board-cranker:33god-54:sequential-differential-publication:v1",
+    "owning_repo": "/home/delorenj/.hermes/hermes-agent",
+    "candidate_worktree": "/tmp/hermes-board-cranker-50",
+    "baseline_worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+    "guard_worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2",
+    "source_mutation_authorized": false,
+    "next_eligible": true,
+    "expected_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56.implementation.json"
+  },
+  "plane": {
+    "workspace": "33god",
+    "project_id": "15258893-0206-4e8f-aea6-340eb217988c",
+    "parent_state_readback_verified": true,
+    "parent_agent_working_label_removed": true,
+    "parent_comment_id": "56ebb9e7-7425-44cf-9cc9-e06dd055c77a",
+    "parent_comment_readback_verified": true,
+    "child_parent_state_priority_external_id_readback_verified": true,
+    "child_assignees_empty": true,
+    "child_agent_working_label_removed_because_no_worker_was_dispatched": true,
+    "child_ready_label": {
+      "id": "4eb4e892-b9b5-4bc3-b33d-4298cb0c898b",
+      "name": "lifecycle:triaged",
+      "readback_verified": true
+    },
+    "module": {
+      "id": "c7f35604-95af-452f-853f-e021aa595b53",
+      "name": "Gateways and Control Planes",
+      "child_membership_readback_verified": true
+    },
+    "ticket_created_event": {
+      "id": "e5f2b6e4-2866-5d41-98c2-bd7a3fcbf681",
+      "type": "bloodbank.repo.task.created",
+      "producer": "n8n-plane-webhook",
+      "ticket_id": "c7317691-a9ad-4139-94cd-38cbc9affe24",
+      "ticket_key": "33GOD-56",
+      "candystore_projection_verified": true
+    }
+  },
+  "decision_event": {
+    "id": "773e3efe-7c7d-491b-8b73-c2cb04e29c23",
+    "type": "bloodbank.repo.decision.recorded",
+    "subject": "bloodbank.evt.repo.decision.recorded",
+    "source": "hermes://agent/33god-pm",
+    "producer": "hermes-agent:33god-pm",
+    "actor_agent_id": "33god-pm",
+    "basis": [
+      "dogfood-the-platform",
+      "build-lego-not-statues",
+      "evidence-over-status",
+      "keep-the-pipeline-unblocked"
+    ],
+    "local_trail": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/bloodbank-events.jsonl",
+    "published_live": true,
+    "candystore_event_url": "http://127.0.0.1:8683/events/773e3efe-7c7d-491b-8b73-c2cb04e29c23",
+    "candystore_projection_verified": true
+  },
+  "shared_wip": {
+    "previous_ticket": "33GOD-54",
+    "previous_worker": "codex-33god-54-evidence-publication-r2",
+    "previous_worker_processes_dead": true,
+    "previous_worker_handback_verified": true,
+    "lease_released": true,
+    "lease_file_absent": true,
+    "selected_ticket": "33GOD-56",
+    "selected_ticket_state": "Todo",
+    "worker_dispatched": false,
+    "parallel_implementation_dispatches": 0
+  },
+  "worker_dispatched": false,
+  "next": "Claim 33GOD-56 as the sole shared WIP item and dispatch exactly one durable no-source worker. It must run candidate and baseline full gateway suites sequentially, use the integrated guard through normal push, verify the remote/PR, and write the schema-valid 33GOD-56 handback; dispatch no reviewer until publication is proven."
+}

@@ -1,0 +1,23 @@
+== owner marker ==
+{
+  "schema_version": 1,
+  "project_slug": "33god",
+  "campaign": "board-cranker",
+  "owner_agent_id": "33god-pm",
+  "owner_profile": "33god-pm",
+  "observer_agent_ids": [
+    "james-brennan-pm"
+  ],
+  "epoch": 1,
+  "set_at": "2026-09-02T20:04:01-04:00",
+  "reason": "The durable five-minute 33god-pm controller is the sole dispatcher for this campaign. The interactive james-brennan-pm agent audits evidence and may steer the owner, but must not dispatch a competing worker."
+}
+
+== owner_agent_id check ==
+owner_agent_id==33god-pm: True
+== fixed file hashes ==
+477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550  /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json
+477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550  /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/prior-integration-handback.json
+2f01f4291333b61258ab7863686b8f97bc3e48f27056a75324a54d7c7d02606a  /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pr-checks-poll.json
+397ee916a0b506fca9eff2a5712153d97ab0317dc367ef5dbf7a4a2abe9f744c  /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r1/verification-result.json
+4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c  /home/delorenj/.agents/git/hooks/_guard.sh

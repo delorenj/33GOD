@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "delorenj",
+    "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "attempt": 1,
+  "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "completed": "2026-09-05T04:31:22Z",
+  "exit_code": 128,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-preflight.log",
+  "name": "remote-preflight",
+  "sha256": "5363e52fc17c51a24f7e039abe2cbec46aadba7f0a4131b0290614ed84a8f322",
+  "started": "2026-09-05T04:31:22Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

@@ -1,0 +1,9 @@
+=== PR final state ===
+{"baseRefName":"main","headRefName":"feat/33GOD-55-git-travel-guard-remote-ancestry","headRefOid":"54aca968fd16e428fe1378f6f401c068d17e5c4a","mergeCommit":{"oid":"02481c8df4cedbdc11081fe41fcf01859a399566"},"mergedAt":"2026-09-05T09:28:07Z","number":1,"state":"MERGED","title":"33GOD-55: Make the global Git travel guard merge-aware for remote-known ancestry"}
+=== fresh remote main ===
+From github.com:delorenj/agents
+ * branch            main       -> FETCH_HEAD
+   36d3ed6..02481c8  main       -> origin/main
+02481c8df4cedbdc11081fe41fcf01859a399566
+=== remote feature branch still present ===
+54aca968fd16e428fe1378f6f401c068d17e5c4a	refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry

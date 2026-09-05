@@ -1,0 +1,8 @@
+=== feature worktree /tmp/agents-board-cranker-55 ===
+54aca968fd16e428fe1378f6f401c068d17e5c4a
+feat/33GOD-55-git-travel-guard-remote-ancestry
+=== review worktree /tmp/agents-board-cranker-55-quality-review-r1 ===
+54aca968fd16e428fe1378f6f401c068d17e5c4a
+=== canonical handback / postmerge worktree existence ===
+ls: cannot access '/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json': No such file or directory
+ls: cannot access '/tmp/agents-board-cranker-55-postmerge': No such file or directory

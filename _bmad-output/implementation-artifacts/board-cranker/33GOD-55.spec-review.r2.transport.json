@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "classification": "single-balanced-object-transport-normalization",
+  "normalized_at": "2026-09-05T07:20:45.946248+00:00",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-spec-review-r2.raw.txt",
+  "raw_sha256": "5c15ae00b0d36374d9ccb31dc70563f604bcd39c7af29e67be8ed14c93a62456",
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-spec-review-r2.schema.json",
+  "schema_sha256": "51b1629bd49d185987daec396d8290b97a2bd19762dc2ce71250290492d4eac8",
+  "candidate_count": 1,
+  "schema_valid": true,
+  "fields_changed": false,
+  "handback_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.spec-review.r2.json",
+  "handback_sha256": "95ac2fb0564ebe77159a5416f7a3144afd48a33adf4a70edc5083ab9945520ee",
+  "discarded_transport": {
+    "preamble": "• UserPromptSubmit hook\n\n  ⚡ REMINDER: Before starting, check if any skills from /home/delorenj/.agents/skills/ are relevant to this request.\n   - If this project utilizes the bmad method (evident by the precence of ./_bmad* folder(s)) start the session with a brief recap of where the last session left off and suggest the next logical step. If there are options, lay them out. Make sure to think about it and the offer your recommendation. ⚡\n  > NOTE: Take any and all docs with a grain of salt - I'm a one-man dev team and I pivot hard and fast. If something seems off or doesn't make sense, it's very likely stale data. A little trick I use to guide my confidence is to run:\n  \\'llr\\' which is an alias for \\'fdfind --type f --hidden --exclude .git -X ls -lt --time=ctime -r --color=auto\\'\n  I use the modified time as a compass the correlates mutation-recency and decay with local-relevance and accuracy/truth\n\n• Diff read. Now let me inspect pre-existing code and the handback/schema/evidence in parallel.\n\n• Handback valid, all 77 evidence hashes match. Now the executable gates.\n\n• All 25 tests pass. Running remaining static gates.\n\n• AC-1 RED reproduced independently — the old hook blocks the clean merge. Now the AC-6 exact-candidate exercise.\n\n• Now I'll capture before-state, run the exact hook contract, and capture after-state.\n\n• Exit 0, exactly one unpublished commit scanned. Capturing after-state and comparing.\n\n• PR #102409 still OPEN with headRefOid cc00fe6 — matches the receipt. Now cleanup and final verification.\n\n• ",
+    "trailer": "\n\n"
+  }
+}

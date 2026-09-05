@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "ticket": "33GOD-54",
+  "status": "BLOCKED_VERIFIED",
+  "phase": "implementation",
+  "recorded_at": "2026-09-05T05:29:08Z",
+  "failed_prerequisite": "sanctioned normal push that passes the global git travel guard",
+  "handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+  "handback_sha256": "0bf1f17dbe5c99a150302374392c64d4fe2b8c313147d2215c2e444c7ae8f8c7",
+  "push_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log",
+  "push_log_sha256": "0fa893d26942b46417137042016d99b517f243c83a34825f7f15afac9d079f72",
+  "verification": {
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "remote_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "worktree_clean": true,
+    "source_changes": 0,
+    "focused_tests_passed": 50,
+    "adjacent_tests_passed": 24,
+    "matching_full_suite_failures": 48,
+    "branch_only_failures": 0,
+    "base_only_failures": 0,
+    "error_class_changes": 0,
+    "feature_range_travel_exit": 0,
+    "remote_range_travel_exit": 1,
+    "remote_range_commit_count": 4398,
+    "local_only_commit_count": 1
+  },
+  "effects": {
+    "decision_event_id": "df28963a-dc12-416e-a000-c42f77ccee78",
+    "decision_event_live_publish": true,
+    "plane_comment_id": "efc0b008-efab-441e-806f-56267e2fd02e",
+    "plane_transition": "Backlog",
+    "wip_lease_released": true
+  },
+  "next": "Create and claim one separate guard-range repair child; do not retry publication or dispatch specification review until the guard passes normally."
+}

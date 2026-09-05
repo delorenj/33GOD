@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse HEAD",
+  "completed": "2026-09-05T05:06:32Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-final.log",
+  "name": "head-sha-final",
+  "sha256": "f1be116b764698af8283b4fee88fcc86efa66e425725091e942493c083a6e8c7",
+  "started": "2026-09-05T05:06:32Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

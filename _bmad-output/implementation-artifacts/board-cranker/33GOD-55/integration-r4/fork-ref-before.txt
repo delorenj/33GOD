@@ -1,0 +1,7 @@
+=== hermes candidate remotes ===
+delorenj	git@github.com:delorenj/hermes-agent.git (fetch)
+delorenj	git@github.com:delorenj/hermes-agent.git (push)
+origin	git@github.com:NousResearch/hermes-agent.git (fetch)
+origin	git@github.com:NousResearch/hermes-agent.git (push)
+=== fork ref (delorenj remote) ===
+cc00fe6ef855e506ad1bf8166473eecf725af8a8	refs/heads/feat/33GOD-50-stateless-contractor-turns

@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "quality-security",
+  "attempt": 1,
+  "classification": "TRANSPORT_FAILURE_SCHEMA_INVALID",
+  "reviewer_agent_id": "copilot-33god-53-quality-review-r1",
+  "provider": "github-copilot",
+  "model": "auto",
+  "immutable_range": {
+    "platform_base_sha": "97f3229dfdc06779f348ab8e7bee043262c3aaa7",
+    "review_base_sha": "c61c87117c5eb234c4f84ce8cd1933790d8025b5",
+    "head_sha": "00346416144c0e42897b79129be2021908830d1d"
+  },
+  "process": {
+    "started_at": "2026-09-03T17:57:50Z",
+    "finished_at": "2026-09-03T18:03:37Z",
+    "exit_code": 0,
+    "launcher_pid": 2221823,
+    "timeout_pid": 2224383,
+    "reviewer_pid": 2224388,
+    "process_session": "proc_9e2fcde18d00"
+  },
+  "transport": {
+    "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-quality-review-r1.raw.txt",
+    "raw_sha256": "8ab2296a4c9fe0e2df825461713383826807eb4521b4380f7d606ec668ddbc43",
+    "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-quality-review-r1.schema.json",
+    "schema_sha256": "e3172a808d3ebace44311c3791d2de59f1ad416660106b31225ccc56909f6509",
+    "balanced_top_level_json_objects": 1,
+    "non_json_preamble": "",
+    "non_json_trailer": "",
+    "json_parse_valid": true,
+    "schema_valid": false,
+    "schema_error_count": 30,
+    "failure_summary": "The one balanced object used an incompatible response shape: eight unexpected top-level fields, eight required top-level fields absent, reviewer independence fields absent, and two finding objects invalid. The object cannot be installed without changing fields.",
+    "canonical_handback_written": false
+  },
+  "disposition": {
+    "substantive_verdict_consumed": false,
+    "code_fix_attempt_consumed": false,
+    "review_attempt_consumed": true,
+    "retry_allowed": true,
+    "retry_requirement": "One fresh quality/security reviewer through a different provider/tool on the unchanged immutable range, executable clean detached worktree, and 1800-second hard timeout."
+  },
+  "recorded_at": "2026-09-03T18:11:49Z"
+}

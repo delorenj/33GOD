@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "--no-optional-locks",
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all"
+  ],
+  "attempt": 1,
+  "command": "git --no-optional-locks status --porcelain=v1 --untracked-files=all",
+  "completed": "2026-09-05T11:55:46Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-status-final.log",
+  "name": "hermes-primary-status-final",
+  "sha256": "5d727f73533e4dc2cfedcf8247a24d0d39875c6ae4bc122662f2f653e9ff4a10",
+  "started": "2026-09-05T11:55:46Z",
+  "worktree": "/home/delorenj/.hermes/hermes-agent"
+}

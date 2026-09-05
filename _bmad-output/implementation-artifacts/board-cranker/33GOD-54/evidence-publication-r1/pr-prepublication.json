@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "gh",
+    "pr",
+    "view",
+    "102409",
+    "--repo",
+    "NousResearch/hermes-agent",
+    "--json",
+    "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft"
+  ],
+  "attempt": 1,
+  "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft",
+  "completed": "2026-09-05T05:03:41Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-prepublication.log",
+  "name": "pr-prepublication",
+  "sha256": "2c6d579a3d054938cb1afeb5ddb4c9aa53dc343fa048f893957859b0127980fe",
+  "started": "2026-09-05T05:03:41Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

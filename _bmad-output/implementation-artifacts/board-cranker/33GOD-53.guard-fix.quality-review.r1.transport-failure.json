@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "quality-security",
+  "classification": "schema_invalid_transport_not_quality_judgment",
+  "recorded_at": "2026-09-03T22:13:39Z",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-guard-quality-review-r1.raw.txt",
+  "raw_sha256": "07f539a9277a0e3617669578c5d6f9332e1f29e1ae6a33aa0cf6957985a5b33e",
+  "candidate_count": 1,
+  "top_level_json_object": true,
+  "wrapped_transport": false,
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-guard-quality-review-r1.schema.json",
+  "schema_sha256": "84e356d709aeba19492a10f085d13d8b1c0322c0f752ae3e011189d1b64d73a1",
+  "schema_valid": false,
+  "schema_validation_exit_code": 1,
+  "schema_errors_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r1.schema-errors.log",
+  "schema_errors_log_sha256": "f74ee01193469782ab4928d08d06ba14bf0c629c034abece96cd37f0301d571e",
+  "verdict_consumed": false,
+  "fields_repaired": false,
+  "source_mutation": false,
+  "recovery": "One final fresh quality/security transport recovery is permitted on the same immutable range through Auggie/Kimi."
+}

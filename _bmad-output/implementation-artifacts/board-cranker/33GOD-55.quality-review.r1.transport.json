@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "classification": "single-balanced-object-transport-normalization",
+  "normalized_at": "2026-09-05T07:31:50.498945+00:00",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-quality-review-r1.raw.txt",
+  "raw_sha256": "9a8e6a3fc5b32a2aed197d4541c8b7c1471f1d4e1d342fecb3b3a28b40942da4",
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-quality-review-r1.schema.json",
+  "schema_sha256": "2b3a77bbc404d954e9378229f19b2d9d50083028dfce4f884f515fa9226949e4",
+  "candidate_count": 1,
+  "schema_valid": true,
+  "fields_changed": false,
+  "handback_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.quality-review.r1.json",
+  "handback_sha256": "3d656c58ec498fd051ce6dd3f6dccb07d3d470a6e2e316090b6a45bed3ef676a",
+  "discarded_transport": {
+    "preamble": "I’m auditing the immutable range, handbacks, evidence, and required executable checks without modifying the worktree.\n\nThe implementation is narrowly scoped and the core helper is now understood; I’m moving to independent execution, including adversarial topology/error paths and the exact candidate contract.\n\n",
+    "trailer": "\n\n"
+  }
+}

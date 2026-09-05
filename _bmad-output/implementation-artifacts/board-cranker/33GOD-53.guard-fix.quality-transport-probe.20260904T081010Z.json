@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "action": "provider_availability_probe",
+  "campaign": "board-cranker",
+  "owner_agent_id": "33god-pm",
+  "controller_lock_verified": true,
+  "ticket": "33GOD-53",
+  "gate": "quality-security",
+  "checked_at": "2026-09-04T08:07:34Z",
+  "recorded_at": "2026-09-04T08:10:10Z",
+  "plane_state": "E2E Testing & QA",
+  "plane_readback_method": "momo ticket-provider adapter",
+  "immutable_range": "97f3229dfdc06779f348ab8e7bee043262c3aaa7..cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "review_worktree": "/tmp/hermes-board-cranker-53-guard-quality-review-r2",
+  "review_worktree_head": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "review_worktree_clean": true,
+  "review_environment": {
+    "pytest": "pytest 9.1.1",
+    "ruff": "ruff 0.15.10"
+  },
+  "canonical_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r2.json",
+  "canonical_handback_present": false,
+  "saved_reviewer_pids": [
+    3158260,
+    3158860,
+    3158863
+  ],
+  "saved_reviewer_pids_alive": [],
+  "matching_review_processes": [],
+  "provider": {
+    "name": "augment",
+    "cli_path": "/home/delorenj/.local/share/mise/installs/node/26.5.0/bin/auggie",
+    "cli_version": "0.35.0 (commit 9a7f3836)",
+    "model": "kimi-k3",
+    "mode": "noninteractive-availability-probe",
+    "exit_code": 0,
+    "http_status": 403,
+    "available": false,
+    "classification": "pre_execution_credits_exhausted",
+    "review_executed": false,
+    "verdict_consumed": false,
+    "message": "Augment account credits remain exhausted; the probe exited before review execution.",
+    "request_id": "f6675670-6749-4891-98a3-709fedb953cd",
+    "transport_output_observed": [
+      "Warning: Could not fetch tenant MCP server configurations: HTTP error: 403 Forbidden",
+      "You have run out of credits for jaradd@gmail.com. Please visit https://app.augmentcode.com/account to upgrade.",
+      "Request ID: f6675670-6749-4891-98a3-709fedb953cd"
+    ]
+  },
+  "source_mutation": false,
+  "shared_wip_disposition": "retain",
+  "decision_event_id": "23d3042b-79e5-4226-9bbf-b7bae0be0943",
+  "decision_publish_exit_code": 0,
+  "decision_local_envelope_verified": true,
+  "decision_candystore_projection_verified": true,
+  "plane_comment_action": "skipped_duplicate_unchanged_blocker",
+  "next_allowed_action": "Reverify worker and canonical handback first. After a bounded cooldown, probe an allowed Auggie/Kimi transport again; dispatch only when available."
+}

@@ -1,0 +1,67 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "delorenj",
+    "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "command_finished_at": "2026-09-05T14:06:51.620580Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:06:51.722725Z",
+  "finished_monotonic_ns": 1345994310995304,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/remote-metadata-recovery-before.log",
+  "name": "remote-metadata-recovery-before",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "git",
+          "ls-remote",
+          "--exit-code",
+          "delorenj",
+          "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 266286,
+        "pid": 266286,
+        "ppid": 266207,
+        "session": 266286,
+        "start_ticks": "134599345",
+        "state": "S"
+      },
+      {
+        "argv": [
+          "/usr/bin/ssh",
+          "-o",
+          "SendEnv=GIT_PROTOCOL",
+          "git@github.com",
+          "git-upload-pack 'delorenj/hermes-agent.git'"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 266286,
+        "pid": 266287,
+        "ppid": 266286,
+        "session": 266286,
+        "start_ticks": "134599346",
+        "state": "S"
+      }
+    ],
+    "pid": 266286,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 266207
+  },
+  "sequence_index": 0,
+  "sha256": "40c1a5b8ce7be66f0695dc781936ab1db3b12b513c6c3db7b87c035a06d58637",
+  "started_at": "2026-09-05T14:06:50.871071Z",
+  "started_monotonic_ns": 1345993459310881,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

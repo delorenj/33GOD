@@ -1,0 +1,11 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "failed_nodes": {},
+  "name": "adjacent-candidate",
+  "passed": 24,
+  "reports_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/adjacent-candidate.reports.json",
+  "reports_sha256": "ecbe8e062fcedcefad42c17635190738f04a91a53b3b8ca9983b5ff03253220f",
+  "skipped": 0,
+  "tests_collected": 24
+}

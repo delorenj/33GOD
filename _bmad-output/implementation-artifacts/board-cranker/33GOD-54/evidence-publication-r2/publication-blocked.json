@@ -1,0 +1,97 @@
+{
+  "base_only_error": "[Errno 98] Address already in use",
+  "base_only_error_class": "OSError",
+  "base_only_failures": [
+    "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+  ],
+  "branch_only_failures": [],
+  "cause": "The worker scheduled the complete candidate/base pair concurrently. The baseline test failed binding a fixed Linux abstract socket shared across both processes; separate HERMES_HOME/TMPDIR roots do not isolate that socket namespace.",
+  "classification": "All 48 common node/error records match, but the one base-only failure makes exact broad equivalence FAIL. Isolated diagnostic passes cannot replace or normalize the complete pair.",
+  "diagnostic_isolated_results": {
+    "base": {
+      "argv": [
+        "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+      ],
+      "attempt": 1,
+      "canonical_node_error_json": "[]",
+      "canonical_node_error_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+      "completed": "2026-09-05T11:55:17Z",
+      "environment": {
+        "GIT_OPTIONAL_LOCKS": "0",
+        "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-base/hermes-home",
+        "HOME": "/home/delorenj",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONHASHSEED": "0",
+        "PYTHONUTF8": "1",
+        "RUFF_NO_CACHE": "true",
+        "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-base",
+        "TZ": "UTC"
+      },
+      "exit_code": 0,
+      "failure_count": 0,
+      "failures": [],
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/systemd-isolated-base.log",
+      "name": "systemd-isolated-base",
+      "sha256": "086ae333b24107e301c1992bb8000c645af79e8cfaa6cb6bb08ec14c4b4e63f1",
+      "started": "2026-09-05T11:55:17Z",
+      "summary": "1 passed in 0.13s",
+      "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+    },
+    "head": {
+      "argv": [
+        "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+      ],
+      "attempt": 1,
+      "canonical_node_error_json": "[]",
+      "canonical_node_error_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+      "completed": "2026-09-05T11:55:17Z",
+      "environment": {
+        "GIT_OPTIONAL_LOCKS": "0",
+        "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-head/hermes-home",
+        "HOME": "/home/delorenj",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONHASHSEED": "0",
+        "PYTHONUTF8": "1",
+        "RUFF_NO_CACHE": "true",
+        "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-head",
+        "TZ": "UTC"
+      },
+      "exit_code": 0,
+      "failure_count": 0,
+      "failures": [],
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/systemd-isolated-head.log",
+      "name": "systemd-isolated-head",
+      "sha256": "8470d31e572b9e032ddc100412a5451e7268c80bf74bec968984fe4f27d5706c",
+      "started": "2026-09-05T11:55:16Z",
+      "summary": "1 passed in 0.13s",
+      "worktree": "/tmp/hermes-board-cranker-50"
+    }
+  },
+  "error_class_changes": [],
+  "full_pairs_run": 1,
+  "next_prerequisite": "A new authorized attempt should execute the complete candidate and baseline suites sequentially to avoid shared abstract socket contention; no product source fix is indicated by this failure.",
+  "publication": "NOT_RUN: differential gate failed; remote and PR title/body unchanged.",
+  "retry_decision": "No second complete pair: user permits it only if candidate-only failures remain, and none do.",
+  "shared_abstract_socket": "hermes-test-notify",
+  "status": "BLOCKED"
+}

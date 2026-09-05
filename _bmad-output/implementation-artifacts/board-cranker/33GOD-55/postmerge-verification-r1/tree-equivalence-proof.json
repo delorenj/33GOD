@@ -1,0 +1,34 @@
+{
+  "reviewed_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+  "merge_commit_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+  "reviewed_head_tree": {
+    "argv": [
+      "git",
+      "show",
+      "-s",
+      "--format=%T",
+      "54aca968fd16e428fe1378f6f401c068d17e5c4a"
+    ],
+    "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+    "exit_code": 0,
+    "stdout": "7d122550387e1459794acf81ae37bbeef879de07\n",
+    "stderr": ""
+  },
+  "merge_commit_tree": {
+    "argv": [
+      "git",
+      "show",
+      "-s",
+      "--format=%T",
+      "02481c8df4cedbdc11081fe41fcf01859a399566"
+    ],
+    "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+    "exit_code": 0,
+    "stdout": "7d122550387e1459794acf81ae37bbeef879de07\n",
+    "stderr": ""
+  },
+  "invariants": {
+    "all_commands_exit_zero": true,
+    "tree_equivalent": true
+  }
+}

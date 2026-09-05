@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "git",
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all"
+  ],
+  "attempt": 1,
+  "command": "git status --porcelain=v1 --untracked-files=all",
+  "completed": "2026-09-05T05:03:40Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-prepublication.log",
+  "name": "base-clean-prepublication",
+  "sha256": "3d498fba456d86ea0ec8ae47c7e9cdd8a545da5c22010e6f70615a65977bd52c",
+  "started": "2026-09-05T05:03:40Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

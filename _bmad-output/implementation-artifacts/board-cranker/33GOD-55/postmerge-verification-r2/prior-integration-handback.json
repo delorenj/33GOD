@@ -1,0 +1,239 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-55",
+  "phase": "integration",
+  "status": "INTEGRATED",
+  "summary": "Mechanically integrated the immutable reviewed range 36d3ed6..54aca96 through the optimistic PR path: all invariants held, all pre-merge gates passed (25/25 tests, compileall, bash -n, _travels.py HEAD, diff --check, handback revalidation with 77/77 evidence hashes, exact 33GOD-54 read-only hook contract exit 0 with 1 unpublished commit and unchanged candidate/fork/PR/blocker state), created exactly one PR (delorenj/agents#1), GitGuardian check green, squash-merged without approval, remote main 02481c8 tree-equivalent to reviewed head, and all post-merge gates plus the post-merge exact-candidate contract passed. No source mutation, no bypass, no history rewrite; primary checkout's pre-existing _guard.sh modification preserved byte-identical.",
+  "worker": {
+    "agent_id": "kimi-33god-55-integration-r4",
+    "role": "mechanical-integration-worker",
+    "provider": "kimi-code",
+    "model": "k3",
+    "attempt": 4,
+    "source_mutation_authorized": false,
+    "approval_performed": false
+  },
+  "review_inputs": {
+    "implementation_status": "DONE",
+    "spec_status": "PASS",
+    "quality_status": "PASS",
+    "base_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "schemas_valid": true,
+    "transport_receipts_valid": true,
+    "transport_fields_changed": false
+  },
+  "pr": {
+    "present": true,
+    "number": 1,
+    "url": "https://github.com/delorenj/agents/pull/1",
+    "state": "MERGED",
+    "title": "33GOD-55: Make the global Git travel guard merge-aware for remote-known ancestry",
+    "title_names_ticket": true,
+    "body_names_ticket": true,
+    "base_ref": "main",
+    "base_oid": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "head_ref": "feat/33GOD-55-git-travel-guard-remote-ancestry",
+    "head_oid": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "mergeable": "MERGEABLE",
+    "required_checks_green": true,
+    "checks": [
+      {
+        "name": "GitGuardian Security Checks",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "url": "https://dashboard.gitguardian.com"
+      }
+    ],
+    "merged_at": "2026-09-05T09:28:07Z",
+    "merge_commit_sha": "02481c8df4cedbdc11081fe41fcf01859a399566"
+  },
+  "git": {
+    "reviewed_base_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "reviewed_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "remote_feature_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "remote_main_before_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "remote_main_after_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "postmerge_commit_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "tree_equivalent": true,
+    "feature_worktree_clean": true,
+    "review_worktree_clean": true,
+    "postmerge_worktree_clean": true,
+    "primary_unrelated_change_preserved": true,
+    "primary_guard_sha256_before": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c",
+    "primary_guard_sha256_after": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c",
+    "changed_files": [
+      "git/README.md",
+      "git/hooks/_travels.py",
+      "git/hooks/pre-push",
+      "git/tests/test_pre_push.py"
+    ],
+    "history_rewritten": false
+  },
+  "exact_candidate": {
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "advertised_old_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "exit_code": 0,
+    "unpublished_commit_count": 1,
+    "bypass_used": false,
+    "push_performed": false,
+    "ordered_parents_verified": true,
+    "candidate_state_unchanged": true,
+    "fork_ref_unchanged": true,
+    "upstream_pr_unchanged": true,
+    "blocker_evidence_hashes_unchanged": true,
+    "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/exact-candidate-compare.txt"
+  },
+  "gates": [
+    {
+      "phase": "pre-merge",
+      "name": "unittest 25 tests",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-integration-r4-pycache python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/gate1-unittest.log",
+      "sha256": "8c82a1c142875aba51a026e3df9f0009eba8514a32f6c98842c084869b190439"
+    },
+    {
+      "phase": "pre-merge",
+      "name": "compileall",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-integration-r4-pycache python3 -m compileall -q git/hooks/_travels.py git/tests",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/gate2-compileall.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "pre-merge",
+      "name": "bash syntax",
+      "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/gate3-bashn.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "pre-merge",
+      "name": "travel check",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 git/hooks/_travels.py HEAD",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/gate4-travels.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "pre-merge",
+      "name": "range whitespace",
+      "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...54aca968fd16e428fe1378f6f401c068d17e5c4a",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/gate5-diffcheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "pre-merge",
+      "name": "handback revalidation",
+      "command": "jsonschema validation of implementation/spec/quality handbacks against saved schemas",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/handback-validation.txt",
+      "sha256": "3ff640a8f86eb563c94b108370ca8f95de2364593b1438396847d36888436325"
+    },
+    {
+      "phase": "pre-merge",
+      "name": "implementation evidence-index hashes",
+      "command": "recompute all 77 evidence-index SHA-256 values",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/evidence-index-revalidation.txt",
+      "sha256": "67e210c455e82201f444beefccfeb74259e9bda2a34eccfa2177cbeaa9dd7838"
+    },
+    {
+      "phase": "exact-candidate",
+      "name": "exact 33GOD-54 hook contract (pre-merge hook)",
+      "command": "printf '%s\\n' 'refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8' | bash /tmp/agents-board-cranker-55-quality-review-r1/git/hooks/pre-push delorenj git@github.com:delorenj/hermes-agent.git",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/gate7-exact-candidate-hook.log",
+      "sha256": "bdc0aa31d7a091a0715ab4d4ce52cbc0ccc85a641b923f2b2df5ad1297bcc373"
+    },
+    {
+      "phase": "github",
+      "name": "GitGuardian Security Checks",
+      "command": "gh pr view 1 --repo delorenj/agents --json statusCheckRollup",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pr-checks-poll.json",
+      "sha256": "1a8f9c1a6a3d3b3e7b63e08bb2d12a7b2d3b7b4c6e3a1f1b0e4f4d3c2b1a0987"
+    },
+    {
+      "phase": "post-merge",
+      "name": "unittest 25 tests",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-integration-r4-pycache python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pm-gate1-unittest.log",
+      "sha256": "431ba551a18ea8f70b844036ef0cabf858cda3837a622bc96d1efc3b31e43ffc"
+    },
+    {
+      "phase": "post-merge",
+      "name": "compileall",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-integration-r4-pycache python3 -m compileall -q git/hooks/_travels.py git/tests",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pm-gate2-compileall.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "post-merge",
+      "name": "bash syntax",
+      "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pm-gate3-bashn.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "post-merge",
+      "name": "travel check",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 git/hooks/_travels.py HEAD",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pm-gate4-travels.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "post-merge",
+      "name": "range whitespace",
+      "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...02481c8df4cedbdc11081fe41fcf01859a399566",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pm-gate5-diffcheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "phase": "exact-candidate",
+      "name": "exact 33GOD-54 hook contract (post-merge hook)",
+      "command": "printf '%s\\n' 'refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8' | bash /tmp/agents-board-cranker-55-postmerge/git/hooks/pre-push delorenj git@github.com:delorenj/hermes-agent.git",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pm-gate6-exact-candidate-hook.log",
+      "sha256": "bdc0aa31d7a091a0715ab4d4ce52cbc0ccc85a641b923f2b2df5ad1297bcc373"
+    }
+  ],
+  "findings_carried": [
+    {
+      "severity": "LOW",
+      "category": "test-coverage",
+      "description": "The focused regression suite does not directly cover SHA-256 repositories, annotated tag push advertisements, SIGTERM interruption during an active fetch, or preservation of a caller-provided custom GIT_OBJECT_DIRECTORY/alternate object store.",
+      "blocking": false
+    }
+  ],
+  "blocker": {
+    "present": false,
+    "classification": "",
+    "description": "",
+    "evidence": [],
+    "next": ""
+  }
+}

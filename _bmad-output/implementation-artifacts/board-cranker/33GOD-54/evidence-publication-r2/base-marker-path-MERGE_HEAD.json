@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "MERGE_HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path MERGE_HEAD",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-MERGE_HEAD.log",
+  "name": "base-marker-path-MERGE_HEAD",
+  "sha256": "80c0b9b164240f9da9c124cddad8606438d543fd6f0a5017750bb2a4a37da3b7",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

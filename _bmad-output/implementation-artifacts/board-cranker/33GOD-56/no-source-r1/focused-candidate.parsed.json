@@ -1,0 +1,11 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "failed_nodes": {},
+  "name": "focused-candidate",
+  "passed": 50,
+  "reports_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/focused-candidate.reports.json",
+  "reports_sha256": "18ebd2462fddd50a7f3fe50cce61dea75292336506e66cd5fef7b9b132b9841d",
+  "skipped": 0,
+  "tests_collected": 50
+}

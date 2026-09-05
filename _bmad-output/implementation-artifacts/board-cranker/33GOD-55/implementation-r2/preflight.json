@@ -1,0 +1,106 @@
+{
+  "owner_agent_id": "33god-pm",
+  "worktree": {
+    "command": [
+      "git",
+      "rev-parse",
+      "--show-toplevel"
+    ],
+    "exit_code": 0,
+    "stdout": "/tmp/agents-board-cranker-55\n",
+    "stderr": ""
+  },
+  "branch": {
+    "command": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "exit_code": 0,
+    "stdout": "feat/33GOD-55-git-travel-guard-remote-ancestry\n",
+    "stderr": ""
+  },
+  "head": {
+    "command": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit_code": 0,
+    "stdout": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f\n",
+    "stderr": ""
+  },
+  "origin_main": {
+    "command": [
+      "git",
+      "rev-parse",
+      "origin/main"
+    ],
+    "exit_code": 0,
+    "stdout": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f\n",
+    "stderr": ""
+  },
+  "status": {
+    "command": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "primary_status": {
+    "command": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit_code": 0,
+    "stdout": " M git/hooks/_guard.sh\n",
+    "stderr": ""
+  },
+  "primary_guard_sha256": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c",
+  "tools": {
+    "git": "/usr/bin/git",
+    "bash": "/usr/bin/bash",
+    "python3": "/home/delorenj/.local/share/mise/installs/python/3.11.13/bin/python3"
+  },
+  "blocker_artifact_hashes": [
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+      "sha256": "0bf1f17dbe5c99a150302374392c64d4fe2b8c313147d2215c2e444c7ae8f8c7"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.blocker-reconciliation.json",
+      "sha256": "34a312da67cb5e2095f163d461ed24877eaad2c5052da7f3b9c7044d768e2ffa"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log",
+      "sha256": "0fa893d26942b46417137042016d99b517f243c83a34825f7f15afac9d079f72"
+    }
+  ],
+  "prior_preflight_files": [
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r1/preflight-remote.json",
+      "sha256": "a6ca1370816dedda6dfca5883ccee1ce91ebcb1104501f34b3126e0b6f6ef58d"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r1/preflight.json",
+      "sha256": "2e759b605b0fee2ee98353574918ac55f045345ac7eeed37789fd7b717017ff6"
+    }
+  ],
+  "in_progress": [],
+  "remote": {
+    "command": [
+      "git",
+      "ls-remote",
+      "origin",
+      "refs/heads/main",
+      "refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry"
+    ],
+    "exit_code": 128,
+    "stdout": "",
+    "stderr": "Bad owner or permissions on /etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n"
+  }
+}

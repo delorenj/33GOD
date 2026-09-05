@@ -1,0 +1,21 @@
+{
+  "captured_at": "2026-09-05T09:57:17.405546+00:00",
+  "path": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+  "sha256": "1c440d8c4473bf997c5f6e666f41a107245776e928c6d308b425707a1152a496",
+  "content": {
+    "schema_version": 1,
+    "project_slug": "33god",
+    "campaign": "board-cranker",
+    "owner_agent_id": "33god-pm",
+    "owner_profile": "33god-pm",
+    "observer_agent_ids": [
+      "james-brennan-pm"
+    ],
+    "epoch": 1,
+    "set_at": "2026-09-02T20:04:01-04:00",
+    "reason": "The durable five-minute 33god-pm controller is the sole dispatcher for this campaign. The interactive james-brennan-pm agent audits evidence and may steer the owner, but must not dispatch a competing worker."
+  },
+  "invariants": {
+    "owner_is_33god_pm": true
+  }
+}

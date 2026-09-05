@@ -1,0 +1,26 @@
+{
+  "hook_contract_command": "printf %s 'refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n' | bash /tmp/agents-board-cranker-55/git/hooks/pre-push delorenj git@github.com:delorenj/hermes-agent.git",
+  "argv": [
+    "bash",
+    "/tmp/agents-board-cranker-55/git/hooks/pre-push",
+    "delorenj",
+    "git@github.com:delorenj/hermes-agent.git"
+  ],
+  "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+  "cwd": "/tmp/hermes-board-cranker-50",
+  "exit_code": 1,
+  "seconds": 23.954,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-precommit-hook.log",
+  "sha256": "932b63ecbb5bd41da4ff799ed5cd119872db0b051529ba9d5c17c3dbe42076dd",
+  "candidate_head_unchanged": true,
+  "candidate_tree_clean": true,
+  "ordered_parents_verified": true,
+  "candidate_all_state_unchanged": true,
+  "baseline_all_state_unchanged": true,
+  "fork_ref_unchanged": true,
+  "origin_main_unchanged": true,
+  "pr_unchanged": true,
+  "evidence_hashes_unchanged": true,
+  "bypass_used": false,
+  "push_performed": false
+}

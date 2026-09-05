@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "sequencer"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path sequencer",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-sequencer-final.log",
+  "name": "base-marker-sequencer-final",
+  "sha256": "1bd0c67584ed1052da6d1f5b9cc0a67cffee49436a0c66e402ff2b6490d51602",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

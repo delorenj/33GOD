@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "baseline_sha": "97f3229dfdc06779f348ab8e7bee043262c3aaa7",
+  "dispatch_head_sha": "00346416144c0e42897b79129be2021908830d1d",
+  "head_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o 'addopts=' tests/gateway",
+  "head": {
+    "exit_code": 1,
+    "summary": "8 failed, 7714 passed, 19 skipped, 2 xfailed, 182 warnings in 801.18s",
+    "failures": [
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent",
+        "error_class": "AssertionError"
+      }
+    ]
+  },
+  "baseline": {
+    "exit_code": 1,
+    "summary": "8 failed, 7671 passed, 19 skipped, 2 xfailed, 181 warnings in 808.65s",
+    "failures": [
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent",
+        "error_class": "AssertionError"
+      }
+    ]
+  },
+  "branch_only_failures": [],
+  "base_only_failures": [],
+  "error_class_changes": [],
+  "status": "PASS",
+  "rationale": "The exact failing node IDs and their primary exception classes are identical on immutable base and final head. The 43 additional head passes are the feature branch's added gateway tests."
+}

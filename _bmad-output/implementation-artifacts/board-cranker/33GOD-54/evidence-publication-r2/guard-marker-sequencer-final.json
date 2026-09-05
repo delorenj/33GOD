@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "sequencer"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path sequencer",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-sequencer-final.log",
+  "name": "guard-marker-sequencer-final",
+  "sha256": "c33242cbff6c45fa13f5a92949cad440c02b7dfee21f26df685d4c628e8aa457",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

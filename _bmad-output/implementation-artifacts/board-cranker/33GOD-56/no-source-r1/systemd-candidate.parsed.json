@@ -1,0 +1,11 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "failed_nodes": {},
+  "name": "systemd-candidate",
+  "passed": 1,
+  "reports_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/systemd-candidate.reports.json",
+  "reports_sha256": "d4aa18c9939d42ca7d52f23a76b9c8ff548ce955ac701d96f6a3deacb906e0b6",
+  "skipped": 0,
+  "tests_collected": 1
+}

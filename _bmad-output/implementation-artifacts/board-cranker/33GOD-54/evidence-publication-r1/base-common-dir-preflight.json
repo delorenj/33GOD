@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-common-dir"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-common-dir",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-common-dir-preflight.log",
+  "name": "base-common-dir-preflight",
+  "sha256": "381353b6742063cafaa9aaf2eaf235567161db7bca3678ff2c4e67717dc051bd",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "delorenj",
+    "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "attempt": 1,
+  "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "completed": "2026-09-05T11:55:17Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/remote-blocked-final.log",
+  "name": "remote-blocked-final",
+  "sha256": "b4ff50f7f30738e7ef42277e7a6816939e4544b2e7562dc4acb212931d00c460",
+  "started": "2026-09-05T11:55:17Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

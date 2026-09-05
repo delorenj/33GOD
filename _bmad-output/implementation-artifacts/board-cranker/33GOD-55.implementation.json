@@ -1,0 +1,275 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-55",
+  "phase": "implementation",
+  "status": "DONE",
+  "summary": "Implemented and normally pushed one focused commit. All 25 regression tests and required committed-HEAD gates passed. The repaired hook accepts the exact immutable Hermes candidate, scanning one unpublished commit. Protected primary, Hermes, fork, PR, and blocker evidence state remained unchanged.",
+  "worker": {
+    "agent_id": "codex-33god-55-implementation-r2",
+    "role": "implementation-worker",
+    "provider": "openai-codex",
+    "model": "gpt-6-astra",
+    "attempt": 2
+  },
+  "immutable_ground": {
+    "base_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "branch": "feat/33GOD-55-git-travel-guard-remote-ancestry",
+    "owner_agent_id": "33god-pm",
+    "primary_guard_sha256_before": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c",
+    "primary_guard_sha256_after": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c",
+    "blocked_candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "blocked_candidate_parents": [
+      "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+      "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+    ],
+    "blocker_artifact_hashes": [
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+        "sha256": "0bf1f17dbe5c99a150302374392c64d4fe2b8c313147d2215c2e444c7ae8f8c7"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.blocker-reconciliation.json",
+        "sha256": "34a312da67cb5e2095f163d461ed24877eaad2c5052da7f3b9c7044d768e2ffa"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log",
+        "sha256": "0fa893d26942b46417137042016d99b517f243c83a34825f7f15afac9d079f72"
+      }
+    ]
+  },
+  "repository": {
+    "owning_repo": "/home/delorenj/.agents",
+    "worktree": "/tmp/agents-board-cranker-55",
+    "branch": "feat/33GOD-55-git-travel-guard-remote-ancestry",
+    "base_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "commit_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "commit_subject": "fix(git): make push ancestry scans merge-aware (33GOD-55)",
+    "remote_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "pushed": true,
+    "start_clean": true,
+    "end_clean": true,
+    "changed_files": [
+      "git/README.md",
+      "git/hooks/_travels.py",
+      "git/hooks/pre-push",
+      "git/tests/test_pre_push.py"
+    ],
+    "forbidden_files_touched": [],
+    "history_rewritten": false
+  },
+  "tdd": {
+    "red_command": "python3 git/tests/test_pre_push.py MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent -v",
+    "red_exit_code": 1,
+    "red_expected_failure": "Unmodified hook rejected the clean merge for historical-missing inherited from a verified remote-known integration parent. The fixture had exactly one unpublished commit. Assertion: FALSE BLOCK: remote-known integration ancestry was rescanned.",
+    "red_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red.log",
+    "green_commands": [
+      "python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+      "python3 -m compileall -q git/hooks/_travels.py git/tests",
+      "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+      "python3 git/hooks/_travels.py HEAD",
+      "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...HEAD",
+      "python3 git/tests/test_pre_push.py MergeTopologyTests -v",
+      "git diff --check",
+      "python3 /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact_33god_54.py committed"
+    ]
+  },
+  "merge_topology": {
+    "fixture_receipt": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/merge-topology-fixtures.json",
+    "existing_ref_clean_merge_passed": true,
+    "new_ref_clean_merge_passed": true,
+    "remote_known_parent_excluded": true,
+    "genuinely_unpublished_count": 1,
+    "normal_missing_import_rejected": true,
+    "local_only_merged_parent_missing_import_rejected": true,
+    "merge_resolution_missing_import_rejected": true,
+    "credential_scan_preserved": true,
+    "unreadable_base_failed_closed": true,
+    "branch_deletion_preserved": true,
+    "local_hook_chain_preserved": true,
+    "persistent_refs_unchanged": true,
+    "branch_index_worktree_unchanged": true,
+    "bypass_used": false
+  },
+  "exact_33god_54": {
+    "hook_contract_command": "printf '%s\\n' 'refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8' | bash /tmp/agents-board-cranker-55/git/hooks/pre-push delorenj git@github.com:delorenj/hermes-agent.git",
+    "exit_code": 0,
+    "candidate_head_unchanged": true,
+    "candidate_tree_clean": true,
+    "ordered_parents_verified": true,
+    "fork_ref_unchanged": true,
+    "pr_unchanged": true,
+    "evidence_hashes_unchanged": true,
+    "receipt": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-receipt.json"
+  },
+  "checks": [
+    {
+      "name": "RED: expected remote-known ancestry rejection",
+      "command": "python3 git/tests/test_pre_push.py MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent -v",
+      "exit_code": 1,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red.log",
+      "sha256": "535cdd3c20874e2752accf0ebebbedcffda28db937446de97f452d1b55e84ca9"
+    },
+    {
+      "name": "Supplemental RED: inherited credential content regression",
+      "command": "python3 git/tests/test_pre_push.py MergeTopologyTests.test_remote_known_credential_fixture_is_not_novel_merge_content -v",
+      "exit_code": 1,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red-credential-boundary.log",
+      "sha256": "0826384cddc5739040d057eb5c2c5f107d35a4e6b66b5ba25892ca23736f3319"
+    },
+    {
+      "name": "Committed HEAD: complete suite, 25 tests",
+      "command": "python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log",
+      "sha256": "cb66f5ffc6fdaf35f6312ab58c24a78dabaebc0086f36b66636251e449cc243d"
+    },
+    {
+      "name": "Committed HEAD: Python compilation",
+      "command": "python3 -m compileall -q git/hooks/_travels.py git/tests",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "Committed HEAD: Bash syntax",
+      "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-3.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "Committed HEAD: travel check",
+      "command": "python3 git/hooks/_travels.py HEAD",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-4.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "Committed HEAD: base-to-head whitespace",
+      "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...HEAD",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-5.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "Committed HEAD: full merge topology integration",
+      "command": "python3 git/tests/test_pre_push.py MergeTopologyTests -v",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log",
+      "sha256": "641c2dfd91d0558fc8c5c68084ec8f73269e52441770b50410d248b4db2cfbdc"
+    },
+    {
+      "name": "Committed HEAD: documented working-diff gate",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-7.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "Committed implementation: exact immutable Hermes hook exercise",
+      "command": "python3 /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact_33god_54.py committed",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-hook.log",
+      "sha256": "bdc0aa31d7a091a0715ab4d4ce52cbc0ccc85a641b923f2b2df5ad1297bcc373"
+    },
+    {
+      "name": "Normal push with configured hooks enabled",
+      "command": "git push -u origin HEAD:refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/push.log",
+      "sha256": "ad996c2bfb1d74d54579f1eb3aeeeef12d3ec7c221709b246fab8eb745c22327"
+    },
+    {
+      "name": "Remote HEAD equals committed local HEAD",
+      "command": "git ls-remote origin refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/remote-verification.json",
+      "sha256": "a5e9eee36f5cb40d66294af92fc5bc1ccd955bb40b257b875661391bfb2c64b4"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/evidence-index.json",
+      "sha256": "a8377f370c6aaedb324fa2fb6e0aa3bfe43da6ba777aad006d48f549fae3346e"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/command-manifest.json",
+      "sha256": "aab5c5b0341551b3cd91243d2fc9ca1f77ca711f5a1e79d5ca79f8a5058d6a3c"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/preflight.json",
+      "sha256": "f9b6242487c37220debdee93d3fac6b47a80a1e755cff480957033e00e141c2e"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/preflight-remote.json",
+      "sha256": "e00594ced41002fa3c3d5f7771352dd819ebedea16f1382910968d9fa239515a"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/merge-topology-fixtures.json",
+      "sha256": "edcbd9e42e033d14cdab78f516f7ae1591d22144d520979247010900291e4c6d"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-checks.json",
+      "sha256": "b37fc7b4d23330a5b3e0ebd5ce78847e94fd1ddd32b000b1207b1aa7ab08cdac"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-checks.json",
+      "sha256": "7e282afc9489de745bd59a1e36f9bc4794e81e234052668ce96399c2fe565e9e"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-receipt.json",
+      "sha256": "a5492a185d8e77e18c56eabe275f0c4baf14468be7289f4a72ba76f48bd6c2f3"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-before.json",
+      "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/exact-committed-after.json",
+      "sha256": "39186200491e11aee9e0f39cf36d07e148d5f77cf67664c59991c961c46f6973"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/forbidden-scope-audit.json",
+      "sha256": "2be969d07f23c20e6756d53aa541bfa5890b7f3fb4fe0fe5c7d466a04eac9a62"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/source-hashes.json",
+      "sha256": "21a9b6fb3c280853066a7e023f7580b5294c29a83b7553ff6c57ca68d65623ed"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/git-unpushed-command.json",
+      "sha256": "0a5f470644aaef8dde45568e820c86bc1c85f44732dc37e313c62fb6b78205fd"
+    }
+  ],
+  "forbidden_scope": {
+    "primary_checkout_touched": false,
+    "plane_touched": false,
+    "bloodbank_touched": false,
+    "client_board_touched": false,
+    "hermes_candidate_touched": false,
+    "hermes_candidate_published": false,
+    "hook_bypass_used": false,
+    "force_push_used": false,
+    "review_or_merge_performed": false,
+    "audit_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/forbidden-scope-audit.json"
+  },
+  "risks": [
+    "Verification requires read access to every configured fetch remote and can transfer missing advertised objects into temporary storage. The committed exact-candidate exercise took approximately 15 seconds.",
+    "The general read-only git unpushed inventory exited 1 and reported 503 out-of-scope repository paths, including campaign artifacts. Those were not landed because this story explicitly permits only four source paths. The implementation branch itself is clean and fully pushed.",
+    "The primary installation remains unchanged. Integration requires controller-owned fresh specification review followed by a different quality/security reviewer."
+  ],
+  "next_gate": "fresh spec-compliance review"
+}

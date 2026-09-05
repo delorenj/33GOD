@@ -1,0 +1,67 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "delorenj",
+    "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "command_finished_at": "2026-09-05T14:04:10.772364Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:04:10.880161Z",
+  "finished_monotonic_ns": 1345833468428364,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/remote-premetadata.log",
+  "name": "remote-premetadata",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "git",
+          "ls-remote",
+          "--exit-code",
+          "delorenj",
+          "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 217294,
+        "pid": 217294,
+        "ppid": 217129,
+        "session": 217294,
+        "start_ticks": "134583285",
+        "state": "S"
+      },
+      {
+        "argv": [
+          "/usr/bin/ssh",
+          "-o",
+          "SendEnv=GIT_PROTOCOL",
+          "git@github.com",
+          "git-upload-pack 'delorenj/hermes-agent.git'"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 217294,
+        "pid": 217295,
+        "ppid": 217294,
+        "session": 217294,
+        "start_ticks": "134583285",
+        "state": "S"
+      }
+    ],
+    "pid": 217294,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 217129
+  },
+  "sequence_index": 0,
+  "sha256": "3305ddf5f2edec053b8c423095b119c6098917a0d58f5d2ac0d57ae64a8ac09a",
+  "started_at": "2026-09-05T14:04:10.265370Z",
+  "started_monotonic_ns": 1345832853608864,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

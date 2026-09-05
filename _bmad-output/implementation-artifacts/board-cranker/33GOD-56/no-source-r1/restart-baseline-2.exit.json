@@ -1,0 +1,79 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-o",
+    "addopts=",
+    "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+  ],
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+  "command_finished_at": "2026-09-05T13:55:09.626071Z",
+  "environment": {
+    "EVIDENCE_REPORT": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-2.reports.json",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTEST_ADDOPTS": "-o cache_dir=/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/cache/pytest",
+    "PYTEST_PLUGINS": "evidence_plugin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONPATH": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1",
+    "PYTHONPYCACHEPREFIX": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/bytecode",
+    "PYTHONUTF8": "1",
+    "RUFF_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/cache/ruff",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/tmp",
+    "TZ": "UTC",
+    "UV_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/cache/uv",
+    "XDG_CACHE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/cache",
+    "XDG_CONFIG_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/config",
+    "XDG_DATA_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/data",
+    "XDG_STATE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/restart-baseline-2/state"
+  },
+  "exit_code": 0,
+  "finished_at": "2026-09-05T13:55:09.743135Z",
+  "finished_monotonic_ns": 1345292331399678,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/restart-baseline-2.log",
+  "name": "restart-baseline-2",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-o",
+          "addopts=",
+          "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-53-upstream-baseline",
+        "pgrp": 47061,
+        "pid": 47061,
+        "ppid": 3070488,
+        "session": 47061,
+        "start_ticks": "134529068",
+        "state": "R"
+      }
+    ],
+    "pid": 47061,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 3070488
+  },
+  "sequence_index": 14,
+  "sha256": "c57cbb2ea75292cb7c65c4cff042298661f360ad01552dd79046fe079f807725",
+  "started_at": "2026-09-05T13:55:08.096616Z",
+  "started_monotonic_ns": 1345290684847932,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

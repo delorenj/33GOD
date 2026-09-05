@@ -1,0 +1,61 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "delorenj",
+    "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "command_finished_at": "2026-09-05T14:06:54.843984Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:06:54.946367Z",
+  "finished_monotonic_ns": 1345997534629379,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/remote-after.log",
+  "name": "remote-after",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [],
+        "cwd": null,
+        "pgrp": 267114,
+        "pid": 267114,
+        "ppid": 266207,
+        "session": 267114,
+        "start_ticks": "134599667",
+        "state": "Z"
+      },
+      {
+        "argv": [
+          "/usr/bin/ssh",
+          "-o",
+          "SendEnv=GIT_PROTOCOL",
+          "git@github.com",
+          "git-upload-pack 'delorenj/hermes-agent.git'"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 267114,
+        "pid": 267115,
+        "ppid": 267114,
+        "session": 267114,
+        "start_ticks": "134599667",
+        "state": "S"
+      }
+    ],
+    "pid": 267114,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 266207
+  },
+  "sequence_index": 0,
+  "sha256": "f526a8ba147d2bccdaed5d2c7eff5a4f0b771d9efa98a795338cd6085a4a3354",
+  "started_at": "2026-09-05T14:06:54.089667Z",
+  "started_monotonic_ns": 1345996677900525,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

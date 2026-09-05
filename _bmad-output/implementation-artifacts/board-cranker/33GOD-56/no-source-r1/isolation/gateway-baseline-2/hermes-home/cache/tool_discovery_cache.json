@@ -1,0 +1,1217 @@
+{
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/annotate_preview_tool.py": [
+1788553714818106745,
+3947,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/ansi_strip.py": [
+1788553714818175604,
+4341,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/apply_layout_tool.py": [
+1788553714818175604,
+2335,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval.py": [
+1788553714818685204,
+58956,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval_context.py": [
+1788553714818685204,
+14454,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval_detection.py": [
+1788553714819067053,
+69322,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval_floors.py": [
+1788553714819067053,
+9689,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval_gateway_wait.py": [
+1788553714819067053,
+8362,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval_human_wait.py": [
+1788553714819067053,
+8416,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval_prompt.py": [
+1788553714819067053,
+15007,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/approval_smart.py": [
+1788553714819067053,
+7282,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/arg_coercion.py": [
+1788553714819067053,
+9068,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/async_delegation.py": [
+1788553714819372469,
+48981,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/audio_container.py": [
+1788553714819372469,
+2674,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/binary_extensions.py": [
+1788553714819372469,
+2274,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/blueprints.py": [
+1788553714819372469,
+9210,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/bot_failure_reasons.py": [
+1788553714819372469,
+3516,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/bot_mode_dm.py": [
+1788553714819697611,
+24931,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/bot_mode_probe.py": [
+1788553714819697611,
+15603,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/bot_relay.py": [
+1788553714819941059,
+22112,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_camofox.py": [
+1788553714820154321,
+27352,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_camofox_state.py": [
+1788553714820154321,
+1566,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_cdp_tool.py": [
+1788553714820154321,
+22206,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_dialog_tool.py": [
+1788553714820154321,
+5405,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_extension_router.py": [
+1788553714820390376,
+6355,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_lightpanda.py": [
+1788553714820390376,
+13117,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_supervisor.py": [
+1788553714820614408,
+24595,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_supervisor_dialogs.py": [
+1788553714820614408,
+15371,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_supervisor_frames.py": [
+1788553714820614408,
+8335,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool.py": [
+1788553714821299438,
+67157,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_cdp.py": [
+1788553714821299438,
+6285,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_cloud.py": [
+1788553714821527728,
+11900,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_eval_policy.py": [
+1788553714821527728,
+8639,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_install.py": [
+1788553714821527728,
+16089,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_lifecycle.py": [
+1788553714821527728,
+30967,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_lightpanda_fallback.py": [
+1788553714821754595,
+10116,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_origin.py": [
+1788553714821754595,
+2913,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_real_profile.py": [
+1788553714821754595,
+13430,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_session.py": [
+1788553714821754595,
+30545,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_snapshot.py": [
+1788553714821754595,
+5091,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_tool_vision.py": [
+1788553714821980180,
+7148,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/browser_use_cli.py": [
+1788553714822217697,
+37441,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/budget_config.py": [
+1788553714822217697,
+5629,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/checkpoint_manager.py": [
+1788553714822426330,
+56842,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/clarify_gateway.py": [
+1788553714822653598,
+14074,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/clarify_tool.py": [
+1788553714822685258,
+15373,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/close_preview_tool.py": [
+1788553714822685258,
+2571,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/close_terminal_tool.py": [
+1788553714822858454,
+2056,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/code_execution_env.py": [
+1788553714822858454,
+13040,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/code_execution_rpc.py": [
+1788553714822858454,
+8696,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/code_execution_tool.py": [
+1788553714823045917,
+47848,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/code_kernel.py": [
+1788553714823045917,
+36127,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/code_kernel_remote.py": [
+1788553714823045917,
+18023,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/computer_use_tool.py": [
+1788553714824685285,
+1104,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/credential_files.py": [
+1788553714824685285,
+17458,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/cronjob_job_args.py": [
+1788553714824685285,
+19890,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/cronjob_prompt_scan.py": [
+1788553714824685285,
+7861,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/cronjob_tools.py": [
+1788553714824685285,
+54014,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/daemon_pool.py": [
+1788553714824685285,
+2533,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/debug_helpers.py": [
+1788553714824685285,
+2187,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool.py": [
+1788553714825685298,
+36609,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_child_run.py": [
+1788553714825685298,
+45285,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_config.py": [
+1788553714825685298,
+29111,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_dispatch.py": [
+1788553714825685298,
+19311,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_progress.py": [
+1788553714825685298,
+20285,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_registry.py": [
+1788553714825685298,
+14606,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_results.py": [
+1788553714825685298,
+19445,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_tasks.py": [
+1788553714825685298,
+6381,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegate_tool_toolsets.py": [
+1788553714825685298,
+5489,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegation_live_log.py": [
+1788553714826685312,
+13883,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/delegation_output_schema.py": [
+1788553714826685312,
+5232,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/desktop_ui.py": [
+1788553714826685312,
+2770,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/discord_tool.py": [
+1788553714826685312,
+31472,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/drive_preview_tool.py": [
+1788553714826685312,
+7033,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/env_passthrough.py": [
+1788553714826685312,
+6344,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/env_probe.py": [
+1788553714826685312,
+11445,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/fal_common.py": [
+1788553714828685339,
+5300,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/feishu_doc_tool.py": [
+1788553714828685339,
+3603,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/feishu_drive_tool.py": [
+1788553714828685339,
+8198,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/feishu_lark.py": [
+1788553714828685339,
+3248,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_operations.py": [
+1788553714828685339,
+75814,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_operations_common.py": [
+1788553714828685339,
+10396,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_operations_lint.py": [
+1788553714828685339,
+13701,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_operations_search.py": [
+1788553714828685339,
+45173,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_state.py": [
+1788553714829685352,
+9713,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_tools.py": [
+1788553714829685352,
+61909,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_tools_paths.py": [
+1788553714829685352,
+8884,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_tools_read_tracking.py": [
+1788553714829685352,
+11085,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/file_tools_write_guards.py": [
+1788553714829685352,
+20115,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/focus_pane_tool.py": [
+1788553714829685352,
+2631,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/fuzzy_match.py": [
+1788553714829685352,
+27644,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/homeassistant_tool.py": [
+1788553714829685352,
+14025,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/hook_output_spill.py": [
+1788553714829685352,
+4878,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/image_generation_catalog.py": [
+1788553714830685366,
+16792,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/image_generation_tool.py": [
+1788553714830685366,
+42405,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/image_source.py": [
+1788553714830685366,
+14444,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/interpreter_shutdown.py": [
+1788553714830685366,
+1225,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/interrupt.py": [
+1788553714830685366,
+3554,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/kanban_tools.py": [
+1788553714830685366,
+48219,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/kanban_tools_schemas.py": [
+1788553714830685366,
+21500,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/lazy_deps.py": [
+1788553714830685366,
+36631,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/managed_tool_gateway.py": [
+1788553714830685366,
+14729,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_dashboard_oauth.py": [
+1788553714830685366,
+5491,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_death_supervisor.py": [
+1788553714830685366,
+9341,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_oauth.py": [
+1788553714831685379,
+53357,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_oauth_manager.py": [
+1788553714831685379,
+23926,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_oauth_provider.py": [
+1788553714831685379,
+6722,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_schema_cache.py": [
+1788553714831685379,
+5175,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_agent.py": [
+1788553714831685379,
+12397,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_common.py": [
+1788553714831685379,
+5746,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_config.py": [
+1788553714831685379,
+15665,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_content.py": [
+1788553714831685379,
+11489,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_discovery.py": [
+1788553714831685379,
+25894,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_errors.py": [
+1788553714831685379,
+17337,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_handlers.py": [
+1788553714832685392,
+31904,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_health.py": [
+1788553714832685392,
+16009,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_lifecycle.py": [
+1788553714832685392,
+13316,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_loop.py": [
+1788553714832685392,
+12816,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_registration.py": [
+1788553714832685392,
+19371,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_sampling.py": [
+1788553714832685392,
+18269,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_schema.py": [
+1788553714832685392,
+11299,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_server_run.py": [
+1788553714832685392,
+24375,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/mcp_tool_transport.py": [
+1788553714832685392,
+29994,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/memory_tool.py": [
+1788553714832685392,
+18039,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/memory_tool_store.py": [
+1788553714832685392,
+22705,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/microsoft_graph_auth.py": [
+1788553714832685392,
+7438,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/microsoft_graph_client.py": [
+1788553714832685392,
+10885,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/neutts_synth.py": [
+1788553714834685419,
+3134,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/open_preview_tool.py": [
+1788553714834685419,
+3854,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/openrouter_client.py": [
+1788553714834685419,
+1587,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/osv_check.py": [
+1788553714834685419,
+10273,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/patch_parser.py": [
+1788553714834685419,
+19065,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/path_security.py": [
+1788553714834685419,
+1508,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/plugin_guard.py": [
+1788553714835685433,
+7845,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/preview_tool.py": [
+1788553714835685433,
+3535,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/process_registry.py": [
+1788553714835685433,
+110787,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/process_registry_notifications.py": [
+1788553714835685433,
+12857,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/project_tools.py": [
+1788553714835685433,
+6450,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/react_to_message_tool.py": [
+1788553714835685433,
+6336,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/read_extract.py": [
+1788553714835685433,
+24973,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/read_preview_tool.py": [
+1788553714835685433,
+3262,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/read_terminal_tool.py": [
+1788553714835685433,
+3275,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/read_window_tool.py": [
+1788553714835685433,
+2613,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/schema_sanitizer.py": [
+1788553714836685446,
+18254,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/self_repo_guard.py": [
+1788553714836685446,
+21197,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/send_message_senders.py": [
+1788553714836685446,
+34982,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/send_message_targets.py": [
+1788553714836685446,
+11099,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/send_message_tool.py": [
+1788553714836685446,
+33277,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/session_search_tool.py": [
+1788553714837685460,
+37453,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/setup_mcp_tool.py": [
+1788553714837685460,
+4603,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/shell_heredoc.py": [
+1788553714837685460,
+8788,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skill_ledger.py": [
+1788553714837685460,
+18664,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skill_linter.py": [
+1788553714837685460,
+11118,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skill_manager_batch.py": [
+1788553714837685460,
+9964,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skill_manager_guards.py": [
+1788553714837685460,
+15422,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skill_manager_tool.py": [
+1788553714837685460,
+44894,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skill_provenance.py": [
+1788553714837685460,
+1168,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skill_usage.py": [
+1788553714837685460,
+36245,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skillevaluator_scan.py": [
+1788553714837685460,
+7363,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_ast_audit.py": [
+1788553714837685460,
+4142,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_guard.py": [
+1788553714838685473,
+43471,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub.py": [
+1788553714838685473,
+15561,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_clawhub.py": [
+1788553714838685473,
+23043,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_github.py": [
+1788553714838685473,
+24404,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_install.py": [
+1788553714838685473,
+14070,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_models.py": [
+1788553714838685473,
+14518,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_official.py": [
+1788553714838685473,
+18828,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_search.py": [
+1788553714838685473,
+8827,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_skillssh.py": [
+1788553714839685487,
+17634,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_hub_sources.py": [
+1788553714839685487,
+20944,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_sync.py": [
+1788553714839685487,
+22437,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_sync_bundled_ops.py": [
+1788553714839685487,
+10454,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_sync_client.py": [
+1788553714839685487,
+27582,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_sync_client_org.py": [
+1788553714839685487,
+14522,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_sync_client_wire.py": [
+1788553714839685487,
+17289,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_sync_optional.py": [
+1788553714839685487,
+10147,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_tool.py": [
+1788553714839685487,
+37268,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_tool_dedup.py": [
+1788553714839685487,
+3721,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_tool_plugin.py": [
+1788553714839685487,
+8474,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/skills_tool_setup.py": [
+1788553714840685500,
+6848,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/slash_confirm.py": [
+1788553714840685500,
+4839,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/spill_safety.py": [
+1788553714840685500,
+3063,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/subagent_worktree.py": [
+1788553714840685500,
+9397,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_hints.py": [
+1788553714840685500,
+8388,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_scope.py": [
+1788553714840685500,
+7726,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool.py": [
+1788553714841685514,
+61624,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool_backends.py": [
+1788553714841685514,
+17631,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool_background.py": [
+1788553714841685514,
+10088,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool_config.py": [
+1788553714841685514,
+4716,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool_guards.py": [
+1788553714841685514,
+11311,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool_lifecycle.py": [
+1788553714841685514,
+13516,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool_result.py": [
+1788553714841685514,
+14315,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/terminal_tool_sudo.py": [
+1788553714841685514,
+20577,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/thread_context.py": [
+1788553714841685514,
+2855,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/threat_patterns.py": [
+1788553714841685514,
+9451,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tip_tool.py": [
+1788553714841685514,
+3222,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tirith_security.py": [
+1788553714841685514,
+25221,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/todo_tool.py": [
+1788553714841685514,
+13102,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tool_backend_helpers.py": [
+1788553714841685514,
+12319,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tool_output_limits.py": [
+1788553714841685514,
+2519,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tool_result_storage.py": [
+1788553714842685527,
+12113,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tool_search.py": [
+1788553714842685527,
+27152,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tool_search_catalog.py": [
+1788553714842685527,
+10903,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tool_search_validation.py": [
+1788553714842685527,
+6428,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tour_tool.py": [
+1788553714842685527,
+6578,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/transcription_audio.py": [
+1788553714842685527,
+14540,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/transcription_cloud.py": [
+1788553714842685527,
+23337,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/transcription_command.py": [
+1788553714842685527,
+14244,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/transcription_common.py": [
+1788553714842685527,
+3926,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/transcription_local.py": [
+1788553714842685527,
+13836,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/transcription_tools.py": [
+1788553714842685527,
+31333,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_command_provider.py": [
+1788553714843685540,
+15550,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_streaming.py": [
+1788553714843685540,
+14997,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_text_normalize.py": [
+1788553714843685540,
+10598,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool.py": [
+1788553714843685540,
+36953,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool_delivery.py": [
+1788553714843685540,
+21080,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool_lifecycle.py": [
+1788553714843685540,
+8070,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool_local.py": [
+1788553714843685540,
+9524,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool_openai.py": [
+1788553714843685540,
+7872,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool_plugins.py": [
+1788553714843685540,
+4576,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool_providers.py": [
+1788553714843685540,
+30749,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/tts_tool_speaker.py": [
+1788553714843685540,
+16419,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/url_safety.py": [
+1788553714843685540,
+26138,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/video_generation_tool.py": [
+1788553714843685540,
+17356,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/vision_tools.py": [
+1788553714844685554,
+52035,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/vision_tools_image_prep.py": [
+1788553714844685554,
+11330,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/voice_client_config.py": [
+1788553714844685554,
+10455,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/voice_mode.py": [
+1788553714844685554,
+72573,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/voice_mode_transcript.py": [
+1788553714844685554,
+5530,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/wake_word.py": [
+1788553714844685554,
+37289,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/wake_word_engines.py": [
+1788553714844685554,
+12022,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/web_result_cache.py": [
+1788553714846685581,
+13605,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/web_tools.py": [
+1788553714846685581,
+28374,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/web_tools_extract.py": [
+1788553714846685581,
+9994,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/web_tools_rescue.py": [
+1788553714846685581,
+5397,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/web_tools_truncate.py": [
+1788553714846685581,
+8018,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/website_policy.py": [
+1788553714846685581,
+8873,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/working_diff.py": [
+1788553714846685581,
+4440,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/write_approval.py": [
+1788553714846685581,
+12431,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/x_search_tool.py": [
+1788553714846685581,
+15035,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/xai_http.py": [
+1788553714846685581,
+10948,
+false
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/xai_video_tools.py": [
+1788553714846685581,
+4599,
+true
+],
+"/tmp/hermes-board-cranker-53-upstream-baseline/tools/yuanbao_tools.py": [
+1788553714846685581,
+21901,
+true
+]
+}

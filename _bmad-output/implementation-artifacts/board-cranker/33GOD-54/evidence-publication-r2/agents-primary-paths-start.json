@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "git",
+    "ls-files",
+    "-z",
+    "--cached",
+    "--others",
+    "--exclude-standard"
+  ],
+  "attempt": 1,
+  "command": "git ls-files -z --cached --others --exclude-standard",
+  "completed": "2026-09-05T11:28:20Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-paths-start.log",
+  "name": "agents-primary-paths-start",
+  "sha256": "38384fd301ff5ff19125857971e37aef27d0f17d399e57eb3d24106c4cebabfd",
+  "started": "2026-09-05T11:28:20Z",
+  "worktree": "/home/delorenj/.agents"
+}

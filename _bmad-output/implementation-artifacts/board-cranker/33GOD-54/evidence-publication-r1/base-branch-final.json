@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "branch",
+    "--show-current"
+  ],
+  "attempt": 1,
+  "command": "git branch --show-current",
+  "completed": "2026-09-05T05:06:32Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-branch-final.log",
+  "name": "base-branch-final",
+  "sha256": "b06674b810db03626c55267c9ab0f7cb14775508460beb549fadd2794359b109",
+  "started": "2026-09-05T05:06:32Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

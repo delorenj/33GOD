@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-B",
+    "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/run_checks_host.py"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/run_checks_host.py",
+  "completed": "2026-09-05T11:52:21Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/checks-host-workflow.log",
+  "name": "checks-host-workflow",
+  "sha256": "f499f66469b3dd0e9e175025ec9ae08380cfbf0d133b5baab3ebb52b989c5eff",
+  "started": "2026-09-05T11:36:28Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

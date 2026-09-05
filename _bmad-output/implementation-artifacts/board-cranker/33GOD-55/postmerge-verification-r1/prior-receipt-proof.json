@@ -1,0 +1,39 @@
+{
+  "files": [
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json",
+      "sha256": "477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550",
+      "expected_sha256": "477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550",
+      "matches_expected": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r1/prior-integration-handback.json",
+      "sha256": "477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550",
+      "expected_sha256": "477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550",
+      "matches_expected": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pr-checks-poll.json",
+      "sha256": "2f01f4291333b61258ab7863686b8f97bc3e48f27056a75324a54d7c7d02606a",
+      "expected_sha256": "2f01f4291333b61258ab7863686b8f97bc3e48f27056a75324a54d7c7d02606a",
+      "matches_expected": true
+    }
+  ],
+  "known_false_declared_sha256": "1a8f9c1a6a3d3b3e7b63e08bb2d12a7b2d3b7b4c6e3a1f1b0e4f4d3c2b1a0987",
+  "prior_receipt_matching_declarations": [
+    {
+      "phase": "github",
+      "name": "GitGuardian Security Checks",
+      "command": "gh pr view 1 --repo delorenj/agents --json statusCheckRollup",
+      "exit_code": 0,
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pr-checks-poll.json",
+      "sha256": "1a8f9c1a6a3d3b3e7b63e08bb2d12a7b2d3b7b4c6e3a1f1b0e4f4d3c2b1a0987"
+    }
+  ],
+  "invariants": {
+    "fixed_actual_hashes_match": true,
+    "false_declaration_present": true,
+    "declaration_is_false": true
+  }
+}

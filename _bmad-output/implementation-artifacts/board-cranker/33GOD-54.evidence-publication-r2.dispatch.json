@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-54",
+  "phase": "implementation",
+  "status": "DISPATCHED",
+  "recorded_at": "2026-09-05T11:26:11Z",
+  "controller": "33god-pm",
+  "campaign_owner_verified": true,
+  "bounded_advancement": "Claimed the dependency-unblocked story as sole WIP and launched one persistent no-source evidence/publication recovery worker.",
+  "plane": {
+    "workspace": "33god",
+    "project_id": "15258893-0206-4e8f-aea6-340eb217988c",
+    "issue_id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+    "state": "In Progress",
+    "state_type": "started",
+    "comment_id": "0a80c1ae-a342-4c60-a853-79a80aa3c926",
+    "readback_verified": true
+  },
+  "worker": {
+    "agent_id": "codex-33god-54-evidence-publication-r2",
+    "role": "evidence-publication-recovery-worker",
+    "provider": "openai-codex",
+    "attempt": 2,
+    "substantive_attempts_consumed": 1,
+    "launcher_pid": 518175,
+    "timeout_pid": 519289,
+    "worker_pid": 519291,
+    "process_session": "proc_c470002d3d7a",
+    "started_at": "2026-09-05T11:24:46Z",
+    "deadline_at": "2026-09-05T13:24:46Z",
+    "alive_at_recording": true,
+    "expected_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json"
+  },
+  "immutable_ground": {
+    "candidate_worktree": "/tmp/hermes-board-cranker-50",
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "baseline_worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+    "base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "guard_worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2",
+    "guard_merge_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "all_three_worktrees_clean": true
+  },
+  "wip": {
+    "limit": 1,
+    "ticket": "33GOD-54",
+    "lease_owner": "hermes:33god-pm:board-cranker:33GOD-54:implementation",
+    "lease_pid": 519291,
+    "lease_ttl_seconds": 9000,
+    "worker_pid_alive": true
+  },
+  "decision_event": {
+    "id": "a9c4cac7-0dcf-4d7c-9fc9-ab7fc936d0b1",
+    "type": "bloodbank.repo.decision.recorded",
+    "actor_agent_id": "33god-pm",
+    "producer": "hermes-agent:33god-pm",
+    "source": "hermes://agent/33god-pm",
+    "local_trail_verified": true,
+    "live_publish_succeeded": true,
+    "candystore_projection_verified": true,
+    "basis": [
+      "evidence-over-status",
+      "keep-the-pipeline-unblocked",
+      "reality-over-theater"
+    ]
+  },
+  "transport_recovery": {
+    "classification": "INVALID_OUTPUT_SCHEMA_REJECTED_BEFORE_EXECUTION",
+    "environment_failure": true,
+    "substantive_attempt_consumed": false,
+    "schema_repaired": true,
+    "same_worker_lane_retained": true,
+    "preserved_stderr": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.stderr.log.schema-transport-failure-20260905T111944Z",
+    "preserved_exit": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.exit.json.schema-transport-failure-20260905T111944Z"
+  },
+  "artifacts": [
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.prompt.md",
+      "sha256": "e5c3d092c64b6a6352d912a29e9a7659bfb41cc83fc2a277a0710e368afc6a4d"
+    },
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.schema.json",
+      "sha256": "9e9cc37da63189abbac6dbb23a49db2b73264d541b619e1cd16e9a313bbe0e5a"
+    },
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/launch-board-cranker-33god-54-evidence-publication-r2.sh",
+      "sha256": "92c82839055ff5ef4ec73c6ad84e8b2ba855035a2bc14bbb7fcd5008a52a521a"
+    },
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.pids.json",
+      "sha256": "f86dfcdfb211896ff93d2e1ae06eae83432249d5762c0207da88d64e0884b2b6"
+    },
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.plane-transition.json",
+      "sha256": "d92a9ea04715e8d9a608749ee41ef3b08352719be4afb83350860f5dc084af47"
+    },
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.plane-comment.json",
+      "sha256": "590741a25007366ebac1c96ec53c3e76a50a0cbc3d60346e47b2746cb65aef40"
+    },
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.stderr.log.schema-transport-failure-20260905T111944Z",
+      "sha256": "c464ffbb20bf699477438908e39693b7517b6f504e458075ead8b633336b2c1b"
+    },
+    {
+      "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r2.exit.json.schema-transport-failure-20260905T111944Z",
+      "sha256": "04c46ad801bba2113a874bf87b9e66454e36b4a5dfcb30bef9c00dbd9a27027d"
+    }
+  ],
+  "next": "Verify the saved worker PID/process/worktrees and consume only a schema-valid, hash-consistent handback. If implementation succeeds, dispatch one fresh specification reviewer and nothing else."
+}

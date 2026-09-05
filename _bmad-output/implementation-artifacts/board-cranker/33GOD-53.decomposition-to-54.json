@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.0",
+  "campaign": "board-cranker",
+  "repo": "33god",
+  "status": "DECOMPOSED",
+  "decided_at": "2026-09-05T04:02:08Z",
+  "owner": {
+    "owner_agent_id": "33god-pm",
+    "marker": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "verified": true
+  },
+  "parent": {
+    "identifier": "33GOD-53",
+    "id": "7ea1ab67-6b7b-433b-b357-345729ea802d",
+    "title": "Repair Hermes contractor trust, isolation, and cleanup seams",
+    "state": "Backlog",
+    "implementation_attempts_exhausted": 2,
+    "post_conflict_spec_review_attempts_exhausted": 2,
+    "verdict_consumed": false
+  },
+  "reason": "33GOD-53 exhausted its implementation and post-conflict specification-review budgets without a schema-valid final verdict. The local candidate and evidence remain usable, but the full-suite differential is contradictory and the candidate has not been published. Recovery is split into a bounded no-source evidence-and-publication child rather than granting a third hidden attempt or discarding verified work.",
+  "child": {
+    "identifier": "33GOD-54",
+    "id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+    "title": "Resolve Hermes gateway differential and publish the integrated contractor candidate",
+    "state": "Todo",
+    "priority": "high",
+    "parent_id": "7ea1ab67-6b7b-433b-b357-345729ea802d",
+    "external_id": "board-cranker:33god-53:gateway-differential-publish-split:v1",
+    "owning_repo": "/home/delorenj/.hermes/hermes-agent",
+    "candidate_worktree": "/tmp/hermes-board-cranker-50",
+    "candidate_head_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "integration_base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "source_mutation_authorized": false,
+    "next_eligible": true
+  },
+  "plane": {
+    "workspace": "33god",
+    "project_id": "15258893-0206-4e8f-aea6-340eb217988c",
+    "module": {
+      "id": "c7f35604-95af-452f-853f-e021aa595b53",
+      "name": "Gateways and Control Planes",
+      "child_membership_readback_verified": true
+    },
+    "parent_state_readback_verified": true,
+    "child_parent_and_state_readback_verified": true,
+    "parent_comment_id": "3a6f6253-02d5-484a-b586-6e339fbc2f47",
+    "parent_comment_readback_verified": true,
+    "ticket_created_event": {
+      "id": "56fefd02-7b63-535c-a934-80862c4302b3",
+      "type": "bloodbank.repo.task.created",
+      "producer": "n8n-plane-webhook",
+      "ticket_id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+      "ticket_key": "33GOD-54",
+      "candystore_projection_verified": true
+    }
+  },
+  "candidate": {
+    "worktree": "/tmp/hermes-board-cranker-50",
+    "worktree_clean": true,
+    "head_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "parent_1": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "parent_2": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "remote_branch": "delorenj/feat/33GOD-50-stateless-contractor-turns",
+    "remote_head_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "remote_head_matches_candidate": false,
+    "upstream_pr": "https://github.com/NousResearch/hermes-agent/pull/102409",
+    "upstream_pr_state": "OPEN",
+    "upstream_pr_head_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8"
+  },
+  "preserved_evidence": {
+    "implementation_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r2.implementation.json",
+    "controller_reconciliation": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r3.controller-reconciliation.json",
+    "review_r1_timeout": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict.spec-review.r1.timeout.json",
+    "review_r2_transport_failure": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict.spec-review.r2.transport-failure.json",
+    "review_r2_transport_failure_sha256": "215bb912f972bed928ea5ad5aecad8a3596c1cfa5148d952aebc7414159ea538",
+    "raw_reviewer_object_used_as_verdict": false
+  },
+  "decision_event": {
+    "id": "7908da6d-da94-41bf-90eb-5724a0e8af18",
+    "type": "bloodbank.repo.decision.recorded",
+    "subject": "bloodbank.evt.repo.decision.recorded",
+    "source": "hermes://agent/33god-pm",
+    "producer": "hermes-agent:33god-pm",
+    "published_live": true,
+    "candystore_projection_verified": true,
+    "candystore_event_url": "http://127.0.0.1:8683/events/7908da6d-da94-41bf-90eb-5724a0e8af18",
+    "local_trail": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/bloodbank-events.jsonl",
+    "basis": [
+      "dogfood-the-platform",
+      "build-lego-not-statues",
+      "evidence-over-status",
+      "smallest-safe-increment",
+      "keep-the-pipeline-unblocked"
+    ]
+  },
+  "shared_wip": {
+    "previous_ticket": "33GOD-53",
+    "previous_owner": "hermes:33god-pm:board-cranker:33GOD-53:implementation",
+    "saved_worker_processes_dead": true,
+    "candidate_and_review_worktrees_clean": true,
+    "expected_final_handback_absent": true,
+    "released_after_explicit_decomposition": true,
+    "lease_file_present_after_release": false
+  },
+  "worker_dispatched": false,
+  "next": "Claim 33GOD-54 as the sole WIP item and dispatch one durable no-source evidence worker in the clean Hermes candidate worktree; do not touch 33GOD-52."
+}

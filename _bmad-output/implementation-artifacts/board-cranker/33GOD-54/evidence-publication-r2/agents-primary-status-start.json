@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "--no-optional-locks",
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all"
+  ],
+  "attempt": 1,
+  "command": "git --no-optional-locks status --porcelain=v1 --untracked-files=all",
+  "completed": "2026-09-05T11:28:20Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-status-start.log",
+  "name": "agents-primary-status-start",
+  "sha256": "f5ce5ad22b8f36b6bfa6369dd818aa0b740a8198873afd7ff6cb515ed5acbcd7",
+  "started": "2026-09-05T11:28:20Z",
+  "worktree": "/home/delorenj/.agents"
+}

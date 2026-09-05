@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "BISECT_START"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-BISECT_START-final.log",
+  "name": "base-marker-BISECT_START-final",
+  "sha256": "8cdc95a4eac65d91efb9573f486306e4944e6840fbabb6bc25b5689cac109e76",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

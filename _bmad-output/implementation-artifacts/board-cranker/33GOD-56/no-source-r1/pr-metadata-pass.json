@@ -1,0 +1,13 @@
+{
+  "at": "2026-09-05T14:06:56.128827Z",
+  "cli_compatibility_failure": "gh pr edit failed in the deprecated projectCards GraphQL read, before mutation; unchanged metadata verified before the REST fallback.",
+  "metadata_updated": true,
+  "readback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-after.json",
+  "readback_sha256": "6fb6dbb91ac0099f4436c0e2b42020097d8341c86aaaa4e1b5434b87163a69c1",
+  "rest_payload_fields": [
+    "title",
+    "body"
+  ],
+  "rest_update_exit_code": 0,
+  "status": "PASS"
+}

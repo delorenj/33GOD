@@ -1,0 +1,69 @@
+{
+  "action": "durable no-source evidence-and-publication worker launched",
+  "artifacts": {
+    "expected_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+    "pid_file": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r1.pids.json",
+    "prompt": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r1.prompt.md",
+    "prompt_sha256": "816805e0fca7a4e617f9fd690f063c77d4233c9c1d3c737eafd5e5557576d37c",
+    "schema": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r1.schema.json",
+    "schema_sha256": "ea1d6ef93dc35a1e3fe2601762567665b3b76f988c2089b6d6b7c4f95df33282"
+  },
+  "at": "2026-09-05T04:29:39Z",
+  "campaign": "board-cranker",
+  "decision_event": {
+    "actor_agent_id": "33god-pm",
+    "candystore_projection_verified": true,
+    "id": "00cfa9d6-0a0a-4a3a-9cf7-fb7d6682acb5",
+    "producer": "hermes-agent:33god-pm",
+    "source": "hermes://agent/33god-pm",
+    "type": "bloodbank.repo.decision.recorded"
+  },
+  "immutable": {
+    "base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "baseline_worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "candidate_worktree": "/tmp/hermes-board-cranker-50",
+    "source_mutation_authorized": false
+  },
+  "launcher_corrections": [
+    {
+      "classification": "controller pre-execution schema-check invocation error",
+      "exit_code": 84,
+      "implementation_attempt_consumed": false,
+      "process_session": "proc_daf097da69b4",
+      "source_execution_started": false
+    },
+    {
+      "classification": "OpenAI output-schema transport rejection",
+      "exit_code": 1,
+      "implementation_attempt_consumed": false,
+      "preserved_stderr": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-54-evidence-publication-r1.stderr.schema-transport-failure.log",
+      "process_session": "proc_5204461ede16",
+      "source_execution_started": false
+    }
+  ],
+  "owner_agent_id": "33god-pm",
+  "phase": "implementation",
+  "plane": {
+    "issue_id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+    "readback_verified": true,
+    "state": "In Progress"
+  },
+  "repo": "33god",
+  "schema_version": "1.0",
+  "status": "DISPATCHED",
+  "ticket": "33GOD-54",
+  "worker": {
+    "all_pids_alive": true,
+    "codex_session_id": "01a06fd9-b99e-76b3-a10e-7e447a8d5d5e",
+    "hard_timeout_seconds": 7200,
+    "heartbeat_pid": 667817,
+    "launcher_pid": 665353,
+    "model": "gpt-6-astra",
+    "process_session": "proc_f2254e64bc10",
+    "provider": "openai-codex",
+    "timeout_pid": 667740,
+    "worker_id": "codex-33god-54-evidence-publication-r1",
+    "worker_pid": 667742
+  }
+}

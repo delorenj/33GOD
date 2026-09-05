@@ -1,0 +1,42 @@
+[
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/red.log",
+    "sha256": "7fe456453163f9369481543fdeef844717f891026b366570d61eb0132a8e0420"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/green.log",
+    "sha256": "0d27d89c5ee07b12752559c11f67d8c02baacc68b4a54904e9ea09c9ee6f4baa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.attempt-1.json",
+    "sha256": "0bf1f17dbe5c99a150302374392c64d4fe2b8c313147d2215c2e444c7ae8f8c7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.blocker-reconciliation.json",
+    "sha256": "34a312da67cb5e2095f163d461ed24877eaad2c5052da7f3b9c7044d768e2ffa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+    "sha256": "79e286285266284134e34a6f7dd0814b682abe180517be3813946f0ba6878209"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json",
+    "sha256": "37ca03936fa8d58ba5bf740976c730517a9da098c283fba8a2d29cb4877f069e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration-controller-verification-r2.json",
+    "sha256": "c7d83164bdade7452d6bc204ffd169d617475fb5dff6e45998cfbf24853d04a3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.decomposition-to-56.json",
+    "sha256": "379a5dbf154c7c70e6f0270032dcf7db1d71fd21d13ad1df0a7fe88831b04ba3"
+  },
+  {
+    "path": "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/pre-push",
+    "sha256": "ddc23c60fa6c67bd20a06d51b76d35d7b30fa812a54dfa9c1ee52280fea179dc"
+  },
+  {
+    "path": "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_travels.py",
+    "sha256": "d395ff645cf25eceabe7e99f82ac969981a4b82a260f7046087d2103acf3615d"
+  }
+]

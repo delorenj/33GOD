@@ -1,0 +1,79 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-o",
+    "addopts=",
+    "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+  ],
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+  "command_finished_at": "2026-09-05T13:55:13.712277Z",
+  "environment": {
+    "EVIDENCE_REPORT": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/systemd-baseline.reports.json",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTEST_ADDOPTS": "-o cache_dir=/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/cache/pytest",
+    "PYTEST_PLUGINS": "evidence_plugin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONPATH": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1",
+    "PYTHONPYCACHEPREFIX": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/bytecode",
+    "PYTHONUTF8": "1",
+    "RUFF_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/cache/ruff",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/tmp",
+    "TZ": "UTC",
+    "UV_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/cache/uv",
+    "XDG_CACHE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/cache",
+    "XDG_CONFIG_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/config",
+    "XDG_DATA_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/data",
+    "XDG_STATE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/systemd-baseline/state"
+  },
+  "exit_code": 0,
+  "finished_at": "2026-09-05T13:55:13.822277Z",
+  "finished_monotonic_ns": 1345296410541715,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/systemd-baseline.log",
+  "name": "systemd-baseline",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-o",
+          "addopts=",
+          "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-53-upstream-baseline",
+        "pgrp": 48155,
+        "pid": 48155,
+        "ppid": 3070488,
+        "session": 48155,
+        "start_ticks": "134529528",
+        "state": "R"
+      }
+    ],
+    "pid": 48155,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 3070488
+  },
+  "sequence_index": 17,
+  "sha256": "e43aa6021d46024e21b3c1e0637bd4354a3c671b35132b91639ea5985052f0fe",
+  "started_at": "2026-09-05T13:55:12.700571Z",
+  "started_monotonic_ns": 1345295288803013,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

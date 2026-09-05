@@ -1,0 +1,23 @@
+{
+  "after_snapshot_sha256": "531c94779723ce0abd1ce27496b573f1dee0b6879e468c75f99d6cfe0a99da4e",
+  "at": "2026-09-05T14:01:13.297609Z",
+  "basis": "This worker issued no commit, pull, rebase, or write to the primary. The independent ASM transition-handler commit and pull/rebase occurred at 13:19 UTC during baseline pair 1. Every changed primary file equals its new committed tree; pre-existing dirty content and all other files are unchanged. The task pins the detached guard worktree, not this dirty primary HEAD. All three pinned revisions remain unchanged.",
+  "before_snapshot_sha256": "fffe44b7f2d3ef9ef6ce039179b77fc059ec025c315b2656e6dfb8a93ba891e4",
+  "changed_files": [
+    "git/README.md",
+    "git/hooks/_travels.py",
+    "git/hooks/pre-push",
+    "git/tests/test_pre_push.py",
+    "hooks/asm/log-transition.sh"
+  ],
+  "changes_exactly_match_committed_tree": true,
+  "classification": "EXTERNAL_UNPINNED_PRIMARY_ADVANCE",
+  "commit_metadata": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0 02481c8df4cedbdc11081fe41fcf01859a399566\nJarad DeLorenzo <jaradd@gmail.com>\n2026-09-05T09:19:37-04:00 2026-09-05T09:19:52-04:00\nfeat(hooks): asm transition handler\n02481c8df4cedbdc11081fe41fcf01859a399566 36d3ed6627b1ee1819952617d7d4ebfcebc2708f\ndelorenj <jaradd@gmail.com>\n2026-09-05T05:28:06-04:00 2026-09-05T05:28:06-04:00\nfix(git): make push ancestry scans merge-aware (33GOD-55) (#1)\n",
+  "new_head": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0",
+  "old_head": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+  "preexisting_dirty_guard_file_unchanged": true,
+  "reflog": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0 HEAD@{2026-09-05T09:19:52-04:00} pull -q --rebase origin main (finish): returning to refs/heads/main\n5e6970e4ac4031f03bf4c99d9b54e6881078bca0 HEAD@{2026-09-05T09:19:52-04:00} pull -q --rebase origin main (pick): feat(hooks): asm transition handler\n02481c8df4cedbdc11081fe41fcf01859a399566 HEAD@{2026-09-05T09:19:52-04:00} pull -q --rebase origin main (start): checkout 02481c8df4cedbdc11081fe41fcf01859a399566\n86676f32b4d5c0f62f4dcdeb5214e3fa6ed9598a HEAD@{2026-09-05T09:19:37-04:00} commit: feat(hooks): asm transition handler\n36d3ed6627b1ee1819952617d7d4ebfcebc2708f HEAD@{2026-09-04T00:41:21-04:00} commit: chore(git): ignore settings.local.json and /export CONTINUE.md\n",
+  "staged_and_unstaged_diffs_unchanged": true,
+  "worker_broad_descendants_in_primary_or_asm_workflow": [],
+  "worker_mutation_performed": false
+}

@@ -1,0 +1,140 @@
+[
+  {
+    "command": "read owner marker; assert owner_agent_id == 33god-pm",
+    "exit_code": 0,
+    "path": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "sha256": "1c440d8c4473bf997c5f6e666f41a107245776e928c6d308b425707a1152a496",
+    "owner_agent_id": "33god-pm"
+  },
+  {
+    "command": "git rev-parse --show-toplevel",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/tmp/agents-board-cranker-55\n",
+    "stderr": ""
+  },
+  {
+    "command": "git branch --show-current",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "feat/33GOD-55-git-travel-guard-remote-ancestry\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse HEAD",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse origin/main",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f\n",
+    "stderr": ""
+  },
+  {
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": "git worktree list --porcelain",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "worktree /home/delorenj/.agents\nHEAD 36d3ed6627b1ee1819952617d7d4ebfcebc2708f\nbranch refs/heads/main\n\nworktree /tmp/agents-board-cranker-55\nHEAD 36d3ed6627b1ee1819952617d7d4ebfcebc2708f\nbranch refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry\n\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse --git-path MERGE_HEAD",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/home/delorenj/.agents/.git/worktrees/agents-board-cranker-55/MERGE_HEAD\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse --git-path CHERRY_PICK_HEAD",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/home/delorenj/.agents/.git/worktrees/agents-board-cranker-55/CHERRY_PICK_HEAD\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse --git-path REVERT_HEAD",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/home/delorenj/.agents/.git/worktrees/agents-board-cranker-55/REVERT_HEAD\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse --git-path rebase-apply",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/home/delorenj/.agents/.git/worktrees/agents-board-cranker-55/rebase-apply\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse --git-path rebase-merge",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/home/delorenj/.agents/.git/worktrees/agents-board-cranker-55/rebase-merge\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse --git-path sequencer",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/home/delorenj/.agents/.git/worktrees/agents-board-cranker-55/sequencer\n",
+    "stderr": ""
+  },
+  {
+    "command": "git rev-parse --git-path BISECT_LOG",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "/home/delorenj/.agents/.git/worktrees/agents-board-cranker-55/BISECT_LOG\n",
+    "stderr": ""
+  },
+  {
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "cwd": "/home/delorenj/.agents",
+    "exit_code": 0,
+    "stdout": " M git/hooks/_guard.sh\n",
+    "stderr": ""
+  },
+  {
+    "command": "sha256sum /home/delorenj/.agents/git/hooks/_guard.sh",
+    "exit_code": 0,
+    "sha256": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c"
+  },
+  {
+    "command": "git --version",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "git version 2.51.0\n",
+    "stderr": ""
+  },
+  {
+    "command": "bash --version",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "GNU bash, version 5.2.37(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2022 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n",
+    "stderr": ""
+  },
+  {
+    "command": "python3 --version",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 0,
+    "stdout": "Python 3.11.13\n",
+    "stderr": ""
+  },
+  {
+    "command": "git ls-remote origin refs/heads/main refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry",
+    "cwd": "/tmp/agents-board-cranker-55",
+    "exit_code": 128,
+    "stdout": "",
+    "stderr": "Bad owner or permissions on /etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n"
+  }
+]

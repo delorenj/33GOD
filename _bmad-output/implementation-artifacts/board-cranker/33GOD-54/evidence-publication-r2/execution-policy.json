@@ -1,0 +1,14 @@
+{
+  "authorized_writes": "New r2 evidence, ignored test caches, exact fork fast-forward push and PR title/body only.",
+  "commits_authored": [],
+  "controlled_environment": "Same allowlist as attempt 1, no credentials, same absolute venv, UTC/C.UTF-8/hash seed 0, distinct HERMES_HOME/TMPDIR only; HOME unchanged.",
+  "full_pair_scheduling": "Candidate and base run concurrently in separate processes with separate state roots. No other gates run concurrently with the full pair.",
+  "history_rewritten": false,
+  "pending_gates": [
+    "Fresh independent specification review",
+    "Fresh independent quality/security review"
+  ],
+  "repeat_policy": "Repeat full pair exactly once only if candidate-only failures remain.",
+  "source_changes": [],
+  "test_runner_choice": "Explicit recovery commands override general run_tests.sh instructions."
+}

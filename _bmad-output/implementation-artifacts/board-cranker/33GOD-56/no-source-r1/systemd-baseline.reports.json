@@ -1,0 +1,28 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "reports": [
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+      "outcome": "passed",
+      "phase": "teardown"
+    }
+  ],
+  "tests_collected": 1
+}

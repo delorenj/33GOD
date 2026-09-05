@@ -1,0 +1,12 @@
+=== postmerge worktree ===
+0
+=== feature worktree ===
+0
+54aca968fd16e428fe1378f6f401c068d17e5c4a
+=== review worktree ===
+0
+54aca968fd16e428fe1378f6f401c068d17e5c4a
+=== primary checkout ===
+main
+ M git/hooks/_guard.sh
+4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c  /home/delorenj/.agents/git/hooks/_guard.sh

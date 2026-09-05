@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "sequencer"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path sequencer",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-marker-path-sequencer.log",
+  "name": "head-marker-path-sequencer",
+  "sha256": "42bf51851743687c834c3fb3d7148fdddb7b9122739cfe2238ad9e8f5d1ec849",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

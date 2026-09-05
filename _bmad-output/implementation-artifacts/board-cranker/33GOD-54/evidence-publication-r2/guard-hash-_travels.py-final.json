@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "sha256sum",
+    "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_travels.py"
+  ],
+  "attempt": 1,
+  "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_travels.py",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-hash-_travels.py-final.log",
+  "name": "guard-hash-_travels.py-final",
+  "sha256": "8c40e257c5cb7d34809478cb47baa15995de3721d061ab3c0b68b4bc0820a5f0",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

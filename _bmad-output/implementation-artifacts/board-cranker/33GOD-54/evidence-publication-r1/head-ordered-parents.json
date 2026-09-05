@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "show",
+    "-s",
+    "--format=%P",
+    "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+  ],
+  "attempt": 1,
+  "command": "git show -s --format=%P 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-ordered-parents.log",
+  "name": "head-ordered-parents",
+  "sha256": "2914878c829d73bd62554afa76587ffa7e645ac5a7d099ccd501869f820ffc3e",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

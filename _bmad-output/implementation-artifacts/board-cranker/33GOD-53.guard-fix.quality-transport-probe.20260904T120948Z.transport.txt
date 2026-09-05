@@ -1,0 +1,4 @@
+Warning: Could not fetch tenant MCP server configurations: HTTP error: 403 Forbidden
+⚠️ **You have run out of credits for jaradd@gmail.com. Please visit https://app.augmentcode.com/account to upgrade.** ⚠️
+
+Request ID: e62c1f01-75f7-4674-b295-2e9dda6a96a1

@@ -1,0 +1,38 @@
+{
+  "agents_primary_touched": false,
+  "allowed_write_roots": [
+    "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2"
+  ],
+  "audit_basis": "Recorded command receipts plus start/end primary file hashes, modes, HEAD/index hashes and statuses; exact three-worktree SHA/branch/cleanliness checks; preserved-input rehash; environment inventory comparison. No Plane, Bloodbank, client-board, controller or review/merge API was invoked.",
+  "bloodbank_touched": false,
+  "client_board_touched": false,
+  "commits_authored": [],
+  "controller_state_touched": false,
+  "environment_install_or_mutation": false,
+  "git_metadata_note": "Authorized push may update shared remote-tracking metadata; neither primary working tree, index, HEAD, nor source files changed.",
+  "global_git_unpushed": "Not run: global sweep/landing conflicts with explicit recovery scope.",
+  "hermes_primary_touched": false,
+  "history_rewritten": false,
+  "ignored_test_caches_permitted": true,
+  "plane_touched": false,
+  "primary_snapshots": {
+    "agents": {
+      "file_hashes_and_modes_unchanged": true,
+      "head_unchanged": true,
+      "index_unchanged": true,
+      "status_unchanged": true
+    },
+    "hermes": {
+      "file_hashes_and_modes_unchanged": true,
+      "head_unchanged": true,
+      "index_unchanged": true,
+      "status_unchanged": true
+    }
+  },
+  "review_or_merge_performed": false,
+  "sandbox_recovery": "Only the verified owned stalled pytest process received SIGINT; preserved exit 2. Same focused command passed in host execution.",
+  "source_changes": [],
+  "status": "PASS",
+  "three_worktrees_end_clean": true,
+  "wip_locks_touched": false
+}

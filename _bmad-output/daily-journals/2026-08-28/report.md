@@ -1,0 +1,413 @@
+Daily Developer Report — 2026-08-28
+Summary written by anthropic/claude-opus-5. Everything below it is rendered by the pipeline from files it read — every status, metric and caveat is on this page whether or not a model answered.
+
+SUMMARY
+-------
+**The version token is gone from Bloodbank's event grammar, and the migration was carried end-to-end in a single day — 176 commits across 8 repositories, with the transitional tolerance already closed behind it.**
+
+## What happened
+
+### De-versioning the event contract
+The day's centre of gravity. It started at the contract (`cdb7b8e refactor(contract): drop the version token from Bloodbank type and subject`) and moved outward in dependency order: stream subjects widened to version-free wildcards (`fb85794`), the schema tree flattened (`6f6c14d`), then the hooks SSOT, generators and smoketest net (`90e0d03 feat(naming)`). The gateway command type, subject and durable followed (`df6298a`), as did the n8n community node (`2cae278`), the two dormant emitters (`6bd37ab`), and the toaster — which now subscribes to the whole event kind rather than one contract version (`e4bdd9b`). Notably the escape hatch was shut the same day: `baa9f88 feat(forward): close the transitional version tolerance now the flip is done`.
+
+Downstream consumers were fixed rather than left tolerant. Candystore stopped counting and summarising on v1 literals (`801e4ee`, `702285f`, `0278732`); Holocene dropped the last two event matchers and re-based velocity history on the version-free grammar (`8b4ecc2`, `1345224`); `delonet-company` followed the de-versioned portfolio schemas (`4567638`). `33GOD` spent much of its 28 commits bumping gitlinks to keep the superproject honest with each wave.
+
+### The synthetic technician placed its first call
+`james-brennan` carried 73 commits, mostly JIMB-186. The five parallel builds became one runnable package (`d9a2da5`), the call script became data behind a loader fence (`11d65b0`), and `9aedc43 chore(devops): taskdefs at c0f6b32, the build that took the first synthetic call` marks the line actually being answered. Around it: the Frank Line moved onto AWS reversibly (`21fb4ca`, `f7c0227`), GorillaDesk writes were fenced to a test scope by the address on the record (`23dc20f`, `50cb297`), and `79ecbca` proved OD-6 — GorillaDesk's two backends do not share ids.
+
+### Hermes PM provisioning
+One fix with fleet-wide blast radius: `9b572fa fix(hermes): role.yaml model.name was "plane" — every PM gateway asked for a model named after its ticket provider`. Alongside it, PMs stopped minting Plane board identifiers and now read them from the provider (`cc261ab`, `b81085a`), with board-binding provenance separated from identifier provenance (`12bd137`).
+
+## Needs you
+
+- **Report delivery is degraded.** 2026-08-26 has no published report and no staged generation in the archive; the delivered streak is 1 of 6 due days. The gap is silent — nothing else flagged it.
+- **Four Hermes gateways are not running.** `delonet-director`, `hermes-agent-pm` and `ssbnk-pm` gateway units are unknown to systemd entirely; `condaleeza`'s exists but is inactive. `hermes-tonnybox-pm-consumer.service` is not-found. Those agents cannot receive commands.
+- **A cron job is lying.** `delodocs-pm/delodocs-triage-second-pass` reports `last_status='ok'` while the `obsidian` and `llm-wiki` skills it needs are not installed. Two more jobs claim ok with no corroboration at all.
+- **`33god-pm.bak` shares a cron dir with `33god-pm`**, so the daily report job is registered twice with identical last-run timestamps.
+- **pr-crusher did nothing useful.** Its single tick on `delorenj/mcp-server-trello` failed — `opencode_free` returned no schema-valid result. 0 PRs triaged, 0 merge candidates, across the only tracked repository.
+
+## Worth noting
+
+Zero decisions were recorded against 30,505 events and 172 sessions. A day that retired a contract grammar and closed its compatibility window should have left at least one decision record behind.
+
+All three of `intelliforia`'s commits — including the merge from `origin/main` and `e949f8ab Handle multi-appointment CR statements (#735)` — are unreachable from its own checked-out branch. Six of 176 commits sit off-HEAD overall. Also: 18 projects active in events have no configured git root, so whatever happened in `.agents`, `33god-platform` and `DeLoContainers` was invisible to the git side of this report.
+
+DEVELOPER ACTIVITY
+------------------
+**Status (authoritative): complete**
+
+30505 events across 21 project(s) on 2026-08-28: 172 session(s), 0 decision(s), 31 committing session(s), 176 commit(s) across 9 of 9 configured repository(ies) read across all refs of each repository (170 on the checked-out branch, 6 only on other refs); peak 2026-08-28T21:00:00Z (5671 events).
+Metrics: candystore_reachable=True, candystore_url=http://127.0.0.1:8683, commit_count=31, decision_count=0, event_count=30505, git_commit_count=176, git_commit_replays_collapsed=0, git_commits_off_head=6, git_commits_on_head=170, git_repos_failed=0, git_repos_logged=8, git_repos_missing=0, git_repos_no_commits=1, git_repos_with_off_head_commits=2, git_root_name_collisions=0, git_roots_active_in_events=3, git_roots_configured=9, git_roots_duplicated=0, git_roots_unread=0, git_roots_unusable=0, git_scope=all-refs, heatmap_read=True, peak_hour=2026-08-28T21:00:00Z, peak_hour_event_count=5671, project_count=21, projects_without_root=18, session_count=172
+Caveats:
+  projects truncated: showing 20 of 25
+  committing sessions truncated: showing 30 of 31
+  operational events truncated: showing 20 of 61
+  git scope is 'all-refs': every ref of each configured repository was read for 2026-08-28 -- branches, tags and fetched remote-tracking refs, excluding refs/stash, refs/notes/* -- not only the checked-out branch; work that exists only in a clone this host has not fetched is out of reach
+  1 configured project root(s) were read across all refs of each repository and had no commits on 2026-08-28: PoopToTheMoon
+  6 of 176 commit(s) are not reachable from their repository's checked-out branch (unmerged or otherwise off-HEAD work) and are counted here: james-brennan 3 of 73 (checked out: main), intelliforia 3 of 3 (checked out: docs/epic-40-two-factor-authentication)
+  18 project(s) active in events have no configured project root, so no git log was read for them: .agents, 20260828T230615Z-w1-4-ambiguous, 33god-platform, DeLoContainers, agents, automatic-ai, ctxtest, delorenj, and 10 more
+Detail:
+  === Events by CLI ===
+    claude      30381
+    unknown       104
+    codex          19
+    reportctl       1
+  
+  === Events by project ===
+    james-brennan          9037
+    vinyl                  8097
+    bloodbank              4608
+    hindsight              3259
+    .agents                2597
+    n8n-nodes-bloodbank    1307
+    relay                   876
+    technician              444
+    unknown                 101
+    voice                    67
+    surface                  29
+    automatic-ai             16
+    ctxtest                  15
+    src                       9
+    agents                    8
+    DeLoContainers.git        6
+    vinyl.git                 5
+    systemd                   5
+    33god-platform            5
+    wax                       4
+    ... showing 20 of 25 projects
+  
+  === Decisions recorded ===
+    (no recorded decisions)
+  
+  === Sessions that committed ===
+    james-brennan (claude, 85 turns): 6 commit(s)
+    technician (claude, 49 turns): 3 commit(s)
+    technician (claude, 154 turns): 5 commit(s)
+    james-brennan (claude, 203 turns): 2 commit(s)
+    james-brennan (claude, 129 turns): 1 commit(s)
+    james-brennan (claude, 58 turns): 1 commit(s)
+    voice (claude, 339 turns): 1 commit(s)
+    james-brennan (claude, 318 turns): 3 commit(s)
+    james-brennan (claude, 289 turns): 1 commit(s)
+    james-brennan (claude, 47 turns): 1 commit(s)
+    james-brennan (claude, 344 turns): 1 commit(s)
+    james-brennan (claude, 689 turns): 1 commit(s)
+    james-brennan (claude, 466 turns): 1 commit(s)
+    james-brennan (claude, 152 turns): 2 commit(s)
+    relay (claude, 305 turns): 4 commit(s)
+    james-brennan (claude, 154 turns): 3 commit(s)
+    james-brennan (claude, 142 turns): 4 commit(s)
+    james-brennan (claude, 15 turns): 2 commit(s)
+    james-brennan (claude, 12 turns): 1 commit(s)
+    james-brennan (claude, 196 turns): 1 commit(s)
+    james-brennan (claude, 110 turns): 2 commit(s)
+    james-brennan (claude, 214 turns): 1 commit(s)
+    james-brennan (claude, 497 turns): 3 commit(s)
+    james-brennan (claude, 206 turns): 2 commit(s)
+    james-brennan (claude, 227 turns): 1 commit(s)
+    james-brennan (claude, 70 turns): 1 commit(s)
+    bloodbank (claude, 256 turns): 2 commit(s)
+    bloodbank (claude, 99 turns): 1 commit(s)
+    james-brennan (claude, 59 turns): 3 commit(s)
+    hindsight (claude, 220 turns): 1 commit(s)
+    ... showing 30 of 31 committing sessions
+  
+  === Operational notes ===
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] completed: (no detail)
+    [unknown] started: (no detail)
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [unknown] exited: restarted container after HTTP 502 on https://get.delo.sh/
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] started: (no detail)
+    [unknown] completed: (no detail)
+    ... showing 20 of 61 operational events
+  
+  === Git log by repository ===
+  === 33GOD ===
+    24ebf69 chore(33GOD): bump gitlinks for the retired repo.issue.* sweep
+    26df9e9 chore(hermes): drop the retired v1 event token from the sentinel docs
+    d5cc4a3 docs: correct event grammar in the docs agents load and follow
+    519a18c chore(hermes): land the refreshed PM template scripts
+    e4a5e6f chore(components): advance the ticket-provider adapter fix
+    0054017 chore(components): advance bloodbank, pjangler, and hermes-agent-template
+    b81085a fix(hermes): stop minting Plane board identifiers in the provisioned PM
+    bd3edc5 chore: record bloodbank (forwarder guard) and mcp-hub at their actual HEADs
+    52b06d5 chore(submodules): land the generator-side bloodbank version-token removal
+    274cfea test(platform): stop pinning the retired grammar in a compose mutation probe
+    ef58b89 fix(hermes): retire the vendored bloodbank consumer, bump the fixed submodules
+    9afe2c9 chore(33GOD): bump gitlinks for the role.yaml evt de-versioning sweep
+    e21fe24 chore(candystore): bump gitlink to the canonical-type session summary fix
+    c8ea0ea chore(bloodbank): bb-emit exits non-zero on caller-side errors
+    b37a45b chore(33GOD): bump candystore gitlink for the version-free summarizer
+    04a5f51 chore(momo): bump gitlink to the versionless decision-event fix
+    99b3df5 chore(33GOD): bump holocene gitlink for the v1 matcher cleanup
+    0fb72e6 chore(bloodbank): bump gitlink for the AGENTS.md/README/bb-emit version strip
+    219a4b8 chore(bloodbank): bump gitlink past the dormant-emitter v1 strip
+    f4e97a1 chore: record bloodbank and candystore at their post-rename commits
+    7552ced chore(bloodbank): bump submodule for the version-free n8n community node
+    aa2ff33 chore(submodules): bump holocene for the version-free history matcher
+    4203f57 chore(submodules): bump bloodbank, pjangler and hermes-agent-template
+    d609f27 chore(bloodbank): bump submodule for version-free stream subjects
+    7cb9ab4 fix(hermes/pm): start-limit the generated gateway unit, and land the vendored 70-systemd drift
+    63ac39a chore(holocene): advance submodule to the srvls inventory fix
+    a56d1bf docs(holocene): the systems tool is srvls, not bgls
+    9b572fa fix(hermes): role.yaml model.name was "plane" — every PM gateway asked for a model named after its ticket provider
+  
+  === james-brennan ===
+    (checked out: main; 3 of 73 commit(s) below are not reachable from it)
+    19b0364 docs: the synthetic technician has called the line, and what the three runs taught
+    9aedc43 chore(devops): taskdefs at c0f6b32, the build that took the first synthetic call
+    3265e21 fix(technician): the tunnel log was landing in the repository again
+    579781e fix(technician,JIMB-186): a script path recorded from the repo root was unreadable from the app
+    5554036 fix(technician,JIMB-186): the call scripts had stopped loading, and stopped being diffable
+    d9a2da5 feat(technician,JIMB-186): the five parallel builds become one package that runs
+    99b7fe0 style(technician): one line over the repo's hundred columns
+    de575e5 fix(technician): the tunnel's config file was landing in the repository
+    27bb6d5 fix(technician): the connect clock was running before the call was placed
+    1446069 fix(technician): the quick tunnel answered 404 from another tunnel's ingress
+    b0cfaee feat(technician,JIMB-186): the run manifest, the collector, and the runner that drives them
+    abb4b99 feat(technician): the caller side speaks first, and it hangs up
+    616fdad fix(technician): job_attached is the grader's clause, not the harness's
+    11d65b0 feat(technician): the call script is data, and the loader is the fence
+    f0698c8 docs: the synthetic technician has a number, and the roster knows it
+    ef4ba13 feat(technician,JIMB-186): the fence on the one number, and the refusal to dial without it
+    a0325ff docs: state of the system, written to be picked up cold
+    c0f6b32 fix(relay,voice): the number's fallback answered with no roster, so every failover was a live call
+    115e797 feat(voice): report the roster on /healthz, because its absence was invisible
+    59c6a92 fix(devops): the voice container answers Jim's line on a laptop's defaults
+    02cdd65 fix(relay,voice): attach the recording to the Case, on the paths real calls take
+    83c543c fix(relay): the fence against test calls reaching a customer record was unreachable
+    df3cda4 fix(relay,JIMB-181): a write that did not land must not report itself as filed
+    4f5c1bc fix(relay): a job status write is not a note, and Jim's page was counting it
+    59d368e chore(hermes): drop the retired v1 event token from the sentinel docs
+    632eccf chore(hermes): land the refreshed PM sentinel files
+    2a9fe8a chore(devops): land taskdef drift for relay and relay-publish
+    dd3b16e feat(devops,JIMB-181): turn the surface write channel on
+    5d7178a checkpoint: 2026-08-28T20:39:49Z auto-commit
+    3670fdd feat(relay,JIMB-186): W1-4 looks for a real Case instead of asserting there is none
+    16d650b chore(devops): taskdefs at b187b75
+    b187b75 fix(relay,JIMB-186): ACC-B3-001 contradicted itself, and the other rows
+    d1fbedd fix(relay,JIMB-186): the job status must not wait behind the note's ledger claim
+    4b96270 docs: the status email to Jim, so it stops getting lost
+    d3815c7 fix(relay,JIMB-186): turning the capability on had removed a human path
+    0f23832 fix(hermes): stop minting Plane board identifiers in the provisioned PM
+    1a06ad8 chore(devops): taskdefs at 8aff859
+    8aff859 docs(JIMB-186): the live testbed, end to end — and a testing approver
+    67e8104 feat(relay,JIMB-186): a test board is a file, and a day of work is one command
+    8e0c3c1 feat(skills): add repeatable GorillaDesk test customers  [not reachable from main]
+    e798419 feat(relay,JIMB-186): the writer authenticates itself, and the deployment gets the login
+    79ecbca fix(relay,JIMB-186): GorillaDesk's two backends do not share ids — OD-6 PROVED
+    a4f881a feat(devops,JIMB-186): turn writes on, inside the fence
+    4576337 feat(relay,JIMB-186): prove the GorillaDesk write on one job, and put it back
+    964c6e3 feat(devops): mise run status can see whether scheduled work is actually running
+    27c7787 fix(devops): grade the voice host Twilio actually rings, not the one we typed
+    21fb4ca feat(devops): the Frank Line answers on AWS
+    7a84527 feat(relay): find the recordings no Case knows about
+    f7c0227 feat(devops): flip the Frank Line between the workstation and AWS, reversibly
+    de7e573 fix(devops): voice on AWS is reachable, and reports which build it is
+    d6ab277 fix(devops): the capture schedule was firing into AccessDenied 96 times a day
+    8273b7d fix(hermes): retire the vendored bloodbank consumer and its v1 grammar  [not reachable from main]
+    0466469 checkpoint: 2026-08-28T17:35:26Z auto-commit
+    cb10514 feat(devops): voice runs in the account, beside the relay
+    3cd35e3 fix(devops): build voice with the relay, and never register an image that is not there
+    85ce2a4 fix(hermes): retire the vendored bloodbank consumer and its v1 grammar
+    be4a42b docs: the Frank Line must not be able to lose a call
+    80e4a75 feat(relay): a call we cannot process is recorded, not refused
+    bab1fbc chore(devops): roll to cb06107 — the ACC-B3 block is now fully characterised
+    cb06107 feat(relay): probe the two pilot-wide safeguards that can be answered honestly
+    addbc84 chore(devops): roll relay and relay-publish to 74d7a84
+    74d7a84 fix(relay): fence the consumer's package open too, and both dispatchers now agree
+    ad9c73c feat(relay): the private GorillaDesk writes state where they land, and are fenced there
+    92c2f72 chore(devops): roll relay and relay-publish to c775842
+    c775842 feat(devops): grade Exhibit B from inside the VPC, where the store actually is
+    ff25524 feat(devops): configure the write scope on the relay and dispatchers
+    373d908 fix(relay): an un-migrated store is a finding, not a broken probe
+    50cb297 fix(relay): fence the branch live traffic actually takes, not the one it doesn't
+    437ea0c feat(relay): wire the write scope into both dispatchers, config and healthz
+    23dc20f feat(relay): fence consequential writes to a test scope, by the address on the record
+    1866444 docs(gorilladesk): declare the private-API skill, and put the switch-on decision to Jim
+    9fb54c8 fix(surface): drop transient Clerk network errors from exception capture  [not reachable from main]
+    e65703f checkpoint: 2026-08-28T01:19:03Z auto-commit
+  
+  === intelliforia ===
+    (checked out: docs/epic-40-two-factor-authentication; 3 of 3 commit(s) below are not reachable from it)
+    179e6a0f docs(stories): re-anchor Epic 40 line references after main moved  [not reachable from docs/epic-40-two-factor-authentication]
+    d3d93f24 Merge remote-tracking branch 'origin/main' into docs/epic-40-two-factor-authentication  [not reachable from docs/epic-40-two-factor-authentication]
+    e949f8ab Handle multi-appointment CR statements (#735)  [not reachable from docs/epic-40-two-factor-authentication]
+  
+  === delonet-company ===
+    83b0595 chore(hermes): stop naming the retired repo.issue.* review families
+    aa4b26f fix(hermes): stop minting Plane board identifiers in the provisioned PM
+    4567638 fix(contracts): follow Bloodbank's de-versioned portfolio schemas
+  
+  === PoopToTheMoon ===
+  (no commits)
+  
+  === pjangler ===
+    0320100 chore(hermes): drop the retired v1 event token from the sentinel docs
+    f05edb4 chore(hermes): land the refreshed PM sentinel/scrum-master files
+    b7083c2 chore(templates): bump hermes-agent to the repo.issue.* event deletion
+    e21c200 Merge remote-tracking branch 'origin/wip/issue-evidence-pjan-21'
+    33b3122 Merge remote-tracking branch 'origin/fix/doctor-von-code-drift'
+    a21a8fd fix(hermes-pm): demote an inherited provider claim on a keyless provider
+    a5c3dc1 fix(tests): retire pjan-86's suite for the deleted config transaction
+    12bd137 fix(registry): separate board-binding provenance from identifier provenance
+    0202f73 fix(tests): run every suite, and restore the TOML validation npm test hid
+    90620d7 fix(registry): reconcile the project SSOT record by record, not agent by agent
+    49a9e17 fix(providers): re-pin hermes-agent to main and complete the tp op contract
+    cc261ab fix(registry): read board identifiers from the provider, never mint them
+    3c824da fix(hermes-agent): pick up the Plane identifier read-back fix
+    da61bf1 Merge remote-tracking branch 'origin/claude/project-registry-backfill-fnc1ih'
+    2d8639a fix(build): close an unterminated docblock and import realpathSync/platform
+    3bc28c7 fix(templates): advance the hermes-agent gitlink past the version-token removal
+    36ec15a fix(hermes): retire the vendored bloodbank consumer and its v1 grammar
+    07478d1 chore(bloodbank): de-version the per-repo evt subscription in the PM role
+    43c5eea fix(hermes): drop the retired v1 token from the cmd subscription
+    24018d2 chore(templates): bump hermes-agent-template for the bloodbank version drop
+    885e6c0 fix(hermes): role.yaml model.name was "plane" — every PM gateway asked for a model named after its ticket provider
+  
+  === bloodbank ===
+    97b7f60 chore(hermes): drop the retired v1 event token from the sentinel docs
+    d831100 chore(hermes): land the refreshed PM sentinel/scrum-master files
+    47a2e82 docs(registry): record the shipped state and what the build changed
+    d763d57 docs: drop the retired version token from agent-loadable Bloodbank docs
+    f9e7d09 chore(hermes): land the PM template drift and retire the runtime submodule
+    c3b03a9 fix(hermes-pm): demote an inherited provider claim on a keyless provider
+    07783a4 fix(hermes-pm): stamp board confirmation apart from identifier provenance
+    39d47cb fix(hermes-pm): refresh the deployed ticket-provider adapters from the template
+    6bfcbc9 fix(hermes): stop minting Plane board identifiers in the shell adapter
+    baa9f88 feat(forward): close the transitional version tolerance now the flip is done
+    400c091 chore(bloodbank): de-version the per-repo evt subscription in the PM role
+    a9fdd41 fix(bb-emit): a malformed --type is the caller's bug, not a bus outage
+    0181204 docs(contract): strip the retired version token from what agents read first
+    b9d92c2 fix(hermes): drop the retired v1 token from the cmd subscription
+    1281885 docs(registry): plan Provider-Derived Project Identity epic
+    6bd37ab fix(services): drop the retired v1 token from the two dormant emitters
+    2a8a134 docs(contract,skills): finish the version strip in §12 and the two skills
+    2cae278 refactor(n8n): drop the version token from the community node's grammar
+    4e85bd2 fix(toaster): refuse to start with an empty NTFY_TOKEN instead of 403ing in silence
+    242c4b4 docs(naming): state the rule that replaced versioning
+    df6298a refactor(gateway): drop the version token from the command type, subject and durable
+    e4bdd9b fix(toaster): subscribe to the whole event kind, not one contract version
+    90e0d03 feat(naming): drop the version token from hooks SSOT, generators and the smoketest net
+    6f6c14d refactor(schemas): flatten the version token out of the schema tree
+    cdb7b8e refactor(contract): drop the version token from Bloodbank type and subject
+    fb85794 feat(nats): widen stream subjects to version-free wildcards
+  
+  === candystore ===
+    965f2d8 chore(hermes): drop the retired v1 event token from the sentinel docs
+    3614a01 chore(bmad): track the forge output artifacts
+    c69bc2c chore(hermes): land the refreshed PM sentinel/scrum-master files
+    7e2ba6d chore(hermes): land the refreshed PM template scripts
+    0179e15 fix(hermes): stop minting Plane board identifiers in the provisioned PM
+    d375490 fix(hermes): retire the vendored bloodbank consumer and its v1 grammar
+    801e4ee fix(query): count session events by canonical type, not v1 literals
+    0489e52 chore(bloodbank): de-version the per-repo evt subscription in the PM role
+    702285f fix(summarize): key the summarizer on canonical types, not v1 literals
+    0b58f11 fix(hermes): drop the retired v1 token from the cmd subscription
+    0278732 fix(query): read scope version-agnostically; drop the enumerated topic list
+  
+  === holocene ===
+    5cde4a7 chore(hermes): stop naming the retired repo.issue.* review families
+    e76efd3 chore(hermes): land the scrum-master review doc refresh
+    5535cf9 chore(hermes): land the refreshed PM sentinel files
+    83a26ef chore(hermes): land the refreshed PM template scripts
+    3d3b813 fix(hermes): stop minting Plane board identifiers in the provisioned PM
+    1f01bdb fix(hermes): retire the vendored bloodbank consumer and its v1 grammar
+    e697da7 chore(bloodbank): de-version the per-repo evt subscription in the PM role
+    8b4ecc2 fix(holocene): drop the v1 token from the last two event matchers
+    286dd6f fix(hermes): drop the retired v1 token from the cmd subscription
+    1345224 fix(fleet): match velocity history on the version-free event grammar
+    d878d12 fix(systems): follow the bgls -> srvls rename
+
+HERMES FLEET HEALTH
+-------------------
+**Status (authoritative): complete**
+
+Hermes fleet: 28 agents registered; 15 timers (15 active, 0 failed); 3 cron jobs across 3 profiles (3 enabled); 1 job(s) reference a missing skill; 0 profile(s) with a stale ticker; 4 gateway unit(s) not running.
+Metrics: agent_profile_dirs_missing=0, agents_registered=28, cron_jobs_enabled=3, cron_jobs_total=3, cron_jobs_unreadable=0, duplicate_cron_dirs=1, gateway_units_inactive=1, gateway_units_unknown=3, jobs_claiming_ok_contradicted=1, jobs_claiming_ok_unverified=2, jobs_with_missing_skill=1, jobs_with_past_next_run=0, profiles_scanned=39, profiles_unreadable_jobs=0, profiles_with_cron_jobs=3, profiles_with_stale_ticker=0, profiles_without_cron_dir=0, report_date=2026-08-28, sources_failed=0, sources_read=4, timers_active=15, timers_failed=0, timers_never_triggered=0, timers_total=15, timers_without_next_elapse=0, units_failed=0, units_not_found=1, units_total=59
+Caveats:
+  2 cron job(s) report last_status='ok' with no independent corroboration; last_status is a scheduler claim and is not treated as evidence of success
+  1 cron job(s) report last_status='ok' while an observable fact contradicts it
+Detail:
+  observed at 2026-08-29T10:01:10.736878Z (fleet state is current, not reconstructed for the report date)
+  registry: 28 agents, 0 missing profile dir(s), 3 gateway unit(s) unknown to systemd, 1 not active
+    agent condaleeza: hermes-condaleeza-gateway.service not active
+    agent delonet-director: hermes-delonet-director-gateway.service unknown to systemd; hermes-delonet-director-heartbeat.timer unknown to systemd
+    agent hermes-agent-pm: hermes-hermes-agent-pm-gateway.service unknown to systemd
+    agent ssbnk-pm: hermes-ssbnk-pm-gateway.service unknown to systemd
+  systemd units: 59 matching, 0 failed, 1 not-found
+    unit hermes-tonnybox-pm-consumer.service: not-found/inactive/dead
+  timers: 15 matching, 15 active, 0 failed, 0 with no next elapse, 0 never triggered
+  cron: 39 profiles scanned (0 without a cron dir), 3 with jobs, 3 jobs (3 enabled), 0 stale ticker(s), 1 shared cron dir(s)
+    profile 33god-pm.bak: shares its cron dir with 33god-pm
+    job 33god-pm/delonet-daily-report: enabled, schedule '0 6 * * *', last_status='ok' (claim, unverified), last run 2026-08-28T10:01:55.318281Z, next 2026-08-30T10:00:00Z
+    job 33god-pm.bak/delonet-daily-report: enabled, schedule '0 6 * * *', last_status='ok' (claim, unverified), last run 2026-08-28T10:01:55.318281Z, next 2026-08-30T10:00:00Z
+    job delodocs-pm/delodocs-triage-second-pass: enabled, schedule '0 9 * * *', last_status='ok' (claim, contradicted), last run 2026-08-28T13:02:26.805901Z, next 2026-08-29T13:00:00Z; skill(s) not installed: obsidian, llm-wiki
+
+NIGHTLY PR MAINTENANCE
+----------------------
+**Status (authoritative): complete**
+
+pr maintenance: 1 tick(s) across 1 of 1 tracked repositories on 2026-08-28; 0 PR(s) triaged, 0 merge candidate(s); 0 merge(s) attempted, 0 confirmed merged; 1 tick(s) did not succeed.
+Metrics: bloodbank_events_published=2, bloodbank_events_skipped=0, merge_candidates=0, merges_attempted=0, merges_completed=0, merges_unconfirmed=0, noop_streak=0, prs_triaged=0, repos_tracked=1, repos_with_ticks=1, state_files_unusable=0, ticks_failed=1, ticks_in_window=1, ticks_noop=0
+Caveats:
+  pr-crusher activity is read from its durable state, not Candystore: its Bloodbank publisher has been observed disabled, so absence of PR events on the bus does not mean absence of PR activity
+  2 pr-crusher lifecycle event(s) did reach Bloodbank
+Detail:
+  window: 2026-08-28T04:00:00Z .. 2026-08-29T04:00:00Z for 2026-08-28 (America/New_York)
+  state directory: /home/delorenj/.local/state/pr-crusher
+  === delorenj/mcp-server-trello (git-github.com-delorenj-mcp-server-trello.git-7bef4efbe7ba8cc5) ===
+    noop streak at the end of the window: 0
+    tick 32 tick-000032-20260828T071319.860914Z completed=2026-08-28T07:24:25.961223Z provider=opencode_free provider_status=failed result_status=failed success=False automerge=False
+      summary: provider did not produce a schema-valid tick result
+
+DAILY REPORT AND DELIVERY HEALTH
+--------------------------------
+**Status (authoritative): complete**
+
+report-delivery: DELIVERY DEGRADED -- 1 of 6 due day(s) in 2026-08-22..2026-08-28 have no valid published report (1 missing). 5 of 6 due days delivered over 2026-08-22..2026-08-28 (1 gap(s)); 5 completion event(s), 0 archive/event disagreement(s); delivered streak 1.
+Metrics: archive_event_disagreements=0, archive_readable=True, candystore_reachable=True, consecutive_delivered_streak=1, days_archive_without_event=0, days_checked=7, days_delivered=5, days_event_without_archive=0, days_in_progress=1, days_invalid=0, days_missing=1, days_unpublished_but_archived=0, days_unreadable=0, delivery_gaps=1, delivery_health=degraded, events_found=5, lookback_days=7
+Caveats:
+  DELIVERY DEGRADED: 1 of 6 due day(s) in 2026-08-22..2026-08-28 have no valid published report (1 missing)
+Detail:
+  window 2026-08-22..2026-08-28 (7 days), report_date 2026-08-28
+  delivery health degraded: 1 of 6 due day(s) in 2026-08-22..2026-08-28 have no valid published report (1 missing)
+  archive /home/delorenj/.local/state/delonet-daily-report/archive: readable
+  candystore http://127.0.0.1:8683 type=bloodbank.reporting.report.completed: reachable
+  2026-08-22 delivered events=1 claimed=complete generation=7eb484d1a81f45dfb3daeb3f21e010aa
+  2026-08-23 delivered events=1 claimed=complete generation=0c3230c650d84d3f8d28308949df22d8
+  2026-08-24 delivered events=1 claimed=complete generation=98b545accde943d0809aa4a9b0cda913
+  2026-08-25 delivered events=1 claimed=complete generation=0c92b6f7abf8482188b536c9cc5eedf8
+  2026-08-26 missing events=0 reason=no current.json and no staged generation under /home/delorenj/.local/state/delonet-daily-report/archive/2026/08/2026-08-26
+  2026-08-27 delivered events=1 claimed=complete generation=1472ef2e152c42aa94012cce38fb34ba
+  2026-08-28 in-progress events=0 reason=this run is producing this day; it publishes after collection
+
+COVERAGE
+--------
+4 of 4 enabled sections completed.
+No section is degraded.
+
+| section | status | generated | fresh until | reason |
+|---|---|---|---|---|
+| dev-activity | complete | 2026-08-29T10:01:10.729167Z | 2026-08-30T10:01:10.729167Z | - |
+| fleet-health | complete | 2026-08-29T10:01:10.736878Z | 2026-08-30T10:01:10.736878Z | - |
+| pr-maintenance | complete | 2026-08-29T10:01:10.786599Z | 2026-08-30T10:01:10.786599Z | - |
+| report-delivery | complete | 2026-08-29T10:01:10.804949Z | 2026-08-30T10:01:10.804949Z | - |
+Required: dev-activity (complete), report-delivery (complete).
+Overall status complete is derived from the run manifest above, not asserted.
+
+Run ddr-2026-08-28-56fbd362 · generated 2026-08-29T10:02:06.396679Z · overall status: complete

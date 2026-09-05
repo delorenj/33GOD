@@ -1,0 +1,57 @@
+{
+  "at": "2026-09-05T13:57:15.346904Z",
+  "commits_authored": [],
+  "history_rewritten": false,
+  "owner_agent_id": "33god-pm",
+  "preserved_input_count": 28637,
+  "preserved_input_mismatches": [],
+  "processes": [],
+  "scope": "No Plane/controller/WIP/Bloodbank/Pjangler/client board mutation; no reviews, approval or merge performed.",
+  "snapshots": {
+    "agents-primary": {
+      "changed_fields": [
+        "files",
+        "head"
+      ],
+      "clean": false,
+      "head": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/agents-primary-prepublication.json",
+      "sha256": "531c94779723ce0abd1ce27496b573f1dee0b6879e468c75f99d6cfe0a99da4e",
+      "unchanged": false
+    },
+    "baseline": {
+      "changed_fields": [],
+      "clean": true,
+      "head": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/baseline-prepublication.json",
+      "sha256": "f3fe51ec3038dca365eb5ca1c4029489d91e3df4a90b4352dafe279a32235a35",
+      "unchanged": true
+    },
+    "candidate": {
+      "changed_fields": [],
+      "clean": true,
+      "head": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/candidate-prepublication.json",
+      "sha256": "1737ecd061e9d1459d465e7ee0dd305b141246f6771bd730e5567ef6e644b78f",
+      "unchanged": true
+    },
+    "guard": {
+      "changed_fields": [],
+      "clean": true,
+      "head": "02481c8df4cedbdc11081fe41fcf01859a399566",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/guard-prepublication.json",
+      "sha256": "638efb396790c580c21a8687a3b1db7fc0e5c6d09a44dd211df6af3c82018365",
+      "unchanged": true
+    },
+    "hermes-primary": {
+      "changed_fields": [],
+      "clean": false,
+      "head": "6852bdbab7217a840424734bb44967d946ffc243",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/hermes-primary-prepublication.json",
+      "sha256": "30acdeef12da54c811ba69e53a5d67d34c8dd0fca345599851e5c9c42ed1dba1",
+      "unchanged": true
+    }
+  },
+  "source_touched": false,
+  "status": "FAIL"
+}

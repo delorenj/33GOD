@@ -1,0 +1,11 @@
+{
+  "name": "bash-syntax",
+  "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+  "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+  "started_at": "2026-09-05T09:58:20.615870+00:00",
+  "finished_at": "2026-09-05T09:58:20.617330+00:00",
+  "stdout": "",
+  "stderr": "",
+  "exit_code": 0,
+  "status": "PASS"
+}

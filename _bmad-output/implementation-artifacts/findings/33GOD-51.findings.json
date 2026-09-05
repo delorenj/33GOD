@@ -1,0 +1,39 @@
+{
+  "findings": [
+    {
+      "category": "security",
+      "created_at": "2026-09-03T14:26:59.730860+00:00",
+      "description": "c61c871 requires the contractor workspace to be beneath the profile home, but the authorized 33god-pm workspace and profile directories are disjoint; the real route fails while the focused test uses a nested fixture.",
+      "evidence": "hermes run.py:21282-21301; fleet registry lines 36-42",
+      "id": "F001",
+      "resolved_at": "",
+      "resolver": "",
+      "severity": "high",
+      "state": "open"
+    },
+    {
+      "category": "concurrency",
+      "created_at": "2026-09-03T14:27:19.539417+00:00",
+      "description": "c61c871 passes a null service tier explicitly for a normal contractor turn, but route resolution treats null as omitted and falls back to shared runner state; sibling-turn service-tier contamination remains possible.",
+      "evidence": "hermes run.py:9051-9114 and 21132-21145",
+      "id": "F002",
+      "resolved_at": "",
+      "resolver": "",
+      "severity": "high",
+      "state": "open"
+    },
+    {
+      "category": "error-handling",
+      "created_at": "2026-09-03T14:33:26.547187+00:00",
+      "description": "c61c871 puts cleanup_error into the private worker result, but _handle_contractor_turn then discards that field and returns only final_response; Bloodbank on_processing_complete therefore records success and the caller receives no cleanup status. QF-3 is logged locally, not surfaced across the contract.",
+      "evidence": "hermes run.py:21242-21260 and 21385-21391; Bloodbank adapter.py:830-858",
+      "id": "F003",
+      "resolved_at": "",
+      "resolver": "",
+      "severity": "high",
+      "state": "open"
+    }
+  ],
+  "issue": "33GOD-51",
+  "schema_version": "1.0"
+}

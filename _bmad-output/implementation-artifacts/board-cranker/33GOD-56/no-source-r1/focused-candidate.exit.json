@@ -1,0 +1,81 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-o",
+    "addopts=",
+    "tests/gateway/test_contractor_turns.py",
+    "tests/gateway/test_session_split_brain_11016.py"
+  ],
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+  "command_finished_at": "2026-09-05T13:54:57.250640Z",
+  "environment": {
+    "EVIDENCE_REPORT": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/focused-candidate.reports.json",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/hermes-home",
+    "HOME": "/home/delorenj",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+    "PYTEST_ADDOPTS": "-o cache_dir=/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/cache/pytest",
+    "PYTEST_PLUGINS": "evidence_plugin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONPATH": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1",
+    "PYTHONPYCACHEPREFIX": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/bytecode",
+    "PYTHONUTF8": "1",
+    "RUFF_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/cache/ruff",
+    "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/tmp",
+    "TZ": "UTC",
+    "UV_CACHE_DIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/cache/uv",
+    "XDG_CACHE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/cache",
+    "XDG_CONFIG_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/config",
+    "XDG_DATA_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/data",
+    "XDG_STATE_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/isolation/focused-candidate/state"
+  },
+  "exit_code": 0,
+  "finished_at": "2026-09-05T13:54:57.359318Z",
+  "finished_monotonic_ns": 1345279947576412,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/focused-candidate.log",
+  "name": "focused-candidate",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-o",
+          "addopts=",
+          "tests/gateway/test_contractor_turns.py",
+          "tests/gateway/test_session_split_brain_11016.py"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 41706,
+        "pid": 41706,
+        "ppid": 3070488,
+        "session": 41706,
+        "start_ticks": "134527475",
+        "state": "R"
+      }
+    ],
+    "pid": 41706,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 3070488
+  },
+  "sequence_index": 5,
+  "sha256": "746f482abc7d9c12cb2064c3dc10354717c5396c77ca1efc9696da705f3f7539",
+  "started_at": "2026-09-05T13:54:52.165079Z",
+  "started_monotonic_ns": 1345274753311256,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

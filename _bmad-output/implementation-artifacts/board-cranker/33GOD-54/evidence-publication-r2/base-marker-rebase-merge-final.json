@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "rebase-merge"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-rebase-merge-final.log",
+  "name": "base-marker-rebase-merge-final",
+  "sha256": "e07f295fcdf42cae3ec1a1cbd3337d16a72eb34de9259311345dc24c14a1938b",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

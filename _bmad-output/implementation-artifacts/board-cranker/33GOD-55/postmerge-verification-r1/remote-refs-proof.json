@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry"
+  ],
+  "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+  "started_at": "2026-09-05T09:58:23.034423+00:00",
+  "finished_at": "2026-09-05T09:58:23.588775+00:00",
+  "stdout": "54aca968fd16e428fe1378f6f401c068d17e5c4a\trefs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry\n02481c8df4cedbdc11081fe41fcf01859a399566\trefs/heads/main\n",
+  "stderr": "",
+  "exit_code": 0
+}

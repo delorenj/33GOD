@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "rebase-apply"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-rebase-apply.log",
+  "name": "base-marker-path-rebase-apply",
+  "sha256": "832aa04ba3dfb2407c2821dc380d05ce28190a06b9f33064ce96f43cc7bb1802",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+}

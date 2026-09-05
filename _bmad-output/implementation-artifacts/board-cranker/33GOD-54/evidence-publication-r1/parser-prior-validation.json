@@ -1,0 +1,8 @@
+{
+  "inputs": [
+    "33GOD-53/integration-conflict-r3/gateway-head.log",
+    "33GOD-53/integration-conflict-r3/gateway-baseline.log"
+  ],
+  "purpose": "Validate complete node/error extraction only; no reuse as current classification",
+  "status": "PASS"
+}

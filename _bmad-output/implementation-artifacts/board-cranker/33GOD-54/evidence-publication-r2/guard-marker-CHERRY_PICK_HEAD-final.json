@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "CHERRY_PICK_HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-CHERRY_PICK_HEAD-final.log",
+  "name": "guard-marker-CHERRY_PICK_HEAD-final",
+  "sha256": "dde7dc52f078cde7b016e0f86542eed86274ffcddc423361cc0e46dba4d3f033",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

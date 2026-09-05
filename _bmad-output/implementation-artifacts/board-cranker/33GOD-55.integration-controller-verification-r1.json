@@ -1,0 +1,40 @@
+{
+  "checked_at": "2026-09-05T09:40:49Z",
+  "controller": "33god-pm",
+  "decision_event_id": "54746956-1aed-4e77-83e2-a7f92d45c7fd",
+  "disposition": "Do not accept integration or unblock 33GOD-54 until one source-free post-merge verification worker reruns the prescribed gates and atomically replaces the canonical handback with internally correct evidence hashes.",
+  "evidence_mismatch": {
+    "actual_sha256": "2f01f4291333b61258ab7863686b8f97bc3e48f27056a75324a54d7c7d02606a",
+    "declared_sha256": "1a8f9c1a6a3d3b3e7b63e08bb2d12a7b2d3b7b4c6e3a1f1b0e4f4d3c2b1a0987",
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/integration-r4/pr-checks-poll.json"
+  },
+  "failed_prerequisite": "Canonical integration receipt has a false SHA-256 for pr-checks-poll.json.",
+  "issue": "33GOD-55",
+  "phase": "integration",
+  "schema_version": "1.0",
+  "source_mutation_authorized": false,
+  "status": "BLOCKED",
+  "verified_facts": {
+    "canonical_handback_schema_valid": true,
+    "canonical_handback_sha256": "477bd616162ab256c496dc30bd94229c9f7ffbcf155f00e7f751718a7983d550",
+    "changed_files": [
+      "git/README.md",
+      "git/hooks/_travels.py",
+      "git/hooks/pre-push",
+      "git/tests/test_pre_push.py"
+    ],
+    "feature_review_postmerge_worktrees_clean": true,
+    "pr_number": 1,
+    "pr_state": "MERGED",
+    "remote_main_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "required_check": "GitGuardian Security Checks",
+    "required_check_conclusion": "SUCCESS",
+    "reviewed_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "tree_equivalent": true,
+    "worker_pids_dead": [
+      2387066,
+      2388203,
+      2388205
+    ]
+  }
+}

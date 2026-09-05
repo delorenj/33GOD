@@ -1,0 +1,329 @@
+Daily Developer Report — 2026-09-03
+Summary written by anthropic/claude-opus-5. Everything below it is rendered by the pipeline from files it read — every status, metric and caveat is on this page whether or not a model answered.
+
+SUMMARY
+-------
+**Nearly the entire decision log for 2026-09-03 was spent holding one ticket — `33GOD-53` — at a quality gate it could not pass, while the actual product work shipped quietly elsewhere.**
+
+## What happened
+
+### The 33GOD-53 deadlock
+62 decisions were recorded; of the 30 shown, all but two are `33GOD-53`. The ticket was born as a decomposition of exhausted `33GOD-51` ("Hold 33GOD-51 after final quality-fix recovery failed the machine handback and live registry-root contract"), advanced to spec review on immutable head `0034641`, passed, then stalled: the pinned Kimi route exhausted credits, the controller was rerouted to `openai-codex/gpt-5.6-sol`, Augment quota blocked the transport recovery, and every subsequent decision is a restatement that "both permitted Kimi transports remain unavailable." Underneath that, upstream PR #102409 sat awaiting maintainer-authorized Actions across at least six separate hold decisions. Two of the day's decisions were housekeeping: terminating three, then two, stale Board Cranker process groups. This is a WIP=1 lease held all day by a ticket blocked on somebody else's CI authorization and a vendor quota.
+
+### Auth hardening in intelliforia
+22 commits, the largest single body of work. Email two-factor landed (`ca75d2f9`), then Teams push delivery where email can't reach (`404ae7ef`, `5fe14b93`), then tap-to-approve on a tenant with no premium licence (`b8f6e592`, `0d6f3aba`). Superadmin masquerade went in at `3d23df2b` and was immediately hardened — `14a29ac6` "make it work, and make it safe to have", `052edf48` centralizing the identity shape, `16bdbb7d` covering the seam where masquerade meets two-factor. Also `162a801f`: deactivated accounts now refused at all four sign-in doors. Separately `e6a4f4d3` adopted Skillex and retired ifskills.
+
+### PJAN-110 closed, and voice telemetry
+pjangler shipped 8 commits closing story 1.8 (`e06fd9b`, `ad1f47e`, `4047506` repairing heartbeat code a review batch had blanked), plus `ef797ea` stopping the parity checker from flagging a projection's own dotfiles. 33GOD bumped the gitlink twice. james-brennan produced the JIMB-254 barge-in spike report and turned it into a formal skill (`13082e0`), plus JIMB-258 "measure what the caller actually heard" and JIMB-260. candystore landed free-text search over the whole event trail (`114ffea`), bumped into 33GOD as `d1393e7`.
+
+## Needs you
+
+- **The Board Cranker loop is running without its tools.** Both copies claim `last_status='ok'` — contradicted — and are missing six skills: `momo`, `project-lifecycle`, `subagent-driven-development`, `coding-strategy`, `pjangler`, `bloodbank-integration`. That is plausibly why 33GOD-53 generated 28 identical holds instead of progress.
+- **`33god-pm.bak` shares its cron dir with `33god-pm`**, so both jobs are duplicated on the same 5-minute schedule.
+- **`hermes-automatic-ai-pm-heartbeat.service` is failed**, `hermes-tonnybox-pm-consumer.service` is not-found, and 8 gateway units are not running (5 unknown to systemd entirely). `james-brennan-pm/JIMB hourly one-ticket pass` last ran with `last_status='error'`.
+- **All 3 bloodbank commits are unreachable from `main`**, including `3409604` typed contractor execution policy for 33GOD-50 — the gateway change 33GOD-50 depends on is not on the trunk.
+- **pr-crusher triaged 2 PRs and merged nothing.** #115 and #111 are both mergeable but gated on unresolved review threads and CI; its Bloodbank publisher has been observed disabled, so the bus under-reports it.
+
+## Worth noting
+
+Report delivery is at a 6-day streak with zero gaps. 9 of 49 commits are off-HEAD across three repos, and 24 projects active in events have no configured git root — a growing blind spot in what this report can see. holocene, delonet-company and PoopToTheMoon produced nothing today.
+
+DEVELOPER ACTIVITY
+------------------
+**Status (authoritative): complete**
+
+17312 events across 30 project(s) on 2026-09-03: 313 session(s), 62 decision(s), 27 committing session(s), 49 commit(s) across 9 of 9 configured repository(ies) read across all refs of each repository (41 on the checked-out branch, 9 only on other refs); peak 2026-09-03T00:00:00Z (2340 events).
+Metrics: candystore_reachable=True, candystore_url=http://127.0.0.1:8683, commit_count=27, decision_count=62, event_count=17312, git_commit_count=49, git_commit_replays_collapsed=1, git_commits_off_head=9, git_commits_on_head=41, git_repos_failed=0, git_repos_logged=6, git_repos_missing=0, git_repos_no_commits=3, git_repos_with_off_head_commits=3, git_root_name_collisions=0, git_roots_active_in_events=6, git_roots_configured=9, git_roots_duplicated=0, git_roots_unread=0, git_roots_unusable=0, git_scope=all-refs, heatmap_read=True, peak_hour=2026-09-03T00:00:00Z, peak_hour_event_count=2340, project_count=30, projects_without_root=24, session_count=313
+Caveats:
+  projects truncated: showing 20 of 38
+  decisions truncated: showing 30 of 62
+  operational events truncated: showing 20 of 26
+  git scope is 'all-refs': every ref of each configured repository was read for 2026-09-03 -- branches, tags and fetched remote-tracking refs, excluding refs/stash, refs/notes/* -- not only the checked-out branch; work that exists only in a clone this host has not fetched is out of reach
+  3 configured project root(s) were read across all refs of each repository and had no commits on 2026-09-03: delonet-company, PoopToTheMoon, holocene
+  9 of 50 commit(s) are not reachable from their repository's checked-out branch (unmerged or otherwise off-HEAD work) and are counted here: james-brennan 1 of 12 (checked out: main), intelliforia 5 of 22 (checked out: feat/two-factor-and-masquerade), bloodbank 3 of 3 (checked out: main)
+  1 commit(s) repeat the author date and subject of another commit in the same window (rebase or cherry-pick copies) and were counted once, not twice: intelliforia 1
+  24 project(s) active in events have no configured project root, so no git log was read for them: bloodbank-board-cranker-43, bloodbank-board-cranker-43-post-merge-verify, bloodbank-board-cranker-43-spec-review, client-portal, commonproject, dist, flyer, hermes-agent, and 16 more
+Detail:
+  === Events by CLI ===
+    claude         7929
+    hermes         5186
+    codex          3196
+    copilot         621
+    antigravity     229
+    unknown         150
+    reportctl         1
+  
+  === Events by project ===
+    unknown                                   5990
+    intelliforia                              2495
+    pjangler                                  2349
+    intelliforia-mobile                       1632
+    hermes-board-cranker-50                    997
+    james-brennan                              837
+    ssbnk                                      751
+    dist                                       523
+    james-brennan-jimb169                      370
+    jimb-254-barge-in                          251
+    client-portal                              197
+    candystore                                 169
+    bloodbank-board-cranker-43                 121
+    web                                         84
+    hermes-board-cranker-53-quality-review      70
+    flyer                                       57
+    wax                                         55
+    repo                                        43
+    stories                                     43
+    legofirst                                   42
+    ... showing 20 of 38 projects
+  
+  === Decisions recorded ===
+    [33god] 33GOD-53: Retain 33GOD-53 at quality review after direct Kimi remained quota-blocked
+    [33god] 33GOD-53: Hold 33GOD-53 at quality review because every permitted Kimi recovery route remains quota-blocked before execution
+    [33god] 33GOD-53: Hold 33GOD-53 at quality review because no permitted Kimi transport can execute the final independent gate
+    [33god] 33GOD-53: Retain 33GOD-53 quality-review hold; both permitted Kimi transports remain unavailable
+    [33god] 33GOD-53: Hold 33GOD-53 at the quality gate because both permitted Kimi transport routes are unavailable
+    [33god] 33GOD-53: Hold the quality gate because Augment quota blocked the final transport recovery before review
+    [33god] 33GOD-53: Dispatch final independent quality/security transport recovery on unchanged guard-fix range
+    [33god] 33GOD-53: Accept the guard-fix specification PASS and dispatch a fresh independent quality/security review
+    [33god] 33GOD-53: Advance verified 33GOD-53 guard fix to fresh specification review despite inherited baseline failures
+    [33god] 33GOD-53: Retain 33GOD-53 as sole WIP while the delegated guard-fix worker completes its verified RED-to-GREEN run
+    [33god] 33GOD-53: Return 33GOD-53 to implementation for the upstream command-guard race and dispatch the final bounded fix attempt
+    [33god] 33GOD-53: Return 33GOD-53 to implementation for the upstream command-guard race and dispatch the final bounded fix attempt
+    [33god] 33GOD-53: Retain 33GOD-53 as the sole WIP item while upstream PR #102409 awaits maintainer-authorized Actions
+    [33god] 33GOD-53: Retain 33GOD-53 as sole WIP while upstream PR #102409 still awaits maintainer-authorized Actions
+    [33god] 33GOD-53: Retain 33GOD-53 as sole WIP while upstream PR #102409 awaits maintainer-authorized Actions
+    [33god] 33GOD-53: Retain 33GOD-53 as sole WIP while upstream PR 102409 awaits maintainer-authorized Actions
+    [33god] 33GOD-53: Retain 33GOD-53 as the sole WIP item while upstream PR 102409 remains blocked awaiting maintainer-authorized checks
+    [33god] 33GOD-53: Retain 33GOD-53 as sole Board Cranker WIP while upstream PR 102409 Actions remain unauthorized
+    [33god] 33GOD-53: Terminate three remaining stale Board Cranker 33GOD-53 process groups and retain the integration WIP hold
+    [33god] 33GOD-53: Terminate two stale 33GOD-53 gateway-suite process groups while retaining the campaign WIP lease and upstream PR hold
+    [33god] 33GOD-53: Hold 33GOD-53 in integration and retain the sole WIP lease while upstream PR #102409 awaits maintainer workflow authorization and review
+    [33god] 33GOD-53: Accept 33GOD-53 quality/security PASS and dispatch one merge-prohibited upstream PR integration worker
+    [33god] 33GOD-53: Reject the schema-invalid first quality-review transport and dispatch one fresh Auggie quality/security reviewer on the unchanged 33GOD-53 range
+    [33god] 33GOD-53: Advance 33GOD-53 from specification PASS to an independent quality and security review on immutable head 0034641
+    [33god] 33GOD-53: Correct the defective spec-review contract and rerun the immutable range without a code-fix cycle
+    [33god] 33GOD-53: Advance verified 33GOD-53 implementation to fresh independent specification review; classify the identical broad gateway failures as inherited baseline.
+    [33god] 33GOD-53: Adopt verified repair child 33GOD-53 as the sole WIP and dispatch one fresh implementer
+    [33god] 33GOD-53: Route the temporary Board Cranker controller to openai-codex/gpt-5.6-sol after the pinned Kimi route exhausted credits
+    [33god] 33GOD-51: Decompose exhausted 33GOD-51 quality repair into child 33GOD-53
+    [33god] 33GOD-51: Hold 33GOD-51 after final quality-fix recovery failed the machine handback and live registry-root contract
+    ... showing 30 of 62 decisions
+  
+  === Sessions that committed ===
+    candystore (claude, 67 turns): 2 commit(s)
+    jimb-254-barge-in (claude, 98 turns): 4 commit(s)
+    intelliforia (claude, 37 turns): 1 commit(s)
+    ssbnk (codex, 2 turns): 1 commit(s)
+    ssbnk (codex, 2 turns): 1 commit(s)
+    intelliforia (claude, 68 turns): 1 commit(s)
+    dist (codex, 2 turns): 1 commit(s)
+    intelliforia-mobile (claude, 30 turns): 1 commit(s)
+    intelliforia (claude, 58 turns): 1 commit(s)
+    dist (codex, 2 turns): 1 commit(s)
+    intelliforia (claude, 41 turns): 2 commit(s)
+    pjangler (claude, 305 turns): 1 commit(s)
+    hermes-board-cranker-50 (codex, 3 turns): 1 commit(s)
+    dist (codex, 6 turns): 1 commit(s)
+    intelliforia (claude, 26 turns): 2 commit(s)
+    intelliforia (claude, 26 turns): 1 commit(s)
+    intelliforia (claude, 40 turns): 1 commit(s)
+    legofirst (claude, 89 turns): 1 commit(s)
+    intelliforia (antigravity, 4 turns): 1 commit(s)
+    intelliforia (antigravity, 69 turns): 1 commit(s)
+    hermes-board-cranker-50 (codex, 5 turns): 1 commit(s)
+    hermes-board-cranker-50 (codex, 3 turns): 1 commit(s)
+    pjangler (claude, 40 turns): 2 commit(s)
+    james-brennan-jimb169 (codex, 0 turns): 1 commit(s)
+    james-brennan-jimb169 (codex, 1 turns): 1 commit(s)
+    james-brennan (claude, 91 turns): 1 commit(s)
+    bloodbank-board-cranker-43 (codex, 5 turns): 1 commit(s)
+  
+  === Operational notes ===
+    [unknown] completed: (no detail)
+    [unknown] started: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] started: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] started: (no detail)
+    [unknown] completed: (no detail)
+    [unknown] started: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] updated: (no detail)
+    [wax] started: (no detail)
+    ... showing 20 of 26 operational events
+  
+  === Git log by repository ===
+  === 33GOD ===
+    d1393e7 chore(candystore): bump to the free-text event search
+    825726b chore(PJAN-110): bump the pjangler gitlink to story 1.8 closed
+    643b6c7 chore(PJAN-110): bump the pjangler gitlink to story 1.8 final
+  
+  === james-brennan ===
+    (checked out: main; 1 of 12 commit(s) below are not reachable from it)
+    abb1662 checkpoint: 2026-09-03T21:26:35Z auto-commit
+    6345952 JIMB-260: the line asked the same question three times
+    d7046ff JIMB-254: the barge-in spike report
+    13082e0 JIMB-254: barge-in-policy, a formal development skill
+    c9dcdf6 JIMB-258: measure what the caller actually heard
+    5b1a50e checkpoint: 2026-09-03T04:04:09Z auto-commit
+    1f00c18 fix(jimb-169): reconcile main and close release blockers  [not reachable from main]
+    f7fd6bf checkpoint: 2026-09-03T03:02:09Z auto-commit
+    d731390 checkpoint: 2026-09-03T02:00:06Z auto-commit
+    8802784 checkpoint: 2026-09-03T00:58:40Z auto-commit
+    afc0ae3 workshop: first real internal activity report (2026-09-02T2035)
+    dd3f905 feat(report): wire the activity-report skill in; report:* tasks replace daily:*
+  
+  === intelliforia ===
+    (checked out: feat/two-factor-and-masquerade; 5 of 22 commit(s) below are not reachable from it)
+    b8f6e592 feat(mfa): answer the sign-in code with a tap, on a tenant with no premium licence
+    0d6f3aba feat(mfa): let a pushed sign-in code be answered "Yes. This was me."
+    68f0f69f docs(staging-teams-mfa): keep the tenant constraint the rewrite dropped
+    5fe14b93 feat(mfa): put the Teams push back, alongside the staging mailbox
+    371985ac feat(staging): read the mail on the screen, and drop Teams
+    404ae7ef feat(mfa): push the sign-in code to Teams where email cannot deliver
+    2c612c26 Deploy coverage report from run 1343 e6a4f4d376ca2cc113a94bdfec415c7390a8d5c7  [not reachable from feat/two-factor-and-masquerade]
+    162a801f fix(auth): refuse a deactivated account at all four sign-in doors
+    e6a4f4d3 build(skills): adopt Skillex, retire ifskills, fix the broken enter hooks
+    b7cb88eb build(skills): adopt Skillex, retire ifskills, fix the broken enter hooks  [same author date and subject as e6a4f4d3, counted once]
+    19bfdcca Apply single-paragraph rule to all notes  [not reachable from feat/two-factor-and-masquerade]
+    16bdbb7d test(auth): cover the seam where masquerade meets two-factor
+    1259c03c Merge branch 'feat/masquerade' into feat/two-factor-and-masquerade
+    052edf48 fix(masquerade): actually centralize the identity shape the docstring promised
+    ea7c11fa docs(masquerade): correct a comment that credited /login with a check it does not do
+    14a29ac6 fix(masquerade): make it work, and make it safe to have
+    8d90cc5a style: update auth page copy to 'have the pen' idiom
+    3d23df2b feat(masquerade): Add superadmin masquerade mode
+    234d505a docs(stories): re-anchor Epic 40 line references after main moved  [not reachable from feat/two-factor-and-masquerade]
+    e40cf3b1 Merge remote-tracking branch 'origin/main' into docs/epic-40-two-factor-authentication  [not reachable from feat/two-factor-and-masquerade]
+    ca75d2f9 feat(auth): email two-factor, and the one carve-out it needs
+    2835fca8 Sync  [not reachable from feat/two-factor-and-masquerade]
+  
+  === delonet-company ===
+  (no commits)
+  
+  === PoopToTheMoon ===
+  (no commits)
+  
+  === pjangler ===
+    c1270f9 chore(template): bump commonproject for the fail-open pack fetch (8e264a8)
+    ef797ea fix(parity): stop reporting a projection's own dotfiles as undeclared skills
+    5a28bc3 docs: dogfood the recap skill on the story 1.8 session
+    a106d6e docs(PJAN-110): record the story 1.8 follow-up review pass
+    4047506 fix(PJAN-110): repair the heartbeat code the review batch blanked
+    ba84cde fix(PJAN-110): correct the domains-answered overclaim and unblock 1.9's ticket
+    e06fd9b docs(PJAN-110): finalize story 1.8 — review triage, result, sprint advance
+    ad1f47e fix(PJAN-110): apply the story 1.8 review batch, worst reading first
+  
+  === bloodbank ===
+    (checked out: main; 3 of 3 commit(s) below are not reachable from it)
+    3409604 feat(gateway): carry typed contractor execution policy (33GOD-50)  [not reachable from main]
+    3dd7fc0 bloodbank: add schema-validated n8n command publishing (#268)  [not reachable from main]
+    60087e0 bloodbank: add schema-validated n8n command publishing  [not reachable from main]
+  
+  === candystore ===
+    114ffea feat(search): free-text search over the whole event trail
+    8755e47 docs(agents): record the agent-consumer framing and mise-first workflow
+  
+  === holocene ===
+  (no commits)
+
+HERMES FLEET HEALTH
+-------------------
+**Status (authoritative): complete**
+
+Hermes fleet: 28 agents registered; 15 timers (15 active, 0 failed); 6 cron jobs across 4 profiles (6 enabled); 4 job(s) reference a missing skill; 0 profile(s) with a stale ticker; 8 gateway unit(s) not running.
+Metrics: agent_profile_dirs_missing=0, agents_registered=28, cron_jobs_enabled=6, cron_jobs_total=6, cron_jobs_unreadable=0, duplicate_cron_dirs=1, gateway_units_inactive=3, gateway_units_unknown=5, jobs_claiming_ok_contradicted=3, jobs_claiming_ok_unverified=2, jobs_with_missing_skill=4, jobs_with_past_next_run=0, profiles_scanned=39, profiles_unreadable_jobs=0, profiles_with_cron_jobs=4, profiles_with_stale_ticker=0, profiles_without_cron_dir=1, report_date=2026-09-03, sources_failed=0, sources_read=4, timers_active=15, timers_failed=0, timers_never_triggered=0, timers_total=15, timers_without_next_elapse=0, units_failed=1, units_not_found=1, units_total=67
+Caveats:
+  2 cron job(s) report last_status='ok' with no independent corroboration; last_status is a scheduler claim and is not treated as evidence of success
+  3 cron job(s) report last_status='ok' while an observable fact contradicts it
+Detail:
+  observed at 2026-09-04T10:00:41.431419Z (fleet state is current, not reconstructed for the report date)
+  registry: 28 agents, 0 missing profile dir(s), 5 gateway unit(s) unknown to systemd, 3 not active
+    agent condaleeza: hermes-condaleeza-gateway.service not active
+    agent delocontainers-pm: hermes-delocontainers-pm-gateway.service not active
+    agent delonet-director: hermes-delonet-director-gateway.service unknown to systemd; hermes-delonet-director-heartbeat.timer unknown to systemd
+    agent drumjangler-pm: hermes-drumjangler-pm-gateway.service unknown to systemd
+    agent hermes-agent-pm: hermes-hermes-agent-pm-gateway.service unknown to systemd
+    agent intelliforia-voice-agent-pm: hermes-intelliforia-voice-agent-pm-gateway.service unknown to systemd
+    agent nautilus-trader-pm: hermes-nautilus-trader-pm-gateway.service unknown to systemd
+    agent ssbnk-pm: hermes-ssbnk-pm-gateway.service not active
+  systemd units: 67 matching, 1 failed, 1 not-found
+    unit hermes-automatic-ai-pm-heartbeat.service: loaded/failed/failed
+    unit hermes-tonnybox-pm-consumer.service: not-found/inactive/dead
+  timers: 15 matching, 15 active, 0 failed, 0 with no next elapse, 0 never triggered
+  cron: 39 profiles scanned (1 without a cron dir), 4 with jobs, 6 jobs (6 enabled), 0 stale ticker(s), 1 shared cron dir(s)
+    profile 33god-pm.bak: shares its cron dir with 33god-pm
+    job 33god-pm/delonet-daily-report: enabled, schedule '0 6 * * *', last_status='ok' (claim, unverified), last run 2026-09-03T10:04:36.424120Z, next 2026-09-05T10:00:00Z
+    job 33god-pm/Board Cranker implementation loop: enabled, schedule 'every 5m', last_status='ok' (claim, contradicted), last run 2026-09-04T09:54:17.998541Z, next 2026-09-04T10:04:37.611659Z; skill(s) not installed: momo, project-lifecycle, subagent-driven-development, coding-strategy, pjangler, bloodbank-integration
+    job 33god-pm.bak/delonet-daily-report: enabled, schedule '0 6 * * *', last_status='ok' (claim, unverified), last run 2026-09-03T10:04:36.424120Z, next 2026-09-05T10:00:00Z
+    job 33god-pm.bak/Board Cranker implementation loop: enabled, schedule 'every 5m', last_status='ok' (claim, contradicted), last run 2026-09-04T09:54:17.998541Z, next 2026-09-04T10:04:37.611659Z; skill(s) not installed: momo, project-lifecycle, subagent-driven-development, coding-strategy, pjangler, bloodbank-integration
+    job delodocs-pm/delodocs-triage-second-pass: enabled, schedule '0 9 * * *', last_status='ok' (claim, contradicted), last run 2026-09-03T13:03:09.700118Z, next 2026-09-04T13:00:00Z; skill(s) not installed: obsidian, llm-wiki
+    job james-brennan-pm/JIMB hourly one-ticket pass: enabled, schedule 'every 60m', last_status='error' (claim, not-claimed), last run 2026-09-04T09:06:48.669391Z, next 2026-09-04T10:06:48.669391Z; skill(s) not installed: momo, project-lifecycle, project-invariants, coding-strategy; last_error recorded (142 chars, not copied here)
+
+NIGHTLY PR MAINTENANCE
+----------------------
+**Status (authoritative): complete**
+
+pr maintenance: 1 tick(s) across 1 of 1 tracked repositories on 2026-09-03; 2 PR(s) triaged, 2 merge candidate(s); 0 merge(s) attempted, 0 confirmed merged.
+Metrics: bloodbank_events_published=2, bloodbank_events_skipped=0, merge_candidates=2, merges_attempted=0, merges_completed=0, merges_unconfirmed=0, noop_streak=0, prs_triaged=2, repos_tracked=1, repos_with_ticks=1, state_files_unusable=0, ticks_failed=0, ticks_in_window=1, ticks_noop=0
+Caveats:
+  pr-crusher activity is read from its durable state, not Candystore: its Bloodbank publisher has been observed disabled, so absence of PR events on the bus does not mean absence of PR activity
+  2 pr-crusher lifecycle event(s) did reach Bloodbank
+Detail:
+  window: 2026-09-03T04:00:00Z .. 2026-09-04T04:00:00Z for 2026-09-03 (America/New_York)
+  state directory: /home/delorenj/.local/state/pr-crusher
+  === delorenj/mcp-server-trello (git-github.com-delorenj-mcp-server-trello.git-7bef4efbe7ba8cc5) ===
+    noop streak at the end of the window: 0
+    tick 38 tick-000038-20260903T071043.374771Z completed=2026-09-03T07:12:17.426369Z provider=opencode_free provider_status=complete result_status=complete success=True automerge=False
+      PR #115 ci=passing coverage=not regressed (Test + coverage gate passed) grade=good disposition=keep mergeable=True draft=False threads_resolved=False head=4b051923b344
+      PR #111 ci=partial (GitGuardian only) coverage=new test file added (tests/unit/health-monitor-timer.test.ts) grade=good disposition=keep mergeable=True draft=False threads_resolved=False head=e2e916a115af
+      merge gate PR #115 allowed=False attempted=False reasons: automerge disabled; review threads are not resolved; CI is not successful; coverage is not holding
+      merge gate PR #111 allowed=False attempted=False reasons: automerge disabled; review threads are not resolved; CI is not successful; coverage is not holding
+      summary: Analysis-only tick for delorenj/mcp-server-trello. Two open PRs: #115 (feat: pos parameter on card creation) and #111 (fix: unref health monitor interval). Both mergeable. No side effects taken — auto-merge disabled and strictly analysis-only per contract.
+      note: PR #115 (feat/add-card-pos): Adds optional pos (top/bottom/number) to add_card_to_list, add_cards_to_list, TrelloClient.addCard, and TrelloClient.batchAddCards. CI green (Test+coverage gate SUCCESS, GitGuardian SUCCESS). Copilot review flags validation strictness: z.union([z.string(), z.number()]) should narrow to z.enum(['top','bottom']) + z.number().positive() to match described semantics. Head... (clipped from 446 chars)
+      note: PR #111 (fix/unref-health-monitor-interval): Stores setInterval handle, calls unref(), adds stopPerformanceMonitoring(), adds tests/unit/health-monitor-timer.test.ts. Fixes #92 — 60s timer kept Node event loop alive, preventing stdio server exit (294 orphaned processes observed). REVIEW_REQUIRED; only GitGuardian CI visible (no test-suite check run). Head SHA: e2e916a115af8f738009e398c94ced7d895ff... (clipped from 404 chars)
+      note: Auto-merge disabled; analysis-only provider per HARD RUNNER CONTRACT. No tools invoked, no side effects performed.
+
+DAILY REPORT AND DELIVERY HEALTH
+--------------------------------
+**Status (authoritative): complete**
+
+report-delivery: 6 of 6 due days delivered over 2026-08-28..2026-09-03 (0 gap(s)); 6 completion event(s), 0 archive/event disagreement(s); delivered streak 6.
+Metrics: archive_event_disagreements=0, archive_readable=True, candystore_reachable=True, consecutive_delivered_streak=6, days_archive_without_event=0, days_checked=7, days_delivered=6, days_event_without_archive=0, days_in_progress=1, days_invalid=0, days_missing=0, days_unpublished_but_archived=0, days_unreadable=0, delivery_gaps=0, delivery_health=ok, events_found=6, lookback_days=7
+Detail:
+  window 2026-08-28..2026-09-03 (7 days), report_date 2026-09-03
+  delivery health ok
+  archive /home/delorenj/.local/state/delonet-daily-report/archive: readable
+  candystore http://127.0.0.1:8683 type=bloodbank.reporting.report.completed: reachable
+  2026-08-28 delivered events=1 claimed=complete generation=001568c972584cae9965b922dcef9126
+  2026-08-29 delivered events=1 claimed=complete generation=e841776cf5764df5ad7cfca76f89fbbd
+  2026-08-30 delivered events=1 claimed=complete generation=41135b0df7434d658f7b5bd65924f82b
+  2026-08-31 delivered events=1 claimed=complete generation=a812ccd90e1f4a33b4c9bc5191fb4550
+  2026-09-01 delivered events=1 claimed=complete generation=2d67cd88cf2d4aa28984166f64a4a497
+  2026-09-02 delivered events=1 claimed=complete generation=c7254d3857b84e25a23ecb77dd1be6f6
+  2026-09-03 in-progress events=0 reason=this run is producing this day; it publishes after collection
+
+COVERAGE
+--------
+4 of 4 enabled sections completed.
+No section is degraded.
+
+| section | status | generated | fresh until | reason |
+|---|---|---|---|---|
+| dev-activity | complete | 2026-09-04T10:00:41.421618Z | 2026-09-05T10:00:41.421618Z | - |
+| fleet-health | complete | 2026-09-04T10:00:41.431419Z | 2026-09-05T10:00:41.431419Z | - |
+| pr-maintenance | complete | 2026-09-04T10:00:41.486998Z | 2026-09-05T10:00:41.486998Z | - |
+| report-delivery | complete | 2026-09-04T10:00:41.504280Z | 2026-09-05T10:00:41.504280Z | - |
+Required: dev-activity (complete), report-delivery (complete).
+Overall status complete is derived from the run manifest above, not asserted.
+
+Run ddr-2026-09-03-ae643455 · generated 2026-09-04T10:01:38.951675Z · overall status: complete

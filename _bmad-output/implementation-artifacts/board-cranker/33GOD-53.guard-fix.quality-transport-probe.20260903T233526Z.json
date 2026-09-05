@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "ticket": "33GOD-53",
+  "gate": "quality-security",
+  "classification": "pre_execution_all_permitted_kimi_routes_quota_blocked",
+  "checked_at": "2026-09-03T23:35:26Z",
+  "review_executed": false,
+  "verdict_consumed": false,
+  "immutable_range": "97f3229dfdc06779f348ab8e7bee043262c3aaa7..cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "augment": {
+    "cli_version": "0.35.0",
+    "model": "kimi-k3",
+    "exit_code": 0,
+    "classification": "pre_execution_quota_exhausted",
+    "credits_remaining": 0,
+    "request_id": "0f0570d7-9476-4068-a9b1-4072e0e2b236",
+    "response": "You have run out of credits for jaradd@gmail.com."
+  },
+  "kimi_code": {
+    "cli_path": "/home/delorenj/.kimi-code/bin/kimi",
+    "cli_version": "0.40.1",
+    "exit_code": 1,
+    "http_status": 403,
+    "classification": "pre_execution_weekly_quota_exhausted",
+    "response": "You've reached your weekly (7-day) usage limit; quota resets when the current 7-day window ends."
+  },
+  "disposition": "No fresh reviewer may be dispatched until one permitted Kimi route can execute. Retain the clean executable review worktree, immutable range, and sole WIP lease."
+}

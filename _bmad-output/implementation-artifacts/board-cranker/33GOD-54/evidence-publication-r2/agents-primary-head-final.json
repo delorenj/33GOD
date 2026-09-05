@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse HEAD",
+  "completed": "2026-09-05T11:55:47Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-head-final.log",
+  "name": "agents-primary-head-final",
+  "sha256": "422959aa168b0cdbb2f0ab3f3f5ec2037776b290eeb33a6bdca91dee06ec854e",
+  "started": "2026-09-05T11:55:47Z",
+  "worktree": "/home/delorenj/.agents"
+}

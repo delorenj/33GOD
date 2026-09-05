@@ -1,0 +1,28 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "reports": [
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+      "outcome": "passed",
+      "phase": "teardown"
+    }
+  ],
+  "tests_collected": 1
+}

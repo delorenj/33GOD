@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "HEAD"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse HEAD",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-sha-preflight.log",
+  "name": "guard-sha-preflight",
+  "sha256": "5dfce34498242055d66db6d982c5f481a32c10eef20927420929f02de6ec4a7c",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

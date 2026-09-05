@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "rebase-apply"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-rebase-apply-preflight.log",
+  "name": "guard-marker-rebase-apply-preflight",
+  "sha256": "6828e5d2caadaa587e2180e20df33c0728aa558ddbea70c5dc69f7aeaf1ff9ca",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

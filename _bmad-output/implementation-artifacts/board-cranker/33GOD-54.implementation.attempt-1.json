@@ -1,0 +1,612 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-54",
+  "phase": "evidence-and-publication",
+  "status": "BLOCKED",
+  "summary": "Differential PASS: 48 identical head/base failures with no regression; focused 50 and adjacent 24 passed. Normal push exited 1 because the global git guard reported missing imports. Remote and open PR remain unchanged at cc00fe6ef855e506ad1bf8166473eecf725af8a8. Both worktrees remain clean.",
+  "worker": {
+    "agent_id": "codex-33god-54-evidence-publication-r1",
+    "role": "evidence-publication-worker",
+    "provider": "openai-codex",
+    "attempt": 1
+  },
+  "immutable_ground": {
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "first_parent_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "upstream_base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "remote_before_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "artifact_hashes": [
+      {
+        "path": "/tmp/hermes-board-cranker-50/uv.lock",
+        "sha256": "6393f09ee88cc5683f0e563306f96b5c068f901a8baa60f7209f302c1ac602d9"
+      },
+      {
+        "path": "/tmp/hermes-board-cranker-53-upstream-baseline/uv.lock",
+        "sha256": "6393f09ee88cc5683f0e563306f96b5c068f901a8baa60f7209f302c1ac602d9"
+      },
+      {
+        "path": "/tmp/hermes-board-cranker-50/pyproject.toml",
+        "sha256": "153c8c9f550a89448f699e37384e78663462b8784e85242dd5ad4e35dbb5e093"
+      },
+      {
+        "path": "/tmp/hermes-board-cranker-53-upstream-baseline/pyproject.toml",
+        "sha256": "153c8c9f550a89448f699e37384e78663462b8784e85242dd5ad4e35dbb5e093"
+      },
+      {
+        "path": "/home/delorenj/.local/share/uv/python/cpython-3.11.12-linux-x86_64-gnu/bin/python3.11",
+        "sha256": "ebc7eee9062dc2681b977c4000ff68070d0e1d19e91331b9863c0327a75c72eb"
+      },
+      {
+        "path": "/home/delorenj/.local/share/mise/installs/python/3.11.13/bin/ruff",
+        "sha256": "03b22709bb8f62028a0732423eaac6f7792235bbcb05b3feaddaac3d992318d8"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+        "sha256": "1c440d8c4473bf997c5f6e666f41a107245776e928c6d308b425707a1152a496"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/command-manifest.json",
+        "sha256": "0e8a4c2530d48ef2c27709765cd61f07fe7c8422e959204b2c5b0af76c0aa8bc"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/evidence-artifact-manifest.json",
+        "sha256": "02f42648d5c0ed20c0fe9bc88ebe7706598969a0aca0f06335483a980fbeb099"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/preserved-evidence.json",
+        "sha256": "dd525d145af8e57ca98d5f91c1309db1856164fef7c6cb83e18f08c5d0fea95d"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/preserved-evidence-final.json",
+        "sha256": "6c61866f8ad4dcdcb6463c764d05d779f00c446fd1398fea21b744e127ab8088"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-differential-1.json",
+        "sha256": "a000b25b39de602ab4239c08b5627c88f8225f08fadfd6477a3820f4cb1ed81d"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/full-comparison.json",
+        "sha256": "ee2b9a3cf8921063e31efdbd471b7fad57123ff419f9daade023ff15fb45175d"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/forbidden-scope-audit.json",
+        "sha256": "035b1082b0607f81f77c06ea7b2d66c2cd7d9ee533099a5f48a7b7b119d5813a"
+      },
+      {
+        "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/support-tool-exit-receipts.json",
+        "sha256": "3f12aac8c002a1dabd546fef5db198c5f8b5ca489a406197130fcafdbb5b4b32"
+      }
+    ]
+  },
+  "repository": {
+    "owning_repo": "/home/delorenj/.hermes/hermes-agent",
+    "candidate_worktree": "/tmp/hermes-board-cranker-50",
+    "baseline_worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+    "branch": "feat/33GOD-50-stateless-contractor-turns",
+    "ordered_parents": [
+      "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+      "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+    ],
+    "expected_diff_files": [
+      "gateway/platforms/base.py",
+      "gateway/run.py",
+      "tests/gateway/test_contractor_turns.py"
+    ],
+    "actual_diff_files": [
+      "gateway/platforms/base.py",
+      "gateway/run.py",
+      "tests/gateway/test_contractor_turns.py"
+    ],
+    "start_clean": true,
+    "end_clean": true,
+    "source_changes": [],
+    "commits_authored": [],
+    "history_rewritten": false
+  },
+  "environment": {
+    "python": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python (Python 3.11.12)",
+    "ruff": "/home/delorenj/.hermes/hermes-agent/.venv/bin/ruff (Ruff 0.16.6)",
+    "lock_source": "/tmp/hermes-board-cranker-50/uv.lock; identical to /tmp/hermes-board-cranker-53-upstream-baseline/uv.lock",
+    "install_performed": false,
+    "validation_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-environment.log"
+  },
+  "preserved_evidence": [
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/red.log",
+      "sha256": "7fe456453163f9369481543fdeef844717f891026b366570d61eb0132a8e0420",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/green.log",
+      "sha256": "0d27d89c5ee07b12752559c11f67d8c02baacc68b4a54904e9ea09c9ee6f4baa",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-gateway-differential.json",
+      "sha256": "eb6c28321cb16f6aa122f7f6a992e188aaccea7da34d64dc5c448c4ffce388fb",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/preflight.log",
+      "sha256": "398234fc07d6c2ab0b8cb84a94a126217772136f825efafbc9a3569ba9de1ab1",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/focused.log",
+      "sha256": "034afb4c6998ad8b462d50a7bc6e6984505ce836649368520ec2cf378af8bd5d",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/adjacent.log",
+      "sha256": "0657308c88ee5e46f2702807456aa800d43b0c66e0364e8c2557396ec706e034",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/branch-only-head-rerun.log",
+      "sha256": "51458165667c0f74fbf7477c6e4bf1bf9441300fa6ece40a8fb2f00cdf7db81b",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/gateway-head.log",
+      "sha256": "f8e68adededf0a89b0bca04d43c9a7d164bc8fd662d2097ffaad26e0a19f0264",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/gateway-baseline.log",
+      "sha256": "0756575eeef5342b8119a9ff9a21165d2c385e1fa87d3b45b6dac8991b9a2d24",
+      "preserved_unchanged": true
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/gateway-differential.json",
+      "sha256": "383e0f80a5a93dab14c22edff6a018b1e64fe909505d1b349a9a2689b92563a1",
+      "preserved_unchanged": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "owner-preflight",
+      "command": "cat /home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "owner_agent_id is exactly 33god-pm.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/owner-preflight.log",
+      "sha256": "3f9af0220e23d3eeabf782918c250f423f9b76f097e6fb8fe50b5a9a5426416f"
+    },
+    {
+      "name": "head-sha-preflight",
+      "command": "git rev-parse HEAD",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Exact required candidate SHA.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-sha-preflight.log",
+      "sha256": "a3d9fe2c2af77fde82ba7504979b31c81dd01cb2aaaca1c1673e054243458018"
+    },
+    {
+      "name": "base-sha-preflight",
+      "command": "git rev-parse HEAD",
+      "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Exact required detached baseline SHA.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-sha-preflight.log",
+      "sha256": "3ff70cca92b77f67906b635b6907ab2b2083a27dc404490e3d64dee74c7a9fed"
+    },
+    {
+      "name": "head-ordered-parents",
+      "command": "git show -s --format=%P 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Required ordered parents verified.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-ordered-parents.log",
+      "sha256": "2914878c829d73bd62554afa76587ffa7e645ac5a7d099ccd501869f820ffc3e"
+    },
+    {
+      "name": "head-diff-files",
+      "command": "git diff --name-only b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Exactly the three required files.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-diff-files.log",
+      "sha256": "820a5bb06197df7d81cbbe039e1bc7a98d50d06f188f3e4e087d91003b3914fa"
+    },
+    {
+      "name": "head-clean-preflight",
+      "command": "git status --porcelain=v1 --untracked-files=all",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Clean candidate worktree.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-clean-preflight.log",
+      "sha256": "0de54d9713cb22844590747262375c656ad2dbc62fcd1f33d46884df0c537836"
+    },
+    {
+      "name": "base-clean-preflight",
+      "command": "git status --porcelain=v1 --untracked-files=all",
+      "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Clean baseline worktree.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/base-clean-preflight.log",
+      "sha256": "d6b7f57030562ac152db530181894037646cb4258786fb99b5a8a238669f7ff6"
+    },
+    {
+      "name": "remote-preflight-network",
+      "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Fork ref equals required pre-dispatch head.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-preflight-network.log",
+      "sha256": "32684ee16f42d46a1c4afb0259001981bc43448863bb8b214bb5d3df15192ca8"
+    },
+    {
+      "name": "pr-preflight-network",
+      "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "PR OPEN on the required fork branch and pre-dispatch head.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-preflight-network.log",
+      "sha256": "992389f76e76f3580ff417f31e255a077f9d05f3012a1c5c3ba26008de229178"
+    },
+    {
+      "name": "focused-head",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "50 passed.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/focused-head.log",
+      "sha256": "1bccc29c550e1e0bcbb9260a68f211fc54df092a7502de594b9f641be05c6510"
+    },
+    {
+      "name": "adjacent-head",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_turn_request_overrides.py tests/gateway/test_fast_command.py tests/gateway/test_custom_provider_request_overrides.py tests/gateway/test_session_model_override_persistence.py tests/gateway/test_turn_context.py",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "24 passed.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/adjacent-head.log",
+      "sha256": "99a64ef6f5e0b7054342fa0151e289756472873d663fcea3287fbcebac9180eb"
+    },
+    {
+      "name": "ruff-head",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/ruff check gateway/platforms/base.py gateway/run.py tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "All checks passed.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/ruff-head.log",
+      "sha256": "32a38adcb34b9db354388cfe8d6c818cf1bdce55ef19ccb431e0119ad7c04c60"
+    },
+    {
+      "name": "compile-head",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m py_compile gateway/platforms/base.py gateway/run.py tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "All four specified files compiled.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/compile-head.log",
+      "sha256": "684af0f9ec88a352ea98328070d8c4e9233e61ab2a69330c5a48f68b39d92553"
+    },
+    {
+      "name": "diff-check-head",
+      "command": "git diff --check b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "No whitespace errors.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/diff-check-head.log",
+      "sha256": "7cbdbe8d720474954425c633dd246b1237fa435f61b0cffda5c20d9c1eddc3fe"
+    },
+    {
+      "name": "gateway-head-1",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 1,
+      "status": "BASELINE_MATCH",
+      "summary": "48 failed, 7685 passed, 45 skipped, 2 xfailed, 164 warnings in 828.68s.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-head-1.log",
+      "sha256": "97d90d03c732a3455a020bd05378d4d1458dad01fa44e522cd858253985c9437"
+    },
+    {
+      "name": "gateway-base-1",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway",
+      "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+      "attempt": 1,
+      "exit_code": 1,
+      "status": "BASELINE_MATCH",
+      "summary": "48 failed, 7642 passed, 45 skipped, 2 xfailed, 164 warnings in 876.18s.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-base-1.log",
+      "sha256": "1d83e6cf0d0faa59cdd83ee6cf27c93cfad8c67608f5ed889f6a0ac4e3d8319b"
+    },
+    {
+      "name": "comparison-finalization",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/finish_comparison.py",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "48 identical node/error-class records; all differential sets empty. No repeat triggered.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/comparison-finalization.log",
+      "sha256": "3dcc68fabfbe6c0db0edc009dc83604d4a3ab52562364edc190d7a2aaa43734a"
+    },
+    {
+      "name": "push",
+      "command": "git push delorenj HEAD:refs/heads/feat/33GOD-50-stateless-contractor-turns",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 1,
+      "status": "FAIL",
+      "summary": "Global git guard rejected 13 reported missing repository-local imports. No bypass or source changes.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log",
+      "sha256": "0fa893d26942b46417137042016d99b517f243c83a34825f7f15afac9d079f72"
+    },
+    {
+      "name": "remote-after-blocked-push",
+      "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Remote remains at the pre-dispatch head.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/remote-after-blocked-push.log",
+      "sha256": "7e6287a324973bc25e712d147cf4ac33975cf2647235b4185f7db999192976c7"
+    },
+    {
+      "name": "pr-after-blocked-push",
+      "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "OPEN; unchanged head, title, and body; unapproved; CONFLICTING / DIRTY; no checks reported.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-after-blocked-push.log",
+      "sha256": "296a7048218d351db61e43a3d419afe85f7fc6dee5a3d27e2bd54271b20d0706"
+    },
+    {
+      "name": "final-audit",
+      "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/final_audit.py",
+      "worktree": "/tmp/hermes-board-cranker-50",
+      "attempt": 1,
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": "Both trees clean; exact refs, parents, and diff unchanged; no git-operation markers; 185 prior artifacts and environment inventory unchanged.",
+      "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/final-audit.log",
+      "sha256": "9ecdfdf740fbb0e41024fa61855aab1b7b7000eb3c16cffc36d8c2324f07eead"
+    }
+  ],
+  "differential": {
+    "full_pairs_run": 1,
+    "head_failures": [
+      "tests/gateway/test_api_server.py::TestDisconnectedAgentReap::test_stop_run_reaps_owned_processes",
+      "tests/gateway/test_api_server_active_work_drain.py::TestDrainWaitsForApiWork::test_drain_waits_for_real_queued_run_before_agent_creation",
+      "tests/gateway/test_api_server_declared_conversation.py::TestRealRunAgentSettlement::test_runs_explicit_unkeyed_session_stays_unbound",
+      "tests/gateway/test_api_server_declared_conversation.py::TestRunsHandlerPrecedence::test_declared_key_selects_the_conversation",
+      "tests/gateway/test_api_server_declared_conversation.py::TestRunsHandlerPrecedence::test_explicit_body_session_outranks_the_header_key",
+      "tests/gateway/test_api_server_runs.py::TestHostedRoomRuns::test_room_approval_requires_and_resolves_exact_request_id",
+      "tests/gateway/test_api_server_runs.py::TestHostedRoomRuns::test_scoped_grant_admits_group_session_run_without_peer_api_key",
+      "tests/gateway/test_api_server_runs.py::TestRunEvents::test_approval_resolve_all_is_scoped_to_target_run",
+      "tests/gateway/test_api_server_runs.py::TestRunEvents::test_events_stream_returns_completed",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_capacity_rejection_does_not_reserve_key",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_changed_payload_conflicts",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_concurrent_duplicate_starts_once",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_dead_owner_nonterminal_status_becomes_interrupted",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_direct_status_hydrates_after_adapter_restart",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_invalid_body_does_not_consume_idempotency_key",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_memory_scope_participates_in_fingerprint",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_missing_key_preserves_legacy_new_run_behavior",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_no_session_id_does_not_load_session_history",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_replay_bypasses_concurrency_limit_and_preserves_session_header",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_sequential_duplicate_reuses_original",
+      "tests/gateway/test_api_server_runs.py::TestRunLifecycleSweep::test_expired_live_run_drops_transport_but_keeps_control_state",
+      "tests/gateway/test_api_server_runs.py::TestRunOwnershipAcrossProfiles::test_session_chat_stream_run_is_owned_by_creating_profile",
+      "tests/gateway/test_api_server_runs.py::TestRunStatus::test_status_reflects_explicit_session_id",
+      "tests/gateway/test_api_server_runs.py::TestRunsProviderAuthFailure::test_status_reports_provider_auth_failure_distinctly",
+      "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_binds_chat_id_for_delegation_wake_target",
+      "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_passes_request_model_provider_options_to_create_agent",
+      "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_returns_202",
+      "tests/gateway/test_api_server_runs.py::TestSteerRun::test_pending_steer_preserved_on_run_completed",
+      "tests/gateway/test_api_server_runs.py::TestSteerRun::test_steer_running_agent",
+      "tests/gateway/test_api_server_runs.py::TestSteerRun::test_stop_then_steer_rejects_retained_agent_ref",
+      "tests/gateway/test_api_server_runs.py::TestStopRun::test_completion_wins_before_uncooperative_stop_is_acknowledged",
+      "tests/gateway/test_api_server_runs.py::TestStopRun::test_stop_running_agent",
+      "tests/gateway/test_api_server_runs.py::TestStopRun::test_stop_sends_sentinel_to_events_stream",
+      "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg",
+      "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments",
+      "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg",
+      "tests/gateway/test_platform_base.py::TestMediaDeliveryDiagnosability::test_rejected_path_appears_in_log",
+      "tests/gateway/test_scale_to_zero.py::test_suspend_self_non_2xx_is_false_not_raise",
+      "tests/gateway/test_scale_to_zero.py::test_suspend_self_posts_suspend_for_this_machine",
+      "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header",
+      "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home",
+      "tests/gateway/test_shutdown_watchdog.py::test_loop_tick_witness_arms_on_posix",
+      "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile",
+      "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available",
+      "tests/gateway/test_teams_pipeline_runtime_wiring.py::test_build_pipeline_runtime_skips_sender_when_adapter_layer_is_unavailable",
+      "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent",
+      "tests/gateway/test_wecom_callback.py::TestWecomCallbackEventConstruction::test_build_event_extracts_text_message",
+      "tests/gateway/test_wecom_callback.py::TestWecomCallbackPollLoop::test_poll_loop_dispatches_handle_message"
+    ],
+    "base_failures": [
+      "tests/gateway/test_api_server.py::TestDisconnectedAgentReap::test_stop_run_reaps_owned_processes",
+      "tests/gateway/test_api_server_active_work_drain.py::TestDrainWaitsForApiWork::test_drain_waits_for_real_queued_run_before_agent_creation",
+      "tests/gateway/test_api_server_declared_conversation.py::TestRealRunAgentSettlement::test_runs_explicit_unkeyed_session_stays_unbound",
+      "tests/gateway/test_api_server_declared_conversation.py::TestRunsHandlerPrecedence::test_declared_key_selects_the_conversation",
+      "tests/gateway/test_api_server_declared_conversation.py::TestRunsHandlerPrecedence::test_explicit_body_session_outranks_the_header_key",
+      "tests/gateway/test_api_server_runs.py::TestHostedRoomRuns::test_room_approval_requires_and_resolves_exact_request_id",
+      "tests/gateway/test_api_server_runs.py::TestHostedRoomRuns::test_scoped_grant_admits_group_session_run_without_peer_api_key",
+      "tests/gateway/test_api_server_runs.py::TestRunEvents::test_approval_resolve_all_is_scoped_to_target_run",
+      "tests/gateway/test_api_server_runs.py::TestRunEvents::test_events_stream_returns_completed",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_capacity_rejection_does_not_reserve_key",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_changed_payload_conflicts",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_concurrent_duplicate_starts_once",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_dead_owner_nonterminal_status_becomes_interrupted",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_direct_status_hydrates_after_adapter_restart",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_invalid_body_does_not_consume_idempotency_key",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_memory_scope_participates_in_fingerprint",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_missing_key_preserves_legacy_new_run_behavior",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_no_session_id_does_not_load_session_history",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_replay_bypasses_concurrency_limit_and_preserves_session_header",
+      "tests/gateway/test_api_server_runs.py::TestRunIdempotency::test_sequential_duplicate_reuses_original",
+      "tests/gateway/test_api_server_runs.py::TestRunLifecycleSweep::test_expired_live_run_drops_transport_but_keeps_control_state",
+      "tests/gateway/test_api_server_runs.py::TestRunOwnershipAcrossProfiles::test_session_chat_stream_run_is_owned_by_creating_profile",
+      "tests/gateway/test_api_server_runs.py::TestRunStatus::test_status_reflects_explicit_session_id",
+      "tests/gateway/test_api_server_runs.py::TestRunsProviderAuthFailure::test_status_reports_provider_auth_failure_distinctly",
+      "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_binds_chat_id_for_delegation_wake_target",
+      "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_passes_request_model_provider_options_to_create_agent",
+      "tests/gateway/test_api_server_runs.py::TestStartRun::test_start_returns_202",
+      "tests/gateway/test_api_server_runs.py::TestSteerRun::test_pending_steer_preserved_on_run_completed",
+      "tests/gateway/test_api_server_runs.py::TestSteerRun::test_steer_running_agent",
+      "tests/gateway/test_api_server_runs.py::TestSteerRun::test_stop_then_steer_rejects_retained_agent_ref",
+      "tests/gateway/test_api_server_runs.py::TestStopRun::test_completion_wins_before_uncooperative_stop_is_acknowledged",
+      "tests/gateway/test_api_server_runs.py::TestStopRun::test_stop_running_agent",
+      "tests/gateway/test_api_server_runs.py::TestStopRun::test_stop_sends_sentinel_to_events_stream",
+      "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg",
+      "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments",
+      "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg",
+      "tests/gateway/test_platform_base.py::TestMediaDeliveryDiagnosability::test_rejected_path_appears_in_log",
+      "tests/gateway/test_scale_to_zero.py::test_suspend_self_non_2xx_is_false_not_raise",
+      "tests/gateway/test_scale_to_zero.py::test_suspend_self_posts_suspend_for_this_machine",
+      "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header",
+      "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home",
+      "tests/gateway/test_shutdown_watchdog.py::test_loop_tick_witness_arms_on_posix",
+      "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile",
+      "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available",
+      "tests/gateway/test_teams_pipeline_runtime_wiring.py::test_build_pipeline_runtime_skips_sender_when_adapter_layer_is_unavailable",
+      "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent",
+      "tests/gateway/test_wecom_callback.py::TestWecomCallbackEventConstruction::test_build_event_extracts_text_message",
+      "tests/gateway/test_wecom_callback.py::TestWecomCallbackPollLoop::test_poll_loop_dispatches_handle_message"
+    ],
+    "branch_only_failures": [],
+    "base_only_failures": [],
+    "error_class_changes": [],
+    "target_node": "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "target_head_isolated": [
+      {
+        "attempt": 1,
+        "worktree": "/tmp/hermes-board-cranker-50",
+        "exit_code": 0,
+        "error_class": "NONE",
+        "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-1.log",
+        "sha256": "0848cecd7ffcc399c8aaa954e514333f0ff9da9d65fa18afe2a0594ba785f6b3"
+      },
+      {
+        "attempt": 2,
+        "worktree": "/tmp/hermes-board-cranker-50",
+        "exit_code": 0,
+        "error_class": "NONE",
+        "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-2.log",
+        "sha256": "b18584d8c2685b91d53471593f7da223d205795fbb2e8b7474c2c6e93b8965fe"
+      },
+      {
+        "attempt": 3,
+        "worktree": "/tmp/hermes-board-cranker-50",
+        "exit_code": 0,
+        "error_class": "NONE",
+        "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-head-3.log",
+        "sha256": "d99463ceac6bb71b77a923b522e80e6ae1fab7e8d46d3d3e250f6e714edd6b5b"
+      }
+    ],
+    "target_base_isolated": [
+      {
+        "attempt": 1,
+        "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+        "exit_code": 0,
+        "error_class": "NONE",
+        "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-1.log",
+        "sha256": "f51192a4798ae8026a8a3a297813dcf5d4c0b6cdecf1256469b3c2da8dc97625"
+      },
+      {
+        "attempt": 2,
+        "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+        "exit_code": 0,
+        "error_class": "NONE",
+        "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-2.log",
+        "sha256": "c28b3400e9bdbfb3cee73046acc932895f201c50e55ee355b17e8e9daae22640"
+      },
+      {
+        "attempt": 3,
+        "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline",
+        "exit_code": 0,
+        "error_class": "NONE",
+        "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/target-base-3.log",
+        "sha256": "64b6e881c7f1d5e795f4984e5c2351beb3d447d442cfc29d8ed31d6ec10a72ae"
+      }
+    ],
+    "status": "PASS",
+    "machine_receipt": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/full-comparison.json",
+    "rationale": "The 48 sorted node/error-class records are byte-equal, with canonical SHA-256 7ccd7b9736cc560a833f0bd4783829f00927297ca1ece004363c28241d89e571. All differential sets are empty and focused/static gates passed. The target passed three consecutive isolated executions at each revision and is absent from both full-suite failure sets. No second pair was required."
+  },
+  "publication": {
+    "push_attempted": true,
+    "push_exit_code": 1,
+    "force_push": false,
+    "remote_ref": "delorenj/feat/33GOD-50-stateless-contractor-turns",
+    "remote_after_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "remote_matches_candidate": false,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log"
+  },
+  "pr": {
+    "number": 102409,
+    "url": "https://github.com/NousResearch/hermes-agent/pull/102409",
+    "state": "OPEN",
+    "head_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "title": "feat(gateway): execute isolated stateless contractor turns (33GOD-50, 33GOD-51, 33GOD-53)",
+    "body_names_ticket": false,
+    "body_names_range": false,
+    "metadata_updated": false,
+    "approved": false,
+    "merged": false,
+    "mergeability": "CONFLICTING / DIRTY",
+    "checks": [],
+    "readback_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/pr-after-blocked-push.log"
+  },
+  "forbidden_scope": {
+    "primary_checkout_touched": false,
+    "plane_touched": false,
+    "bloodbank_touched": false,
+    "client_board_touched": false,
+    "source_touched": false,
+    "review_or_merge_performed": false,
+    "audit_log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/forbidden-scope-audit.json"
+  },
+  "deferred_gates": [
+    "Controller-owned resolution of the pre-push git-guard rejection in separate authorized investigation/repair scope, followed by publication retry.",
+    "After successful publication: fresh independent specification review.",
+    "After specification review: quality/security review by a different independent reviewer."
+  ],
+  "risks": [
+    "The push guard reported 13 missing local imports involving dashboard_auth, Discord/email/Telegram adapter modules, and video_gen. Its correctness was not adjudicated; neither the guard nor accepted source was changed.",
+    "The broad gateway suite remains non-green with 48 matching failures on both revisions. Four shared failures involve long runtime paths, including Unix socket limits and log-path truncation.",
+    "The PR remains CONFLICTING / DIRTY on the old fork head with stale range, test, and review claims. Metadata updates were prohibited after the failed push."
+  ],
+  "notes": [
+    "The content-addressed command-manifest.json contains 79 verification command receipts with argv, explicit exits, full log paths, and SHA-256 hashes, including all isolated-node commands and additional preflight/environment/final checks.",
+    "All 185 prior 33GOD-53 artifacts and handbacks were hashed and rechecked unchanged. Their complete paths, hashes, and preservation results are in preserved-evidence-final.json; directly relied-on inputs are enumerated above.",
+    "Explicit story commands superseded the general scripts/run_tests.sh guidance. Both revisions used the same absolute venv executable and credential-free deterministic environment; only isolated HERMES_HOME and TMPDIR roots differed. HOME remained unchanged.",
+    "The initial sandbox SSH read failed with exit 128. The authorized read-only network retry passed. Tests ran with equivalent execution permissions outside the sandbox for localhost fixtures.",
+    "Receipt tooling corrected summary extraction and separated an interleaved pytest RuntimeWarning. Raw test logs remained unchanged, and parsed failure counts matched terminal summaries. A stale parser monitor failed; corrected finalization passed without rerunning gateway tests. Support exit receipts are preserved.",
+    "Only ignored test/bytecode caches were permitted in worktrees. No source edits, commits, history changes, environment installation, guard bypass, PR mutation, board/controller writes, reviews, or merge occurred.",
+    "The launcher owns installation of canonical 33GOD-54.implementation.json. This worker did not write that file."
+  ]
+}

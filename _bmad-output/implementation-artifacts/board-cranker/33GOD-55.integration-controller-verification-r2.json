@@ -1,0 +1,132 @@
+{
+  "campaign_owner_agent_id": "33god-pm",
+  "canonical_handback": {
+    "all_17_evidence_and_prerequisite_hashes_match": true,
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json",
+    "schema": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-postmerge-verification-r2.schema.json",
+    "schema_sha256": "799fa30a4d18255ad95811655a326f3d4a11c69fe35271da5666b91a5093ca1d",
+    "schema_valid": true,
+    "sha256": "37ca03936fa8d58ba5bf740976c730517a9da098c283fba8a2d29cb4877f069e",
+    "status": "INTEGRATED"
+  },
+  "checked_at": "2026-09-05T10:53:44Z",
+  "controller": "33god-pm",
+  "controller_direct_gate_rerun": {
+    "all_exit_codes": 0,
+    "companion_gates": [
+      "python3 -m compileall -q git/hooks/_travels.py git/tests",
+      "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+      "python3 git/hooks/_travels.py HEAD",
+      "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...02481c8df4cedbdc11081fe41fcf01859a399566"
+    ],
+    "status": "PASS",
+    "tests": "25/25",
+    "tests_command": "python3 -m unittest discover -s git/tests -p test_*.py -v",
+    "worktree_final_status": "clean"
+  },
+  "decision_event": {
+    "basis": [
+      "evidence-over-status",
+      "independent-adversarial-review",
+      "keep-the-pipeline-unblocked",
+      "reality-over-theater"
+    ],
+    "candystore_projection_evidence": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/controller-verification-r2/decision-candystore.json",
+    "candystore_projection_evidence_sha256": "edda6903b0b9b4f1df24227158440c7f2ed03faad86fbd7e49bbd5e7d368f2aa",
+    "candystore_projection_verified": true,
+    "id": "c5a6999a-737b-4bfa-973e-27ecfc7f94bc",
+    "local_attribution_verified": true,
+    "type": "bloodbank.repo.decision.recorded"
+  },
+  "disposition": "INTEGRATED",
+  "git": {
+    "changed_files": [
+      "git/README.md",
+      "git/hooks/_travels.py",
+      "git/hooks/pre-push",
+      "git/tests/test_pre_push.py"
+    ],
+    "merge_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "postmerge_worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2",
+    "remote_main_tree": "7d122550387e1459794acf81ae37bbeef879de07",
+    "reviewed_base_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "reviewed_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "reviewed_head_tree": "7d122550387e1459794acf81ae37bbeef879de07",
+    "tree_equivalent": true,
+    "worktree_clean": true
+  },
+  "independent_roles": {
+    "distinct": true,
+    "implementer": "codex-33god-55-implementation-r2",
+    "quality_security_reviewer": "copilot-33god-55-quality-review-r1",
+    "spec_reviewer": "kimi-33god-55-spec-review-r2"
+  },
+  "issue": "33GOD-55",
+  "next": "On the next controller tick, verify the free lease and claim only 33GOD-54 for its post-guard evidence/publication retry.",
+  "phase": "integration",
+  "plane": {
+    "comment_id": "351be5b2-25fc-4d95-b466-32f3c8b8187e",
+    "comment_readback_verified": true,
+    "exact_state_write_readback_verified": true,
+    "issue_id": "716bdb6d-e614-44fa-8f17-528cbf24b75e",
+    "next_ticket": "33GOD-54",
+    "next_ticket_claimed": false,
+    "next_ticket_state": "Backlog",
+    "state": "E2E Testing & QA"
+  },
+  "postmerge_gate_evidence": [
+    {
+      "name": "unittest-25",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-unittest.log",
+      "sha256": "31d9e2c4066a136f6909cd3a7c4cab14d57a907ca585e65a5eabc78c9955fd81",
+      "status": "PASS"
+    },
+    {
+      "name": "compileall",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-compileall.log",
+      "sha256": "ec8db59017a972f74dd485b6529f6fc6ad77e4c0840841c340983b638b8fba7b",
+      "status": "PASS"
+    },
+    {
+      "name": "bash-syntax",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-bash-syntax.log",
+      "sha256": "104472df93422392121cc0795181316dd3d75f55e2e9d5b6ca8e854da88cd752",
+      "status": "PASS"
+    },
+    {
+      "name": "travel-head",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-travel-head.log",
+      "sha256": "b7ededef2a248a536d56b6d0ffe1d309ca8e7d64893c27687ec3f746a5a5a82a",
+      "status": "PASS"
+    },
+    {
+      "name": "diff-check",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/postmerge-verification-r2/gate-diff-check.log",
+      "sha256": "45cc08c26eb9206c77d846234c7b1a43909b130190caa01b69b908e2ccc73a5c",
+      "status": "PASS"
+    }
+  ],
+  "pr": {
+    "checks_green": true,
+    "number": 1,
+    "state": "MERGED",
+    "ticket_and_reviewed_range_in_body": true,
+    "ticket_in_title": true,
+    "title": "33GOD-55: Make the global Git travel guard merge-aware for remote-known ancestry",
+    "url": "https://github.com/delorenj/agents/pull/1"
+  },
+  "schema_version": "1.0",
+  "source_mutation_authorized": false,
+  "status": "PASS",
+  "worker": {
+    "all_saved_pids_dead": true,
+    "exit_code": 0,
+    "finished_at": "2026-09-05T10:18:47Z",
+    "id": "kimi-33god-55-postmerge-verification-r2",
+    "saved_pids": [
+      3379921,
+      3381847,
+      3381849
+    ]
+  }
+}

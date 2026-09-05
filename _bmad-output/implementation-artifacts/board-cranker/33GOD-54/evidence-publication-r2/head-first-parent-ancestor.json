@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "merge-base",
+    "--is-ancestor",
+    "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+  ],
+  "attempt": 1,
+  "command": "git merge-base --is-ancestor cc00fe6ef855e506ad1bf8166473eecf725af8a8 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-first-parent-ancestor.log",
+  "name": "head-first-parent-ancestor",
+  "sha256": "8462fa62a03b2d232b309d2809fd6961a77d5c65b1af5af6b90edd50431fb01f",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

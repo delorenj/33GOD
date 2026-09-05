@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "git",
+    "diff",
+    "--name-only",
+    "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+  ],
+  "attempt": 1,
+  "command": "git diff --name-only b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-diff-files.log",
+  "name": "head-diff-files",
+  "sha256": "820a5bb06197df7d81cbbe039e1bc7a98d50d06f188f3e4e087d91003b3914fa",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

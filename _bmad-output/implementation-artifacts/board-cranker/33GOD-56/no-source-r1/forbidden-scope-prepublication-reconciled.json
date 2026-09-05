@@ -1,0 +1,83 @@
+{
+  "at": "2026-09-05T14:02:56.912076Z",
+  "commits_authored": [],
+  "external_unpinned_primary_advance": {
+    "after_snapshot_sha256": "531c94779723ce0abd1ce27496b573f1dee0b6879e468c75f99d6cfe0a99da4e",
+    "at": "2026-09-05T14:01:13.297609Z",
+    "basis": "This worker issued no commit, pull, rebase, or write to the primary. The independent ASM transition-handler commit and pull/rebase occurred at 13:19 UTC during baseline pair 1. Every changed primary file equals its new committed tree; pre-existing dirty content and all other files are unchanged. The task pins the detached guard worktree, not this dirty primary HEAD. All three pinned revisions remain unchanged.",
+    "before_snapshot_sha256": "fffe44b7f2d3ef9ef6ce039179b77fc059ec025c315b2656e6dfb8a93ba891e4",
+    "changed_files": [
+      "git/README.md",
+      "git/hooks/_travels.py",
+      "git/hooks/pre-push",
+      "git/tests/test_pre_push.py",
+      "hooks/asm/log-transition.sh"
+    ],
+    "changes_exactly_match_committed_tree": true,
+    "classification": "EXTERNAL_UNPINNED_PRIMARY_ADVANCE",
+    "commit_metadata": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0 02481c8df4cedbdc11081fe41fcf01859a399566\nJarad DeLorenzo <jaradd@gmail.com>\n2026-09-05T09:19:37-04:00 2026-09-05T09:19:52-04:00\nfeat(hooks): asm transition handler\n02481c8df4cedbdc11081fe41fcf01859a399566 36d3ed6627b1ee1819952617d7d4ebfcebc2708f\ndelorenj <jaradd@gmail.com>\n2026-09-05T05:28:06-04:00 2026-09-05T05:28:06-04:00\nfix(git): make push ancestry scans merge-aware (33GOD-55) (#1)\n",
+    "new_head": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0",
+    "old_head": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "preexisting_dirty_guard_file_unchanged": true,
+    "reflog": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0 HEAD@{2026-09-05T09:19:52-04:00} pull -q --rebase origin main (finish): returning to refs/heads/main\n5e6970e4ac4031f03bf4c99d9b54e6881078bca0 HEAD@{2026-09-05T09:19:52-04:00} pull -q --rebase origin main (pick): feat(hooks): asm transition handler\n02481c8df4cedbdc11081fe41fcf01859a399566 HEAD@{2026-09-05T09:19:52-04:00} pull -q --rebase origin main (start): checkout 02481c8df4cedbdc11081fe41fcf01859a399566\n86676f32b4d5c0f62f4dcdeb5214e3fa6ed9598a HEAD@{2026-09-05T09:19:37-04:00} commit: feat(hooks): asm transition handler\n36d3ed6627b1ee1819952617d7d4ebfcebc2708f HEAD@{2026-09-04T00:41:21-04:00} commit: chore(git): ignore settings.local.json and /export CONTINUE.md\n",
+    "staged_and_unstaged_diffs_unchanged": true,
+    "worker_broad_descendants_in_primary_or_asm_workflow": [],
+    "worker_mutation_performed": false
+  },
+  "history_rewritten": false,
+  "owner_agent_id": "33god-pm",
+  "preserved_input_count": 28637,
+  "preserved_input_mismatches": [],
+  "processes": [],
+  "scope": "No Plane/controller/WIP/Bloodbank/Pjangler/client board mutation; no reviews, approval or merge performed.",
+  "snapshots": {
+    "agents-primary": {
+      "changed_fields": [
+        "files",
+        "head"
+      ],
+      "clean": false,
+      "external_advance_accounted": true,
+      "external_advance_receipt": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/external-agents-primary-advance.json",
+      "external_advance_receipt_sha256": "242f4b21d7d2a6beb7f3b063fb8063694ff66460256ebd5fa8d3d4a62549c1c3",
+      "head": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/agents-primary-prepublication-reconciled.json",
+      "sha256": "531c94779723ce0abd1ce27496b573f1dee0b6879e468c75f99d6cfe0a99da4e",
+      "unchanged": false
+    },
+    "baseline": {
+      "changed_fields": [],
+      "clean": true,
+      "head": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/baseline-prepublication-reconciled.json",
+      "sha256": "f3fe51ec3038dca365eb5ca1c4029489d91e3df4a90b4352dafe279a32235a35",
+      "unchanged": true
+    },
+    "candidate": {
+      "changed_fields": [],
+      "clean": true,
+      "head": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/candidate-prepublication-reconciled.json",
+      "sha256": "1737ecd061e9d1459d465e7ee0dd305b141246f6771bd730e5567ef6e644b78f",
+      "unchanged": true
+    },
+    "guard": {
+      "changed_fields": [],
+      "clean": true,
+      "head": "02481c8df4cedbdc11081fe41fcf01859a399566",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/guard-prepublication-reconciled.json",
+      "sha256": "638efb396790c580c21a8687a3b1db7fc0e5c6d09a44dd211df6af3c82018365",
+      "unchanged": true
+    },
+    "hermes-primary": {
+      "changed_fields": [],
+      "clean": false,
+      "head": "6852bdbab7217a840424734bb44967d946ffc243",
+      "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/hermes-primary-prepublication-reconciled.json",
+      "sha256": "30acdeef12da54c811ba69e53a5d67d34c8dd0fca345599851e5c9c42ed1dba1",
+      "unchanged": true
+    }
+  },
+  "source_touched": false,
+  "status": "PASS"
+}

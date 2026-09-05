@@ -1,0 +1,13 @@
+implementation: schema VALID sha256=f7732f1eff4264c0fbdbcb7f95051cc351974b96c4db2e7c6f695f58bf26b996
+spec: schema VALID sha256=95ac2fb0564ebe77159a5416f7a3144afd48a33adf4a70edc5083ab9945520ee
+quality: schema VALID sha256=3d656c58ec498fd051ce6dd3f6dccb07d3d470a6e2e316090b6a45bed3ef676a
+impl status: DONE
+spec status: PASS
+quality status: PASS
+impl base/head: 36d3ed6627b1ee1819952617d7d4ebfcebc2708f 54aca968fd16e428fe1378f6f401c068d17e5c4a
+spec base/head: 36d3ed6627b1ee1819952617d7d4ebfcebc2708f 54aca968fd16e428fe1378f6f401c068d17e5c4a
+qual base/head: 36d3ed6627b1ee1819952617d7d4ebfcebc2708f 54aca968fd16e428fe1378f6f401c068d17e5c4a
+spec transport: candidate_count=1 schema_valid=True fields_changed=False
+quality transport: candidate_count=1 schema_valid=True fields_changed=False
+quality finding: LOW test-coverage False - The focused regression suite does not directly cover SHA-256 repositories, annot
+OVERALL: PASS

@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "exit_code": 0,
+  "validated_handback_sha256": "149a1e5eaf0a902eb5c6d4cfe87660c387012bf7297611140d04ead858fb693c",
+  "command_receipt_count": 144,
+  "all_referenced_log_and_artifact_hashes_valid": true,
+  "pr_title_body_head_state_review_decision_unchanged": true,
+  "head_failure_count": 48,
+  "base_failure_count": 49,
+  "canonical_handback_written": false
+}

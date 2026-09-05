@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "ticket": "33GOD-53",
+  "action": "implementation-handback-reconciled-and-stale-sandbox-terminated",
+  "at": "2026-09-05T00:20:31Z",
+  "worktree": "/tmp/hermes-board-cranker-50",
+  "base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+  "head_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "worktree_clean": true,
+  "handback": {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r2.implementation.json",
+    "sha256": "66b1737f603e8eb67a7ad0cc63200c648dcbcacf0b2a1aecb3f36a833167b2b5",
+    "schema_valid": true,
+    "status": "BLOCKED"
+  },
+  "worker_exit": {
+    "path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-integration-conflict-r3.exit.json",
+    "sha256": "747f1d6f2a239b5266aba75e3ffcf052cc4526314315fb3cb149d961691fbc81",
+    "exit_code": 0
+  },
+  "stale_process": {
+    "process_group": 2412995,
+    "pids": [
+      2412995,
+      2412998,
+      2413004,
+      2413005
+    ],
+    "identity_verified": true,
+    "reason": "worker-preserved focused sandbox stall remained orphaned after the worker completed; equivalent focused gate later passed outside that sandbox",
+    "termination": "TERM",
+    "all_pids_dead": true
+  },
+  "verified_gate_facts": {
+    "focused": "50 passed",
+    "ruff": "PASS",
+    "compileall": "PASS",
+    "diff_check": "PASS",
+    "adjacent_paths_present": false,
+    "broad_head": "45 failed, 812 passed",
+    "broad_base": "44 failed, 812 passed",
+    "branch_only_node": "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "branch_only_isolated_head": "FAIL AssertionError",
+    "branch_only_isolated_base": "FAIL AssertionError"
+  },
+  "disposition": "BLOCKED_PENDING_INDEPENDENT_BASELINE_AND_SPEC_REVIEW",
+  "implementation_attempts_consumed": 2
+}

@@ -1,0 +1,43 @@
+{
+  "action": "provider_availability_probe",
+  "augment_route": {
+    "classification": "pre_execution_quota_exhausted",
+    "credits_remaining": 0,
+    "last_verified_at": "2026-09-03T23:35:26Z",
+    "reprobe_skipped_reason": "Prior provider response reported zero credits; direct Kimi was the only route with a potentially earlier rolling reset.",
+    "review_executed": false
+  },
+  "campaign": "board-cranker",
+  "canonical_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r2.json",
+  "canonical_handback_present": false,
+  "checked_at": "2026-09-03T23:51:42Z",
+  "controller_lock_verified": true,
+  "decision_event_id": "21b9c906-7848-4016-9b83-cc2db53e0636",
+  "disposition": "Retain the immutable range, clean executable review worktree, and sole WIP lease; do not dispatch or integrate until a permitted Kimi transport can execute the fresh gate.",
+  "gate": "quality-security",
+  "immutable_range": "97f3229dfdc06779f348ab8e7bee043262c3aaa7..cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "owner_agent_id": "33god-pm",
+  "provider": {
+    "classification": "pre_execution_weekly_quota_exhausted",
+    "cli_path": "/home/delorenj/.kimi-code/bin/kimi",
+    "cli_version": "0.40.1",
+    "exit_code": 1,
+    "http_status": 403,
+    "mode": "noninteractive-availability-probe",
+    "name": "kimi-code",
+    "response": "You've reached your weekly (7-day) usage limit; quota resets when the current 7-day window ends.",
+    "review_executed": false
+  },
+  "review_worktree": "/tmp/hermes-board-cranker-53-guard-quality-review-r2",
+  "review_worktree_clean": true,
+  "review_worktree_head": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "saved_reviewer_pids": [
+    3158260,
+    3158860,
+    3158863
+  ],
+  "saved_reviewer_pids_alive": [],
+  "schema_version": 1,
+  "ticket": "33GOD-53",
+  "verdict_consumed": false
+}

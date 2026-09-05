@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "git",
+    "push",
+    "delorenj",
+    "HEAD:refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "attempt": 1,
+  "command": "git push delorenj HEAD:refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "completed": "2026-09-05T05:04:28Z",
+  "exit_code": 1,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log",
+  "name": "push",
+  "sha256": "0fa893d26942b46417137042016d99b517f243c83a34825f7f15afac9d079f72",
+  "started": "2026-09-05T05:03:41Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

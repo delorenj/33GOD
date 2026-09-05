@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "rebase-merge"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+  "completed": "2026-09-05T11:28:16Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-rebase-merge-preflight.log",
+  "name": "guard-marker-rebase-merge-preflight",
+  "sha256": "6bc68813821158b334337c67fc113a398e62ee3d18ab0d89d5c0b5d2985c1be6",
+  "started": "2026-09-05T11:28:16Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

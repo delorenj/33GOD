@@ -1,0 +1,9 @@
+{
+  "broad_suites_concurrent": false,
+  "instrumentation": "External evidence-only pytest plugin records actual call.excinfo types. No test selection or outcome modification. PYTEST_ADDOPTS only relocates pytest cache.",
+  "network": "No inherited credentials in tests; host execution needed for AF_UNIX abstract socket and asyncio subprocess behavior.",
+  "repeat_policy": "Exactly one additional complete sequential candidate/base pair only if the first pair has a candidate-only failed node.",
+  "started_at": "2026-09-05T12:56:30.327968Z",
+  "supervision": "One supervisor, subprocess wait, Linux child subreaper, adopted-child reaping, recursive descendant and process session tracking, /proc scans before and after every command.",
+  "writes": "Only evidence root including per-command state/cache/bytecode roots."
+}

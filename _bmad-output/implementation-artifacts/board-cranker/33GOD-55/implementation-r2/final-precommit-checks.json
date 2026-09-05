@@ -1,0 +1,58 @@
+[
+  {
+    "name": "final-precommit-gate-1",
+    "command": "python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-1.log",
+    "sha256": "95168d9a81613c35a5f9097b98ebacb3a7861c1583247703c567e2629bafec37"
+  },
+  {
+    "name": "final-precommit-gate-2",
+    "command": "python3 -m compileall -q git/hooks/_travels.py git/tests",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "final-precommit-gate-3",
+    "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "final-precommit-gate-4",
+    "command": "python3 git/hooks/_travels.py HEAD",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-4.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "final-precommit-gate-5",
+    "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...HEAD",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-5.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "final-precommit-gate-6",
+    "command": "python3 git/tests/test_pre_push.py MergeTopologyTests -v",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-6.log",
+    "sha256": "394cc4bf4760019536e69ce2bfd79c6eee249e5e244ac7e35491442550d1c1a3"
+  },
+  {
+    "name": "final-precommit-gate-7",
+    "command": "git diff --check",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/final-precommit-gate-7.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

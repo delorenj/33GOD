@@ -1,0 +1,188 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-51",
+  "gate": "spec-compliance",
+  "status": "PASS",
+  "summary": "Independent line-by-line review of 97f3229..f3f37df confirms the stateless contractor-turn contract and execution path match the specification: typed frozen ContractorTurnContext on BasePlatformAdapter with fail-closed invariants, dispatch ahead of all session bookkeeping, fresh non-cloned persistence-isolated AIAgent per turn, normalized success/ContractorTurnRejected failure result, and deterministic finally-based cleanup on success, error, cancellation, and cleanup-failure paths (non-masking probe-verified with a raising agent.close()). Authentic RED evidence predates both production commits; GREEN reproduced independently on the exact head (24 passed, exit 0). The broad gateway suite's 8 failures reproduce identically on immutable base (recorded full suites: 8 failed on both, same node IDs and error classes; independent isolated re-runs: same 2 fail / 6 pass on both commits) and are demonstrably outside the new behavior. Scope is exactly the three allowed files; recovery preserves parent 33GOD-50 history with a 33GOD-51 Plane reference; head is not merged. Two minor non-blocking findings: cleanup failures inside the shared best-effort _cleanup_agent_resources are swallowed without logging, and the result-normalization rejection branch lacks a dedicated focused test (both verified live by independent probe).",
+  "reviewer": {
+    "agent_id": "auggie-33god-51-spec-review-r1",
+    "role": "spec-reviewer",
+    "provider": "augment",
+    "model": "kimi-k3"
+  },
+  "git": {
+    "base_sha": "97f3229dfdc06779f348ab8e7bee043262c3aaa7",
+    "head_sha": "f3f37df8e265c2b178f4c7ce8b1b491426ae1654",
+    "worktree": "/tmp/hermes-board-cranker-51-spec-review",
+    "commit_count": 2
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "status": "PASS",
+      "evidence": [
+        "gateway/platforms/base.py:2513-2564 — frozen dataclass ContractorTurnContext declares the explicit stateless contractor-turn interface (contractor_id, contractor_version, memory_policy='none', continuity=False, required_skills non-empty unique tuple, profile_name, project_root) with fail-closed __post_init__ validation",
+        "gateway/platforms/base.py:2665 — MessageEvent.contractor_context optional field; base.py:3246 — close_after_turn class flag; base.py:6189-6201 — clear_session() removes all adapter-owned transient caches keyed by session_key",
+        "gateway/run.py:18864-18873 and 21560-21566 — contractor events dispatch to _handle_contractor_turn before session keys, control commands, active-turn markers, hooks, or cached agents",
+        "gateway/run.py:21128-21166 — a fresh AIAgent is constructed per turn (no callback or cloned-agent architecture) with session_db=None, gateway_session_key=None, prefill_messages=None, skip_memory=True, skip_background_review=True",
+        "gateway/run.py:21221-21328 — canonical target/prompt/context passed through; success returns final_response str; every failure mode raises the single normalized ContractorTurnRejected (gateway/run.py:2466)",
+        "tests/gateway/test_contractor_turns.py:87-118 (capability presence) and 427-529 (fresh, memoryless, unpersisted agent with configured runtime) — 24/24 pass on the reviewed head, independently reproduced (exit 0)"
+      ],
+      "reasoning": "The adapter exposes an explicit typed contract, the gateway executes via a dedicated path with an isolated transient session id (contractor:<id>:<command_id>) and empty history instead of the long-lived project conversation, and the result is normalized (str on success, ContractorTurnRejected on every failure). All ten independently probed negative cases (invalid root/list-skills/file-root/bool-version, memory-tool classification, non-internal event, profile mismatch, missing command id, failed result) behave per contract."
+    },
+    {
+      "id": "AC-2",
+      "status": "PASS",
+      "evidence": [
+        "gateway/run.py:21217-21219 — finally on every execution path removes the agent registry entry then runs _cleanup_agent_resources(agent)",
+        "gateway/run.py:21305-21318 — CancelledError sets the shared cancel_event and calls _interrupt_contractor_agent (request_hard_interrupt, tool_reason='gateway_turn_cancelled') before re-raising; gateway/run.py:21319-21320 — finally clear_session_vars(tokens)",
+        "gateway/platforms/base.py:7461-7467 — completion-boundary finally calls clear_session(session_key) when close_after_turn is True or the event carries contractor_context, so platform-error and cancellation paths also purge adapter transient state",
+        "tests/gateway/test_contractor_turns.py:130-151 (cleanup decision matrix incl. ordinary-turn negative), 376-408 (cancellation signals worker then hard interrupt), 411-424 (cancelled worker stops before agent construction), 87-118 (key-specific eviction, sibling preserved)",
+        "Independent cleanup-failure probe: an agent whose close() raises RuntimeError still produced the primary result ('PRIMARY_RESULT' returned) and left _contractor_agents empty — cleanup failure cleans transient state and cannot replace the primary execution result",
+        "Contamination guards: session_db=None and agent._persist_disabled=True (run.py:21181), memory-state rejection (21184-21195), fail-closed memory/history tool rejection (21196-21205, probe: honcho_memory/memory_recall/conversation_history_list blocked), bypass tests 187-227 prove no session-store creation/resume and no ordinary session-slot claim"
+      ],
+      "reasoning": "Success, platform error, timeout/cancellation, and cleanup-failure paths all deterministically clean transient state via layered finally blocks; the registry pop precedes the only failable cleanup step, and that helper is structurally non-raising (all bodies wrapped), so the primary result can never be masked — probe-verified. Observability of swallowed cleanup failures inside the shared best-effort helper is recorded as a minor finding; it is pre-existing shared behavior and does not violate the non-replacement guarantee."
+    },
+    {
+      "id": "AC-3",
+      "status": "PASS",
+      "evidence": [
+        "RED predates production on both generations: 33GOD-50 hermes-red.log (Sep 3 01:14, 16 failed incl. all typed-context and dispatch tests) predates commit abaaa84 (02:47:33); 33GOD-51 recovery-red.log (05:36, 4 failed/20 passed — AttributeError on missing close_after_turn/clear_session) predates commit f3f37df (05:53:56)",
+        "GREEN evidence: recovery-green.log 24 passed (05:37); post-commit hermes-focused.log 24 passed (05:54); independent re-run on the exact reviewed head: '24 passed in 2.95s', exit 0",
+        "Coverage map: explicit capability presence (test line 87), successful context propagation (318 skill order/cwd/profile/session_id, 427 configured runtime), isolation (187, 211, 231, 427, 532), primary execution failure (260 missing skill, 281 partial resolution, 411 pre-construction cancel, 532 memory/history tool leak rejected before model execution), cancellation/timeout (376, 411), cleanup paths including the ordinary-turn negative case (87, 130, 376)",
+        "Artifact internal consistency: sha256 of all five 33GOD-50 logs and both 33GOD-51 recovery logs reverified and match implementation.json exactly (hermes-red eed3f405…, hermes-green 90fde6f5…, recovery-red cd2ac72b…, recovery-green 34f696c2…)"
+      ],
+      "reasoning": "Both RED artifacts predate their production commits and fail exactly on the missing capability; GREEN passes against the reviewed head both in the recorded post-commit gate and in my independent run. All six required focused-coverage areas are represented; the two branches without a dedicated test (result normalization, injected cleanup failure) were exercised by live independent probes and are noted as a minor finding."
+    },
+    {
+      "id": "AC-4",
+      "status": "PASS",
+      "evidence": [
+        "Recorded head suite at f3f37df: '8 failed, 7695 passed' (hermes-gateway-head.log); recorded immutable-base suite at 97f3229: '8 failed, 7671 passed' (hermes-gateway-base.log); hermes-gateway-differential.json records identical node IDs and error classes with zero branch-only failures",
+        "Independent re-run of the exact eight failing node IDs using the review interpreter: head run exit 1 with '2 failed, 6 passed'; baseline run exit 1 with identical '2 failed, 6 passed' — the same two node IDs (test_session_store_prune.py:44 HERMES_HOME freeze, test_status_command.py:459 home-path abbreviation) fail with the same AssertionErrors on both commits",
+        "The other six node IDs pass in isolation on both commits; their full-suite-only failures (e.g. discord AttributeError 'None has no attribute File') are environment/test-pollution effects present identically at base",
+        "None of the eight failing test files (test_discord_send, test_send_multiple_images, test_session_store_prune, test_status_command, test_teams_dotenv_isolation, test_telegram_polling_health_confirmation) reference contractor_context, clear_session, close_after_turn, or _handle_contractor_turn; the diff is purely additive and gated behind 'contractor_context is not None' / 'close_after_turn is True'",
+        "Focused changed-path tests (24 passed, exit 0) and ruff ('All checks passed!', exit 0) both green on the reviewed head"
+      ],
+      "reasoning": "The required gateway suite was run on the reviewed head; every recorded failure reproduces on the immutable base with identical node IDs and error classes, my independent isolated re-runs show head and base failure surfaces exactly equal, and the source/diff evidence places all failures outside the new stateless-turn behavior. Disposition VALID."
+    },
+    {
+      "id": "AC-5",
+      "status": "PASS",
+      "evidence": [
+        "git branch --contains f3f37df: only feat/33GOD-50-stateless-contractor-turns and remotes/delorenj/feat/33GOD-50-stateless-contractor-turns; git merge-base --is-ancestor f3f37df origin/main exits 1 — not merged",
+        "Head commit subject 'fix(gateway): formalize stateless turn cleanup (33GOD-51)' carries the required Plane reference; direct parent abaaa84 subject 'feat(gateway): execute stateless contractor turns (33GOD-50)' preserves prior parent-ticket history unamended",
+        "implementation.json explicitly defers quality/security review, controller integration, PR creation, merge, release, deployment, and live contractor-command proof; this review is the first independent gate (spec-compliance only)"
+      ],
+      "reasoning": "No premature merge or completion marking is observable at the git level; the recovery head references 33GOD-51 while preserving 33GOD-50 history; integration remains deferred pending a distinct quality/security reviewer. Plane/controller state was not mutated or consulted by this review."
+    },
+    {
+      "id": "AC-6",
+      "status": "PASS",
+      "evidence": [
+        "git diff --name-status 97f3229..f3f37df: exactly 'M gateway/platforms/base.py', 'M gateway/run.py', 'A tests/gateway/test_contractor_turns.py' — the three expected files, zero unexpected files",
+        "Full 1089-line diff inspected line-by-line: base.py gains only the contract dataclass, the optional event field, the close_after_turn flag, clear_session(), and the completion-boundary branch; run.py gains only ContractorTurnRejected, the two dispatch guards, the contractor execution helpers, and lock/dict initialization; the only comment rewrap is the MessageEvent field comment displaced by the new field",
+        "No Bloodbank command primitive/schema, contractor manifest or skill, Krebs fortifier, n8n workflow, PJangler/template/Skillex projection, hourly crank, callback/clone design (fresh AIAgent per turn), live automation enablement, Plane/controller state, or unrelated source appears anywhere in the range",
+        "git diff --check 97f3229..f3f37df exits 0 — no whitespace errors"
+      ],
+      "reasoning": "Changes are limited precisely to the Hermes gateway adapter contract, the gateway execution path, and focused gateway tests. Scope restraint fully satisfied."
+    },
+    {
+      "id": "AC-7",
+      "status": "PASS",
+      "evidence": [
+        "Base 97f3229dfdc06779f348ab8e7bee043262c3aaa7 is an ancestor of HEAD (merge-base exit 0); prior implementation abaaa84b4849f397b06ef1ae225ea1a30050422b is the direct parent of the reviewed head; HEAD equals the expected f3f37df8e265c2b178f4c7ce8b1b491426ae1654; exactly 2 commits in range with the expected subjects",
+        "Recovery continues the preserved candidate: the 33GOD-50 commit (02:47) added the execution path and 20-test suite; the 33GOD-51 commit (05:53) additively formalized cleanup (close_after_turn, clear_session, completion branch) plus 4 tests — nothing rewritten or discarded",
+        "RED/GREEN and baseline differential artifacts remain available and internally consistent: all seven sha256 hashes reverified unchanged against implementation.json; genealogy 16 RED → 20 GREEN (33GOD-50) and 4 RED/20 passed → 24 GREEN (33GOD-51) matches test counts observed in the committed files (24 tests in tests/gateway/test_contractor_turns.py)"
+      ],
+      "reasoning": "The recovery builds on the verified candidate history exactly as required; base, prior commit, head, commit count, and messages all match, and every preserved artifact is present, hash-stable, and consistent with the committed tree."
+    }
+  ],
+  "scope": {
+    "status": "PASS",
+    "changed_files": [
+      "gateway/platforms/base.py",
+      "gateway/run.py",
+      "tests/gateway/test_contractor_turns.py"
+    ],
+    "unexpected_files": [],
+    "assessment": "The committed range touches exactly the three expected files (993 insertions, 2 deletions across 1089 diff lines): the adapter contract in gateway/platforms/base.py, the execution path in gateway/run.py, and the focused suite in tests/gateway/test_contractor_turns.py. No forbidden surface (Bloodbank schema/primitive, contractor manifest/skill, Krebs fortifier, n8n, PJangler/template/Skillex, crank, callback/clone design, live automation, Plane/controller state, unrelated source) is present."
+  },
+  "baseline_disposition": {
+    "status": "VALID",
+    "base_failures_reproduced": true,
+    "head_matches_base": true,
+    "outside_new_behavior": true,
+    "evidence": [
+      "Recorded full suites: base 97f3229 '8 failed, 7671 passed' vs head f3f37df '8 failed, 7695 passed' — identical eight node IDs and error classes (hermes-gateway-differential.json comparison.status=PASS, zero branch-only failures)",
+      "Independent isolated re-run of all eight node IDs on head: exit 1, '2 failed, 6 passed' — test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home and test_status_command.py::test_profile_command_reports_source_stamped_profile",
+      "Independent isolated re-run of the same eight node IDs on /tmp/hermes-board-cranker-50-baseline with the same interpreter: exit 1, identical '2 failed, 6 passed' with the same AssertionError causes",
+      "The six suite-only failures pass in isolation on both commits and fail only under full-suite test pollution (sys.modules/home-path effects) — environment-sensitive, not caused by the diff",
+      "The changed files introduce no code reachable by the failing tests: all new behavior is gated behind contractor_context presence or close_after_turn opt-in; ordinary-path behavior is byte-equivalent"
+    ],
+    "assessment": "The eight broad-suite failures reproduce on the immutable base with identical surfaces, my independent head/base re-runs produce exactly equal results, focused tests and lint pass on head, and the failures are provably outside the new stateless-turn behavior. The remaining repository-level failures are pre-existing concerns carried forward, not regressions from this change."
+  },
+  "tests": [
+    {
+      "command": ".venv/bin/python -m pytest tests/gateway/test_contractor_turns.py -q -o addopts= (from /tmp/hermes-board-cranker-51-spec-review @ f3f37df)",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "24 passed in 2.95s — matches the recorded post-commit focused gate (hermes-focused.log, 24 passed) and recovery GREEN; independent reproduction on the exact reviewed head."
+    },
+    {
+      "command": ".venv/bin/ruff check gateway/platforms/base.py gateway/run.py tests/gateway/test_contractor_turns.py (from /tmp/hermes-board-cranker-51-spec-review)",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "All checks passed! — lint clean on all three changed files at the reviewed head."
+    },
+    {
+      "command": "git diff --check 97f3229dfdc06779f348ab8e7bee043262c3aaa7..f3f37df8e265c2b178f4c7ce8b1b491426ae1654 (from /tmp/hermes-board-cranker-51-spec-review)",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "No output; no whitespace errors across the full review range."
+    },
+    {
+      "command": ".venv/bin/python -m pytest tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent -q -o addopts= (from /tmp/hermes-board-cranker-51-spec-review @ head)",
+      "status": "FAIL",
+      "exit_code": 1,
+      "evidence": "2 failed, 6 passed — the two failures are test_session_store_prune.py:44 (HERMES_HOME import-time freeze AssertionError) and test_status_command.py:459 (home-path '~' abbreviation AssertionError); both are recorded members of the known eight. The other six known failures pass in isolation. Note: pinned aiohttp==3.14.3 was installed into the untracked, git-ignored review .venv so test_send_multiple_images could collect (initial collection errored with ModuleNotFoundError, exit 4); the git tree was never touched."
+    },
+    {
+      "command": "/tmp/hermes-board-cranker-51-spec-review/.venv/bin/python -m pytest <same eight node IDs> -q -o addopts= (from /tmp/hermes-board-cranker-50-baseline @ 97f3229)",
+      "status": "FAIL",
+      "exit_code": 1,
+      "evidence": "2 failed, 6 passed — identical node IDs, identical AssertionError causes and lines as the head run; baseline failure surface exactly matches head failure surface under isolation."
+    },
+    {
+      "command": ".venv/bin/python /tmp/probe_51_negatives.py (10 negative-case probes against production source from /tmp/hermes-board-cranker-51-spec-review)",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "All ten probes behaved per contract: nonexistent/file/relative project_root, list-typed required_skills, and bool contractor_version all raise ValueError; _is_contractor_memory_tool blocks memory/session_search/memory_recall/conversation_history_list/honcho_memory while passing web_search/terminal; _contractor_tool_names normalizes both schema shapes; non-internal event, profile mismatch, missing command identity, and failed=True result each raise ContractorTurnRejected with the expected message."
+    },
+    {
+      "command": ".venv/bin/python /tmp/probe_51_cleanup.py (cleanup-failure non-masking probe: agent.close() raises RuntimeError)",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "Primary result 'PRIMARY_RESULT' was still returned and the _contractor_agents registry was left empty — a cleanup failure deterministically cleans transient state and cannot replace the primary execution result; the RuntimeError was swallowed silently by the shared best-effort _cleanup_agent_resources (recorded as a minor observability finding)."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "minor",
+      "criterion_id": "AC-2",
+      "file": "gateway/run.py",
+      "line": 12425,
+      "description": "Cleanup failures inside the shared best-effort _cleanup_agent_resources are swallowed with bare 'except Exception: pass' blocks (12417-12418, 12425-12426, 12434-12435) and no logging, so a failing agent.close() leaves no observable trace. The AC-2 non-replacement guarantee is structurally satisfied and probe-verified (raising close() still returned the primary result and emptied the contractor agent registry), and this helper is pre-existing shared infrastructure outside the diff, so the observability nuance does not block spec compliance — but the letter of 'cleanup failures remain observable' is only partially honored.",
+      "required_fix": "Non-blocking hardening for the downstream quality/security gate or a follow-up: emit a WARNING log when a contractor-turn cleanup step fails (e.g. wrap the _cleanup_agent_resources call site in _run_contractor_agent_sync's finally with a logged boundary), without changing the shared helper's behavior for ordinary sessions."
+    },
+    {
+      "severity": "minor",
+      "criterion_id": "AC-3",
+      "file": "gateway/run.py",
+      "line": 21327,
+      "description": "The result-normalization rejection branch (result not a dict / failed is True / completed is not True → ContractorTurnRejected at 21322-21327) has no dedicated focused test in tests/gateway/test_contractor_turns.py, and no focused test injects a cleanup failure to pin non-masking behavior. Both branches were exercised successfully by independent live probes during this review, and every AC-3 coverage area is otherwise represented in the 24-test focused suite, so this is a coverage-resilience gap rather than missing behavior.",
+      "required_fix": "In a future hardening pass (not this gate), add focused tests pinning (a) the failed=True/completed!=True normalization rejection and (b) a raising agent.close() not masking the turn result, so these probes are captured in the committed suite."
+    }
+  ],
+  "source_tree_clean_after": true
+}

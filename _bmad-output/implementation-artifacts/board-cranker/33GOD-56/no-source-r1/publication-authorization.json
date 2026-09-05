@@ -1,0 +1,21 @@
+{
+  "GIT_GUARD_OFF_present": false,
+  "at": "2026-09-05T14:02:59.191207Z",
+  "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "evidence_gates_receipt": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/gates-pass.json",
+  "evidence_gates_sha256": "ddfb0552bd22f918456522f025bc390ee24ec7a4a14c3238017f548f0fe5a2a8",
+  "first_parent_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "force_push": false,
+  "guard_disabled": false,
+  "guard_merge_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+  "guard_source_override": true,
+  "guard_support_sha256": "0209b5d8f764dd8d3b2f22eea02d7dd8040c3f2124764e4f8f9bf972f205c9aa",
+  "hook_source_path": "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks",
+  "no_verify": false,
+  "pre_push_sha256": "ddc23c60fa6c67bd20a06d51b76d35d7b30fa812a54dfa9c1ee52280fea179dc",
+  "python3_matches_required_interpreter": true,
+  "python3_resolution": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python3",
+  "source_mutation_authorized": false,
+  "travels_sha256": "d395ff645cf25eceabe7e99f82ac969981a4b82a260f7046087d2103acf3615d",
+  "upstream_base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+}

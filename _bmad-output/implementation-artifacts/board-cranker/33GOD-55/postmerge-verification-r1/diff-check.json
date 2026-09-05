@@ -1,0 +1,11 @@
+{
+  "name": "diff-check",
+  "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...02481c8df4cedbdc11081fe41fcf01859a399566",
+  "cwd": "/tmp/agents-board-cranker-55-postmerge-verification-r1",
+  "started_at": "2026-09-05T09:58:20.642776+00:00",
+  "finished_at": "2026-09-05T09:58:20.644650+00:00",
+  "stdout": "",
+  "stderr": "",
+  "exit_code": 0,
+  "status": "PASS"
+}

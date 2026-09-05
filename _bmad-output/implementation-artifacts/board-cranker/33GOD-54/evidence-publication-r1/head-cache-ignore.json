@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "git",
+    "check-ignore",
+    "--no-index",
+    "gateway/__pycache__/run.cpython-311.pyc",
+    "tests/gateway/__pycache__/test_contractor_turns.cpython-311.pyc",
+    ".pytest_cache/CACHEDIR.TAG",
+    ".ruff_cache/CACHEDIR.TAG"
+  ],
+  "attempt": 1,
+  "command": "git check-ignore --no-index gateway/__pycache__/run.cpython-311.pyc tests/gateway/__pycache__/test_contractor_turns.cpython-311.pyc .pytest_cache/CACHEDIR.TAG .ruff_cache/CACHEDIR.TAG",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/head-cache-ignore.log",
+  "name": "head-cache-ignore",
+  "sha256": "6142e98fcb50dad84b841517084157c3846958ea5f5b78c4074976a6238a18ae",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

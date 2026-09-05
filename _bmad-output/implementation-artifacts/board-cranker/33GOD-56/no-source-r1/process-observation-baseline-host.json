@@ -1,0 +1,23 @@
+{
+  "at": "2026-09-05T13:18:07.635913Z",
+  "gateway_processes": [
+    {
+      "argv": [
+        "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/gateway"
+      ],
+      "cwd": "/tmp/hermes-board-cranker-53-upstream-baseline",
+      "pgrp": 3376421,
+      "pid": 3376421,
+      "ppid": 3070488,
+      "session": 3376421,
+      "start_ticks": "134265454",
+      "state": "R"
+    }
+  ]
+}

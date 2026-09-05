@@ -1,0 +1,32 @@
+[
+  {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "862ea9",
+      "wall_time_seconds": 0.000003016,
+      "exit_code": 0,
+      "original_token_count": 53,
+      "output": "FAILED tests/gateway/test_wecom_callback.py::TestWecomCallbackPollLoop::test_poll_loop_dispatches_handle_message\n48 failed, 7642 passed, 45 skipped, 2 xfailed, 164 warnings in 876.18s (0:14:36)\n\n[exit_code=1]\n"
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "53bd61",
+      "wall_time_seconds": 0.000002315,
+      "exit_code": 1,
+      "original_token_count": 312,
+      "output": "Traceback (most recent call last):\n  File \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/finish_comparison.py\", line 4, in <module>\n    r1=differential(1)\n       ^^^^^^^^^^^^^^^\n  File \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/differential_parser.py\", line 42, in differential\n    receipt=json.loads((E/('gateway-'+role+'-'+str(attempt)+'.json')).read_text())\n                             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/differential_parser.py\", line 28, in parse\n    m=re.match(r'([\\w.]+(?:Error|Exception)|Failed|Timeout|SystemExit)\\b',message)\n           ^\nAssertionError: Unresolved error class: tests/gateway/test_scale_to_zero.py::test_suspend_self_posts_suspend_for_this_machine/home/delorenj/.hermes/hermes-agent/.venv/lib/python3.11/site-packages/_pytest/unraisableexception.py:33: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited in /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-head-1.log\n"
+    }
+  },
+  {
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "37ec5c",
+      "wall_time_seconds": 0.000002534,
+      "exit_code": 0,
+      "original_token_count": 617,
+      "output": "{\"name\": \"gateway-head-1\", \"command\": \"/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway\", \"argv\": [\"/home/delorenj/.hermes/hermes-agent/.venv/bin/python\", \"-m\", \"pytest\", \"-q\", \"-o\", \"addopts=\", \"tests/gateway\"], \"worktree\": \"/tmp/hermes-board-cranker-50\", \"attempt\": 1, \"exit_code\": 1, \"log\": \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-head-1.log\", \"sha256\": \"97d90d03c732a3455a020bd05378d4d1458dad01fa44e522cd858253985c9437\", \"started\": \"2026-09-05T04:33:11Z\", \"completed\": \"2026-09-05T04:47:04Z\", \"environment\": {\"PATH\": \"/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin\", \"HOME\": \"/home/delorenj\", \"TZ\": \"UTC\", \"LANG\": \"C.UTF-8\", \"LC_ALL\": \"C.UTF-8\", \"PYTHONHASHSEED\": \"0\", \"PYTHONUTF8\": \"1\", \"PYTHONDONTWRITEBYTECODE\": \"1\", \"HERMES_HOME\": \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/gateway-head-1/hermes-home\", \"TMPDIR\": \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/gateway-head-1\", \"GIT_OPTIONAL_LOCKS\": \"0\", \"RUFF_NO_CACHE\": \"true\"}}\n{\"name\": \"gateway-base-1\", \"command\": \"/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway\", \"argv\": [\"/home/delorenj/.hermes/hermes-agent/.venv/bin/python\", \"-m\", \"pytest\", \"-q\", \"-o\", \"addopts=\", \"tests/gateway\"], \"worktree\": \"/tmp/hermes-board-cranker-53-upstream-baseline\", \"attempt\": 1, \"exit_code\": 1, \"log\": \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/gateway-base-1.log\", \"sha256\": \"1d83e6cf0d0faa59cdd83ee6cf27c93cfad8c67608f5ed889f6a0ac4e3d8319b\", \"started\": \"2026-09-05T04:47:04Z\", \"completed\": \"2026-09-05T05:01:44Z\", \"environment\": {\"PATH\": \"/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin\", \"HOME\": \"/home/delorenj\", \"TZ\": \"UTC\", \"LANG\": \"C.UTF-8\", \"LC_ALL\": \"C.UTF-8\", \"PYTHONHASHSEED\": \"0\", \"PYTHONUTF8\": \"1\", \"PYTHONDONTWRITEBYTECODE\": \"1\", \"HERMES_HOME\": \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/gateway-base-1/hermes-home\", \"TMPDIR\": \"/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/runtime/gateway-base-1\", \"GIT_OPTIONAL_LOCKS\": \"0\", \"RUFF_NO_CACHE\": \"true\"}}\n"
+    }
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "config",
+    "--show-origin",
+    "--get",
+    "core.hooksPath"
+  ],
+  "attempt": 1,
+  "command": "git config --show-origin --get core.hooksPath",
+  "completed": "2026-09-05T11:28:20Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/global-hooks-path.log",
+  "name": "global-hooks-path",
+  "sha256": "2c9bf97a3ac3938b4f00d8be4ec21222bc21df5f5e170a5d3c2e749023bfd29c",
+  "started": "2026-09-05T11:28:20Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

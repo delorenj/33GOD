@@ -1,0 +1,58 @@
+[
+  {
+    "name": "committed-gate-1",
+    "command": "python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-1.log",
+    "sha256": "cb66f5ffc6fdaf35f6312ab58c24a78dabaebc0086f36b66636251e449cc243d"
+  },
+  {
+    "name": "committed-gate-2",
+    "command": "python3 -m compileall -q git/hooks/_travels.py git/tests",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "committed-gate-3",
+    "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "committed-gate-4",
+    "command": "python3 git/hooks/_travels.py HEAD",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-4.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "committed-gate-5",
+    "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...HEAD",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-5.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "committed-gate-6",
+    "command": "python3 git/tests/test_pre_push.py MergeTopologyTests -v",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-6.log",
+    "sha256": "641c2dfd91d0558fc8c5c68084ec8f73269e52441770b50410d248b4db2cfbdc"
+  },
+  {
+    "name": "committed-gate-7",
+    "command": "git diff --check",
+    "exit_code": 0,
+    "status": "PASS",
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/committed-gate-7.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

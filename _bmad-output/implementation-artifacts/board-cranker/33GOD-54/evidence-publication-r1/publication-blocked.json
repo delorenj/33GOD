@@ -1,0 +1,11 @@
+{
+  "force_push": false,
+  "pr_head_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "pr_metadata_updated": false,
+  "pr_state": "OPEN",
+  "push_attempted": true,
+  "push_exit_code": 1,
+  "reason": "Global git guard rejected outgoing commits for 13 reported missing local imports. No guard bypass, source edits, or PR mutation attempted.",
+  "remote_after_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "remote_matches_candidate": false
+}

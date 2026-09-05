@@ -1,0 +1,5 @@
+=== primary checkout /home/delorenj/.agents (READ-ONLY inspection) ===
+main
+ M git/hooks/_guard.sh
+=== _guard.sh sha256 before ===
+4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c  /home/delorenj/.agents/git/hooks/_guard.sh

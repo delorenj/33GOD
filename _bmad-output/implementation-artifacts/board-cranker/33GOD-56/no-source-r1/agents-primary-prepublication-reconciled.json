@@ -1,0 +1,212 @@
+{
+  "branch": "main",
+  "files": {
+    ".gitignore": {
+      "mode": 436,
+      "sha256": "c697646d3cae6d62d0c1a08eb81cc831c05195ab1190604d448786997abc665c"
+    },
+    ".skill-lock.json": {
+      "mode": 436,
+      "sha256": "b89ea1d6261c7ace27bff4847c23952ea488e92c78177123b17138f60dbdadae"
+    },
+    "AGENTS.md": {
+      "mode": 436,
+      "sha256": "256176d50e45df46abe16035bbc8266d80b8bcc836f25d0ae2526454bab6b068"
+    },
+    "agents/command-crafter.md": {
+      "mode": 436,
+      "sha256": "4ed27d44a2684cb1b56fdb863536bbef9307a992d5a72cb163bbdeab2aac402a"
+    },
+    "agents/developer.md": {
+      "mode": 436,
+      "sha256": "b3cf3404b33525c5a13aef2787175edd22031409c0027ef986b60a847ba05c52"
+    },
+    "agents/dr-denny-grubbs.md": {
+      "mode": 436,
+      "sha256": "5576c78cac192fdb14c4a1f0cf83347842aad58419fe6fad73bfdbd31913a4cc"
+    },
+    "agents/momo.md": {
+      "mode": 436,
+      "sha256": "5f827441b1a7592e1f01d066afb3815598d6d77d35d413eec2664f1fbd88fd87"
+    },
+    "agents/pr-crusher.md": {
+      "mode": 436,
+      "sha256": "5a5ac3424ffd5705707642c5f4795d7e1b143cf6ac963f58908565b179c35997"
+    },
+    "agents/project-manager.md": {
+      "mode": 436,
+      "sha256": "3e2550eda8e6b92e5cd4811d7f845c0c0774495a82e0d4cc819648a1eb4dcbb3"
+    },
+    "agents/qa.md": {
+      "mode": 436,
+      "sha256": "14029e9944338dbf244f1cb3f8edfeaf5bba0ee50c957b389a51a1769eba623b"
+    },
+    "agents/tech-lead.md": {
+      "mode": 436,
+      "sha256": "f66b4a8d8cef578fe768779085833aa364ba22a3773d36a0b4b97d3534412320"
+    },
+    "bin/git-unpushed": {
+      "mode": 509,
+      "sha256": "2e2412a929a631c7393d44295284046f969ae85df4d9ed5c0bc05b8b694db5a0"
+    },
+    "bin/jot": {
+      "mode": 509,
+      "sha256": "bf9be1796c0026f25909b3bcc4d72f54e6e07ea41dbacc1020039439009a15e1"
+    },
+    "commands/curator-bootstrap.md": {
+      "mode": 436,
+      "sha256": "721565c054a691ef3ddaaab9c2dedb76abbf0218ffcc74357117673c27fab732"
+    },
+    "commands/speak.md": {
+      "mode": 436,
+      "sha256": "856e6ad1203bc0790591c8667abc860606d0ceca512971c40a776ff6b15d4b4c"
+    },
+    "commands/subagent-driven-adversarial-pr-review.md": {
+      "mode": 436,
+      "sha256": "2c3920ed4b6e2f4948a9068e7950ecfbdf35a524c0a961721f3333fdf46cf9fa"
+    },
+    "commands/voice.md": {
+      "mode": 436,
+      "sha256": "3e730b462213c7d23a61d24b5b933f3e6d9a9b8e220564fb4f56dfde22c0f1ac"
+    },
+    "git/README.md": {
+      "mode": 436,
+      "sha256": "7853e40ab5decfb94a568af9c513d9d28b4d4475fa8cceb83cb22171fd282d7d"
+    },
+    "git/hooks/_guard.sh": {
+      "mode": 436,
+      "sha256": "4d9e0e66c7f34ad18ce0d576061d4f60afc9784e563214659c23ba3a8aced51c"
+    },
+    "git/hooks/_travels.py": {
+      "mode": 509,
+      "sha256": "d395ff645cf25eceabe7e99f82ac969981a4b82a260f7046087d2103acf3615d"
+    },
+    "git/hooks/post-commit": {
+      "mode": 509,
+      "sha256": "dcebd36b602050947af75cea4eb1a055111539f60df1c5ccb20553a36c89a609"
+    },
+    "git/hooks/pre-commit": {
+      "mode": 509,
+      "sha256": "672317d2be5a88300d69339a63a0f320ef84df9439f63725d7ff9214df2b47a2"
+    },
+    "git/hooks/pre-push": {
+      "mode": 509,
+      "sha256": "ddc23c60fa6c67bd20a06d51b76d35d7b30fa812a54dfa9c1ee52280fea179dc"
+    },
+    "git/ignore": {
+      "mode": 436,
+      "sha256": "a909094a6b099145bf71a8a68d1271311a7ed9cf62ae646fa5f9f1c2cfaac8d5"
+    },
+    "git/tests/test_pre_push.py": {
+      "mode": 436,
+      "sha256": "dd4661059177e0da5e3c49301cb295fdeb93c0397151e7e0876910d061f1d9a7"
+    },
+    "hooks/TODO.md": {
+      "mode": 436,
+      "sha256": "036e8e5988d7f9e5b15e4af5f783b45b41c25d602da8a70175e6bc319cb85626"
+    },
+    "hooks/asm/log-transition.sh": {
+      "mode": 509,
+      "sha256": "dc0da7beb5cc23382541e7927b40a7d803f510f2dcea0d8ab3769dba7ea85ac2"
+    },
+    "hooks/bloodbank": {
+      "symlink": "/home/delorenj/code/33GOD/bloodbank/services/agent-hooks"
+    },
+    "hooks/hindsight/README.md": {
+      "mode": 436,
+      "sha256": "ff84019e743a1ee959398eba6c091d2c9ea1283692b584c7e1b4a17cf329d0ba"
+    },
+    "hooks/hindsight/hindsight-jot-flush.sh": {
+      "mode": 509,
+      "sha256": "301af7567d146a5e14f9c9be7c8b591ed88b1c12aaddd7013d8755d9c9aa77ed"
+    },
+    "hooks/hindsight/hindsight-journal-audit.sh": {
+      "mode": 509,
+      "sha256": "0ae3125054fdb03bff808546c71cc42468bd363084f9b39f69eece19cd2ccabe"
+    },
+    "hooks/hindsight/hindsight-journal-prune.sh": {
+      "mode": 509,
+      "sha256": "68a544701d2fed9eb96793de7e071535235fdb1891a97aa5ba7987b125054764"
+    },
+    "hooks/hindsight/hindsight-journal-write.sh": {
+      "mode": 509,
+      "sha256": "939f9d2a28934bbefaea3b7cf04cf33550bda5a28b83790f428c1dd401f26c8e"
+    },
+    "hooks/hindsight/hindsight-recall.sh": {
+      "mode": 509,
+      "sha256": "a77d99e219aea9bf8dda7650c57dc1d58eee4add418794a3512ea39a711c44f6"
+    },
+    "hooks/hindsight/hindsight-retain.sh": {
+      "mode": 509,
+      "sha256": "6bda4e27183941f508f38652dae7d1a3eef87621916bbbb5157f17eb5705ed3a"
+    },
+    "hooks/hindsight/hindsight-session-end.sh": {
+      "mode": 509,
+      "sha256": "764c042cf4977e94d3f52a6dcde4f808b30da1e563ee98cd5c019f36d8e23268"
+    },
+    "hooks/hindsight/hindsight-write-probe.sh": {
+      "mode": 509,
+      "sha256": "1dcfcd7570059a798de22ea69c129d42433404bab8570a7169d98c444593691b"
+    },
+    "hooks/lib/hindsight-bank.sh": {
+      "mode": 509,
+      "sha256": "c80e002297e669ecda8998abdfd4f2ef7bc1f0c67c59987107d7db25a7986b50"
+    },
+    "hooks/lib/hindsight-identity.sh": {
+      "mode": 509,
+      "sha256": "14fd526fd92089655323a6e7e8c809782d0d7403222c97d37114d34cdd24bf11"
+    },
+    "hooks/lib/hindsight-journal.sh": {
+      "mode": 509,
+      "sha256": "e8714d9b88f8ea3253b097164e7864607c41cacde1d37779e3a8246b22c9014d"
+    },
+    "hooks/lib/hook-guard.sh": {
+      "mode": 493,
+      "sha256": "9d2d23a346ff2ebccc8c8b77ee85c480f981718d33d9e07699d6b0d54fa12a2a"
+    },
+    "hooks/lib/local-config.sh": {
+      "mode": 493,
+      "sha256": "1de9794049225ad90e055e836dc18b324dfd89c7cea6e4608ed4b26b360fa413"
+    },
+    "hooks/merge-forward/session-end.sh": {
+      "mode": 493,
+      "sha256": "eeb8f9106199a8fe06962be0ace4ebeffb93be1169f490039cbbf0f31fdd76c5"
+    },
+    "hooks/reminder-for-skill-check.sh": {
+      "mode": 509,
+      "sha256": "d7b706ad134aa444375430b9b83efc6b6b3e533cc3f50bdb6ee702436a1185b3"
+    },
+    "scripts/fanout-skills.sh": {
+      "mode": 509,
+      "sha256": "37ed4caab11570c1203bbcda414f5a69da6dce60ac4ea122c1aec63a69b4d36b"
+    },
+    "scripts/lint-skills.py": {
+      "mode": 509,
+      "sha256": "df6393dfff9cf0dc1b397322575ef8d3119e254be954e2296feede2d40774943"
+    },
+    "scripts/mise-agents-fanout.sh": {
+      "mode": 509,
+      "sha256": "2043e44e2cfaecf6d09ce88c6ffaa807df958077894fa79a7af84bcfe07ce0c5"
+    },
+    "scripts/skill-watcher.sh": {
+      "mode": 509,
+      "sha256": "dc2b9cd897b8f9b2fd6e3ed0abd0ec605a368543cdfa9a03a3cc7fe5c20586bc"
+    },
+    "scripts/sync-skills.py": {
+      "mode": 509,
+      "sha256": "577dd0e06844fff3c5f017c2e5534aad9392391f7b8b4597dc3f84afc3bfb535"
+    },
+    "skills.json": {
+      "mode": 436,
+      "sha256": "dd45f4f03fb09a0fa5faf332072df8b8ab64f7ad2764e2ae20ac4b1be9af2ff8"
+    },
+    "skills.schema.json": {
+      "symlink": "/home/delorenj/code/skillex/skills.schema.json"
+    }
+  },
+  "head": "5e6970e4ac4031f03bf4c99d9b54e6881078bca0",
+  "path": "/home/delorenj/.agents",
+  "staged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status": " M git/hooks/_guard.sh\n",
+  "unstaged_diff_sha256": "5f05751b64ddd62cb566cfaa5f04ae357336996d4ace4316ba4f0d1b728f0a22"
+}

@@ -1,0 +1,5 @@
+{
+  "at": "2026-09-05T13:09:15.454922Z",
+  "authoritative": "The host supervisor runs all tests and /proc scans in the same host context. Its per-command exit receipts, child-subreaper records, process/session membership and timestamps prove sequentiality. process-observation-candidate-host.json independently sees exactly the candidate suite.",
+  "non_authoritative": "process-observation-candidate-midrun.json was produced inside the sandbox and could not see host test processes; its empty list is NOT used as no-overlap evidence."
+}

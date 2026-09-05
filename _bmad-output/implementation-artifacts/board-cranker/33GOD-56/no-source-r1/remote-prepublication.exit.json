@@ -1,0 +1,67 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "delorenj",
+    "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "command_finished_at": "2026-09-05T14:02:57.474592Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:02:57.582708Z",
+  "finished_monotonic_ns": 1345760170970998,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/remote-prepublication.log",
+  "name": "remote-prepublication",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "git",
+          "ls-remote",
+          "--exit-code",
+          "delorenj",
+          "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 191309,
+        "pid": 191309,
+        "ppid": 190821,
+        "session": 191309,
+        "start_ticks": "134575955",
+        "state": "S"
+      },
+      {
+        "argv": [
+          "/usr/bin/ssh",
+          "-o",
+          "SendEnv=GIT_PROTOCOL",
+          "git@github.com",
+          "git-upload-pack 'delorenj/hermes-agent.git'"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 191309,
+        "pid": 191310,
+        "ppid": 191309,
+        "session": 191309,
+        "start_ticks": "134575956",
+        "state": "S"
+      }
+    ],
+    "pid": 191309,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 190821
+  },
+  "sequence_index": 0,
+  "sha256": "4614044955df7ebcc82a5d8fcb31afcf5d5870281ff0bd732f201901e81b6bea",
+  "started_at": "2026-09-05T14:02:56.971066Z",
+  "started_monotonic_ns": 1345759559299016,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

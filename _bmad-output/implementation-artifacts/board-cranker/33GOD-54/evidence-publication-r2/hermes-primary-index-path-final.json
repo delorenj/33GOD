@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "index"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path index",
+  "completed": "2026-09-05T11:55:47Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-index-path-final.log",
+  "name": "hermes-primary-index-path-final",
+  "sha256": "ae461cdbb374d862d6acbf00e503c125e530d951a6f74f656965a934bada07ba",
+  "started": "2026-09-05T11:55:47Z",
+  "worktree": "/home/delorenj/.hermes/hermes-agent"
+}

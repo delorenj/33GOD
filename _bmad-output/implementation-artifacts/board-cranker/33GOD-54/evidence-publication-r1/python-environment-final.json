@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+    "-B",
+    "-c",
+    "import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"prefix\":sys.prefix,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))"
+  ],
+  "attempt": 1,
+  "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B -c 'import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"prefix\":sys.prefix,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))'",
+  "completed": "2026-09-05T05:06:32Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/python-environment-final.log",
+  "name": "python-environment-final",
+  "sha256": "3cf34218283d3f9a220d2095ba9c8f10a911e20fecaf97708746f09256f491f1",
+  "started": "2026-09-05T05:06:32Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

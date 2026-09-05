@@ -1,0 +1,57 @@
+{
+  "argv": [
+    "gh",
+    "pr",
+    "view",
+    "102409",
+    "--repo",
+    "NousResearch/hermes-agent",
+    "--json",
+    "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt"
+  ],
+  "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt",
+  "command_finished_at": "2026-09-05T14:03:28.811248Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:03:28.922315Z",
+  "finished_monotonic_ns": 1345791510581935,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-published.log",
+  "name": "pr-published",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "gh",
+          "pr",
+          "view",
+          "102409",
+          "--repo",
+          "NousResearch/hermes-agent",
+          "--json",
+          "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 203084,
+        "pid": 203084,
+        "ppid": 190821,
+        "session": 203084,
+        "start_ticks": "134579063",
+        "state": "S"
+      }
+    ],
+    "pid": 203084,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 190821
+  },
+  "sequence_index": 0,
+  "sha256": "af51412ee67f58329f959d2c4c73470bb4b2bc5bb3370590342d39567e907439",
+  "started_at": "2026-09-05T14:03:28.050035Z",
+  "started_monotonic_ns": 1345790638267346,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

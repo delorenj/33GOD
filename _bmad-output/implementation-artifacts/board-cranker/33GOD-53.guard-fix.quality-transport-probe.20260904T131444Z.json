@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "action": "provider_availability_probe",
+  "campaign": "board-cranker",
+  "owner_agent_id": "33god-pm",
+  "controller_lock_verified": true,
+  "ticket": "33GOD-53",
+  "gate": "quality-security",
+  "checked_at": "2026-09-04T13:14:44+00:00",
+  "recorded_at": "2026-09-04T13:14:45+00:00",
+  "plane_state": "E2E Testing & QA",
+  "plane_readback_method": "momo ticket-provider adapter",
+  "immutable_range": "97f3229dfdc06779f348ab8e7bee043262c3aaa7..cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "review_worktree": "/tmp/hermes-board-cranker-53-guard-quality-review-r2",
+  "review_worktree_head": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+  "review_worktree_clean": true,
+  "canonical_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r2.json",
+  "canonical_handback_present": false,
+  "saved_reviewer_pids": [
+    3158260,
+    3158860,
+    3158863
+  ],
+  "saved_reviewer_pids_alive": [],
+  "matching_review_processes": [],
+  "provider": {
+    "name": "augment",
+    "model": "kimi-k3",
+    "cli_path": "/home/delorenj/.local/share/mise/installs/node/26.5.0/bin/auggie",
+    "cli_version": "0.35.0 (commit 9a7f3836)",
+    "mode": "read-only availability probe",
+    "exit_code": 1,
+    "available": false,
+    "classification": "pre_execution_cli_usage_error",
+    "review_executed": false,
+    "verdict_consumed": false,
+    "request_id": "",
+    "transport_result": "CLI positional instruction was parsed into --workspace-root; no provider request or review executed."
+  },
+  "transport": {
+    "stdout_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-augment-availability-20260904T131444Z.stdout.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-augment-availability-20260904T131444Z.stderr.txt",
+    "stderr_sha256": "4819faa32b28cda5955b348c66faf96a657534416d0766dadb156f6fef3b1d61"
+  },
+  "source_mutation": false,
+  "shared_wip_disposition": "retain",
+  "decision_event_action": "skipped_pre_execution_controller_correction_no_judgment",
+  "plane_comment_action": "skipped_no_board_delta",
+  "next_allowed_action": "Run one corrected read-only availability probe with the positional instruction before options.",
+  "classification_correction": {
+    "corrected_at": "2026-09-04T13:16:17+00:00",
+    "reason": "Availability required exit 0 plus an exact AVAILABLE response; the original exit 1 workspace-root usage error was misclassified because the echoed prompt contained AVAILABLE.",
+    "original_classification": "available",
+    "provider_request_executed": false
+  }
+}

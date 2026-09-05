@@ -1,0 +1,181 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-55",
+  "gate": "spec-compliance",
+  "status": "PASS",
+  "summary": "Independently re-adjudicated the immutable range 36d3ed6..54aca96. Exactly one commit touches exactly the four allowed files; remote branch equals head; both worktrees clean. Full 25-test suite, compileall, bash -n, _travels.py HEAD, and both diff --check gates pass. Independently reproduced the RED condition by running the new merge-topology tests against the base-revision hook (both clean-merge tests fail under the old guard, pass under the new). Handback is schema-valid and all 77 evidence-index SHA-256 values recompute exactly. Exercised the exact 33GOD-54 candidate 750ad5c against remote base cc00fe6 from /tmp/hermes-board-cranker-50: exit 0, exactly 1 unpublished commit scanned, no bypass, no push, and candidate HEAD/tree/refs/index/config/worktree, baseline state, fork ref, origin/main, PR #102409 (OPEN, headRefOid cc00fe6), and blocker evidence hashes all verified unchanged before/after. All eight ACs pass; no blocking findings.",
+  "reviewer": {
+    "agent_id": "kimi-33god-55-spec-review-r2",
+    "role": "spec-reviewer",
+    "provider": "kimi-code",
+    "model": "k3",
+    "independent_of_implementer": true,
+    "implementer_agent_id": "codex-33god-55-implementation-r2"
+  },
+  "git": {
+    "base_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "worktree": "/tmp/agents-board-cranker-55-spec-review-r2",
+    "detached": true,
+    "commit_count": 1,
+    "commit_subject": "fix(git): make push ancestry scans merge-aware (33GOD-55)",
+    "remote_branch": "feat/33GOD-55-git-travel-guard-remote-ancestry",
+    "remote_head_sha": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "remote_matches": true,
+    "history_rewritten": false
+  },
+  "implementation_handback": {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.implementation.json",
+    "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-implementation-r1.schema.json",
+    "sha256": "f7732f1eff4264c0fbdbcb7f95051cc351974b96c4db2e7c6f695f58bf26b996",
+    "schema_valid": true,
+    "head_matches": true,
+    "claimed_files_match": true,
+    "evidence_index_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/evidence-index.json",
+    "evidence_files_checked": 77,
+    "evidence_hash_mismatches": []
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "status": "PASS",
+      "evidence": "Independently reproduced RED: extracted base-revision git/hooks/pre-push and _travels.py (36d3ed6) into /tmp/redhook-55 with the unchanged _guard.sh, pointed the committed MergeTopologyTests at them, and both test_existing_ref_clean_merge_excludes_remote_known_parent and test_new_ref_clean_merge_excludes_remote_known_parent FAILED under the old guard (old hook blocked on remote-known integration ancestry with 'the outgoing commits do not build from a clone'), while the same tests pass at head 54aca96. The fixture merges a published feature parent with a published integration parent and has exactly one unpublished commit (receipt 'unpublished': [merge] only)."
+    },
+    {
+      "id": "AC-2",
+      "status": "PASS",
+      "evidence": "push_scan (git/hooks/_travels.py:367) derives the outgoing set from live ls-remote advertisements of the destination and every configured fetch remote (advertised_refs, line 321), never from local tracking refs; it enforces exact pre-push advertised old-SHA equality per ref (line 409). Tests prove the semantics: test_stale_tracking_ref_honors_exact_advertised_sha, test_missing_advertised_object_resolved_without_ref_mutation (missing advertised object fetched into a disposable object store with no persistent ref mutation), and test_stale_unverified_remote_tracking_cannot_hide_local_parent all pass. The exact-candidate run reported exactly '1 unpublished commit(s)' for 750ad5c."
+    },
+    {
+      "id": "AC-3",
+      "status": "PASS",
+      "evidence": "test_existing_ref_clean_merge_excludes_remote_known_parent and test_new_ref_clean_merge_excludes_remote_known_parent both pass at head: exit 0 with '1 unpublished commit(s)' and no GIT_GUARD_OFF. The authentic exact candidate 750ad5c (merge of cc00fe6 + b0ab2e1) also passed the hook with exit 0 in my own run."
+    },
+    {
+      "id": "AC-4",
+      "status": "PASS",
+      "evidence": "All fail-closed tests pass: test_normal_unpublished_missing_import_rejected (normal-missing), test_local_only_merged_parent_missing_import_rejected (side-missing, octopus), test_merge_resolution_missing_import_rejected (resolution-missing), test_incorrect_advertised_base_fails_closed, test_unreadable_remote_base_fails_closed, test_advertised_but_unfetchable_base_fails_closed, test_unreachable_remote_fails_closed, and test_malformed_stdin_fails_closed. I additionally observed fail-closed behavior directly: stdin carrying a literal backslash-n (invalid object identity) was rejected with exit 1 at git/hooks/_travels.py:378."
+    },
+    {
+      "id": "AC-5",
+      "status": "PASS",
+      "evidence": "Existing protections are covered and green: test_credential_scan_preserved, test_credential_in_local_parent_removed_by_merge_is_rejected, test_credential_in_merge_resolution_is_rejected (credential detection, including unpublished side parents and novel merge resolution), test_branch_deletion_is_no_scan_success, test_new_ref_clean_merge_excludes_remote_known_parent and test_empty_remote_new_root_is_scanned (new-ref handling), test_multiple_updates_do_not_skip_second_broken_ref, test_empty_stdin_chains_successfully, and test_local_hook_chain_preserves_arguments_and_consumed_stdin plus test_successful_scan_chains_local_hook_with_consumed_stdin (argument propagation, consumed stdin, exit code 17 propagated)."
+    },
+    {
+      "id": "AC-6",
+      "status": "PASS",
+      "evidence": "Ran the exact contract from /tmp/hermes-board-cranker-50 with the r2 review hook: stdin 'refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d ... cc00fe6ef855e506ad1bf8166473eecf725af8a8' with a real trailing newline; exit 0, 'git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)', no GIT_GUARD_OFF, no push. Ordered parents verified [cc00fe6, b0ab2e1]. Full before/after snapshots (HEAD 750ad5cc, tree d5747a42, symbolic branch, porcelain status, complete show-ref, index SHA-256, config SHA-256, FETCH_HEAD) are byte-identical; baseline worktree (/tmp/hermes-board-cranker-53-upstream-baseline at b0ab2e1) unchanged; fork ref ls-remote cc00fe6 unchanged; origin/main identical before/after my run (5ac75e91); PR #102409 on NousResearch/hermes-agent still OPEN with headRefOid cc00fe6, matching the receipt; the three 33GOD-54 blocker artifact hashes recompute to the receipt values (0bf1f17d, 34a312da, 0fa893d2)."
+    },
+    {
+      "id": "AC-7",
+      "status": "PASS",
+      "evidence": "From the detached review worktree: unittest discover ran 25 tests, all OK (2.965s); compileall -q on _travels.py and git/tests passed; bash -n on pre-push and _guard.sh passed; PYTHONDONTWRITEBYTECODE=1 python3 git/hooks/_travels.py HEAD exited 0; git diff --check over both the base...head range and the working tree passed clean. The implementation handback validates against the saved r1 schema (jsonschema 4.25.1) and its SHA-256 is f7732f1eff4264c0fbdbcb7f95051cc351974b96c4db2e7c6f695f58bf26b996. All 77 evidence-index entries exist and every recomputed SHA-256 matches exactly (0 mismatches)."
+    },
+    {
+      "id": "AC-8",
+      "status": "PASS",
+      "evidence": "git log base..head shows exactly one commit 54aca968fd16e428fe1378f6f401c068d17e5c4a with the exact subject; git diff --name-only lists only git/README.md, git/hooks/_travels.py, git/hooks/pre-push, git/tests/test_pre_push.py; origin/feat/33GOD-55-git-travel-guard-remote-ancestry == 54aca96. Review worktree is detached and clean (git status empty) before and after; implementation worktree /tmp/agents-board-cranker-55 is clean at 54aca96; candidate worktree clean. No bypass, force-push, or history rewrite observed or used by me; reviewer identity (kimi-code) is independent of the implementer (codex-33god-55-implementation-r2). All /tmp review artifacts (pycache prefix, redhook dir, AC-6 state snapshots) removed."
+    }
+  ],
+  "scope": {
+    "status": "PASS",
+    "expected_files": [
+      "git/README.md",
+      "git/hooks/_travels.py",
+      "git/hooks/pre-push",
+      "git/tests/test_pre_push.py"
+    ],
+    "actual_files": [
+      "git/README.md",
+      "git/hooks/_travels.py",
+      "git/hooks/pre-push",
+      "git/tests/test_pre_push.py"
+    ],
+    "forbidden_files": [],
+    "evidence": "git diff --name-only 36d3ed6..54aca96 returns exactly the four allowed paths; handback changed_files matches; forbidden_files_touched is empty and the forbidden-scope audit evidence hash verifies."
+  },
+  "exact_candidate": {
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "remote_base_sha": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "exit_code": 0,
+    "bypass_used": false,
+    "push_performed": false,
+    "ordered_parents_verified": true,
+    "candidate_head_unchanged": true,
+    "candidate_tree_clean": true,
+    "candidate_all_state_unchanged": true,
+    "baseline_all_state_unchanged": true,
+    "fork_ref_unchanged": true,
+    "origin_main_unchanged": true,
+    "pr_unchanged": true,
+    "evidence_hashes_unchanged": true
+  },
+  "tests": [
+    {
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-spec-r2-pycache python3 -m unittest discover -s git/tests -p 'test_*.py' -v",
+      "status": "PASS",
+      "summary": "Ran 25 tests in 2.965s, OK — every MergeTopologyTests case passes including clean merges, fail-closed bases, credentials, chaining, and multi-update coverage."
+    },
+    {
+      "command": "PYTHONPYCACHEPREFIX=/tmp/33god-55-spec-r2-pycache python3 -m compileall -q git/hooks/_travels.py git/tests",
+      "status": "PASS",
+      "summary": "Exit 0; both the hook helper and the test module compile."
+    },
+    {
+      "command": "bash -n git/hooks/pre-push git/hooks/_guard.sh",
+      "status": "PASS",
+      "summary": "Exit 0; hook and guard library parse."
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 git/hooks/_travels.py HEAD",
+      "status": "PASS",
+      "summary": "Exit 0; committed HEAD travels."
+    },
+    {
+      "command": "git diff --check 36d3ed6627b1ee1819952617d7d4ebfcebc2708f...54aca968fd16e428fe1378f6f401c068d17e5c4a",
+      "status": "PASS",
+      "summary": "Exit 0; no whitespace errors in the immutable range."
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS",
+      "summary": "Exit 0; review worktree diff clean."
+    },
+    {
+      "command": "Independent RED repro: base-revision pre-push + _travels.py (36d3ed6) in /tmp/redhook-55 run against committed MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent and test_new_ref_clean_merge_excludes_remote_known_parent",
+      "status": "PASS",
+      "summary": "Both tests failed under the old guard (old hook blocked the authentic clean merged topology) and pass at head — the RED topology proof is genuine, not self-fulfilling."
+    },
+    {
+      "command": "printf '%s\\n' 'refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8' | bash /tmp/agents-board-cranker-55-spec-review-r2/git/hooks/pre-push delorenj git@github.com:delorenj/hermes-agent.git (cwd=/tmp/hermes-board-cranker-50)",
+      "status": "PASS",
+      "summary": "Exit 0; '1 unpublished commit(s)'; full before/after state snapshots (HEAD, tree, refs, index, config, status, baseline worktree, fork ref, origin/main, PR #102409, blocker evidence hashes) byte-identical. No push performed, no bypass."
+    },
+    {
+      "command": "jsonschema.validate(handback, board-cranker-33god-55-implementation-r1.schema.json) + recompute all 77 evidence-index SHA-256 values",
+      "status": "PASS",
+      "summary": "Handback schema-valid; handback file SHA-256 f7732f1e...b996; 77/77 evidence files present with exact hash matches, 0 mismatches."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "INFO",
+      "category": "review-procedure-note",
+      "description": "The literal review-instruction command uses `printf %s '...\\n'`, and bash printf does not expand backslash escapes in %s arguments, so the hook receives a trailing literal backslash-n and correctly fails closed with 'invalid pre-push object identity' (exit 1). Re-running the identical contract with a real newline (printf '%s\\n', matching the handback's recorded command form) passes with exit 0. The fail-closed rejection of the malformed input is correct behavior per AC-4, not a defect.",
+      "evidence": "Observed directly: literal-\\n invocation exited 1 with 'git-travel: cannot scan what is leaving the machine: invalid pre-push object identity'; real-newline invocation exited 0 with '1 unpublished commit(s)'.",
+      "file": "git/hooks/_travels.py",
+      "line": 378,
+      "blocking": false
+    },
+    {
+      "severity": "INFO",
+      "category": "external-drift",
+      "description": "Live upstream origin/main (NousResearch/hermes-agent) advanced between implementation (b51c055a per the receipt) and this review (5ac75e91). This is external remote drift, not an implementation or review side effect: my before/after ls-remote values are identical, and the candidate's second parent b0ab2e1 remains reachable and remote-known. The hook's live-advertisement design (advertised_refs) is precisely what tolerates this.",
+      "evidence": "AC-6 before/after snapshots: origin_main '5ac75e91e2012497db474835a58e0139e89047cd refs/heads/main' in both; receipt exact-committed-before.json records b51c055a12220f8c7c18660e8599365012e19532.",
+      "file": "git/hooks/_travels.py",
+      "line": 321,
+      "blocking": false
+    }
+  ],
+  "source_tree_clean_after": true
+}

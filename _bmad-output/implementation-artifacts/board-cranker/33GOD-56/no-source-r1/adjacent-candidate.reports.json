@@ -1,0 +1,511 @@
+{
+  "collection_errors": [],
+  "exit_status": 0,
+  "reports": [
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_provider_request_overrides_preserved_without_service_tier",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_provider_request_overrides_preserved_without_service_tier",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_provider_request_overrides_preserved_without_service_tier",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_provider_request_overrides_merged_under_fast_mode",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_provider_request_overrides_merged_under_fast_mode",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_provider_request_overrides_merged_under_fast_mode",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_no_provider_overrides_yields_empty",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_no_provider_overrides_yields_empty",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_no_provider_overrides_yields_empty",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_resolve_runtime_agent_kwargs_carries_request_overrides",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_resolve_runtime_agent_kwargs_carries_request_overrides",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_resolve_runtime_agent_kwargs_carries_request_overrides",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_applies_request_overrides",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_applies_request_overrides",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_applies_request_overrides",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_clears_stale_request_overrides",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_clears_stale_request_overrides",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_clears_stale_request_overrides",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_absent_is_noop",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_absent_is_noop",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_request_overrides.py::test_session_override_absent_is_noop",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_turn_route_injects_priority_processing_without_changing_runtime",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_turn_route_injects_priority_processing_without_changing_runtime",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_turn_route_injects_priority_processing_without_changing_runtime",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_handle_fast_command_global_flag_persists_config",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_handle_fast_command_global_flag_persists_config",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_handle_fast_command_global_flag_persists_config",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_session_fast_override_beats_config_default",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_session_fast_override_beats_config_default",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_fast_command.py::test_session_fast_override_beats_config_default",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_resolve_runtime_agent_kwargs_preserves_request_overrides",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_resolve_runtime_agent_kwargs_preserves_request_overrides",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_resolve_runtime_agent_kwargs_preserves_request_overrides",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_turn_route_preserves_provider_request_overrides_without_fast_mode",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_turn_route_preserves_provider_request_overrides_without_fast_mode",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_turn_route_preserves_provider_request_overrides_without_fast_mode",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_turn_route_merges_fast_mode_with_provider_request_overrides",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_turn_route_merges_fast_mode_with_provider_request_overrides",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_turn_route_merges_fast_mode_with_provider_request_overrides",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_run_agent_preserves_provider_request_overrides_on_gateway_path",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_run_agent_preserves_provider_request_overrides_on_gateway_path",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_run_agent_preserves_provider_request_overrides_on_gateway_path",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_reused_agent_turn_merges_request_overrides_not_overwrite",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_reused_agent_turn_merges_request_overrides_not_overwrite",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_custom_provider_request_overrides.py::test_reused_agent_turn_merges_request_overrides_not_overwrite",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_override_persists_and_survives_restart",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_override_persists_and_survives_restart",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_override_persists_and_survives_restart",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_runner_rehydrates_override_after_restart",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_runner_rehydrates_override_after_restart",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_runner_rehydrates_override_after_restart",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_sanitize_model_override",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_sanitize_model_override",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_session_model_override_persistence.py::test_sanitize_model_override",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnContext::test_defaults_are_independent_containers",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnContext::test_defaults_are_independent_containers",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnContext::test_defaults_are_independent_containers",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnContext::test_shared_containers_visible_to_outer_scope",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnContext::test_shared_containers_visible_to_outer_scope",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnContext::test_shared_containers_visible_to_outer_scope",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_methods_exist_and_bind",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_methods_exist_and_bind",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_methods_exist_and_bind",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_send_progress_messages_no_queue_returns",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_send_progress_messages_no_queue_returns",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_send_progress_messages_no_queue_returns",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_send_progress_messages_no_adapter_returns",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_send_progress_messages_no_adapter_returns",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_send_progress_messages_no_adapter_returns",
+      "outcome": "passed",
+      "phase": "teardown"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_normal_response_preserves_compression_exhausted",
+      "outcome": "passed",
+      "phase": "setup"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_normal_response_preserves_compression_exhausted",
+      "outcome": "passed",
+      "phase": "call"
+    },
+    {
+      "error_class": null,
+      "error_message": null,
+      "nodeid": "tests/gateway/test_turn_context.py::TestTurnRunner::test_normal_response_preserves_compression_exhausted",
+      "outcome": "passed",
+      "phase": "teardown"
+    }
+  ],
+  "tests_collected": 24
+}

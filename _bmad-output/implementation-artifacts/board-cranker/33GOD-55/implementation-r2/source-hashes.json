@@ -1,0 +1,14 @@
+{
+  "git/hooks/pre-push": {
+    "base_sha256": "a52f088f6795993fd24c375356b28cff093d208a9e84fe429436cf43bc837f77",
+    "committed_sha256": "ddc23c60fa6c67bd20a06d51b76d35d7b30fa812a54dfa9c1ee52280fea179dc"
+  },
+  "git/hooks/_travels.py": {
+    "base_sha256": "8da91a0cd743a915043f574ff676caedccca9a5073fa145fe5c2db1d6f9491e1",
+    "committed_sha256": "d395ff645cf25eceabe7e99f82ac969981a4b82a260f7046087d2103acf3615d"
+  },
+  "git/hooks/_guard.sh": {
+    "base_sha256": "0209b5d8f764dd8d3b2f22eea02d7dd8040c3f2124764e4f8f9bf972f205c9aa",
+    "committed_sha256": "0209b5d8f764dd8d3b2f22eea02d7dd8040c3f2124764e4f8f9bf972f205c9aa"
+  }
+}

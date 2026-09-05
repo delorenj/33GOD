@@ -1,0 +1,12 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "git.tests.test_pre_push.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+    "-v"
+  ],
+  "exit_code": 1,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/red.log",
+  "sha256": "1813779c45ba72c603ce3bbebee7bb67a53947739a6f2dae472457b991c364b5"
+}

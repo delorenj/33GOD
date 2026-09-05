@@ -1,0 +1,9 @@
+{
+  "base_only_failures": [
+    "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+  ],
+  "branch_only_failures": [],
+  "error_class_changes": [],
+  "full_pairs_run": 1,
+  "status": "FAIL"
+}

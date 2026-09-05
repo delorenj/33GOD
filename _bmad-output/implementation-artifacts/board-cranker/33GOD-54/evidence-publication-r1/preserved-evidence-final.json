@@ -1,0 +1,927 @@
+[
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/green.log",
+    "preserved_unchanged": true,
+    "sha256": "0d27d89c5ee07b12752559c11f67d8c02baacc68b4a54904e9ea09c9ee6f4baa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/diff-scope.log",
+    "preserved_unchanged": true,
+    "sha256": "ddb3c30431af7312d6e00ad221050f72a7813911e9bdc2a6999d3931dfbe0df7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/focused.log",
+    "preserved_unchanged": true,
+    "sha256": "f999b6a7cb7b09c2ba6d833c1e4b57b4d9f00b32f0217a5c8871eaf929adda30"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/gateway-base.log",
+    "preserved_unchanged": true,
+    "sha256": "c26f86ae3e8321183578a51d65ec2c519a1f181f6f9a2dffea8ef168d1703fce"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/gateway-differential.json",
+    "preserved_unchanged": true,
+    "sha256": "8e552bb24f5f0c4e452d04b6a1f637d7f647be4e6ccaa867ee45acdc6ad0bcb6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/gateway-head.log",
+    "preserved_unchanged": true,
+    "sha256": "17c79eabcdbb4583b8e29684186f488320c71c6d3f5c9832bc5783efd74c7ca0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/git-verification.log",
+    "preserved_unchanged": true,
+    "sha256": "6112d83c4eec84ba84b5652d935e2ad4e2d39c6c52ea600ef9bb2cc925372bec"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/green.log",
+    "preserved_unchanged": true,
+    "sha256": "dacdcc98a6f820a04847028aacb2197e05cf32ad1ace934ecd7623b7f5748518"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/red.log",
+    "preserved_unchanged": true,
+    "sha256": "b07f958c265fc5936c62ec52258548e3b1e80c6b325796912cf7ba5c3d8041e0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/review-env-quality-r1.log",
+    "preserved_unchanged": true,
+    "sha256": "e9db0a15553e7ba9c05de4eb957fa9eb1b79790a1adf48a3a83be896b2a482b7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/review-env-quality-r2.log",
+    "preserved_unchanged": true,
+    "sha256": "e2319ac07e7f1643ee784a98b9b0e788c26e8f0b6bc18d2504d39d26750399e5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/review-env-spec-r1.log",
+    "preserved_unchanged": true,
+    "sha256": "8f4339d994acde51a9bef27bbe8fb6a62a954d6ecc166f831420b1d45b50d315"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/guard-fix/ruff.log",
+    "preserved_unchanged": true,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-diff-scope.log",
+    "preserved_unchanged": true,
+    "sha256": "f5013ea7c82dbbb60bbe99051e78c57838459aa24b6e7d5a322bbd629b9b164f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-focused.log",
+    "preserved_unchanged": true,
+    "sha256": "3cb49629950b8b86dd1dafb63fcc7b8a12a67f99caa2b34857ffc6613d260e73"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-gateway-base.log",
+    "preserved_unchanged": true,
+    "sha256": "d92697423546ca765a0bcc24cd183fd1c73d0791ba0b7ccbd38f4030fc317790"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-gateway-differential.json",
+    "preserved_unchanged": true,
+    "sha256": "eb6c28321cb16f6aa122f7f6a992e188aaccea7da34d64dc5c448c4ffce388fb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-gateway-head.log",
+    "preserved_unchanged": true,
+    "sha256": "ddfa5f0b5bd9db37a1d8e879a438323f322b4cf9212910b9a0b10e494e4e4cd3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-git-verification.log",
+    "preserved_unchanged": true,
+    "sha256": "ae789b6cefa2093adcfe4decec20088a0c33c7b41c465e59ec570e04e6bad13f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-restart-base-diagnostic.log",
+    "preserved_unchanged": true,
+    "sha256": "3b82c71d66c5be7b80b6fc47355038f580da431a3acfa2dbed571907ea238aa5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-restart-head-clean-env-diagnostic.log",
+    "preserved_unchanged": true,
+    "sha256": "71846e23680f75e7f9dff2bfdaa37e4490a17a988bb14e158d68d97711a7797d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-restart-head-diagnostic.log",
+    "preserved_unchanged": true,
+    "sha256": "93cde26a89c50bcd4f311c0cb8e45c235fef6e8f5856f6287f7ff29d65fcfaba"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/hermes-ruff.log",
+    "preserved_unchanged": true,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/adjacent-current.log",
+    "preserved_unchanged": true,
+    "sha256": "8066bc3f161ee2d0f71392aba7753365ff590accc4d0006bba801a446736ac07"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/adjacent.log",
+    "preserved_unchanged": true,
+    "sha256": "182cf0cf6b384cf3cdeae0f219a29bc95e8ef39cdb538d585b0e3d79a0305ad4"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/cleanup-regression.log",
+    "preserved_unchanged": true,
+    "sha256": "e453cca9d302e03fa400c70529ae705f118e49d736f4617f149a69cd89a51c4f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/compile-before-cleanup-fix.log",
+    "preserved_unchanged": true,
+    "sha256": "66f0d611a1d6c26d77450755388f1c6c40e5e11ccb7a3551d50d86e2fb545c8d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/compile.log",
+    "preserved_unchanged": true,
+    "sha256": "66f0d611a1d6c26d77450755388f1c6c40e5e11ccb7a3551d50d86e2fb545c8d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/focused-before-cleanup-fix.log",
+    "preserved_unchanged": true,
+    "sha256": "f990a71232dc1a5bbf48324b8a06b9ba0a7f1d5149b1da1adcefb4cab950a91b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/focused-environment-red.log",
+    "preserved_unchanged": true,
+    "sha256": "c1e82189fd8f83d0fae9f420d27dc9ace86a220a68e3beda76d76aedf167dc00"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/focused-precommit.log",
+    "preserved_unchanged": true,
+    "sha256": "8ac06eb7eac7682a1cb582eb3be442756a49f5486192c29582d2d767e2e8582b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/focused-sandbox-stall.log",
+    "preserved_unchanged": true,
+    "sha256": "8971f6d844af0a99a9e1f183395a631f6b962091bccd29785a84a2c18f28253d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/focused.log",
+    "preserved_unchanged": true,
+    "sha256": "8afec2adaa394a38d1209ec82268182dd91356f52ab453288052aa2334e9299f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/gateway-differential.json",
+    "preserved_unchanged": true,
+    "sha256": "55f9a3a8a5ef1ccc84db522ed20d330f50af40e496fda0b2e7a4c21daf034051"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/gateway-head-before-cleanup-fix.log",
+    "preserved_unchanged": true,
+    "sha256": "3084f54bfab7b16809422bc134d3801cc3fa4e0c2c48de4f28cebf87aab0201a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/gateway-head.log",
+    "preserved_unchanged": true,
+    "sha256": "7025ccb65f43026ed767b6bda655e37b212d2eb2de38fc9619fc81c74151f30e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/gateway-upstream-base.log",
+    "preserved_unchanged": true,
+    "sha256": "c7e4f9136a3d6beddc59b735db1c211ae4eb0b57af1073b4f62f7a8f3a813417"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/merge-red.log",
+    "preserved_unchanged": true,
+    "sha256": "3472959484ea4de8513036868d33d8afe09b05ea8b7865e5664c921dde29dd05"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/preflight.log",
+    "preserved_unchanged": true,
+    "sha256": "93711534e2ec3cb5499729a9a30e495afd4bf3d4ec9decd94fa02ac4ccec4613"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/resolution-scope.log",
+    "preserved_unchanged": true,
+    "sha256": "1d39d16429fe2cc5a4c067c93a405bf424cacf67716281dd51b366a05048565d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/ruff-before-cleanup-fix.log",
+    "preserved_unchanged": true,
+    "sha256": "025a6581f8474087cc14328687d20dade7084086bee5e5ef978927c0f9bbebc2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/ruff.log",
+    "preserved_unchanged": true,
+    "sha256": "025a6581f8474087cc14328687d20dade7084086bee5e5ef978927c0f9bbebc2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r2/unmerged-paths.log",
+    "preserved_unchanged": true,
+    "sha256": "a9cb1eeda4378cf62dfc16a089e48d175dd633f8c1b38dc4715a0229a4f1492d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/adjacent.log",
+    "preserved_unchanged": true,
+    "sha256": "0657308c88ee5e46f2702807456aa800d43b0c66e0364e8c2557396ec706e034"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/branch-only-baseline-rerun.log",
+    "preserved_unchanged": true,
+    "sha256": "10f99d34361d837d95ca0321241be50ecfa2ddb5d8489dbc062efa160cd85861"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/branch-only-head-rerun.log",
+    "preserved_unchanged": true,
+    "sha256": "51458165667c0f74fbf7477c6e4bf1bf9441300fa6ece40a8fb2f00cdf7db81b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/branch-only-rerun-summary.log",
+    "preserved_unchanged": true,
+    "sha256": "6e71a75e2f454e5c867f80ccf9e303389b2d4ead5d6d465dd4ab19b929bb5939"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/compile.log",
+    "preserved_unchanged": true,
+    "sha256": "b87434ff4d847571d1a3988d18182aa78c97fe26d446495477768f7de33e90cb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/diff-check.log",
+    "preserved_unchanged": true,
+    "sha256": "b87434ff4d847571d1a3988d18182aa78c97fe26d446495477768f7de33e90cb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/diff-scope.log",
+    "preserved_unchanged": true,
+    "sha256": "935785fbd2f86d1b2345331b03627760750199d89244017a70dc0d742f0d7c27"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/focused-sandbox-stall.log",
+    "preserved_unchanged": true,
+    "sha256": "8971f6d844af0a99a9e1f183395a631f6b962091bccd29785a84a2c18f28253d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/focused.log",
+    "preserved_unchanged": true,
+    "sha256": "034afb4c6998ad8b462d50a7bc6e6984505ce836649368520ec2cf378af8bd5d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/gateway-baseline.log",
+    "preserved_unchanged": true,
+    "sha256": "0756575eeef5342b8119a9ff9a21165d2c385e1fa87d3b45b6dac8991b9a2d24"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/gateway-differential-parse.log",
+    "preserved_unchanged": true,
+    "sha256": "705e1438b1416fedc5f04971861e4dcbdb1a5fcb7e3972245497b9c98c32faac"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/gateway-differential.json",
+    "preserved_unchanged": true,
+    "sha256": "383e0f80a5a93dab14c22edff6a018b1e64fe909505d1b349a9a2689b92563a1"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/gateway-head.log",
+    "preserved_unchanged": true,
+    "sha256": "f8e68adededf0a89b0bca04d43c9a7d164bc8fd662d2097ffaad26e0a19f0264"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/git-verification.log",
+    "preserved_unchanged": true,
+    "sha256": "6a8d2e069efd7aee8d7bf4dc0c0d46d50a63be620c6e2746b9e6dea71f943741"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/preflight.log",
+    "preserved_unchanged": true,
+    "sha256": "398234fc07d6c2ab0b8cb84a94a126217772136f825efafbc9a3569ba9de1ab1"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/preserved-evidence-recheck.log",
+    "preserved_unchanged": true,
+    "sha256": "16fd7762e34252556e72c1df696227a14a8c8dc8d6977e489fcb555c9764bace"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/prior-evidence-manifest.log",
+    "preserved_unchanged": true,
+    "sha256": "ca13838842a1a817dd7c5bf158c6cb712ec4882712bf4ba92503753f3d7fcffd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/review-env-spec-r1-baseline.log",
+    "preserved_unchanged": true,
+    "sha256": "67b591ba0c157e022b845f5e1e35b77bc91d2ae59f484cb4ad7d6569fcdbe41d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/review-env-spec-r1.log",
+    "preserved_unchanged": true,
+    "sha256": "d32053a5bb4bc296fb69e84dc80da5a9744e4189c7fd7d5f6fcc618a0fa1db27"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/review-env-spec-r2.log",
+    "preserved_unchanged": true,
+    "sha256": "d5f0951d442c6b824e881a59a5ffccb4eaab98a2186917838f10094cdc3a432c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/integration-conflict-r3/ruff.log",
+    "preserved_unchanged": true,
+    "sha256": "21b34e61963ff03d189fa56b905479bc01eabd9ecb3a18247b3e3f7d8966c2fc"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/red.log",
+    "preserved_unchanged": true,
+    "sha256": "7fe456453163f9369481543fdeef844717f891026b366570d61eb0132a8e0420"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/review-env-quality-r1.log",
+    "preserved_unchanged": true,
+    "sha256": "68428b2a4937bfd4833543b9b18507199e69b295a53e98faee6566c41d44ee18"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53/review-env-spec-r1.log",
+    "preserved_unchanged": true,
+    "sha256": "2d832a3e40299e936ca30eb856dfd6a817cbde3f1dc31813be6667bb792f5385"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.decomposition-to-54.json",
+    "preserved_unchanged": true,
+    "sha256": "f2467739613ee426407f53a9d1583ee767a424228f4d778d494640c4b68907a7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.implementation.json",
+    "preserved_unchanged": true,
+    "sha256": "70e446cf97d2e4a5073785ef8fa3529e83613a4389c8e6d3f13ff9f8ca56aa2f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-decision-projection.20260904T160457Z.json",
+    "preserved_unchanged": true,
+    "sha256": "d826742d2608e0caaeb9077986f6144df0b3f29cfae5558653af06049601e5d7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-decision-projection.20260904T164139Z.json",
+    "preserved_unchanged": true,
+    "sha256": "6c0b24a7e2905736d7e82bc92ad8f36b57019b168d35a8c625a5b7de8f8fc231"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r1.transport-failure.json",
+    "preserved_unchanged": true,
+    "sha256": "53d5339a6a4331a01a13ddfc47a98f8740c0a83cc8436bf5e6a440b740bb0f90"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r2.json",
+    "preserved_unchanged": true,
+    "sha256": "d7f76022ef01b94eab9b106f72821c94ba3dccd113f235fe07240fbfae7cd206"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r3.pre-execution-failure.json",
+    "preserved_unchanged": true,
+    "sha256": "49c029189b8d225ec3723872afb8ce0ccb2a5d130b71e5f4d80a478085f8c0e4"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r3.transport.json",
+    "preserved_unchanged": true,
+    "sha256": "165d9476b4fd941f9a957af219a18b6fe1971a36dd3169c37192e7a4e23c1fd2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260903T233526Z.json",
+    "preserved_unchanged": true,
+    "sha256": "c80ed78715f20b68247df0624e33f3a227dfc8ff880f053b3ca43b174f45660e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260903T235142Z.json",
+    "preserved_unchanged": true,
+    "sha256": "cc670e5c2a45000420d6b96c32466c33f341d92dc72fd74526207a01b7b0adbc"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T000518Z.json",
+    "preserved_unchanged": true,
+    "sha256": "0b3e3f1f2e2ec532b1d46786a37b53760bfdd18608b1c756fde6e32fe149eb47"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T002233Z.json",
+    "preserved_unchanged": true,
+    "sha256": "e98562e2ffb07e8977f204653dd3e4ab1e743c5fca8157ff0f81eedef5855232"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T003453Z.json",
+    "preserved_unchanged": true,
+    "sha256": "bd551b068a94cc8ec0bfab73b7a52f3e7a7920acc7e3b3d212e72e347f61724f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T004800Z.json",
+    "preserved_unchanged": true,
+    "sha256": "b611b49a723238db33bc318195569b5004186cc45ee61e1c1e7e54d52e02963d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T010104Z.json",
+    "preserved_unchanged": true,
+    "sha256": "edbc1ddfe77f8c18297cdf7a0dcaaf56a37eb3f4f223b3930e8cce01cf667f70"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T012240Z.json",
+    "preserved_unchanged": true,
+    "sha256": "c0d7a8927b3d1c5328205c57a9beec3be8315142c1c30fdec07e45014d3437f6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T013221Z.json",
+    "preserved_unchanged": true,
+    "sha256": "be8ec597439576d819cebf27c0ee11c5c2c3b75b5cc08091486b7f7a53d8479f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T014404Z.json",
+    "preserved_unchanged": true,
+    "sha256": "905da1199f823b949aeb8f9e3b658f8b80e46aeefa5afda8ca05820d3f6c0a8a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T015435Z.json",
+    "preserved_unchanged": true,
+    "sha256": "c5f439fac15222487114ddb9c8e4ea711a58f84605582744f13edc5e8fa16396"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T020450Z.json",
+    "preserved_unchanged": true,
+    "sha256": "abdc84ac2af3068d222e6f1f2fa3eb6f6ed8fde4dca9eb4d847a97828681ac40"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T021532Z.json",
+    "preserved_unchanged": true,
+    "sha256": "0b18950cdcf123c32156b4e850592412632aede070dc04b7ad21ff4b1d616bed"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T023426Z.json",
+    "preserved_unchanged": true,
+    "sha256": "d0137d3d28d3c6847664a69a84a92379789922ca126bae5f480821411fa7d4bb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T025108Z.json",
+    "preserved_unchanged": true,
+    "sha256": "84291d098f81a12598b97d02e6e6d53a7f8ecaac3ffe5d3df9afbce56cdbef5c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T030710Z.json",
+    "preserved_unchanged": true,
+    "sha256": "9b3255ea1a0a07eebb2bb3e51039e71090f6144f79d4089987c05fe5d71dee25"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T032516Z.json",
+    "preserved_unchanged": true,
+    "sha256": "bee2692e55aae2f504de64c4623eb5b4b9da2f2336724d315ddfdcfc18818765"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T033427Z.json",
+    "preserved_unchanged": true,
+    "sha256": "b19a35de4a093fb1367373af662b5e30265f3b6aba3fd32d7a2bf11c509f83a2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T034715Z.json",
+    "preserved_unchanged": true,
+    "sha256": "f3850b5d0e380fd0a8d5e12e4a7d19626aad7db5e3a1257489243166375be191"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T035833Z.json",
+    "preserved_unchanged": true,
+    "sha256": "28dc06b509369e5f53b3dabba5fea50c2174a6071db7148a78221f90a414159a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T040649Z.json",
+    "preserved_unchanged": true,
+    "sha256": "8b694909e9574e8f85fdae78a3e325e87e8ea1e6cee412ebba895075d6ae8e48"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T041835Z.json",
+    "preserved_unchanged": true,
+    "sha256": "668802a31f01e98a69e37eba1b6c8a550d4a08451aa7af75698c9f786cb7b050"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T043519Z.json",
+    "preserved_unchanged": true,
+    "sha256": "544e09c4502d619fa424f39a64cd272b1df99e7f8020d57119ff4b8337eafc9d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T044436Z.json",
+    "preserved_unchanged": true,
+    "sha256": "056b3bea42756bcd044bc39b467ca077554770df67de851919da57e97452a038"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T045628Z.json",
+    "preserved_unchanged": true,
+    "sha256": "e95409af38e3b3d4d53cf56733325b78f9732161917e1051eb2d4b3d751fdedf"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T0504Z.json",
+    "preserved_unchanged": true,
+    "sha256": "f9a400049abf1bace20cd608a3f53a8225a3b901b8a706f763045b548367f84d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T053518Z.json",
+    "preserved_unchanged": true,
+    "sha256": "3f4c9c9dbc1d2037e39e016a02241f5c52ddc0a801cbc4a5006e0be8a03d6ab2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T0544Z.json",
+    "preserved_unchanged": true,
+    "sha256": "e623732c903d64f76ac8f3cf1fbff20590dac2cb82fff2cf4bf2940c41f7f7aa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T060309Z.json",
+    "preserved_unchanged": true,
+    "sha256": "51f72d3369f26b56c48e1934a12a90c658e9c0af0d66507d8583dcb1166812bd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T061221Z.json",
+    "preserved_unchanged": true,
+    "sha256": "bb120f783070776ab56e764d0d89acc47606d70ff96985a9087f75bcf9cda306"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T062148Z.json",
+    "preserved_unchanged": true,
+    "sha256": "467e3d4b069befd095256616eaf51c650648dfa2301834e1b8ad2939f19e9cad"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T063514Z.json",
+    "preserved_unchanged": true,
+    "sha256": "38b018f3b33ca0c4039c5907f1d00c7b71003268812e1527706377f785c0ceab"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T064610Z.json",
+    "preserved_unchanged": true,
+    "sha256": "9cd415256ea58cc45931aeee40d7febe1e784f6b8401f6827b28aa6b22aeeb3a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T065732Z.json",
+    "preserved_unchanged": true,
+    "sha256": "fa5dd9b35dd6aff1cc9409f00fbb230c9ffb58b608314a5524513810ad7f5950"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T070744Z.json",
+    "preserved_unchanged": true,
+    "sha256": "231be7bff31787a19630f9033e8fce339646960b388deb469a88e5eb83877e56"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T071606Z.json",
+    "preserved_unchanged": true,
+    "sha256": "9b3a9d1f43eceacd7b30ad34a80332635cdf0389c3eac849420af936af07be1f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T072704Z.json",
+    "preserved_unchanged": true,
+    "sha256": "c5724137410824ca0467cbeccbc917c1c8243379ada485b613862f96e08394df"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T073719Z.json",
+    "preserved_unchanged": true,
+    "sha256": "82bce9e67116ae54ecc889be149668cfdb5ce3d6f9606cce1d9043891729354e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T074922Z.json",
+    "preserved_unchanged": true,
+    "sha256": "9282a08d180f4ebf1205d3320516ae70ce3710037f22e9d4423128fad798c256"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T081010Z.json",
+    "preserved_unchanged": true,
+    "sha256": "b9a9e3b8d76a17bc5711fe5049c2b7b349a02d51785f044221c19f4b9ba2d2c4"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T081836Z.json",
+    "preserved_unchanged": true,
+    "sha256": "204724438134360f522101f4a84ee75142121e1edce125e638c3f8d050d188fa"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T082724Z.json",
+    "preserved_unchanged": true,
+    "sha256": "1b2117cd8144d6543f08f25802ed8d949faa22cb7bd4198c6f364db5b493a462"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T084154Z.json",
+    "preserved_unchanged": true,
+    "sha256": "f50382ba86a4edbe517d00bc253c034d6c3b815a0873f813d16da27f59d9660b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T085428Z.json",
+    "preserved_unchanged": true,
+    "sha256": "da587b41c598ae1879e6d06c6594ad0757e03ddcf5c59384d96dc63f0420a0b5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T090151Z.json",
+    "preserved_unchanged": true,
+    "sha256": "0a9d816e42a9ca1f26f53cd67f307b6598d56755e9c072bd2afdc3536a096f48"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T090952Z.json",
+    "preserved_unchanged": true,
+    "sha256": "559013a30c46201abd4a5e7966ff3208ec4f37a94570127249038ca0572a9d0e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T091745Z.json",
+    "preserved_unchanged": true,
+    "sha256": "4ec6007384cf860ed43d65d21fc89b385fc3cd34aba11b712f207ad82adc560d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T093202Z.json",
+    "preserved_unchanged": true,
+    "sha256": "04770d221c659911fc11565e89bda0d6fadd2db5b093cfeecf2f31ce007e710f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T095032Z.json",
+    "preserved_unchanged": true,
+    "sha256": "5172aa91ec854beb84dd06075ca45c9210fa70865f773add97a3099abcc352ea"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T100201Z.json",
+    "preserved_unchanged": true,
+    "sha256": "43dba39e35681881da24758ecbc0baac74e6200f27f1b167db68d69eddba0546"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T101314Z.json",
+    "preserved_unchanged": true,
+    "sha256": "b375dbfcdcd4808f265b0285b69613fc77b915234a798d17e4bc5d4258f88c55"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T102250Z.json",
+    "preserved_unchanged": true,
+    "sha256": "5d1d92592c34a0d4539bd7a0f8c5079796579b1fe85972befb3559d667728634"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T103540Z.json",
+    "preserved_unchanged": true,
+    "sha256": "027c72109b562ad26b6e3797deeff53dc8bfa2c905b9448d10838885b06391b6"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T104751Z.json",
+    "preserved_unchanged": true,
+    "sha256": "c87f8d6275dcd65db3757fed17abe79f5d7a8ab9bdc2d4f114a621d5fcf2f201"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T105810Z.json",
+    "preserved_unchanged": true,
+    "sha256": "0639e6e70cb22246b62b46d3da75609da16405dd1ed9e8d445d222f9e12e94a0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T110715Z.json",
+    "preserved_unchanged": true,
+    "sha256": "d19c342ea9586e41168ca8d1b3bd58575ac4e60182c27cc5eea29ed71c653823"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T111559Z.json",
+    "preserved_unchanged": true,
+    "sha256": "51f9c4e05fb90c8f0ee029e1e97bf4200ea2d86aac94f0a03232c0f2e411b866"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T113506Z.json",
+    "preserved_unchanged": true,
+    "sha256": "2bad4a258a520f6b04874b1097592a794ad0d80c2c8e2db711d378061cc471a7"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T114529Z.json",
+    "preserved_unchanged": true,
+    "sha256": "0911e61fb81085e0be5a8e736c93524eda29dd58dc1c624c79b0660119f88435"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T115841Z.json",
+    "preserved_unchanged": true,
+    "sha256": "ed835e66ba1384f0a25cfe6863a57e8f607aa8dff6cf4082393e164e96d43acc"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T120948Z.json",
+    "preserved_unchanged": true,
+    "sha256": "1b5e1e223c6b19a7c412603b52a57044ce6cd6b429509fcb140d7967ff43596d"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T122128Z.json",
+    "preserved_unchanged": true,
+    "sha256": "e45b6747bf1d30f1aa53f014edc3e28dc0a4369ce514da8e67ed95a68c06b178"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T123138Z.json",
+    "preserved_unchanged": true,
+    "sha256": "f920f9b60f2eee44eb8c42d030455e31dd5d9dc9d2196138a231b3c0a63b014f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T124301Z.json",
+    "preserved_unchanged": true,
+    "sha256": "af8ab60daea0abe4e2445e11093e7021d7c460d6d1453216ca94e4ab5e6059ba"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T130156Z.json",
+    "preserved_unchanged": true,
+    "sha256": "e0c1837cdc190266c3ac8859869de3bbd607a3e227f9d54cc8b0f204f6cd0248"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T131444Z.json",
+    "preserved_unchanged": true,
+    "sha256": "d843d77370c4d6276d5df708929aafc122e2a2a21a4ca423ccb1e8d2144fafcf"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T131617Z.json",
+    "preserved_unchanged": true,
+    "sha256": "2928db44b302764ac762d7b66cc9f6eea868e522078341bac5eb5a680d3af1c0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T132549Z.json",
+    "preserved_unchanged": true,
+    "sha256": "0590f68cfbf87f2474da215786dff3edf0eb1899e36a3e21c43494a77ec7beb5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T134620Z.json",
+    "preserved_unchanged": true,
+    "sha256": "17b4b272afd0e3708c629a9bd95ec3022993f563bc8f88270e00a8c847cb8db2"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T140107Z.json",
+    "preserved_unchanged": true,
+    "sha256": "bd3d3a0839e54207d1024c881c0bf03b7b2680c009791146d47ad866ac1a5461"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T141305Z.json",
+    "preserved_unchanged": true,
+    "sha256": "9c74f6ebc8f3a0f99c888b2f5083a761fb1fade80346a89cee221bc548eac17e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T142218Z.json",
+    "preserved_unchanged": true,
+    "sha256": "6fee3fca966fd48f6ea1583309e05e61a276428d41f23759f728430bf138455f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T143118Z.json",
+    "preserved_unchanged": true,
+    "sha256": "dce870916e8206d15845360d40a8a0384a6b9ce837a2f8d7c861552db0d2aeb1"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T144136Z.json",
+    "preserved_unchanged": true,
+    "sha256": "218601f0cb71d8defcf580e7eab7d09afadb860b267a807ce129eceb6f17f00e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T145118Z.json",
+    "preserved_unchanged": true,
+    "sha256": "f0d33df0e31c88ea9adcf73e6d4b85714bc7407c932772f6e839d2b4fe2b78b4"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T150750Z.json",
+    "preserved_unchanged": true,
+    "sha256": "bd9f7f870ecc168e1782c68cbbe50c449f7819d61b5d13dc99f75237f91adbe5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T152147Z.json",
+    "preserved_unchanged": true,
+    "sha256": "a8a15abcf7e425f95769cd859733bca561f605d16825ba049aac9b4f6b0b43a4"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T153242Z.json",
+    "preserved_unchanged": true,
+    "sha256": "122cb072ea8011204dfc0d99866670dc245cb33ade6709adf0925cd1b9f3787c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T154451Z.json",
+    "preserved_unchanged": true,
+    "sha256": "867e9df8f7a78ea0bd5633367a47f3997e8cab44db55d6f3a3d0ff24b86d8412"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T161503Z.json",
+    "preserved_unchanged": true,
+    "sha256": "055d0cf5a88f2003f92723d255cc71a8ac43b4345dc5ef5d8f444c77b9721e20"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T162427Z.json",
+    "preserved_unchanged": true,
+    "sha256": "5007cd5ada7405021f6998a52b770524eec561478fe39f7f9db4caff305e7890"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T165121Z.json",
+    "preserved_unchanged": true,
+    "sha256": "3e06a46aa8cd8fb1004d3987a23e8b11cecaf59041a9b27a14844fe1f5c1c5ba"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T170103Z.json",
+    "preserved_unchanged": true,
+    "sha256": "a75d529fb2c92e142e1829b1ccf0274b56e0ee26fbf2c61f578b05533918e26e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T171805Z.json",
+    "preserved_unchanged": true,
+    "sha256": "45285a740f09d071866aebe3ae43387785d1ba36a4103b5c881e386c4a20501b"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T172755Z.json",
+    "preserved_unchanged": true,
+    "sha256": "7704b8a534f8ab810769d4cba0d8a8789805e9cbad0a705a2c8c3df5035e38e8"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T173836Z.json",
+    "preserved_unchanged": true,
+    "sha256": "6949b4c23a9013c4b12a71cc15ca00a0920626a7ad5494bed72fa053d25c1e0c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T175003Z.json",
+    "preserved_unchanged": true,
+    "sha256": "3ce7d0101381ece173512fdf4336654bbb6aab353a997fe22f020764b14398e9"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T180629Z.json",
+    "preserved_unchanged": true,
+    "sha256": "77bec07bdff77d41b3a88b93e9fd053d0d4fce2c92a94d7498284756827f190c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T181754Z.json",
+    "preserved_unchanged": true,
+    "sha256": "3985b42b06a242564d474f766436e5c8a89214342f71e16746584583f561602e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-transport-probe.20260904T182813Z.json",
+    "preserved_unchanged": true,
+    "sha256": "aef648c61daff7bc13f9cfe1f67b6bf5a24901b969216b0312cd629008d1b424"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.spec-review.r1.json",
+    "preserved_unchanged": true,
+    "sha256": "233e3f99e2997289ba64fbc54bed9976a6ba65f05b728a8ee4bcc9cd48cc65eb"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.spec-review.r1.transport.json",
+    "preserved_unchanged": true,
+    "sha256": "45a171340202ed23e7297f25a0a7b18c901b4efbcb8f33648460ad15c072ca80"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.implementation.json",
+    "preserved_unchanged": true,
+    "sha256": "6ba914e059e3188e2331d46b71d60f639ce841d08056c363f8c94dbc687bb47c"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r1.pre-execution-failure.json",
+    "preserved_unchanged": true,
+    "sha256": "147676699df74784ae6b98c4a80ed15b02b5e4e9eee46ed13f0e24b44769fec4"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r2.dispatch.json",
+    "preserved_unchanged": true,
+    "sha256": "da5fa862091dd6f1b3893c55f8a8a6eb97b3b4c155d4bf53c67be858b75959c0"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r2.implementation.json",
+    "preserved_unchanged": true,
+    "sha256": "66b1737f603e8eb67a7ad0cc63200c648dcbcacf0b2a1aecb3f36a833167b2b5"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r2.timeout-cleanup.json",
+    "preserved_unchanged": true,
+    "sha256": "fc9b68df863948470ef8a06b2c25072c825e01699fb54d5d244e0b5aa81f4448"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r3.controller-reconciliation.json",
+    "preserved_unchanged": true,
+    "sha256": "8533abf3616dc945edea3c8885079271a307b2d065d85fb729155370162d9a2e"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict-r3.dispatch.json",
+    "preserved_unchanged": true,
+    "sha256": "a3807eceab2909f641e92164eb2a5b51f8e8e8df3a03213d8264f60898d091a3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict.spec-review.r1.dispatch.json",
+    "preserved_unchanged": true,
+    "sha256": "e19c38735d161978ea682fef84979c561c733fbebf549819e0d05afcacdbafc3"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict.spec-review.r1.timeout.json",
+    "preserved_unchanged": true,
+    "sha256": "dcd0db31b22441fcfe3a824919f0a2b603778d85586c63952f0b5ee64ff4ce16"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict.spec-review.r2.pre-execution-failure.json",
+    "preserved_unchanged": true,
+    "sha256": "9f8bcf13dacc4b18bc16956bfdf87d8ee3f0f702a4629b591483dc271300e02a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration-conflict.spec-review.r2.transport-failure.json",
+    "preserved_unchanged": true,
+    "sha256": "215bb912f972bed928ea5ad5aecad8a3596c1cfa5148d952aebc7414159ea538"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.integration.json",
+    "preserved_unchanged": true,
+    "sha256": "6915a79d0d7ad431943c64471e1e1295dfc33ac6113f0f8db2437223a11d148f"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.quality-review.json",
+    "preserved_unchanged": true,
+    "sha256": "716d412593c6d6e20941e57c85027bff973743a47570d9e14be8d52d39d96052"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.quality-review.r1.transport-failure.json",
+    "preserved_unchanged": true,
+    "sha256": "a57c80cd87d11930e4f7016d7aa84a6c97965af235b1fb5da33d5324038ce75a"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.quality-review.r2.transport.json",
+    "preserved_unchanged": true,
+    "sha256": "d24ab346704e01510944775ad53f82194f04b8777d28fe33b4ff8da5647fe279"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.spec-review.json",
+    "preserved_unchanged": true,
+    "sha256": "ed85d2eae9b6d945356a19122c96c4511455c5d981622f079bb320d0257ea8fd"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.spec-review.r2.json",
+    "preserved_unchanged": true,
+    "sha256": "17c797282d2493bb6110873813dc4c2db043f203057e8f68136d3e855e7672a8"
+  },
+  {
+    "path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.spec-review.r2.transport.json",
+    "preserved_unchanged": true,
+    "sha256": "bacefe243a90c4a811ee11f8ee75aa97c24ce7dab1420f642721b7961d173a06"
+  }
+]

@@ -1,0 +1,2802 @@
+[
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_turn_request_overrides.py",
+      "tests/gateway/test_fast_command.py",
+      "tests/gateway/test_custom_provider_request_overrides.py",
+      "tests/gateway/test_session_model_override_persistence.py",
+      "tests/gateway/test_turn_context.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_turn_request_overrides.py tests/gateway/test_fast_command.py tests/gateway/test_custom_provider_request_overrides.py tests/gateway/test_session_model_override_persistence.py tests/gateway/test_turn_context.py",
+    "completed": "2026-09-05T11:36:33Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/adjacent-head/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/adjacent-head",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/adjacent-head.log",
+    "name": "adjacent-head",
+    "sha256": "571ab227b2e828d4b1d9bd62acb33c7828bef303e734890bb9be8ee4b4fc3892",
+    "started": "2026-09-05T11:36:32Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:55:47Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-head-final.log",
+    "name": "agents-primary-head-final",
+    "sha256": "422959aa168b0cdbb2f0ab3f3f5ec2037776b290eeb33a6bdca91dee06ec854e",
+    "started": "2026-09-05T11:55:47Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-head-start.log",
+    "name": "agents-primary-head-start",
+    "sha256": "daee04c23f5c52cf861a0dacc701f911c2821a8edfef0c17ccf44d6d92517322",
+    "started": "2026-09-05T11:28:20Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index",
+    "completed": "2026-09-05T11:55:47Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-index-path-final.log",
+    "name": "agents-primary-index-path-final",
+    "sha256": "fe40f5f5da6eaf116a9e1fe168ea33c7df8023d5c84ed69d7ee3c1b62cbf0703",
+    "started": "2026-09-05T11:55:47Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-index-path-start.log",
+    "name": "agents-primary-index-path-start",
+    "sha256": "4e982ae485e07fc2c2cf3856905886924727d18c4380a68cdd357a380e7dc424",
+    "started": "2026-09-05T11:28:20Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard"
+    ],
+    "attempt": 1,
+    "command": "git ls-files -z --cached --others --exclude-standard",
+    "completed": "2026-09-05T11:55:47Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-paths-final.log",
+    "name": "agents-primary-paths-final",
+    "sha256": "dc8b48818579a1fa41801b2e46329e2596bf81a8b5ff020080619b76dad86912",
+    "started": "2026-09-05T11:55:47Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard"
+    ],
+    "attempt": 1,
+    "command": "git ls-files -z --cached --others --exclude-standard",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-paths-start.log",
+    "name": "agents-primary-paths-start",
+    "sha256": "38384fd301ff5ff19125857971e37aef27d0f17d399e57eb3d24106c4cebabfd",
+    "started": "2026-09-05T11:28:20Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git --no-optional-locks status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:55:47Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-status-final.log",
+    "name": "agents-primary-status-final",
+    "sha256": "99ea911f315c98fc2750c5529ea21ab5dca1dd46fd6997b88509869dd368776c",
+    "started": "2026-09-05T11:55:47Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git --no-optional-locks status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-status-start.log",
+    "name": "agents-primary-status-start",
+    "sha256": "f5ce5ad22b8f36b6bfa6369dd818aa0b740a8198873afd7ff6cb515ed5acbcd7",
+    "started": "2026-09-05T11:28:20Z",
+    "worktree": "/home/delorenj/.agents"
+  },
+  {
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "attempt": 1,
+    "command": "git branch --show-current",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-branch-final.log",
+    "name": "base-branch-final",
+    "sha256": "a53e2a9647864a099c2e94c725d766fb715575e93e145e31e48344ae6fd092b6",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "attempt": 1,
+    "command": "git branch --show-current",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-branch-preflight.log",
+    "name": "base-branch-preflight",
+    "sha256": "bfc1035f307e553676c872658ba1a254ee56bfa7caefab2b6201f679d96d7796",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "check-ignore",
+      "--no-index",
+      "gateway/__pycache__/run.cpython-311.pyc",
+      "tests/gateway/__pycache__/test_contractor_turns.cpython-311.pyc",
+      ".pytest_cache/CACHEDIR.TAG",
+      ".ruff_cache/CACHEDIR.TAG"
+    ],
+    "attempt": 1,
+    "command": "git check-ignore --no-index gateway/__pycache__/run.cpython-311.pyc tests/gateway/__pycache__/test_contractor_turns.cpython-311.pyc .pytest_cache/CACHEDIR.TAG .ruff_cache/CACHEDIR.TAG",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-cache-ignore.log",
+    "name": "base-cache-ignore",
+    "sha256": "ce16f857013c1f2f0f4d8d38c435aa6a019e94baec767049ef7043582d39512a",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-clean-final.log",
+    "name": "base-clean-final",
+    "sha256": "6b473a7a2f2e1dc4c08e76bf6e01bad5be1a94d779f2f638f3b9d518c0d2f038",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-clean-preflight.log",
+    "name": "base-clean-preflight",
+    "sha256": "c74e982a3b1a9e089d6642b131c05d9ec7b099e349b6961e3c4e481e0e87345d",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-common-dir"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-common-dir",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-common-dir-preflight.log",
+    "name": "base-common-dir-preflight",
+    "sha256": "c9ed8f7b3cf1a8c2282ad971e3ed64a529e3633eefb6ca56ef562e919c1438f5",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "BISECT_START"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-BISECT_START-final.log",
+    "name": "base-marker-BISECT_START-final",
+    "sha256": "8cdc95a4eac65d91efb9573f486306e4944e6840fbabb6bc25b5689cac109e76",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "CHERRY_PICK_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-CHERRY_PICK_HEAD-final.log",
+    "name": "base-marker-CHERRY_PICK_HEAD-final",
+    "sha256": "f038da301426dcb9aaec9165bed648212140b4d117c1af8ffc678c6be2225abf",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "MERGE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path MERGE_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-MERGE_HEAD-final.log",
+    "name": "base-marker-MERGE_HEAD-final",
+    "sha256": "9141f9cbf89a2ed847894e80e5ddb9410f59d4cd24513d0a9bc6fc15e5574a36",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REBASE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REBASE_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-REBASE_HEAD-final.log",
+    "name": "base-marker-REBASE_HEAD-final",
+    "sha256": "880716c6a6b3873142ee17fb5a30569990071ce88c18881a5491c2032bd20c61",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REVERT_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REVERT_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-REVERT_HEAD-final.log",
+    "name": "base-marker-REVERT_HEAD-final",
+    "sha256": "54e6de55b72d54c2089302aaecd68dbd39dbb85c888697c1e8e89d1b13920d69",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index.lock"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index.lock",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-index.lock-final.log",
+    "name": "base-marker-index.lock-final",
+    "sha256": "cffe142073d7d7a1283797690a1f622655ff630dde575f93befd64d3fbb73a85",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "BISECT_START"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-BISECT_START.log",
+    "name": "base-marker-path-BISECT_START",
+    "sha256": "787b0e876df0547dd7fc93ed7d498eba97022db621cbecf8e12d8dea22c724cf",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "CHERRY_PICK_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-CHERRY_PICK_HEAD.log",
+    "name": "base-marker-path-CHERRY_PICK_HEAD",
+    "sha256": "02c5dc8fdf7a3eadb3ac61a2daf2c179c0b6cc38ef9f2ced8481b80356311fcd",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "MERGE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path MERGE_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-MERGE_HEAD.log",
+    "name": "base-marker-path-MERGE_HEAD",
+    "sha256": "80c0b9b164240f9da9c124cddad8606438d543fd6f0a5017750bb2a4a37da3b7",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REBASE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REBASE_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-REBASE_HEAD.log",
+    "name": "base-marker-path-REBASE_HEAD",
+    "sha256": "af22a7c1b85953c4cd20c80e2da4dffae543f5cb2e97f0b6985d8b329655dec2",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REVERT_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REVERT_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-REVERT_HEAD.log",
+    "name": "base-marker-path-REVERT_HEAD",
+    "sha256": "7f4846466c5558cb0c915e5bfe13f9377083b2cff71c0db8c758e22552713b26",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index.lock"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index.lock",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-index.lock.log",
+    "name": "base-marker-path-index.lock",
+    "sha256": "95e4eae600f4f4b14f19805162abf1d2a8153f8de285bffad1f57826b5403d96",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-apply"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-rebase-apply.log",
+    "name": "base-marker-path-rebase-apply",
+    "sha256": "832aa04ba3dfb2407c2821dc380d05ce28190a06b9f33064ce96f43cc7bb1802",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-merge"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-rebase-merge.log",
+    "name": "base-marker-path-rebase-merge",
+    "sha256": "10b1a280e562f918158396e5353999a2bb78d3875d2a1ca909cc808eff1fbea2",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "sequencer"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path sequencer",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-path-sequencer.log",
+    "name": "base-marker-path-sequencer",
+    "sha256": "412997491b30b992224d95deb749a2af4d84881acc74a165993cef5d7b153d0d",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-apply"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-rebase-apply-final.log",
+    "name": "base-marker-rebase-apply-final",
+    "sha256": "d95e42d1c9e2cf1c919903592386d1b97e358b32eabf2aae3a61c64240e15faa",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-merge"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-rebase-merge-final.log",
+    "name": "base-marker-rebase-merge-final",
+    "sha256": "e07f295fcdf42cae3ec1a1cbd3337d16a72eb34de9259311345dc24c14a1938b",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "sequencer"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path sequencer",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-marker-sequencer-final.log",
+    "name": "base-marker-sequencer-final",
+    "sha256": "1bd0c67584ed1052da6d1f5b9cc0a67cffee49436a0c66e402ff2b6490d51602",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/diagnose_base_only.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/diagnose_base_only.py",
+    "completed": "2026-09-05T11:55:17Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-only-diagnostic-workflow.log",
+    "name": "base-only-diagnostic-workflow",
+    "sha256": "16267d8c26b82ac0fac9e07e02204cc15b946d050665f8150d4d81c5ce35d2f3",
+    "started": "2026-09-05T11:55:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-sha-final.log",
+    "name": "base-sha-final",
+    "sha256": "2d5561fb4abf80f1b27f0cc2dbdd692905956bac991e39b05e78b95d721524c5",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/base-sha-preflight.log",
+    "name": "base-sha-preflight",
+    "sha256": "6ea940225cf91f5b88c4ff1563a5e3614509c63dd59b17e80edd7f88bc6707fa",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/run_checks_host.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/run_checks_host.py",
+    "completed": "2026-09-05T11:52:21Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/checks-host-workflow.log",
+    "name": "checks-host-workflow",
+    "sha256": "f499f66469b3dd0e9e175025ec9ae08380cfbf0d133b5baab3ebb52b989c5eff",
+    "started": "2026-09-05T11:36:28Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/run_checks.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/run_checks.py",
+    "completed": "2026-09-05T11:35:16Z",
+    "exit_code": 1,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/checks-workflow.log",
+    "name": "checks-workflow",
+    "sha256": "fd012cf2132821860e99f8d570e2fa7c08f95810feb17108d7ddaf740a23f029",
+    "started": "2026-09-05T11:31:06Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "py_compile",
+      "gateway/platforms/base.py",
+      "gateway/run.py",
+      "tests/gateway/test_contractor_turns.py",
+      "tests/gateway/test_session_split_brain_11016.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m py_compile gateway/platforms/base.py gateway/run.py tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+    "completed": "2026-09-05T11:36:33Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/compile-head/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/compile-head",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/compile-head.log",
+    "name": "compile-head",
+    "sha256": "8d3c808b529b54782dade534346fdd00b6bac6a4f88398ccd602ade233a5b286",
+    "started": "2026-09-05T11:36:33Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+    ],
+    "attempt": 1,
+    "command": "git diff --check b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "completed": "2026-09-05T11:36:33Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/diff-check-head/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/diff-check-head",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/diff-check-head.log",
+    "name": "diff-check-head",
+    "sha256": "98a46a4c9a3e1dccb597a1c6264f152fe630c1fe7bd358197919158d55c45377",
+    "started": "2026-09-05T11:36:33Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/final_audit.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/final_audit.py",
+    "completed": "2026-09-05T11:55:47Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/final-audit-workflow.log",
+    "name": "final-audit-workflow",
+    "sha256": "8f1bbd0ebf45b3fb7032ecda8dac9176fd2f5592c7a335e4dfd408c5fe3dcec6",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_contractor_turns.py",
+      "tests/gateway/test_session_split_brain_11016.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+    "completed": "2026-09-05T11:36:32Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/focused-head-host/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/focused-head-host",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/focused-head-host.log",
+    "name": "focused-head-host",
+    "sha256": "ce74c6449e32dde0550b8cea14d606d5b8eb38989c64a9da7f31d70c4881c9f6",
+    "started": "2026-09-05T11:36:28Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_contractor_turns.py",
+      "tests/gateway/test_session_split_brain_11016.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+    "completed": "2026-09-05T11:35:16Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/focused-head/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/focused-head",
+      "TZ": "UTC"
+    },
+    "exit_code": 2,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/focused-head.log",
+    "name": "focused-head",
+    "sha256": "ea2f0ed1a29b6a2389a6584b310eca307abc210a7c052d972ec1dd2ac02f9d3c",
+    "started": "2026-09-05T11:31:06Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "get-url",
+      "--push",
+      "delorenj"
+    ],
+    "attempt": 1,
+    "command": "git remote get-url --push delorenj",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/fork-url.log",
+    "name": "fork-url",
+    "sha256": "7f6dbcc6249cc67327d30eab157c0907181e46e76761cee30ae97b73e43711a7",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway",
+    "completed": "2026-09-05T11:52:21Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/gateway-base-1/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/gateway-base-1",
+      "TZ": "UTC"
+    },
+    "exit_code": 1,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/gateway-base-1.log",
+    "name": "gateway-base-1",
+    "sha256": "954c3d60cec645a3c3e2fa4fc196b2b94c09b9619fd89e246bcddefbf0620a02",
+    "started": "2026-09-05T11:36:36Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway",
+    "completed": "2026-09-05T11:52:21Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/gateway-head-1/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/gateway-head-1",
+      "TZ": "UTC"
+    },
+    "exit_code": 1,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/gateway-head-1.log",
+    "name": "gateway-head-1",
+    "sha256": "816ef437e711b29176cc5dac82407129db266e9b2957dabd586633452dbfc5a4",
+    "started": "2026-09-05T11:36:36Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "--show-origin",
+      "--get",
+      "core.hooksPath"
+    ],
+    "attempt": 1,
+    "command": "git config --show-origin --get core.hooksPath",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/global-hooks-path.log",
+    "name": "global-hooks-path",
+    "sha256": "2c9bf97a3ac3938b4f00d8be4ec21222bc21df5f5e170a5d3c2e749023bfd29c",
+    "started": "2026-09-05T11:28:20Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "attempt": 1,
+    "command": "git branch --show-current",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-branch-final.log",
+    "name": "guard-branch-final",
+    "sha256": "4bb98bb09c6be96f9a070afe7adcbcf7f1da7b18ef7a332ca4908720ee028c2a",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "attempt": 1,
+    "command": "git branch --show-current",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-branch-preflight.log",
+    "name": "guard-branch-preflight",
+    "sha256": "dae179ba72b3a0152a5cc9d3c62848baa44436fadacf5b122aee2e4892fe18d5",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-clean-final.log",
+    "name": "guard-clean-final",
+    "sha256": "bc915265c6020755f0b90c0d8448043757123c0896ed8b74df9ee595c6fd8dc9",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-clean-preflight.log",
+    "name": "guard-clean-preflight",
+    "sha256": "8f1f7d84c22df77374b66fc7ddd2b36dd04c31c93faa15cfd4c2887cd0407986",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "sha256sum",
+      "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_travels.py"
+    ],
+    "attempt": 1,
+    "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_travels.py",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-hash-_travels.py-final.log",
+    "name": "guard-hash-_travels.py-final",
+    "sha256": "8c40e257c5cb7d34809478cb47baa15995de3721d061ab3c0b68b4bc0820a5f0",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "sha256sum",
+      "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_travels.py"
+    ],
+    "attempt": 1,
+    "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_travels.py",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-hash-_travels.py-preflight.log",
+    "name": "guard-hash-_travels.py-preflight",
+    "sha256": "baa013e147d2db839d685f574930acbcae8905b7aba0f8fdc81c856b98574b93",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "sha256sum",
+      "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/pre-push"
+    ],
+    "attempt": 1,
+    "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/pre-push",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-hash-pre-push-final.log",
+    "name": "guard-hash-pre-push-final",
+    "sha256": "629075c140d6fd36c51b6b86d6e477cab31211689ca432712bd9d14e03eda385",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "sha256sum",
+      "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/pre-push"
+    ],
+    "attempt": 1,
+    "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/pre-push",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-hash-pre-push-preflight.log",
+    "name": "guard-hash-pre-push-preflight",
+    "sha256": "e816d01455f18e873a1adf53d066920ae8e5ac7521d74ff53ac695b7533ea897",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "BISECT_START"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-BISECT_START-final.log",
+    "name": "guard-marker-BISECT_START-final",
+    "sha256": "14e0bb36e403b84c2952f530355f5e78a561d7a4bdbfdc6a478f12298a45fd0a",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "BISECT_START"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-BISECT_START-preflight.log",
+    "name": "guard-marker-BISECT_START-preflight",
+    "sha256": "984b230ec4c93a2c62bfbbe4f77e56bc62999d21ed65f8399a4c483ec45499ff",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "CHERRY_PICK_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-CHERRY_PICK_HEAD-final.log",
+    "name": "guard-marker-CHERRY_PICK_HEAD-final",
+    "sha256": "dde7dc52f078cde7b016e0f86542eed86274ffcddc423361cc0e46dba4d3f033",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "CHERRY_PICK_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-CHERRY_PICK_HEAD-preflight.log",
+    "name": "guard-marker-CHERRY_PICK_HEAD-preflight",
+    "sha256": "df2e2f767e64dbf0fed17d07e15447d733b7354e0f228488e9dbba5884be3b7d",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "MERGE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path MERGE_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-MERGE_HEAD-final.log",
+    "name": "guard-marker-MERGE_HEAD-final",
+    "sha256": "7fc8e480ae7da29c7dbbd39300b9a3b911d90d523e7e904957eebdad38da708f",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "MERGE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path MERGE_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-MERGE_HEAD-preflight.log",
+    "name": "guard-marker-MERGE_HEAD-preflight",
+    "sha256": "035c60d2b5ed4d2b0fab049f774c40abfdf9b403151ee7dda3e0f5497ef053c3",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REBASE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REBASE_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-REBASE_HEAD-final.log",
+    "name": "guard-marker-REBASE_HEAD-final",
+    "sha256": "cf910313ff1e6cdf15f4156f6d7ea12cea9a8c34109adec7b9f18913533a5787",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REBASE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REBASE_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-REBASE_HEAD-preflight.log",
+    "name": "guard-marker-REBASE_HEAD-preflight",
+    "sha256": "9f9c32a96955a4d6ca1b0b257dc2155c3cd4a53e53b83339175ff9025f558fc1",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REVERT_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REVERT_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-REVERT_HEAD-final.log",
+    "name": "guard-marker-REVERT_HEAD-final",
+    "sha256": "75f813f02bafe2ff18300da2af65018ca42d3d0cf6a4224ec7c8984446f98cc9",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REVERT_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REVERT_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-REVERT_HEAD-preflight.log",
+    "name": "guard-marker-REVERT_HEAD-preflight",
+    "sha256": "c7f8cd0d346ea46936865ab942cd0c0c56381ac2803181954993a7d08836ba7a",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index.lock"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index.lock",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-index.lock-final.log",
+    "name": "guard-marker-index.lock-final",
+    "sha256": "b0e36256b9d8c83c7602785a133054dd26f7974322893706231c0183429767d9",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index.lock"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index.lock",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-index.lock-preflight.log",
+    "name": "guard-marker-index.lock-preflight",
+    "sha256": "67dc9614c4ec6004a68932ad851eb21a6cb8fba83fd05876961b012d4b4c3f6c",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-apply"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-rebase-apply-final.log",
+    "name": "guard-marker-rebase-apply-final",
+    "sha256": "b14226145eea5acb7ceaf5b60b03c5b80397885bf7e45a1daeff7e3eb71dca03",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-apply"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-rebase-apply-preflight.log",
+    "name": "guard-marker-rebase-apply-preflight",
+    "sha256": "6828e5d2caadaa587e2180e20df33c0728aa558ddbea70c5dc69f7aeaf1ff9ca",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-merge"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-rebase-merge-final.log",
+    "name": "guard-marker-rebase-merge-final",
+    "sha256": "06d2720e52150a2fa36d0a991aab4719e98ea27102ea94960ad5ebd664aaf95d",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-merge"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-rebase-merge-preflight.log",
+    "name": "guard-marker-rebase-merge-preflight",
+    "sha256": "6bc68813821158b334337c67fc113a398e62ee3d18ab0d89d5c0b5d2985c1be6",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "sequencer"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path sequencer",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-sequencer-final.log",
+    "name": "guard-marker-sequencer-final",
+    "sha256": "c33242cbff6c45fa13f5a92949cad440c02b7dfee21f26df685d4c628e8aa457",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "sequencer"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path sequencer",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-marker-sequencer-preflight.log",
+    "name": "guard-marker-sequencer-preflight",
+    "sha256": "df501c934f7e1cb493f6456963a07a48088d0d6cc711b3e60fb731c5ed9daedc",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "-s",
+      "--format=%P",
+      "02481c8df4cedbdc11081fe41fcf01859a399566"
+    ],
+    "attempt": 1,
+    "command": "git show -s --format=%P 02481c8df4cedbdc11081fe41fcf01859a399566",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-parents-final.log",
+    "name": "guard-parents-final",
+    "sha256": "6d49a461d01a601dc928987bdd567fd994a61549472e1866e59cfd04019682d5",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "-s",
+      "--format=%P",
+      "02481c8df4cedbdc11081fe41fcf01859a399566"
+    ],
+    "attempt": 1,
+    "command": "git show -s --format=%P 02481c8df4cedbdc11081fe41fcf01859a399566",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-parents-preflight.log",
+    "name": "guard-parents-preflight",
+    "sha256": "f76ca6da3135a2fd973def1f72966dbb0f105a7a08b9ae95ba85bc51f0fb4f67",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-sha-final.log",
+    "name": "guard-sha-final",
+    "sha256": "dd1229b1941b2d77143edd65f942d8e5a6ac610d9fd2e0b5ac4dcf657dcf410f",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-sha-preflight.log",
+    "name": "guard-sha-preflight",
+    "sha256": "5dfce34498242055d66db6d982c5f481a32c10eef20927420929f02de6ec4a7c",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "sha256sum",
+      "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_guard.sh"
+    ],
+    "attempt": 1,
+    "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_guard.sh",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-support-hashes-final.log",
+    "name": "guard-support-hashes-final",
+    "sha256": "47a8fac3ec31e2180beadb0a0f21fd685dca1c219898da4ee9b80c9297149705",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "sha256sum",
+      "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_guard.sh"
+    ],
+    "attempt": 1,
+    "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_guard.sh",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-support-hashes-preflight.log",
+    "name": "guard-support-hashes-preflight",
+    "sha256": "286bd33e0cbe07f0ea967a3dc740d3d9b6b6faac1b9f48a2e671337d12829319",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+  },
+  {
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "attempt": 1,
+    "command": "git branch --show-current",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-branch-final.log",
+    "name": "head-branch-final",
+    "sha256": "877326ed28152e521ebefcacec08116cc38cf32fe3c037393d0d57fa9f756ad9",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "attempt": 1,
+    "command": "git branch --show-current",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-branch-preflight.log",
+    "name": "head-branch-preflight",
+    "sha256": "e3e3e70cf0de00f82ae3395f3ae24063473d976ded595349a4d194ac891d184f",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "check-ignore",
+      "--no-index",
+      "gateway/__pycache__/run.cpython-311.pyc",
+      "tests/gateway/__pycache__/test_contractor_turns.cpython-311.pyc",
+      ".pytest_cache/CACHEDIR.TAG",
+      ".ruff_cache/CACHEDIR.TAG"
+    ],
+    "attempt": 1,
+    "command": "git check-ignore --no-index gateway/__pycache__/run.cpython-311.pyc tests/gateway/__pycache__/test_contractor_turns.cpython-311.pyc .pytest_cache/CACHEDIR.TAG .ruff_cache/CACHEDIR.TAG",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-cache-ignore.log",
+    "name": "head-cache-ignore",
+    "sha256": "1ab995fd9ff966839d8f9c2702df82c48c3ef2defa4b024c52ed4a789b05c6db",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-clean-final.log",
+    "name": "head-clean-final",
+    "sha256": "afbdd6af49790ac249e15afdf768267a9aa26bb532f828b3dff6dd6139ce7b56",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-clean-preflight.log",
+    "name": "head-clean-preflight",
+    "sha256": "59ccbc902f29cbe70b7a819a356f41f1e406e20d9a44220a482ec2bc69d853d0",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-common-dir"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-common-dir",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-common-dir-preflight.log",
+    "name": "head-common-dir-preflight",
+    "sha256": "e7ffcaaefb2e7bfc8eb6a6c05c0a24e7f018a7b3934b52a5b783292503b24824",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--name-only",
+      "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+    ],
+    "attempt": 1,
+    "command": "git diff --name-only b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-diff-files-final.log",
+    "name": "head-diff-files-final",
+    "sha256": "3664355182f0b24e05cbe66670cca523cb5b32de9856d82fc59149f1bd6cf958",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--name-only",
+      "b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+    ],
+    "attempt": 1,
+    "command": "git diff --name-only b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-diff-files.log",
+    "name": "head-diff-files",
+    "sha256": "89c636ffc3330a243e7a474ddb40894a1366494ca5a9bb66d67ad77139a8b543",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "merge-base",
+      "--is-ancestor",
+      "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+      "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+    ],
+    "attempt": 1,
+    "command": "git merge-base --is-ancestor cc00fe6ef855e506ad1bf8166473eecf725af8a8 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-first-parent-ancestor.log",
+    "name": "head-first-parent-ancestor",
+    "sha256": "8462fa62a03b2d232b309d2809fd6961a77d5c65b1af5af6b90edd50431fb01f",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "BISECT_START"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-BISECT_START-final.log",
+    "name": "head-marker-BISECT_START-final",
+    "sha256": "b4549afc9cbefc467c3a8cfc39e70d6572b690259442681f63185909c641dae6",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "CHERRY_PICK_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-CHERRY_PICK_HEAD-final.log",
+    "name": "head-marker-CHERRY_PICK_HEAD-final",
+    "sha256": "5feff4d78a67788f9057a4ba1cf18ee791a216e0458606ff0ca0d74130dfd5db",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "MERGE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path MERGE_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-MERGE_HEAD-final.log",
+    "name": "head-marker-MERGE_HEAD-final",
+    "sha256": "d6f17a4e3fef241bb7bd89e7de634973704589de2a599c5c3c86fcbe3e8dfbab",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REBASE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REBASE_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-REBASE_HEAD-final.log",
+    "name": "head-marker-REBASE_HEAD-final",
+    "sha256": "d6fefb694d84251611300630e947de0fb8c8e1503ab5fa9d549a0779ff9dd719",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REVERT_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REVERT_HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-REVERT_HEAD-final.log",
+    "name": "head-marker-REVERT_HEAD-final",
+    "sha256": "a116905f5603467f1e30cc6bb681f8cf4a9d7bfe111d02c7623432a785f0e48d",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index.lock"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index.lock",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-index.lock-final.log",
+    "name": "head-marker-index.lock-final",
+    "sha256": "f29983f266399783acfee410785bdce9f235c77e9e63650e8c8ace68fea0f8fe",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "BISECT_START"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path BISECT_START",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-BISECT_START.log",
+    "name": "head-marker-path-BISECT_START",
+    "sha256": "ad6b15322bef0e890ece2f0b8642cf1d545bae96786da1ef9ca020d71ae581e7",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "CHERRY_PICK_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-CHERRY_PICK_HEAD.log",
+    "name": "head-marker-path-CHERRY_PICK_HEAD",
+    "sha256": "5c529bc03373e3a55544493284edef1dfaaae1d4ad24ee4db3f9141329a0a2ac",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "MERGE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path MERGE_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-MERGE_HEAD.log",
+    "name": "head-marker-path-MERGE_HEAD",
+    "sha256": "fdf996e5cf06ec6efb87b2882f95ba0f9836bc15ad79a44d6ee624d68f03c8ac",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REBASE_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REBASE_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-REBASE_HEAD.log",
+    "name": "head-marker-path-REBASE_HEAD",
+    "sha256": "563f0a7ed7ca6f50ca31621e03a9e965fb59886ac9385e8c738318a652ffa136",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "REVERT_HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path REVERT_HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-REVERT_HEAD.log",
+    "name": "head-marker-path-REVERT_HEAD",
+    "sha256": "c81afae1f73b09a2a72f7567937e67e53f8922bb9880ef6924752f017707ce03",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index.lock"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index.lock",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-index.lock.log",
+    "name": "head-marker-path-index.lock",
+    "sha256": "7a88ab3bc8e564713468239c2f9000f866760519322185ef30a1b560dc73bc84",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-apply"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-rebase-apply.log",
+    "name": "head-marker-path-rebase-apply",
+    "sha256": "4a4c653ea4ba7fdea378a7a711be9679fe3bc48c66cb75b56424b10ddbb53bd2",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-merge"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-rebase-merge.log",
+    "name": "head-marker-path-rebase-merge",
+    "sha256": "faecb8ae7dd46de07812811768866f0094ada681502a46f41ad522240426b3df",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "sequencer"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path sequencer",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-path-sequencer.log",
+    "name": "head-marker-path-sequencer",
+    "sha256": "f672559cb633ad09e7127a10e3bdfbb6b74d0a1c45cf1a5efd1b05a8e1cc6943",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-apply"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-apply",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-rebase-apply-final.log",
+    "name": "head-marker-rebase-apply-final",
+    "sha256": "309fee12de94797590e100c470f99b6f93b7c79d3711323223ccc2e29705e662",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "rebase-merge"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path rebase-merge",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-rebase-merge-final.log",
+    "name": "head-marker-rebase-merge-final",
+    "sha256": "11165ad257a2c9f7b17e4c13c2ea55b0efda44c0a62dc849bb1fed6fa10c608e",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "sequencer"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path sequencer",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-marker-sequencer-final.log",
+    "name": "head-marker-sequencer-final",
+    "sha256": "20b14e3b6586451181a5a77f5a58cf24bd95307112a227e9bbbc9a4f69d79097",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "-s",
+      "--format=%P",
+      "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+    ],
+    "attempt": 1,
+    "command": "git show -s --format=%P 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-ordered-parents.log",
+    "name": "head-ordered-parents",
+    "sha256": "871df765f51e3ee83993100bc67ff490ab61d15b1e570fd7604dd691af796356",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "-s",
+      "--format=%P",
+      "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+    ],
+    "attempt": 1,
+    "command": "git show -s --format=%P 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-parents-final.log",
+    "name": "head-parents-final",
+    "sha256": "1136143d000c60c0c56640955190e499475c7c7f494466fee82edd33a18b613a",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-sha-final.log",
+    "name": "head-sha-final",
+    "sha256": "e005b90f7d1fd30f3ac5c3526a38e0cacbe2b46652ba541231950d363a6f4eba",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-sha-preflight.log",
+    "name": "head-sha-preflight",
+    "sha256": "68b0a6c33a569fb12adc58deee397691dcb6c243ea824128ae7b24ee2eb5adbc",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "merge-base",
+      "--is-ancestor",
+      "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+      "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+    ],
+    "attempt": 1,
+    "command": "git merge-base --is-ancestor b0ab2e163a50d4e6c36507eba955a6067fde6abc 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/head-upstream-ancestor.log",
+    "name": "head-upstream-ancestor",
+    "sha256": "497a814104c61d292a2c13fe95c7aba27db2596a444ec3983045313807e611c0",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:55:46Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-head-final.log",
+    "name": "hermes-primary-head-final",
+    "sha256": "a79b7ba6daba560dfbe0c0c0f69cc30ccea0de37708a54d432b11d96f648c2b2",
+    "started": "2026-09-05T11:55:46Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse HEAD",
+    "completed": "2026-09-05T11:28:19Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-head-start.log",
+    "name": "hermes-primary-head-start",
+    "sha256": "24e0d3d4b0f4244f0f2c2c247deed42b5569a82e7d8585a9c0ca08a66e4757b1",
+    "started": "2026-09-05T11:28:19Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index",
+    "completed": "2026-09-05T11:55:47Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-index-path-final.log",
+    "name": "hermes-primary-index-path-final",
+    "sha256": "ae461cdbb374d862d6acbf00e503c125e530d951a6f74f656965a934bada07ba",
+    "started": "2026-09-05T11:55:47Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-path",
+      "index"
+    ],
+    "attempt": 1,
+    "command": "git rev-parse --path-format=absolute --git-path index",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-index-path-start.log",
+    "name": "hermes-primary-index-path-start",
+    "sha256": "ca8f14dd843a5431661870b4f458188eb6303e50dc20afda3159d03a5de2c0eb",
+    "started": "2026-09-05T11:28:20Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "git",
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard"
+    ],
+    "attempt": 1,
+    "command": "git ls-files -z --cached --others --exclude-standard",
+    "completed": "2026-09-05T11:55:46Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-paths-final.log",
+    "name": "hermes-primary-paths-final",
+    "sha256": "2d2f327b00c87f0ce75fcb73237678f323b041e51bf06bcecbe767285a42c962",
+    "started": "2026-09-05T11:55:46Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "git",
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard"
+    ],
+    "attempt": 1,
+    "command": "git ls-files -z --cached --others --exclude-standard",
+    "completed": "2026-09-05T11:28:19Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-paths-start.log",
+    "name": "hermes-primary-paths-start",
+    "sha256": "b9bd728695ead5ba0035d4fb356d01108de82069a529616672410972eeb52a95",
+    "started": "2026-09-05T11:28:19Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git --no-optional-locks status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:55:46Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-status-final.log",
+    "name": "hermes-primary-status-final",
+    "sha256": "5d727f73533e4dc2cfedcf8247a24d0d39875c6ae4bc122662f2f653e9ff4a10",
+    "started": "2026-09-05T11:55:46Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "attempt": 1,
+    "command": "git --no-optional-locks status --porcelain=v1 --untracked-files=all",
+    "completed": "2026-09-05T11:28:19Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/hermes-primary-status-start.log",
+    "name": "hermes-primary-status-start",
+    "sha256": "98c482eeb7e7d497f2b2ac1deb2172a923b5107d2a7637b85be79c7df7ef5f93",
+    "started": "2026-09-05T11:28:19Z",
+    "worktree": "/home/delorenj/.hermes/hermes-agent"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "-c",
+      "import importlib.util,json,sys; print(json.dumps({\"executable\":sys.executable,\"gateway\":importlib.util.find_spec(\"gateway\").origin,\"run_agent\":importlib.util.find_spec(\"run_agent\").origin}))"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B -c 'import importlib.util,json,sys; print(json.dumps({\"executable\":sys.executable,\"gateway\":importlib.util.find_spec(\"gateway\").origin,\"run_agent\":importlib.util.find_spec(\"run_agent\").origin}))'",
+    "completed": "2026-09-05T11:36:35Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/import-paths-base/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/import-paths-base",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/import-paths-base.log",
+    "name": "import-paths-base",
+    "sha256": "25bbfbbb9fbe86f832d5abf449d146c290dc740b277f50ae25b1336d7ecdcee3",
+    "started": "2026-09-05T11:36:35Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "-c",
+      "import importlib.util,json,sys; print(json.dumps({\"executable\":sys.executable,\"gateway\":importlib.util.find_spec(\"gateway\").origin,\"run_agent\":importlib.util.find_spec(\"run_agent\").origin}))"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B -c 'import importlib.util,json,sys; print(json.dumps({\"executable\":sys.executable,\"gateway\":importlib.util.find_spec(\"gateway\").origin,\"run_agent\":importlib.util.find_spec(\"run_agent\").origin}))'",
+    "completed": "2026-09-05T11:36:33Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/import-paths-head/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/import-paths-head",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/import-paths-head.log",
+    "name": "import-paths-head",
+    "sha256": "a7fe310ff999b632b177ca01f4376a4fcb72212a584b5272d97366a89d2a7c6f",
+    "started": "2026-09-05T11:36:33Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "cat",
+      "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json"
+    ],
+    "attempt": 1,
+    "command": "cat /home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "completed": "2026-09-05T11:55:45Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/owner-final.log",
+    "name": "owner-final",
+    "sha256": "bdcf351f22ae4485db13553b1f9186a92fd4bfb7c577c24d3de8221c1c35040c",
+    "started": "2026-09-05T11:55:45Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "cat",
+      "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json"
+    ],
+    "attempt": 1,
+    "command": "cat /home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/owner-fixed-check.log",
+    "name": "owner-fixed-check",
+    "sha256": "54f611e69df487fe48d9be9e6ba0dcf025745e051cfcc789a34ed653dd9357c4",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "cat",
+      "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json"
+    ],
+    "attempt": 1,
+    "command": "cat /home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/owner-preflight.log",
+    "name": "owner-preflight",
+    "sha256": "54f611e69df487fe48d9be9e6ba0dcf025745e051cfcc789a34ed653dd9357c4",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "gh",
+      "pr",
+      "view",
+      "102409",
+      "--repo",
+      "NousResearch/hermes-agent",
+      "--json",
+      "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft"
+    ],
+    "attempt": 1,
+    "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft",
+    "completed": "2026-09-05T11:55:18Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/pr-blocked-final.log",
+    "name": "pr-blocked-final",
+    "sha256": "d9c71c02e273297d084170961b35e1021085d402bc80bcf851dadfdf885f1947",
+    "started": "2026-09-05T11:55:17Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "gh",
+      "pr",
+      "view",
+      "102409",
+      "--repo",
+      "NousResearch/hermes-agent",
+      "--json",
+      "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft"
+    ],
+    "attempt": 1,
+    "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,isDraft",
+    "completed": "2026-09-05T11:29:44Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/pr-preflight-network.log",
+    "name": "pr-preflight-network",
+    "sha256": "db312862d2c04be036a723a8546cf44deb63525b33d944f64e8add0b12a8036c",
+    "started": "2026-09-05T11:29:44Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "cat",
+      ".github/PULL_REQUEST_TEMPLATE.md"
+    ],
+    "attempt": 1,
+    "command": "cat .github/PULL_REQUEST_TEMPLATE.md",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/pr-template.log",
+    "name": "pr-template",
+    "sha256": "ad4b81f1f40d1c9044f24a407d6bc248af8034ab0f4711ca7521f448d89be797",
+    "started": "2026-09-05T11:28:20Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/preflight.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B /home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/preflight.py",
+    "completed": "2026-09-05T11:28:20Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/preflight-workflow.log",
+    "name": "preflight-workflow",
+    "sha256": "4b8158490a2253e97a67717a4f9788e1d2eb1f688c4a2d032da19e1ff970a714",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "-c",
+      "import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"prefix\":sys.prefix,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B -c 'import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"prefix\":sys.prefix,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))'",
+    "completed": "2026-09-05T11:55:47Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/python-environment-final.log",
+    "name": "python-environment-final",
+    "sha256": "2a6e63a84caede4defba5c5deaae09761168e1ed137d400cc67de6fa02bd3391",
+    "started": "2026-09-05T11:55:47Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-B",
+      "-c",
+      "import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"prefix\":sys.prefix,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -B -c 'import sys,pytest,importlib.metadata,json; print(json.dumps({\"executable\":sys.executable,\"prefix\":sys.prefix,\"pytest\":pytest.__version__,\"packages\":sorted((d.metadata[\"Name\"],d.version) for d in importlib.metadata.distributions())},indent=2))'",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/python-environment.log",
+    "name": "python-environment",
+    "sha256": "4cc750ce32a92e2382c1409d727c5855920f4b23fc3b71ab1a5a0a76b93645b4",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "--version"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python --version",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/python-version.log",
+    "name": "python-version",
+    "sha256": "5aa182ee110b04d9556d8b9b41d7f69d5632b390fb7d17160f0d1645810d7941",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "ls-remote",
+      "--exit-code",
+      "delorenj",
+      "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+    ],
+    "attempt": 1,
+    "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+    "completed": "2026-09-05T11:55:17Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/remote-blocked-final.log",
+    "name": "remote-blocked-final",
+    "sha256": "b4ff50f7f30738e7ef42277e7a6816939e4544b2e7562dc4acb212931d00c460",
+    "started": "2026-09-05T11:55:17Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "ls-remote",
+      "--exit-code",
+      "delorenj",
+      "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+    ],
+    "attempt": 1,
+    "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+    "completed": "2026-09-05T11:29:44Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/remote-preflight-network.log",
+    "name": "remote-preflight-network",
+    "sha256": "3a0f5c5f0c78e340bdf0ca626d0b14a055a36290062496de356e802da0edf9ee",
+    "started": "2026-09-05T11:29:43Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "git",
+      "ls-remote",
+      "--exit-code",
+      "delorenj",
+      "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+    ],
+    "attempt": 1,
+    "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+    "completed": "2026-09-05T11:28:59Z",
+    "exit_code": 128,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/remote-preflight.log",
+    "name": "remote-preflight",
+    "sha256": "bbc631691db394bc45c7e451646d1512e6b0a108b06c345e88fb00e35f7cea90",
+    "started": "2026-09-05T11:28:59Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/ruff",
+      "check",
+      "gateway/platforms/base.py",
+      "gateway/run.py",
+      "tests/gateway/test_contractor_turns.py",
+      "tests/gateway/test_session_split_brain_11016.py"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/ruff check gateway/platforms/base.py gateway/run.py tests/gateway/test_contractor_turns.py tests/gateway/test_session_split_brain_11016.py",
+    "completed": "2026-09-05T11:36:33Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/ruff-head/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/ruff-head",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/ruff-head.log",
+    "name": "ruff-head",
+    "sha256": "eb18eb24d28a7196361d9459ab16d4b07a57985cb01fe1773fcb27106e891327",
+    "started": "2026-09-05T11:36:33Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/ruff",
+      "--version"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/ruff --version",
+    "completed": "2026-09-05T11:28:16Z",
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/ruff-version.log",
+    "name": "ruff-version",
+    "sha256": "3f44a71c5a49cc48724309696e217589b084fb2b9230c71f42812b5dccaa90c1",
+    "started": "2026-09-05T11:28:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+    "completed": "2026-09-05T11:55:17Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-base/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-base",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/systemd-isolated-base.log",
+    "name": "systemd-isolated-base",
+    "sha256": "086ae333b24107e301c1992bb8000c645af79e8cfaa6cb6bb08ec14c4b4e63f1",
+    "started": "2026-09-05T11:55:17Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_systemd_notify.py::test_notify_supports_systemd_abstract_socket",
+    "completed": "2026-09-05T11:55:17Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-head/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/systemd-isolated-head",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/systemd-isolated-head.log",
+    "name": "systemd-isolated-head",
+    "sha256": "8470d31e572b9e032ddc100412a5451e7268c80bf74bec968984fe4f27d5706c",
+    "started": "2026-09-05T11:55:16Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "completed": "2026-09-05T11:36:35Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-base-1/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-base-1",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/target-base-1.log",
+    "name": "target-base-1",
+    "sha256": "7a83822a62e369243e6c684b31d6ae54cdba6f9abf949db14c2deb0872e2f419",
+    "started": "2026-09-05T11:36:35Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+    ],
+    "attempt": 2,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "completed": "2026-09-05T11:36:36Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-base-2/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-base-2",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/target-base-2.log",
+    "name": "target-base-2",
+    "sha256": "a19ccbd965ae4f3b5b88424305aea7e3435fd1f6fbcace7568e3897483370161",
+    "started": "2026-09-05T11:36:35Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+    ],
+    "attempt": 3,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "completed": "2026-09-05T11:36:36Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-base-3/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-base-3",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/target-base-3.log",
+    "name": "target-base-3",
+    "sha256": "043f3eda63807522b0c6051c161b11468a2f926f994a4fff44a6029d923391bc",
+    "started": "2026-09-05T11:36:36Z",
+    "worktree": "/tmp/hermes-board-cranker-53-upstream-baseline"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+    ],
+    "attempt": 1,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "completed": "2026-09-05T11:36:34Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-head-1/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-head-1",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/target-head-1.log",
+    "name": "target-head-1",
+    "sha256": "dadd29e61088fc955f26b6c9f7d57e69b384fd2589d9c31c3875f5c6ea143569",
+    "started": "2026-09-05T11:36:33Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+    ],
+    "attempt": 2,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "completed": "2026-09-05T11:36:34Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-head-2/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-head-2",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/target-head-2.log",
+    "name": "target-head-2",
+    "sha256": "3bd26c8a459e0b8ee1430fbad4ce70418bf92744cec7887a2d8a5c30e6879f83",
+    "started": "2026-09-05T11:36:34Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  },
+  {
+    "argv": [
+      "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-o",
+      "addopts=",
+      "tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape"
+    ],
+    "attempt": 3,
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest -q -o addopts= tests/gateway/test_restart_resume_pending.py::TestResumePendingSystemNote::test_stale_tool_tail_with_production_data_shape",
+    "completed": "2026-09-05T11:36:35Z",
+    "environment": {
+      "GIT_OPTIONAL_LOCKS": "0",
+      "HERMES_HOME": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-head-3/hermes-home",
+      "HOME": "/home/delorenj",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/home/delorenj/.hermes/hermes-agent/.venv/bin:/usr/bin:/bin",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONHASHSEED": "0",
+      "PYTHONUTF8": "1",
+      "RUFF_NO_CACHE": "true",
+      "TMPDIR": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/runtime/target-head-3",
+      "TZ": "UTC"
+    },
+    "exit_code": 0,
+    "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/target-head-3.log",
+    "name": "target-head-3",
+    "sha256": "2ae8e3a3832ac330275fae2f6aad28d09f2d843546ec3b7dd32346658d8e3f71",
+    "started": "2026-09-05T11:36:34Z",
+    "worktree": "/tmp/hermes-board-cranker-50"
+  }
+]

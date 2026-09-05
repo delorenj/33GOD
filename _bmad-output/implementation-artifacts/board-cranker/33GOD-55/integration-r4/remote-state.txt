@@ -1,0 +1,16 @@
+=== fetch origin (safe read of remote state) ===
+From github.com:delorenj/agents
+ * branch            main       -> FETCH_HEAD
+ * branch            feat/33GOD-55-git-travel-guard-remote-ancestry -> FETCH_HEAD
+fetch exit=0
+=== origin/main ===
+36d3ed6627b1ee1819952617d7d4ebfcebc2708f
+=== remote feature branch ===
+54aca968fd16e428fe1378f6f401c068d17e5c4a	refs/heads/feat/33GOD-55-git-travel-guard-remote-ancestry
+=== range commit count + files ===
+1
+git/README.md
+git/hooks/_travels.py
+git/hooks/pre-push
+git/tests/test_pre_push.py
+54aca968fd16e428fe1378f6f401c068d17e5c4a fix(git): make push ancestry scans merge-aware (33GOD-55)

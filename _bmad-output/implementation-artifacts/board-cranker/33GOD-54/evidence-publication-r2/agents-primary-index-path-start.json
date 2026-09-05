@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-path",
+    "index"
+  ],
+  "attempt": 1,
+  "command": "git rev-parse --path-format=absolute --git-path index",
+  "completed": "2026-09-05T11:28:20Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/agents-primary-index-path-start.log",
+  "name": "agents-primary-index-path-start",
+  "sha256": "4e982ae485e07fc2c2cf3856905886924727d18c4380a68cdd357a380e7dc424",
+  "started": "2026-09-05T11:28:20Z",
+  "worktree": "/home/delorenj/.agents"
+}

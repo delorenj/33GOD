@@ -1,0 +1,119 @@
+{
+  "campaign": "board-cranker",
+  "child": {
+    "external_id": "board-cranker:33god-54:git-travel-guard-range-repair:v1",
+    "id": "716bdb6d-e614-44fa-8f17-528cbf24b75e",
+    "identifier": "33GOD-55",
+    "next_eligible": true,
+    "owning_repo": "/home/delorenj/.agents",
+    "owning_repo_remote_main_sha": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "parent_id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+    "planned_branch": "feat/33GOD-55-git-travel-guard-remote-ancestry",
+    "planned_worktree": "/tmp/agents-board-cranker-55",
+    "priority": "high",
+    "source_mutation_authorized": true,
+    "state": "Todo",
+    "title": "Make the global Git travel guard merge-aware for remote-known ancestry"
+  },
+  "decided_at": "2026-09-05T05:45:27Z",
+  "decision_event": {
+    "actor_agent_id": "33god-pm",
+    "basis": [
+      "dogfood-the-platform",
+      "build-lego-not-statues"
+    ],
+    "candystore_event_url": "http://127.0.0.1:8683/events/eb3fb848-e1b5-4adc-8012-4849a874ff2b",
+    "candystore_projection_verified": true,
+    "id": "eb3fb848-e1b5-4adc-8012-4849a874ff2b",
+    "local_trail": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/bloodbank-events.jsonl",
+    "producer": "hermes-agent:33god-pm",
+    "published_live": true,
+    "source": "hermes://agent/33god-pm",
+    "subject": "bloodbank.evt.repo.decision.recorded",
+    "type": "bloodbank.repo.decision.recorded"
+  },
+  "guard_ground_truth": {
+    "direct_candidate_vs_remote_known_parent_check_exit": 0,
+    "genuinely_unpublished_commit_count": 1,
+    "hermes_candidate_first_parent": "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "hermes_candidate_head": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "hermes_candidate_remote_known_parent": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "installed_hook": "/home/delorenj/.agents/git/hooks/pre-push",
+    "normal_push_exit": 1,
+    "owner_repo": "/home/delorenj/.agents",
+    "owner_repo_head": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "owner_repo_origin_main": "36d3ed6627b1ee1819952617d7d4ebfcebc2708f",
+    "pre_push_range_commit_count": 4398,
+    "primary_checkout_dirty": true,
+    "primary_checkout_must_not_be_modified": true,
+    "reported_missing_imports": 13,
+    "source_evidence": [
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.blocker-reconciliation.json",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/full-comparison.json",
+      "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/push.log"
+    ],
+    "unrelated_dirty_file": "git/hooks/_guard.sh"
+  },
+  "next": "Claim 33GOD-55 as the sole shared WIP item, create a clean isolated .agents worktree at 36d3ed6627b1ee1819952617d7d4ebfcebc2708f, and dispatch exactly one durable RED-to-GREEN implementer; do not retry Hermes publication or dispatch 33GOD-54 review until the repaired guard is integrated and proven.",
+  "owner": {
+    "marker": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+    "owner_agent_id": "33god-pm",
+    "verified": true
+  },
+  "parent": {
+    "id": "87b5b9fd-d5b3-4285-b0c5-a03eb0fc5ee7",
+    "identifier": "33GOD-54",
+    "source_mutation_authorized": false,
+    "state": "Backlog",
+    "title": "Resolve Hermes gateway differential and publish the integrated contractor candidate",
+    "verified_handback": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54.implementation.json",
+    "verified_handback_status": "BLOCKED"
+  },
+  "plane": {
+    "child_assignees_empty": true,
+    "child_labels_after_grooming": [
+      {
+        "id": "4eb4e892-b9b5-4bc3-b33d-4298cb0c898b",
+        "name": "lifecycle:triaged"
+      }
+    ],
+    "child_ready_label_readback_verified": true,
+    "child_parent_state_priority_external_id_readback_verified": true,
+    "module": {
+      "child_membership_readback_verified": true,
+      "id": "6ebde7b5-5814-40af-ba6c-864228bf8bd3",
+      "name": "Agent Configuration and Normalization"
+    },
+    "parent_comment_id": "a3a17eae-111f-4071-ac46-933e2c0bdb31",
+    "parent_comment_readback_verified": true,
+    "project_id": "15258893-0206-4e8f-aea6-340eb217988c",
+    "ticket_created_event": {
+      "candystore_projection_verified": true,
+      "id": "e2b54625-b78f-5678-9d9b-ae315cbfe75e",
+      "producer": "n8n-plane-webhook",
+      "ticket_id": "716bdb6d-e614-44fa-8f17-528cbf24b75e",
+      "ticket_key": "33GOD-55",
+      "type": "bloodbank.repo.task.created"
+    },
+    "transient_agent_working_label_removed_because_no_worker_was_dispatched": true,
+    "workspace": "33god"
+  },
+  "reason": "33GOD-54 proved the immutable Hermes candidate has zero branch-only gateway failures and exact scope, but its only sanctioned normal push is rejected by the machine-wide pre-push travel guard because the remote feature range rescans 4,398 commits from a different remote-known merge parent. The reusable guard defect is isolated into a separate RED-to-GREEN child rather than bypassing hooks, rewriting the candidate, or consuming another 33GOD-54 implementation attempt.",
+  "repo": "33god",
+  "schema_version": "1.0",
+  "shared_wip": {
+    "lease_created": false,
+    "parallel_implementation_dispatches": 0,
+    "previous_lease_present": false,
+    "previous_ticket": "33GOD-54",
+    "previous_worker_completed": true,
+    "previous_worker_handback_verified": true,
+    "previous_worker_processes_dead": true,
+    "selected_ticket": "33GOD-55",
+    "selected_ticket_state": "Todo",
+    "worker_dispatched": false
+  },
+  "status": "DECOMPOSED",
+  "worker_dispatched": false
+}

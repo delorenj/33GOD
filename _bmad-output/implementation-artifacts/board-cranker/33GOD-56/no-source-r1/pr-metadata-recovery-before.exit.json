@@ -1,0 +1,57 @@
+{
+  "argv": [
+    "gh",
+    "pr",
+    "view",
+    "102409",
+    "--repo",
+    "NousResearch/hermes-agent",
+    "--json",
+    "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt"
+  ],
+  "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt",
+  "command_finished_at": "2026-09-05T14:06:52.520932Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:06:52.623364Z",
+  "finished_monotonic_ns": 1345995211624948,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/pr-metadata-recovery-before.log",
+  "name": "pr-metadata-recovery-before",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "gh",
+          "pr",
+          "view",
+          "102409",
+          "--repo",
+          "NousResearch/hermes-agent",
+          "--json",
+          "number,url,title,body,state,headRefOid,headRefName,headRepositoryOwner,headRepository,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,isDraft,mergedAt"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 266486,
+        "pid": 266486,
+        "ppid": 266207,
+        "session": 266486,
+        "start_ticks": "134599436",
+        "state": "S"
+      }
+    ],
+    "pid": 266486,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 266207
+  },
+  "sequence_index": 0,
+  "sha256": "8d284b9615aef06931ef450bf3a0eb3466fc96310a9eeec8d5208035e83e93f7",
+  "started_at": "2026-09-05T14:06:51.775157Z",
+  "started_monotonic_ns": 1345994363390831,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

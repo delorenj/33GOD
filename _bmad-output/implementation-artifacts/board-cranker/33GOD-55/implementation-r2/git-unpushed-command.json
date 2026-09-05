@@ -1,0 +1,10 @@
+{
+  "command": [
+    "git",
+    "unpushed"
+  ],
+  "exit_code": 1,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/implementation-r2/git-unpushed.log",
+  "sha256": "6b6c7190b3545b61140d59d18a48877a2dacad66a7d51c234b70b9d81f4065f8",
+  "scope_note": "Read-only general AGENTS checkpoint inventory. Unrelated repositories and the pre-existing primary dirty guard remain outside this explicitly bounded lane."
+}

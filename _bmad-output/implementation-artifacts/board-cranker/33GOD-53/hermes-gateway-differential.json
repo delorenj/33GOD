@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "baseline": {
+    "worktree": "/tmp/hermes-board-cranker-50-baseline",
+    "sha": "97f3229dfdc06779f348ab8e7bee043262c3aaa7",
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest tests/gateway -q -o 'addopts='",
+    "exit_code": 1,
+    "summary": "8 failed, 7671 passed, 19 skipped, 2 xfailed, 181 warnings in 847.12s",
+    "failures": [
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent",
+        "error_class": "AssertionError"
+      }
+    ]
+  },
+  "head": {
+    "worktree": "/tmp/hermes-board-cranker-50",
+    "dispatch_sha": "c61c87117c5eb234c4f84ce8cd1933790d8025b5",
+    "final_sha": "00346416144c0e42897b79129be2021908830d1d",
+    "command": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python -m pytest tests/gateway -q -o 'addopts='",
+    "exit_code": 1,
+    "summary": "8 failed, 7713 passed, 19 skipped, 2 xfailed, 181 warnings in 823.55s",
+    "failures": [
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg",
+        "error_class": "AttributeError"
+      },
+      {
+        "node_id": "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available",
+        "error_class": "AssertionError"
+      },
+      {
+        "node_id": "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent",
+        "error_class": "AssertionError"
+      }
+    ]
+  },
+  "comparison": {
+    "common_failures": [
+      "tests/gateway/test_discord_send.py::test_send_video_uses_path_based_files_kwarg",
+      "tests/gateway/test_discord_send.py::test_send_video_fails_loud_when_message_has_no_attachments",
+      "tests/gateway/test_discord_send.py::test_send_file_attachment_forum_uses_files_kwarg",
+      "tests/gateway/test_send_multiple_images.py::TestDiscordMultiImage::test_url_batch_follows_safe_redirect_location_header",
+      "tests/gateway/test_session_store_prune.py::test_session_store_default_db_uses_runtime_hermes_home",
+      "tests/gateway/test_status_command.py::test_profile_command_reports_source_stamped_profile",
+      "tests/gateway/test_teams_dotenv_isolation.py::TestTeamsAdapterImportDoesNotLeakDotenv::test_namespace_without_apps_is_not_sdk_available",
+      "tests/gateway/test_telegram_polling_health_confirmation.py::TestPollingHealthConfirmation::test_subsequent_progress_is_silent"
+    ],
+    "branch_only_failures": [],
+    "base_only_failures": [],
+    "error_class_changes": [],
+    "status": "PASS",
+    "rationale": "The final clean-environment head run and immutable-base run have identical failed node IDs and error classes; the eight non-green outcomes are inherited."
+  }
+}

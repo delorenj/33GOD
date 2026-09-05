@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "sha256sum",
+    "/tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_guard.sh"
+  ],
+  "attempt": 1,
+  "command": "sha256sum /tmp/agents-board-cranker-55-postmerge-verification-r2/git/hooks/_guard.sh",
+  "completed": "2026-09-05T11:55:45Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r2/guard-support-hashes-final.log",
+  "name": "guard-support-hashes-final",
+  "sha256": "47a8fac3ec31e2180beadb0a0f21fd685dca1c219898da4ee9b80c9297149705",
+  "started": "2026-09-05T11:55:45Z",
+  "worktree": "/tmp/agents-board-cranker-55-postmerge-verification-r2"
+}

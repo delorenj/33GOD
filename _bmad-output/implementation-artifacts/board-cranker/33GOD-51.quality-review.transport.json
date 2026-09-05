@@ -1,0 +1,14 @@
+{
+  "candidate_count": 1,
+  "discarded_lines": [
+    "I’m validating the immutable range and repository guidance, then I’ll inspect the full diff and lifecycle paths before running the required focused and gateway checks.",
+    "",
+    "The source review confirms one serious boundary concern: the typed context canonicalizes any existing absolute directory, while contractor dispatch trusts it as the worker CWD without proving it belongs to the resolved profile. I’m now checking whether cleanup, ordinary-session compatibility, and tests reveal additional introduced defects, then I’ll run the required commands.",
+    "",
+    "The review found two additional introduced risks beyond the path boundary: contractor resolution writes shared runner-level reasoning/service-tier fields used by ordinary turns, creating cross-turn contamination under concurrency; and contractor teardown routes through best-effort cleanup that suppresses `close()` failures, so required cleanup failures are not observable. I’m doing the final baseline-differential and cleanliness checks now.",
+    "",
+    "",
+    ""
+  ],
+  "normalized_without_field_changes": true
+}

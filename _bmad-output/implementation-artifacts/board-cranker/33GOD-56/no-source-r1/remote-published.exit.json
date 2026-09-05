@@ -1,0 +1,67 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "delorenj",
+    "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+  ],
+  "command": "git ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns",
+  "command_finished_at": "2026-09-05T14:03:27.887924Z",
+  "exit_code": 0,
+  "finished_at": "2026-09-05T14:03:27.995063Z",
+  "finished_monotonic_ns": 1345790583331657,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1/remote-published.log",
+  "name": "remote-published",
+  "process": {
+    "after_gateway_processes": [],
+    "all_descendants_gone": true,
+    "before_gateway_processes": [],
+    "child_subreaper": true,
+    "observed_processes": [
+      {
+        "argv": [
+          "git",
+          "ls-remote",
+          "--exit-code",
+          "delorenj",
+          "refs/heads/feat/33GOD-50-stateless-contractor-turns"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 202992,
+        "pid": 202992,
+        "ppid": 190821,
+        "session": 202992,
+        "start_ticks": "134578997",
+        "state": "S"
+      },
+      {
+        "argv": [
+          "/usr/bin/ssh",
+          "-o",
+          "SendEnv=GIT_PROTOCOL",
+          "git@github.com",
+          "git-upload-pack 'delorenj/hermes-agent.git'"
+        ],
+        "cwd": "/tmp/hermes-board-cranker-50",
+        "pgrp": 202992,
+        "pid": 202993,
+        "ppid": 202992,
+        "session": 202992,
+        "start_ticks": "134578997",
+        "state": "S"
+      }
+    ],
+    "pid": 202992,
+    "reaped_adopted_descendants": [],
+    "remaining_descendants": [],
+    "supervisor_pid": 190821
+  },
+  "sequence_index": 0,
+  "sha256": "1fcb21cc8de39ee38d83f3ad973374771335c8f8f46cfcc0bc93688addcc14f1",
+  "started_at": "2026-09-05T14:03:27.381967Z",
+  "started_monotonic_ns": 1345789970200547,
+  "status": "PASS",
+  "summary": "",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}

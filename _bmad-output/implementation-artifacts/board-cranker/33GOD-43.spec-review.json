@@ -1,0 +1,135 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-43",
+  "gate": "spec-compliance",
+  "status": "PASS",
+  "summary": "Independently verified the single commit 9de80e2..60087e0 line-by-line. The invocation command schema now requires a non-empty prompt and target and pins type/kind/subject/dataschema/schemaref consts; command mode emits a fully schema-validated envelope with kind=command, delivery=single_consumer, command identity, target+command-scoped idempotency, and fails before any NATS connection on malformed input; registry routing resolves exactly one eligible fleet-scope target and fails closed on absent/disabled/mismatched/ambiguous routes without leaking profile names; event mode envelope, subject, and output shape are unchanged and the generated selector regenerates byte-identically from codegen; RED evidence (41 failures against base behavior: validateEnvelope not a function, publish arity 1!==2, execute arity 0!==1) transitions to 52/52 GREEN. All four required checks re-run independently with exit 0; worktree clean afterwards; all 14 changed files fall within the declared owning surfaces.",
+  "reviewer": {
+    "agent_id": "auggie-33god-43-spec-review-r2",
+    "role": "spec-reviewer",
+    "provider": "augment",
+    "model": "kimi-k3"
+  },
+  "git": {
+    "base_sha": "9de80e24ec0586c68d0c95457941592d973771e1",
+    "head_sha": "60087e0c1e9d53e9865b1f436bbc0195ebd46527",
+    "worktree": "/tmp/bloodbank-board-cranker-43-spec-review",
+    "commit_count": 1
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "status": "PASS",
+      "evidence": [
+        "schemas/bloodbank/agent/invocation.start.json:13-15 \u2014 type const 'bloodbank.agent.invocation.start' (4 tokens, no version token, satisfies docs/event-naming.md \u00a72 regex and \u00a75/\u00a78.2 imperative tense for commands)",
+        "schemas/bloodbank/agent/invocation.start.json:22-24 \u2014 subject const 'bloodbank.cmd.agent.invocation.start' (5-token cmd-marker shape per \u00a73, no version token per \u00a73.1)",
+        "schemas/bloodbank/agent/invocation.start.json:61-66 and 73 \u2014 data.prompt is type string with minLength 1 and pattern \\S, and data.required is ['target_agent_id', 'prompt']; target_agent_id at 43-48 carries the same non-blank constraints",
+        "schemas/bloodbank/agent/invocation.start.json:7-11 and 77-91 \u2014 allOf $ref to ../../_common/cloudevent_base.v1.json plus a required list covering type, kind, domain, data, actor, subject, datacontenttype, dataschema, schemaref, causationid, command_id, idempotency_key, delivery, so the complete envelope is validated",
+        "schemas/bloodbank/agent/invocation.start.json:16-18, 25-33 \u2014 kind const 'command', dataschema/schemaref consts 'apicurio://holyfields/bloodbank.agent.invocation.start/versions/1' and 'bloodbank.agent.invocation.start.v1', delivery const 'single_consumer'"
+      ],
+      "reasoning": "The canonical schema requires non-empty prompt and target, pins the exact type and cmd subject without any version token, and validates the whole envelope via the CloudEvents base composition plus its own required array. The only version axis present is the \u00a713 schema revision in dataschema/schemaref, which the contract explicitly keeps."
+    },
+    {
+      "id": "AC-2",
+      "status": "PASS",
+      "evidence": [
+        "integrations/n8n-nodes-bloodbank/src/nats.ts:163-205 \u2014 command branch: subject via subjectFor(type,'command') (152-156) yields 'bloodbank.cmd.agent.invocation.start'; command_id set at 202; idempotency_key at 203-204 is 'agent.invocation.start:target:<target_agent_id>:command:<command_id>' matching docs/event-naming.md \u00a711.2 as amended; delivery 'single_consumer' at 205",
+        "integrations/n8n-nodes-bloodbank/src/nats.ts:168-173 \u2014 correlationid defaults to command_id (root-issued rule, \u00a711) and causationid defaults to null; dataschema/schemaref set at 184/190 and match the schema consts",
+        "integrations/n8n-nodes-bloodbank/src/nats.ts:291-294 \u2014 publish() calls validateEnvelope (103-116, AJV 2020-12 over the generated canonical schema documents) before connect(); test/nats-contract.test.cjs 'invalid command input fails before a NATS connection or publish' asserts connectCalls === 0 across three malformed inputs",
+        "integrations/n8n-nodes-bloodbank/src/nats.ts:66-89 \u2014 RESERVED_ENVELOPE_KEYS now includes command_id, idempotency_key, delivery; extension overwrite attempts throw (207-212), exercised by the extended test at test/nats-contract.test.cjs:176-182",
+        "integrations/n8n-nodes-bloodbank/src/nodes/Bloodbank/Bloodbank.node.ts:281-320 \u2014 node requires retry-stable nonblank commandId (285), passes kind 'command' (310), eventId=commandId, and data carries only target_agent_id/prompt/context/thread_id/turn_id (297-306)"
+      ],
+      "reasoning": "Explicit command mode emits every required command field with the canonical subject, derives a target-scoped retry-stable idempotency key (test asserts identical keys across two builds with the same commandId and a different key for a different target), and all malformed envelope/data, kind mismatch, and extension-overwrite inputs throw during build/validate, before any NATS connection or publish."
+    },
+    {
+      "id": "AC-3",
+      "status": "PASS",
+      "evidence": [
+        "integrations/n8n-nodes-bloodbank/src/registry.ts:17-63 \u2014 resolveFleetTargetForRepo enforces: root mapping (21-22), exact integer schema_version 1 (23-26), agents mapping (27-29), canonical lowercase slug keys per the \u00a73.2 regex (1, 33-35), mapping entries (36-38), repo match (39-41), absent route throws (43-45), eligibility filter requiring nonblank profile_name, bloodbank.enabled === true, gateway_scope === 'fleet', target_agent_id === agentId (47-55), ineligible throws (57-59), ambiguous throws (60-62)",
+        "integrations/n8n-nodes-bloodbank/src/nodes/Bloodbank/Bloodbank.node.ts:221-223 and 281-289 \u2014 registryFile parameter defaults to '~/.hermes/agents-registry.yaml' and the file is read and parsed on every command execution, with resolution errors wrapped as NodeOperationError before any publish",
+        "integrations/n8n-nodes-bloodbank/src/registry.ts:13-16 and 63 \u2014 documented and implemented boundary: only the agent ID is returned; profile_name is checked solely as an eligibility prerequisite",
+        "integrations/n8n-nodes-bloodbank/test/publisher-node.test.cjs \u2014 'repository routing returns exactly one eligible fleet target, never its profile', four fail-closed route cases (absent/disabled/target-mismatch/ambiguous), malformed snapshot cases, and 'command mode publishes one validated targeted invocation without exposing a profile' asserting the serialized envelope never contains the profile string and data has no profile_name key",
+        "integrations/n8n-nodes-bloodbank/test/publisher-node.test.cjs \u2014 'publisher exposes explicit event/command mode' asserts zero node properties matching /profile/i, so profile names cannot enter workflow data via node parameters"
+      ],
+      "reasoning": "Routing reads the canonical fleet registry fresh per execution, implements the \u00a73.2 eligibility contract verbatim, resolves exactly one enabled fleet-scope target, and fails closed with zero publish attempts for absent, disabled, target-mismatched, and ambiguous routes. Profile names never cross the resolver boundary into workflow data or the envelope."
+    },
+    {
+      "id": "AC-4",
+      "status": "PASS",
+      "evidence": [
+        "integrations/n8n-nodes-bloodbank/src/nats.ts:163, 195-197 \u2014 kind defaults to 'event' for omitted-kind callers and ordering_key is emitted only for events, so event envelopes keep exactly their prior shape (no command fields)",
+        "integrations/n8n-nodes-bloodbank/src/nodes/Bloodbank/Bloodbank.node.ts:96-116 (mode default 'event') and 370-390 \u2014 event branch output object {published, type, subject, eventId, correlationid} is byte-for-byte the base shape, confirmed against git show 9de80e2 of the same file",
+        "integrations/n8n-nodes-bloodbank/test/publisher-node.test.cjs \u2014 'event mode preserves the existing envelope, subject, and output shape' asserts subject 'bloodbank.evt.repo.task.created', kind 'event', ordering_key 'repo:ticket-1', absence of command_id, and the exact output key set",
+        "integrations/n8n-nodes-bloodbank/codegen/generate-events.mjs:11-13, 31-42, 66-92 \u2014 generated selector now walks schemas/ for canonical documents and schemas/bloodbank for the selector, adds schemaId, and embeds canonicalSchemaDocuments; running npm run codegen in this worktree regenerated src/nodes/Bloodbank/eventSchemas.ts with zero git diff (git status --short empty afterward), proving the committed generated file is reproducible from codegen and not hand-authored drift"
+      ],
+      "reasoning": "Event mode is the default and is unchanged in envelope, subject, and output shape; the base-vs-head comparison of the event branch shows identical publish arguments and output keys. The only generated file in the diff regenerates byte-identically from the checked-in codegen, satisfying the code-generation-only rule."
+    },
+    {
+      "id": "AC-5",
+      "status": "PASS",
+      "evidence": [
+        "/tmp/bloodbank-board-cranker-43/.evidence/red-tests.log \u2014 41 of 52 tests fail against base behavior with signatures that only the new code can fix: 'TypeError: validateEnvelope is not a function' (line 102), 'publish exposes its bounded connector seam 1 !== 2' (line 813-815), 'publisher node must accept its test transport seam 0 !== 1', and 'Unknown bloodbank event: undefined' from the pre-command-mode node",
+        "/tmp/bloodbank-board-cranker-43/.evidence/green-tests.log \u2014 the same 52 tests pass 52/0 after the change; gate1-npm-test.log, gate2-smoketest-schemas.log, gate3-smoketest-command.log, gate4-gateway-tests.log all green and consistent with my independent re-runs",
+        "integrations/n8n-nodes-bloodbank/test/nats-contract.test.cjs:62-95 \u2014 positive command path asserting subject, kind, delivery, identity, correlation=command_id, causation null, exact idempotency format, retry-stable key equality, dataschema/schemaref, no ordering_key, and schema validity",
+        "integrations/n8n-nodes-bloodbank/test/nats-contract.test.cjs:97-128 \u2014 23 malformed envelope/data cases (wrong type/kind/subject/delivery/dataschema/schemaref, blank idempotency key, invalid UUIDs, invalid calendar date, missing/blank target and prompt, blank thread ID, non-object context, malformed actor, missing IDs) each rejected by schema validation",
+        "integrations/n8n-nodes-bloodbank/test/publisher-node.test.cjs \u2014 zero-publish cases for absent/disabled/mismatched/ambiguous routes, missing prompt, and missing command ID (publishCalls === 0), plus 'event mode preserves the existing envelope, subject, and output shape' covering unchanged event behavior"
+      ],
+      "reasoning": "RED was captured against base behavior (failures are missing-export, arity, and missing-mode errors, not arbitrary breakage) and GREEN flips exactly those tests to pass. Coverage spans the positive command path, malformed envelope and data fields, kind/schema mismatch, extension overwrite attempts, zero-publish/zero-connection failures, exact retry-stable identity, and unchanged event behavior \u2014 every element AC-5 enumerates."
+    }
+  ],
+  "scope": {
+    "status": "PASS",
+    "changed_files": [
+      "docs/event-naming.md",
+      "integrations/n8n-nodes-bloodbank/README.md",
+      "integrations/n8n-nodes-bloodbank/codegen/generate-events.mjs",
+      "integrations/n8n-nodes-bloodbank/package-lock.json",
+      "integrations/n8n-nodes-bloodbank/package.json",
+      "integrations/n8n-nodes-bloodbank/src/index.ts",
+      "integrations/n8n-nodes-bloodbank/src/nats.ts",
+      "integrations/n8n-nodes-bloodbank/src/nodes/Bloodbank/Bloodbank.node.ts",
+      "integrations/n8n-nodes-bloodbank/src/nodes/Bloodbank/eventSchemas.ts",
+      "integrations/n8n-nodes-bloodbank/src/registry.ts",
+      "integrations/n8n-nodes-bloodbank/test/nats-contract.test.cjs",
+      "integrations/n8n-nodes-bloodbank/test/publisher-node.test.cjs",
+      "schemas/_common/cloudevent_base.v1.json",
+      "schemas/bloodbank/agent/invocation.start.json"
+    ],
+    "unexpected_files": [],
+    "assessment": "All 14 changed files sit inside the declared owning surfaces: invocation schema (schemas/bloodbank/agent/invocation.start.json), common-schema example sync (schemas/_common/cloudevent_base.v1.json \u2014 only the idempotency_key example updated to the new \u00a711.2 convention), naming/readme documentation narrowly tracking the idempotency and command-mode changes (docs/event-naming.md \u00a711.2 one-liner, README publisher section), the n8n node/publisher (Bloodbank.node.ts, nats.ts, index.ts), schema codegen plus its generated selector (generate-events.mjs, eventSchemas.ts \u2014 regenerated byte-identical, not hand-edited), the new shared registry resolver (src/registry.ts), package dependencies limited to ajv 8.17.1 + ajv-formats 3.0.1 with matching package-lock entries, and two focused test files. Nothing touches Hermes stateless execution, contractor manifests, Board Cranker selection, Plane mutation, agent profiles, callback/clone architecture, live automation enablement, or any service-to-service bypass."
+  },
+  "tests": [
+    {
+      "command": "cd integrations/n8n-nodes-bloodbank && npm test",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "Full build (codegen + tsc + icons) then tsx --test: 52 tests, 52 pass, 0 fail in this worktree, including all 23 schema-rejection cases, the zero-connection publish guard, registry fail-closed cases, the profile-non-exposure publish test, and the event-mode compatibility test."
+    },
+    {
+      "command": "mise run smoketest:schemas",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "Fail-fast chain (validate:schemas && schema-contract-consistency && bloodbank-naming && maintenance-reporting-contracts && portfolio-contracts && project-contracts && plane-binding && agent-hooks-ssot per mise.toml:256-258) completed; tail shows 'agent-hooks-ssot: 35 binding(s) validated, 0 failure(s); PASS', confirming the edited schema tree stays internally consistent and contract-valid."
+    },
+    {
+      "command": "mise run smoketest:command",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "Live NATS round-trip against the running bloodbank-nats container: command published on bloodbank.cmd.system.heartbeat.send, responder consumed it, reply published on bloodbank.rpy.system.heartbeat.send with matching correlation, final line 'smoketest-command: PASS'."
+    },
+    {
+      "command": "python3 -m pytest services/hermes-gateway/tests -q",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "62 passed in 0.85s \u2014 the fleet gateway consumer contract (adapter, registration, and envelope contract suites) is unaffected by the publisher-side and schema changes."
+    },
+    {
+      "command": "cd integrations/n8n-nodes-bloodbank && npm run codegen && git status --short",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "codegen printed 'generated 81 events + 6 commands' and git status --short afterward was completely empty, proving src/nodes/Bloodbank/eventSchemas.ts (including the new canonicalSchemaDocuments and schemaId selector field) is reproducible from codegen with zero drift."
+    }
+  ],
+  "findings": [],
+  "source_tree_clean_after": true
+}

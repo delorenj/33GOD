@@ -1,0 +1,11 @@
+{
+  "initial_sandbox_github_probe": {
+    "command": "gh pr view 102409 --repo NousResearch/hermes-agent --json number,url,state,title,body,headRefOid,headRefName,headRepositoryOwner,reviewDecision,mergeable,mergeStateStatus,statusCheckRollup",
+    "exit_code": 1,
+    "observed_output": "error connecting to api.github.com; check your internet connection or https://githubstatus.com",
+    "resolution": "Host-network remote-before and pr-before command receipts passed before test execution. No required tests ran inside the sandbox."
+  },
+  "memory_search": "No task-relevant matches; no prior memory facts used.",
+  "recorded_at": "2026-09-05T13:23:32.792217Z",
+  "skills": "pr-creator read for template/body-file metadata guidance; exact user-specified no-source commands supersede its unrelated create/commit/build workflow."
+}

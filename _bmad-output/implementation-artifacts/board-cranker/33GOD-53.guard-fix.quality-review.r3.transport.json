@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "quality-security",
+  "classification": "single-line-balanced-top-level-json-with-non-json-transport",
+  "normalized_at": "2026-09-04T19:38:21Z",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-guard-quality-review-r3-corrected.raw.txt",
+  "raw_sha256": "8c671a9874c82a297b1fe899a7a4a733e5c6d65a10b83810dc5f6909777fb5b3",
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-guard-quality-review-r3.schema.json",
+  "schema_sha256": "87bea657cf626214ad688870b16061cbf7e12af99cf1c3b8fc87f3ed454e4067",
+  "candidate_count": 1,
+  "schema_valid": true,
+  "fields_changed": false,
+  "handback_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.guard-fix.quality-review.r2.json",
+  "handback_sha256": "d7f76022ef01b94eab9b106f72821c94ba3dccd113f235fe07240fbfae7cd206",
+  "discarded_transport": {
+    "candidate_prefix": "• ",
+    "noncandidate_lines": [
+      "• UserPromptSubmit hook",
+      "",
+      "  ⚡ REMINDER: Before starting, check if any skills from /home/delorenj/.agents/skills/ are relevant to this request.",
+      "   - If this project utilizes the bmad method (evident by the precence of ./_bmad* folder(s)) start the session with a brief recap of where the last session left off and suggest the next logical step. If there are options, lay them out. Make sure to think about it and the offer your recommendation. ⚡",
+      "  > NOTE: Take any and all docs with a grain of salt - I'm a one-man dev team and I pivot hard and fast. If something seems off or doesn't make sense, it's very likely stale data. A little trick I use to guide my confidence is to run:",
+      "  \\'llr\\' which is an alias for \\'fdfind --type f --hidden --exclude .git -X ls -lt --time=ctime -r --color=auto\\'",
+      "  I use the modified time as a compass the correlates mutation-recency and decay with local-relevance and accuracy/truth",
+      "",
+      "• Focused tests pass (50 + 24). Now verifying supporting symbols and the Bloodbank seam.",
+      "",
+      "• All checks done except final tree status. Getting exact line numbers for findings, then final status.",
+      "",
+      "",
+      ""
+    ]
+  }
+}

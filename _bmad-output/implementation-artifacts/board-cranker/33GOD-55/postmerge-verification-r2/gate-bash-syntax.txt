@@ -1,0 +1,2 @@
+$ bash -n git/hooks/pre-push git/hooks/_guard.sh
+exit_code=0

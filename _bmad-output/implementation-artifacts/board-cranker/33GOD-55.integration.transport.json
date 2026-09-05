@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "classification": "single-balanced-object-transport-normalization",
+  "normalized_at": "2026-09-05T10:18:47.342143+00:00",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-postmerge-verification-r2.raw.txt",
+  "raw_sha256": "bd53132bc7a1a1266948819cf10dd78bc4fea69e4045b6d036d8c0d1934fecae",
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-55-postmerge-verification-r2.schema.json",
+  "schema_sha256": "799fa30a4d18255ad95811655a326f3d4a11c69fe35271da5666b91a5093ca1d",
+  "candidate_count": 1,
+  "schema_valid": true,
+  "fields_changed": false,
+  "handback_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55.integration.json",
+  "handback_sha256": "37ca03936fa8d58ba5bf740976c730517a9da098c283fba8a2d29cb4877f069e",
+  "discarded_transport": {
+    "preamble": "• UserPromptSubmit hook\n\n  ⚡ REMINDER: Before starting, check if any skills from /home/delorenj/.agents/skills/ are relevant to this request.\n   - If this project utilizes the bmad method (evident by the precence of ./_bmad* folder(s)) start the session with a brief recap of where the last session left off and suggest the next logical step. If there are options, lay them out. Make sure to think about it and the offer your recommendation. ⚡\n  > NOTE: Take any and all docs with a grain of salt - I'm a one-man dev team and I pivot hard and fast. If something seems off or doesn't make sense, it's very likely stale data. A little trick I use to guide my confidence is to run:\n  \\'llr\\' which is an alias for \\'fdfind --type f --hidden --exclude .git -X ls -lt --time=ctime -r --color=auto\\'\n  I use the modified time as a compass the correlates mutation-recency and decay with local-relevance and accuracy/truth\n\n• Schema and r1 result read. Now running the five code gates from the r2 worktree.\n\n• Owner marker and all fixed hashes verified. Running the five code gates now.\n\n• All PR facts verified. Now the remote/ref/tree/worktree proofs.\n\n• All hashes computed. Building the result JSON programmatically from the manifest, then validating against the schema and rechecking.\n\n• Schema validation passed. Final step: recheck every hash declared in the result against the actual files.\n\n• ",
+    "trailer": "\n\n"
+  }
+}

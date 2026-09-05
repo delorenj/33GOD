@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "issue": "33GOD-53",
+  "gate": "spec-compliance",
+  "classification": "single_balanced_top_level_json_with_non_json_transport",
+  "raw_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-spec-review-r2.raw.txt",
+  "raw_sha256": "fc2e18e0e14a2e2c545145705f5765d30d455cfbf34dc70522a7621234c13502",
+  "canonical_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-53.spec-review.r2.json",
+  "canonical_sha256": "17c797282d2493bb6110873813dc4c2db043f203057e8f68136d3e855e7672a8",
+  "schema_path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-53-spec-review-r2.schema.json",
+  "schema_valid": true,
+  "fields_changed": false,
+  "discarded_prefix": "📂 Adding workspace: /tmp/hermes-board-cranker-50-baseline\n📂 Adding workspace: /home/delorenj/code/33GOD",
+  "discarded_suffix": "\n\n\nRequest ID: 3f16f5da-f0d3-4db3-93a4-4e3945ec4e3f"
+}

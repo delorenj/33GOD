@@ -1,0 +1,1 @@
+{"mergeStateStatus":"CLEAN","mergeable":"MERGEABLE","statusCheckRollup":[{"__typename":"CheckRun","completedAt":"2026-09-05T09:27:40Z","conclusion":"SUCCESS","detailsUrl":"https://dashboard.gitguardian.com","name":"GitGuardian Security Checks","startedAt":"2026-09-05T09:27:07Z","status":"COMPLETED","workflowName":""}]}

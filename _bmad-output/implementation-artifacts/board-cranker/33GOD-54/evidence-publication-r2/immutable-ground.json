@@ -1,0 +1,44 @@
+{
+  "artifact_hashes": [
+    {
+      "path": "/tmp/hermes-board-cranker-50/uv.lock",
+      "sha256": "6393f09ee88cc5683f0e563306f96b5c068f901a8baa60f7209f302c1ac602d9"
+    },
+    {
+      "path": "/tmp/hermes-board-cranker-53-upstream-baseline/uv.lock",
+      "sha256": "6393f09ee88cc5683f0e563306f96b5c068f901a8baa60f7209f302c1ac602d9"
+    },
+    {
+      "path": "/tmp/hermes-board-cranker-50/pyproject.toml",
+      "sha256": "153c8c9f550a89448f699e37384e78663462b8784e85242dd5ad4e35dbb5e093"
+    },
+    {
+      "path": "/tmp/hermes-board-cranker-53-upstream-baseline/pyproject.toml",
+      "sha256": "153c8c9f550a89448f699e37384e78663462b8784e85242dd5ad4e35dbb5e093"
+    },
+    {
+      "path": "/home/delorenj/.local/share/uv/python/cpython-3.11.12-linux-x86_64-gnu/bin/python3.11",
+      "sha256": "ebc7eee9062dc2681b977c4000ff68070d0e1d19e91331b9863c0327a75c72eb"
+    },
+    {
+      "path": "/home/delorenj/.local/share/mise/installs/python/3.11.13/bin/ruff",
+      "sha256": "03b22709bb8f62028a0732423eaac6f7792235bbcb05b3feaddaac3d992318d8"
+    },
+    {
+      "path": "/home/delorenj/code/33GOD/agents/hermes/pm/runtime/board-cranker-controller-owner.json",
+      "sha256": "1c440d8c4473bf997c5f6e666f41a107245776e928c6d308b425707a1152a496"
+    }
+  ],
+  "base_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+  "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "diff_files": [
+    "gateway/platforms/base.py",
+    "gateway/run.py",
+    "tests/gateway/test_contractor_turns.py"
+  ],
+  "ordered_parents": [
+    "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+  ],
+  "start_clean": true
+}

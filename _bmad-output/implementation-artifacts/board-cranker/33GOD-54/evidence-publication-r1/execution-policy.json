@@ -1,0 +1,23 @@
+{
+  "commits_authored": [],
+  "controlled_environment": "credential-free allowlist; same absolute venv; UTC, C.UTF-8, hash seed 0; distinct HERMES_HOME and TMPDIR under this evidence directory; HOME retained unchanged",
+  "external_mutations_allowed_only_after_passing_differential": [
+    "normal fast-forward push of exact candidate",
+    "PR 102409 title and body only"
+  ],
+  "global_git_unpushed": "Not run: global repair/sweep would exceed the named worktree-only scope",
+  "history_rewritten": false,
+  "pending_gates": [
+    "Fresh specification review by controller-appointed independent reviewer",
+    "Subsequent quality/security review by a different independent reviewer"
+  ],
+  "primary_checkout": "forbidden; shared venv executables and shared git metadata read only as explicitly required",
+  "prior_manifest_count": 185,
+  "source_changes": [],
+  "support_tooling_notes": [
+    "Initial evidence parser validation used a single-character summary extraction; corrected before parsing any current evidence.",
+    "Parser validation subprocess exited 0; its wrapper receipt write collided with its report filename. The validation output and explicit exit remain preserved in parser-prior-validation.log."
+  ],
+  "test_runner_choice": "Explicit 33GOD-54 exact python -m pytest commands override general scripts/run_tests.sh guidance; no per-file splitting or pytest command flags added",
+  "worker": "codex-33god-54-evidence-publication-r1"
+}

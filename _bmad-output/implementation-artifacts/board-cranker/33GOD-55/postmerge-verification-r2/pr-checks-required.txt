@@ -1,0 +1,3 @@
+$ gh pr checks 1 --repo delorenj/agents --required
+no required checks reported on the 'feat/33GOD-55-git-travel-guard-remote-ancestry' branch
+exit_code=1

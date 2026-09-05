@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "remote",
+    "get-url",
+    "--push",
+    "delorenj"
+  ],
+  "attempt": 1,
+  "command": "git remote get-url --push delorenj",
+  "completed": "2026-09-05T04:31:01Z",
+  "exit_code": 0,
+  "log": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-54/evidence-publication-r1/fork-url.log",
+  "name": "fork-url",
+  "sha256": "962f017e60836137e8d677facd6734fe8ab6bd67e46e1c248b5019b4783fe56a",
+  "started": "2026-09-05T04:31:01Z",
+  "worktree": "/tmp/hermes-board-cranker-50"
+}
