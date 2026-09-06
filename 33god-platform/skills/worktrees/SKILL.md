@@ -53,6 +53,20 @@ A worktree is a short-lived staging area, not a home.
 - **Never leave uncommitted work in a worktree overnight** — commit and push, even broken. Rotting local state is the failure mode this entire policy exists to kill.
 - **Never bypass `wt` with raw `git worktree add`** — raw git knows nothing about the path template and will happily create a stray. (Raw `git worktree list/remove` for *inspection and repair* is fine.)
 
+## Directory-keyed side effects
+
+Worktrees change your absolute path, and several fleet systems key on it. Know what follows you and what doesn't.
+
+**Hindsight banks — follows you (fixed 2026-09-06).** Bank identity is per-repo, not per-directory. The hook resolver (`~/.agents/hooks/lib/hindsight-bank.sh`) anchors to the main checkout via `git rev-parse --path-format=absolute --git-common-dir`, and remote-name resolution is worktree-independent by nature. Memories written from `repo/.worktrees/feat-x` land in the `repo` bank, same as the main checkout. Never set `HINDSIGHT_BANK` per-worktree — that recreates the fragmentation the resolver exists to prevent. (Before the fix, `--show-toplevel` basename spawned a per-branch bank; if you find banks named like branches, they're fossils of that bug.)
+
+**Agent CLI session history — does NOT follow you.** Kimi Code (`~/.kimi-code/sessions/wd_<dir>_<hash>`), Claude Code (`~/.claude/projects/<encoded-path>`), and Codex all key session history on the absolute working-directory path. Consequences:
+
+- A session started in a worktree is a **new, separate history** — `--resume` / `--continue` from the main checkout won't list it, and vice versa. This is a feature when you want task isolation; plan for it when you don't.
+- When `wt merge` / `wt remove` deletes the worktree, its session history dangles at a dead path and stops being discoverable by cd-ing around. **Treat worktree sessions as ephemeral**: land the work, write the hindsight memory / ticket note, let the session die with the worktree.
+- If a task must outlive its worktree (multi-session epic), the breadcrumb belongs in the repo's hindsight bank or the ticket — never in "I'll just resume that session."
+
+**Shell state — follows interactively only.** `wt switch` with shell integration cd's the interactive shell, so a human's zsh history is continuous. Agent tool calls get a fresh shell per call regardless — always `cd` explicitly or use `wt -C <path>`.
+
 ## Relationship to other rules
 
 - **merge-forward skill:** worktrees are the delivery vehicle for merge-forward slices — smallest observable change in a worktree, landed on main immediately.
