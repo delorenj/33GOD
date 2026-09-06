@@ -1,6 +1,6 @@
 # iMi-managed directories (per-component)
 **/.iMi/
-worktrees/
+.worktrees/
 **/feat-*/
 **/fix-*/
 **/pr-*/
