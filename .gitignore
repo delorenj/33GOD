@@ -109,7 +109,9 @@ runtime/
 # does not untrack anything already in the index -- those needed
 # `git rm -r --cached .agents/skills`. No trailing slash: the projection can be
 # a symlink as well as a directory.
-/.agents/skills
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/33god-merge-forward/
 
 # PJAN-82: generated skill projections are never tracked
 # sync-skills.py, provision-packs.py and bmad-method rewrite these on every
@@ -122,4 +124,5 @@ runtime/
 .kimi-code/skills
 .crush/skills
 .cursor/skills
-.agents/skills
+.agents/skills/*
+!.agents/skills/33god-merge-forward/

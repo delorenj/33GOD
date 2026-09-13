@@ -58,6 +58,8 @@ def desired_commands(master: dict, agent_key: str) -> list[tuple[str, str | None
     mapping = agent["lifecycle_events"]
     result = []
     for hook in master["hooks"]:
+        if hook.get("dispatch_owner") == "bloodbank-hook-hub":
+            continue
         event = mapping.get(hook["lifecycle"])
         if not event:
             continue
@@ -149,9 +151,9 @@ def load_json_target(path: Path) -> dict | None:
 
 
 def backup_once(path: Path) -> None:
-    backup = path.with_suffix(path.suffix + ".33god-bak")
-    if path.exists() and not backup.exists():
-        backup.write_text(path.read_text())
+    # Source history is the backup. Native config projection never writes a
+    # plaintext copy alongside a credential-bearing settings file.
+    pass
 
 
 def install_json(master: dict, agent_key: str) -> None:

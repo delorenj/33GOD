@@ -1,15 +1,16 @@
 {
-  "$comment": "SINGLE SOURCE OF TRUTH for 33GOD project-scoped hooks. Hand-edit this file, then run `mise run hooks:sync`. Generated/injected client configs are not hand-edited.",
+  "$comment": "33GOD owns the merge-forward implementation. Bloodbank hook-hub owns its native lifecycle dispatch; project fanout removes its retired native registrations.",
   "version": 1,
   "marker": "33god-project-hooks",
   "hooks": [
     {
       "id": "merge-forward-session-rebalance",
+      "dispatch_owner": "bloodbank-hook-hub",
       "lifecycle": "session_close",
       "script": "merge-forward/session-end.sh",
       "timeout_s": 3,
       "reads_stdin": true,
-      "description": "After a 33GOD session becomes idle or closes, asynchronously tune the repo-scoped merge-forward skill from concrete session evidence."
+      "description": "After a true 33GOD session close, the hub supervises the repo-scoped merge-forward tuner."
     }
   ],
   "agents": {
@@ -28,11 +29,11 @@
       "dialect": "codex_hooks",
       "config_target": "~/.codex/hooks.json",
       "base_dir": "{repo}/.agents/hooks",
-      "timeout_unit": "ms",
+      "timeout_unit": "s",
       "lifecycle_events": {
-        "session_close": "Stop"
+        "session_close": "SessionEnd"
       },
-      "notes": "Codex exposes Stop rather than a true project SessionEnd event. The hook worker debounces Stop events and runs only after the session has been quiet."
+      "notes": "Installed Codex exposes SessionEnd. Stop is turn completion. Native dispatch is owned by the hub."
     },
     "kimi": {
       "enabled": true,
