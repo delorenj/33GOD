@@ -144,8 +144,16 @@ selection crash found during these checks was corrected and re-tested live.
   the root Compose service; the API runs its built service artifact.
 
 Existing CLI processes may cache native registrations. Their registered legacy
-publisher commands now forward safely to the hub, and owned legacy behaviors
-are passive. Start a fresh CLI session to load newly added native hook types.
+publisher commands now forward safely to the hub, and guarded legacy behavior
+entrypoints defer to central ownership. Start a fresh CLI session to load newly
+added native hook types.
+The final process check found two running Claude and four Codex processes with
+no Orca launch environment, and no Copilot/Kimi processes. Their cached Orca
+registrations reference mutable shell scripts, which exit without that launch
+context. No current Orca double-posting path was demonstrated, and these observed
+processes do not require a restart to prevent it. Fresh sessions use the new
+central registrations.
+
 Actual cached Hermes fleet emission has not yet been observed; compatibility is
 covered by executable forwarding/identity tests, while its installed wiring and
 adapter replay are verified. OpenClaw remains explicitly unsupported.
