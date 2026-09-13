@@ -2,7 +2,7 @@ id: pjangler
 name: PJangler
 role: provisioning-control-plane
 repo: ../pjangler
-description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects and agents.
+description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects and agents, including the portable repository-ignore contract.
 compose:
   files: []
   platform_projection: ../compose.yaml
@@ -26,4 +26,8 @@ changelog:
 public_card:
   title: Project Factory
   promise: Reproducible project and agent provisioning from one registry.
-backfills: []
+contracts:
+  repository_ignore: CommonProject preserves repo rules and never copies core.excludesFile; .agents is canonical and client roots remain local generated projections.
+  index_reconciliation: PJangler never bulk-untracks files; use gitignore-maintenance after effective-rule review.
+backfills:
+  - gitignore-global-policy-v1

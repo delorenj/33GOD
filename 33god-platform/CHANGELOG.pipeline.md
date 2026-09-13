@@ -3,6 +3,23 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-09-13
+
+### Global Git ignore policy and reviewed repository parity
+
+CommonProject no longer copies a developer's global ignore into generated
+repositories or emits negations that make client-specific agent directories
+durable project state. It preserves existing `.gitignore` content and appends
+only the portable project contract. PJangler's `bmad.cli-roots` parity rule now
+removes only its exact retired override lines, keeps `.agents/` canonical, and
+leaves the Git index untouched.
+
+Skillex distributes the standalone `gitignore-maintenance` skill through the
+minimum global set. That skill owns effective-rule provenance, repo
+simplification, and the reviewed already-tracked parity workflow with local-file
+preservation plus commit/push. The `gitignore-global-policy-v1` read-only
+backfill inventories old component repos without silently untracking anything.
+
 ## 2026-08-26
 
 ### Canonical event journey and skill dependency reconciliation

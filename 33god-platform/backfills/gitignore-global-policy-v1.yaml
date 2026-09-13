@@ -1,0 +1,28 @@
+id: gitignore-global-policy-v1
+title: Retire copied global ignores and client-root overrides
+owner_component: pjangler
+kind: check-only
+summary: >
+  Component repositories keep only portable project rules in .gitignore;
+  machine-wide exclusions stay in core.excludesFile, .agents is canonical, and
+  client-specific agent roots are generated local projections.
+search_paths:
+  - ../*/.gitignore
+forbidden_patterns:
+  - "# Personal, machine-wide Git excludes."
+  - "# Generated CLI configurations are durable project state..."
+  - "!.claude/"
+  - "!.codex/"
+  - "!.gemini/"
+  - "!.copilot/"
+  - "!.opencode/"
+  - "!.kimi-code/"
+remediation: >
+  Load gitignore-maintenance. Resolve the active global source with
+  `git config --show-origin --path --get core.excludesFile`; never assume a
+  fixed path or copy that file into the repo. Simplify only rules confirmed to
+  be system-wide, then run the effective-ignore audit and review every tracked
+  match with provenance. If approved, use explicit `git rm --cached` paths,
+  prove local files remain, commit and push the parity change, and restore the
+  repository .gitignore exactly as the skill workflow specifies. PJangler may
+  normalize its exact managed legacy lines but must never bulk-untrack files.

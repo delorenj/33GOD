@@ -11,11 +11,14 @@ health:
     - cd ../../skillex && python3 /home/delorenj/.codex/skills/.system/skill-creator/scripts/quick_validate.py all-skills/33god-ecosystem
 source_of_truth:
   - ../../skillex/all-skills
+  - ../../skillex/sets
   - ../../skillex/packs
 changelog:
   topics: [skills, packs, agent-capabilities]
 public_card:
   title: Unified Agent Skills
   promise: One capability catalog fanned out to every agent CLI.
+contracts:
+  global_repository_hygiene: gitignore-maintenance is selected by sets/min-global and projected through the global manifest; repositories do not vendor it.
 backfills:
   - skillex-33god-hub-v1

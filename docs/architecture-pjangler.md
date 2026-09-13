@@ -38,7 +38,24 @@ PJangler has no HTTP server. CLI and stdio MCP are its public control surfaces. 
 
 ## Template and Integration Architecture
 
-Templates may mutate repositories, user profiles, systemd, external providers, and remote services. Copier is invoked with trust. Current template gitlinks are dirty, and Hermes resolution uses `HEAD`, breaking parent-commit reproducibility.
+Templates may mutate repositories, user profiles, systemd, external providers,
+and remote services. Copier is invoked with trust. Template gitlinks must pin
+published component revisions so parent commits remain reproducible; local
+dirty submodule state is never release evidence.
+
+### Repository ignore boundary (PJAN-126)
+
+CommonProject treats `.gitignore` as a small, portable project contract. It
+preserves existing content, appends only secret and `.agents` local-projection
+rules, and never copies the operator's `core.excludesFile`. `.agents/` is the
+only canonical agent-config tree; the six supported client roots remain local
+generated projections governed by the global ignore.
+
+The `bmad.cli-roots` migration removes only exact client-root override lines
+from PJangler's retired managed block. It does not mutate Git's index. Existing
+repositories use the globally distributed `gitignore-maintenance` skill to
+resolve rule provenance, review tracked ignored paths, prove local copies
+survive, and then commit/push explicit index changes.
 
 > **Superseded 2026-08-04 (PJAN-19 landed):** Bloodbank command ingress is now the
 > single fleet-shared `hermes-fleet-bloodbank-gateway.service` routing
@@ -65,4 +82,4 @@ Wrong root repository identity, dirty/unpinned templates, package-lock version d
 
 ## Development Workflow
 
-Use [PJangler Development Guide](./development-guide-pjangler.md). Template changes require platform change evidence and downstream regeneration/backfill planning.
+Use [PJangler Development Guide](./development-guide-pjangler.md). Template changes require platform change evidence and downstream regeneration/backfill planning; repository-ignore drift is inventoried by `gitignore-global-policy-v1`.

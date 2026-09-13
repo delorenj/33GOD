@@ -121,6 +121,7 @@ change and its skill update land in the same commit:
 | `agent-fleet-operations`, `mise-*`, `pjangler-*`, `projects`    | `pjangler/skills/`   |
 | `project-lifecycle`, `task-triage`                              | `krebs/skills/`      |
 | `33god-hub`, `merge-forward`, `skillex-skill-registry`          | `33god-platform/skills/` |
+| `gitignore-maintenance`                                         | `~/code/skillex/all-skills/` (standalone catalog skill) |
 
 Root `skills/` holds only links to those owners. Never edit through a link
 expecting the owner to follow.

@@ -34,6 +34,14 @@ Treat `~/.config/pjangler/projects.yaml` as catalog/bootstrap authority and `.pr
 
 Copier uses `--trust`; template tasks are executable host code. Pin template provenance, eliminate dirty gitlink dependence, and review remote installers, provider wiring, secret handling, systemd changes, and checkpoint pushes. Update platform change logs and define a regeneration/backfill plan for every material template contract change.
 
+For `.gitignore`, preserve existing repo rules and add only the portable
+project contract. Never copy or hard-code `core.excludesFile`, and never add
+negations that make `.claude/`, `.codex/`, or another generated client root
+canonical. A structural migration may delete exact lines PJangler previously
+generated; it must not call `git rm --cached`. Route index reconciliation to
+`gitignore-maintenance` and cover both an isolated global-ignore fixture and a
+tracked-path-preservation regression.
+
 ## Tests
 
 The Node regression scripts create/remove temporary filesystem state. Run them only in a writable test environment. Existing coverage includes parity migration, MCP catalog/server flows, project initialization, registry conflicts, agent preservation, and ticket projections.

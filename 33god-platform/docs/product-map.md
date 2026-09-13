@@ -27,6 +27,7 @@ hosted/cloud projection remains validation-only.
 | Agent intent | Momo/UI/CLI → Bloodbank COMMANDS → Hermes gateway → fleet-registry gate → Hermes profile | Work is requested; the command itself is not evidence that work completed. |
 | Lifecycle proof | Hermes gateway/profile → Bloodbank EVENTS → Candystore → Holocene | Started, completed, failed, or rejected facts close the command correlation loop. |
 | Memory context | Agent runtime ↔ Hindsight | Recall/retain augments decisions but never replaces ticket, event, or command authority. |
+| Repository hygiene | Skillex → `gitignore-maintenance` → Git effective-ignore/index review; PJangler → CommonProject repo contract | Global personal exclusions stay global, project rules stay portable, and tracked ignored files are removed only after provenance review. |
 
 The complete authority map, security boundary, current proof, and editable
 architecture/message-trace diagrams are in [Event and Command
@@ -59,6 +60,16 @@ The approved ownership and pilot design lives in
 5. **Operator experience:** Candybar, HeyMa, product docs.
 6. **Planned execution integration:** Flume policy -> ACP sessions -> Bloodbank
    commands -> Hermes fleet, with DeLoNET LiteLLM owning model routing.
+
+Repository hygiene deliberately spans provisioning and capability layers.
+CommonProject preserves an existing `.gitignore` and adds only project-owned
+secret/local-projection rules; it never copies a developer's
+`core.excludesFile`. PJangler can retire only its exact historical managed
+lines and never mutates the index. Skillex distributes
+`gitignore-maintenance`, which resolves the effective global file dynamically,
+audits tracked matches with provenance, and performs the reviewed commit/push
+parity workflow. `.agents/` is canonical; `.claude/`, `.codex/`, and the other
+client roots are local generated projections.
 
 ## Local-first rule
 
