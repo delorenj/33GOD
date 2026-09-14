@@ -90,6 +90,11 @@ exactly-once guarantee.
 
 ## Holocene
 
+The direct proxy and polling path described below is the initial delivery.
+The [Bloodbank event collection follow-up](hooks-event-collection-2026-09-13.md)
+supersedes that integration boundary: Hooks is now a filtered view of
+Holocene's shared event collection.
+
 The implementation preserves the drawing's stacked Bloodbank/native panels,
 explorer, explicit mapping, and attached-handler badges. Its UX was refined in
 [Google Stitch project 16143358374491232683](https://stitch.withgoogle.com/projects/16143358374491232683),
