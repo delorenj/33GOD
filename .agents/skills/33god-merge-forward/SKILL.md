@@ -24,7 +24,7 @@ Changes to these boundaries require an explicit product decision. Routine implem
 
 ## Delivery
 
-1. Establish the current branch, source changes, and affected live behavior.
+1. Establish the current branch, source changes, and affected live behavior. For diagnosis-only work, if service has recovered and no repair is needed, verify recovery and report findings; no source change or merge is required.
 2. Define the smallest outcome and select the checks in [references/gates.md](references/gates.md).
 3. Implement only the owning component and its immediate interface changes.
 4. Run checks sufficient to prove the changed behavior. Fix reproduced failures.

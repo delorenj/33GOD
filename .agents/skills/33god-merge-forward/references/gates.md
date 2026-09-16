@@ -2,6 +2,7 @@
 
 Select checks that demonstrate the slice's actual behavior:
 
+- Live routing failures: check the public response, backend, and affected data endpoint; an authentication redirect alone does not prove backend health. Correlate Traefik DNS/health errors with container recreation timestamps and the configured health-check interval. If service recovers without intervention, verify current route health and endpoint responses, then stop without a speculative restart or patch. Distinguish the observed failure and recovery from any unproven recreation trigger.
 - Hook changes: native loader registration, one event to one handler receipt, payload and context output, hub-down behavior, and concurrent session identity.
 - Event changes: contract validation, broker delivery, and durable Candystore arrival.
 - Holocene changes: typecheck, build, browser interaction, and live route verification.
