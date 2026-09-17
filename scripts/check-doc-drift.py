@@ -46,7 +46,6 @@ GENERATED_SCAFFOLDS = (
     "candystore/agents/hermes/pm/.runtime-scaffold",
     "holocene/agents/hermes/pm/.runtime-scaffold",
     "pjangler/agents/hermes/pm/.runtime-scaffold",
-    "candybar/agents/hermes/pm/.runtime-scaffold",
 )
 
 # A generated subject must never carry a repo or agent identifier as a subject

@@ -1,9 +1,6 @@
 [submodule "bloodbank"]
 	path = bloodbank
 	url = git@github.com:delorenj/bloodbank.git
-[submodule "candybar"]
-	path = candybar
-	url = git@github.com:delorenj/candybar.git
 [submodule "candystore"]
 	path = candystore
 	url = git@github.com:delorenj/candystore.git

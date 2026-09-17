@@ -27,9 +27,6 @@ while IFS= read -r file; do
         holyfields/*)
             COMPONENTS_CHANGED[holyfields]=1
             ;;
-        candybar/*)
-            COMPONENTS_CHANGED[candybar]=1
-            ;;
         candystore/*)
             COMPONENTS_CHANGED[candystore]=1
             ;;
