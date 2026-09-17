@@ -38,6 +38,10 @@ The first managed canaries are 33GOD and James Brennan. Plane key enrollment is 
 - Bloodbank `bb verify-envelope` accepted the generated receipt event's canonical naming/envelope.
 - Live event transport/storage fixture: event `402d9659-dc1c-4794-b902-82e6c4f14e47`, explicitly marked `fixture=true`, was acknowledged by `BLOODBANK_EVENTS` at stream sequence `2299057` and fetched from Candystore at `/events/402d9659-dc1c-4794-b902-82e6c4f14e47` (HTTP 200). No Plane ticket was created or modified for this probe.
 
+- Real Pilot HTTP adapter: four integration checks pass against an isolated HTTP server, using the production Node subprocess and Plane client. Verified paginated membership, exact states, native assignment, preserved unrelated labels/assignees, one escaped question comment and zero writes for rejected identity/membership/state bindings. Controller capability changes are under review; final tests will use durable intents.
+- Installed Momo: Skillex vendored canonical Momo `9c69b5d` into catalog commit `3a3fc73` (Skillex pin `e2afe8c`). Fresh native Hermes `skill_view` calls for `33god-pm` and `james-brennan-pm` returned the exact canonical entrypoint SHA256 `af9e0d9a5141a207e935bac61aa8a019807d71947da2875f5b1cabb4152e3568` and referenced playbook SHA256 `15b51e3cb0832bfddf6f4d075d972a22044189bfbdeb14ce24c2781e6c39d9da`. These prove native loading, not managed activation; final review fixes will be re-vendored.
+- Formal review: blind, edge-case and verification layers completed. Individual verified findings and correction groups are recorded in the implementation spec; corrections are in progress.
+
 These checks do not establish that the new controller is running in production, any PM is enrolled for managed mode, or any stranded ticket has been repaired. Further implementation and integration checks remain pending.
 
 ## Workspace preservation

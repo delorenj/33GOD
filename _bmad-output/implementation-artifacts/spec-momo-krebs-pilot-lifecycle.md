@@ -2,7 +2,7 @@
 title: Momo, Krebs and Pilot reliable ticket execution
 type: feature
 created: 2026-09-16
-status: in-progress
+status: in-review
 baseline_commit: 1bb2011d5994
 review_loop_iteration: 0
 context:
@@ -73,6 +73,57 @@ Implementation agent owns code and its focused tests across these components; ro
 ## Spec Change Log
 
 ## Review Triage Log
+
+All three reviews completed before triage. A new third reviewer thread was unavailable (platform thread limit); the idle grounding reviewer ran verification-gap instructions against the supplied diff. Each finding below was checked against its own source/call path. Shared-parent ephemeral review actors are intentional; no finding requests a native account for every temporary reviewer.
+
+All entries are kept as implementation patches: the approved execution contract already specifies the required behavior, so there is no unresolved intent or change to frozen acceptance. Related entries are grouped for implementation only after these individual verdicts. No existing work is reverted.
+
+| ID | Severity | Verified finding | Source consequence / disposition |
+|---|---|---|---|
+| B1 | high | Successful outcome still swept as abnormal exit | Keep; patch — controller sweep ignores record.outcome. |
+| B2 | high | Null acceptance passes equality checks | Keep; patch — review/handoff accept None after update. |
+| B3 | high | No delivered outcome required for closeout | Keep; patch — handoff checks evidence but not successful finish. |
+| B4 | high | Cross-ticket takeover strands old ticket | Keep; patch — stop targets old attempt; projection targets new ticket. |
+| B5 | high | Invalid start wedges pending intent | Keep; patch — argv validated only inside recovery. |
+| B6 | high | Lost transient unit allows duplicate dispatch | Keep; patch — runtime start dedup uses only LoadState. |
+| B7 | high | Plane outage prevents local revocation/stop | Keep; patch — sweep reads provider before expiry and recover verifies first. |
+| B8 | high | Managed Backlog cannot become Todo | Keep; patch — planning transition absent from operations. |
+| B9 | high | Inactive-ticket CRUD requires worker | Keep; patch — comment/update enter active-attempt gate. |
+| B10 | high | Retry exhaustion has no operator reset | Keep; patch — all acquisition paths reject exhausted flag. |
+| B11 | high | Malformed command can kill consumer | Keep; patch — exception handler assumes command dict and correlation. |
+| B12 | high | Pins omit transitive helper and skill files | Keep; patch — verify hashes only two entrypoints. |
+| B13 | high | Explicit board outside CWD bypasses managed routing | Keep; patch — config loads execution only from ancestor manifest. |
+| B14 | high | Malformed manifest reactivates legacy | Keep; patch — heartbeat fallback and readJson swallow parse failure. |
+| B15 | high | Readiness accepts unusable recovery/runtime bindings | Keep; patch — service omits controller actor, roles, prefix and supervisor probe. |
+| B16 | high | Standalone health import missing dependency | Keep; patch — old pyproject has no canonical Krebs dependency. |
+| B17 | medium | Legacy idea submission regressed | Keep; patch — new submit requires execution.actors before queue. |
+| B18 | high | Feedback crash leaves permanent lock | Keep; patch — mkdir lock has no ownership/recovery or flush path. |
+| E1 | high | Invalid start permanently blocks board | Keep; patch — confirmed independently at contract start and recovery. |
+| E2 | high | Restart can repeat disappeared transient launch | Keep; patch — no durable launch-attempt record. |
+| E3 | high | Expired pending start can launch | Keep; patch — recovery calls runtime.start before lease check. |
+| E4 | high | Null acceptance drops child gates | Keep; patch — required_children falls back to empty for None. |
+| E5 | high | Takeover leaves old projection active | Keep; patch — no old-ticket provider action in plan. |
+| E6 | high | PATCH then failed question POST strands intent | Keep; patch — one sent bit covers two independent mutations. |
+| E7 | high | Comment blesses changed human scope | Keep; patch — all observed revisions overwrite provider_revision. |
+| E8 | high | Scope race between validation and apply/readback | Keep; patch — helper lacks expected content revision guard. |
+| E9 | high | Operator cannot reset exhausted retry state | Keep; patch — no operation changes retry_exhausted to false. |
+| E10 | high | Lock-before-spool can lose idea | Keep; patch — lock survives process exit before persist. |
+| E11 | high | Standalone health dependency missing | Keep; patch — checkout fallback requires sibling root source. |
+| E12 | high | Internal helper apply lacks durable intent check | Keep; patch — handle accepts caller binding and disables execution fence. |
+| E13 | high | Readiness lacks repair actor/runtime prerequisites | Keep; patch — verified service and PJ readiness differences. |
+| E14 | high | Installed referenced playbook not pinned | Keep; patch — SKILL.md hash does not cover managed-execution.md. |
+| V1 | high | Default test command can pass with all skipped | Keep; patch — reviewer ran20skipped; all new test groups opt-in. |
+| V2 | high | Production provider writes not exercised | Keep; patch — existing provider tests verify only enrollment; execution substitutes lane-only fixtures. |
+| V3 | high | Legacy managed dispatch/ACK fences untested | Keep; patch — tests do not execute managed/shadow/cached callback branches. |
+| V4 | high | Managed heartbeat behavior untested | Keep; patch — existing heartbeat tests remain legacy; adapter fence test separate. |
+| V5 | high | Feedback spool and delivery recovery untested | Keep; patch — no test imports idea submit/recovery. |
+| V6 | high | Undispatched claim renewed forever | Keep; patch — adapter renews every active claim; sweep only probes dispatched runs. |
+| R1 | high | Managed heartbeat never invokes idle PM planning | Keep; patch — adapter only status/renew/exit disables autonomous board operation. |
+| R2 | high | Run ID reuse across generations remains possible | Keep; patch — unit identity based on run_id; contract does not enforce uniqueness. |
+| R3 | high | Approved distinct operator override missing | Keep; patch — operation set lacks audited override path. |
+| R4 | medium | Momo distribution text contradicts actual registry | Keep; patch — SKILL.md calls all-skills retired though native Hermes consumes it. |
+
+Correction groups: execution gates (B1–B5/B8–B10/E1/E4/E5/E9/R2/R3); durable launch and local recovery (B6/B7/E2/E3/V6/R1); provider step/content integrity (E6–E8/E12/V2); ingress and ownership (B11/B13/B14); full artifact/readiness/compatibility (B12/B15/B16/E11/E13/E14/R4); feedback (B17/B18/E10/V5); required behavioral gates (V1/V3/V4). Root owns the real HTTP provider and transport integration checks; implementation agent owns code fixes and other regression checks.
 
 ## Verification
 

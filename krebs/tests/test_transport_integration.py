@@ -13,10 +13,24 @@ import uuid
 
 import nats
 import pytest
+from jsonschema import Draft202012Validator, FormatChecker
+from referencing import Registry as SchemaRegistry, Resource
 
 from krebs import adapters, service
 from krebs.controller import Controller
 from krebs.store import Store
+
+
+def validate_envelope(root, envelope):
+    schema_root = root / "bloodbank/schemas"
+    resources = []
+    for path in (schema_root / "_common").glob("*.json"):
+        document = json.loads(path.read_text())
+        resources.append((document["$id"], Resource.from_contents(document)))
+    domain, entity, action = envelope["type"].split(".")[1:]
+    schema = json.loads((schema_root / "bloodbank" / domain / f"{entity}.{action}.json").read_text())
+    Draft202012Validator(schema, registry=SchemaRegistry().with_resources(resources),
+                         format_checker=FormatChecker()).validate(envelope)
 
 
 class FixtureProvider:
@@ -133,9 +147,21 @@ def test_real_pilot_bloodbank_controller_roundtrip(tmp_path, monkeypatch):
             with store.connect() as conn:
                 event = conn.execute("SELECT * FROM krebs.outbox WHERE envelope->>'causationid'=%s", (command_id,)).fetchone()
             assert event and event["published_at"]
-            stored = await js.get_last_msg("BLOODBANK_EVENTS", event["subject"])
-            # The stream's stored envelope keeps the command causation intact.
-            assert json.loads(stored.data)["causationid"] == command_id
+            # Other test projects share the disposable outbox. Locate this
+            # immutable event ID, rather than assuming it was published last.
+            info = await js.stream_info("BLOODBANK_EVENTS")
+            stored_envelope = None
+            for sequence in range(info.state.last_seq, max(info.state.first_seq - 1, info.state.last_seq - 1000), -1):
+                stored = await js.get_msg("BLOODBANK_EVENTS", seq=sequence)
+                candidate = json.loads(stored.data)
+                if candidate["id"] == event["id"]:
+                    stored_envelope = candidate
+                    break
+            assert stored_envelope and stored_envelope["causationid"] == command_id
+            validate_envelope(root, stored_envelope)
+            for subject in ["bloodbank.cmd.lifecycle.task.invoke", "bloodbank.rpy.lifecycle.task.invoke"]:
+                message = await js.get_last_msg("BLOODBANK_COMMANDS", subject)
+                validate_envelope(root, json.loads(message.data))
         finally:
             serving.cancel()
             await asyncio.gather(serving, return_exceptions=True)
