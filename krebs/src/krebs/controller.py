@@ -221,16 +221,21 @@ class Controller:
         require(payload.get('reason') and payload.get('receipt'),'operator reconciliation reason and evidence receipt required')
         require(payload.get('resolution') in {'cancel','abandon'},'resolution must be cancel or abandon')
         pending=conn.execute('SELECT body FROM krebs.commands WHERE command_id=%s',(board['pending'],)).fetchone()['body']
+        pending_plan=conn.execute('SELECT plan FROM krebs.intents WHERE command_id=%s',(board['pending'],)).fetchone()['plan']
+        planner=pending['operation']=='planner'
         require(command['ticket_id']==pending['ticket_id'],'reconciliation ticket mismatch')
         next_state=deepcopy(board);next_state['revision']+=1;next_state['pending']=None
-        action={'stop':bool(board['active'])}
-        if payload['resolution']=='cancel':
+        attempt=deepcopy(pending_plan.get('attempt') if planner else board['active'])
+        action={'stop':bool(attempt)}
+        if planner:
+            next_state['tickets'].pop(command['ticket_id'],None)
+        elif payload['resolution']=='cancel':
             action.update(lane='Cancelled',working=False)
             next_state['tickets'].setdefault(command['ticket_id'],{})['lane']='Cancelled'
         else:
             next_state['tickets'].setdefault(command['ticket_id'],{}).update(lane='Needs Re-evaluation',unverified_provider=True)
-        if board['active'] and board['active']['ticket_id']==command['ticket_id']: next_state['active']=None
-        plan={'next':next_state,'action':action,'attempt':deepcopy(board['active']),'actor':command['actor_id'],'content_revision':None}
+        if not planner and board['active'] and board['active']['ticket_id']==command['ticket_id']: next_state['active']=None
+        plan={'next':next_state,'action':action,'attempt':attempt,'actor':command['actor_id'],'content_revision':None}
         with conn.transaction():
             self._supersede(conn,board,'operator '+payload['resolution']+': '+payload['reason'])
             self._enqueue(conn,project,project['actors'][command['actor_id']],board,command,plan)
@@ -248,6 +253,7 @@ class Controller:
         planner={**command,'lease_until':self.clock()+300,'supervisor':self.runtime.freeze(actor['runtime']) if hasattr(self.runtime,'freeze') else deepcopy(actor['runtime']),'project_root':str(__import__('pathlib').Path(project['manifest']).parent)}
         # One fixed planner unit per board; runtime refuses a second active instance.
         planner['run_id']='planner-'+digest(project['project_id'])[:16]
+        planner['planning']=True
         plan={'next':deepcopy(board),'action':{'runtime_start':argv},'attempt':planner,'actor':command['actor_id'],'content_revision':None}
         plan['next']['revision']+=1
         self._enqueue(conn,project,actor,board,command,plan)

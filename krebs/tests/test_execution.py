@@ -247,3 +247,17 @@ def test_outbox_sequence_follows_board_revisions(world):
     with world[0].store.connect() as conn:
         rows=conn.execute("SELECT envelope->>'causationid' AS command_id FROM krebs.outbox WHERE envelope->>'causationid'=ANY(%s) ORDER BY sequence",([first['command_id'],second['command_id']],)).fetchall()
     assert [r['command_id'] for r in rows]==[first['command_id'],second['command_id']]
+
+def test_pending_planner_cancel_stops_frozen_unit_without_plane_issue_write(world):
+    world[1].binding['manifest']='/tmp/fixture/.project.json'
+    world[1].binding['actors']['pm']['runtime']['planner_argv']=['true']
+    def launch(*args):raise OSError('unknown launch')
+    world[3].start=launch
+    c=command(world,operation='planner',ticket_id='_board',payload={})
+    with pytest.raises(OSError):world[0].execute(c,'pm')
+    stopped=[]
+    world[3].stop=lambda p,a:stopped.append(a) or {'stopped':True}
+    fix=command(world,operation='reconcile',ticket_id='_board',actor='repair',payload={'operation_id':c['command_id'],'resolution':'cancel','reason':'unit outcome uncertain','receipt':'supervisor evidence'})
+    assert world[0].execute(fix,'repair')['ok']
+    assert stopped[0]['planning'] is True and stopped[0]['run_id'].startswith('planner-')
+    assert world[2].writes==0

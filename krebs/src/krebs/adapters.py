@@ -150,11 +150,11 @@ class Runtime:
         probe = subprocess.run(["systemctl", "--user", "show", unit, "--property=LoadState", "--value"], capture_output=True, text=True, timeout=10)
         if probe.returncode == 0 and probe.stdout.strip() == "loaded":
             return {"unit": unit, "existing": True}
-        extra=[]
+        extra=["--property=RuntimeMaxSec=300"] if attempt.get("planning") else []
         if adapter.get('release_descriptor'):
-            extra=['--setenv=PATH='+adapter['path']]
+            extra+=['--setenv=PATH='+adapter['path']]
             argv=[adapter['python'],'-m','krebs.worker',adapter['release_descriptor'],'--',*argv]
-        result = subprocess.run(["systemd-run", "--user", "--unit", unit,
+        result = subprocess.run(["systemd-run", "--user", "--collect", "--unit", unit,
             "--property=KillMode=control-group", "--property=Restart=no", "--property=TimeoutStopSec=15",
             *extra, "--setenv=KREBS_RUN_ID=" + run, "--setenv=PILOT_ACTOR_ID=" + attempt["actor_id"],
             "--working-directory=" + attempt.get("project_root", str(Path(project["manifest"]).parent)), "--", *argv], capture_output=True, timeout=30)
