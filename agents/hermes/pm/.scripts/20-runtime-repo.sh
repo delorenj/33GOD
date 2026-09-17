@@ -70,7 +70,25 @@ PYEOF
 # Never let a literal secret reach the runtime. The scaffold is rendered from
 # templates, so a leaked credential shows up here before anything is copied.
 python3 "$(dirname "$0")/secret-scan.py" "$TMP"
-cp -an "$TMP/." "$RUNTIME_LOCAL/"
+python3 - "$TMP" "$RUNTIME_LOCAL" <<'PYEOF'
+import os, pathlib, shutil, sys
+
+source = pathlib.Path(sys.argv[1])
+target = pathlib.Path(sys.argv[2])
+for current in sorted(source.rglob("*")):
+    relative = current.relative_to(source)
+    destination = target / relative
+    if current.is_dir():
+        destination.mkdir(parents=True, exist_ok=True)
+        continue
+    if os.path.lexists(destination):
+        continue
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if current.is_symlink():
+        destination.symlink_to(os.readlink(current))
+    else:
+        shutil.copy2(current, destination, follow_symlinks=False)
+PYEOF
 
 # Seed mutable identity/config only when no local value exists.
 if [[ "$ROLE" == "reporter" ]]; then
@@ -78,18 +96,18 @@ if [[ "$ROLE" == "reporter" ]]; then
   # config: it may carry dashboard credentials, write-capable MCPs, or broad tools.
   MODEL_PROVIDER="$(yaml_get model.provider)"
   MODEL_NAME="$(yaml_get model.name)"
-  CANONICAL_SKILLS_DIR="${CANONICAL_SKILLS_DIR:-$(config_get fleet.canonical_skills_dir "$HOME/.agents/skills")}"
   if [[ ! -e "$RUNTIME_LOCAL/config.yaml" ]]; then
     python3 - "$RUNTIME_LOCAL/config.yaml" "$PROJECT_PATH" "${HERMES_TIMEZONE:-America/New_York}" \
-      "$MODEL_PROVIDER" "$MODEL_NAME" "$CANONICAL_SKILLS_DIR" "$ROLE" <<'PYEOF'
+      "$MODEL_PROVIDER" "$MODEL_NAME" "$ROLE" <<'PYEOF'
 import json, pathlib, re, sys
-path, cwd, timezone, provider, model, skills, role = sys.argv[1:8]
+path, cwd, timezone, provider, model, role = sys.argv[1:7]
 if not re.fullmatch(r"[A-Za-z_]+(?:/[A-Za-z_]+)*", timezone):
     raise SystemExit("unsafe timezone")
 config = {
     "timezone": timezone,
     "terminal": {"cwd": cwd},
-    "skills": {"external_dirs": [skills]},
+    # The named profile owns its real skills overlay, reconciled in step 10.
+    "skills": {"external_dirs": []},
 }
 if provider or model:
     config["model"] = {}
@@ -148,29 +166,34 @@ log "    singleton profile verified by pj migrate hermes.runtime-singleton: $PRO
 # config.yaml is fleet-shared in the singleton topology.  The manual and
 # service launchers pass TERMINAL_CWD process-locally for this role instead.
 
-profile_config_set() {
-  local key="$1"
-  [[ -x "$HERMES_BIN" ]] \
-    || die "Hermes CLI is not executable; cannot configure named profile: $HERMES_BIN"
-  if ! env HERMES_HOME="$PROFILE_HOME" "$HERMES_BIN" config set "$@" >/dev/null; then
-    die "required Hermes config write failed for named profile $PROFILE_NAME: $key"
-  fi
-}
-
 if [[ "$ROLE" == "pm" ]]; then
-  VOXXY_PLUGIN_DIR="${VOXXY_PLUGIN_DIR:-$(config_get fleet.voxxy_plugin_dir "$HOME/code/voxxy/plugins/tts/voxxy")}"
-  if [[ -d "$VOXXY_PLUGIN_DIR" ]]; then
-    mkdir -p "$RUNTIME_LOCAL/plugins/tts"
-    ln -sfn "$VOXXY_PLUGIN_DIR" "$RUNTIME_LOCAL/plugins/tts/voxxy"
-    log "    linked Voxxy plugin into runtime"
+  VOX_PLUGIN_NAME="${VOX_PLUGIN_NAME:-$(config_get fleet.vox_plugin_name 'vox')}"
+  VOX_VOICE="${VOX_VOICE:-$(config_get fleet.vox_voice 'carlin')}"
+  VOX_PLUGIN_DIR="${VOX_PLUGIN_DIR:-$(config_get fleet.vox_plugin_dir "$HOME/code/voxxy/plugins/tts/$VOX_PLUGIN_NAME")}"
+  if [[ -d "$VOX_PLUGIN_DIR" ]]; then
+    mkdir -p "$PROFILE_HOME/plugins/tts"
+    ln -sfn "$VOX_PLUGIN_DIR" "$PROFILE_HOME/plugins/tts/$VOX_PLUGIN_NAME"
+    profile_voice_contract_set "$PROFILE_HOME" "$VOX_PLUGIN_NAME" "$VOX_VOICE" \
+      || die "could not write the canonical PM voice contract to config.delta.yaml"
+    python3 - "$PROFILE_HOME/config.yaml" "$VOX_PLUGIN_NAME" "$VOX_VOICE" <<'PYEOF' \
+      || die "PM voice config is not the canonical vox/carlin contract"
+import pathlib, sys
+try:
+    import yaml
+except ImportError:
+    raise SystemExit("PyYAML is required to validate PM voice config")
+config = yaml.safe_load(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")) or {}
+plugin, voice = sys.argv[2:4]
+enabled = ((config.get("plugins") or {}).get("enabled") or [])
+tts = config.get("tts") or {}
+actual_voice = ((tts.get(plugin) or {}).get("voice") or tts.get("voice") or "")
+if f"tts/{plugin}" not in enabled or tts.get("provider") != plugin or actual_voice != voice:
+    raise SystemExit(1)
+PYEOF
+    log "    PM voice verified: provider=$VOX_PLUGIN_NAME voice=$VOX_VOICE"
   else
-    warn "    Voxxy plugin dir missing: $VOXXY_PLUGIN_DIR"
+    log "    optional Vox plugin not installed; PM voice activation deferred"
   fi
-
-  profile_config_set plugins.enabled.0 tts/voxxy
-  profile_config_set tts.provider voxxy
-  profile_config_set tts.voice rick
-  log "    set PM named-profile TTS provider -> voxxy"
 fi
 
 mark_done 20-runtime-repo

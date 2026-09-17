@@ -33,24 +33,21 @@ registry_file = "~/.hermes/agents-registry.yaml"
 # (including openai-codex); CODEX_HOME is for Codex CLI/app-server auth.
 oauth_file = "~/.hermes/auth.json"
 codex_home = "~/.codex"
-# Canonical external skills dir mirrored into each agent profile.
-canonical_skills_dir = "/home/delorenj/.agents/skills"
-# Voxxy plugin + service defaults for Hermes PM agents.
-voxxy_plugin_dir = "~/code/voxxy/plugins/tts/voxxy"
+# Skill selection lives in global/project .agents/skills.json. Step 10 uses
+# pinned Skillex profile sync; no external projection path is configured here.
+# Optional Vox plugin + service defaults for Hermes PM agents.
+vox_plugin_name = "vox"
+vox_plugin_dir = "~/code/voxxy/plugins/tts/vox"
+vox_voice = "carlin"
 vox_url = "https://vox.delo.sh"
+# Channel credentials are written directly to Password items in this vault;
+# only op:// references are recorded in named-profile config.delta.yaml.
+onepassword_vault = "DeLoSecrets"
+onepassword_item_prefix = "hermes-agent"
 # Canonical PM config.yaml the provisioner seeds each runtime's config.yaml from.
 # This is the fleet-wide Hermes inference/skill config (model, toolsets, etc.)
 # every agent runtime starts from. ~ is expanded.
 # canonical_pm_config = "~/.hermes/config.yaml"
-# Skills symlinked into every agent's runtime skills root.
-symlinked_runtime_skills = [
-  "delonet-conventions",
-  "delonet-dotenv",
-  "hermes-pm-template-maintenance",
-  "hindsight",
-  "33god-projects",
-  "subagent-driven-development",
-]
 
 [github]
 # LEGACY INERT COMPATIBILITY METADATA ONLY. Older role manifests may still
