@@ -50,6 +50,10 @@ ticket_provider:
   in_review: "E2E Testing & QA"
   completed: "Done"
   cancelled: "Cancelled"
+  awaiting_decision: "Needs Attention"
+  e2e_testing: "E2E Testing & QA"
+  ready_for_documentation: "Ready for Documentation"
+  needs_re_evaluation: "Needs Re-evaluation"
 
 # Board-reconciliation knobs for the heartbeat sentinel pass.
 reconcile:
