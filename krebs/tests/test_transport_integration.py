@@ -4,6 +4,8 @@ KREBS_TEST_DSN and KREBS_TEST_NATS_URL must name disposable test services.
 Only the external Plane/runtime adapters and secret lookup are fixtures.
 """
 import asyncio
+import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
@@ -84,14 +86,19 @@ def test_real_pilot_bloodbank_controller_roundtrip(tmp_path, monkeypatch):
             "legacy_writers_fenced": True, "policy_version": 2, "skill_version": "fixture",
             "actors": {"pm": {
                 "key_ref": "op://DeLoSecrets/test-only-fixture/key", "native_user_id": "fixture-native-pm",
-                "runtime_id": "fixture-host", "role": "pm", "runtime": {"adapter": "systemd"},
+                "runtime_id": "fixture-host", "role": "pm",
+                "runtime": {"adapter": "systemd", "unit_prefix": "fixture-pm", "planner_argv": ["/usr/bin/true"]},
+            }, "repair": {
+                "key_ref": "op://DeLoSecrets/test-only-fixture/repair", "native_user_id": "fixture-native-repair",
+                "runtime_id": "fixture-controller", "role": "operator",
+                "runtime": {"adapter": "systemd", "unit_prefix": "fixture-repair"},
             }},
         },
     }
     manifest_path = tmp_path / ".project.json"
     manifest_path.write_text(json.dumps(manifest))
     payload = tmp_path / "payload.json"
-    payload.write_text(json.dumps({"acceptance": {"text": "Review café\n雪", "ratio": 1.0},
+    payload.write_text(json.dumps({"acceptance": {"profile": "fixture", "text": "Review café\n雪", "ratio": 1.0},
                                    "artifact": "fixture-revision", "ticket_revision": "source-1"}))
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -125,6 +132,25 @@ def test_real_pilot_bloodbank_controller_roundtrip(tmp_path, monkeypatch):
                     await asyncio.sleep(0.02)
             run_id = str(uuid.uuid4())
             command_id = str(uuid.uuid4())
+            # A poison message must not terminate the durable consumer before
+            # the next valid CLI request. These are intentionally invalid.
+            for bad_command in [None, ["not", "a", "command"], "bad-command"]:
+                await js.publish(service.COMMAND_SUBJECT, json.dumps({
+                    "subject": service.COMMAND_SUBJECT,
+                    "type": "bloodbank.lifecycle.task.invoke",
+                    "command_id": str(uuid.uuid4()),
+                    "data": {"command": bad_command, "auth": {}},
+                }).encode())
+            incomplete = {"command_id": str(uuid.uuid4()), "actor_id": "pm",
+                          "project_id": project_id, "runtime_id": "fixture-host"}
+            wire = json.dumps(incomplete)
+            await js.publish(service.COMMAND_SUBJECT, json.dumps({
+                "subject": service.COMMAND_SUBJECT,
+                "type": "bloodbank.lifecycle.task.invoke",
+                "command_id": incomplete["command_id"],
+                "data": {"command": incomplete, "auth": {"wire": wire,
+                    "signature": hmac.new(fixture_key.encode(), wire.encode(), hashlib.sha256).hexdigest()}},
+            }).encode())
             argv = ["node", str(pilot / "bin/pilot.js"), "task", "claim", "fixture-ticket",
                     "--actor", "pm", "--run-id", run_id, "--command-id", command_id,
                     "--file", str(payload), "--json"]
@@ -133,7 +159,7 @@ def test_real_pilot_bloodbank_controller_roundtrip(tmp_path, monkeypatch):
                 proc = await asyncio.create_subprocess_exec(*argv, cwd=tmp_path, env=env,
                     stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
                 stdout, stderr = await asyncio.wait_for(proc.communicate(), 40)
-                assert proc.returncode == 0, stderr.decode()
+                assert proc.returncode == 0, stderr.decode() + stdout.decode()
                 return json.loads(stdout)
 
             first = await invoke()
@@ -143,9 +169,15 @@ def test_real_pilot_bloodbank_controller_roundtrip(tmp_path, monkeypatch):
             # Replay through all client/transport layers is the same operation.
             assert await invoke() == first
             assert provider.writes == 1
-            await service.publish_outbox(store, js)
-            with store.connect() as conn:
-                event = conn.execute("SELECT * FROM krebs.outbox WHERE envelope->>'causationid'=%s", (command_id,)).fetchone()
+            # Focused runs may share a disposable database with other suites.
+            # Drain bounded batches until this command's durable event is sent.
+            event = None
+            for _ in range(100):
+                await service.publish_outbox(store, js)
+                with store.connect() as conn:
+                    event = conn.execute("SELECT * FROM krebs.outbox WHERE envelope->>'causationid'=%s", (command_id,)).fetchone()
+                if event and event["published_at"]:
+                    break
             assert event and event["published_at"]
             # Other test projects share the disposable outbox. Locate this
             # immutable event ID, rather than assuming it was published last.

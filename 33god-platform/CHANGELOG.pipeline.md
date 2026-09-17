@@ -13,11 +13,12 @@ the authenticated command path through Bloodbank; Momo supplies the shared PM
 playbook; PJangler validates manifest bindings; Hermes provides supervised run
 adapters. Existing project-health behavior is kept in a separate Krebs module.
 
-The implementation is undergoing adversarial correction and integration gates.
+The implementation passed adversarial corrections and its required integration gate.
 The updated Momo skill has been loaded through the native 33GOD and James Brennan
 Hermes runtimes, and isolated transport/provider checks plus a live Candystore
 event probe are recorded. **No board is activated for managed execution yet.**
-Native actor enrollment, artifact pins and writer cutover remain per-board gates.
+A pinned host release is installed with passing migration/health and disabled startup.
+Native actor enrollment and verified writer cutover remain per-board gates.
 See `../krebs/docs/rollout-evidence.md` for exact proof and limitations.
 
 ## 2026-09-13

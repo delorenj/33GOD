@@ -2,9 +2,9 @@
 title: Momo, Krebs and Pilot reliable ticket execution
 type: feature
 created: 2026-09-16
-status: in-review
+status: done
 baseline_commit: 1bb2011d5994
-review_loop_iteration: 0
+review_loop_iteration: 1
 context:
   - /home/delorenj/code/33GOD/AGENTS.md
   - /home/delorenj/code/33GOD/krebs/docs/execution-contract.md
@@ -55,13 +55,13 @@ Never equate worker exit with completion, silently fall back to Jarad's credenti
 Implementation agent owns code and its focused tests across these components; root owns this spec, execution-contract.md, inventory/rollout evidence and final integration review. You are not alone: preserve others' changes, inspect initial diffs and stage only yours. Applicable BMAD instructions require sequential implementation; do not spawn parallel implementers. Use CodeGraph first where indexed. Commit scoped tested units with ticket references when available; root will ensure final push/integration.
 
 **Execution:**
-- [ ] Implement versioned commands, evidence, outcomes and receipts; deterministic state machine and Postgres migrations/leases/fencing/dedup/intents/outbox/recovery.
-- [ ] Add authenticated Pilot bindings, provider-only helper, pagination/exact states/readback and public lifecycle CLI; managed CRUD cannot bypass controller.
-- [ ] Add Bloodbank request/reply/status client and durable controller consumer/publisher with canonical schemas; fence legacy writers per managed board.
-- [ ] Integrate Momo, Hermes and interactive runtime behavior, PJangler bindings/readiness; prove installed skill source/version.
-- [ ] Preserve project-health module separately, add service packaging, artifact contract, migrations and operational controls.
-- [ ] Implement attributed/deduplicated/offline-tolerant Pilot idea feedback.
-- [ ] Test all matrix rows and end-to-end controlled execution; deliver inventory, shadow/canary reconciliation and explicit fleet enrollment status.
+- [x] Implement versioned commands, evidence, outcomes and receipts; deterministic state machine and Postgres migrations/leases/fencing/dedup/intents/outbox/recovery.
+- [x] Add authenticated Pilot bindings, provider-only helper, pagination/exact states/readback and public lifecycle CLI; managed CRUD cannot bypass controller.
+- [x] Add Bloodbank request/reply/status client and durable controller consumer/publisher with canonical schemas; fence legacy writers per managed board.
+- [x] Integrate Momo, Hermes and interactive runtime behavior, PJangler bindings/readiness; prove installed skill source/version.
+- [x] Preserve project-health module separately, add service packaging, artifact contract, migrations and operational controls.
+- [x] Implement attributed/deduplicated/offline-tolerant Pilot idea feedback.
+- [x] Test all matrix rows and end-to-end controlled execution; deliver inventory, shadow/canary reconciliation and explicit fleet enrollment status.
 
 **Acceptance Criteria:**
 - Given a managed board, when work starts, then verified identity and claim precede dispatch; zero unauthorized writes occur.
@@ -130,3 +130,76 @@ Correction groups: execution gates (B1–B5/B8–B10/E1/E4/E5/E9/R2/R3); durable
 ## Verification
 
 Run focused Python/Postgres, Node CLI and affected template/provisioning tests. Include real database concurrent-claim tests, provider failure injection, restart tests, command ingress identity checks, and installed-runtime/source verification. Record exact results and distinguish fixture, shadow and live proof. Root performs independent review before completion.
+
+## Final implementation result
+
+All triaged correction groups are implemented in core `4227e0e` and `2fdd5b8`,
+Pilot `6fa3757`, Bloodbank `a170335`, Hermes `5f972b5`, Momo `5d64d25`, and
+PJangler `cfd1647`. Root-owned HTTP, transport and ownership regressions are
+included in the required gate. Additional final corrections cover ordered outbox
+publication, paused heartbeat behavior and pending planner cancellation against
+its frozen supervisor unit.
+
+Validation: 58 Krebs checks with zero skips (fresh PostgreSQL/NATS and real user
+systemd), 77 n8n checks, 8 Pilot checks, 52 focused Hermes checks, PJ readiness
+checks/typecheck, and 21 standalone health checks installed outside the checkout.
+The installed release is pinned to `2fdd5b8369773327c6b3c815efda50a92d4d5eb9`;
+25 wheel files were compared byte-for-byte with that commit. Migration and health
+pass. Native Hermes loads and the complete distributed Momo bundle match release.
+
+Implementation is complete; fleet activation is not. The service is installed,
+disabled and inactive. Both canaries fail readiness explicitly because execution
+is not enrolled. 33GOD-63 is Needs Attention for manual native actor enrollment;
+PJAN-129's implementation acceptance is complete. Exact proof, unrelated root
+validation failures and preserved workspace debt are in the rollout ledger.
+
+## Suggested Review Order
+
+**Authority and durable execution**
+
+- Persist decisions before side effects; reconcile results before returning completion.
+  [controller.py:8](../../krebs/src/krebs/controller.py#L8)
+
+- Enforce generation, scope, review and exact lane progression invariants.
+  [contract.py:53](../../krebs/src/krebs/contract.py#L53)
+
+**Provider and transport boundaries**
+
+- Authorize each HTTP mutation against its persisted controller intent.
+  [capability.py:8](../../krebs/src/krebs/capability.py#L8)
+
+- Verify native identity and exact provider readback, including partial writes.
+  [provider-helper.js:14](../../../pilot/src/provider-helper.js#L14)
+
+- Authenticate durable command ingress and publish recorded receipt events.
+  [service.py:40](../../krebs/src/krebs/service.py#L40)
+
+**Hosts and deployment**
+
+- Stop the frozen supervisor identity before releasing execution capacity.
+  [adapters.py:96](../../krebs/src/krebs/adapters.py#L96)
+
+- Install immutable artifacts with a required readiness gate and vault references.
+  [install.py:4](../../krebs/ops/install.py#L4)
+
+- Keep managed PM planning and heartbeat behavior behind controller authority.
+  [managed-execution.py:3](../../hermes-agent-template/template/.scripts/managed-execution.py#L3)
+
+**Host playbook and bindings**
+
+- Apply one shared PM playbook under each actual enrolled actor.
+  [managed-execution.md:1](../../momo/skill/references/managed-execution.md#L1)
+
+- Validate canonical project bindings before managed activation.
+  [executionBinding.ts:3](../../pjangler/src/project/executionBinding.ts#L3)
+
+**Verification and evidence**
+
+- Exercise real provider writes, response loss, restart and scope races.
+  [test_provider_integration.py:151](../../krebs/tests/test_provider_integration.py#L151)
+
+- Prove actual CLI transport survives poison messages and records durable events.
+  [test_transport_integration.py:67](../../krebs/tests/test_transport_integration.py#L67)
+
+- Separate installed/source proof from actual enrolled fleet activation.
+  [rollout-evidence.md:1](../../krebs/docs/rollout-evidence.md#L1)

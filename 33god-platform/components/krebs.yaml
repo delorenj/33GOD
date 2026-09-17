@@ -12,7 +12,7 @@ health:
 source_of_truth:
   - ../krebs/src/krebs
   - ../krebs/spec/execution-command.v2.schema.json
-  - ../krebs/ops/krebs-execution.service
+  - ../krebs/ops/install.py
   - ../krebs/spec/lifecycle.v1.yaml
   - ../krebs/spec/lifecycle.schema.json
   - ../krebs/spec/event-schemas.md
