@@ -149,5 +149,7 @@ Its `ops/sync-claude-token.py` follows the access token owned by Claude Code,
 without taking over refresh-token rotation. No Plane/Krebs actor bridge was
 found in the inspected routes/operations. No model relay, OAuth refresh, provider
 channel change, Plane membership write or managed activation was performed.
-Interactive model authentication and native ticket attribution remain separate;
-the requested meaning of passthrough is awaiting clarification.
+The architecture decision is explicit: NewAPI OAuth authenticates
+model-provider traffic only; native Plane identities and separate `op://`
+references provide ticket attribution for interactive Codex, Claude and Kimi
+actors. A gateway identity-to-Plane mapping is out of scope.

@@ -21,8 +21,9 @@ Database configuration is `op://DeLoSecrets/Krebs Execution/database_url`.
    - Interactive Codex/Claude/Kimi: use `api.automaticai.io` for the requested
      model-provider OAuth path. The inspected NewAPI relay validates NewAPI
      tokens, and its Claude follower copies the upstream OAuth access token;
-     no Plane/Krebs actor bridge was found. Decide whether to enroll separate
-     Plane actors or explicitly build a gateway identity-to-Plane mapping.
+     no Plane/Krebs actor bridge was found. Keep these model credentials
+     separate from Plane attribution and enroll distinct native Plane actors
+     for Codex, Claude and Kimi when their ticket access is needed.
    - Controller repairs: native Plane actor/key reference is still unspecified.
 2. Populate each canonical `.project.json` execution binding using
    [the contract](execution-contract.md): mode `shadow`, policy version 2, exact
