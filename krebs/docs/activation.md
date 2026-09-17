@@ -5,10 +5,25 @@ release is `~/.local/share/krebs/releases/2fdd5b8369773327c6b3c815efda50a92d4d5e
 Its descriptor pins the wheel, dependency lock, Pilot and complete Momo bundle.
 Database configuration is `op://DeLoSecrets/Krebs Execution/database_url`.
 
-1. Enroll the native 33GOD PM, interactive Codex, interactive Claude and controller
-   repair identities in Plane; record only their `op://` key references. JIMB's
-   existing George Carlin identity is verified on JIMB but lacks PX feedback access.
-   Grant intended board memberships and verify `/api/v1/users/me/` under each key.
+1. Complete the verified PM enrollments below, then select interactive/controller
+   Plane identities. Model-provider OAuth through NewAPI is a separate binding;
+   it does not currently authenticate a Plane/Krebs actor.
+   - James Brennan PM: George Carlin,
+     `op://DeLoSecrets/Plane/API Keys - Agent Roster/George Carlin`, native ID
+     `2d34d5ca-2433-478f-8132-ccb99cec714a`. Native identity and JIMB membership
+     pass. PX feedback membership remains missing.
+   - 33GOD PM: Grolf,
+     `op://DeLoSecrets/Plane/API Keys - Agent Roster/Grolf`, native ID
+     `62b4fef6-b0fe-4cd2-bcd7-53737a61feb4`. Native identity passes; bootstrap
+     operator membership readback finds no membership on 33GOD or PX. Grolf's
+     member/state/label/issue requests return 403 despite project detail reads
+     succeeding. Add the intended project memberships before readiness.
+   - Interactive Codex/Claude/Kimi: use `api.automaticai.io` for the requested
+     model-provider OAuth path. The inspected NewAPI relay validates NewAPI
+     tokens, and its Claude follower copies the upstream OAuth access token;
+     no Plane/Krebs actor bridge was found. Decide whether to enroll separate
+     Plane actors or explicitly build a gateway identity-to-Plane mapping.
+   - Controller repairs: native Plane actor/key reference is still unspecified.
 2. Populate each canonical `.project.json` execution binding using
    [the contract](execution-contract.md): mode `shadow`, policy version 2, exact
    state UUIDs, working label, PM/operator actor roles, unique native identities,

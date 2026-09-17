@@ -127,3 +127,27 @@ The final workspace sweep reports 501 dirty/unpushed repositories/worktrees
 across the workspace (502 at baseline; concurrent work continued). Task-owned component commits and skill distribution are
 pushed; unrelated changes are preserved. Root integration adds the reviewed
 component pins and this evidence separately from the installed core revision.
+
+## Enrollment follow-up — supplied PM references
+
+The user supplied George Carlin and Grolf's `op://` references and selected
+NewAPI at `api.automaticai.io` for interactive model-provider OAuth. Both Plane
+keys were resolved only in process memory and `/api/v1/users/me/` verified:
+
+| Actor | Native ID | Actual board access |
+|---|---|---|
+| George Carlin | `2d34d5ca-2433-478f-8132-ccb99cec714a` | JIMB membership verified |
+| Grolf | `62b4fef6-b0fe-4cd2-bcd7-53737a61feb4` | No root/PX membership in bootstrap-operator readback; root ticket/state/label/member reads return 403 |
+
+A successful project-detail GET under Grolf does not prove usable membership.
+The exact references and remaining enrollment steps are in [activation.md](activation.md).
+
+The local NewAPI source (`middleware/auth.go`, `router/relay-router.go`) uses
+NewAPI token validation on relay requests. The deployed image reports
+`newapi-automaticai:v1.0.0-rc.25`; the local checkout describes the same tag.
+Its `ops/sync-claude-token.py` follows the access token owned by Claude Code,
+without taking over refresh-token rotation. No Plane/Krebs actor bridge was
+found in the inspected routes/operations. No model relay, OAuth refresh, provider
+channel change, Plane membership write or managed activation was performed.
+Interactive model authentication and native ticket attribution remain separate;
+the requested meaning of passthrough is awaiting clarification.
