@@ -41,9 +41,15 @@ ticket_provider:
   board_url: "https://plane.delo.sh/33god/projects/15258893-0206-4e8f-aea6-340eb217988c/issues/"
   workspace: "33god"
   project: ""     # Plane project uuid (set by 42-ticket-provider.sh)
-  # Optional normalized-state name overrides for non-standard boards.
-  in_review: ""   # e.g. "In Review"
-  completed: ""   # e.g. "Done"
+  # Normalized-state -> Plane lane names. REQUIRED, not optional: this board has
+  # 4 lanes in Plane's `started` group and 2 in `unstarted`, so the adapter
+  # refuses to guess and every transition fails until each band is named here.
+  backlog:   "Backlog"
+  unstarted: "Todo"
+  started:   "In Progress"
+  in_review: "E2E Testing & QA"
+  completed: "Done"
+  cancelled: "Cancelled"
 
 # Board-reconciliation knobs for the heartbeat sentinel pass.
 reconcile:
