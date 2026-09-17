@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "component": "krebs",
+  "version": "2.0.0",
+  "artifact_type": "python-package",
+  "runtime_mode": "host-service",
+  "source": "https://github.com/delorenj/33GOD",
+  "build": "uv sync --frozen --no-dev && uv build",
+  "validation": "uv run pytest -q tests",
+  "readiness": "uv run krebs readiness",
+  "migration": "uv run krebs migrate",
+  "activation": "blocked-until-enrolled-and-pinned",
+  "required_pins": ["source_revision", "wheel_sha256", "pilot_source_revision", "pilot_helper_sha256", "momo_skill_sha256"]
+}

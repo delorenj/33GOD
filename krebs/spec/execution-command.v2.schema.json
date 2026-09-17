@@ -1,0 +1,92 @@
+{
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "operation": {
+      "enum": [
+        "claim",
+        "start",
+        "handoff",
+        "complete",
+        "attention",
+        "resume",
+        "release",
+        "cancel",
+        "takeover",
+        "status",
+        "heartbeat",
+        "finish",
+        "review",
+        "get",
+        "comment",
+        "update",
+        "create"
+      ]
+    },
+    "command_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ticket_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "causation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expected_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "version",
+    "operation",
+    "command_id",
+    "idempotency_key",
+    "project_id",
+    "ticket_id",
+    "actor_id",
+    "runtime_id",
+    "run_id",
+    "correlation_id",
+    "causation_id",
+    "generation",
+    "expected_revision"
+  ],
+  "additionalProperties": false
+}

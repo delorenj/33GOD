@@ -1,0 +1,14 @@
+[Unit]
+Description=Krebs execution authority v2
+After=network-online.target
+[Service]
+Type=simple
+WorkingDirectory=%h/code/33GOD/krebs
+EnvironmentFile=%h/.config/krebs/execution.env
+ExecStartPre=%h/code/33GOD/krebs/.venv/bin/krebs health
+ExecStart=%h/code/33GOD/krebs/.venv/bin/krebs serve
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+[Install]
+WantedBy=default.target

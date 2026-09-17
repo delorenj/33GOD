@@ -1,0 +1,10 @@
+[tasks.test]
+run = "uv run pytest -q tests"
+[tasks.migrate]
+run = "uv run krebs migrate"
+[tasks.readiness]
+run = "uv run krebs readiness"
+[tasks.health]
+run = "uv run krebs health"
+[tasks.reconcile]
+run = "uv run krebs reconcile"

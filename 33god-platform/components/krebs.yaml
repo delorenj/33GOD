@@ -2,14 +2,17 @@ id: krebs
 name: Krebs
 role: ticket-lifecycle-engine
 repo: ../krebs
-description: Canonical ticket-lifecycle state machine, ticket-provider abstraction, webhook normalization, and fan-out for all task platforms.
+description: Fenced Plane execution authority with Postgres intents and Bloodbank commands; separate legacy project-health projection.
 compose:
   files: []
   profiles: [integrations]
 health:
   commands:
-    - cd ../krebs && python -m json.tool spec/lifecycle.schema.json >/dev/null
+    - cd ../krebs && uv run krebs health
 source_of_truth:
+  - ../krebs/src/krebs
+  - ../krebs/spec/execution-command.v2.schema.json
+  - ../krebs/ops/krebs-execution.service
   - ../krebs/spec/lifecycle.v1.yaml
   - ../krebs/spec/lifecycle.schema.json
   - ../krebs/spec/event-schemas.md
