@@ -44,6 +44,12 @@ The first managed canaries are 33GOD and James Brennan. Plane key enrollment is 
 
 These checks do not establish that the new controller is running in production, any PM is enrolled for managed mode, or any stranded ticket has been repaired. Further implementation and integration checks remain pending.
 
+## Root integration checks
+
+- Root platform validation reaches an existing unrelated failure: `33god-platform/components/heyma.yaml` refers to missing `/home/delorenj/code/HeyMa/compose.yml`. This task did not alter that component.
+- Root documentation drift: 20 checks passed, including Compose semantic validation and Markdown links; one existing failure is incomplete markers in `docs/cli-hook-audit-2026-09-13.md`. This task did not alter that audit.
+- A fresh inventory read still finds 20 PM roles, 17 enabled, 12 missing canonical IDs and zero managed activations.
+
 ## Workspace preservation
 
 Initial `git unpushed` found extensive pre-existing workspace state (502 reported repositories/worktrees). This task stages its own paths and preserves unrelated changes, including existing root settings, component changes and journal output. A global dirty report is not evidence that those unrelated edits belong to this implementation.

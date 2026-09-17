@@ -1,0 +1,18 @@
+id: managed-momo-distribution-source-v2
+title: Momo source and installed catalog must have distinct documented ownership
+owner_component: momo
+kind: check-only
+summary: >
+  Momo authors the shared playbook; Skillex distributes committed skill bundles.
+  Guard against reintroducing the retired-catalog instruction that disagrees with
+  native Hermes skill discovery. This static check does not certify enrollment
+  or runtime activation; use the Krebs rollout ledger and readiness command.
+search_paths:
+  - ../momo/skill/SKILL.md
+forbidden_patterns:
+  - "`~/code/skillex/all-skills/momo` is retired."
+remediation: >
+  Vendor a committed Momo release through the current Skillex CLI, preserve local
+  authored work, verify the complete bundle and native host skill loading. Apply
+  per-board enrollment and writer-cutover gates separately; never infer managed
+  readiness from catalog parity alone.

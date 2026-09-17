@@ -123,6 +123,8 @@ All entries are kept as implementation patches: the approved execution contract 
 | R3 | high | Approved distinct operator override missing | Keep; patch — operation set lacks audited override path. |
 | R4 | medium | Momo distribution text contradicts actual registry | Keep; patch — SKILL.md calls all-skills retired though native Hermes consumes it. |
 
+Additional independent path checks: R5 (high, keep/patch) — runtime stop/running derive units from mutable actor configuration; freeze supervisor identity so a changed prefix cannot prove the old worker stopped. R6 (high, keep/patch) — parent completion must reject operator-override receipts and verify declared child identity, rather than accepting arbitrary global Done receipts.
+
 Correction groups: execution gates (B1–B5/B8–B10/E1/E4/E5/E9/R2/R3); durable launch and local recovery (B6/B7/E2/E3/V6/R1); provider step/content integrity (E6–E8/E12/V2); ingress and ownership (B11/B13/B14); full artifact/readiness/compatibility (B12/B15/B16/E11/E13/E14/R4); feedback (B17/B18/E10/V5); required behavioral gates (V1/V3/V4). Root owns the real HTTP provider and transport integration checks; implementation agent owns code fixes and other regression checks.
 
 ## Verification

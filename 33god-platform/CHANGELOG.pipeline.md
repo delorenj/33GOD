@@ -3,6 +3,23 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-09-17
+
+### Momo, Pilot and Krebs execution contract v2
+
+Krebs now owns the ticket execution implementation, with Postgres attempts,
+fenced commands, provider intents, recovery and an event outbox. Pilot exposes
+the authenticated command path through Bloodbank; Momo supplies the shared PM
+playbook; PJangler validates manifest bindings; Hermes provides supervised run
+adapters. Existing project-health behavior is kept in a separate Krebs module.
+
+The implementation is undergoing adversarial correction and integration gates.
+The updated Momo skill has been loaded through the native 33GOD and James Brennan
+Hermes runtimes, and isolated transport/provider checks plus a live Candystore
+event probe are recorded. **No board is activated for managed execution yet.**
+Native actor enrollment, artifact pins and writer cutover remain per-board gates.
+See `../krebs/docs/rollout-evidence.md` for exact proof and limitations.
+
 ## 2026-09-13
 
 ### Global Git ignore policy and reviewed repository parity
