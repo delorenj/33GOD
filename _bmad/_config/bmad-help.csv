@@ -11,7 +11,7 @@ BMad Builder,bmad-module-builder,Create Module,CM,"Scaffold module infrastructur
 BMad Builder,bmad-module-builder,Validate Module,VM,"Check that a module's structure is complete, accurate, and all capabilities are properly registered.",validate-module,{-H: headless mode}|{path: module or skill to validate},anytime,bmad-module-builder:create-module,,false,bmad_builder_reports,validation report
 BMAD Loop Skills,bmad-loop-setup,Setup Loop Module,SA,Install or update BMAD Loop module config and help entries.,configure,{-H: headless mode},anytime,,,false,{project-root}/_bmad,config.yaml entries
 BMAD Loop Skills,bmad-loop-sweep,Sweep Triage,ST,Read-only triage of the deferred-work ledger into a machine-readable partition. Automation-only; bmad-loop sweep invokes it.,triage,{--feedback path},anytime,,,false,implementation_artifacts,result.json triage plan
-BMad Method,_meta,,,,,,,,,false,https://docs.bmad-method.org/llms.txt,
+BMad Method,_meta,,,,,,,,,false,https://docs.bmad-method.org/,
 BMad Method,bmad-prd,Create Edit and Review PRD,PRD,"Create a new PRD through guided discovery, update an existing one when plans change, or validate a finished PRD against a checklist with an HTML findings report.",,,2-planning,bmad-product-brief,,true,planning_artifacts,prd
 BMad Method,bmad-ux,Create UX,CU,Capture UX decisions into design and experience documents. Strongly recommended when a UI is a major part of the project.,,,2-planning,bmad-prd,,false,planning_artifacts,ux design
 BMad Method,bmad-project-context,Project Context,PC,"Set up or refresh a repo's agent instructions so AI agents work well in it: verified commands, policy, conventions that differ from defaults, and known pitfalls. Setup, refresh, record, and audit — replaces document-project and generate-project-context.",,,anytime,,,false,repo root,AGENTS.md managed block
@@ -26,10 +26,10 @@ BMad Method,bmad-create-epics-and-stories,Create Epics and Stories,CE,Break the 
 BMad Method,bmad-sprint-planning,Sprint Planning,SP,"Checks the planning is complete enough to implement (PASS/CONCERNS/FAIL), then generates the sprint status file that implementation agents follow for every story.",,,plan,,,true,implementation_artifacts,sprint status
 BMad Method,bmad-build,Build,BD,"The standard implementation flow: clarify intent, plan, implement, review, and present.",,,ship,bmad-sprint-planning,bmad-code-review,true,implementation_artifacts,spec and project implementation
 BMad Method,bmad-code-review,Code Review,CR,Ad hoc review of any code change. An optional extra check after Build's built-in review.,,,ship,bmad-build,,false,,
-BMad Method,bmad-checkpoint-preview,Checkpoint,CK,"Guided walkthrough of a change, from purpose and context into details. Use for human review of commits, branches, or PRs.",,,ship,,,false,,
+BMad Method,bmad-walkthrough,Walkthrough,WT,"Guided walkthrough of a change, from purpose and context into details. Use for human review of commits, branches, or PRs.",,,ship,,,false,,
 BMad Method,bmad-qa-generate-e2e-tests,QA Automation Test,QA,Generate automated API and end-to-end tests for implemented code. Not for code review or story validation — use Code Review for that.,,,ship,bmad-build,,false,implementation_artifacts,test suite
 BMad Method,bmad-retrospective,Retrospective,ER,"Optional at the end of an epic: review the completed work and lessons learned, and look ahead to the next epic. If major issues surfaced, consider Correct Course.",,,ship,bmad-code-review,,false,implementation_artifacts,retrospective
-Core,_meta,,,,,,,,,false,https://docs.bmad-method.org/llms.txt,
+Core,_meta,,,,,,,,,false,https://docs.bmad-method.org/,
 Core,bmad-brainstorming,Brainstorming,BSP,Use early in ideation or when stuck generating ideas.,,,anytime,,,false,{output_folder}/brainstorming,brainstorming session
 Core,bmad-party-mode,Party Mode,PM,Orchestrate multi-agent discussions when you need multiple perspectives or want agents to collaborate.,,,anytime,,,false,,
 Core,bmad-help,BMad Help,BH,,,,anytime,,,false,,
