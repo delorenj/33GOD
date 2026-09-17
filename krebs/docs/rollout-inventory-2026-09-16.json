@@ -1,0 +1,335 @@
+{
+  "observed_at": "2026-09-17T03:36:28.153812+00:00",
+  "source": "read-only live manifests and ~/.hermes/agents-registry.yaml; James key users/me and membership API verified",
+  "scope": "PM roles only; disabled roles explicitly retained; no lifecycle managed activation",
+  "tracking": [
+    "33GOD-63",
+    "PJAN-129"
+  ],
+  "actors": [
+    {
+      "actor_id": "bloodbank-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/33GOD/bloodbank",
+      "project_id": "bb",
+      "workspace": "33god",
+      "board_id": "10d06f8d-c110-4ce5-beaa-0914534b090a",
+      "registry_board_id": "10d06f8d-c110-4ce5-beaa-0914534b090a",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "33god-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/33GOD",
+      "project_id": "33god",
+      "workspace": "33god",
+      "board_id": "15258893-0206-4e8f-aea6-340eb217988c",
+      "registry_board_id": "15258893-0206-4e8f-aea6-340eb217988c",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "candystore-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/33GOD/candystore",
+      "project_id": "candystore",
+      "workspace": "33god",
+      "board_id": "82e56896-e7fd-466b-826c-1019441c64ca",
+      "registry_board_id": "82e56896-e7fd-466b-826c-1019441c64ca",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "nautilus-trader-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/nautilus_trader",
+      "project_id": null,
+      "workspace": null,
+      "board_id": null,
+      "registry_board_id": "603a6391-2d04-46df-8d1a-5530c44f24e1",
+      "readiness": "blocked",
+      "blockers": [
+        "manifest missing",
+        "project_id missing",
+        "manifest board missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "zshyzsh-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/.config/zshyzsh",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "",
+      "registry_board_id": "700f95ab-71ae-4f6a-a7aa-142a5252db47",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "manifest board missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "holocene-pm",
+      "route_enabled": false,
+      "project_path": "/home/delorenj/code/33GOD/holocene",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "727a2b17-a1dd-46f6-b583-afa5a2d2cdae",
+      "registry_board_id": "727a2b17-a1dd-46f6-b583-afa5a2d2cdae",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "skillex-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/skillex",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "5aa8ec5c-3c66-49f9-b900-cca8a8446b65",
+      "registry_board_id": "5aa8ec5c-3c66-49f9-b900-cca8a8446b65",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "voxxy-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/voxxy",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "b757648f-0067-482c-84b5-947158a7af3f",
+      "registry_board_id": "b757648f-0067-482c-84b5-947158a7af3f",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "drumjangler-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/drumjangler",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "fdfbeb2d-4e0f-43a3-9615-f3f13c60a9f1",
+      "registry_board_id": "fdfbeb2d-4e0f-43a3-9615-f3f13c60a9f1",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "keepy-money-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/KeepyMoney",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "11cf7e2b-f964-4e82-b952-6fa74033fa57",
+      "registry_board_id": "11cf7e2b-f964-4e82-b952-6fa74033fa57",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "delocontainers-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/docker",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "702d2969-e0a0-4e8d-ab59-e2cc00606f76",
+      "registry_board_id": "702d2969-e0a0-4e8d-ab59-e2cc00606f76",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "slowburns-pm",
+      "route_enabled": false,
+      "project_path": "/home/delorenj/code/slowburns",
+      "project_id": "slowburns",
+      "workspace": "33god",
+      "board_id": "244259e4-98e8-4abb-9e62-d0c668c38f86",
+      "registry_board_id": "244259e4-98e8-4abb-9e62-d0c668c38f86",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "james-brennan-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/james-brennan",
+      "project_id": "james-brennan",
+      "workspace": "automaticai",
+      "board_id": "a8a12be1-b3ab-44f4-ab24-abe8829aeb72",
+      "registry_board_id": "a8a12be1-b3ab-44f4-ab24-abe8829aeb72",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "PX feedback membership denied"
+      ],
+      "identity_verified": true,
+      "native_actor_id": "2d34d5ca-2433-478f-8132-ccb99cec714a",
+      "credential_ref": "op://DeLoSecrets/Plane/API Keys - Agent Roster/George Carlin",
+      "membership_verified": [
+        "JIMB"
+      ],
+      "feedback_membership": "403"
+    },
+    {
+      "actor_id": "pjangler-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/33GOD/pjangler",
+      "project_id": "pjangler",
+      "workspace": "33god",
+      "board_id": "18a79832-00fb-4146-b054-d88528f9fef3",
+      "registry_board_id": "18a79832-00fb-4146-b054-d88528f9fef3",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "heyma-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/HeyMa",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "7485039f-85b0-47db-ad99-d11497f043d7",
+      "registry_board_id": "7485039f-85b0-47db-ad99-d11497f043d7",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "automatic-ai-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/automatic-ai",
+      "project_id": null,
+      "workspace": null,
+      "board_id": null,
+      "registry_board_id": "c2cbdc01-bcce-46b9-b10c-7bd620a81cd4",
+      "readiness": "blocked",
+      "blockers": [
+        "manifest missing",
+        "project_id missing",
+        "manifest board missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "deckard-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/deckard",
+      "project_id": "deckard",
+      "workspace": "33god",
+      "board_id": "0c0f017d-ea58-4196-95a3-088261ed06b3",
+      "registry_board_id": "0c0f017d-ea58-4196-95a3-088261ed06b3",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "infra-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/infra",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "721549c9-3487-4005-81bc-022849cd2e17",
+      "registry_board_id": "721549c9-3487-4005-81bc-022849cd2e17",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "ssbnk-pm",
+      "route_enabled": true,
+      "project_path": "/home/delorenj/code/ssbnk",
+      "project_id": "ssbnk",
+      "workspace": "33god",
+      "board_id": "ce150fc4-bfd9-4b6f-9f14-6468c18616e3",
+      "registry_board_id": "ce150fc4-bfd9-4b6f-9f14-6468c18616e3",
+      "readiness": "blocked",
+      "blockers": [
+        "lifecycle binding absent",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    },
+    {
+      "actor_id": "tonnybox-pm",
+      "route_enabled": false,
+      "project_path": "/home/delorenj/code/TonnyBox",
+      "project_id": null,
+      "workspace": "33god",
+      "board_id": "7e2557f9-861f-4cc7-8929-9b7f514c7fc3",
+      "registry_board_id": "b9016a74-0aec-452d-8271-d53e9755c59d",
+      "readiness": "blocked",
+      "blockers": [
+        "project_id missing",
+        "lifecycle binding absent",
+        "registry and manifest board disagree",
+        "native actor/key enrollment unverified"
+      ],
+      "identity_verified": false
+    }
+  ]
+}
