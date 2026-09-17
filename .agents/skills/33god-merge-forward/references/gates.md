@@ -5,10 +5,28 @@ Select checks that demonstrate the slice's actual behavior:
 - Live routing failures: check the public response, backend, and affected data endpoint; an authentication redirect alone does not prove backend health. Correlate Traefik DNS/health errors with container recreation timestamps and the configured health-check interval. If service recovers without intervention, verify current route health and endpoint responses, then stop without a speculative restart or patch. Distinguish the observed failure and recovery from any unproven recreation trigger.
 - Hook changes: native loader registration, one event to one handler receipt, payload and context output, hub-down behavior, and concurrent session identity.
 - Event changes: contract validation, broker delivery, and durable Candystore arrival.
+- Managed ticket changes: resolve the canonical project and board binding, then
+  prove the actual `px`/Krebs path with provider readback. A worker must claim
+  before execution; evidence must belong to that attempt; an unanswered
+  question must enter **Needs Attention**; and successful work is moved to Done
+  automatically only after its evidence gate passes. A turn ending, review
+  label, or accepted handoff is not completion. For recovery changes, exercise restart/lost-reply
+  behavior, ensure old attempts cannot close newer ones, and ensure parked or
+  expired workers do not retain execution capacity.
+- Managed activation: verify the exact native Plane actor, board membership,
+  credential binding, and runtime loader before enabling a board. If enrollment
+  is missing, leave the controller disabled and report activation as blocked;
+  NewAPI model OAuth is not a substitute for Plane attribution.
+- Skill distribution changes: compare the canonical source with the installed
+  bundle and load it through each affected native runtime; do not treat a
+  source diff or catalog entry as installed parity.
 - Holocene changes: typecheck, build, browser interaction, and live route verification.
 - Compose or systemd changes: resolve the effective configuration, restart only affected units, and verify the running artifact.
 - Template or generator changes: render into an isolated temporary directory and compare the intended owned projection while preserving foreign settings.
 
-Run the affected tests and direct boundary checks. A config file, selected handler, or zero exit status alone is not proof that its downstream work succeeded. Treat idle clients as unobserved until exercised.
+Run the affected tests and direct boundary checks, not a fixed suite by habit. A
+config file, selected handler, board status, or zero exit status alone is not
+proof that its downstream work succeeded. Treat idle clients as unobserved
+until exercised.
 
 Preserve unrelated WIP. Land coherent units promptly on component main and root main. Do not add speculative review layers or repeat unchanged checks.

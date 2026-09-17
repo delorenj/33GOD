@@ -13,12 +13,27 @@ This is one user and one decision-maker working in pre-production. Deliver the s
 
 ## Product authority
 
-- **Lifecycle:** PJangler owns deterministic project and fleet provisioning.
-- **Momo:** owns ongoing project orchestration and delegates implementation.
+- **Momo:** owns the shared PM playbook: prioritization, readiness, delegation,
+  review, human questions, and improvement feedback. It is not a second ticket
+  state machine or Plane actor.
+- **Lifecycle (Krebs):** owns managed ticket execution: claims, leases, lifecycle
+  transitions, recovery, evidence gates, and reconciliation.
+- **Pilot (`px`):** owns the agent-facing authenticated Plane commands and
+  provider operations. Krebs may use its internal provider entrypoint; do not
+  duplicate board mutation logic in Momo or Hermes.
+- **PJangler:** owns canonical project/role bindings, provisioning, and
+  capability readiness; it does not infer missing board bindings or close work.
+- **Hermes and interactive runtimes:** supervise recorded agent runs; they do
+  not own a competing ticket lifecycle.
 - **Bloodbank:** owns event contracts, hook ingress, behavioral dispatch, and event publication.
 - **Candystore:** owns durable event history.
 - **Holocene:** owns the operator-facing control surface and displays runtime evidence.
 - Component repositories own their implementations; root owns relationships, pins, and integrated acceptance.
+
+Model authentication and Plane attribution are separate. NewAPI OAuth is only
+the model-provider path; each interactive agent and controller repair identity
+needs its own native Plane actor and credential. Never infer Plane provenance
+from a gateway token or build an implicit gateway-to-Plane mapping.
 
 Changes to these boundaries require an explicit product decision. Routine implementation inside them proceeds under the user's task authorization.
 
@@ -29,7 +44,9 @@ Changes to these boundaries require an explicit product decision. Routine implem
 3. Implement only the owning component and its immediate interface changes.
 4. Run checks sufficient to prove the changed behavior. Fix reproduced failures.
 5. Commit and push the component, then advance and push the root pin.
-6. Report what is running, what was tested, and material remaining limits.
+6. Report implementation, installation/runtime proof, and activation readiness
+   separately. A distributed skill, healthy service, or passing test does not
+   prove native actor enrollment or active-board cutover.
 
 ## Session tuning
 
