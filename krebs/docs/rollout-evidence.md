@@ -123,7 +123,7 @@ No fleet-wide stranded-ticket repair or managed production execution is claimed.
 [Activation steps](activation.md) describe the remaining enrollment, shadow,
 writer-fence and controlled canary checks.
 
-The final workspace sweep still reports 502 pre-existing dirty/unpushed
-repositories/worktrees. Task-owned component commits and skill distribution are
+The final workspace sweep reports 501 dirty/unpushed repositories/worktrees
+across the workspace (502 at baseline; concurrent work continued). Task-owned component commits and skill distribution are
 pushed; unrelated changes are preserved. Root integration adds the reviewed
 component pins and this evidence separately from the installed core revision.
