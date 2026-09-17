@@ -1,18 +1,28 @@
 # Execution v2 operations
 
-The supported supervisor is the host's user systemd manager. Package `krebs` with
-`uv sync --frozen`; package Pilot separately and set `KREBS_PILOT_HELPER` to the
-verified immutable helper. Configuration is process environment:
+The supported supervisor is the host's user systemd manager. Build the release
+wheel with `uv build` and export locked runtime dependencies with
+`uv export --frozen --no-dev --no-emit-project --format requirements-txt`.
+Stage the wheel, requirements file, committed Pilot bundle and committed Momo
+skill bundle in immutable release paths. Do not bind a mutable working tree.
 
-- `KREBS_DATABASE_URL`: resolve from environment or 1Password at service launch.
-- `KREBS_MANIFESTS`: JSON array of canonical `.project.json` paths.
-- `KREBS_PILOT_HELPER`: absolute path to the pinned Pilot provider helper.
-- `NATS_URL`, optional `NATS_TOKEN`: authenticated Bloodbank broker binding.
+`python3 ops/install.py release.json --destination RELEASE_DIRECTORY` validates
+all inputs before writing, installs the hash-locked dependencies and wheel into
+a fresh venv, and generates the user systemd unit with those exact paths.
+Installation does not activate the service. The descriptor contains:
 
-Never store literal secrets in the environment file: use a supervisor launch
-resolver with op references. The example unit describes process ownership and
-requires that launch integration before installation. It is not deployed by the
-source implementation.
+- `wheel`, `wheel_sha256`, `requirements`, `requirements_sha256`;
+- `source_revision` (40 lowercase hex), `pilot_root`, `pilot_bundle_sha256`;
+- `momo_root`, `momo_bundle_sha256`, and `manifests` (canonical manifest paths);
+- `environment`: `KREBS_DATABASE_URL`, `NATS_URL`, optional `NATS_TOKEN`, and any
+  required runtime variables. Secret values must be `op://` references.
+
+The generated ExecStartPre validates installed wheel bytes, full Pilot/Momo
+bundle digests, enrolled native identities, exact lanes, runtime systemd access
+and writer fences. `krebs.launch` resolves vault references only into the child
+process environment, repeats readiness at launch, then executes the service.
+Use the readiness argv printed by the installer before activation. Source
+includes no mutable-checkout example unit and no plaintext environment file.
 
 Run `krebs migrate` explicitly against the selected database. Migrations touch
 only the `krebs` schema; the existing project-health tables are unchanged. Run
@@ -26,14 +36,19 @@ A pending provider intent holds capacity. `krebs reconcile` reads back exact
 provider state before any mutation, and never repeats a previously sent uncertain
 POST. Manual investigation must resolve a mismatched uncertain intent; do not
 clear pending or delete the board row to unblock a worker. Outbox publication
-requires a JetStream acknowledgement; Candystore observation is separately
+uses persisted monotonic outbox sequence for new receipts and requires a JetStream acknowledgement;
+historical rows receive a stable migration order because original insertion order
+was not retained; Candystore observation is separately
 verified deployment evidence.
 
 Canonical manifest `execution` fields: mode (`legacy`, `shadow`, `managed`),
-policy_version2, skill_version(SHA256), pm_actor, controller_actor, actors keyed by
+policy_version2, skill_version(released version), pilot_bundle_sha256, momo_bundle_sha256, pm_actor, controller_actor, actors keyed by
 actor ID, exact states name-to-UUID map, working_label, legacy_writers_fenced.
 Each actor declares native_user_id, key_ref(op reference), role(pm/operator or
-reviewer), runtime_id, and runtime {adapter:systemd, unit_prefix}. Unique native
+reviewer/interactive), runtime_id, and runtime {adapter:systemd, unit_prefix}.
+The owning PM runtime also declares planner_argv for its installed Hermes/Momo
+planning invocation. The heartbeat honors reconcile.enabled=false as a planning
+pause while continuing valid active lease maintenance. Unique native
 identities are required; interactive Codex/Claude are separate actors. Readiness
 must verify source/installed skill and runtime writer inventory before setting
 legacy_writers_fenced. PJangler rejects incomplete managed bindings; shadow

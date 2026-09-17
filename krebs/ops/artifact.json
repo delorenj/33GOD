@@ -6,9 +6,16 @@
   "runtime_mode": "host-service",
   "source": "https://github.com/delorenj/33GOD",
   "build": "uv sync --frozen --no-dev && uv build",
-  "validation": "uv run pytest -q tests",
+  "validation": "mise run test",
   "readiness": "uv run krebs readiness",
   "migration": "uv run krebs migrate",
   "activation": "blocked-until-enrolled-and-pinned",
-  "required_pins": ["source_revision", "wheel_sha256", "pilot_source_revision", "pilot_helper_sha256", "momo_skill_sha256"]
+  "required_pins": [
+    "source_revision",
+    "wheel_sha256",
+    "requirements_sha256",
+    "pilot_bundle_sha256",
+    "momo_bundle_sha256"
+  ],
+  "installer": "python3 ops/install.py release.json --destination RELEASE_DIRECTORY"
 }

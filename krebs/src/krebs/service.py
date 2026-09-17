@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import nats
 from nats.js.api import ConsumerConfig, AckPolicy
 from .adapters import Registry, PilotProvider, Runtime, secret
-from .contract import canonical, require
+from .contract import canonical, require, validate
 from .controller import Controller
 from .store import Store
 
@@ -30,7 +30,7 @@ def envelope(kind, entity, action, data, correlation, causation, event_id=None):
 
 async def publish_outbox(store, js):
     with store.connect() as conn:
-        rows = conn.execute('SELECT * FROM krebs.outbox WHERE published_at IS NULL ORDER BY id LIMIT 100').fetchall()
+        rows = conn.execute('SELECT * FROM krebs.outbox WHERE published_at IS NULL ORDER BY sequence LIMIT 100').fetchall()
     for row in rows:
         # JetStream acknowledgement, not flush, proves durable bus storage. Same ID on retries.
         await js.publish(row['subject'], canonical(row['envelope']).encode(), headers={'Nats-Msg-Id':row['id']})
@@ -51,17 +51,24 @@ async def serve(controller):
                 auth_project = auth_actor = command = None
                 try:
                     raw = json.loads(message.data)
+                    require(isinstance(raw,dict) and isinstance(raw.get('data'),dict),'invalid envelope shape')
                     require(raw['subject'] == COMMAND_SUBJECT and raw['type'] == 'bloodbank.lifecycle.task.invoke', 'invalid command envelope')
-                    command = raw['data']['command']; auth = raw['data']['auth']
+                    candidate=raw['data'].get('command')
+                    validate(candidate)
+                    command=candidate; auth=raw['data'].get('auth')
                     require(raw['command_id'] == command['command_id'], 'envelope command id mismatch')
                     auth_project, auth_actor = await asyncio.to_thread(controller.registry.authenticate, command, auth)
                     receipt = await asyncio.to_thread(controller.execute, command, auth)
                 except Exception as exc:
                     receipt = {'version':2, 'command_id':command.get('command_id') if command else None,
                                'project_id':command.get('project_id') if command else None, 'ticket_id':command.get('ticket_id') if command else None, 'ok':False, 'status':'rejected', 'error':str(exc)}
-                if auth_actor:
+                if auth_actor and isinstance(command,dict):
                     wire = canonical(receipt)
-                    key = await asyncio.to_thread(secret, auth_actor['key_ref'])
+                    try:
+                        key = await asyncio.to_thread(secret, auth_actor['key_ref'])
+                    except Exception:
+                        await message.nak(delay=5)
+                        continue
                     data = {'wire':wire, 'signature':hmac.new(key.encode(), wire.encode(), hashlib.sha256).hexdigest()}
                     reply = envelope('reply', 'task', 'invoke', data, command['correlation_id'], command['command_id'])
                     await nc.publish(REPLY_SUBJECT, canonical(reply).encode())
@@ -102,13 +109,15 @@ def main():
             doc=json.loads(Path(path).read_text()); pid=doc.get('project_id')
             try:
                 project=registry.project(pid)
-                require(project.get('legacy_writers_fenced') is True, 'legacy writers not fenced')
-                require(project.get('policy_version') == 2 and project.get('skill_version'), 'policy/skill not pinned')
-                require(project.get('pm_actor') in project.get('actors',{}), 'PM not enrolled')
+                from .readiness import validate_binding
+                validate_binding(project)
+                controller.runtime.probe()
                 for actor in project['actors'].values():
-                    require(actor.get('runtime',{}).get('adapter') == 'systemd', 'stop-proof runtime missing')
                     provider.verify(project, actor)
                 results.append({'project_id':pid,'ready':True,'mode':project['mode']})
             except Exception as exc: results.append({'project_id':pid,'ready':False,'error':str(exc)})
         print(canonical(results))
         if not results or any(not r['ready'] for r in results): raise SystemExit(1)
+
+if __name__=='__main__':
+    main()

@@ -6,12 +6,14 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
+from .bundles import bundle_digest
 from .contract import LANES, canonical, require
 
 
 def secret(ref):
     require(isinstance(ref, str) and ref.startswith("op://"), "actor requires an enrolled op:// credential")
-    result = subprocess.run(["op", "read", ref], capture_output=True, text=True, check=False)
+    result = subprocess.run(["op", "read", ref], capture_output=True, text=True, check=False, timeout=20)
     require(result.returncode == 0, "actor credential unavailable")
     return result.stdout.strip()
 
@@ -50,22 +52,37 @@ class PilotProvider:
     def __init__(self, helper):
         self.helper = str(Path(helper).resolve())
 
-    def call(self, project, actor, operation, **data):
-        request = {"version": 2, "operation": operation, "binding": {
-            "base": project["base"], "workspace": project["workspace"], "board": project["board"],
-            "keyRef": actor["key_ref"], "nativeUserId": actor["native_user_id"],
-            "states": project.get("states", {}), "workingLabel": project.get("working_label")}, **data}
-        proc = subprocess.run(["node", self.helper], input=canonical(request), capture_output=True, text=True, timeout=60)
-        require(proc.returncode == 0, "Pilot provider operation failed; reconcile durable intent")
+    def attach_store(self, store):
+        self.store=store
+
+    def binding(self,project,actor):
+        return {"base":project["base"],"workspace":project["workspace"],"board":project["board"],
+                "keyRef":actor["key_ref"],"nativeUserId":actor["native_user_id"],
+                "states":project.get("states",{}),"workingLabel":project.get("working_label")}
+
+    def call(self,project,actor,operation,**data):
+        request={"version":2,"operation":operation,"binding":self.binding(project,actor),**data}
+        env=dict(os.environ)
+        env.pop('KREBS_DATABASE_URL',None)
+        if operation=='apply' and hasattr(self,'store'):
+            env['KREBS_DATABASE_URL']=self.store.dsn
+            env['KREBS_CAPABILITY_PYTHON']=sys.executable
+        proc=subprocess.run(['node',self.helper],input=canonical(request),capture_output=True,text=True,timeout=60,env=env)
+        require(proc.returncode==0,'provider content changed; readiness invalidated' if 'content_conflict' in proc.stderr else 'Pilot provider operation failed; reconcile durable intent')
         return json.loads(proc.stdout)
 
-    def verify(self, project, actor):
-        require(project.get("pilot_helper_sha256") == hashlib.sha256(Path(self.helper).read_bytes()).hexdigest(), "Pilot provider helper pin missing or changed")
-        skill = Path(project.get("skill_path", str(Path(project["manifest"]).parent / ".agents/skills/momo/SKILL.md")))
-        require(skill.is_file() and project.get("skill_version") == hashlib.sha256(skill.read_bytes()).hexdigest(), "installed Momo skill pin missing or changed")
-        require(set(LANES) <= set(project.get("states", {})), "exact lane bindings incomplete")
-        require(project.get("working_label"), "working label binding missing")
-        return self.call(project, actor, "verify")
+    def verify(self,project,actor):
+        from .readiness import validate_binding
+        validate_binding(project)
+        require(project.get('pilot_bundle_sha256')==bundle_digest(Path(self.helper).parents[1],'pilot'),'Pilot dependency bundle pin missing or changed')
+        skill=Path(project.get('skill_path',str(Path(project['manifest']).parent/'.agents/skills/momo/SKILL.md')))
+        require(project.get('momo_bundle_sha256')==bundle_digest(skill.parent,'momo'),'installed Momo bundle pin missing or changed')
+        require(set(LANES)<=set(project.get('states',{})),'exact lane bindings incomplete')
+        require(project.get('working_label'),'working label binding missing')
+        return self.call(project,actor,'verify')
+
+    def apply_step(self,project,actor,ticket_id,action,marker,capability):
+        return self.call(project,actor,'apply',ticket_id=ticket_id,action=action,marker=marker,capability=capability)
 
     def ticket(self, project, actor, ticket_id):
         return self.call(project, actor, "get", ticket_id=ticket_id)
@@ -77,10 +94,19 @@ class PilotProvider:
         return self.call(project, actor, "apply", ticket_id=ticket_id, action=action, marker=marker)
 
 class Runtime:
+    def freeze(self, binding):
+        from copy import deepcopy
+        snapshot=deepcopy(binding)
+        if os.environ.get('KREBS_RELEASE_DESCRIPTOR'):
+            snapshot['release_descriptor']=os.environ['KREBS_RELEASE_DESCRIPTOR']
+            snapshot['python']=sys.executable
+            snapshot['path']=os.environ['PATH']
+        return snapshot
+
     """Only enrolled systemd units can prove stop; client booleans are never proof."""
     def stop(self, project, attempt):
         actor = project["actors"][attempt["actor_id"]]
-        adapter = actor.get("runtime", {})
+        adapter = attempt.get("supervisor", {})
         require(adapter.get("adapter") == "systemd", "runtime has no installed stop-proof adapter")
         prefix = adapter.get("unit_prefix", "")
         require(re.fullmatch(r"[a-zA-Z0-9_-]+", prefix) is not None and prefix, "invalid runtime unit prefix")
@@ -94,8 +120,18 @@ class Runtime:
         require(probe.returncode == 0 and "0" in values and "inactive" in values and "dead" in values, "old runtime still live or stop proof unavailable")
         return {"unit": unit, "state": "stopped"}
 
+    def probe(self):
+        result=subprocess.run(['systemctl','--user','show-environment'],capture_output=True,timeout=10)
+        require(result.returncode==0,'user systemd supervisor unavailable')
+
+    def present(self,project,attempt):
+        adapter=attempt.get('supervisor',{})
+        unit=adapter['unit_prefix']+'-'+attempt['run_id']+'.service'
+        probe=subprocess.run(['systemctl','--user','show',unit,'--property=LoadState','--value'],capture_output=True,text=True,timeout=10)
+        return probe.returncode==0 and probe.stdout.strip()=='loaded'
+
     def running(self, project, attempt):
-        adapter = project["actors"][attempt["actor_id"]].get("runtime", {})
+        adapter = attempt.get("supervisor", {})
         require(adapter.get("adapter") == "systemd", "runtime adapter unavailable")
         prefix, run = adapter.get("unit_prefix", ""), attempt["run_id"]
         require(bool(re.fullmatch(r"[a-zA-Z0-9_-]+", prefix)) and bool(re.fullmatch(r"[a-zA-Z0-9_-]+", run)), "invalid unit identity")
@@ -106,7 +142,7 @@ class Runtime:
     def start(self, project, attempt, argv):
         require(isinstance(argv, list) and argv and all(isinstance(x, str) for x in argv), "worker argv required")
         actor = project["actors"][attempt["actor_id"]]
-        adapter = actor.get("runtime", {})
+        adapter = attempt.get("supervisor", {})
         require(adapter.get("adapter") == "systemd", "runtime adapter unavailable")
         prefix, run = adapter.get("unit_prefix", ""), attempt["run_id"]
         require(bool(re.fullmatch(r"[a-zA-Z0-9_-]+", prefix)) and bool(re.fullmatch(r"[a-zA-Z0-9_-]+", run)), "invalid unit identity")
@@ -114,9 +150,13 @@ class Runtime:
         probe = subprocess.run(["systemctl", "--user", "show", unit, "--property=LoadState", "--value"], capture_output=True, text=True, timeout=10)
         if probe.returncode == 0 and probe.stdout.strip() == "loaded":
             return {"unit": unit, "existing": True}
+        extra=[]
+        if adapter.get('release_descriptor'):
+            extra=['--setenv=PATH='+adapter['path']]
+            argv=[adapter['python'],'-m','krebs.worker',adapter['release_descriptor'],'--',*argv]
         result = subprocess.run(["systemd-run", "--user", "--unit", unit,
             "--property=KillMode=control-group", "--property=Restart=no", "--property=TimeoutStopSec=15",
-            "--setenv=KREBS_RUN_ID=" + run, "--setenv=PILOT_ACTOR_ID=" + attempt["actor_id"],
-            "--working-directory=" + str(Path(project["manifest"]).parent), "--", *argv], capture_output=True, timeout=30)
+            *extra, "--setenv=KREBS_RUN_ID=" + run, "--setenv=PILOT_ACTOR_ID=" + attempt["actor_id"],
+            "--working-directory=" + attempt.get("project_root", str(Path(project["manifest"]).parent)), "--", *argv], capture_output=True, timeout=30)
         require(result.returncode == 0, "supervised dispatch failed")
         return {"unit": unit, "existing": False}

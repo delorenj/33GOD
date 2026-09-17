@@ -34,4 +34,4 @@ class Store:
         return dict(row)
 
     def save(self, conn, state):
-        conn.execute("UPDATE krebs.boards SET revision=%s,generation=%s,active=%s,tickets=%s,pending=%s WHERE project_id=%s", (state["revision"], state["generation"], Jsonb(state["active"]), Jsonb(state["tickets"]), state.get("pending"), state["project_id"]))
+        conn.execute("UPDATE krebs.boards SET revision=%s,generation=%s,active=%s,tickets=%s,pending=%s,used_runs=%s WHERE project_id=%s", (state["revision"], state["generation"], Jsonb(state["active"]), Jsonb(state["tickets"]), state.get("pending"), Jsonb(state.get("used_runs",[])), state["project_id"]))

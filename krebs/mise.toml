@@ -1,5 +1,5 @@
 [tasks.test]
-run = "uv run pytest -q tests"
+run = "python3 ops/test.py"
 [tasks.migrate]
 run = "uv run krebs migrate"
 [tasks.readiness]
@@ -8,3 +8,6 @@ run = "uv run krebs readiness"
 run = "uv run krebs health"
 [tasks.reconcile]
 run = "uv run krebs reconcile"
+
+[tasks."test:pure"]
+run = "uv run pytest -q tests/test_state.py"
