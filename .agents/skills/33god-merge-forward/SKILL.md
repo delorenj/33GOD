@@ -11,6 +11,14 @@ Apply the [generic merge-forward workflow](../../../../33god-platform/skills/mer
 
 This is one user and one decision-maker working in pre-production. Deliver the smallest useful slice, verify its changed behavior, and immediately land component `main` followed by root `main`. Preserve unrelated work and avoid long-lived integration branches.
 
+The 33GOD skill applies to this repository and its owned components only. If a
+request or transcript is primarily about a sibling repository, stop and resume
+from that repository's canonical checkout; its instructions, memory, skills,
+and code index are part of the safety boundary. Extract a generic workflow
+lesson only when it is directly applicable here. Do not merge, deploy, or
+report sibling-repository work as 33GOD work merely because the session opened
+in this directory.
+
 ## Product authority
 
 - **Momo:** owns the shared PM playbook: prioritization, readiness, delegation,
@@ -47,6 +55,12 @@ Changes to these boundaries require an explicit product decision. Routine implem
 6. Report implementation, installation/runtime proof, and activation readiness
    separately. A distributed skill, healthy service, or passing test does not
    prove native actor enrollment or active-board cutover.
+
+For CI or workflow edits, inspect path filters and downstream jobs before
+merging. A workflow-only change can trigger a deployment or restart; do not
+describe a merged change as undeployed without checking. Verify the exact
+running ref when a deployment was triggered, and report merge and deployment
+as separate facts.
 
 ## Session tuning
 

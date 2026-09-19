@@ -23,6 +23,16 @@ Select checks that demonstrate the slice's actual behavior:
 - Holocene changes: typecheck, build, browser interaction, and live route verification.
 - Compose or systemd changes: resolve the effective configuration, restart only affected units, and verify the running artifact.
 - Template or generator changes: render into an isolated temporary directory and compare the intended owned projection while preserving foreign settings.
+- Test or CI changes: do not treat a broad green suite, a negative regex, or a
+  dead vocabulary check as proof. For a changed guard, use positive behavior
+  and one targeted mutation or fault injection that should make the test fail;
+  distinguish live tripwires from strings that never occur in current source.
+  Keep known-red or boundary-unproven suites advisory until the failure is
+  understood and the relevant boundary is exercised. Do not enable a slow
+  suite merely because it exists or to improve a test-count metric.
+- Workflow changes: inspect `paths`/`paths-ignore`, required checks, and jobs
+  with deployment or restart side effects before merge. If the change triggers
+  one, verify its completion and the running commit separately from the merge.
 
 Run the affected tests and direct boundary checks, not a fixed suite by habit. A
 config file, selected handler, board status, or zero exit status alone is not
