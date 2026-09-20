@@ -123,7 +123,8 @@ change and its skill update land in the same commit:
 | Skills                                                          | Owner                |
 | --------------------------------------------------------------- | -------------------- |
 | `bloodbank-integration`, `bloodbank-sdk-generation`             | `bloodbank/skills/`  |
-| `agent-fleet-operations`, `mise-*`, `pjangler-*`, `projects`    | `pjangler/skills/`   |
+| `mise-*`, `pjangler-*`, `project-jangler`, `projects`           | `pjangler/skills/`   |
+| `agent-fleet-operations`, `hermes-pm-template-maintenance`      | `flume/skills/`      |
 | `project-lifecycle`, `task-triage`                              | `krebs/skills/`      |
 | `33god-hub`, `merge-forward`, `skillex-skill-registry`          | `33god-platform/skills/` |
 | `gitignore-maintenance`                                         | `~/code/skillex/all-skills/` (standalone catalog skill) |

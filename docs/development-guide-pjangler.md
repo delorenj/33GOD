@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - npm
 - Copier 9+ for templates
 - mise for local tool/runtime coordination
@@ -20,7 +20,7 @@ npm start
 npm run mcp
 ```
 
-The build bundles CLI and MCP entrypoints with esbuild. The package reports 1.2.18, while the root lock metadata reports 1.2.10; resolve that before publishing or relying on lock parity.
+The build bundles CLI and MCP entrypoints with esbuild. `npm test` runs `scripts/run-tests.mjs`, which typechecks as a hard gate, rebuilds, then attempts all sixty-one suites — esbuild never typechecks, so suites run against un-typechecked source report fiction.
 
 ## Safe Operation
 
@@ -32,7 +32,7 @@ Treat `~/.config/pjangler/projects.yaml` as catalog/bootstrap authority and `.pr
 
 ## Template Changes
 
-Copier uses `--trust`; template tasks are executable host code. Pin template provenance, eliminate dirty gitlink dependence, and review remote installers, provider wiring, secret handling, systemd changes, and checkpoint pushes. Update platform change logs and define a regeneration/backfill plan for every material template contract change.
+`templates/commonproject` is the only submodule. Copier uses `--trust`; template tasks are executable host code. Pin template provenance, eliminate dirty gitlink dependence, and review remote installers, provider wiring, and secret handling. The agent template and its host-service provisioning are Flume's. Update platform change logs and define a regeneration/backfill plan for every material template contract change.
 
 For `.gitignore`, preserve existing repo rules and add only the portable
 project contract. Never copy or hard-code `core.excludesFile`, and never add
@@ -50,4 +50,4 @@ Add focused tests for prompt cancellation, ingredient failure propagation, MCP c
 
 ## Known Self-Parity Drift
 
-PJangler’s root mise hook syntax is older than its generated template, and `.mise/scripts/setup-plane.py` can recreate `.plane.json`. Repair sources before regenerating downstream projects. The root platform manifest currently points to another checkout and invokes Bun; use the live `33GOD/pjangler` repository and npm commands for evidence.
+PJangler’s root mise hook syntax is older than its generated template, and `.mise/scripts/setup-plane.py` can recreate `.plane.json`. Repair sources before regenerating downstream projects.

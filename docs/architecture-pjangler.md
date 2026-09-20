@@ -8,12 +8,12 @@ PJangler is a host-local provisioning control plane with a Commander CLI and std
 
 | Category | Technology | Version/evidence |
 |---|---|---|
-| Runtime | Node.js ESM | >=20; local mise 26.4 |
+| Runtime | Node.js ESM | >=24; local mise 26.4 |
 | Language/build | TypeScript / esbuild | TS 5.9 lock, esbuild 0.25 |
 | Interfaces | Commander / MCP SDK | 14.x / 1.29.0 |
 | Validation | Zod / YAML | 4.4.3 / 2.9.0 |
 | Templates | Copier | 9+ |
-| Package | `@delorenj/pjangler` | code 1.2.18; lock root 1.2.10 |
+| Package | `@delorenj/pjangler` | 1.5.0; package lock in parity |
 
 ## Architecture Pattern
 
@@ -23,10 +23,10 @@ Project provisioning pipeline and registry. Typed plans separate some preview fr
 
 - Central registry at `~/.config/pjangler/projects.yaml` with atomic replacement but no concurrency control.
 - `.project.json` repository-local runtime projection.
-- Eleven parity rules covering mise, versioning, symlinks, project identity, secrets, provenance, BMAD, and Momo lifecycle readiness. The eight employee rules (`hermes.*`, `systemd.sentinel`) moved to Flume.
+- Nineteen parity rules covering mise, versioning, the skills manifest, agent symlinks, project identity, secrets, provenance, BMAD, Momo lifecycle readiness, board schema, and seven notebook rules. The eight employee rules (`hermes.*`, `systemd.sentinel`) moved to Flume.
 - The CommonProject Copier template.
 - CLI groups for project/recipe/command/audit/migrate/describe operations.
-- Eleven MCP tools exposing overlapping catalog, audit, migration, bootstrap, project, recipe, and deployment behavior.
+- Twelve MCP tools exposing overlapping catalog, audit, migration, bootstrap, project, describe, and recipe behavior.
 
 ## Data Architecture
 
@@ -71,15 +71,15 @@ Generated Bloodbank integration (as of the July 2026 scan) used core NATS and in
 
 ## Deployment Architecture
 
-PJangler runs directly with host-user permissions. It has no container or Compose service. The platform `provisioning` profile is metadata, not a started service.
+PJangler runs directly with host-user permissions. It has no container or Compose service. Its `tools`/`full` profile projection is run-only with zero replicas — metadata, not a started service.
 
 ## Testing Strategy
 
-Four Node regression scripts cover parity migrations, MCP catalog/server behavior, and project registry flows. Gaps include non-local provisioning, template shell behavior, cancellation/result propagation, MCP concurrency, security, and end-to-end Bloodbank delivery. Typechecking and built CLI smoke checks passed in the audit.
+Sixty-one Node regression suites run under `scripts/run-tests.mjs`, behind a hard typecheck gate, covering parity migrations, MCP catalog/server behavior, project registry flows, notebook binding, and generated-project lifecycle. Every suite is attempted on every run; the exit code is decided from collected results, not the first failure. Gaps include non-local provisioning, template shell behavior, cancellation/result propagation, MCP concurrency, security, and end-to-end Bloodbank delivery. Typechecking and built CLI smoke checks passed in the audit.
 
 ## Principal Risks
 
-Wrong root repository identity, dirty/unpinned templates, package-lock version drift, misleading `--live` behavior, unsafe MCP defaults, failure/cancellation propagation defects, stale `.plane.json` setup, supply-chain `curl | sh`, secrets in process arguments, and host-level privilege.
+Wrong root repository identity, dirty/unpinned templates, misleading `--live` behavior, unsafe MCP defaults, failure/cancellation propagation defects, stale `.plane.json` setup, supply-chain `curl | sh`, secrets in process arguments, and host-level privilege.
 
 ## Development Workflow
 
