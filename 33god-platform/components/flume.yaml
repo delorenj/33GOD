@@ -1,0 +1,33 @@
+id: flume
+name: Flume
+role: workforce
+repo: ../flume
+description: >
+  The corporate layer. Hires, onboards and reviews the agents that do the work,
+  and owns the org chart they appear in. Anthropomorphism as protocol: employees,
+  titles, desks, records -- never "fleet".
+compose:
+  files: []
+  profiles: [agents]
+health:
+  commands:
+    - cd ../flume && npm run typecheck
+source_of_truth:
+  - ../flume/packages
+  - ../flume/contracts/handbook.yaml
+  - ~/.hermes/agents-registry.yaml
+changelog:
+  topics: [workforce, hiring, onboarding, org-chart, employee-review]
+public_card:
+  title: The Workforce
+  promise: One place that hires an agent, seats it, and tells you honestly how it is doing.
+contracts:
+  handbook: >
+    contracts/handbook.yaml names an owner for every field Flume or PJangler may
+    write, and the one-directional projections between the project registry and
+    the org chart. Neither side writes the other's fields.
+  standing: >
+    A performance review has three verdicts, not two. An observation that could
+    not be trusted is reported as "unable to assess" and never collapsed into a
+    pass or a failure.
+backfills: []

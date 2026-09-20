@@ -19,3 +19,6 @@
 [submodule "momo"]
 	path = momo
 	url = git@github.com:delorenj/momo.git
+[submodule "flume"]
+	path = flume
+	url = git@github.com:delorenj/flume.git
