@@ -1,7 +1,3 @@
 {
-  "hooks": {
-    "PostToolUse": [],
-    "SessionStart": [],
-    "SessionEnd": []
-  }
+  "hooks": {}
 }
