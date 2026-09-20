@@ -17,15 +17,15 @@ PJangler is a host-local provisioning control plane with a Commander CLI and std
 
 ## Architecture Pattern
 
-Host automation and provisioning pipeline. Typed plans separate some preview from execution; parity rules detect/migrate repository state; recipes compose sequential ingredients; Copier templates create project and Hermes runtime projections.
+Project provisioning pipeline and registry. Typed plans separate some preview from execution; parity rules detect/migrate repository state; recipes compose sequential ingredients; the CommonProject Copier template creates the project projection.
 
 ## Core Components
 
 - Central registry at `~/.config/pjangler/projects.yaml` with atomic replacement but no concurrency control.
 - `.project.json` repository-local runtime projection.
-- Eleven parity rules covering mise, versioning, symlinks, project identity, secrets, provenance, BMAD, Hermes, and systemd.
-- CommonProject and Hermes Copier templates.
-- CLI groups for project/recipe/command/audit/migrate/config/Hermes operations.
+- Eleven parity rules covering mise, versioning, symlinks, project identity, secrets, provenance, BMAD, and Momo lifecycle readiness. The eight employee rules (`hermes.*`, `systemd.sentinel`) moved to Flume.
+- The CommonProject Copier template.
+- CLI groups for project/recipe/command/audit/migrate/describe operations.
 - Eleven MCP tools exposing overlapping catalog, audit, migration, bootstrap, project, recipe, and deployment behavior.
 
 ## Data Architecture
@@ -61,8 +61,9 @@ survive, and then commit/push explicit index changes.
 > single fleet-shared `hermes-fleet-bloodbank-gateway.service` routing
 > `data.target_agent_id` through the fleet registry. Provisioning writes the
 > registry `bloodbank: {gateway_scope: fleet, target_agent_id}` block and installs
-> NO per-agent consumer, checkpoint timer, or inbox files; `pj audit` /
-> `pj migrate hermes.registry-parity` enforce this. Canon:
+> NO per-agent consumer, checkpoint timer, or inbox files; `flume audit` /
+> `flume remediate hermes.registry-parity` enforce this — the rule moved with the
+> workforce and PJangler no longer answers for it. Canon:
 > `hermes-agent-template/docs/architecture.md` § "Bloodbank wiring". The
 > paragraph below records the pre-PJAN-19 state this scan observed.
 

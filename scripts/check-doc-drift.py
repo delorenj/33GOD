@@ -34,13 +34,19 @@ FORBIDDEN_MARKERS = re.compile(
 )
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
-# The hermes-agent generator materializes these trees into every provisioned
+# The job-description generator materializes these trees into every provisioned
 # repo, and _lib.sh prefers a repo's own vendored copy over the template's, so
 # each copy is an independent generator source and all of them must be scanned.
 # One file used to be scanned here; a file is not a target, a generator is.
+#
+# The template moved with the workforce: it is vendored by Flume now, not by
+# pjangler. The standalone checkout is scanned too, because it is the one an
+# operator edits.
 GENERATED_SCAFFOLDS = (
-    "pjangler/templates/hermes-agent/runtime-scaffold",
-    "pjangler/templates/hermes-agent/template/.runtime-scaffold",
+    "flume/templates/hermes-agent/runtime-scaffold",
+    "flume/templates/hermes-agent/template/.runtime-scaffold",
+    "hermes-agent-template/runtime-scaffold",
+    "hermes-agent-template/template/.runtime-scaffold",
     "agents/hermes/pm/.runtime-scaffold",
     "bloodbank/agents/hermes/pm/.runtime-scaffold",
     "candystore/agents/hermes/pm/.runtime-scaffold",

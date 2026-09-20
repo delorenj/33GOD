@@ -57,6 +57,8 @@ contract_paths:
   - ../holocene/docs
   - ../mcp-hub/README.md
   - ../pjangler/templates
+  - ../flume/contracts/handbook.yaml
+  - ../krebs/adapters/tp
   - ../../skillex/all-skills
   - ../hermes-agent-template
 

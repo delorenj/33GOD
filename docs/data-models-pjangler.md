@@ -17,7 +17,7 @@ Authority split:
 
 ## Initialization Plan
 
-Typed actions describe registry upsert, Copier render, local manifest write, ticket-provider creation/linkage, and Hermes provisioning. Execution implements only a subset; plan presence is not proof of side effects.
+Typed actions describe registry upsert, Copier render, local manifest write, and ticket-provider creation/linkage. Execution implements only a subset; plan presence is not proof of side effects.
 
 ## Parity Model
 
@@ -25,4 +25,4 @@ Eleven rule identifiers represent desired repository/user state. Audits emit fin
 
 ## Schema and Concurrency Limits
 
-No JSON Schema exists for registry or local projection; TypeScript interfaces and runtime checks are authoritative. Arbitrary target paths are possible, and no transaction spans registry, template, provider, manifest, and Hermes actions.
+No JSON Schema exists for registry or local projection; TypeScript interfaces and runtime checks are authoritative. Arbitrary target paths are possible, and no transaction spans registry, template, provider, and manifest actions.

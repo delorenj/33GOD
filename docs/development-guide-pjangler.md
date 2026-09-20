@@ -24,7 +24,7 @@ The build bundles CLI and MCP entrypoints with esbuild. The package reports 1.2.
 
 ## Safe Operation
 
-Prefer project-init dry runs, migration dry runs, and local modes. Inspect each MCP tool’s defaults: `run_recipe` executes by default and `deploy_hermes_agent` is local but not dry-run by default. Do not assume all MCP calls are non-mutating.
+Prefer project-init dry runs, migration dry runs, and local modes. Inspect each MCP tool’s defaults: `run_recipe` executes by default. Do not assume all MCP calls are non-mutating.
 
 ## Registry and Projection Changes
 
@@ -46,7 +46,7 @@ tracked-path-preservation regression.
 
 The Node regression scripts create/remove temporary filesystem state. Run them only in a writable test environment. Existing coverage includes parity migration, MCP catalog/server flows, project initialization, registry conflicts, agent preservation, and ticket projections.
 
-Add focused tests for prompt cancellation, ingredient failure propagation, MCP concurrent output capture, non-local Hermes provisioning, template shell scripts, Bloodbank contract/durability, and security boundaries.
+Add focused tests for prompt cancellation, ingredient failure propagation, MCP concurrent output capture, template shell scripts, and security boundaries.
 
 ## Known Self-Parity Drift
 

@@ -2,7 +2,7 @@ id: hermes-fleet
 name: Hermes Fleet
 role: agent-runtime-fleet
 repo: ../hermes-agent-template
-description: Shared Hermes runtime, profiles, systemd units, and generated agent role scaffolds.
+description: Shared Hermes runtime, profiles, systemd units, and the job-description template agent role scaffolds are rendered from. Flume is the tool that renders and reviews them.
 compose:
   files: []
   profiles: [agents]

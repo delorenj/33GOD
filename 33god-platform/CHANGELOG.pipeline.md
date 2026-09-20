@@ -3,6 +3,45 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-09-20
+
+### The workforce leaves PJangler for Flume
+
+PJangler is a project bootstrapper and registry. It was also the entire Hermes
+agent fleet -- deploy, profiles, systemd, the org chart, health -- which was
+about half its source. All of it moved to **Flume**, revived as the workforce
+component and back in the registry: `src/fleet/**` (20,090 L), the provisioning
+chain, `HermesAgentRecipe`, the eight `hermes.*` / `systemd.sentinel` parity
+rules, `contracts/fleet-contract.yaml` (now `contracts/handbook.yaml`), the
+`templates/hermes-agent` submodule, eleven test suites and the
+`agent-fleet-operations` runbook.
+
+The command surface is corporate, because an agent is an employee:
+`flume hire` / `onboard` / `offboard`, `flume roster` (alias `org`),
+`flume record`, `flume review`, `flume handbook validate`, `flume audit` /
+`remediate`. A review still returns three verdicts, not two -- in good standing,
+on notice, and **unable to assess** for an observation that could not be trusted.
+
+**The two-way cycle is cut.** The template used to shell into `pj migrate
+hermes.runtime-singleton`, and PJangler used to run the template's
+`providers/*.sh` inside a fake Hermes role tree to create a *project's* ticket
+board. The adapters are canonical in `krebs/adapters/tp/` now -- where
+`components/krebs.yaml` had declared Krebs's source of truth all along, behind a
+README describing that exact interface with nothing implementing it -- and the
+template vendors a mirror with a byte-equality test. The runtime-singleton
+redirect is a config key (`[fleet] flume_bin`), which reaches all 74 deployed
+copies of `20-runtime-repo.sh` on this host; `fleet-sync` iterates the registry
+and would have reached only 25. `flume remediate` keeps `migrate` as a frozen
+alias so that argv keeps working.
+
+Ownership follows the handbook rather than habit: `.project.json.agents` is a
+one-way projection Flume writes and PJangler reads, and `pj project identity`
+now reports an abandoned agent instead of deleting its row.
+
+Not activated by this change: nothing about the live workforce moved. 25
+employees, 18 active gateways and every `~/.hermes/*` file are byte-unchanged,
+verified against a snapshot taken before the split.
+
 ## 2026-09-17
 
 ### Momo, Pilot and Krebs execution contract v2

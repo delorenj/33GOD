@@ -2,7 +2,7 @@ id: pjangler
 name: PJangler
 role: provisioning-control-plane
 repo: ../pjangler
-description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects and agents, including the portable repository-ignore contract.
+description: Project subsystem bootstrapper CLI and MCP server for 33GOD projects, including the project registry and the portable repository-ignore contract. Employees are Flume's.
 compose:
   files: []
   platform_projection: ../compose.yaml
@@ -18,14 +18,12 @@ health:
 source_of_truth:
   - ../pjangler/src
   - ../pjangler/templates/commonproject
-  - ../pjangler/templates/hermes-agent
   - ~/.config/pjangler
-  - ~/.config/hermes-agent-template
 changelog:
   topics: [project-registry, provisioning, templates, mcp]
 public_card:
   title: Project Factory
-  promise: Reproducible project and agent provisioning from one registry.
+  promise: Reproducible project provisioning from one registry.
 contracts:
   repository_ignore: CommonProject preserves repo rules and never copies core.excludesFile; .agents is canonical and client roots remain local generated projections.
   index_reconciliation: PJangler never bulk-untracks files; use gitignore-maintenance after effective-rule review.

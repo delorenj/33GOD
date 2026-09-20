@@ -38,9 +38,10 @@ specs, templates, CLIs, and agent bundles are first-class.
 
 | Component                                       | Runtime mode             | Description                                                                                                                                     |
 | ----------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **[PJangler](pjangler/)**                       | run-only CLI + stdio MCP | Deterministic project and fleet provisioning. `pjangler project create` is the canonical way to start a new repo.                               |
+| **[PJangler](pjangler/)**                       | run-only CLI + stdio MCP | Deterministic project provisioning and the project registry. `pjangler init` is the canonical way to start a new repo.                          |
+| **[Flume](flume/)**                             | CLI + stdio MCP          | The workforce. Hires, onboards and reviews the agents that do the work, and owns the org chart. `flume hire pm` seats an employee in a repo.     |
 | **[Momo](momo/)**                               | Agent skill              | PM/EM orchestrator. Holds roadmap and next action, delegates every code change. The interactive twin of the autonomous Hermes PM.                |
-| **[Hermes Agent Template](hermes-agent-template/)** | Template + host systemd | Versioned agent-generation contract, runtime configuration, fleet reconciliation, and host survival services.                                    |
+| **[Hermes Agent Template](hermes-agent-template/)** | Template + host systemd | Versioned job-description contract, runtime configuration, reconciliation, and host survival services. Flume renders employees from it.          |
 
 ### Integrations & surfaces
 
@@ -57,13 +58,17 @@ at their real paths and `platform:components` reports presence.
 
 ### Planned integrations
 
-Flume, the LiteLLM Agent Control Plane, DeLoNET LiteLLM, DeLoHQ, and
-OpenNotebook are target integration boundaries, not active registry members.
-The accepted direction keeps ACP subordinate: Flume owns workforce policy,
-ACP normalizes sessions, Bloodbank dispatches canonical commands, Hermes runs
-managed agents, and DeLoNET LiteLLM owns model credentials and fallback policy.
-Holocene remains mission control; DeLoHQ is the bounded executive surface;
-OpenNotebook is a searchable read model over canonical Git/BMAD evidence.
+The LiteLLM Agent Control Plane, DeLoNET LiteLLM, DeLoHQ, and OpenNotebook are
+target integration boundaries, not active registry members. The accepted
+direction keeps ACP subordinate: Flume owns workforce policy, ACP normalizes
+sessions, Bloodbank dispatches canonical commands, Hermes runs managed agents,
+and DeLoNET LiteLLM owns model credentials and fallback policy. Holocene remains
+mission control; DeLoHQ is the bounded executive surface; OpenNotebook is a
+searchable read model over canonical Git/BMAD evidence.
+
+Flume is no longer on that list. It is an active registry member: it took the
+agent deploy, org chart and review surfaces out of PJangler, which is a project
+bootstrapper and registry and should never have owned a workforce.
 
 See the
 [`LiteLLM Agent Control Plane integration decision`](33god-platform/docs/litellm-agent-control-plane-integration.md)
