@@ -28,9 +28,23 @@ Each provider implements these operations:
 
 ## Provider implementations
 
-- `plane/` — Plane REST API adapter
-- `linear/` — Linear GraphQL adapter
-- `trello/` — Trello REST adapter
+- `plane.sh` — Plane REST API adapter
+- `linear.sh` — Linear GraphQL adapter
+- `trello.sh` — Trello REST adapter
+
+These three files are the CANONICAL copies. They used to live only inside
+`hermes-agent-template/template/.scripts/providers/`, which made them agent
+assets that a project could not use without one: pjangler created a project's
+ticket board by staging a fake Hermes role tree in a temp dir and running the
+agent template's adapter inside it. Board creation is a ticket concern, so the
+adapters belong to Krebs, and both consumers now read them from here:
+
+- Flume renders them into each employee's role directory, from a vendored mirror
+  in the template. `tests/test_tp_adapter_vendoring.py` asserts the mirror is
+  byte-identical to these files.
+- pjangler resolves them directly for `pj init --provision-ticket-board`.
+
+Change them HERE, then re-sync the template mirror.
 
 ## Per-repo configuration
 
