@@ -350,6 +350,44 @@ systemd is holding a failed job for a phantom.
 its loudest genuine breakage is invisible.** Note this is the 33GOD PM — the
 agent this document would be handed to.
 
+### 7.5.1 ...and `hermes profile list` lied about all 15 (fixed 2026-09-21)
+
+A second, unrelated status lie in the same family: `hermes profile list`
+reported **every one of 15 running gateways as `stopped`**.
+
+The daemon was blameless. Each profile's `gateway.pid` held the right PID,
+`gateway_state.json` said `"gateway_state":"running"` with a fresh
+`updated_at`, and the PID matched the unit's `MainPID`. The CLI refused to
+believe it. `gateway/status.py::_command_line_belongs_to_profile` identifies a
+gateway by reading `/proc/<pid>/cmdline`, and for a **named** profile it
+requires `-p`/`--profile` (or a literal `HERMES_HOME=`) **on argv** —
+environment `HERMES_HOME` is explicitly not accepted, though the *default*
+profile's branch says "HERMES_HOME usually arrives via the env". Every unit
+here passes the profile as `Environment=HERMES_HOME=`, so identification
+failed, and both rungs of the liveness ladder route through that one check.
+The failure is silent: no log line, on either side.
+
+It was sharpened by a version split worth knowing about independently:
+
+| surface | binary | version |
+|---|---|---|
+| CLI on `PATH` | `~/.hermes/hermes-agent/venv/bin/hermes` | **v0.21.3** |
+| every gateway | pinned release `0408fec7…/.venv/bin/hermes` | **v0.20.1** |
+
+The daemon never had a chance to write what the newer reader wanted.
+
+Fix: put `-p <profile>` on argv. For directly-exec'd units that is the
+`ExecStart` in `10-versioned-runtime.conf`; for the wrapper-launched PMs it
+must go in `credential-launch.sh` instead, because that wrapper validates
+`$1` as its mode and exits 2 on an unexpected token — putting `-p` in their
+`ExecStart` takes them down.
+
+**Two things this leaves standing.** The `10-versioned-runtime.conf` drop-ins
+still have no generator (§7.4), so the 19 edited units are hand-maintained
+state living only on this disk and in no repo — regenerate them and the lie
+returns. And the check remains version-coupled: aligning the CLI and runtime
+versions is the real fix, of which this is the workaround.
+
 ### 7.6 What to build
 
 Not access. A **registry and a boundary**:
