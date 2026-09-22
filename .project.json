@@ -28,5 +28,18 @@
   },
   "created_at": "2026-07-10T20:27:57.657Z",
   "updated_at": "2026-07-10T20:27:57.657Z",
-  "project_id": "33god"
+  "project_id": "33god",
+  "notebook": {
+    "binding": {
+      "state": "linked",
+      "notebook_name": "33GOD",
+      "notebook_id": "notebook:74oukemt337kbkfmtv6b",
+      "overview_note_id": "note:4zj9izh8u8kqmaiwurbx"
+    },
+    "policy": {
+      "enabled": true,
+      "session_start_enabled": false,
+      "session_capture_enabled": false
+    }
+  }
 }
