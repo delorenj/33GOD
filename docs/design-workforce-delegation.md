@@ -328,9 +328,20 @@ ago."
   all are scoped to one profile. Raw `systemctl --user` is the entire
   documented control surface — and it requires an agent-id that the registry
   stores but no command prints.
-- **26 gateways carry a `10-versioned-runtime.conf` drop-in overriding
+- ~~**26 gateways carry a `10-versioned-runtime.conf` drop-in overriding
   ExecStart, with no generator anywhere on disk** and no commit that ever
-  contained the string. Unexplained provenance on almost every unit.
+  contained the string. Unexplained provenance on almost every unit.~~
+  **Closed 2026-09-22.** `flume/templates/hermes-agent/scripts/hermes-runtime-dropin.py`
+  now generates them. It needed no new source of truth — the drop-in is a pure
+  function of the base unit plus the pinned release, with per-unit cwd from
+  `agents-registry.yaml`. `check` reproduces all twenty existing files byte for
+  byte, and a delete/regenerate round trip returns an identical file, so the
+  generator was proven to match reality before it was allowed to own it.
+  Two gaps it surfaced rather than hid: three units (`automatic-ai-pm`,
+  `fleet-bloodbank-gateway`, `intelliforia-voice-agent-pm`) have **no
+  `agents-registry.yaml` entry at all**, so their working directory can only be
+  preserved from disk, not derived; and five wrapper-launched units carry no
+  drop-in by design, their `-p` living inside `credential-launch.sh`.
 
 ### 7.5 The status commands lie
 
