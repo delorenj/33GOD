@@ -51,7 +51,11 @@ Changes to these boundaries require an explicit product decision. Routine implem
 2. Define the smallest outcome and select the checks in [references/gates.md](references/gates.md).
 3. Implement only the owning component and its immediate interface changes.
 4. Run checks sufficient to prove the changed behavior. Fix reproduced failures.
-5. Commit and push the component, then advance and push the root pin.
+   When a change crosses a nested component boundary, run that component's
+   focused checks and land its canonical commit before parent gates that inspect
+   the component source; then advance the root pin and run integrated checks.
+5. Commit and push the component, then advance and push the root pin. Do not
+   treat a dirty nested checkout as canonical source for an acceptance gate.
 6. Report implementation, installation/runtime proof, and activation readiness
    separately. A distributed skill, healthy service, or passing test does not
    prove native actor enrollment or active-board cutover.
