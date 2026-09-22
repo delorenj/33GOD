@@ -71,6 +71,10 @@ plane:
 # reads the fleet registry and routes canonical commands by target_agent_id;
 # this profile does not install its own NATS consumer or inbox bridge.
 bloodbank:
+  # Explicit on purpose: 80-registry.sh reads an absent key as false, so a
+  # re-provision (the 2026-09-17 `pj init sidepiece` run) silently quarantined
+  # this agent and every 33GOD ticket skipped grooming as a green no-op.
+  enabled: true
   gateway_scope: fleet
   target_agent_id: "33god-pm"
   producer: "hermes-agent:33god-pm"
