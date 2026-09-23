@@ -1,0 +1,197 @@
+Daily Developer Report — 2026-09-21
+Summary written by anthropic/claude-opus-5. Everything below it is rendered by the pipeline from files it read — every status, metric and caveat is on this page whether or not a model answered.
+
+SUMMARY
+-------
+**Two real fixes landed in `james-brennan`, but today's honest finding is that your status surfaces lie — and there are 9 gateway units down to prove it.**
+
+## What happened
+
+### Status surfaces caught lying
+
+Both `33GOD` commits are the same bug class: control-plane state reported without being verified. `1b8b932` "Bump flume: profile on argv so gateway status stops lying" and `f554029` "Record the second status lie: profile list called 15 live gateways stopped". Fleet health confirms it from the other direction — 24 agents registered, 9 gateway units not running (7 unknown to systemd, 2 inactive), and 0 timers matching at all. Two cron jobs report `last_status='ok'` while an observable fact contradicts it; two more claim ok with nothing corroborating them.
+
+### james-brennan carried the commits
+
+10 of the day's 12 commits. The substance: `57c6fbe1` fix(JIMB-360) (#204) — a deleted job ends, and a fenced approval does not expire — and `da80dd82` (#201), the brief header no longer reading greener than the completion card. The rest is machinery: three `chore(inventory)` AWS-observation commits (#205, #203, #200) and `08a176b8` taskdefs (#202). 4 of the 10 are unreachable from the checked-out `docs/closeout-prose-sweep`; each shares its subject with a merged PR, so this reads as pre-squash residue rather than lost work — worth a glance, not alarm. The other 7 configured repos (`bloodbank`, `pjangler`, `holocene`, `candystore`, `intelliforia`, `delonet-company`, `PoopToTheMoon`) produced nothing.
+
+Activity collection is `partial`: pagination stopped at the 50,000-event budget, so the day is not fully covered. Within what was read — 3,812 sessions, 48,593 `claude` events, peak 17,407 events at 15:00Z, and **0 recorded decisions**.
+
+## Needs you
+
+- **Daily report delivery is degraded.** 3 of 6 due days have no valid published report (09-15, 09-16, 09-18 — no `current.json`, no staged generation). 09-19 has duplicate completion events: two runs claimed the same day.
+- **pr-crusher is credential-blocked.** Its one tick on `delorenj/mcp-server-trello` failed at setup — credential broker rejected `prc_github_read_token`, and the merge gate rejected `prc_github_write_token`. 0 PRs triaged. It does nothing until those tokens are reissued.
+- **`delodocs-pm` is dead, not slow.** Ticker last moved 156,746s ago (~43.5h); `delodocs-triage-second-pass` last ran 09-20 with `last_status='error'` and a next run already in the past.
+- **3 jobs reference uninstalled skills.** Board Cranker wants momo, project-lifecycle, subagent-driven-development, coding-strategy, pjangler, bloodbank-integration. It is disabled, so re-enabling it today would fail immediately.
+
+## Worth noting
+
+`33god-pm.bak` shares a cron dir with `33god-pm`, which is why `delonet-daily-report` appears twice with identical timestamps — one job, double-counted. The delivered streak is 2, so the three delivery gaps are older than the current run; that trend is recovering rather than worsening.
+
+DEVELOPER ACTIVITY
+------------------
+**Status (authoritative): partial** -- event pagination stopped at the 50-page budget (50000 events read); the day is not fully covered
+
+50000 events across 1 project(s) on 2026-09-21: 3812 session(s), 0 decision(s), 0 committing session(s), 12 commit(s) across 9 of 9 configured repository(ies) read across all refs of each repository (8 on the checked-out branch, 4 only on other refs); peak 2026-09-21T15:00:00Z (17407 events).
+Metrics: candystore_reachable=True, candystore_url=http://127.0.0.1:8683, commit_count=0, decision_count=0, event_count=50000, git_commit_count=12, git_commit_replays_collapsed=0, git_commits_off_head=4, git_commits_on_head=8, git_repos_failed=0, git_repos_logged=2, git_repos_missing=0, git_repos_no_commits=7, git_repos_with_off_head_commits=1, git_root_name_collisions=0, git_roots_active_in_events=1, git_roots_configured=9, git_roots_duplicated=0, git_roots_unread=0, git_roots_unusable=0, git_scope=all-refs, heatmap_read=True, peak_hour=2026-09-21T15:00:00Z, peak_hour_event_count=17407, project_count=1, projects_without_root=0, session_count=3812
+Caveats:
+  git scope is 'all-refs': every ref of each configured repository was read for 2026-09-21 -- branches, tags and fetched remote-tracking refs, excluding refs/stash, refs/notes/* -- not only the checked-out branch; work that exists only in a clone this host has not fetched is out of reach
+  7 configured project root(s) were read across all refs of each repository and had no commits on 2026-09-21: intelliforia, delonet-company, PoopToTheMoon, pjangler, bloodbank, candystore, holocene
+  4 of 12 commit(s) are not reachable from their repository's checked-out branch (unmerged or otherwise off-HEAD work) and are counted here: james-brennan 4 of 10 (checked out: docs/closeout-prose-sweep)
+Detail:
+  === Events by CLI ===
+    claude    48593
+    unknown     916
+    hermes      275
+    codex       216
+  
+  === Events by project ===
+    unknown         48547
+    james-brennan    1453
+  
+  === Decisions recorded ===
+    (no recorded decisions)
+  
+  === Sessions that committed ===
+    (no commits in session-end events)
+  
+  === Operational notes ===
+    [unknown] completed: (no detail)
+    [unknown] started: (no detail)
+    [unknown] completed: (no detail)
+    [unknown] started: (no detail)
+  
+  === Git log by repository ===
+  === 33GOD ===
+    f554029 Record the second status lie: profile list called 15 live gateways stopped
+    1b8b932 Bump flume: profile on argv so gateway status stops lying
+  
+  === james-brennan ===
+    (checked out: docs/closeout-prose-sweep; 4 of 10 commit(s) below are not reachable from it)
+    9494f1fe chore(inventory): observed AWS services in run 35648724205 (#205)
+    3a92e4a6 chore(inventory): observed AWS services in run 35648724205  [not reachable from docs/closeout-prose-sweep]
+    57c6fbe1 fix(JIMB-360): a deleted job ends, and a fenced approval does not expire (#204)
+    f7fee23f chore(inventory): observed AWS services in run 35642432514 (#203)
+    ddc6ac3e chore(inventory): observed AWS services in run 35642432514  [not reachable from docs/closeout-prose-sweep]
+    08a176b8 chore(devops): taskdefs at da80dd82 (#202)
+    66ded18f chore(devops): taskdefs at da80dd82  [not reachable from docs/closeout-prose-sweep]
+    da80dd82 fix(review): the brief header may not read greener than the completion card (#201)
+    902bebbd chore(inventory): observed AWS services in run 35622212393 (#200)
+    cb49fe38 chore(inventory): observed AWS services in run 35622212393  [not reachable from docs/closeout-prose-sweep]
+  
+  === intelliforia ===
+  (no commits)
+  
+  === delonet-company ===
+  (no commits)
+  
+  === PoopToTheMoon ===
+  (no commits)
+  
+  === pjangler ===
+  (no commits)
+  
+  === bloodbank ===
+  (no commits)
+  
+  === candystore ===
+  (no commits)
+  
+  === holocene ===
+  (no commits)
+
+HERMES FLEET HEALTH
+-------------------
+**Status (authoritative): complete**
+
+Hermes fleet: 24 agents registered; 0 timers (0 active, 0 failed); 5 cron jobs across 3 profiles (3 enabled); 3 job(s) reference a missing skill; 1 profile(s) with a stale ticker; 9 gateway unit(s) not running.
+Metrics: agent_profile_dirs_missing=0, agents_registered=24, cron_jobs_enabled=3, cron_jobs_total=5, cron_jobs_unreadable=0, duplicate_cron_dirs=1, gateway_units_inactive=2, gateway_units_unknown=7, jobs_claiming_ok_contradicted=2, jobs_claiming_ok_unverified=2, jobs_with_missing_skill=3, jobs_with_past_next_run=1, profiles_scanned=39, profiles_unreadable_jobs=0, profiles_with_cron_jobs=3, profiles_with_stale_ticker=1, profiles_without_cron_dir=2, report_date=2026-09-21, sources_failed=0, sources_read=4, timers_active=0, timers_failed=0, timers_never_triggered=0, timers_total=0, timers_without_next_elapse=0, units_failed=0, units_not_found=1, units_total=19
+Caveats:
+  2 cron job(s) report last_status='ok' with no independent corroboration; last_status is a scheduler claim and is not treated as evidence of success
+  2 cron job(s) report last_status='ok' while an observable fact contradicts it
+Detail:
+  observed at 2026-09-22T10:02:14.591695Z (fleet state is current, not reconstructed for the report date)
+  registry: 24 agents, 0 missing profile dir(s), 7 gateway unit(s) unknown to systemd, 2 not active
+    agent 33god-pm: hermes-33god-pm-heartbeat.timer unknown to systemd
+    agent deckard-pm: hermes-deckard-pm-heartbeat.timer unknown to systemd
+    agent delocontainers-pm: hermes-delocontainers-pm-gateway.service not active
+    agent delonet-director: hermes-delonet-director-gateway.service unknown to systemd; hermes-delonet-director-heartbeat.timer unknown to systemd
+    agent gruvato-pm: hermes-gruvato-pm-gateway.service unknown to systemd
+    agent heyma-pm: hermes-heyma-pm-heartbeat.timer unknown to systemd
+    agent infra-pm: hermes-infra-pm-heartbeat.timer unknown to systemd
+    agent james-brennan-pm: hermes-james-brennan-pm-heartbeat.timer unknown to systemd
+    agent keepy-money-pm: hermes-keepy-money-pm-gateway.service unknown to systemd
+    agent nautilus-trader-pm: hermes-nautilus-trader-pm-gateway.service unknown to systemd
+    agent pjangler-pm: hermes-pjangler-pm-heartbeat.timer unknown to systemd
+    agent sidepiece-pm: hermes-sidepiece-pm-gateway.service unknown to systemd
+    agent skillex-pm: hermes-skillex-pm-gateway.service not active
+    agent slowburns-pm: hermes-slowburns-pm-heartbeat.timer unknown to systemd
+    agent ssbnk-pm: hermes-ssbnk-pm-gateway.service unknown to systemd; hermes-ssbnk-pm-heartbeat.timer unknown to systemd
+    agent tonnybox-pm: hermes-tonnybox-pm-gateway.service unknown to systemd; hermes-tonnybox-pm-heartbeat.timer unknown to systemd
+  systemd units: 19 matching, 0 failed, 1 not-found
+    unit hermes-tonnybox-pm-consumer.service: not-found/inactive/dead
+  timers: 0 matching, 0 active, 0 failed, 0 with no next elapse, 0 never triggered
+  cron: 39 profiles scanned (2 without a cron dir), 3 with jobs, 5 jobs (3 enabled), 1 stale ticker(s), 1 shared cron dir(s)
+    profile 33god-pm.bak: shares its cron dir with 33god-pm
+    profile delodocs-pm: ticker last moved 156746s ago
+    job 33god-pm/delonet-daily-report: enabled, schedule '0 6 * * *', last_status='ok' (claim, unverified), last run 2026-09-21T10:03:36.479986Z, next 2026-09-23T10:00:00Z
+    job 33god-pm/Board Cranker implementation loop: disabled, schedule 'every 5m', last_status='ok' (claim, contradicted), last run 2026-09-05T12:48:43.347617Z, next none; skill(s) not installed: momo, project-lifecycle, subagent-driven-development, coding-strategy, pjangler, bloodbank-integration
+    job 33god-pm.bak/delonet-daily-report: enabled, schedule '0 6 * * *', last_status='ok' (claim, unverified), last run 2026-09-21T10:03:36.479986Z, next 2026-09-23T10:00:00Z
+    job 33god-pm.bak/Board Cranker implementation loop: disabled, schedule 'every 5m', last_status='ok' (claim, contradicted), last run 2026-09-05T12:48:43.347617Z, next none; skill(s) not installed: momo, project-lifecycle, subagent-driven-development, coding-strategy, pjangler, bloodbank-integration
+    job delodocs-pm/delodocs-triage-second-pass: enabled, schedule '0 9 * * *', last_status='error' (claim, not-claimed), last run 2026-09-20T14:29:18.568645Z, next 2026-09-21T13:00:00Z; skill(s) not installed: obsidian, llm-wiki; next run is in the past; last_error recorded (53 chars, not copied here)
+
+NIGHTLY PR MAINTENANCE
+----------------------
+**Status (authoritative): complete**
+
+pr maintenance: 1 tick(s) across 1 of 1 tracked repositories on 2026-09-21; 0 PR(s) triaged, 0 merge candidate(s); 0 merge(s) attempted, 0 confirmed merged; 1 tick(s) did not succeed.
+Metrics: bloodbank_events_published=2, bloodbank_events_skipped=0, merge_candidates=0, merges_attempted=0, merges_completed=0, merges_unconfirmed=0, noop_streak=0, prs_triaged=0, repos_tracked=1, repos_with_ticks=1, state_files_unusable=0, ticks_failed=1, ticks_in_window=1, ticks_noop=0
+Caveats:
+  pr-crusher activity is read from its durable state, not Candystore: its Bloodbank publisher has been observed disabled, so absence of PR events on the bus does not mean absence of PR activity
+  2 pr-crusher lifecycle event(s) did reach Bloodbank
+Detail:
+  window: 2026-09-21T04:00:00Z .. 2026-09-22T04:00:00Z for 2026-09-21 (America/New_York)
+  state directory: /home/delorenj/.local/state/pr-crusher
+  === delorenj/mcp-server-trello (git-github.com-delorenj-mcp-server-trello.git-7bef4efbe7ba8cc5) ===
+    noop streak at the end of the window: 0
+    tick 55 tick-000055-20260921T070416.342864Z completed=2026-09-21T07:04:19.090535Z provider=none provider_status=failed result_status=failed success=False automerge=False
+      merge gate PR #None allowed=False attempted=False reasons: merge processing failed: credential broker rejected prc_github_write_token
+      summary: runner/provider setup failed: credential broker rejected prc_github_read_token
+
+DAILY REPORT AND DELIVERY HEALTH
+--------------------------------
+**Status (authoritative): complete**
+
+report-delivery: DELIVERY DEGRADED -- 3 of 6 due day(s) in 2026-09-15..2026-09-21 have no valid published report (3 missing). 3 of 6 due days delivered over 2026-09-15..2026-09-21 (3 gap(s)); 4 completion event(s), 0 archive/event disagreement(s); delivered streak 2.
+Metrics: archive_event_disagreements=0, archive_readable=True, candystore_reachable=True, consecutive_delivered_streak=2, days_archive_without_event=0, days_checked=7, days_delivered=3, days_event_without_archive=0, days_in_progress=1, days_invalid=0, days_missing=3, days_unpublished_but_archived=0, days_unreadable=0, delivery_gaps=3, delivery_health=degraded, events_found=4, lookback_days=7
+Caveats:
+  DELIVERY DEGRADED: 3 of 6 due day(s) in 2026-09-15..2026-09-21 have no valid published report (3 missing)
+  duplicate completion events for 2026-09-19; more than one run claimed the same day
+Detail:
+  window 2026-09-15..2026-09-21 (7 days), report_date 2026-09-21
+  delivery health degraded: 3 of 6 due day(s) in 2026-09-15..2026-09-21 have no valid published report (3 missing)
+  archive /home/delorenj/.local/state/delonet-daily-report/archive: readable
+  candystore http://127.0.0.1:8683 type=bloodbank.reporting.report.completed: reachable
+  2026-09-15 missing events=0 reason=no current.json and no staged generation under /home/delorenj/.local/state/delonet-daily-report/archive/2026/09/2026-09-15
+  2026-09-16 missing events=0 reason=no current.json and no staged generation under /home/delorenj/.local/state/delonet-daily-report/archive/2026/09/2026-09-16
+  2026-09-17 delivered events=1 claimed=partial generation=3252122c267b4beaa3e75dde1d2f11ca
+  2026-09-18 missing events=0 reason=no current.json and no staged generation under /home/delorenj/.local/state/delonet-daily-report/archive/2026/09/2026-09-18
+  2026-09-19 delivered events=2 claimed=partial generation=527ce8a2d2f742b99a1c920c5d037f85
+  2026-09-20 delivered events=1 claimed=partial generation=11f52f9cbf71413ebbc33c23c666aa20
+  2026-09-21 in-progress events=0 reason=this run is producing this day; it publishes after collection
+
+COVERAGE
+--------
+3 of 4 enabled sections completed.
+Degraded: dev-activity (partial).
+
+| section | status | generated | fresh until | reason |
+|---|---|---|---|---|
+| dev-activity | partial | 2026-09-22T10:02:14.584911Z | 2026-09-23T10:02:14.584911Z | event pagination stopped at the 50-page budget (50000 events read); the day is not fully covered |
+| fleet-health | complete | 2026-09-22T10:02:14.591695Z | 2026-09-23T10:02:14.591695Z | - |
+| pr-maintenance | complete | 2026-09-22T10:02:14.651155Z | 2026-09-23T10:02:14.651155Z | - |
+| report-delivery | complete | 2026-09-22T10:02:14.668535Z | 2026-09-23T10:02:14.668535Z | - |
+Required: dev-activity (partial), report-delivery (complete).
+Overall status partial is derived from the run manifest above, not asserted.
+
+Run ddr-2026-09-21-25bc22a8 · generated 2026-09-22T10:03:13.036300Z · overall status: partial
