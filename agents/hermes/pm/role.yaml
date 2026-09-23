@@ -5,8 +5,26 @@
 repo: 33god
 role: pm
 agent_id: 33god-pm
-display_name: "33god PM"
+display_name: "Grolf"
 purpose: "pm agent for 33god"
+
+# Named agent -- the fleet's first. `name` is WHO this agent is; agent_id and
+# profile (33god-pm) are only the POST it holds and stay the routing key for
+# units, the registry row, Bloodbank target_agent_id and the profile dir.
+# Grolf's name, personal Hindsight bank and Telegram bot (@Gr0lfBot) travel
+# with it if it ever changes posts. 10-hermes-profile.sh pins identity memory
+# to write_bank; 80-registry.sh / `flume remediate hermes.registry-parity`
+# project this block into the fleet registry.
+identity:
+  name: grolf
+  write_bank: agent-grolf
+  # History Grolf recalls explicitly: agent-33god-pm is its identity memory
+  # from before it was named (2026-08-17 .. 2026-09-23); workspace-grolf is
+  # the pre-Hermes Grolf workspace bank.
+  recall_banks:
+    - agent-grolf
+    - agent-33god-pm
+    - workspace-grolf
 
 # Inference target (empty = inherit from global ~/.hermes/config.yaml)
 model:
@@ -18,9 +36,9 @@ profile: 33god-pm
 
 # Telegram bot identity (one bot per agent — see docs/architecture.md).
 telegram:
-  provisioning_status: "disabled"
-  bot_username: "33god_pm_bot"
-  bot_id: ""
+  provisioning_status: "verified"
+  bot_username: "Gr0lfBot"
+  bot_id: "8453298804"
 
 # Slack is opt-in. Credentials live only in runtime/.env; this block records
 # safe provisioning state and the verified auth.test identity.
@@ -57,7 +75,8 @@ ticket_provider:
 
 # Board-reconciliation knobs for the heartbeat sentinel pass.
 reconcile:
-  enabled: false             # heartbeat runs the autonomous board-reconciliation pass ONLY when true; default off = checkpoint-only
+  enabled: true
+  explicit_opt_out: false
   grace_hours: 0             # 0 = no human-approval wait (adversarially-reviewed review-lane = done); set >0 to require a wait
   auto_review: true          # autonomous adversarial review (act, do not wait) on/off
 
@@ -95,3 +114,7 @@ runtime:
 # Provenance — managed by the template, do not hand-edit.
 provisioned_at: "2026-08-02T01:31:35Z"
 provisioned_by: hermes-agent-template
+
+service_state:
+  heartbeat: "retired"
+  gateway: "active"
