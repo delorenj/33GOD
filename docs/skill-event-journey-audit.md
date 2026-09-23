@@ -30,7 +30,7 @@ they neither produce nor consume the 33GOD contracts.
 | `bloodbank-integration` | Bloodbank | Added the canonical end-to-end event/command journey, stream purposes, Plane ingress security, durable-proof checks, command-gateway routing, and retired-path warnings. |
 | `delonet-n8n-architecture` | Skillex | Added the exact active Plane workflow, raw-body HMAC contract, per-webhook secret selection, project routing, Candystore proof, and `8477` retirement. |
 | `33god-hub` | 33god-platform | Added the cross-component event/command spine, integration boundary map, skill ownership routes, and links to root architecture/diagrams. |
-| `agent-fleet-operations` | PJangler | Added command production/consumption, default-deny eligibility, lifecycle-event proof, and the current zero-enabled-route check. |
+| `agent-fleet-operations` | PJangler | Added command production/consumption, route eligibility (then default-deny; since 2026-09-22 a missing `enabled` means enabled), lifecycle-event proof, and the routable-target count check. |
 | `33god-projects` reference | PJangler | Connected `.project.json` project identity to Plane ingress routing and clarified that agent hooks do not each own a competing command consumer. |
 | `project-lifecycle` | Krebs | Replaced stale `.plane.json` assumptions with `.project.json.ticket_provider`; documented that Plane mutations automatically emit canonical facts. |
 | `task-triage` | Krebs | Replaced the nonexistent `task.inbox.new` trigger with the canonical repo-task event plus `provider_event_type=plane.ticket.created`. |
@@ -57,8 +57,10 @@ they neither produce nor consume the 33GOD contracts.
    separate system boundary.
 5. Bloodbank is the contract/transport authority; Candystore is the durable
    history proof; Holocene is a read model.
-6. Agent commands are consumed by the durable Hermes gateway and remain
-   default-deny until the fleet registry explicitly enables the target.
+6. Agent commands are consumed by the durable Hermes gateway and dispatch only
+   to a target with a valid fleet-registry route. Activation defaults to
+   allow: a missing `bloodbank.enabled` means enabled, an explicit `false`
+   quarantines, and a non-boolean value is invalid.
 7. Ticket mutations made through Plane automatically traverse ingress; skills
    must not emit a second copy of the same lifecycle fact.
 8. Port `8477`, `.plane.json`, `task.inbox.new`, and Plane use of `/event` are

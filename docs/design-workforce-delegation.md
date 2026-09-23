@@ -445,8 +445,9 @@ typed node per consumer, backed by the registry, calling the allowlisted shim.
 ## 8. Open questions
 
 - **Ephemeral agent identity.** The gateway resolves `target_agent_id` through
-  the fleet registry with default-deny. Ephemeral contractors have no registry
-  entry by definition. Does the orchestrator hold a wildcard entry, or does the
+  the fleet registry, and a target with no registry row is unroutable
+  (activation defaults to allow only for an agent that has one). Ephemeral
+  contractors have no registry entry by definition. Does the orchestrator hold a wildcard entry, or does the
   registry grow a "contractor" class? This is the main unresolved design point.
 - **Cost attribution.** Provider arbitrage only pays off if spend per pool is
   measurable. Is that a Candystore projection or a separate meter?

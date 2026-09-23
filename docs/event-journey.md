@@ -142,13 +142,13 @@ sequenceDiagram
     G->>G: Validate actor, schema, prompt, target
     G->>R: Resolve target_agent_id and enabled route
 
-    alt route explicitly enabled
+    alt route enabled (enabled absent or true)
         R-->>G: Eligible profile
         G->>E: invocation.started
         G->>A: Dispatch prompt with correlation
         A-->>G: Terminal execution result
         G->>E: completed / failed
-    else disabled, unknown, or malformed
+    else enabled false, non-boolean enabled, unknown, or malformed
         R-->>G: No eligible route
         G->>E: invocation.rejected
     end
@@ -156,8 +156,15 @@ sequenceDiagram
     E->>D: Durable lifecycle history
 ```
 
-This is deliberately default-deny. A healthy gateway does not imply that a
-target is dispatchable.
+Activation defaults to allow. A registry route with no `bloodbank.enabled` key
+is enabled, `enabled: true` is enabled, an explicit `enabled: false`
+quarantines the agent, and a present value that is not a YAML boolean
+(`"true"`, `null`, `1`) is invalid: the gateway refuses it and logs an ERROR
+naming `agents.<id>.bloodbank.enabled`. The same rule holds in the role
+scaffold (`80-registry.sh`), Flume's validators and handbook, and the n8n Fleet
+resolver. A healthy gateway still does not imply that a target is
+dispatchable: the route also needs `gateway_scope: fleet`, a `target_agent_id`
+equal to the registry `agent_id`, and a nonblank `profile_name`.
 
 ## Live verification snapshot
 
@@ -179,8 +186,10 @@ Verified on 2026-08-27 UTC:
 - An invalid signature was rejected before publication.
 - The gateway journal contains five historical completed commands, including
   `33god-pm` and `automatic-ai-pm`, with correlated lifecycle events.
-- The current fleet registry has zero enabled Bloodbank routes. The gateway is
-  active but dispatch is closed until a target route is deliberately enabled.
+- (Superseded 2026-09-22.) This snapshot found zero enabled Bloodbank routes,
+  because the registry then required an explicit `enabled: true`. Activation
+  now defaults to allow; on 2026-09-23 24 of the 25 registry agents were
+  routable and one (`dumply`) was quarantined with `enabled: false`.
 
 Historical success and present route eligibility are separate claims; both are
 shown in the command trace.

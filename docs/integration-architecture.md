@@ -89,8 +89,11 @@ no ports.
   1Password secret reference by `webhook_id`, and resolve a project route before
   publication. Unknown identity, bad signature, or missing route means no event.
 - A healthy Hermes gateway is not proof of dispatch eligibility. The fleet
-  registry is a separate default-deny gate; the current snapshot has no enabled
-  Bloodbank routes.
+  registry is a separate route gate: a missing `bloodbank.enabled` means
+  enabled, only an explicit `false` quarantines the agent, and a present
+  non-boolean value is invalid (refused and logged). The route also needs
+  `gateway_scope: fleet`, a matching `target_agent_id`, and a nonblank
+  `profile_name`.
 - The host API preflight establishes reachability, not application auth safety.
 - Holocene history remains a direct HTTP read-side exception to Bloodbank.
 - PJangler recipes requiring host files, systemd, or provider credentials remain
