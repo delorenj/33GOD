@@ -60,7 +60,7 @@ hub useful without completing that cutover.
 
 PJangler's current `SUPPORTED_CLIS` lists Claude, Codex, Gemini, Copilot,
 OpenCode, and Kimi. Bloodbank's master instead lists Claude, Codex, Copilot,
-Hermes, Antigravity, and an OpenClaw watcher placeholder: 42 bindings across six
+Hermes, Antigravity, and an OpenClaw watcher stub (declared, never implemented): 42 bindings across six
 entries, of which only five have publisher adapters. These are different
 support inventories.
 
@@ -77,7 +77,7 @@ been exercised in a live session.
 | OpenCode 1.18.2 | `~/.config/opencode/plugins/hindsight-memory.ts`, `crg-plugin.ts`, and `vox-tts.ts` | No adapter or bindings | The memory plugin launches scripts itself and publishes through the **Claude** adapter. Those events are attributed to `actor.cli=claude`/Anthropic, even though its payload says OpenCode. No live OpenCode session was exercised. |
 | Hermes | Default home plus 38 non-backup profile configs, each with six direct Bloodbank hooks and `hooks_auto_accept: true`; most also enable the separate `orca-status` Python plugin | None | Recent durable tool/session events. Running processes mostly use `~/.hermes/profiles/<name>`, while the installer and old checker still discover `<role_dir>/runtime`. One observed TonnyBox process still used its repository runtime. |
 | Antigravity | `~/.gemini/config/hooks.json`: 10 commands across four named bundles, including 4 Bloodbank commands, Orca, reminder, and session-end retention | None | Last publisher telemetry about 86 hours earlier; no matching process in the sample. Its native interface has limited prompt/tool data and intentionally omits the permission-gating PreToolUse hook. |
-| OpenClaw, legacy | Built-in internal hooks and a configured `hindsight-openclaw` memory plugin; Bloodbank master declares a watcher | No implemented watcher at the configured path | `~/.agents/hooks/openclaw/watch.py` is missing; no OpenClaw user service was listed. Its internal hooks and HTTP webhook settings are separate from this lifecycle publisher. No Bloodbank coverage can be inferred from the master placeholder. |
+| OpenClaw, legacy | Built-in internal hooks and a configured `hindsight-openclaw` memory plugin; Bloodbank master declares a watcher | No implemented watcher at the configured path | `~/.agents/hooks/openclaw/watch.py` is missing; no OpenClaw user service was listed. Its internal hooks and HTTP webhook settings are separate from this lifecycle publisher. No Bloodbank coverage can be inferred from the master's declared-but-unimplemented stub. |
 
 Kimi's deduplication and active config location are documented in its
 [hook reference](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/hooks.html)
