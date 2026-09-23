@@ -37,8 +37,10 @@ pipeline-status:
 Every successful Plane project/issue/comment write is independently reported by
 Plane to the one active n8n workflow at
 `https://n8n.delo.sh/webhook/plane`. n8n verifies the exact raw-body HMAC using
-the secret selected by `webhook_id`, resolves `board_id` through the Hermes
-registry, normalizes provider actions, and publishes canonical Bloodbank facts:
+the secret selected by `webhook_id`, resolves `board_id` through pjangler
+enrollment (`.project.json`, wins) merged with the Hermes registry (an unclaimed
+board is unrouted), normalizes provider actions, and publishes canonical
+Bloodbank facts:
 
 | Plane activity | Canonical event |
 |---|---|
@@ -48,8 +50,17 @@ registry, normalizes provider actions, and publishes canonical Bloodbank facts:
 | issue comment created | `bloodbank.repo.task.appended` |
 
 These events are retained in `BLOODBANK_EVENTS` and projected by Candystore.
-Do not manually emit a second ticket lifecycle event after Plane CRUD. Explicit
-PM judgments remain separate `repo.decision.recorded` events.
+Never emit a ticket lifecycle event yourself, before or after Plane CRUD: create
+with `px task create` and move with `px move <ref> <state>` (Krebs-managed
+boards: `px task <op>` / `bloodbank.cmd.lifecycle.task.invoke`); the webhook
+echo is the fact. Explicit PM judgments remain separate `repo.decision.recorded`
+events.
+
+Two Plane API traps: a `PATCH` with `labels` replaces the whole list (there is
+no per-label endpoint), so re-read and change one label at a time and never
+touch the pipeline-owned `agent:working`; and an archived board reads as 0
+issues and 0 states with no error, so check `archived_at` before calling it
+empty.
 
 The Plane workspace `automaticai` is a tenant slug on the same self-hosted
 personal `plane.delo.sh` instance. It is not a separate infrastructure or

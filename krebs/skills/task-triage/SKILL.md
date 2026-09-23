@@ -18,9 +18,11 @@ inbox/backlog band; creation alone does not imply a particular lane.
 
 Do not route by workspace alone. `33god` and `automaticai` are tenant slugs on
 the same self-hosted `plane.delo.sh` instance, and one workspace can contain many
-boards. Board mapping comes from `.project.json` reconciled into the shared
-Hermes registry. For the full transport and consumer journey, load
-`bloodbank-integration` → `references/event-journey.md`.
+boards. Board mapping comes from `.project.json` enrollment (the pjangler
+registry, which wins) merged with the shared Hermes registry. Tickets you
+create go through `px task create`; never publish the `repo.task.created` fact
+yourself, the Plane webhook does. For the full transport and consumer journey,
+load `bloodbank-integration` → `references/event-journey.md`.
 
 There’s a large amount of friction when deciding:
 

@@ -21,7 +21,7 @@ Every entry is **Symptom → Cause → Fix → Why**. All of them were reproduce
 
 ## `Project-local skills sync engine differs from the shipped template`
 
-**Symptom.** `pj audit` reports `Project-local skills sync engine differs from the shipped template` and/or `Skillex pack provisioning script is missing or unsafe`, even though the script "works fine". Verified live: `/home/delorenj/code/automatic-ai`, `/home/delorenj/code/agentboard`, and `/home/delorenj/code/intelliforia-mobile` all carry drifted copies (automatic-ai's is 449 lines against the template's 1422).
+**Symptom.** `pj audit` reports `Project-local skills sync engine differs from the shipped template` and/or `Skillex pack provisioning script is missing or unsafe`, even though the script "works fine". Verified live: `/home/delorenj/code/automatic-ai` and `/home/delorenj/code/intelliforia-mobile` carry drifted copies (agentboard did too until it was archived on 2026-09-23; automatic-ai's is 449 lines against the template's 1422).
 
 **Cause.** The rule compares the repo's `.mise/scripts/sync-skills.py` and `.mise/scripts/provision-packs.py` **byte for byte** against `pjangler/templates/commonproject/template/.mise/scripts/<name>.py`. There is no fuzzy match, no version header, no "close enough". Editing the repo copy guarantees a permanent audit failure, and `pj migrate` will overwrite your edit.
 
