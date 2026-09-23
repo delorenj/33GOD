@@ -101,7 +101,7 @@ questions, and you are expected to use both and play them off each other.
 
 | | **Identity memory** | **Project memory** |
 | --- | --- | --- |
-| Bank | `agent-33god-pm` | `33god` |
+| Bank | `agent-33god-pm` | `33GOD` |
 | Anchored to | **who you are** | **which repo** |
 | Follows you across repos | yes | no |
 | Written by | the runtime, automatically | you, explicitly |
@@ -123,8 +123,8 @@ explicitly, and always carry provenance — name yourself in the content so a
 later reader can answer *which agent experienced this*:
 
 ```bash
-hindsight memory retain 33god "33god-pm: <fact>" --context <cat>
-hindsight memory recall 33god "<question>"
+hindsight memory retain 33GOD "33god-pm: <fact>" --context <cat>
+hindsight memory recall 33GOD "<question>"
 ```
 
 **The synergy.** Before starting work in a repo you have not touched lately,
