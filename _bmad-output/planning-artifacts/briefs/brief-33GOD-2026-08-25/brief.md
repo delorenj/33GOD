@@ -16,6 +16,13 @@ project agents, boards, event streams, and runtime services into something that
 feels like an organization: departments with purpose, people with current work,
 an inbox of decisions, and a trustworthy record of what happened next.
 
+DeloHQ is the executive experience, not a new system of record. Flume is the
+workforce authority behind it: it owns employees, hierarchy, delegation, and
+workforce policy. Holocene hosts the operator projections and the existing `/hq`
+surface. Tickets, events, runtime execution, and durable history remain owned by
+their canonical systems. DeloHQ brings those truths together for executive use
+without absorbing their authority.
+
 It lives where Jarad already talks to the company: Telegram. Individual agent
 chats remain the offices where work conversations happen. The DeloHQ Mini App is
 the shared company map and executive desk that Telegram chats cannot provide on
@@ -180,11 +187,31 @@ comparison, decisions, and navigation.
 6. **The org chart is alive, not decorative.** It is how Jarad understands and
    navigates the company.
 
+7. **The surface is not the authority.** DeloHQ may explain, link, acknowledge,
+   and request bounded actions, but it does not become the source of truth for
+   workforce identity, tickets, events, runtime execution, or history.
+
+## Ownership Boundary
+
+The product boundary is intentionally split:
+
+- **Flume** owns the workforce model: employees, roles, hierarchy, delegation,
+  escalation, and workforce policy.
+- **Holocene** hosts the mission-control projections and serves the DeloHQ
+  experience, including the Telegram Mini App at `/hq`.
+- **Krebs and Pilot** own ticket lifecycle and provider-facing board state.
+- **Bloodbank and Candystore** own event transport and durable event history.
+- **Hermes** owns agent runtime execution and execution receipts.
+- **DeloHQ** owns executive presentation, navigation, attention management, and
+  the user's view of action progress; it does not duplicate those authorities.
+
 ## First Product Slice
 
 The first coherent release is intentionally narrow:
 
 - the current fleet appears automatically with accurate roles and ownership;
+- workforce roles and ownership come from a Flume-backed projection rather than
+  a DeloHQ-specific roster;
 - Company, Now, Executive Inbox, and Agent Office are usable on mobile;
 - agent states distinguish current work, availability, and configuration drift;
 - DeloHQ opens the correct Telegram chat, board, repository, and evidence;
@@ -211,6 +238,8 @@ for projects and agents.
 - Mobile is primary, with desktop remaining useful for broader inspection.
 - The living org chart should remain the home rather than becoming one tab among
   many interchangeable dashboards.
+- Flume remains the workforce authority while Holocene remains the initial host
+  for DeloHQ; whether the experience later gets its own repository is deferred.
 - Cost and budget views belong in DeloHQ only after their data is trustworthy
   enough to support decisions.
 
