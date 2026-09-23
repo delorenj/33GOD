@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Create or reconcile the initial named Hermes profile without cloning secrets.
 # The directory remains REAL. Step 20 delegates final shared-vs-owned link
-# topology to `pj migrate hermes.runtime-singleton`; no template step may
+# topology to `flume remediate hermes.runtime-singleton`; no template step may
 # replace the profile itself with a symlink.
 
 if [[ "${SKIP_HOST_STATE:-0}" == "1" ]]; then
@@ -20,7 +20,7 @@ PROFILE_HOME="$HOME/.hermes/profiles/$PROFILE_NAME"
 # from the link target before the singleton-runtime migration can preserve
 # them.  Refuse the legacy topology before any profile mutation.
 if [[ -L "$PROFILE_HOME" ]]; then
-  die "legacy named profile symlink detected at $PROFILE_HOME; refusing mutation. Run: pj migrate hermes.runtime-singleton '$(project_repo_path 2>/dev/null || printf '%s' "$ROLE_DIR")'"
+  die "legacy named profile symlink detected at $PROFILE_HOME; refusing mutation. Run: flume remediate hermes.runtime-singleton '$(project_repo_path 2>/dev/null || printf '%s' "$ROLE_DIR")'"
 fi
 PROFILE_DELTA_SEEDER="$ROLE_DIR/.scripts/lib/profile-config-seed.py"
 [[ -f "$PROFILE_DELTA_SEEDER" && ! -L "$PROFILE_DELTA_SEEDER" ]] \
@@ -128,8 +128,52 @@ fi
 # that also failed to resolve.
 PROFILE_MEM_CFG="$PROFILE_HOME/hindsight/config.json"
 mkdir -p "$(dirname "$PROFILE_MEM_CFG")"
-if [[ ! -f "$PROFILE_MEM_CFG" ]]; then
-  log "    pinning identity-memory bank: agent-$PROFILE_NAME"
+PROFILE_RENDERER="${PROFILE_RENDERER:-$HOME/code/33GOD/hermes-agent-template/scripts/hermes-profile-config.py}"
+
+# A named travelling agent declares its durable bank in the registry. Read that
+# declaration by agent id, never by profile/post name. The registry is written
+# by step 80, so an absent row is the normal first-provision path for legacy PMs.
+DECLARED_PERSONAL_BANK="$(python3 - "$REGISTRY_FILE" "$AGENT_ID" <<'PYEOF'
+import pathlib
+import re
+import sys
+
+registry, agent_id = sys.argv[1:3]
+path = pathlib.Path(registry)
+if not path.is_file() or path.is_symlink():
+    raise SystemExit(0)
+try:
+    import yaml
+    document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    entry = (document.get("agents") or {}).get(agent_id) or {}
+except Exception as exc:
+    raise SystemExit(f"cannot read fleet registry for {agent_id}: {exc}")
+if not isinstance(entry, dict):
+    raise SystemExit(f"fleet registry entry for {agent_id} must be a mapping")
+identity = entry.get("identity")
+hindsight = entry.get("hindsight")
+bank = hindsight.get("write_bank") if isinstance(hindsight, dict) else None
+if identity is not None and (not isinstance(identity, str) or not identity.strip()):
+    raise SystemExit(f"fleet registry identity for {agent_id} must be a non-empty string")
+if identity is not None and bank is None:
+    raise SystemExit(f"named agent {agent_id} must declare hindsight.write_bank")
+if bank is not None:
+    if not isinstance(bank, str) or re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", bank) is None:
+        raise SystemExit(f"hindsight.write_bank for {agent_id} must be a lower-case bank identifier")
+    if identity is not None and bank != f"agent-{identity}":
+        raise SystemExit(f"hindsight.write_bank for {agent_id} must be agent-{identity}")
+    print(bank)
+PYEOF
+)" || die "named-agent bank declaration is invalid in $REGISTRY_FILE"
+
+if [[ -n "$DECLARED_PERSONAL_BANK" ]]; then
+  [[ -f "$PROFILE_RENDERER" ]] \
+    || die "named-agent bank declaration requires the canonical profile renderer: $PROFILE_RENDERER"
+  log "    pinning declared identity-memory bank: $DECLARED_PERSONAL_BANK"
+  python3 "$PROFILE_RENDERER" memory-pin --profile "$PROFILE_NAME" --bank-id "$DECLARED_PERSONAL_BANK" \
+    >/dev/null || die "canonical profile renderer could not pin $DECLARED_PERSONAL_BANK"
+elif [[ ! -f "$PROFILE_MEM_CFG" ]]; then
+  log "    pinning compatibility identity-memory bank: agent-$PROFILE_NAME"
   printf '{\n  "bank_id": "agent-%s"\n}\n' "$PROFILE_NAME" > "$PROFILE_MEM_CFG"
   chmod 600 "$PROFILE_MEM_CFG"
 fi
@@ -137,7 +181,6 @@ fi
 # Render config.yaml from base + delta when the renderer is available. Without
 # it the profile still boots (Hermes reads whatever config.yaml exists), but it
 # is not yet under inheritance and `pj audit` will say so.
-PROFILE_RENDERER="${PROFILE_RENDERER:-$HOME/code/33GOD/hermes-agent-template/scripts/hermes-profile-config.py}"
 if [[ -x "$PROFILE_RENDERER" || -f "$PROFILE_RENDERER" ]]; then
   log "    rendering config.yaml from fleet base + delta"
   python3 "$PROFILE_RENDERER" render --profile "$PROFILE_NAME" >/dev/null 2>&1 \

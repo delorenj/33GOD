@@ -15,9 +15,12 @@
 hermes_bin = "~/.local/share/hermes-agent/releases/0408fec7a153e6c32c064acd2b8053917f1525f1/.venv/bin/hermes"
 # Checkout of the shared hermes-agent repo.
 hermes_repo = "~/.local/share/hermes-agent/releases/0408fec7a153e6c32c064acd2b8053917f1525f1"
-# Canonical CommonProject migration CLI. Runtime provisioning delegates named
-# profile topology to this command; it never rewrites profile links itself.
-pjangler_bin = "pj"
+# The workforce CLI. Runtime provisioning delegates named profile topology to
+# this command; it never rewrites profile links itself.
+flume_bin = "flume"
+# Deprecated alias for flume_bin, read only so that role directories rendered
+# before the split keep resolving. Set both to the same value.
+pjangler_bin = "flume"
 # Reviewed fleet runtime publication. Provisioning metadata and clean installs
 # must agree on this fork/ref/SHA; do not substitute upstream main.
 hermes_git_url = "https://github.com/delorenj/hermes-agent.git"

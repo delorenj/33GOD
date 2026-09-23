@@ -23,15 +23,15 @@ REL_RUNTIME_PATH="${REL_ROLE_PATH}/runtime"
 log "[20] local runtime: $RUNTIME_LOCAL"
 
 # Fail closed if an older installation still models runtime as a project
-# submodule. `pjangler migrate` performs the non-destructive index transition;
+# submodule. `flume remediate` performs the non-destructive index transition;
 # this provisioner never removes or rewrites an existing nested repository.
 if git -C "$PROJECT_PATH" ls-files --stage -- "$REL_RUNTIME_PATH" | grep -q '^160000 '; then
-  die "$REL_RUNTIME_PATH is still a tracked gitlink; run 'pjangler migrate' before provisioning"
+  die "$REL_RUNTIME_PATH is still a tracked gitlink; run 'flume remediate hermes.untracked-runtimes' before provisioning"
 fi
 if [[ -f "$PROJECT_PATH/.gitmodules" ]] &&
    git -C "$PROJECT_PATH" config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null |
      awk -v expected="$REL_RUNTIME_PATH" '$2 == expected { found=1 } END { exit !found }'; then
-  die "$REL_RUNTIME_PATH still has a stale .gitmodules mapping; run 'pjangler migrate' before provisioning"
+  die "$REL_RUNTIME_PATH still has a stale .gitmodules mapping; run 'flume remediate hermes.untracked-runtimes' before provisioning"
 fi
 
 mkdir -p "$RUNTIME_LOCAL"
@@ -146,21 +146,26 @@ if [[ ! -e "$RUNTIME_LOCAL/SOUL.md" ]]; then
   cp "$ROLE_DIR/SOUL.md" "$RUNTIME_LOCAL/SOUL.md"
 fi
 
-# Named-profile topology belongs exclusively to PJangler. Preview first, then
-# apply the one idempotent rule. This script never removes or replaces a real
-# profile directory and never creates the obsolete profile -> runtime symlink.
-if [[ "$PJANGLER_BIN" != */* ]]; then
-  PJANGLER_BIN="$(command -v "$PJANGLER_BIN" 2>/dev/null || true)"
+# Named-profile topology belongs exclusively to Flume. Preview first, then apply
+# the one idempotent rule. This script never removes or replaces a real profile
+# directory and never creates the obsolete profile -> runtime symlink.
+#
+# The subcommand stays `migrate`, and that is a FROZEN compatibility argv, not an
+# oversight: Flume's verb is `remediate` and keeps `migrate` as an alias
+# precisely so the copies of this script already sitting in 74 role directories
+# keep working after the rename.
+if [[ "$FLUME_BIN" != */* ]]; then
+  FLUME_BIN="$(command -v "$FLUME_BIN" 2>/dev/null || true)"
 fi
-[[ -n "$PJANGLER_BIN" && -x "$PJANGLER_BIN" ]] \
-  || die "PJángler CLI not found; install 'pj' or set PJANGLER_BIN"
-"$PJANGLER_BIN" migrate hermes.runtime-singleton "$PROJECT_PATH" --dry-run --json >/dev/null \
+[[ -n "$FLUME_BIN" && -x "$FLUME_BIN" ]] \
+  || die "Flume CLI not found; install 'flume' or set FLUME_BIN"
+"$FLUME_BIN" migrate hermes.runtime-singleton "$PROJECT_PATH" --dry-run --json >/dev/null \
   || die "singleton-runtime audit failed; profile was left untouched"
-"$PJANGLER_BIN" migrate hermes.runtime-singleton "$PROJECT_PATH" --json >/dev/null \
-  || die "singleton-runtime migration failed; inspect with: pj migrate hermes.runtime-singleton '$PROJECT_PATH' --dry-run"
+"$FLUME_BIN" migrate hermes.runtime-singleton "$PROJECT_PATH" --json >/dev/null \
+  || die "singleton-runtime migration failed; inspect with: flume remediate hermes.runtime-singleton '$PROJECT_PATH' --dry-run"
 [[ -d "$PROFILE_HOME" && ! -L "$PROFILE_HOME" ]] \
-  || die "PJángler did not establish a real named profile at $PROFILE_HOME"
-log "    singleton profile verified by pj migrate hermes.runtime-singleton: $PROFILE_HOME"
+  || die "Flume did not establish a real named profile at $PROFILE_HOME"
+log "    singleton profile verified by flume remediate hermes.runtime-singleton: $PROFILE_HOME"
 
 # Never persist a project-specific terminal.cwd through the named profile.
 # config.yaml is fleet-shared in the singleton topology.  The manual and
