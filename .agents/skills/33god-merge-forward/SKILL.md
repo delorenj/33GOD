@@ -55,7 +55,8 @@ Changes to these boundaries require an explicit product decision. Routine implem
 4. Run checks sufficient to prove the changed behavior. Fix reproduced failures.
    Follow asynchronous work to its actual receipt: a successful n8n run may
    have skipped dispatch, and a PM handoff does not prove a worker claimed or
-   executed the ticket.
+   executed the ticket. When moving an existing delivery target, confirm the
+   replacement's delivery receipt before disabling the old path.
    When a change crosses a nested component boundary, run that component's
    focused checks and land its canonical commit before parent gates that inspect
    the component source; then advance the root pin and run integrated checks.

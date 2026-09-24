@@ -4,7 +4,20 @@ Select checks that demonstrate the slice's actual behavior:
 
 - Live routing failures: check the public response, backend, and affected data endpoint; an authentication redirect alone does not prove backend health. Correlate Traefik DNS/health errors with container recreation timestamps and the configured health-check interval. If service recovers without intervention, verify current route health and endpoint responses, then stop without a speculative restart or patch. Distinguish the observed failure and recovery from any unproven recreation trigger.
 - Hook changes: native loader registration, one event to one handler receipt, payload and context output, hub-down behavior, and concurrent session identity.
-- Event changes: contract validation, broker delivery, and durable Candystore arrival. For ticket ingress or grooming changes, trace one ticket from Plane webhook through publication, trigger, eligibility decision, and invocation receipt; inspect a successful run's output for `skipped` and its reason.
+- Event changes: validate the contract, broker delivery, and durable Candystore
+  arrival. For ticket ingress or grooming, trace one ticket from Plane webhook
+  through publication, trigger, eligibility, and invocation receipt; inspect
+  successful runs for `skipped` output. For n8n consumers, exercise the intended
+  node in the running server and read back its durable receipt and downstream
+  result. A separate `n8n execute` process or native Data Table node does not
+  prove Code or custom node table access.
+- Dev Journal processing changes: verify the configured model route with one
+  structured extraction before bulk processing. Check representative history
+  for recurring faults described in different words, unrelated faults grouped
+  together, and collector caveats promoted to tickets. For schedule changes,
+  verify previous-day targeting and that a verified partial report counts as
+  generated. For replay changes, check that reruns create no duplicate tickets
+  or rollups.
 - Managed ticket changes: resolve the canonical project and board binding, then
   prove the actual `px`/Krebs path with provider readback. A worker must claim
   before execution; evidence must belong to that attempt; an unanswered
