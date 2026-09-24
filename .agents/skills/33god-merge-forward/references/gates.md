@@ -4,7 +4,7 @@ Select checks that demonstrate the slice's actual behavior:
 
 - Live routing failures: check the public response, backend, and affected data endpoint; an authentication redirect alone does not prove backend health. Correlate Traefik DNS/health errors with container recreation timestamps and the configured health-check interval. If service recovers without intervention, verify current route health and endpoint responses, then stop without a speculative restart or patch. Distinguish the observed failure and recovery from any unproven recreation trigger.
 - Hook changes: native loader registration, one event to one handler receipt, payload and context output, hub-down behavior, and concurrent session identity.
-- Event changes: contract validation, broker delivery, and durable Candystore arrival.
+- Event changes: contract validation, broker delivery, and durable Candystore arrival. For ticket ingress or grooming changes, trace one ticket from Plane webhook through publication, trigger, eligibility decision, and invocation receipt; inspect a successful run's output for `skipped` and its reason.
 - Managed ticket changes: resolve the canonical project and board binding, then
   prove the actual `px`/Krebs path with provider readback. A worker must claim
   before execution; evidence must belong to that attempt; an unanswered
@@ -12,26 +12,33 @@ Select checks that demonstrate the slice's actual behavior:
   automatically only after its evidence gate passes. A turn ending, review
   label, or accepted handoff is not completion. For recovery changes, exercise restart/lost-reply
   behavior, ensure old attempts cannot close newer ones, and ensure parked or
-  expired workers do not retain execution capacity.
+  expired workers do not retain execution capacity. For label writes, prove PM
+  updates preserve unrelated labels and assignees and cannot remove the
+  pipeline-owned `agent:working` label.
+- Board consolidation: read archived status and tickets directly before moving
+  or archiving a board; an archived board's empty list is not evidence that it
+  has no open tickets. Read back the destination tickets before retiring a board.
 - Managed activation: verify the exact native Plane actor, board membership,
   credential binding, and runtime loader before enabling a board. If enrollment
   is missing, leave the controller disabled and report activation as blocked;
-  NewAPI model OAuth is not a substitute for Plane attribution.
+  NewAPI model OAuth is not a substitute for Plane attribution. PM dispatch
+  eligibility is separate: a missing `bloodbank.enabled` means enabled, while
+  explicit `false` opts out. Verify provisioning preserves existing routing
+  fields rather than writing empty values.
 - Skill distribution changes: compare the canonical source with the installed
   bundle and load it through each affected native runtime; do not treat a
   source diff or catalog entry as installed parity.
-- Holocene changes: typecheck, build, browser interaction, and live route verification.
+- Holocene code changes: typecheck and build; add browser interaction or live
+  route verification when the changed behavior is visible there.
 - Compose or systemd changes: resolve the effective configuration, restart only affected units, and verify the running artifact.
-- Template or generator changes: render into an isolated temporary directory and compare the intended owned projection while preserving foreign settings.
-- Test additions or changes: run newly added or changed tests once before a
-  long regression phase so import/fixture setup failures are separated from
-  behavior failures. Do not treat a broad green suite, a negative regex, or a
-  dead vocabulary check as proof. For a changed guard, use positive behavior
-  and one targeted mutation or fault injection that should make the test fail;
-  distinguish live tripwires from strings that never occur in current source.
-  Keep known-red or boundary-unproven suites advisory until the failure is
-  understood and the relevant boundary is exercised. Do not enable a slow
-  suite merely because it exists or to improve a test-count metric.
+- Template or generator changes: render an affected existing role into an
+  isolated directory and compare owned files, executable modes, and retained
+  routing fields while preserving foreign settings. Include a role that omits
+  optional fields when that is the reported failure.
+- Regression tests: run the focused test for the reproduced failure first.
+  Check the allowed and denied behavior of a changed guard; use fault injection
+  only when an ordinary assertion cannot prove the boundary. Expand to a broad
+  suite only for a concrete remaining risk.
 - Workflow changes: inspect `paths`/`paths-ignore`, required checks, and jobs
   with deployment or restart side effects before merge. If the change triggers
   one, verify its completion and the running commit separately from the merge.

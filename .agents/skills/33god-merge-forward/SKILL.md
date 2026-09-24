@@ -31,6 +31,8 @@ in this directory.
   duplicate board mutation logic in Momo or Hermes.
 - **PJangler:** owns canonical project/role bindings, provisioning, and
   capability readiness; it does not infer missing board bindings or close work.
+- **Flume:** owns workforce identity, roster, and role contracts, including a
+  named agent's stable personal memory bank; it does not own Plane tickets.
 - **Hermes and interactive runtimes:** supervise recorded agent runs; they do
   not own a competing ticket lifecycle.
 - **Bloodbank:** owns event contracts, hook ingress, behavioral dispatch, and event publication.
@@ -51,6 +53,9 @@ Changes to these boundaries require an explicit product decision. Routine implem
 2. Define the smallest outcome and select the checks in [references/gates.md](references/gates.md).
 3. Implement only the owning component and its immediate interface changes.
 4. Run checks sufficient to prove the changed behavior. Fix reproduced failures.
+   Follow asynchronous work to its actual receipt: a successful n8n run may
+   have skipped dispatch, and a PM handoff does not prove a worker claimed or
+   executed the ticket.
    When a change crosses a nested component boundary, run that component's
    focused checks and land its canonical commit before parent gates that inspect
    the component source; then advance the root pin and run integrated checks.
@@ -59,12 +64,6 @@ Changes to these boundaries require an explicit product decision. Routine implem
 6. Report implementation, installation/runtime proof, and activation readiness
    separately. A distributed skill, healthy service, or passing test does not
    prove native actor enrollment or active-board cutover.
-
-For CI or workflow edits, inspect path filters and downstream jobs before
-merging. A workflow-only change can trigger a deployment or restart; do not
-describe a merged change as undeployed without checking. Verify the exact
-running ref when a deployment was triggered, and report merge and deployment
-as separate facts.
 
 ## Session tuning
 
