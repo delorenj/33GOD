@@ -143,3 +143,34 @@ Telegram exact-context entry, freshness, Unknown, auth, and failure behavior
 remain acceptance concerns across all applicable epics.
 
 <!-- Epic and story sections will be added in later workflow steps. -->
+
+## Epic 1: Open HQ and Understand the Company
+
+The executive can open `/hq`, understand workforce posture, and navigate from
+Departments or Employees to owned context. This vertical slice includes the
+shared contract, verified route boundary, freshness/error envelope, and Flume
+projection needed to make the first read experience truthful.
+
+### Story 1.1: Establish the Shared DeloHQ Projection Contract
+
+As the executive operator,
+I want every DeloHQ surface to use one versioned projection contract,
+So that company facts remain consistent as additional surfaces and actions are added.
+
+**Acceptance Criteria:**
+
+**Given** Holocene has multiple DeloHQ projections and route consumers
+**When** the shared contract package is created at `holocene/packages/delohq-contracts/`
+**Then** it exports versioned envelopes, canonical reference types, freshness vocabulary, explicit Unknown/error states, and evidence metadata.
+
+**Given** a browser-facing DeloHQ projection is returned
+**When** the response is validated against the contract
+**Then** it requires `schema_version`, `source`, `generated_at`, `observed_at`, freshness state, and evidence or error detail.
+
+**Given** a DeloHQ projection contains an Employee, Project, Action, Receipt, ticket, event, or execution
+**When** its identity is serialized
+**Then** it preserves the opaque canonical reference and never uses a display name or username as a join key.
+
+**Given** adapters, routes, or views define a DeloHQ payload
+**When** contract tests run
+**Then** incompatible local dialects are rejected and the shared registry remains the only browser-facing contract source.
