@@ -174,3 +174,31 @@ So that company facts remain consistent as additional surfaces and actions are a
 **Given** adapters, routes, or views define a DeloHQ payload
 **When** contract tests run
 **Then** incompatible local dialects are rejected and the shared registry remains the only browser-facing contract source.
+
+### Story 1.2: Open HQ Through the Verified Telegram Boundary
+
+As the executive operator,
+I want to open DeloHQ from Telegram without a second login,
+So that only my verified executive context can access company information.
+
+**Acceptance Criteria:**
+
+**Given** a valid, fresh, allowlisted Telegram Mini App `initData`
+**When** the executive requests a public `/hq/api/*` route
+**Then** the route verifies the data, derives actor context, and forwards the request as a typed DeloHQ operation.
+
+**Given** a request has verified actor context
+**When** the route creates the command or projection context
+**Then** it includes `actor_ref`, `auth_observed_at`, and originating route metadata.
+
+**Given** `initData` is missing, invalid, expired, or not allowlisted
+**When** the executive requests `/hq` data
+**Then** the route rejects the request with an explicit typed auth error and exposes no source data or command capability.
+
+**Given** the browser attempts to bypass `/hq/api/*` and call an internal host API directly
+**When** the request is received
+**Then** the browser-facing flow does not depend on or expose that internal route as its trust boundary.
+
+**Given** the host API or an upstream source is unavailable
+**When** an authenticated `/hq/api/*` request is made
+**Then** the response reports an explicit unavailable, stale, or Unknown state and never fabricated success.
