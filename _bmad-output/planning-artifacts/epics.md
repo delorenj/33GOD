@@ -202,3 +202,31 @@ So that only my verified executive context can access company information.
 **Given** the host API or an upstream source is unavailable
 **When** an authenticated `/hq/api/*` request is made
 **Then** the response reports an explicit unavailable, stale, or Unknown state and never fabricated success.
+
+### Story 1.3: Show the Flume-Backed Company Projection
+
+As the executive operator,
+I want to see Departments, Employees, roles, and ownership from the workforce authority,
+So that Company reflects the real organization without a DeloHQ-owned roster.
+
+**Acceptance Criteria:**
+
+**Given** the authenticated Company request succeeds
+**When** Holocene builds the Company projection
+**Then** it returns Departments, Employees, roles, ownership, and canonical opaque identifiers from one workforce projection snapshot.
+
+**Given** the workforce projection is rendered
+**When** the response reaches the browser
+**Then** it includes source, projection generation time, observation time, and freshness state through the shared DeloHQ envelope.
+
+**Given** the Flume transport is not yet available
+**When** the transitional workforce adapter is used
+**Then** registry data is treated as an operational reference, `org.yaml` data is treated as presentation metadata, and neither source is writable through DeloHQ.
+
+**Given** the workforce source is unavailable, partial, stale, or contradictory
+**When** Company renders
+**Then** the affected projection is labeled unavailable, stale, contradictory, or Unknown instead of appearing empty, healthy, or current.
+
+**Given** a newly provisioned Employee exists in the workforce projection
+**When** Company loads
+**Then** the Employee can appear without hand-editing a DeloHQ-specific roster.
