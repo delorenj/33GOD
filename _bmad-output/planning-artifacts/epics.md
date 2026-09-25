@@ -259,3 +259,28 @@ So that I understand whether an Agent is working, waiting on me, blocked, quiet,
 **When** rendered in the mobile-first Telegram Mini App
 **Then** posture meaning is clear from text and structure rather than color alone, satisfying accessibility requirements.
 
+### Story 1.5: Navigate from Company to Owned Context
+
+As the executive operator,
+I want to navigate from a Department or Employee in Company directly into their Agent Office, Project, Evidence, or conversation and return without losing context,
+So that I can quickly drill down into active work without having to reorient or re-filter.
+
+**Acceptance Criteria:**
+
+**Given** the executive is viewing a Department or Employee in the Company projection
+**When** selecting the Department or Employee
+**Then** the UI provides direct navigational links to their associated Agent Office, active Project, canonical Evidence, or Telegram conversation.
+
+**Given** navigation occurs from Company to a drill-down context (Office, Project, Evidence, or conversation)
+**When** the destination view loads
+**Then** it preserves originating filters, scroll position, and context so the executive can return to Company seamlessly.
+
+**Given** an Employee or Department link is resolved
+**When** routing to the target resource
+**Then** navigation uses opaque canonical identifiers (`agent_ref`, `project_ref`, `evidence_ref`) rather than display names or usernames.
+
+**Given** an associated target (such as an Agent Office, active Project, or Telegram conversation) is unprovisioned, unavailable, or lacks supporting evidence
+**When** the link is rendered or clicked
+**Then** the destination shows an explicit unprovisioned or unavailable state instead of a broken route or silent failure.
+
+
