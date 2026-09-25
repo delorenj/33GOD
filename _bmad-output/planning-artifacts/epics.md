@@ -230,3 +230,32 @@ So that Company reflects the real organization without a DeloHQ-owned roster.
 **Given** a newly provisioned Employee exists in the workforce projection
 **When** Company loads
 **Then** the Employee can appear without hand-editing a DeloHQ-specific roster.
+
+### Story 1.4: Explain Employee Posture in Company Language
+
+As the executive operator,
+I want to see each Employee's current posture explained in company language,
+So that I understand whether an Agent is working, waiting on me, blocked, quiet, unavailable, or in an unknown state without guessing.
+
+**Acceptance Criteria:**
+
+**Given** a Company projection containing Employees
+**When** the Employee posture is derived
+**Then** it maps canonical agent runtime status and event evidence into one of six distinct company postures: Working, Waiting on you, Blocked, Quiet, Unavailable, or Unknown.
+
+**Given** an Employee is waiting on human input or decision approval
+**When** posture is evaluated
+**Then** it reflects "Waiting on you" and references the specific awaiting context or pending action.
+
+**Given** an Employee is waiting on dependencies or has an active error state
+**When** posture is evaluated
+**Then** it reflects "Blocked" if execution is halted on blockers, or "Unavailable" if runtime communication or heartbeat is lost.
+
+**Given** supporting runtime evidence or heartbeat is stale, missing, or contradictory
+**When** posture is evaluated
+**Then** it defaults to "Unknown" with explanatory evidence metadata, rather than guessing or defaulting to a healthy state.
+
+**Given** posture is displayed in the UI
+**When** rendered in the mobile-first Telegram Mini App
+**Then** posture meaning is clear from text and structure rather than color alone, satisfying accessibility requirements.
+
