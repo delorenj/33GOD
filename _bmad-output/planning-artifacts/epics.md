@@ -39,6 +39,11 @@ authority for their domain facts and mutations.
 - **FR-14:** Preserve durable correlation between each Action, its originating Inbox item or Agent Office, actor, request, and Canonical System outcome Evidence.
 - **FR-15:** Support context-preserving Telegram bot-menu, notification, and Agent-conversation entry into Company, Now, Inbox, Exception, or Agent Office.
 - **FR-16:** Hand off to the relevant Telegram conversation without replacing native Agent chat or treating chat as a Decision, Evidence, or Receipt by itself.
+- **FR-17:** Define and instantiate repo-independent named agents bound by Role and/or Job Description rather than a repository checkout.
+- **FR-18:** Provide curated, portable Skillex skill packs bound to named agents that travel with them regardless of invocation context or working directory.
+- **FR-19:** Persist and mount traveling Hindsight memory banks (`agent-<name>`) that accumulate role-specific learnings across all invocations.
+- **FR-20:** Normalize named agent definitions so they are framework-agnostic and projectable into both persistent daemon profiles (Hermes) and dynamic CLI/headless harnesses.
+- **FR-21:** Route event-driven Bloodbank commands directly to named agents by canonical `target_agent_id` with full lifecycle event reporting without requiring a repo binding.
 
 ### NonFunctional Requirements
 
@@ -79,23 +84,29 @@ authority for their domain facts and mutations.
 FR-1: Epic 1 - Flume-backed Company projection.
 FR-2: Epic 1 - Company-language Employee posture and Unknown handling.
 FR-3: Epic 1 - Navigation from Company to owned context.
-FR-4: Epic 2 - Grouped meaningful movement in Now.
-FR-5: Epic 2 - Exact context from Now items.
-FR-6: Epic 3 - Human-consequence Inbox classification.
-FR-7: Epic 3 - Decision explanation and supporting Evidence.
-FR-8: Epic 3 - Preserved Inbox state across entry points.
-FR-9: Epic 4 - Employee role, work, outcomes, blockers, and Evidence.
-FR-10: Epic 4 - Agent working-context links.
-FR-11: Epic 4 - Distinct conversational, observational, and consequential intervention paths.
-FR-12: Epic 5 - Explicit confirmation for bounded Actions.
-FR-13: Epic 5 - Action Receipt progress and terminal outcome.
-FR-14: Epic 5 - Durable Action correlation and non-duplication.
-FR-15: Epic 1 - Initial Telegram entry into exact DeloHQ context; deep-link continuity recurs in Epics 2–4.
-FR-16: Epic 4 - Context-preserving handoff to the responsible Agent conversation.
+FR-15: Epic 1 - Initial Telegram entry into exact DeloHQ context; deep-link continuity recurs in later epics.
+FR-17: Epic 2 - Repo-independent named agent contract and role/JD binding.
+FR-18: Epic 2 - Curated, portable Skillex skill packs.
+FR-19: Epic 2 - Traveling Hindsight memory bank integration.
+FR-20: Epic 2 - Framework-agnostic harness projections.
+FR-21: Epic 2 - Event-driven Bloodbank dispatch without repo bindings.
+FR-4: Epic 3 - Grouped meaningful movement in Now.
+FR-5: Epic 3 - Exact context from Now items.
+FR-6: Epic 4 - Human-consequence Inbox classification.
+FR-7: Epic 4 - Decision explanation and supporting Evidence.
+FR-8: Epic 4 - Preserved Inbox state across entry points.
+FR-9: Epic 5 - Employee role, work, outcomes, blockers, and Evidence.
+FR-10: Epic 5 - Agent working-context links.
+FR-11: Epic 5 - Distinct conversational, observational, and consequential intervention paths.
+FR-16: Epic 5 - Context-preserving handoff to the responsible Agent conversation.
+FR-12: Epic 6 - Explicit confirmation for bounded Actions.
+FR-13: Epic 6 - Action Receipt progress and terminal outcome.
+FR-14: Epic 6 - Durable Action correlation and non-duplication.
 
 Cross-cutting NFRs and AD-1 through AD-11 apply to every epic. The first
 vertical slice owns the shared contract, Telegram verification, freshness/error
-envelopes, and Company projection without creating a technical-only epic.
+envelopes, and Company projection. Epic 2 delivers the walking skeleton for
+portable named specialist agents.
 
 ## Epic List
 
@@ -107,26 +118,31 @@ shared contract, verified route boundary, freshness/error envelope, and Flume
 projection needed to make the first read experience truthful.
 **FRs covered:** FR-1, FR-2, FR-3, FR-15
 
-### Epic 2: Know What Changed
+### Epic 2: Repo-Independent Named Specialist Workforce
+
+The platform can define, house, and invoke portable named agents bound by Role/Job Description with traveling Hindsight memory, curated Skillex skills, framework-agnostic harness projections, and Bloodbank event dispatch — establishing our walking skeleton with the inaugural n8n workflow specialist and big-chungus infra specialist.
+**FRs covered:** FR-17, FR-18, FR-19, FR-20, FR-21
+
+### Epic 3: Know What Changed
 
 The executive can see grouped meaningful movement and open the exact supporting
 context without reconstructing a raw event stream.
 **FRs covered:** FR-4, FR-5
 
-### Epic 3: Decide from the Executive Inbox
+### Epic 4: Decide from the Executive Inbox
 
 The executive can review Approvals, Exceptions, Questions, and Briefings with
 ownership, consequence, Evidence, preserved context, and terminal-state clarity.
 **FRs covered:** FR-6, FR-7, FR-8
 
-### Epic 4: Understand and Reach an Agent
+### Epic 5: Understand and Reach an Agent
 
 The executive can understand an Employee's role and current work, inspect
 Evidence, choose the correct intervention path, and continue in Telegram when
 needed.
 **FRs covered:** FR-9, FR-10, FR-11, FR-16
 
-### Epic 5: Act and Verify the Outcome
+### Epic 6: Act and Verify the Outcome
 
 The executive can confirm bounded Actions and follow durable receipts through
 truthful terminal outcomes. The first Action catalog and receipt providers are
@@ -135,12 +151,7 @@ an explicit prerequisite for this epic's dependent stories.
 
 ### Dependency Flow
 
-Epic 1 is the first independently useful read-only slice. Epics 2–4 build on
-its shared `/hq` contract and context model but each delivers a complete user
-outcome within its own surface. Epic 5 builds on Inbox and Agent Office context
-but is gated by the bounded Action catalog and canonical receipt contracts.
-Telegram exact-context entry, freshness, Unknown, auth, and failure behavior
-remain acceptance concerns across all applicable epics.
+Epic 1 provides the read-only workforce and company context. Epic 2 delivers the essential walking skeleton: repo-independent named specialists with curated skills, traveling memory, and event-driven invocation—decoupling agents from repositories and fulfilling the breadth-before-depth platform imperative. Epics 3–6 build upon this foundation to provide unified visibility (Now feed, Inbox, Agent Office) and consequential action execution across both repo-bound and cross-cutting specialist agents.
 
 <!-- Epic and story sections will be added in later workflow steps. -->
 
@@ -282,5 +293,114 @@ So that I can quickly drill down into active work without having to reorient or 
 **Given** an associated target (such as an Agent Office, active Project, or Telegram conversation) is unprovisioned, unavailable, or lacks supporting evidence
 **When** the link is rendered or clicked
 **Then** the destination shows an explicit unprovisioned or unavailable state instead of a broken route or silent failure.
+
+## Epic 2: Repo-Independent Named Specialist Workforce
+
+The platform can define, house, and invoke portable named agents bound by Role/Job Description with traveling Hindsight memory, curated Skillex skills, framework-agnostic harness projections, and Bloodbank event dispatch — establishing our walking skeleton with the inaugural n8n workflow specialist and big-chungus infra specialist.
+
+### Story 2.1: Portable Named Agent Contract & Skillex Pack Binding
+
+As a platform developer,
+I want to define named agents by Role and Job Description decoupled from repository checkouts and bind them to curated Skillex packs,
+So that specialists can be maintained as first-class workforce members whose capabilities travel with them anywhere.
+
+**Acceptance Criteria:**
+
+**Given** a named agent definition
+**When** the agent contract is authored
+**Then** it defines identity (`name`, `display_name`, `role`), role charter/directives, a traveling Hindsight memory bank reference (`agent-<name>`), and curated Skillex pack references without requiring a `repo` or `project_path` attribute.
+
+**Given** an agent's curated skills are declared
+**When** resolving the skills via Skillex
+**Then** the agent binds to a reference-only Skillex pack composed of canonical skills from `~/code/skillex/all-skills/`, adhering to ADR-0001 reference-only topology.
+
+**Given** an agent requires bespoke or agent-specific skills
+**When** those skills are defined
+**Then** they are housed in the canonical Skillex catalog or the agent's desk directory and exposed via managed symlinks, never creating unmanaged duplicate skill copies.
+
+**Given** an agent's desk directory (`~/.agents/workforce/<name>/` or equivalent canonical location) is provisioned
+**When** the environment is initialized
+**Then** its `.agents/skills` directory contains verified symlinks to all declared skills in its Skillex pack.
+
+### Story 2.2: Framework-Agnostic Projection Engine
+
+As a platform developer,
+I want tooling to project normalized named agent definitions into runtime execution harnesses,
+So that specialists can run in Hermes, dynamic CLI panes, or headless workers without rewriting their configuration.
+
+**Acceptance Criteria:**
+
+**Given** a normalized named agent specification
+**When** the projection engine runs for Hermes
+**Then** it generates or updates the Hermes profile (`~/.hermes/profiles/<name>`), registers the agent in `agents-registry.yaml`, and configures gateway/systemd units without requiring a repo post directory.
+
+**Given** a normalized named agent specification
+**When** invoked in an interactive terminal or dynamic working directory
+**Then** the harness runner configures the active environment with the agent's persona prompt, curated Skillex skills, and active Hindsight bank.
+
+**Given** changes to an agent's core charter, directives, or skills in the source specification
+**When** the projection is refreshed
+**Then** target harness configurations (Hermes, CLI) update deterministically to reflect the changes without manual config drift.
+
+### Story 2.3: Provision the n8n Workflow Specialist
+
+As the lead developer,
+I want an n8n workflow specialist agent with curated n8n skills and a personal Hindsight bank,
+So that I have an AI specialist who understands how my workflows are organized, my node design patterns, field exposure preferences, and script thresholds.
+
+**Acceptance Criteria:**
+
+**Given** the n8n specialist role charter
+**When** the agent is provisioned
+**Then** its persona and directives codify standards for n8n workflow design, node structure, field exposure levels, and criteria for when embedded scripts (JS/Python) are preferred over stock nodes.
+
+**Given** the n8n specialist's skill manifest
+**When** resolving skills
+**Then** it binds to the curated `n8n` Skillex set (`~/code/skillex/sets/n8n`), providing node configuration, expression syntax, error handling, subworkflows, and MCP tools expertise.
+
+**Given** the n8n specialist is invoked
+**When** performing workflow operations or reviews
+**Then** it mounts and records to Hindsight bank `agent-n8n-specialist`, recalling historical preferences and decisions across sessions.
+
+### Story 2.4: Provision the Big Chungus Infrastructure Specialist
+
+As the lead developer,
+I want an infrastructure specialist agent with curated homelab/Docker skills and a personal Hindsight bank,
+So that I have an AI specialist who knows the big-chungus topology, Docker stack layouts, Traefik routing, and environment secrets.
+
+**Acceptance Criteria:**
+
+**Given** the infra specialist role charter
+**When** the agent is provisioned
+**Then** its persona and directives codify operational guidelines for `big chungus` Docker stacks in `~/docker`, Traefik reverse proxy routing, systemd user services, and `.env.op` 1Password references.
+
+**Given** the infra specialist's skill manifest
+**When** resolving skills
+**Then** it binds to curated homelab skills including `delonet-conventions`, `delonet-dotenv`, and related infrastructure toolsets from the Skillex catalog.
+
+**Given** the infra specialist is invoked
+**When** inspecting, deploying, or troubleshooting host services
+**Then** it mounts and records to Hindsight bank `agent-infra-specialist`, preserving operational learnings, service quirks, and network boundaries.
+
+### Story 2.5: Event-Driven Dispatch & Lifecycle via Bloodbank
+
+As a platform developer,
+I want to invoke named specialists via Bloodbank commands and receive durable lifecycle events,
+So that specialists can be triggered asynchronously from n8n, webhooks, or other agents without a repo binding.
+
+**Acceptance Criteria:**
+
+**Given** a command published to `bloodbank.cmd.agent.invocation.start` with `data.target_agent_id` matching a named specialist (e.g. `n8n-specialist` or `infra-specialist`)
+**When** the fleet Bloodbank gateway processes the command
+**Then** it authorizes the agent against the registry, resolves the specialist's profile and desk, and dispatches the execution payload.
+
+**Given** an invocation is dispatched to a named specialist
+**When** execution begins and concludes
+**Then** the gateway emits canonical CloudEvents (`bloodbank.agent.invocation.started`, and `completed` or `failed`) echoing correlation context and outcome metadata to `BLOODBANK_EVENTS`.
+
+**Given** a specialist invocation is triggered without an active repository context
+**When** the agent executes
+**Then** it runs in its designated desk environment with full access to its curated skills and Hindsight bank, completing without repo-dependency errors.
+
 
 
