@@ -2,8 +2,9 @@
 title: 'Story 2.1: Portable Named Agent Contract & Skillex Pack Binding'
 type: 'feature'
 created: '2026-09-26'
-status: 'draft'
+status: 'review'
 route: 'dispatch'
+baseline_commit: '83236c1b7cb156bd511aa8c45f248bf4ab7c99e3'
 review_loop_iteration: 0
 context:
   - _bmad-output/implementation-artifacts/epic-2-context.md
@@ -58,12 +59,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `flume/contracts/named-agent.schema.json` -- Create schema -- Author JSON Schema for portable named agents declaring id, display_name, role, charter, skills, memory, and desk attributes.
-- [ ] `flume/packages/flume-hr/src/workforce/types.ts` -- TypeScript declarations -- Define NamedAgentContract, AgentCharter, AgentSkillsBinding, and AgentDeskManifest interfaces.
-- [ ] `flume/packages/flume-hr/src/workforce/validator.ts` -- Validation logic -- Implement schema validator parsing YAML/JSON named agent definitions.
-- [ ] `flume/packages/flume-hr/src/workforce/desk.ts` -- Desk provisioner -- Implement function to materialize desk directory and compile `.agents/skills` symlinks from Skillex pack.
-- [ ] `flume/packages/flume-hr/src/index.ts` -- Export workforce API -- Re-export workforce types, validator, and desk manager from package entry point.
-- [ ] `flume/tests/named-agent-contract-regressions.ts` -- Regression test suite -- Add tests for valid agent parsing, invalid schema rejection, and desk symlink reconciliation.
+- [x] `flume/contracts/named-agent.schema.json` -- Create schema -- Author JSON Schema for portable named agents declaring id, display_name, role, charter, skills, memory, and desk attributes.
+- [x] `flume/packages/flume-hr/src/workforce/types.ts` -- TypeScript declarations -- Define NamedAgentContract, AgentCharter, AgentSkillsBinding, and AgentDeskManifest interfaces.
+- [x] `flume/packages/flume-hr/src/workforce/validator.ts` -- Validation logic -- Implement schema validator parsing YAML/JSON named agent definitions.
+- [x] `flume/packages/flume-hr/src/workforce/desk.ts` -- Desk provisioner -- Implement function to materialize desk directory and compile `.agents/skills` symlinks from Skillex pack.
+- [x] `flume/packages/flume-hr/src/index.ts` -- Export workforce API -- Re-export workforce types, validator, and desk manager from package entry point.
+- [x] `flume/tests/named-agent-contract-regressions.ts` -- Regression test suite -- Add tests for valid agent parsing, invalid schema rejection, and desk symlink reconciliation.
 
 **Acceptance Criteria:**
 - Given a valid named agent definition without `repo` or `project_path`, when validated, then it passes schema validation and parses identity, charter, and memory settings.
@@ -72,6 +73,13 @@ context:
 - Given an agent definition referencing a non-existent canonical skill, when validated, then an explicit diagnostic error identifies the missing skill.
 
 ## Implementation Notes
+
+- Created `flume/contracts/named-agent.schema.json` declaring portable named agent schema with `schema_version`, `id`, `display_name`, `role`, `charter`, `skills`, `memory` (strictly enforcing `agent-<name>` write_bank), and `desk` attributes. Disallows repo/project_path properties via `additionalProperties: false`.
+- Implemented `flume/packages/flume-hr/src/workforce/types.ts` defining `NamedAgentContract`, `AgentCharter`, `AgentSkillsBinding`, `AgentDeskManifest`, `ResolvedNamedAgentContract`, and related types.
+- Implemented `flume/packages/flume-hr/src/workforce/validator.ts` with Ajv2020 JSON Schema validation, YAML parsing, and Skillex pack resolution verifying canonical skills in `all-skills/`.
+- Implemented `flume/packages/flume-hr/src/workforce/desk.ts` providing `provisionDesk`/`materializeDesk` with idempotent symlink reconciliation in `.agents/skills`, preserving user notes, and writing `contract.yaml`.
+- Exported workforce API from `flume/packages/flume-hr/src/index.ts`.
+- Added comprehensive regression test suite in `flume/tests/named-agent-contract-regressions.ts` and wired into `flume/scripts/run-tests.mjs`.
 
 ## Spec Change Log
 
