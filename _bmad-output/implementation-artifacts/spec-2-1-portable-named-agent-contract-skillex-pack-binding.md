@@ -2,7 +2,7 @@
 title: 'Story 2.1: Portable Named Agent Contract & Skillex Pack Binding'
 type: 'feature'
 created: '2026-09-26'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 baseline_commit: '83236c1b7cb156bd511aa8c45f248bf4ab7c99e3'
 review_loop_iteration: 0
