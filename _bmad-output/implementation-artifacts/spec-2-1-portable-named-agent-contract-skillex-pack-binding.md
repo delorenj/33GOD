@@ -2,7 +2,7 @@
 title: 'Story 2.1: Portable Named Agent Contract & Skillex Pack Binding'
 type: 'feature'
 created: '2026-09-26'
-status: 'review'
+status: 'in-review'
 route: 'dispatch'
 baseline_commit: '83236c1b7cb156bd511aa8c45f248bf4ab7c99e3'
 review_loop_iteration: 0
@@ -84,6 +84,16 @@ context:
 ## Spec Change Log
 
 ## Review Triage Log
+
+| Verdict | Location | Evidence / Disposition | Route |
+|---------|----------|------------------------|-------|
+| high | `flume/packages/flume-hr/src/workforce/desk.ts:523` | Resolved: Omitted `resolvedSkills` from persisted `contract.yaml` so it conforms to `named-agent.schema.json` (`additionalProperties: false`). Verified in test 9. | patch |
+| high | `flume/packages/flume-hr/src/workforce/desk.ts:345` | Resolved: Prioritized `options.deskRoot` in `validator.ts` and `desk.ts` when contract omits `desk.path`. Verified in test 10. | patch |
+| medium | `flume/packages/flume-hr/src/workforce/desk.ts:365` | Resolved: Passed `resolveSkills: !options.resolvedSkills` in `desk.ts` so explicit skills bypass catalog resolution. Verified in test 12. | patch |
+| medium | `flume/packages/flume-hr/src/index.ts:272` | Resolved: Tightened `isCliEntry` to check package directory (`dist/index.js`, `src/index.ts`, `thisFile`) and `flume`/`fl` basenames. | patch |
+| medium | `flume/packages/flume-hr/src/workforce/desk.ts:510` | Resolved: Pre-validated canonical skill targets and `SKILL.md` before modifying symlinks or writing files. Verified in test 13. | patch |
+| medium | `flume/packages/flume-hr/src/workforce/desk.ts:383` | Resolved: Inspected existing symlinks during dry-run mode to return accurate diff counts. Verified in test 11. | patch |
+| low | `flume/tests/named-agent-contract-regressions.ts:1414` | Resolved: Added regression tests 9-13 covering persisted schema validity, deskRoot override, dryRun diff counts, explicit skills bypass, and fail-fast pre-validation. | patch |
 
 ## Design Notes
 
