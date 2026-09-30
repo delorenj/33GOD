@@ -11,6 +11,14 @@ inputDocuments:
 
 # 33GOD - Epic Breakdown
 
+> **Frozen for new implementation stories (2026-09-29, the Director Rule).**
+> The parent holds outcomes that span children, never work inside one. Every
+> epic below is child implementation except Story 2.5 and the seam half of 1.3,
+> which become integration stories in `initiatives.md`. Do not draft new
+> implementation stories here and do not run `bmad-loop` in this repo:
+> implementation epics live in the owning child, and the loop runs there.
+> Plan, owners and migration order: `director-rule-plan.md`.
+
 ## Overview
 
 This document provides the complete epic and story breakdown for 33GOD,
@@ -117,23 +125,31 @@ Departments or Employees to owned context. This vertical slice includes the
 shared contract, verified route boundary, freshness/error envelope, and Flume
 projection needed to make the first read experience truthful.
 **FRs covered:** FR-1, FR-2, FR-3, FR-15
+**Owner:** holocene. Migrates to Holocene's own BMAD (plan Phase 3). Story 1.1 is
+done; Story 1.3 splits, its Flume read-transport decision becomes `I-1.6`.
 
 ### Epic 2: Repo-Independent Named Specialist Workforce
 
 The platform can define, house, and invoke portable named agents bound by Role/Job Description with traveling Hindsight memory, curated Skillex skills, framework-agnostic harness projections, and Bloodbank event dispatch — establishing our walking skeleton with the inaugural n8n workflow specialist and big-chungus infra specialist.
 **FRs covered:** FR-17, FR-18, FR-19, FR-20, FR-21
+**Owner:** flume. Stories 2.1-2.4 migrate to Flume's own BMAD (2.1 is done; 2.2 is
+rescoped there after the 2026-09-23 named-agent overlap). Story 2.5 stays in the
+parent as integration story `I-1.4`.
 
 ### Epic 3: Know What Changed
 
 The executive can see grouped meaningful movement and open the exact supporting
 context without reconstructing a raw event stream.
 **FRs covered:** FR-4, FR-5
+**Owner:** holocene. Tombstoned in place: stories are drafted in Holocene's BMAD
+when it starts this epic, not here.
 
 ### Epic 4: Decide from the Executive Inbox
 
 The executive can review Approvals, Exceptions, Questions, and Briefings with
 ownership, consequence, Evidence, preserved context, and terminal-state clarity.
 **FRs covered:** FR-6, FR-7, FR-8
+**Owner:** holocene. Tombstoned in place (see Epic 3).
 
 ### Epic 5: Understand and Reach an Agent
 
@@ -141,6 +157,7 @@ The executive can understand an Employee's role and current work, inspect
 Evidence, choose the correct intervention path, and continue in Telegram when
 needed.
 **FRs covered:** FR-9, FR-10, FR-11, FR-16
+**Owner:** holocene. Tombstoned in place (see Epic 3).
 
 ### Epic 6: Act and Verify the Outcome
 
@@ -148,6 +165,9 @@ The executive can confirm bounded Actions and follow durable receipts through
 truthful terminal outcomes. The first Action catalog and receipt providers are
 an explicit prerequisite for this epic's dependent stories.
 **FRs covered:** FR-12, FR-13, FR-14
+**Owner:** holocene for the surface. Tombstoned in place (see Epic 3). The action
+catalog and receipt providers are cross-project seams (Krebs, Pilot, Hermes
+gateway) and become integration stories in `initiatives.md` when scheduled.
 
 ### Dependency Flow
 

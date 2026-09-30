@@ -1,8 +1,9 @@
 ---
 title: 'The Director Rule: BMAD for a parent repo with pjangler-registered submodules'
-status: 'proposed'
+status: 'accepted'
 created: '2026-09-29'
-owner: 'grolf (33god-pm) once adopted'
+accepted: '2026-09-29'
+owner: 'grolf (33god-pm)'
 ---
 
 <!-- Deliberately NOT named epics.md and deliberately uses no `## Epic N:` / `### Story N.M`
@@ -60,7 +61,8 @@ Cross-references are always project-qualified (`flume:2-1-portable-named-agent-c
 1. **Author.** Grolf writes an Integration Story: outcome, seam ACs, `delegations[]`, `depends_on`. No task breakdown.
 2. **Request.** For each delegation Grolf sends the child a Work Request: outcome, seam AC, priority signal, back-link (`33GOD:I-1.3`), labels `from:33god` and `int:I-1.3`. It says what must be true at the seam, never how.
    - Preferred (pull): Bloodbank command `bloodbank.cmd.agent.invocation.start` to the child PM, whose own intake creates the ticket and, through the child's BMAD flow, whatever epic or story it wants.
-   - Fallback when the child has no PM (Flume today): Grolf files the ticket on the child's board through `px`.
+   - Practical form today: file the Work Request as a ticket on the child's board. The Plane-to-Bloodbank lane (ticket created, then grooming, then `bloodbank.cmd.agent.invocation.start`) delivers it to that board's PM. Filing goes through `px`.
+   - A child with no PM has no receiver; hire one first (Flume was in this state until 2026-09-29, now `flume-pm`).
 3. **Link.** A Plane relation (`blocked_by` or `relates_to`) from the parent ticket to the child ticket, through `px` (the only Plane writer).
 4. **Implement.** The child owns triage, refinement, spec, loop, review and merge, run inside the child.
 5. **Signal.** Child ticket Done emits `bloodbank.repo.task.completed` (schema exists). Grolf's reconcile pass matches it to the delegation.
@@ -98,7 +100,7 @@ The child's resulting story key is recorded back on the parent story as a qualif
 
 ## Prerequisites found (all verified 2026-09-29)
 
-- **Flume has no PM agent** (`agents: {}` in `flume/.project.json`, no registry row). A delegation to Flume has no triage receiver.
+- **Flume's PM is `flume-pm` ("Flumey")**, created 2026-09-29: `flume/.project.json` lists it as provisioned, the Hermes registry row has `bloodbank.enabled: true` and `target_agent_id: flume-pm`, its `FLUME` board is `bf5663f0-8d37-41c6-97a3-437d45d64523`, and `hermes-flume-pm-gateway.service` is active. Registered and running; not yet exercised by a delegation.
 - **`px` cannot go cross-board:** `~/.config/krebs/manifests.json` does not exist, and `px` has no relation or link command.
 - **Plane cross-board relations exist:** `GET .../work-items/{id}/relations/` returns 200. POST is untested.
 - **Holocene is not in the pjangler registry.** It has a PM and a `HOLOC` board in the Hermes registry. Only `pjangler`, `bb`, `flume`, `candystore` and `momo` are registered among the 8 submodules; `hermes-agent-template` and `mcp-hub` are not, and a rule keyed on registration excludes them.
@@ -132,15 +134,13 @@ Every story is `owner_project: 33god`; ACs are observable at the seam and name n
 | I-1.7 | Skill packs survive the round trip | skillex, flume | none | Each named agent's desk `.agents/skills` symlinks resolve to canonical Skillex entries and stay valid after a Skillex sync |
 | I-1.8 | Named identity end to end on the board | flume, pilot, krebs | I-1.5 | Plane ticket activity is attributed to the named agent, not only the post, across px and Krebs writes |
 
-I-1.5 and I-1.8 are where Flume's missing PM bites.
-
 ## Phases
 
 **Phase 0 (about a day): write the rule and stop the bleeding.**
 Land this document; add a one-line pointer in the parent `CLAUDE.md` ("bmad-loop runs in each child, never in the parent"); create `initiatives.md` with I-1.1 and I-1.6 only; freeze new parent implementation stories (Epics 3-6 stay backlog, nothing lost).
 
 **Phase 1: one real delegation, end to end.**
-Use I-1.6 (it resolves the already-deferred AD-5 decision). Create `~/.config/krebs/manifests.json` to unblock `px --board`; file one ticket on `HOLOC` and one on `FLUME` from Grolf with back-link labels (Holocene has a PM to triage; Flume does not, so Grolf files that one directly); add the relation through a minimal `px link`; observe one `task.completed` event resolve the delegation; verify the seam by hand-run smoke. Success is closing the loop once.
+First delegation: hand Epic 2's Flume-owned stories (2.1-2.4) to Flumey so Flume's own BMAD creates Flume's epic (Story 2.1 done, Story 2.2 rescoped). It is real work, it is Flume-only, and it exercises the whole path. Create `~/.config/krebs/manifests.json` to unblock `px --board`; file the ticket on `FLUME` with back-link labels (`from:33god`); add the relation through a minimal `px link`; observe the `agent.invocation.started` and later `task.completed` events; verify the seam by hand. Then repeat with I-1.6 across `HOLOC` and `FLUME`. Success is closing the loop once.
 
 **Phase 2: lint.**
 Deliver `director.scope` (R1-R5) to pjangler as a Work Request (the first delegation of the rule itself). Run against the parent. Expect red on Epics 1 and 3-6 on day one; that is the dogfood proof.
@@ -162,10 +162,15 @@ Move Epic 1 and 3-6 to Holocene and 2.1-2.4 to Flume with tombstones, in small c
 - Parent presence threshold: at least two children, or a timing dependency on another child.
 - The dependency record is a native Plane cross-board `blocked_by` relation, delivered through `px link`.
 
-## Open decisions
+## Decisions (2026-09-29)
 
-1. Does DeloHQ (PRD, epics, AD-2, AD-11) move wholly to Holocene? Recommended: yes.
-2. Flume PM: hire one, or does Grolf drive the `FLUME` board directly for now? Recommended: Grolf directly.
-3. Key format: non-numeric `I-n.m` (recommended) or a reserved numeric range.
-4. Grolf: a new `director` role file (recommended) or `pm` with a `portfolio:` block.
-5. Move Epics 3-6 physically now, or tombstone in place until Holocene starts them? Recommended: tombstone in place; move Flume's 2.1-2.4 first.
+1. DeloHQ (PRD, epics, AD-2, AD-11) moves wholly to Holocene.
+2. Flume gets its own PM rather than Grolf driving the `FLUME` board: `flume-pm` ("Flumey"), created and onboarded 2026-09-29.
+3. Parent keys are non-numeric: `I-n` and `I-n.m`.
+4. Grolf gets a new `director` role file, composed by Flume, rather than a `portfolio:` block on `pm`.
+5. Epics 3-6 are tombstoned in place until Holocene starts them; Flume's 2.1-2.4 move first.
+
+## Status of the phases
+
+- **Phase 0 (2026-09-29):** this plan accepted; pointer added to the parent `CLAUDE.md`; `initiatives.md` created with I-1.1 and I-1.6; `epics.md` frozen with owner notes and tombstones on every epic.
+- **Transitional gap:** Epic 1's rows are still in the parent's `sprint-status.yaml` until they migrate to Holocene (Phase 3), so a bare `bmad-loop run` in the parent could still pick up Story 1.2. The rule is to not run it there; the structural guard (no parent board) arrives with the Epic 1 migration.

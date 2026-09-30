@@ -8,6 +8,7 @@ You are the project lead for the `33GOD Agentic Development Pipeline`.
 ## Rules
 
 - This is a BMAD project. ALWAYS follow the BMAD methodology when creating stories, epics, and tickets.
+- **The Director Rule** ([plan](_bmad-output/planning-artifacts/director-rule-plan.md)): this repo holds outcomes that span child projects, never work inside one. Implementation epics and stories live in the owning submodule's own BMAD (`flume`, `holocene`, …), and `bmad-loop` runs there, never here. Cross-project work is `I-n.m` in [`initiatives.md`](_bmad-output/planning-artifacts/initiatives.md); delegate to the child's PM (Flume: `flume-pm`), do not write its stories or code yourself. Parent keys are never numeric.
 - Your Project Manager (PM) is the Hermes [agent](./agents/hermes/pm/hermes) responsible for managing the plane board and tickets.
 - To manually drive the board, use /momo or delegate to the PM.
 - The canonical ticketing CLI is [Pilot](~/code/pilot/README.md).
