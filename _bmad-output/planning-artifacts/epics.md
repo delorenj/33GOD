@@ -320,6 +320,10 @@ The platform can define, house, and invoke portable named agents bound by Role/J
 
 ### Story 2.1: Portable Named Agent Contract & Skillex Pack Binding
 
+> **Moved to flume (2026-09-30, FLUME-25). Status: done.** Shipped as `flume:6b1f429` and `flume:7c10c85`.
+> FLUME-21 (hire by name) consumes this contract; it does not cover the story. Do not
+> work this story here.
+
 As a platform developer,
 I want to define named agents by Role and Job Description decoupled from repository checkouts and bind them to curated Skillex packs,
 So that specialists can be maintained as first-class workforce members whose capabilities travel with them anywhere.
@@ -344,6 +348,11 @@ So that specialists can be maintained as first-class workforce members whose cap
 
 ### Story 2.2: Framework-Agnostic Projection Engine
 
+> **Moved to flume (2026-09-30, FLUME-25): `FLUME-21` + `FLUME-29`.** FLUME-21 covers
+> hire-by-name and bank binding; FLUME-29 carries the three projection gaps (the 2.1
+> validator reusing `readRoleIdentity()`, template step 10 accepting a desk as owning
+> root, a harness runner). Do not work this story here.
+
 As a platform developer,
 I want tooling to project normalized named agent definitions into runtime execution harnesses,
 So that specialists can run in Hermes, dynamic CLI panes, or headless workers without rewriting their configuration.
@@ -364,6 +373,9 @@ So that specialists can run in Hermes, dynamic CLI panes, or headless workers wi
 
 ### Story 2.3: Provision the n8n Workflow Specialist
 
+> **Moved to flume (2026-09-30, FLUME-25): `FLUME-29`.** Kept, not dropped: the first
+> acceptance hire once hire-by-name is stable. Do not work this story here.
+
 As the lead developer,
 I want an n8n workflow specialist agent with curated n8n skills and a personal Hindsight bank,
 So that I have an AI specialist who understands how my workflows are organized, my node design patterns, field exposure preferences, and script thresholds.
@@ -383,6 +395,9 @@ So that I have an AI specialist who understands how my workflows are organized, 
 **Then** it mounts and records to Hindsight bank `agent-n8n-specialist`, recalling historical preferences and decisions across sessions.
 
 ### Story 2.4: Provision the Big Chungus Infrastructure Specialist
+
+> **Moved to flume (2026-09-30, FLUME-25): `FLUME-29`.** Kept, not dropped: the second
+> acceptance hire. Do not work this story here.
 
 As the lead developer,
 I want an infrastructure specialist agent with curated homelab/Docker skills and a personal Hindsight bank,
