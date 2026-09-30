@@ -113,11 +113,15 @@ The child's resulting story key is recorded back on the parent story as a qualif
 | Epic 1 (1.1, 1.2, 1.4, 1.5) | Holocene implementation | Move to Holocene BMAD; 1.1 already done, leave a tombstone `moved_to: holocene:1-1` |
 | Story 1.3 | Split | Flume read-transport decision (AD-5) becomes a parent integration story; consumer work goes to Holocene |
 | Epics 3-6 | Holocene implementation | Move to Holocene. The parent keeps one initiative, "DeloHQ executive surface", with only the seam stories (evidence contract, action catalog and receipt providers, Telegram and gateway boundary) |
-| Stories 2.1-2.4 | Flume implementation | Move to Flume BMAD. This creates Flume's epic. 2.1 is done (tombstone). 2.2 is rescoped first (below) |
+| Stories 2.1-2.4 | Flume implementation, and already partly on Flume's board (FLUME-16, FLUME-21) | Not a blind move: reconcile with Flume's existing backlog. Delegated to Flumey as FLUME-25; 2.1 is done (tombstone); Flumey decides what becomes Flume BMAD stories and replies with a ref per story |
 | Story 2.5 | Genuine integration (Flume, Bloodbank, gateway) | Stays in the parent as an integration story |
 | FRs, NFRs, AD-1 | Platform PRD and architecture | Stay. AD-2 and AD-11 (package layout) move to Holocene architecture. FR-to-epic map becomes a derived table |
 
 **Story 2.2 rescope (from the 2026-09-23 overlap check).** The Hermes profile, systemd and registry mechanics already exist as template steps 10, 70 and 80, but step 10 dies without an owning repo and `<project>/.agents/skills.json`. Story 2.1's validator also re-invented identity rules more loosely than the Sep 23 `readRoleIdentity()`. So 2.2 becomes: (1) make the 2.1 validator reuse the Sep 23 identity rules, (2) let step 10 accept a desk as its owning root, (3) build the new harness runner. It becomes Flume's first story.
+
+**Superseded in part (2026-09-30).** Flume's Plane board already holds `FLUME-21` ("flume hire <name>: a named officer bound by banks, not a directory": hire by name with a charter instead of a repo, binding by declared banks, no faked repo) on top of the `FLUME-16` memory epic (`FLUME-17` to `FLUME-20`, `FLUME-22`), filed about 2026-09-22, four days before Epic 2 was written. The earlier overlap check looked at code and commits and missed the board. The rescope above is now Flumey's call under `FLUME-25`.
+
+**Refinement to the rule.** A child's backlog is not necessarily BMAD: Flume's real backlog is 25 Plane tickets (`FLUME-12` and `FLUME-16` are Plane-native `[EPIC]`s) and its `_bmad-output/` is empty. "The child owns its epics" means wherever the child keeps them. `director.scope` R3 (duplicate suspicion) must therefore compare against the child's Plane board as well as its `epics.md`, and a delegation's first step is always "does the child already have this?"
 
 ## First dogfood initiative: I-1 "Flume agent rollout throughout the system"
 
@@ -147,6 +151,13 @@ Deliver `director.scope` (R1-R5) to pjangler as a Work Request (the first delega
 
 **Phase 3: migrate, charter, rollup.**
 Move Epic 1 and 3-6 to Holocene and 2.1-2.4 to Flume with tombstones, in small commits verified per repo (the parent auto-checkpoint sweeps cross-repo moves into submodule working directories). Register Holocene with pjangler. Add the `director` role and re-compose Grolf. Add the derived `portfolio-status.yaml` rollup only if the Plane board proves not to be enough; do not build it up front.
+
+## Phase 1 log
+
+- **2026-09-30, cross-board access.** `px --board <child>` needs a registry of `.project.json` paths. The file `~/.config/krebs/manifests.json` was deliberately not created: when it exists, every `px` call on the machine validates every listed path, so one bad entry would break px for all agents. The same registry is passed for one invocation through the `KREBS_MANIFESTS` environment variable (a JSON array; identical semantics, no persistent effect). Promote it to the file once the path is proven.
+- **2026-09-30, first delegation.** Work Request filed on Flume's board as `FLUME-25` through `px backlog create` (labels `from:33god`, `int:I-1`). Observed on the bus via Candystore (`127.0.0.1:8683`): `bloodbank.repo.task.created` from `n8n-plane-webhook` at 01:57:32.779Z, then `bloodbank.agent.invocation.started` from `hermes-agent:flume-pm` about 300 ms later. No skipped or failed event.
+- **Attribution caveat.** The ticket was created with the shared Plane key, so Plane attributes it to the operator rather than to Grolf. Grolf's own agent token is the fix (an I-1.8 concern).
+- **Pending:** Flumey's completion event and its reply with a ref per story 2.1-2.4; then tombstone those stories in the parent `epics.md`.
 
 ## Risks
 
