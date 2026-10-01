@@ -71,3 +71,73 @@ is the seam half of the former Story 1.3.
 **Seam evidence (executable).** Change a post in Flume; measure the time until the
 `/hq` API reflects it; assert it is under the declared maximum age and that
 `org.yaml` is not opened during the request.
+
+## I-2 Holocene Auto walking skeleton
+
+**Outcome.** On Jarad's standalone Android head unit, activity from multiple
+harnesses is available through one normalized view, the driving voice interface
+routes a confirmed instruction to one supported conversation, its real reply is
+heard through Voxxy, and an explicit broadcast fact reaches multiple subscribers.
+The complete conversational loop requires no screen reads or taps while driving;
+detailed event browsing remains parked-only.
+
+**Owner:** `33god` for integrated acceptance; `holocene` for the operator-facing
+product. The cross-project seam contract is
+[Holocene Auto](../specs/spec-holocene-auto/SPEC.md); its companions define current
+capabilities, car modes, gaps, and bounded demonstration evidence. Child PMs own
+all implementation stories. No implementation dispatch is authorized by this entry.
+
+### I-2.1 Observability, voice, and conversation seams
+
+```yaml
+owner_project: 33god
+delegations:
+  - owner_project: holocene
+    request: expose a head-unit operator surface with truthful observation and explicit supported conversation routes
+    ticket_ref: pending
+  - owner_project: bb
+    owner_component: bloodbank
+    request: support schema-valid exact-conversation intent and correlated execution evidence without route substitution
+    ticket_ref: pending
+  - owner_project: candystore
+    request: supply durable correlated event history and reconnect evidence for the car surface
+    ticket_ref: pending
+  - owner_project: transcription-queue
+    owner_component: heyma
+    binding_state: requires-reconciliation
+    request: reconcile the moved checkout binding and provide schema-aligned final-transcript voice ingress usable from the head unit
+    ticket_ref: pending
+  - owner_project: infra
+    request: verify the existing ASR bridge as a bounded head-unit recognition dependency
+    ticket_ref: pending
+  - owner_project: pending
+    owner_component: hermes-fleet
+    request: resolve the runtime-owning project and prove declared conversation continuity with resolved-session evidence
+    ticket_ref: pending
+  - owner_project: voxxy
+    request: provide correlated short speech output with explicit synthesis and playback distinctions
+    ticket_ref: pending
+depends_on: []
+```
+
+**Seam acceptance criteria**
+
+- Two harnesses are observable independently of Deckard panes with identity and
+  freshness preserved.
+- One confirmed utterance reaches the selected supported conversation and yields
+  correlated lifecycle evidence plus an audible response; unsupported routes are
+  read-only, never silently redirected.
+- A confirmed typed broadcast fact reaches two passive subscribers and durable
+  history; publication does not claim subscriber execution.
+- Disconnect/reconnect preserves the demonstration history and does not duplicate
+  the instruction; Driving/Unknown hides detailed activity but supports the
+  validated hands-free selection, instruction, broadcast, reply, and cancel loop.
+- First-release driving acceptance requires no display reads or taps; stationary
+  staging alone is not final proof of movement-dependent hardware behavior.
+
+**Seam evidence.** Execute the staged acceptance sequence and collect canonical
+event IDs, declared conversation and resolved-session identifiers, correlation
+IDs, receipt and answer readback, device/activation proof, audio playback,
+reconnect/broadcast observations, and non-screen interaction evidence as specified
+in the contract's `acceptance.md` companion. APK installability alone is not
+integration completion.

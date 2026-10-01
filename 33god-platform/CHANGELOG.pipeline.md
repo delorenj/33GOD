@@ -3,6 +3,20 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-09-30
+
+### Holocene Auto cross-project spec
+
+Defined the standalone Android head-unit walking skeleton and `33GOD:I-2`
+integrated outcome. First release must support hands-free agent selection,
+normalized activity summaries, confirmed targeted instructions, explicit broadcast
+facts, and real spoken replies while driving; detailed browsing remains parked-only.
+
+The spec separates existing event/replay and logical-thread invocation seams from
+missing session joins, mobile voice ingress, schema-aligned transcription, answer
+publication, and Vox bus adapters. Child PMs own implementation. This is planning
+only: no tickets, commands, app installation, or runtime activation were dispatched.
+
 ## 2026-09-20
 
 ### The workforce leaves PJangler for Flume
