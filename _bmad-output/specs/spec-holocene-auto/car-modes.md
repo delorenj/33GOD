@@ -13,7 +13,7 @@ Honda's SDK feed includes:
 | Android 13/API 33, 9-inch LHD | `system-images;android-33;Honda-ivi-9inch-LHD` | x86_64, revision `25.03.120114`, archive approximately 2.72 GB. Initial U.S.-market development candidate, not proof of actual Civic firmware or ABI. |
 | Android 12L/API 32, 9-inch LHD | `system-images;android-32;Honda-ivi-9inch-LHD` | Compatibility candidate if actual unit information warrants it. |
 
-Use Android Studio's SDK Update Sites to add the official feed, then a Honda Automotive AVD. Accepting SDK/vendor licenses and downloading the images are separate owner decisions; this planning correction does neither. Default image/example settings for another Honda model are not Civic display measurements.
+Use Android Studio's SDK Update Sites to add the official feed, then a Honda Automotive AVD. Jarad explicitly authorized the Holocene feasibility worker to install missing Android tooling, accept the Android SDK/Honda emulator licenses, and download the required image. No Play upload, paid account, actual-car modification, or default-assistant switch is included. Default image/example settings for another Honda model are not Civic display measurements.
 
 Record actual head-unit software/API/ABI, resolution/density, template host, installed assistant/recognition services, audio focus, sleep/resume, microphone permissions, UX restriction behavior, and connectivity. Prefer private service-hostname routing to authenticated Holocene; no public broker or embedded engine credentials.
 

@@ -6,7 +6,7 @@ Parent keys are `33GOD:I-2` and `33GOD:I-2.1`; child PMs own implementation tick
 
 The first owner-led Work Request is a bounded feasibility spike, not the complete walking skeleton:
 
-1. Identify installed/needed toolchain and an available Honda 9-inch emulator candidate; report license/download decisions before accepting vendor terms. Actual Civic firmware/API remains a separate measurement.
+1. Identify installed/needed toolchain and an available Honda 9-inch emulator candidate. Jarad authorized installing missing Android tooling, accepting Android SDK/Honda emulator licenses, and downloading the required image; record installed versions and acceptance/setup results. Actual Civic firmware/API remains a separate measurement.
 2. Produce a minimal native AAOS build/launch experiment and labeled agent-observation/voice shell where tooling permits. Fixtures may prove rendering and interaction plumbing but cannot claim live agent commands or replies.
 3. Exercise host restriction transitions, permitted mic capture/endpointing, audio focus, and a non-screen activation/cancel candidate; distinguish Assistant launch from app capture. Report each unavailable feature and whether the issue is emulator capability, permission, architecture, or OEM integration.
 4. Return a source-backed category/distribution decision and evaluate category-eligible in-app voice versus genuine VIA/assistant-role availability as separate branches. No TTS-as-media, agents-as-IoT, or navigation/messaging disguise. Google lists AAOS internal testing with no car form-factor review and closed review as non-blocking; that opportunity does not prove device eligibility or privileges. Honda does not expose actual-vehicle ADB.
