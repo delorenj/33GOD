@@ -62,4 +62,8 @@ proof that its downstream work succeeded. For nested components, verify the
 parent's pinned source is the committed canonical revision before integrated
 checks. Treat idle clients as unobserved until exercised.
 
-Preserve unrelated WIP. Land coherent units promptly on component main and root main. Do not add speculative review layers or repeat unchanged checks.
+Preserve unrelated WIP. Triage audit failures against the current slice before
+remediating them: a finding caused by another agent's in-progress work is a
+coordination input, not a gate for unrelated delivery. Land coherent units
+promptly on component main and root main. Do not add speculative review layers
+or repeat unchanged checks.
