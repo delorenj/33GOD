@@ -24,7 +24,7 @@ Native AAOS buildability does not settle agent-control category eligibility, Aut
 
 Holocene's `packages/delohq-contracts` provides useful evidence/freshness envelopes, but legacy APIs remain allowlisted and reference kinds omit runtime/session/pane. It is not an already migrated mobile command API: `holocene/packages/delohq-contracts/src/envelope.ts:36`, `dialect-guard.test.ts:50`, `refs.ts:8`. Auto is not constrained to Telegram Mini App authentication.
 
-Project identities are not component labels: Bloodbank declares `project_id: bb` (`bloodbank/.project.json:31`); HeyMa declares `project_id: transcription-queue` while its `repo_path` still points to the retired checkout (`/home/delorenj/HeyMa/.project.json:4`, `:18`). Resolve that moved binding before live delegation. Holocene, Candystore, infra, and Voxxy declare matching project IDs. The runtime-owning project remains unresolved; `hermes-fleet` is a component, not an invented `hermes-runtime` project. All I-2 ticket references stay pending.
+Project identities are not component labels: Bloodbank declares `project_id: bb` (`bloodbank/.project.json:31`); HeyMa declares `project_id: transcription-queue` while its `repo_path` still points to the retired checkout (`/home/delorenj/HeyMa/.project.json:4`, `:18`). Resolve that moved binding before live delegation. Holocene, Candystore, infra, and Voxxy declare matching project IDs. The runtime-owning project remains unresolved; `hermes-fleet` is a component, not an invented `hermes-runtime` project. The Holocene feasibility request is `holocene:HOLOC-9`; other I-2 ticket references remain pending. Current execution status comes from the board/events, not this source snapshot.
 
 ## Observability already available
 

@@ -97,7 +97,7 @@ owner_project: 33god
 delegations:
   - owner_project: holocene
     request: prove Honda-AAOS emulator feasibility and a legitimate category, installation, and driving-voice path before the integrated surface
-    ticket_ref: pending
+    ticket_ref: HOLOC-9
   - owner_project: bb
     owner_component: bloodbank
     request: support schema-valid exact-conversation intent and correlated execution evidence without route substitution
