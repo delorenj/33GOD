@@ -1,10 +1,10 @@
 # Integrated acceptance
 
-Parent keys are `33GOD:I-2` and `33GOD:I-2.1`; child PMs own implementation tickets, builds, and code. This is cross-project acceptance, not child stories. No root sprint file or `stories.yaml` is created.
+Parent keys are `33GOD:I-2`, `I-2.1`, `I-2.2`, and `I-2.3`; child PMs own implementation tickets, builds, and code. This is cross-project acceptance, not child stories. No root sprint file or `stories.yaml` is created.
 
-## Immediate Honda AAOS feasibility slice
+## Accepted Honda AAOS feasibility baseline
 
-The first owner-led Work Request is a bounded feasibility spike, not the complete walking skeleton:
+HOLOC-9 is accepted and published in Holocene main `41d9ba22bf97b55be2b7a50dccbec2e787abeee4`; its child evidence owns the executed results. The following describes that bounded baseline, not a requirement to repeat the spike or proof of the complete walking skeleton:
 
 1. Identify installed/needed toolchain and an available Honda 9-inch emulator candidate. Jarad authorized installing missing Android tooling, accepting Android SDK/Honda emulator licenses, and downloading the required image; record installed versions and acceptance/setup results. Actual Civic firmware/API remains a separate measurement.
 2. Produce a minimal native AAOS build/launch experiment and labeled agent-observation/voice shell where tooling permits. Fixtures may prove rendering and interaction plumbing but cannot claim live agent commands or replies.
@@ -13,6 +13,31 @@ The first owner-led Work Request is a bounded feasibility spike, not the complet
 5. Identify the smallest next owner requests for runtime/session joins, response publication, ASR schema alignment, and Vox bus adapters, using current code rather than assuming the September 30 gaps are unchanged.
 
 Spike exit can be **demonstrated**, **blocked with reproduced evidence**, or **requires OEM/Play confirmation** per question. It cannot close CAP-8 or substitute parked-only scope. Internal/closed test or public-store upload is not authorized by the spike alone.
+
+## Next independently deliverable seams
+
+The full loop needs two narrow advances after the HOLOC-9 baseline:
+
+- **I-2.2 / Bloodbank final answers:** capture a full final assistant answer and
+  exact command/logical/native lineage, journal immutable message identity, then
+  publish a canonical durable fact before command acknowledgement. Commentary,
+  tool output, reasoning, empty/failure/interrupted outcomes, and processing-only
+  receipts cannot satisfy answered state. Publication/restart replay must not
+  rerun completed execution; pre-capture ambiguity stays explicit. Existing
+  generic conversation messages remain compatible.
+- **I-2.3 / Holocene real speech:** inject one known short synthetic/prerecorded
+  phrase into the isolated emulator microphone, measure actual waveform and
+  silence control, obtain a real final recognizer transcript, and render a local
+  diagnostic acknowledgement with guest-output evidence. No canned transcript
+  substitution. Local playback is not Vox or an agent reply. Screen/simulated-key
+  cancel tests do not prove spoken stop or factory steering-wheel support.
+
+These slices can develop in separate child repos; shared runtime activation and
+integrated verification are serialized. Known synthetic input is authorized; room
+microphone recording, assistant-default changes, account/model/provider updates,
+Play uploads and vehicle modifications are not. Recognition failure is a
+reproduced blocker, not permission to send the APK directly to a backend engine
+or bypass Bloodbank. This advances CAP-3/4/6/7 evidence without claiming CAP-8.
 
 ## Bound the integrated walking skeleton
 

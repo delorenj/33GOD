@@ -86,9 +86,9 @@ detailed event browsing remains parked-only.
 product. The cross-project seam contract is
 [Holocene Auto](../specs/spec-holocene-auto/SPEC.md); its companions define current
 capabilities, car modes, gaps, and bounded demonstration evidence. Child PMs own
-all implementation stories. The approved next action is a bounded Holocene-led
-Honda-AAOS feasibility Work Request, not the full integrated implementation;
-other component requests remain pending until the child identifies the seams.
+all implementation stories. HOLOC-9 supplies the accepted emulator diagnostic
+baseline; the next approved seams are final-answer publication (I-2.2) and isolated
+real-speech evidence (I-2.3), not the full integrated driving product.
 
 ### I-2.1 Observability, voice, and conversation seams
 
@@ -147,3 +147,71 @@ IDs, receipt and answer readback, device/activation proof, audio playback,
 reconnect/broadcast observations, and non-screen interaction evidence as specified
 in the contract's `acceptance.md` companion. APK installability alone is not
 integration completion.
+
+### I-2.2 Durable final assistant answers
+
+```yaml
+owner_project: 33god
+delegations:
+  - owner_project: bb
+    owner_component: bloodbank
+    request: publish a final assistant answer with exact invocation and conversation lineage, durable replay, and no repeated execution
+    ticket_ref: pending
+depends_on: []
+related_to: [33GOD-16]
+```
+
+**Seam acceptance criteria**
+
+- A valid targeted invocation producing a nonempty final assistant answer yields
+  one schema-valid message fact, explicitly distinguishable from processing
+  completion, commentary, tool output, history, and reasoning.
+- Command, target/profile, correlation/causation, logical thread/turn, and native
+  session/turn identities remain distinct and traceable. Concurrent or delegated
+  turns cannot cross-wire the parent answer.
+- Captured results and immutable event identity/body are persisted before publish;
+  command acknowledgement follows acknowledged answer and terminal publication.
+  Publication/restart/redelivery replays stored facts without rerunning execution.
+  Pre-capture ambiguity is disclosed, not called global exactly-once delivery.
+- Schema compatibility and deterministic failure/replay tests prove the contract;
+  later authorized live verification proves durable Candystore arrival.
+
+**Seam evidence.** Canonical schema validation, exact command/turn/answer identifiers,
+restart/publication-failure replay tests, consumer deduplication, and an authorized
+live answer row. No ASR, TTS, mobile authentication, or arbitrary terminal resume is
+part of this first authority-owner request.
+
+### I-2.3 Isolated real speech and diagnostic playback
+
+```yaml
+owner_project: 33god
+delegations:
+  - owner_project: holocene
+    request: prove a known isolated speech waveform through the emulator microphone, real final recognition, local audible acknowledgement, and bounded cancellation
+    ticket_ref: pending
+depends_on: []
+prerequisites: [holocene:HOLOC-9]
+```
+
+**Seam acceptance criteria**
+
+- A known short synthetic/prerecorded phrase enters the Android microphone path,
+  with waveform provenance, sample statistics, duration, and a silence control.
+  Canned text written into transcript state cannot satisfy recognition.
+- The current recognizer produces a nonempty final transcript and timing/callback
+  evidence; unsupported, no-match, or network failure is a reproduced blocker,
+  never replaced by a fixture transcript.
+- Output derived from that final transcript is audibly rendered with recorded
+  guest-output evidence and engine/asset identity. Platform-local diagnostic
+  playback is labeled as such, not Vox synthesis or a real agent reply.
+- Capture/playback cancellation, focus/resource release, and late-callback handling
+  work under permitted host UX. Screen and simulated-key tests do not claim Honda
+  steering-wheel, spoken stop, or non-screen driving support.
+- No room microphone recording, assistant-default change, Play upload, actual-car
+  modification, agent/broadcast dispatch, or direct engine/broker bypass occurs.
+  CAP-8 and the eventual live Vox/agent loop remain required and unfulfilled.
+
+**Seam evidence.** Input and output waveform identifiers/statistics, actual ASR
+provider/support/final callbacks, transcript and latency, cancellation/focus/host
+behavior, and explicit diagnostic-versus-live boundaries. This independent audio
+slice may progress alongside I-2.2; shared runtime activation is serialized later.

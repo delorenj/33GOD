@@ -5,6 +5,16 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 
 ## 2026-10-02
 
+### Real-speech and durable-answer seams
+
+After HOLOC-9's accepted fixture baseline, I-2.2 requests durable final assistant
+answers from Bloodbank; I-2.3 requests isolated emulator speech recognition and
+local diagnostic playback from Holocene. These independent slices preserve the
+full driving/Vox product goal without labeling local audio or processing receipts
+as live agent conversation. Known synthetic input is authorized, not room recording,
+assistant-default changes, account updates, Play uploads, or vehicle work. Runtime
+activation and eventual integrated verification remain separate, serialized gates.
+
 ### Honda AAOS fixture experiment and refreshed integration findings
 
 HOLOC-9 produced an isolated native Android diagnostic fixture and installed it
