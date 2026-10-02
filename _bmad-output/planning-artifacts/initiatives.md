@@ -74,10 +74,11 @@ is the seam half of the former Story 1.3.
 
 ## I-2 Holocene Auto walking skeleton
 
-**Outcome.** On Jarad's standalone Android head unit, activity from multiple
-harnesses is available through one normalized view, the driving voice interface
-routes a confirmed instruction to one supported conversation, its real reply is
-heard through Voxxy, and an explicit broadcast fact reaches multiple subscribers.
+**Outcome.** On Jarad's factory Honda Civic Si 2026 AAOS Google built-in system,
+activity from multiple harnesses is available through one normalized view; the
+driving voice interface routes a confirmed instruction to one supported
+conversation, its real reply is heard through Voxxy, and an explicit broadcast
+fact reaches multiple subscribers.
 The complete conversational loop requires no screen reads or taps while driving;
 detailed event browsing remains parked-only.
 
@@ -85,7 +86,9 @@ detailed event browsing remains parked-only.
 product. The cross-project seam contract is
 [Holocene Auto](../specs/spec-holocene-auto/SPEC.md); its companions define current
 capabilities, car modes, gaps, and bounded demonstration evidence. Child PMs own
-all implementation stories. No implementation dispatch is authorized by this entry.
+all implementation stories. The approved next action is a bounded Holocene-led
+Honda-AAOS feasibility Work Request, not the full integrated implementation;
+other component requests remain pending until the child identifies the seams.
 
 ### I-2.1 Observability, voice, and conversation seams
 
@@ -93,7 +96,7 @@ all implementation stories. No implementation dispatch is authorized by this ent
 owner_project: 33god
 delegations:
   - owner_project: holocene
-    request: expose a head-unit operator surface with truthful observation and explicit supported conversation routes
+    request: prove Honda-AAOS emulator feasibility and a legitimate category, installation, and driving-voice path before the integrated surface
     ticket_ref: pending
   - owner_project: bb
     owner_component: bloodbank
@@ -134,6 +137,9 @@ depends_on: []
   validated hands-free selection, instruction, broadcast, reply, and cancel loop.
 - First-release driving acceptance requires no display reads or taps; stationary
   staging alone is not final proof of movement-dependent hardware behavior.
+- Honda-emulator feasibility, category/testing-route evidence, actual-car
+  installation, and driving proof are distinct; host UX restrictions are obeyed
+  and actual-vehicle ADB is never an installation dependency.
 
 **Seam evidence.** Execute the staged acceptance sequence and collect canonical
 event IDs, declared conversation and resolved-session identifiers, correlation

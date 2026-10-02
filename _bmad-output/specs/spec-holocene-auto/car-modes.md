@@ -1,94 +1,108 @@
-# Car platform and interaction contract
+# Honda AAOS platform and interaction contract
 
-Derived from the Holocene Auto memlog. Jarad explicitly requires first-release usability while driving; this supersedes the earlier parked-first scope. Stationary tests are validation staging, not the product boundary.
+Jarad requires first-release usability while driving. Vehicle identification supersedes the earlier aftermarket-Android inference: the target is native factory AAOS with Google built-in in a 2026 Honda Civic Si. Stationary/emulator tests stage validation; they do not replace driving acceptance.
 
-## Target and hardware gate
+## Hardware and development target
 
-**Confirmed:** an Android head unit that installs apps directly. Deliver a native APK, not an Android Auto projection. Holocene chooses the child implementation; Kotlin/Compose is a candidate, not an existing dependency or parent mandate.
+Official U.S. model documentation confirms a 9-inch Google built-in display, native Play apps, system-assistant voice activation through “Hey Google” and the steering-wheel talk button, plus separate wireless Android Auto/CarPlay support. Native app execution does not need a phone; backend connectivity still needs proof.
 
-Record make/model, Android/API level, ABI, landscape size/density, install/debug path, Google-services presence, microphone/speaker path, hardware voice controls, audio focus, sleep/resume, background microphone restrictions, DeLoNET connectivity, and motion/park signal availability. Test with the phone disconnected to distinguish native apps from projection. Use private connectivity and service hostnames, not a public broker.
+Honda's SDK feed includes:
 
-Start on a matching landscape emulator, then the stationary real head unit. Verify mic, speech activation, audio interruption, and focus on that hardware; emulator success does not establish them.
-
-| Platform | Relationship to this spec |
-|---|---|
-| Standalone Android/AOSP head unit | First target; firmware may lack Play Services, recognition provider, car APIs, vehicle signals, or hardware-button mapping. |
-| Phone-projected Android Auto | Deferred. No documented developer-agent dashboard category; a regular Activity is not a projected app. Do not relabel as messaging/media/navigation/IoT. |
-| Embedded Android Automotive OS | Deferred. Host UX restrictions and OEM capabilities apply; it is not synonymous with standalone Android or Google built-in. |
-
-“Parked-only” is not an unrestricted publication exemption. Native installation does not establish platform eligibility or tested in-motion behavior.
-
-## Modes
-
-| Mode | Visual behavior | Conversational behavior |
+| Candidate | SDK package | Evidence boundary |
 |---|---|---|
-| Unknown | Default until motion evidence is available; same restrictive visuals as Driving. No detail/editor/touch decision flow. | Validated voice selection, summary, confirmation, instruction, broadcast, reply, and cancel remain available. Missing motion data does not remove the voice product. |
-| Parked | Large agent tiles, bounded normalized event detail, optional Deckard context, PTT supplement, device/setup diagnostics. Enter deliberately while stationary or through a trusted signal. | Same conversational loop; setup may use touch. |
-| Driving | Minimal glanceable identity/status; no scrolling logs, source editing, transcript review, or complex touch confirmation. | Complete supported hands-free loop. No step requires reading or tapping the display; complex work is summarized/deferred, not exposed as a terminal. |
+| Android 13/API 33, 9-inch LHD | `system-images;android-33;Honda-ivi-9inch-LHD` | x86_64, revision `25.03.120114`, archive approximately 2.72 GB. Initial U.S.-market development candidate, not proof of actual Civic firmware or ABI. |
+| Android 12L/API 32, 9-inch LHD | `system-images;android-32;Honda-ivi-9inch-LHD` | Compatibility candidate if actual unit information warrants it. |
 
-Missing/stale motion data, zero GPS speed, disconnected phone, or silence cannot unlock Parked detail. Manual Parked selection is not automatic enforcement. A mode transition cancels any unsent touch-oriented composition but need not cancel an already confirmed voice command. Published work continues; its result remains available by conversation/correlation.
+Use Android Studio's SDK Update Sites to add the official feed, then a Honda Automotive AVD. Accepting SDK/vendor licenses and downloading the images are separate owner decisions; this planning correction does neither. Default image/example settings for another Honda model are not Civic display measurements.
 
-On a later AAOS target, host restrictions take precedence; do not assume this ordinary Android mode policy grants AAOS driving permission.
+Record actual head-unit software/API/ABI, resolution/density, template host, installed assistant/recognition services, audio focus, sleep/resume, microphone permissions, UX restriction behavior, and connectivity. Prefer private service-hostname routing to authenticated Holocene; no public broker or embedded engine credentials.
 
-## Hands-free activation gate
+**Honda explicitly says ADB cannot be used in an actual vehicle.** ADB install/logging belongs to emulator development. Actual-car tests require an independently verified Automotive Play testing/distribution or approved OEM route; do not assume sideload or a hidden developer menu.
 
-A screen-only PTT button fails driving acceptance. Choose and demonstrate an actual non-screen entrypoint supported on the unit:
+## Architecture and distribution gate
 
-- a bounded wake-word/activation recognizer;
-- a reliable hardware/steering-wheel voice control if exposed by firmware;
-- an existing voice-assistant integration that opens the app's supported capture flow.
-
-Do not assume Google Assistant, key events, a privileged mic service, or continuous `SpeechRecognizer` works on this hardware. The activation choice remains an explicit open question. If a bounded listener is required, it is in scope; unrestricted always-listening general conversation is not. Explain mic permissions and foreground-service behavior within Android's actual API constraints.
-
-Wake-word activation should not continuously upload cabin audio. Forward only intentionally captured utterances through the owned voice ingress. A local activation/cancel path must remain responsive during network/LLM/TTS delays.
-
-## Conversational experience
-
-Supported first catalog: enumerate/summarize agents, select an unambiguous conversation, request a short activity summary, compose an instruction, explicitly broadcast a note, clarify/confirm, repeat last reply, and stop/mute/cancel. One ingress routes these bounded intents; interpretation never invents recipients or unrestricted shell actions.
-
-1. Activate without the screen. Stop this app's playback and announce/listen with brief local feedback; freeze current destination/context.
-2. Capture one short utterance after explicit microphone permission. End by proven voice-activity detection, spoken completion, or hardware release. Screen release is only a parked option.
-3. Use a final transcript, not partial recognizer guesses. Clarify uncertain speech, aliases, target, or intent using short spoken choices. Limit unsolicited verbosity.
-4. For an instruction or broadcast, speak back the exact destination or audience and a concise interpreted action. Require verbal confirmation in driving mode. A target/session change invalidates confirmation.
-5. Publish once with stable command/request identity and correlation. Say “sent” only after known transport evidence, not “done.” Capture/ASR/TTS retries never repeat publication.
-6. Distinguish queued/submitted, gateway dispatch, processing outcome, and answer availability. “Started” from the current gateway is not proof a model turn began; a missing answer remains missing even if processing completed.
-7. Speak the real correlated response through Voxxy, explicitly requesting `voice: "rick"` by default. Preserve the exact declared conversation for follow-ups. Stop/mute/cancel must interrupt promptly by voice or the chosen reliable hardware path.
-
-Half-duplex capture and playback do not overlap. A tested local interrupt detector or hardware path may remain available during output, but it must reject the app's own audio; do not solve cancellation by continuously recording TTS into command ingress. Broad full-duplex/barge-in conversation is not required.
-
-Agent attention notifications are opt-in, bounded, and evidence-backed. A tool event or finished turn is not automatically “needs input.” Do not read every event, code block, or full transcript aloud.
-
-## Voice services and interruptions
-
-Android `SpeechRecognizer` needs an installed working provider; API 31+ on-device support still requires a model. It is not intended as continuous listening. Backend ASR is a candidate when the unit lacks a provider; HeyMa/infra must define mobile upload and canonical transcription publication. Vox is TTS, not recognition.
-
-The APK reaches authenticated Holocene ingress. Behavioral ASR, agent, and TTS requests/results use owner-defined Bloodbank adapters; existing HTTP engines sit behind those adapters. No raw mobile broker or engine credentials.
-
-Request suitable transient audio focus; release promptly. Stop/defer own speech on phone/navigation/focus loss without masquerading as navigation guidance. Foreground/background mic and audio focus must work under the measured Android version; if not, driving readiness is blocked rather than falsely declared.
-
-Vox URL synthesis is synchronous full audio, not incremental streaming. Keep replies to one or two short sentences when possible. Record engine identity; distinguish synthesis success, URL availability, client playback, and actual user acknowledgement. Retry an expired URL or speech failure for the same answer only.
-
-## Failure behavior
-
-| Condition | Required behavior |
+| Question | Required evidence |
 |---|---|
-| Activation/mic/ASR unavailable | Announce through any working path and disable voice dispatch; explicit driving-readiness blocker, not invisible failure. Observation remains available later. |
-| Ambiguous transcript/alias/target/intent | Short spoken clarification; no publication until explicit confirmation. |
-| Route/session resets or eligibility disappears | Cancel/reconfirm; never silently target a replacement thread. |
-| Connectivity lost before publication | Retain an explicitly unsent draft if supported; never auto-send on reconnect. |
-| Connectivity lost after publication | Spoken Unknown/delayed outcome; correlation-based readback, no retry without proven deduplication. |
-| Vox unavailable/audio expired | Preserve answer; speech-only retry or brief local unavailable prompt. Never repeat agent work. |
-| Call/navigation/focus interruption | Stop own capture/playback; pause interaction and preserve context. Resume only explicitly, not by replaying confirmed intent. |
-| Tool flood or long response | Bound/group details and speak a short summary. Canonical history stays queryable. |
-| Driving/Unknown entered during visual composition | Hide detail and cancel unsent touch draft; a voice instruction must be freshly clarified/confirmed. |
+| Does a permitted AAOS category cover this product? | Source-backed assessment of agent status/conversation/control, not a category label selected merely to make an emulator launch. No established fit is claimed yet. |
+| Can it use the templated host? | Category eligibility, actual host/version/features, and a supported `CarAppService`/AAOS entrypoint. Freeform driving UI is not the default. |
+| Is a media architecture appropriate? | Only for genuine audio-media functionality. `MediaSession` with `MediaBrowserService`/`MediaLibraryService` can work without template UI; TTS replies alone do not establish media eligibility. |
+| Can the app reach the actual car? | Automotive test-track/device eligibility or explicit OEM delivery permission. Track review behavior is described below; testing is not a blanket capability approval. No upload is authorized by this spike. |
+| Is a voice-assistant route available? | Documented OEM/user role-selection and permitted permissions. App launch by Assistant is not replacement of Assistant or automatic access to the voice-button audio. |
 
-## Platform references
+`app-automotive` applies to a templated AAOS implementation, not every possible AAOS architecture. Adding a library or `distractionOptimized` metadata is not a general unlock, app-category approval, or host-policy override. Android Auto messaging support does not imply native AAOS messaging eligibility.
 
-Checked 2026-09-30; revisit before platform expansion.
+The feasibility result must distinguish a runnable emulator experiment, a legitimate distribution candidate, and actual-car readiness. If the current feature set has no supported route, retain the driving requirement and return a concrete architecture/OEM decision—not a parked-only product silently substituted for it.
 
-- [Android Auto versus AAOS](https://source.android.com/docs/automotive/start/what_automotive)
-- [Supported categories](https://developer.android.com/training/cars), [Car App Library setup](https://developer.android.com/training/cars/apps/library/set-up-project), and [car app quality](https://developer.android.com/docs/quality-guidelines/car-app-quality)
-- [SpeechRecognizer](https://developer.android.com/reference/android/speech/SpeechRecognizer)
-- [Audio focus](https://developer.android.com/reference/android/media/AudioFocusRequest) and [microphone service restrictions](https://developer.android.com/develop/background-work/services/fgs/service-types)
-- [AAOS UX restrictions](https://source.android.com/docs/automotive/driver_distraction/consume)
-- [ADB](https://developer.android.com/tools/adb), [AAOS emulator](https://developer.android.com/training/cars/testing/emulator), and [Android Auto Desktop Head Unit](https://developer.android.com/training/cars/testing/dhu)
+Google's [distribution table](https://developer.android.com/training/cars/distribute) lists AAOS internal testing without car form-factor review, closed testing with non-blocking review, and open/production with blocking review. Internal App Sharing is Android Auto-only. Internal testing is a real capability-probe opportunity, not proof of device filtering, category fit, or privileged access; production approval is not assumed necessary before every vehicle test.
+
+Two legitimate voice branches need separate evidence:
+
+- **In-app voice:** a category-eligible templated host can expose `CarAudioRecord` with Car App API 5+, `RECORD_AUDIO`, audio focus, and recording indicator. This supports an in-app assistant, not background hotword or steering-wheel ownership. Car App Actions currently cover POI parking/charging, not arbitrary agent commands or microphone handoff.
+- **Voice Interaction Application (VIA):** AOSP documents `VoiceInteractionService`, session/recognition, and a custom voice plate. Only the selected default receives system PTT/TTT; documented OEM deployment uses preinstallation and required grants, with later store updates. Check `ROLE_ASSISTANT` availability/selection rather than assuming Honda supports third-party replacement. `BIND_VOICE_INTERACTION` protects binding; it alone does not prove the APK must be system-signed. Hotword/system-control permissions are distinct.
+
+No default-assistant change or internal-track upload is authorized now. A missing assistant role blocks the VIA branch, not necessarily in-app voice; a working emulator role does not establish the factory vehicle's role.
+
+## Modes under host authority
+
+| Mode | Visual behavior | Required conversational outcome |
+|---|---|---|
+| Unknown/restricted | No detailed logs, editor, or touch decision flow. Missing app vehicle evidence cannot unlock detail. | Hands-free path remains the product goal but runs only where host permissions/restrictions allow; unsupported state is a readiness blocker. |
+| Parked/unrestricted | Supported setup and bounded event detail. Custom Views/Compose are allowed only where the selected AAOS architecture/category permits them, not merely because the vehicle is stationary. | Same conversation loop; parked screen PTT may supplement setup/testing. |
+| Driving | Supported host-rendered/minimal presentation, no scrolling logs, transcript review, or complex touch confirmation. | Selection, summaries, clarification, confirmation, instruction, broadcast, reply, and cancel without screen reads/taps through a proven permitted path. |
+
+Use app-accessible AAOS UX restrictions and supported host callbacks. Do not substitute raw privileged speed/gear properties, zero GPS speed, or manual Parked selection for host authority. Host restriction changes cancel unsent visual composition and may suspend capture/playback; published work continues and remains queryable later. Do not keep audio active when the host forbids it.
+
+## Hands-free activation
+
+A screen-only PTT fails driving acceptance. Honda's factory activation proves access to the **system assistant**, not a Holocene capture API. Test system-assistant app launch/intents and the selected architecture's microphone entrypoint first. Hardware-key interception, custom wake words, default-assistant replacement, and privileged hotword capture remain unproven; do not require them without an available route.
+
+Record each separately: assistant invocation, app launch, microphone permission/capture, utterance completion, verbal confirmation, and non-screen cancellation. A launched app with no supported way to capture or cancel is not hands-free proof. User-initiated recording, a local cancel path, and short audible state feedback must remain responsive during backend delays.
+
+If an approved bounded activation listener is used, it must not continuously upload cabin audio. Android `SpeechRecognizer` is not continuous hotword recognition. Any assistant role/privileged permission dependency is reported explicitly; an emulator granting it does not prove production Honda access.
+
+## Conversational loop
+
+Initial catalog: enumerate/summarize agents, select an unambiguous conversation, summarize activity, compose an instruction, explicitly broadcast a note, clarify/confirm, repeat last reply, and stop/mute/cancel. One ingress routes bounded intent, not guessed recipients or arbitrary shell execution.
+
+1. Activate through the proven non-screen route; stop own playback, provide short local feedback, and freeze destination/context.
+2. Capture one short intentional utterance after permission; complete by proven endpointing or hardware release. Screen release is parked-only.
+3. Process final transcript, not partial guesses. Clarify uncertain speech/aliases/intent using short spoken choices.
+4. Speak exact recipient or audience plus concise action; require verbal confirmation for driving instruction/broadcast. A route/session change invalidates confirmation.
+5. Publish once with stable command/request identity and correlation. Transport evidence permits “sent,” not “done”; ASR/TTS retries never republish intent.
+6. Distinguish submission, gateway dispatch, processing outcome, and actual answer. Current gateway `started` is not proof of model execution; processing completion without answer remains answer-unavailable.
+7. Speak the real correlated response through Voxxy with `voice: "rick"` by default. Follow-ups preserve the declared route. Non-screen stop/mute/cancel must interrupt promptly.
+
+Half-duplex capture and playback do not overlap. A permitted local interrupt detector/hardware path may remain active, but must reject the app's own speech. Broad full-duplex/barge-in conversation is not required. Attention announcements are opt-in/bounded; a tool event or finished turn is not automatically “needs input.”
+
+## Voice services, focus, and failures
+
+`SpeechRecognizer` needs an installed working provider; API 31+ on-device support still requires a model. HeyMa/infra's backend ASR is a candidate through owned upload/transcription adapters; Vox supplies TTS, not recognition. Actual mic/focus/network behavior needs production evidence.
+
+The AAOS client reaches authenticated Holocene ingress. ASR, agent, and synthesis behavior crosses owner-defined Bloodbank adapters; existing HTTP engines stay behind them. Appropriate audio focus is requested/released without impersonating navigation. Calls/navigation/host restriction changes interrupt/defer speech and capture.
+
+Vox URL synthesis is complete-audio, not streaming. Keep spoken replies short and record engine identity; synthesis, URL availability, playback, and user acknowledgement are distinct. Speech-only retries never repeat agent work.
+
+| Failure | Required behavior |
+|---|---|
+| Unsupported category/install/voice/permission route | Explicit feasibility blocker and next decision; no disguised app or policy bypass. |
+| Mic/activation/provider unavailable | No voice dispatch; audible/local available explanation and readiness blocker. |
+| Ambiguous transcript/recipient/action | Spoken clarification before confirmation/publication. |
+| Route resets or eligibility changes | Cancel/reconfirm; never silently replace thread. |
+| Offline before publication | Explicit unsent draft if supported, never automatic send. |
+| Offline after publication | Unknown/delayed until correlation readback; no retry without proven deduplication. |
+| Vox/focus/URL failure | Preserve answer; speech-only retry, no duplicated instruction. |
+| Host restricts activity/audio | Obey restriction, preserve context, resume explicitly through supported flow. |
+| Tool flood/long reply | Bounded summary and canonical history, not an unbounded audio log. |
+
+## Official references
+
+Honda sources and feed verified in this conversation; SDK availability is not an installed emulator or exact-vehicle claim.
+
+- [2026 Civic Si Google built-in and factory voice controls](https://www.hondainfocenter.com/2026/Civic-Si/Feature-Guide/Interior-Features/Google-Built-In/)
+- [Honda emulator setup and no-vehicle-ADB FAQ](https://global.honda/en/cars-apps/)
+- [Honda SDK feed](https://global.honda/cars-apps/emulator/honda-ivi-sys.xml)
+- [Android for Cars categories](https://developer.android.com/training/cars), [AAOS templated implementation](https://developer.android.com/training/cars/apps/automotive-os), [car quality requirements](https://developer.android.com/docs/quality-guidelines/car-app-quality)
+- [Media architecture](https://developer.android.com/training/cars/media), [AAOS UX restrictions](https://source.android.com/docs/automotive/driver_distraction/consume)
+- [Automotive distribution tracks](https://developer.android.com/training/cars/distribute), [car microphone recording](https://developer.android.com/training/cars/apps/library/car-microphone), [Car App Actions](https://developer.android.com/develop/devices/assistant/cars)
+- [VIA integration/distribution](https://source.android.com/docs/automotive/voice/voice_interaction_guide/integration_flows), [VIA implementation](https://source.android.com/docs/automotive/voice/voice_interaction_guide/app_development)
+- [SpeechRecognizer](https://developer.android.com/reference/android/speech/SpeechRecognizer), [audio focus](https://developer.android.com/reference/android/media/AudioFocusRequest), [microphone service constraints](https://developer.android.com/develop/background-work/services/fgs/service-types)

@@ -3,6 +3,21 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-10-02
+
+### Holocene Auto targets factory Honda AAOS
+
+Vehicle identification corrects the earlier unrestricted-head-unit assumption:
+Holocene Auto targets the 2026 Civic Si's factory 9-inch Google built-in AAOS
+system. Honda's 9-inch API 33 emulator is a development candidate, not an exact
+firmware claim; Honda explicitly excludes ADB on actual vehicles.
+
+The eight capabilities retain driving-first hands-free use. Host UX restrictions,
+category eligibility, Automotive testing/distribution, and non-screen mic/assistant
+access are now explicit feasibility gates. The next owner-led request is a bounded
+Holocene emulator spike; no SDK license acceptance, Play upload, or car installation
+is implied by this planning update.
+
 ## 2026-09-30
 
 ### Holocene Auto cross-project spec

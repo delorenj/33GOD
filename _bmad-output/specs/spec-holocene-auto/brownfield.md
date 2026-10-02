@@ -1,6 +1,12 @@
 # Current integration evidence and missing seams
 
-Source inspected 2026-09-30. Paths below are relative to `/home/delorenj/code/33GOD` unless absolute. This is current-source evidence, not deployment acceptance. Read-only observation did not execute agent commands or test ASR/TTS. Revalidate sources before child implementation; older documents and installed skills disagree with several current behaviors.
+Source inspected 2026-09-30. Paths below are relative to `/home/delorenj/code/33GOD` unless absolute. Backend details are dated evidence, not reverified deployment acceptance. Read-only observation did not execute agent commands or test ASR/TTS. Vehicle identification subsequently corrected the platform to factory Honda AAOS; older standalone/aftermarket assumptions are superseded. Revalidate backend source before child implementation.
+
+## Honda AAOS correction
+
+Target is the 2026 Civic Si factory 9-inch Google built-in system. [Honda's emulator page](https://global.honda/en/cars-apps/) documents native AAOS development and explicitly says ADB cannot be used in an actual vehicle. [The SDK feed](https://global.honda/cars-apps/emulator/honda-ivi-sys.xml) includes API 33 `Honda-ivi-9inch-LHD`, x86_64 revision `25.03.120114`, plus API 32. These are development candidates, not exact Civic firmware/ABI evidence.
+
+Native AAOS buildability does not settle agent-control category eligibility, Automotive test/distribution access, production mic/assistant permissions, or driving UX. Factory “Hey Google”/talk-button support invokes the system assistant; launching an app is distinct from capturing a Holocene utterance. The first child request is a bounded feasibility spike, with emulator and delivery-path results kept separate from actual-car/integrated voice proof.
 
 ## Ownership and existing shape
 

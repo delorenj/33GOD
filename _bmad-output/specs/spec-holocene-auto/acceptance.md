@@ -1,71 +1,74 @@
 # Integrated acceptance
 
-This is cross-project planning, not child stories or evidence of completed implementation. Parent keys are `33GOD:I-2` and `33GOD:I-2.1`; accepting child PMs own tickets, builds, and code. No root sprint file or `stories.yaml` is created.
+Parent keys are `33GOD:I-2` and `33GOD:I-2.1`; child PMs own implementation tickets, builds, and code. This is cross-project acceptance, not child stories. No root sprint file or `stories.yaml` is created.
 
-## Bound the walking skeleton
+## Immediate Honda AAOS feasibility slice
 
-Observe at least two harnesses, enable writes for one declared conversation, and prove real voice input, answer publication, Voxxy playback, follow-up continuity, and an explicit broadcast to two passive subscribers. **Driving usability belongs to this first delivery.** A parked-only or screen-PTT-only app cannot close CAP-8.
+The first owner-led Work Request is a bounded feasibility spike, not the complete walking skeleton:
 
-Fixture mode may support early UI iteration but must be labeled; emulator/fixture success is not live integration proof. A newly established dedicated Bloodbank thread may prove conversation continuity if it is visibly declared as that thread, not passed off as an existing terminal session.
+1. Identify installed/needed toolchain and an available Honda 9-inch emulator candidate; report license/download decisions before accepting vendor terms. Actual Civic firmware/API remains a separate measurement.
+2. Produce a minimal native AAOS build/launch experiment and labeled agent-observation/voice shell where tooling permits. Fixtures may prove rendering and interaction plumbing but cannot claim live agent commands or replies.
+3. Exercise host restriction transitions, permitted mic capture/endpointing, audio focus, and a non-screen activation/cancel candidate; distinguish Assistant launch from app capture. Report each unavailable feature and whether the issue is emulator capability, permission, architecture, or OEM integration.
+4. Return a source-backed category/distribution decision and evaluate category-eligible in-app voice versus genuine VIA/assistant-role availability as separate branches. No TTS-as-media, agents-as-IoT, or navigation/messaging disguise. Google lists AAOS internal testing with no car form-factor review and closed review as non-blocking; that opportunity does not prove device eligibility or privileges. Honda does not expose actual-vehicle ADB.
+5. Identify the smallest next owner requests for runtime/session joins, response publication, ASR schema alignment, and Vox bus adapters, using current code rather than assuming the September 30 gaps are unchanged.
 
-| Seam checkpoint | Owning request | Integration exit evidence |
+Spike exit can be **demonstrated**, **blocked with reproduced evidence**, or **requires OEM/Play confirmation** per question. It cannot close CAP-8 or substitute parked-only scope. Internal/closed test or public-store upload is not authorized by the spike alone.
+
+## Bound the integrated walking skeleton
+
+Observe at least two harnesses, write to one declared conversation, and prove real voice input, answer publication, Voxxy playback, follow-up continuity, and an explicit broadcast to two passive subscribers. **Driving usability remains first-release scope.** Screen-PTT-only or parked-only functionality fails CAP-8.
+
+Emulator/fixture proof, distribution eligibility, actual installation, live backend proof, and actual-car driving behavior are separate stages. A dedicated Bloodbank thread may demonstrate continuity if declared honestly, not represented as an existing terminal session.
+
+| Seam checkpoint | Owning request | Exit evidence |
 |---|---|---|
-| Hardware and activation feasibility | Holocene; HeyMa/infra for ASR | Native install, mic/audio/connectivity, reliable non-screen activation and cancellation, API/background/focus behavior measured on the actual unit. |
-| Truthful observation | Holocene + Bloodbank/Candystore; Deckard optional | Two real harnesses; canonical runtime/native-session/correlation associations; explicit unknown/stale/coverage and supported-route descriptors. |
-| Real responder and continuity | Bloodbank + runtime owner + Holocene | Confirmed targeted command, lifecycle facts, published answer, and a second turn retaining context through the same declared route; unsupported terminal intervention remains disabled. |
-| Complete hands-free loop | Holocene + HeyMa/infra + Bloodbank + Voxxy | Activate, select, dictate, clarify/confirm, dispatch, hear response, follow up, broadcast, stop/cancel with zero required display reads/taps. |
-| Recovery and vehicle behavior | Same owners | No duplicate execution after reconnect, two broadcast observations and durable row, audio focus/interruption, and Driving/Unknown visual restrictions without losing the valid voice path. |
+| AAOS feasibility | Holocene | Reproducible Honda-emulator experiment, host UX/voice findings, honest category/installation-path decision, remaining production blockers. |
+| Actual delivery and activation | Holocene; HeyMa/infra for ASR | Verified Automotive testing/OEM route, installed build, measured real unit/API/mic/focus/network and non-screen capture/cancel. No vehicle-ADB dependency. |
+| Truthful observation | Holocene + Bloodbank/Candystore; Deckard optional | Two harnesses; canonical runtime/native-session/correlation associations, freshness/coverage, explicit supported-route descriptors. |
+| Real responder/continuity | Bloodbank + runtime owner + Holocene | Targeted confirmed command, lifecycle facts, published answer, and context retained on a second turn. |
+| Complete driving voice loop | Holocene + HeyMa/infra + Bloodbank + Voxxy | Permitted activation, selection, capture, clarify/confirm, dispatch, reply, follow-up, broadcast, stop/cancel without screen reads/taps. |
+| Recovery/vehicle behavior | Same owners | No duplicate execution, two broadcast observations and durable row, focus/interruption, host restriction behavior, supported nonvisual operation on actual hardware. |
 
-These checkpoints are not a requirement to finish wider DeloHQ or workforce rollout first. Reuse existing facts and solve only the missing seam. Initial stationary tests precede any motion-dependent checks; final reporting must still identify whether driving usability has actually been verified.
+No wider DeloHQ/workforce completion is imposed as a prerequisite. Host UX restrictions always govern permitted behavior; a blocked driving path is a concrete feasibility result, not a local override.
 
-## Demonstration sequence
+## Integrated demonstration sequence
 
-1. Record actual unit/API/ABI, APK build, backend versions, connectivity, mic/audio/activation behavior, mode source, and the selected route descriptor. Keep credentials out of evidence.
-2. Launch Unknown. Show restrictive visuals and the working voice path. While stationary, open Parked detail and demonstrate that missing signals/zero GPS speed do not automatically unlock it.
-3. Produce real activity from two harnesses. Match roster rows to canonical event/runtime/conversation evidence independently of Deckard. An observed-only harness must reject intervention visibly and audibly.
-4. Inspect a bounded parked stream with lifecycle, tool, message, and unknown-type examples. Match canonical event IDs, source timestamps, cursor/replay behavior, and coverage. Do not infer Needs input or session termination from silence.
-5. Enter the Driving interaction profile while stationary for initial testing. Hide detail and run the rest without looking at/tapping the display. Activate through the chosen non-screen mechanism, ask which agents are active, and select the supported conversation by voice.
-6. Dictate a short bounded instruction containing a unique marker. Use only the final transcript, hear target/action confirmation, then confirm verbally. Ambiguity, cancellation, or route changes publish nothing.
-7. Collect stable command/request ID, correlation, target/profile, logical thread, turn, and resolved session evidence. Distinguish transport submission, gateway dispatch, processing outcome, and actual answer. Query durable facts; invocation completion alone cannot prove reply delivery.
-8. Hear the real published response through Voxxy on the head unit. Record response ID, returned synthesis engine, audio duration, playback/interrupt result, and latency. A placeholder or discarded response cannot satisfy this step.
-9. Follow up by asking about the earlier marker without repeating it. Prove context continuity and declared route behavior. If an exact-native-session route was promised, prove it or reject reset; logical-thread continuity cannot be misrepresented as native-session targeting.
-10. Explicitly request a broadcast note, hear fact type/audience, and confirm by voice. Collect one schema-valid fact, two passive subscriber observations, and one durable Candystore row. Publication is not proof of consumer work execution.
-11. Drop connectivity before and after controlled submission in separate tests. Unsent drafts must never auto-send. After publication, outcome stays Unknown until readback; do not retransmit without proven consumer deduplication. Replay must not duplicate visible events or agent execution.
-12. Interrupt with phone/navigation/focus loss and stop/mute/cancel. Demonstrate prompt nonvisual cancellation, no TTS-to-ASR echo command, and explicit resumption without republishing intent.
-13. Exercise actual hardware behavior affected by movement, using a controlled test/operator arrangement that does not require the driver to inspect diagnostics. Document activation, focus, networking, mode changes, and zero required display interaction. Stationary simulation alone is not evidence that firmware remains usable in motion.
+1. Record build/toolchain/emulator revision, then actual unit/API/ABI, verified distribution route, backend revisions, connectivity/mic/focus/activation, and selected conversation guarantees. Keep credentials out of evidence.
+2. Exercise AAOS host restrictions in the emulator before actual-car verification. Unknown/missing evidence must not unlock detail; supported host callbacks dominate local UI modes. Host-blocked capture/audio must stop, not bypass the restriction.
+3. Produce activity from two harnesses; match roster rows to canonical identities/events independently of Deckard. Observed-only targets must reject intervention visibly/audibly.
+4. Where the chosen architecture permits parked detail, inspect a bounded stream with lifecycle, tool, message, and unknown-type examples. Verify timestamps/cursors/replay/coverage; silence does not prove Needs input or termination.
+5. In the host-permitted driving interaction path, activate without the display, ask for agent status, and select a supported conversation by voice. Initial stationary simulation stages this test but does not prove real in-motion firmware behavior.
+6. Dictate a short bounded instruction with a unique marker. Use final transcript, speak target/action confirmation, then confirm verbally. Ambiguity/cancel/route change publishes nothing.
+7. Collect command/request ID, correlation, recipient/profile, logical thread/turn, and resolved-session evidence. Distinguish submission, gateway dispatch, processing completion, and actual answer; query durable facts.
+8. Hear the real published reply through Voxxy on the head unit; capture response/engine/audio/playback/interrupt/latency evidence. A fixture, discarded response, or processing-only receipt fails this step.
+9. Ask about the earlier marker without repeating it; prove declared continuity. Logical-thread continuation cannot be called strict native-session targeting; if strict routing was promised, resets must reject/reconfirm.
+10. Dictate an explicit broadcast, hear fact type/audience, confirm by voice, and verify one canonical fact, two passive observations, and one Candystore row. Publication is not subscriber execution.
+11. Lose connectivity before and after controlled submission in separate tests. Drafts never auto-send; published outcome stays Unknown until readback. No retransmission without consumer deduplication; replay never duplicates rows or work.
+12. Exercise calls/navigation/focus loss, host restriction change, and non-screen stop/mute/cancel. No TTS echo commands or automatic intent replay; resume explicitly through the supported path.
+13. Verify movement-dependent production behavior through a controlled test/operator arrangement without driver diagnostic interaction. Record host restrictions, activation/capture/audio/network and zero required screen reads/taps. Emulator/stationary proof alone cannot close driving readiness.
 
 ## Negative cases
 
 | Test | Expected result |
 |---|---|
-| Shared display names or multiple sessions | Spoken clarification using canonical route choices; no guessed destination. |
-| Route reset/eligibility change after capture | Cancel or reconfirm; no hidden replacement conversation. |
-| Missing hook coverage/end fact or stale source | Unknown/stale with evidence, not invented Idle/Completed/Needs input. |
-| Mic/provider/activation denied or unavailable | No command; explicit driving-readiness blocker. |
-| Partial or ambiguous ASR/intent | Clarify before confirmation/publication. |
-| Unsupported interactive target | Read-only/rejected; no keystroke or `/resume` prompt workaround. |
-| Unknown/malformed/out-of-order/replayed event | Bounded fallback, stable ID deduplication, no false lifecycle regression. |
-| Gateway completed but no answer | Processing complete/answer unavailable, not “agent replied.” |
-| Same idempotency key with different command ID | Do not assume deduplication; current gateway keys claim by command ID plus envelope digest. |
-| Vox/focus failure or expired URL | Preserve answer and retry speech only; no repeated agent command. |
-| App output heard by activation/ASR | No command publication; local cancel remains usable. |
-| Driving/Unknown entered | Hide logs/editing, retain validated voice path, cancel unsent touch composition. |
-| Broadcast ambiguity | Clarify; no implicit all-agent command. |
+| Unsupported category/install/mic/assistant path | Reproduced/source-backed blocker; no relabeling or ADB/host-policy workaround. |
+| Host disallows UI/audio/capture | Obey; report incomplete driving readiness without removing CAP-8. |
+| Shared names/multiple sessions | Spoken canonical-route clarification, no guessed destination. |
+| Route reset/eligibility change | Cancel/reconfirm, no hidden replacement conversation. |
+| Missing hook/end facts or stale coverage | Unknown/stale evidence, not invented Idle/Completed/Needs input. |
+| Partial/ambiguous ASR | Clarify before publication; unavailable voice means no command. |
+| Unsupported interactive terminal | Read-only/rejected; no keystroke or `/resume` workaround. |
+| Unknown/malformed/out-of-order/duplicate event | Bounded fallback, canonical deduplication, no receipt regression. |
+| Processing completed, no answer | Processing-complete/answer-unavailable, not “agent replied.” |
+| Same idempotency key, new command ID | No assumed deduplication; preserve supported command identity/body on any allowed retry. |
+| Vox/focus/URL failure | Preserve answer; retry speech only. |
+| Own output heard by ASR/activation | No command; local supported cancel remains responsive. |
+| Broadcast ambiguous | Clarify, not implicit all-agent execution. |
 
-## Proposed measurement budgets
+## Proposed budgets and closeout
 
-These are defaults pending actual hardware/owner measurements, not existing guarantees.
+Measure rather than assume: live presentation under 5 seconds from ingress plus source delay/coverage; history recovery under 10 seconds after connectivity; final short transcript under 5 seconds; warm short Vox acknowledgement under 10 seconds; local non-screen cancel under 1 second. Cold starts are separate; agent execution has no fixed completion promise. Owners declare source max-age; silence is not an idle reducer.
 
-- Live presentation within 5 seconds of observed ingress; also record source-to-display latency and upstream coverage.
-- Recent-history recovery within 10 seconds after restored connectivity; explicit gap if catch-up is incomplete.
-- Final transcription within 5 seconds after short utterance completion.
-- Warm short Vox acknowledgement within 10 seconds; immediate local capture feedback must not wait for synthesis. Measure cold starts separately.
-- Nonvisual stop/cancel local response target under 1 second; verify during backend delays and playback.
-- No fixed agent-execution promise; distinguish delay/Unknown from actual failure.
-- Owners declare per-source max-age. Silence is not an idle-state reducer.
+Keep emulator/build/category evidence, actual install and activation proof, event/command/correlation IDs, logical/native route guarantees, follow-up context, published answer and playback, broadcast observations, reconnect, host restrictions, audio interruption, and zero-display interaction measurements. Link child tickets/revisions; derive progress rather than duplicate state.
 
-## Closeout evidence
-
-Keep device/build and activation proof, canonical event/command/correlation IDs, declared logical-thread versus native-session guarantees, second-turn continuity, real answer publication, speech/playback evidence, subscriber observations, reconnect/deduplication, audio interruptions, and non-screen interaction measurements. Link child tickets and landed revisions when implementation happens; derive progress rather than entering duplicate status here.
-
-Report separately: **implemented**, **installed**, **live integrated proof**, and **verified driving usability**. Planning establishes none of those runtime outcomes. The next recommended step is Holocene-led hardware/activation and conversation-route feasibility, followed by accepted child requests for the smallest complete voice slice.
+Report separately: **emulator feasibility**, **distribution path**, **installed on Civic**, **live integrated proof**, and **verified driving usability**. The immediate request advances the first stage, not all five.
