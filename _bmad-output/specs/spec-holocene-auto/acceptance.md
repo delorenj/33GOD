@@ -18,14 +18,14 @@ Spike exit can be **demonstrated**, **blocked with reproduced evidence**, or **r
 
 The full loop needs two narrow advances after the HOLOC-9 baseline:
 
-- **I-2.2 / Bloodbank final answers:** capture a full final assistant answer and
+- **I-2.2 / Bloodbank final answers (`bb:BB-30`):** capture a full final assistant answer and
   exact command/logical/native lineage, journal immutable message identity, then
   publish a canonical durable fact before command acknowledgement. Commentary,
   tool output, reasoning, empty/failure/interrupted outcomes, and processing-only
   receipts cannot satisfy answered state. Publication/restart replay must not
   rerun completed execution; pre-capture ambiguity stays explicit. Existing
   generic conversation messages remain compatible.
-- **I-2.3 / Holocene real speech:** inject one known short synthetic/prerecorded
+- **I-2.3 / Holocene real speech (`holocene:HOLOC-10`):** inject one known short synthetic/prerecorded
   phrase into the isolated emulator microphone, measure actual waveform and
   silence control, obtain a real final recognizer transcript, and render a local
   diagnostic acknowledgement with guest-output evidence. No canned transcript

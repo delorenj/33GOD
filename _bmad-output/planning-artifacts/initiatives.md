@@ -156,7 +156,7 @@ delegations:
   - owner_project: bb
     owner_component: bloodbank
     request: publish a final assistant answer with exact invocation and conversation lineage, durable replay, and no repeated execution
-    ticket_ref: pending
+    ticket_ref: BB-30
 depends_on: []
 related_to: [33GOD-16]
 ```
@@ -188,7 +188,7 @@ owner_project: 33god
 delegations:
   - owner_project: holocene
     request: prove a known isolated speech waveform through the emulator microphone, real final recognition, local audible acknowledgement, and bounded cancellation
-    ticket_ref: pending
+    ticket_ref: HOLOC-10
 depends_on: []
 prerequisites: [holocene:HOLOC-9]
 ```
