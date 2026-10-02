@@ -94,9 +94,13 @@ Vox URL synthesis is complete-audio, not streaming. Keep spoken replies short an
 | Host restricts activity/audio | Obey restriction, preserve context, resume explicitly through supported flow. |
 | Tool flood/long reply | Bounded summary and canonical history, not an unbounded audio log. |
 
+## October 2 emulator findings
+
+HOLOC-9 installed a fixture-only diagnostic Activity on the official API 33 9-inch x86_64 candidate. Public CarUx restrictions reported parked/unrestricted; user-image `car_service` transition injection was denied. The assistant role is available but Google remains default; replacement qualification and non-screen capture were not demonstrated. Bounded AudioRecord capture and permission/focus plumbing worked with near-silent headless input; ASR returned no-match, not a transcript. These facts establish a runnable experiment, not category approval, speech conversation, moving UX, or Civic readiness. The child evidence is the detailed authority; integration success criteria above remain unchanged.
+
 ## Official references
 
-Honda sources and feed verified in this conversation; SDK availability is not an installed emulator or exact-vehicle claim.
+Honda sources and feed verified in this conversation; the installed candidate and fixture result are not exact-vehicle claims.
 
 - [2026 Civic Si Google built-in and factory voice controls](https://www.hondainfocenter.com/2026/Civic-Si/Feature-Guide/Interior-Features/Google-Built-In/)
 - [Honda emulator setup and no-vehicle-ADB FAQ](https://global.honda/en/cars-apps/)

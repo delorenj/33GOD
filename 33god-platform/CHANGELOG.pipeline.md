@@ -5,6 +5,27 @@ fed by `changes/*.jsonl`; update both when a contract shifts.
 
 ## 2026-10-02
 
+### Honda AAOS fixture experiment and refreshed integration findings
+
+HOLOC-9 produced an isolated native Android diagnostic fixture and installed it
+on Honda's API 33 9-inch emulator candidate. Independent build and specification
+checks reproduced the artifact, synthetic labels, bounded microphone plumbing,
+recognizer no-match, and pause cancellation. The image is not exact Civic firmware;
+no actual vehicle installation or driving conversation is claimed.
+
+Quality review reproduced cold Gradle integrity, incomplete image-install, and
+license-receipt defects, followed by two installer recovery regressions. All five
+are repaired and independently cleared. Final checks include 27 tooling tests,
+10 Android tests, substantive Android lint/build, and TypeScript checks; existing
+workspace lint remains stub-only. Specification review and the canonical acceptance
+gate pass. Holocene main publishes `41d9ba22bf97b55be2b7a50dccbec2e787abeee4`;
+this parent pins that exact accepted diagnostic slice.
+
+The old HeyMa missing-final-transcript-fields finding is superseded: Wax now
+finalizes canonical fields through its outbox. Mobile ingress/correlation, runtime
+identity and answer publication, Vox playback, category/OEM distribution, and
+non-screen driving behavior remain explicit integration gates.
+
 ### Holocene Auto targets factory Honda AAOS
 
 Vehicle identification corrects the earlier unrestricted-head-unit assumption:

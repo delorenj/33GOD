@@ -1,6 +1,6 @@
 # Current integration evidence and missing seams
 
-Source inspected 2026-09-30. Paths below are relative to `/home/delorenj/code/33GOD` unless absolute. Backend details are dated evidence, not reverified deployment acceptance. Read-only observation did not execute agent commands or test ASR/TTS. Vehicle identification subsequently corrected the platform to factory Honda AAOS; older standalone/aftermarket assumptions are superseded. Revalidate backend source before child implementation.
+Backend baseline was inspected 2026-09-30; explicit October 2 updates below supersede those findings where noted. Paths are relative to `/home/delorenj/code/33GOD` unless absolute. Source evidence is not deployed integration acceptance. Vehicle identification corrected the platform to factory Honda AAOS; unrestricted aftermarket assumptions are superseded. Revalidate unchanged findings before implementation.
 
 ## Honda AAOS correction
 
@@ -8,11 +8,17 @@ Target is the 2026 Civic Si factory 9-inch Google built-in system. [Honda's emul
 
 Native AAOS buildability does not settle agent-control category eligibility, Automotive test/distribution access, production mic/assistant permissions, or driving UX. Factory “Hey Google”/talk-button support invokes the system assistant; launching an app is distinct from capturing a Holocene utterance. The first child request is a bounded feasibility spike, with emulator and delivery-path results kept separate from actual-car/integrated voice proof.
 
+## Accepted HOLOC-9 diagnostic slice
+
+Holocene main publishes `41d9ba22bf97b55be2b7a50dccbec2e787abeee4`. Its [canonical evidence](../../../holocene/_bmad-output/implementation-artifacts/issue-evidence/HOLOC-9.md) and [detailed findings](../../../holocene/_bmad-output/implementation-artifacts/holoc-9-feasibility-evidence.md) own implementation facts; this parent owns seam acceptance. Independent specification, emulator, final quality, and canonical acceptance gates passed after repairing five reproduced tooling defects. Parent verification passed 27 tooling regressions, 10 Android tests, substantive Android lint/build, nine uncached TypeScript checks, and 89 existing contract tests; workspace lint remains stub-only.
+
+The retained debug fixture APK is at `holocene/agents/hermes/pm/runtime/workers/HOLOC-9-recovery-1/holocene-auto-fixture.apk`, SHA256 `88f74c255a50d91b87b100cf4d4c5fa03ba656f68673ee7f93d9a69328ad5381`. It has no network/publication capability and is not a store artifact. Honda candidate installation/launch, public parked UX callbacks, near-silent microphone plumbing, recognizer no-match, and pause cancellation are demonstrated. Actual speech, non-screen activation/confirmation/stop, moving UX, category/OEM/Play eligibility, Civic installation, authenticated live routing/answers, and Vox playback remain open. The original installed SDK metadata/license receipt was preserved; regression proof uses disposable SDKs, not a claim that the historical live receipt was repaired. CAP-8 is unchanged and unfulfilled.
+
 ## Ownership and existing shape
 
 | Owner | Existing seam | Required Auto contribution |
 |---|---|---|
-| Holocene | Next.js 15/React 18 web, Fastify 5 API, SQLite event projection; host API plus platform-composed web | New native client and authenticated mobile/voice ingress; truthful roster/conversation projection and spoken receipt presentation. No Android/Gradle/Kotlin module found. |
+| Holocene | Next.js 15/React 18 web, Fastify 5 API, SQLite projection; HOLOC-9 now adds an isolated native Android fixture experiment | Authenticated mobile/voice ingress, truthful runtime/conversation projection, and permitted driving voice remain integration work; fixture launch is not live readiness. |
 | Bloodbank | CloudEvents schemas, NATS/Dapr, harness hooks, ASM live state, shared fleet invocation gateway | Runtime/session join, declared supported routes, answer publication, canonical mobile behavioral/voice contracts, observable rejection. |
 | Candystore | PostgreSQL/Dapr event history and HTTP query API | Bounded correlation-based history/reconnect evidence; not a command executor or native-session registry. |
 | HeyMa | Canonical checkout `/home/delorenj/HeyMa`; Wax durable file/audio workflow | Mobile voice ingress and schema-aligned transcript facts. `/home/delorenj/code/HeyMa` is retired, despite the older platform component path. |
@@ -93,7 +99,7 @@ Interactive Claude/Codex/OpenCode hooks are event producers, not inbound control
 - Publication is transport evidence, not responder acceptance; no distinct invocation-accepted event was found.
 - Gateway `started` is emitted before invoking Hermes; not proof that the model started.
 - `completed` means processing completion, not business/task success or answer delivery.
-- Invalid/ineligible routes can be dropped without a failure event; authenticated ingress needs explicit rejection/readback semantics.
+- Initial malformed/ineligible rejection still needs explicit ingress readback qualification. October 2 source has improved post-claim route-invalid terminal closure: `bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:575`. Do not retain the older blanket drop-only description or treat processing failure as answer delivery.
 - Gateway `send()` discards response content: `adapter.py:684`. Completed schema contains no answer. **Publish a schema-backed final response before claiming a real voice round trip.** Existing `bloodbank/schemas/bloodbank/conversation/message.appended.json:25` is a candidate, not a decision that its current shape suffices.
 
 Lifecycle/dispatch details: `adapter.py:460`, `:515`, `:654`; envelope builder: `contract.py:334`. Current claim/replay deduplication is keyed by **command ID plus full-envelope digest**, not idempotency key alone: `adapter.py:381`. Identical retry must preserve command ID/body; a new command ID with the same key can execute again. Replays may repeat lifecycle facts, so client event-ID deduplication remains necessary.
@@ -106,7 +112,7 @@ Events are facts broadcast to subscribers; commands target one consumer. A futur
 
 Canonical `audio.transcription.completed` requires `transcription_id`, `file_path`, and `transcript_text`: `bloodbank/schemas/bloodbank/audio/transcription.completed.json:22`. Related start/started/failed schemas are file-path based, not mobile upload contracts.
 
-HeyMa/Wax pipeline is an existing durable file workflow, but its state-change transcription events currently use `{item_id, from_state, to_state, cause_code, evidence}`, missing canonical fields: `/home/delorenj/HeyMa/components/wax/src/wax/ledger.py:262`, `:347`; outbox: `wax/events.py:88`. No mobile upload API, canonical transcription-start consumer, or started emitter was found. Do not treat these topic names as schema-aligned recognition readiness.
+**October 2 correction:** HeyMa/Wax finalization now emits `transcription_id`, `file_path`, `transcript_text`, URI, engine metadata, and a transactional outbox: `/home/delorenj/HeyMa/components/wax/src/wax/finalize.py:73`. `wax/events.py:80` suppresses legacy premature completion facts. The September 30 missing-final-fields finding is superseded; do not commission that repair again. Mobile authenticated upload, start/correlation alignment, short-utterance endpointing, and latency remain unproven.
 
 infra's existing loopback ASR implements `POST /v1/audio/transcriptions`, multipart file with optional language/model, returning text, language, durations and model: `/home/delorenj/code/infra/scripts/vocalinux-faster-whisper-server.py:130`, `:167`, `:319`. It serializes CPU/int8 inference and has a 50 MiB upload cap. Tests with a fake model do not prove live short-utterance latency. Keep this behind an owned bus/mobile adapter; do not embed a loopback address or infer remote availability in the APK.
 
