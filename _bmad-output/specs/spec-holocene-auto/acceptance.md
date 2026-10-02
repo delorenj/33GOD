@@ -39,6 +39,26 @@ Play uploads and vehicle modifications are not. Recognition failure is a
 reproduced blocker, not permission to send the APK directly to a backend engine
 or bypass Bloodbank. This advances CAP-3/4/6/7 evidence without claiming CAP-8.
 
+## Authorized serialized runtime verification
+
+After BB-30 passes independent specification and quality review and its exact
+revision is on component/root main, Jarad authorized restarting only the affected
+fleet gateway once no commands are in flight. Two benign no-tool prompts in a
+dedicated eligible test conversation may then verify final-answer arrival and
+follow-up continuity. Verify the intended subscription route, no paid fallback,
+full correlation/lineage, stable message identity and Candystore readback; no
+unrelated agent turns or provider/fleet reconfiguration are included. This is
+permission for later proof, not evidence that activation or live publication has
+succeeded.
+
+HOLOC-10 runtime verification remains isolated synthetic audio. A failed or
+protectively stopped emulator boot establishes a resource/setup blocker, not ASR
+failure. Any next emulator-only experiment must retain the existing bounded
+memory policy, measure actual scope/process usage, and prove private audio,
+authenticated loopback gRPC and disabled host microphone before input/output
+claims. Do not raise shared limits or convert unit/fake-server success into
+on-device acceptance.
+
 ## Bound the integrated walking skeleton
 
 Observe at least two harnesses, write to one declared conversation, and prove real voice input, answer publication, Voxxy playback, follow-up continuity, and an explicit broadcast to two passive subscribers. **Driving usability remains first-release scope.** Screen-PTT-only or parked-only functionality fails CAP-8.
