@@ -43,6 +43,7 @@ Select checks that demonstrate the slice's actual behavior:
   source diff or catalog entry as installed parity.
 - Holocene code changes: typecheck and build; add browser interaction or live
   route verification when the changed behavior is visible there.
+- Release-console uploads: a platform consumes a version/build identifier once it enters any release draft, so `already used` means attached to a draft elsewhere, not uploaded. Before minting a new identifier or re-dropping the same artifact, read the track's drafts, its artifact library, and sibling tracks read-only to find the owning draft, and add from the library rather than re-uploading. Page metadata can lag processing or drop entries; decode the artifact's own manifest and signature to confirm version, package, and signing identity.
 - Compose or systemd changes: resolve the effective configuration, restart only affected units, and verify the running artifact.
 - Template or generator changes: render an affected existing role into an
   isolated directory and compare owned files, executable modes, and retained
