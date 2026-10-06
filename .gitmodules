@@ -25,3 +25,6 @@
 [submodule "pilot"]
 	path = pilot
 	url = git@github.com:delorenj/pilot.git
+[submodule "monitoring"]
+	path = monitoring
+	url = git@github.com:delorenj/monitoring.git
