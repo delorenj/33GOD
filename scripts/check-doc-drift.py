@@ -119,7 +119,10 @@ def check_root_artifacts(source: Path, docs: Path, report: Reporter) -> None:
         report.passed("root-docs", f"all {len(REQUIRED_ROOT_DOCS)} core files exist under {docs}")
 
     config_root = docs.parent
-    required_configs = (config_root / "_bmad/core/config.yaml", config_root / "_bmad/bmm/config.yaml")
+    # BMB setup (33GOD-80) folded _bmad/core/config.yaml into the shared
+    # _bmad/config.yaml. user_name and communication_language moved to the
+    # ignored per-user _bmad/config.user.yaml, so they are not checked here.
+    required_configs = (config_root / "_bmad/config.yaml", config_root / "_bmad/bmm/config.yaml")
     absent = [str(path) for path in required_configs if not path.is_file()]
     if absent:
         report.fail("root-bmad", f"missing root configuration: {', '.join(absent)}")
@@ -127,15 +130,13 @@ def check_root_artifacts(source: Path, docs: Path, report: Reporter) -> None:
         report.warn("root-bmad", "PyYAML unavailable; files exist but YAML parsing was skipped")
     else:
         try:
-            core, bmm = (load_yaml(path) for path in required_configs)
+            shared, bmm = (load_yaml(path) for path in required_configs)
             expected = {
                 "project_name": "33GOD",
-                "user_name": "Jarad",
-                "communication_language": "English",
                 "document_output_language": "English",
                 "output_folder": "{project-root}/_bmad-output",
             }
-            errors = [f"{key}={core.get(key)!r}" for key, value in expected.items() if core.get(key) != value]
+            errors = [f"{key}={shared.get(key)!r}" for key, value in expected.items() if shared.get(key) != value]
             if bmm.get("project_knowledge") != "{project-root}/docs":
                 errors.append(f"project_knowledge={bmm.get('project_knowledge')!r}")
             if errors:

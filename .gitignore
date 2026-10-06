@@ -122,3 +122,9 @@ runtime/
 
 # Canonical agent config lives in .agents; generated skill projections stay local.
 /.agents/skills
+
+# BMB personal config (BMAD config.user.yaml) — per-user, never tracked
+/_bmad/config.user.yaml
+# Rewritten by the BMB setup merge-help-csv.py from tracked skill assets, like
+# the per-module _bmad/*/module-help.csv the global ignore already covers.
+/_bmad/module-help.csv
