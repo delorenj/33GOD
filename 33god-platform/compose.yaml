@@ -104,7 +104,7 @@ services:
     environment:
       APP_PORT: "3001"
       APP_HOST: 0.0.0.0
-      DATABASE_URL: postgresql://candystore:candystore@postgres:5432/candystore
+      DATABASE_URL: postgresql://candystore:candystore@candystore-postgres:5432/candystore
       SUBSCRIBE_PUBSUB: bloodbank-pubsub
       SUBSCRIBE_TOPIC: bloodbank.evt.>
       SUBSCRIBE_ROUTE: /events/all
@@ -221,7 +221,7 @@ services:
       traefik.http.routers.holocene-web.service: holocene-web
       traefik.http.routers.holocene-web.tls: "true"
       traefik.http.routers.holocene-web.tls.certresolver: letsencrypt
-      traefik.http.routers.holocene-hq.rule: Host(`holocene.delo.sh`) && (PathPrefix(`/hq`) || PathPrefix(`/_next/static`))
+      traefik.http.routers.holocene-hq.rule: Host(`holocene.delo.sh`) && (PathPrefix(`/hq`) || PathPrefix(`/_next/static`) || Path(`/auto/privacy`))
       traefik.http.routers.holocene-hq.priority: "350"
       traefik.http.routers.holocene-hq.entrypoints: websecure
       traefik.http.routers.holocene-hq.service: holocene-web
