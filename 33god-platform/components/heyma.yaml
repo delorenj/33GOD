@@ -4,16 +4,16 @@ role: voice-interface
 repo: ../../HeyMa
 description: Voice capture/transcription/TTS interface layer for 33GOD.
 compose:
-  files:
-    - ../../HeyMa/compose.yml
+  # HeyMa deleted compose.yml in 1d21e8b (2026-07-25); it runs as systemd user units (waxd).
+  files: []
   profiles: [optional]
 health:
   commands:
-    - cd ../../HeyMa && mise run test
+    - cd ../../HeyMa && mise run wax:test
 source_of_truth:
   - ../../HeyMa/scripts
-  - ../../HeyMa/chrome-extension
-  - ../../HeyMa/TonnyTray
+  - ../../HeyMa/bin
+  - ../../HeyMa/components
 changelog:
   topics: [voice, transcription, tts]
 public_card:
