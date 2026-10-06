@@ -3,6 +3,42 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-10-03
+
+### Pilot adopted as a monorepo submodule (33GOD-79)
+
+The Pilot repository (px, the Plane board CLI every agent and human on the
+fleet drives) moved from `~/code/pilot` into the monorepo as a genuine git
+submodule (`pilot/`, origin `git@github.com:delorenj/pilot.git`, gitlink
+160000). Local checkout state and history are preserved: a 498-file pre/post
+hash comparison plus all 65 snapshot symlink targets initially showed only the
+intended `.project.json` `repo_path` change. A subsequent project-only Skillex
+projection regeneration converged the five copied skill files
+(`bmad-loop-setup` SKILL.md + assets/module.yaml; `bmad-loop-sweep` SKILL.md,
+migration-mode.md, automation-mode.md) byte-for-byte to the
+`skillex/all-skills` canon and reanchored 56 skill symlinks one directory
+deeper (`../../../skillex/...` to `../../../../skillex/...`), each preserving
+its same canonical absolute destination; all 107 current skill links resolve
+with zero dangling. The 373 displaced original copied-skill payloads are
+durably preserved, hash-verified against the pre-adoption archive, in the
+ignored untracked `pilot/.bmad-loop/import-originals/2026-10-03-pilot-adoption/`
+together with that archive itself; the /tmp evidence copies remain in place.
+The pjangler project registry was
+reindexed so project `px` resolves at the new canonical path. The PATH
+executables `px`, `pilot`, and `px-supervised` now resolve into the monorepo
+checkout; a compatibility symlink keeps the legacy `~/code/pilot` path working
+for external references. Git history, board, project, and agent identity are
+unchanged (child HEAD still `cda8257`, equal to `origin/main`; PX board,
+project `px`, no deployed agent). A platform component record now
+describes Pilot in `components/pilot.yaml`. Parent integration: 33GOD-79.
+
+Status of this change: landed 2026-10-06. The child `.project.json` path edit
+is pilot `8e02b20`, and the parent submodule metadata (`.gitmodules` + gitlink
+at `8e02b20`) is committed here; both are pushed. The `~/code/pilot`
+compatibility symlink is no longer present, so the monorepo path is the only
+one. The reusable `pj import` feature remains PJAN-165, requested and not
+implemented.
+
 ## 2026-10-02
 
 ### Real-speech and durable-answer seams

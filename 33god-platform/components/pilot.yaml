@@ -1,0 +1,24 @@
+id: pilot
+name: Pilot
+role: plane-board-cli
+repo: ../pilot
+description: >-
+  Zero-dependency Node CLI (`px`) that drives the Plane boards of the 33GOD
+  fleet: ticket verbs, board binding via `.project.json`, schema export and
+  replay, and the Krebs managed-execution command surface. Adopted into the
+  monorepo as a git submodule; the PATH entry points at this checkout.
+compose:
+  files: []
+  profiles: [tools]
+health:
+  commands:
+    - cd ../pilot && node --test 'test/*.test.js'
+source_of_truth:
+  - ../pilot/src
+  - ../pilot/schemas/33god-standard.json
+changelog:
+  topics: [tickets, plane, cli, board-schema, krebs]
+public_card:
+  title: Plane Board CLI
+  promise: One command line for every board in the fleet — read, write, and replay a ticket board without knowing the API.
+backfills: []

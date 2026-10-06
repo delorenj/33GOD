@@ -48,6 +48,7 @@ component_files:
   - components/krebs.yaml
   - components/momo.yaml
   - components/heyma.yaml
+  - components/pilot.yaml
 
 contract_paths:
   - ../bloodbank/docs/event-naming.md

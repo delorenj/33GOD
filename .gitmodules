@@ -22,3 +22,6 @@
 [submodule "flume"]
 	path = flume
 	url = git@github.com:delorenj/flume.git
+[submodule "pilot"]
+	path = pilot
+	url = git@github.com:delorenj/pilot.git
