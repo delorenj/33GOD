@@ -215,3 +215,90 @@ prerequisites: [holocene:HOLOC-9]
 provider/support/final callbacks, transcript and latency, cancellation/focus/host
 behavior, and explicit diagnostic-versus-live boundaries. This independent audio
 slice may progress alongside I-2.2; shared runtime activation is serialized later.
+
+## I-3 Repository import, dogfooded by Pilot adoption
+
+**Outcome.** An existing local project or remote repository can become an official
+33GOD submodule without losing local state or leaving project/workforce bindings
+pointing at a retired checkout. Pilot is the first concrete adoption.
+
+**Owner:** `33god` (Grolf), parent ticket `33GOD-79`. PJangler owns reusable import;
+Flume owns workforce relocation where a deployment exists. Ticket titles initially
+used I-2 in error; this I-3 key is canonical, and both boards carry the correction.
+
+```yaml
+owner_project: 33god
+ticket_ref: 33GOD-79
+delegations:
+  - owner_project: pjangler
+    request: import a local checkout or remote repository as a submodule while preserving identity and repairing declared bindings
+    ticket_ref: PJAN-165
+depends_on: []
+```
+
+**Seam acceptance criteria**
+
+- Pilot is a real Git submodule with its canonical GitHub origin. Its history,
+  tracked changes, untracked and ignored local state survive adoption.
+- PJangler resolves project `px` to the adopted checkout with the same PX board;
+  affected executable and workforce bindings remain usable without identity changes.
+- Local-path and remote-URL import share enrollment behavior, provide a no-write
+  preview, converge on rerun, and report recoverable failure rather than false success.
+- The reusable command's child delivery is distinct from the one-time adoption;
+  neither a filed work request nor the manual move proves the command is available.
+
+**Seam evidence (executable).** Inspect `git ls-files --stage pilot`,
+`git config -f .gitmodules --get submodule.pilot.url`, `pj info px --json`,
+and `px whoami --json` from the adopted checkout. Compare preserved local-state
+inventories and executable-link resolution. Exercise local and fresh-remote import
+through the child's delivered CLI, including dry-run, collision and rerun cases.
+
+## I-4 Repository-aware PM skills and a 33GOD BMAD integration companion
+
+**Outcome.** PM desks prefer the skills installed in their own declared repository,
+while new and existing 33GOD projects can install BMAD with an ecosystem-aware
+companion that connects methodology to existing owner contracts.
+
+**Owner:** `33god` (Grolf), parent ticket `33GOD-81`. Child PMs own their
+implementation stories; the parent owns the seam acceptance below.
+
+```yaml
+owner_project: 33god
+ticket_ref: 33GOD-81
+delegations:
+- owner_project: flume
+  request: preserve repository-aware project skill discovery in PM desk provisioning and backfill registered PM desks through the locked generated-config writer
+- owner_project: skillex
+  request: author and package the canonical g33 BMAD integration expansion with executable setup, ecosystem mapping, and evidence-to-handoff capabilities
+- owner_project: pjangler
+  request: consume the companion installer in the owned BMAD installation and update path without copying package logic
+related_work: [pjangler:PJAN-166]
+depends_on: []
+```
+
+**Seam acceptance criteria**
+
+- Every registered PM has its actual repository binding inventoried; verified
+bindings enable project discovery and preserve existing trust entries. Missing
+repositories or skill roots are disclosed, never silently omitted. The actual
+runtime resolver proves project-before-profile selection where skills exist.
+- The module maps BMAD planning, decomposition, implementation, and review to
+existing ecosystem entrypoints, without introducing a scheduler, employee, or
+second board. Krebs authority is conditional on actual project enrollment;
+legacy board routing remains usable.
+- Setup is portable, previewable, repeatable, and preserves upstream BMAD files
+and operator customization. Registration must be visible to the actual BMAD
+runtime resolver, not merely a YAML file or help row.
+- Manual installation and PJangler's BMAD installation/update consume one package
+implementation. Real fixture and live 33GOD checks prove the supported path;
+unpublished source and live deployment claims remain distinguishable.
+- Evidence-to-handoff separates worker claims from actual diff/test evidence and
+distinguishes implemented, tested, installed, deployed, and outstanding work.
+Existing Momo review and independent reviewer ownership remain intact.
+
+**Seam evidence.** PM profile/repository inventory and fresh runtime resolver
+readbacks; generated-config and lock-concurrency checks; canonical module schema,
+help and override resolution tests; fresh install, preview, rerun, operator-edit,
+and BMAD-update checks; live 33GOD activation and independent review artifacts.
+The BMB YAML/TOML/scaffold reconciliation in `PJAN-166` remains separate: module
+integration must not claim that installation wrinkle resolved incidentally.
