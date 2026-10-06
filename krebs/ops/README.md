@@ -18,9 +18,11 @@ Installation does not activate the service. The descriptor contains:
   required runtime variables. Secret values must be `op://` references.
 
 The generated ExecStartPre validates installed wheel bytes, full Pilot/Momo
-bundle digests, enrolled native identities, exact lanes, runtime systemd access
-and writer fences. `krebs.launch` resolves vault references only into the child
-process environment, repeats readiness at launch, then executes the service.
+bundle digests, enrolled native identities, exact lanes and runtime systemd
+access. It does not verify writer fences: it only checks that the self-attested
+`legacy_writers_fenced` boolean is `true`. `krebs.launch` resolves vault
+references only into the child process environment, repeats readiness at
+launch, then executes the service.
 Use the readiness argv printed by the installer before activation. Source
 includes no mutable-checkout example unit and no plaintext environment file.
 
@@ -47,12 +49,16 @@ actor ID, exact states name-to-UUID map, working_label, legacy_writers_fenced.
 Each actor declares native_user_id, key_ref(op reference), role(pm/operator or
 reviewer/interactive), runtime_id, and runtime {adapter:systemd, unit_prefix}.
 The owning PM runtime also declares planner_argv for its installed Hermes/Momo
-planning invocation. The heartbeat honors reconcile.enabled=false as a planning
-pause while continuing valid active lease maintenance. Unique native
-identities are required; interactive Codex/Claude are separate actors. Readiness
-must verify source/installed skill and runtime writer inventory before setting
-legacy_writers_fenced. PJangler rejects incomplete managed bindings; shadow
-bindings can remain incomplete and make no writes.
+planning invocation. Flume's `heartbeat.sh` passes `reconcile.enabled` to
+`managed-execution.py` as `KREBS_PLANNER_ENABLED`; per-agent heartbeat timers are
+retired, so nothing schedules lease renewal or planning today (see
+[activation](../docs/activation.md)). Unique native identities are required;
+interactive Codex/Claude are separate actors. No code verifies the writer
+inventory: prove every legacy writer fenced before setting
+legacy_writers_fenced. PJangler rejects incomplete managed bindings and accepts
+incomplete shadow ones, but Krebs readiness validates every manifest in the
+release cohort fully, in either mode, so one incomplete shadow binding blocks
+the controller from starting for every board.
 
 Rollback sets mode to shadow and stops new execution. Terminate/prove existing
 workers stopped before retiring authority. Keep legacy writers fenced until a

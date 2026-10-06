@@ -153,3 +153,80 @@ The architecture decision is explicit: NewAPI OAuth authenticates
 model-provider traffic only; native Plane identities and separate `op://`
 references provide ticket attribution for interactive Codex, Claude and Kimi
 actors. A gateway identity-to-Plane mapping is out of scope.
+
+## Re-verification 2026-10-06
+
+Read-only checks on 2026-10-06. Plane keys were resolved in process with
+`op read` and sent only as request headers; no secret value was printed or
+written. Nothing was written to Plane, Postgres, NATS, systemd or any manifest.
+The sections above stay as recorded; this section lists what they no longer
+describe and what has been observed since.
+
+### Superseded
+
+| Recorded (2026-09-17) | Observed 2026-10-06 | Source |
+|---|---|---|
+| Grolf is `62b4fef6-b0fe-4cd2-bcd7-53737a61feb4`; root member, state, label and issue reads return 403 | The Grolf roster reference resolves to `db1ac9dc-6180-47d0-aa87-e1bf46d10707` (jaradd+grolf, created 2026-09-17 11:30 UTC). It is an active project member of 33GOD, PX, BB, DECK, GENESIS, HERPM, HEYMA, HOLOC, HOLYF, MOMO, PJAN, SIDE and the archived CNDY, and gets 403 on JIMB members. `62b4fef6` (grolf@delo.sh) has an inactive 33god workspace membership, no project membership, and an API token last used 2026-09-17 11:10 UTC | `GET /api/v1/users/me/` per key; 33GOD and PX `members/`; Grolf `GET /workspaces/33god/projects/` (`is_member`); read-only Plane ORM query of WorkspaceMember, ProjectMember and APIToken `last_used` |
+| Root native PM identity not yet enrolled | Two candidates exist. Besides Grolf `db1ac9dc`, the agent-registry row `33god-pm` uses `op://DeLoSecrets/Plane Agent 33god-pm/apiKey`, which resolves to `b29eaffc-cc8d-4de1-a10b-7425c67177ab` (33god-pm@delo.sh, created 2026-09-20). It is an active 33god workspace member with no project membership and gets 403 on 33GOD and PX issue reads. 33GOD and PX members are exactly Grolf `db1ac9dc` and Jarad `a95d7646` | `~/.hermes/agents-registry.yaml` (`33god-pm.plane`); `users/me`; issue GETs as `b29eaffc`; ORM query |
+| Both PM roles retain `reconcile.enabled=false` | 33GOD `agents/hermes/pm/role.yaml` has `reconcile.enabled: true` and `explicit_opt_out: false` since `8a4e7fd` (2026-09-23, migrated to the template default). JIMB still has `false` | Both `role.yaml` files; `git show 8a4e7fd` |
+| The PM heartbeat drives `managed-execution.py` (lease renewal and planner) | Per-agent heartbeat timers were retired on 2026-09-17 (hermes-agent-template `63466a8`); 28 unit files for 14 agents are archived in `~/.hermes/retired-units-20260917T091432Z`. FLUME-15 (flume `827ac7b`, merged `c48ee02` on 2026-10-05) retired the handbook requirement. No heartbeat timer or unit is installed, and `heartbeat.sh:86` is the only caller of `managed-execution.py`, so nothing renews 300 s leases or runs the planner | `git show`; archive listing; `systemctl --user list-timers --all` and `list-unit-files`; `rg managed-execution.py flume/templates` |
+| Candystore fixture event `402d9659-dc1c-4794-b902-82e6c4f14e47` returns HTTP 200 | HTTP 404 (retention). `/healthz` and `/readyz` return 204. The receipt gate must be proved again at canary time | `curl 127.0.0.1:8683` |
+| Release Pilot `6fa3757` and Momo `5d64d25` are the current sources | Pilot checkout HEAD `8e02b20` is 20 commits ahead; `7a49409`, `1bc8a13` and `ddf55e2` are not in the pin. Bundle digests: release Pilot `7c421077…`, checkout `e4b45cf4…`; release Momo `31a1911a…`, Skillex catalog `cb02f43c…` (Skillex `a855e57`, re-vendored at momo `8d110b0` on 2026-10-01), momo HEAD `4029c34` `f1d4a8bb…`. Both canaries' `.agents/skills/momo` resolve to the catalog | `release.json`; artifacts `release-input.json`; `git merge-base --is-ancestor`; `krebs.bundles.bundle_digest` in the release venv |
+| Root validation fails on missing `/home/delorenj/code/HeyMa/compose.yml`; docs drift fails on markers in `docs/cli-hook-audit-2026-09-13.md` | HeyMa deleted `compose.yml` in `1d21e8b` (2026-07-25) and now runs as systemd user units, so `heyma.yaml` lists no compose file. The audit markers were fixed in `3a8a447` (2026-09-23) | HeyMa `git log`; `platform.py validate`; `scripts/check-doc-drift.py` |
+| `spec/execution-command.v2.schema.json` lists the command operations | It listed 17. `contract.py` OPERATIONS and Bloodbank `lifecycle/task.invoke.json` list 22 (adding plan, reevaluate, override, reconcile and planner). The spec now matches `contract.py`; nothing validates against the spec file | `contract.py:9-11`; `task.invoke.json` enum; `rg execution-command` |
+
+### Unchanged
+
+- George Carlin's reference resolves to `2d34d5ca-2433-478f-8132-ccb99cec714a`.
+  JIMB members are George, damian `36dce2c2` and Jarad `a95d7646`; George gets
+  403 on PX members.
+- `verify_release` passes. Pinned readiness, run with
+  `PYTHONDONTWRITEBYTECODE=1` (no `.pyc` written), exits 1 with
+  `[{"error":"execution is not enrolled","project_id":"33god","ready":false},{"error":"execution is not enrolled","project_id":"james-brennan","ready":false}]`.
+- `git diff 2fdd5b8..HEAD -- krebs/src krebs/ops krebs/pyproject.toml krebs/uv.lock`
+  is empty. `krebs-execution.service` is disabled and inactive.
+
+### New observations
+
+- All 37 Hermes profiles set
+  `secrets.onepassword.env.PLANE_API_KEY=op://DeLoSecrets/Plane/Main/AutomaticAI API Token`,
+  which resolves to Jarad `a95d7646`. Even the enrolled PMs run on the shared
+  key. Source: `~/.hermes/profiles/*/config.yaml`; `users/me`.
+- Krebs DB: Postgres 17.10. The `krebs` schema has 7 tables (boards, commands,
+  history, intents, outbox, provider_steps, reviews), all with 0 rows, and
+  `outbox.sequence` exists (migration 003). Source: read-only transaction
+  through the release venv.
+- NATS: `BLOODBANK_COMMANDS` (`bloodbank.cmd.>` and `bloodbank.rpy.>`,
+  workqueue) has one consumer, `bloodbank-hermes-gateway`, filtering
+  `bloodbank.cmd.agent.invocation.start`. `BLOODBANK_EVENTS` (`bloodbank.evt.>`)
+  has `candystore-events`. `krebs-execution-v2` does not exist yet; `serve`
+  creates it. Source: JetStream `stream_info` and `consumers_info`.
+- The fences are open:
+  - `KREBS_FENCED_BOARDS` is absent from every n8n process environment, and the
+    Ticket Pickup Chip treats an unset value as `[]`. Source: `/proc/<pid>/environ`
+    key check; `bloodbank/integrations/n8n-workflows/ticket-pickup-chip.v1.json`.
+  - The Fleet node checks the fence only `if (route.projectPath)`, and
+    `executionMode()` returns `legacy` on any read error. Source:
+    `Fleet.node.ts:95-102,512`.
+  - Dev Journal `process-report.js:129,192,212` POSTs comments and issues and
+    PATCHes Done, with no mode check.
+  - jimb-api `apps/project-room/server/plane.mjs` POSTs `/work-items/` with
+    `labels` and `module`.
+  - `legacy_writers_fenced` is only compared to `true` (`readiness.py:22`,
+    `controller.py:40`).
+- Shadow semantics: `boardMode()` treats any non-legacy mode as managed (pilot
+  `src/surface.js:27-28`); `Plane.request()` refuses non-GET requests
+  (`src/plane.js:52`); `loadConfig` requires an enrolled actor
+  (`src/config.js:158-162`); the controller refuses everything except
+  `status`/`get` unless the mode is managed (`controller.py:21`).
+- Cohort: `launch.py:35` sets `KREBS_MANIFESTS` from the release. Readiness runs
+  the full `validate_binding` and a live verify for every listed manifest
+  regardless of mode (`service.py:106-120`), while PJangler accepts incomplete
+  shadow bindings (`executionBinding.ts:28-35`).
+- Capacity: one `state['active']` per board, with lease `now+300`
+  (`contract.py:93`) and `review_until` `now+1800` after finish
+  (`contract.py:142`).
+
+The rollout plan, including the open decisions, is Flume Epic 6 in
+[`flume/_bmad-output/planning-artifacts/epics.md`](../../flume/_bmad-output/planning-artifacts/epics.md).
+The current runbook is [activation.md](activation.md).
