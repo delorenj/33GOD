@@ -1,0 +1,22 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: bloodbank-pubsub
+spec:
+  type: pubsub.jetstream
+  version: v1
+  metadata:
+    - name: natsURL
+      value: "nats://nats:4222"
+    - name: name
+      value: "bloodbank-pubsub"
+    - name: durableName
+      value: "enricher-events"
+    - name: queueGroupName
+      value: "enricher"
+    - name: streamName
+      value: "BLOODBANK_EVENTS"
+    - name: deliverPolicy
+      value: "new"
+    - name: ackWait
+      value: "30s"

@@ -72,7 +72,7 @@ services:
     restart: unless-stopped
 
   candystore-postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: candystore-postgres
     environment:
       POSTGRES_USER: candystore
@@ -282,6 +282,68 @@ services:
       - echo '33god-platform is not cloud-production-ready; this model requires local bind mounts, host services, and external local networks.' >&2; exit 64
     network_mode: none
     restart: "no"
+
+  enricher:
+    build:
+      context: ${GOD_SOURCE_ROOT:-..}/33god-platform/enricher
+    image: enricher:local
+    container_name: enricher
+    environment:
+      DATABASE_URL: postgresql://candystore:candystore@candystore-postgres:5432/candystore
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      JEV_API_KEY: ${JEV_API_KEY:-}
+    ports:
+      - target: 3002
+        published: "3002"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      candystore-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3002/dapr/subscribe', timeout=3)\""]
+      interval: 30s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      candystore-internal:
+        aliases: [enricher-app]
+    restart: unless-stopped
+
+  enricher-daprd:
+    image: daprio/daprd:1.13.0
+    container_name: enricher-daprd
+    command:
+      - ./daprd
+      - --app-id=enricher
+      - --dapr-http-port=3501
+      - --dapr-grpc-port=50002
+      - --app-port=3002
+      - --app-channel-address=enricher-app
+      - --app-protocol=http
+      - --resources-path=/components
+      - --placement-host-address=dapr-placement:50005
+      - --log-level=info
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-..}/33god-platform/enricher/dapr-components
+        target: /components
+        read_only: true
+    ports:
+      - target: 3501
+        published: "3505"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      nats-init:
+        condition: service_completed_successfully
+      dapr-placement:
+        condition: service_started
+      enricher:
+        condition: service_healthy
+    networks: [candystore-internal, bloodbank-network]
+    restart: unless-stopped
 
 networks:
   bloodbank-network:
