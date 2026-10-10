@@ -302,3 +302,63 @@ help and override resolution tests; fresh install, preview, rerun, operator-edit
 and BMAD-update checks; live 33GOD activation and independent review artifacts.
 The BMB YAML/TOML/scaffold reconciliation in `PJAN-166` remains separate: module
 integration must not claim that installation wrinkle resolved incidentally.
+
+## I-5 Employees use company identities across mail, access and code/tickets
+
+**Outcome.** A named employee keeps one company identity across posts and agent
+harnesses, receives invitations at `@agents.delo.sh`, requests only approved API
+access, and leaves code/ticket comments with verified author attribution. Retirement
+stops access while preserving the identity behind historical work.
+
+**Owner:** `33god` for integrated acceptance, parent ticket `33GOD-82`.
+Flume owns the employment/contact/access-binding epic `FLUME-46`; its seven
+implementation stories live in Flume's own planning artifacts and board.
+Pilot's owner request is `PX-13`. No implementation or activation is claimed by this
+planning entry. User directed autonomous research/planning on 2026-10-10.
+
+```yaml
+owner_project: 33god
+ticket_ref: 33GOD-82
+delegations:
+  - owner_project: flume
+    ticket_ref: FLUME-46
+    request: extend existing named employees with stable company identity, Cloudflare-first contact/auth bindings, approved provider access and retirement
+  - owner_project: px
+    owner_component: pilot
+    ticket_ref: PX-13
+    request: verify installed Plane native identity and membership, preserve authenticated actor routing, and read back employee-authored sandbox comments
+related_work: [flume:FLUME-39, 33god:33GOD-63]
+depends_on: []
+```
+
+**Seam acceptance criteria**
+
+- One employee retains its stable subject through Hermes and a plain client;
+  another employee cannot select its credentials or retrieve its invitations.
+- `agents.delo.sh` receiving works through literal Cloudflare routing rules,
+  without changing apex mail or buying per-employee mailboxes. Current account
+  entitlements, service-token capacity and Worker/storage costs are measured;
+  arbitrary outbound email remains optional, not assumed free.
+- GitHub and Plane readbacks show the native principals declared in Flume's
+  bindings. Shared-bot text attribution is never labeled native-distinct;
+  mutable git author/email fields are not authenticated comment authorship.
+- Existing Grolf/33god-pm Plane candidates are reconciled before account adoption.
+  Pilot owns provider writes, PJangler owns project enrollment and Krebs retains
+  managed execution. Model-gateway tokens do not establish a Plane identity.
+- Suspension denies new grants/mail access; provider retirement is proven or its
+  residual expiry/manual action is explicit. Static upstream keys cannot be made
+  short-lived by an internal timer. History remains linked to retired subjects.
+- Durable evidence uses existing Bloodbank/Candystore contracts without credentials
+  or raw verification mail. Schema additions, if needed, are owned by Bloodbank.
+
+**Seam evidence.** Two canary employees, one sandbox code repository and ticket
+board, actual provider-author readbacks, cross-harness identity receipts,
+negative identity/mail tests, measured revocation/expiry and cost/capacity checks.
+Source tests, sandbox evidence and live deployment remain separate claims.
+No workforce rollout or board-mode cutover is part of this planning pass.
+
+**Canonical child plan:**
+[Flume company identity](../../flume/_bmad-output/planning-artifacts/employee-company-identity/epics.md),
+with requirements, architecture and cited research alongside it. Child stories
+are not duplicated here. Planning publication advances the Flume gitlink only;
+unrelated component pins and main-checkout work are preserved.
