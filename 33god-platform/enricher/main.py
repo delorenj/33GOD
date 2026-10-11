@@ -89,14 +89,15 @@ async def _do_handle_tool_completed(body: dict):
     # ---------------------------------------------------------
     jev_endpoint = os.environ.get("JEV_ENDPOINT", "https://openrouter.ai/api/v1/chat/completions")
     jev_api_key = os.environ.get("JEV_API_KEY")
+    jev_model = os.environ.get("JEV_MODEL", "meta-llama/llama-3.1-8b-instruct")
     if jev_api_key:
         try:
-            logger.info(f"Calling OpenRouter JEV route for slop classification on {event_id}...")
+            logger.info(f"Calling OpenRouter JEV route ({jev_model}) for slop classification on {event_id}...")
             r = requests.post(jev_endpoint, headers={
                 "Authorization": f"Bearer {jev_api_key}",
                 "Content-Type": "application/json"
             }, json={
-                "model": "aai/openrouter-personal",
+                "model": jev_model,
                 "messages": [
                     {"role": "system", "content": "You are a classifier checking for 'slop' (unhelpful, generic, or unwanted automated AI output). Classify this event payload."},
                     {"role": "user", "content": text_to_embed}
@@ -119,6 +120,8 @@ async def _do_handle_tool_completed(body: dict):
                     }
                 }
             }, timeout=10)
+            if not r.ok:
+                logger.error(f"JEV API call returned {r.status_code}: {r.text}")
             r.raise_for_status()
             res = r.json()
             
@@ -129,9 +132,18 @@ async def _do_handle_tool_completed(body: dict):
                     result = json.loads(content)
                     if result.get("is_slop"):
                         logger.info(f"JEV detected slop in {event_id}. Emitting bloodbank.review.slop.annotated...")
+                        session_id = body.get("correlationid")
+                        cwd = (
+                            event_data.get("working_directory")
+                            or event_data.get("cwd")
+                            or (arguments.get("Cwd") if isinstance(arguments, dict) else None)
+                        )
                         emit_event("bloodbank.evt.review.slop.annotated", {
                             "target_event_id": event_id,
+                            "session_id": session_id,
+                            "cwd": cwd,
                             "tool_name": tool_name,
+                            "arguments": arguments,
                             "confidence": result.get("confidence"),
                             "reason": result.get("reason")
                         })
@@ -205,19 +217,22 @@ async def _do_handle_session_ended(body: dict):
     # CALL LLM (e.g., OpenRouter) TO SUMMARIZE SESSION
     # ---------------------------------------------------------
     api_key = os.environ.get("OPENROUTER_API_KEY")
+    summary_model = os.environ.get("SESSION_SUMMARY_MODEL", "meta-llama/llama-3.1-8b-instruct")
     summary = ""
     if api_key:
-        logger.info("Calling OpenRouter for session summary...")
+        logger.info(f"Calling OpenRouter ({summary_model}) for session summary...")
         try:
             r = requests.post("https://openrouter.ai/api/v1/chat/completions", headers={
                 "Authorization": f"Bearer {api_key}"
             }, json={
-                "model": "google/gemini-flash-1.5-8b",
+                "model": summary_model,
                 "messages": [
                     {"role": "system", "content": "Summarize this agent session into a short dense paragraph (3-4 sentences max). Focus on what was achieved."},
                     {"role": "user", "content": f"Session Tool Calls:\n{tool_text}"}
                 ]
             }, timeout=10)
+            if not r.ok:
+                logger.error(f"OpenRouter LLM call returned {r.status_code}: {r.text}")
             r.raise_for_status()
             summary = r.json()["choices"][0]["message"]["content"]
         except Exception as err:
