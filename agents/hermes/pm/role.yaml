@@ -118,3 +118,10 @@ provisioned_by: hermes-agent-template
 service_state:
   heartbeat: "retired"
   gateway: "active"
+company_identity:
+  version: 1
+  subject: "1dcd3567-3b5e-46b0-a6c3-a2753d6c763b"
+  handle: "grolf"
+  email: "grolf@agents.delo.sh"
+  status: "active"
+  enrolled_at: "2026-10-13T09:14:09.584Z"
