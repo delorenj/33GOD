@@ -1,0 +1,41 @@
+/**
+ * agents-facade — edge identity facade (FLUME-48) + employee mailbox ingress (FLUME-49).
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "agents-facade",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-13",
+
+	// FLUME-48: the facade owns identity.delo.sh. Cloudflare Access sits in front;
+	// the worker refuses direct-origin calls on the access path.
+	"routes": [
+		{
+			"pattern": "identity.delo.sh/*",
+			"zone_name": "delo.sh",
+		},
+	],
+
+	"observability": {
+		"enabled": true,
+	},
+	"upload_source_maps": true,
+
+	// FLUME-49: raw-mail mailbox storage. Per the story, mail content lives here —
+	// "mailbox storage, not a second event ledger" — never on the agent bus.
+	"r2_buckets": [
+		{
+			"binding": "MAILBOX",
+			"bucket_name": "agents-facade-mailbox",
+		},
+	],
+
+	"vars": {
+		// Enrolled employee addresses allowed to receive (CSV). The owned routing
+		// projection: a recipient outside this list is rejected at SMTP time.
+		"MAILBOX_ALLOWLIST": "grolf@agents.delo.sh",
+		// Bounded ingestion policy (bytes). Oversize mail is rejected, never stored.
+		"MAX_MESSAGE_BYTES": "10485760",
+	},
+}
