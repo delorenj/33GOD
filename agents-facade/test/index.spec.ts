@@ -1,8 +1,13 @@
 import { env, createExecutionContext, waitOnExecutionContext, SELF } from 'cloudflare:test';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import worker from '../src/index';
 
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
+
+// The routing projection `flume identity provision` would have written.
+beforeEach(async () => {
+	await env.MAILBOX_ALLOWLIST.put('allowlist/grolf@agents.delo.sh', JSON.stringify({ handle: 'grolf', subject: 'fixture-subject', provisioned_at: new Date().toISOString() }));
+});
 
 function stubMessage(overrides: { from?: string; to?: string; raw?: string; messageId?: string; setReject?: ReturnType<typeof vi.fn> }) {
 	const body = overrides.raw ?? 'From: sender@example.com\r\nTo: grolf@agents.delo.sh\r\nSubject: hi\r\n\r\nhello\r\n';

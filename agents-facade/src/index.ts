@@ -41,12 +41,15 @@ async function sha256Hex(data: ArrayBuffer): Promise<string> {
 	return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function allowlisted(env: Env, address: string): boolean {
-	const list = (env.MAILBOX_ALLOWLIST ?? '')
-		.split(',')
-		.map((a) => a.trim().toLowerCase())
-		.filter(Boolean);
-	return list.includes(address.trim().toLowerCase());
+/**
+ * The routing projection lives in KV as `allowlist/<address>` keys written by
+ * `flume identity provision` (FLUME-56): hiring never redeploys this worker.
+ * A KV failure throws — transient, so delivery is retried rather than a mail
+ * being falsely accepted or silently dropped on an infrastructure hiccup.
+ */
+async function allowlisted(env: Env, address: string): Promise<boolean> {
+	const entry = await env.MAILBOX_ALLOWLIST.get<{ handle: string }>(`allowlist/${address.trim().toLowerCase()}`, 'json');
+	return entry !== null && typeof entry.handle === 'string';
 }
 
 function logMail(event: string, fields: Record<string, unknown>): void {
@@ -91,7 +94,7 @@ export default {
 	async email(message: ForwardableEmailMessage, env: Env, ctx: ExecutionContext): Promise<void> {
 		const to = message.to.toLowerCase();
 
-		if (!allowlisted(env, to)) {
+		if (!(await allowlisted(env, to))) {
 			logMail('mail.rejected', { reason: 'unknown-recipient', to });
 			message.setReject('Unknown recipient');
 			return;

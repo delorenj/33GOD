@@ -31,10 +31,17 @@
 		},
 	],
 
+	// The routing projection: enrolled addresses live in KV as
+	// `allowlist/<address>` keys, written by `flume identity provision` — hiring
+	// never redeploys this worker. A missing key means the recipient is rejected.
+	"kv_namespaces": [
+		{
+			"binding": "MAILBOX_ALLOWLIST",
+			"id": "6bc4a16cfaa54c2894793ec67a9a8334",
+		},
+	],
+
 	"vars": {
-		// Enrolled employee addresses allowed to receive (CSV). The owned routing
-		// projection: a recipient outside this list is rejected at SMTP time.
-		"MAILBOX_ALLOWLIST": "grolf@agents.delo.sh",
 		// Bounded ingestion policy (bytes). Oversize mail is rejected, never stored.
 		"MAX_MESSAGE_BYTES": "10485760",
 	},
