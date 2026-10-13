@@ -125,3 +125,8 @@ company_identity:
   email: "grolf@agents.delo.sh"
   status: "active"
   enrolled_at: "2026-10-13T09:14:09.584Z"
+  bindings:
+    cloudflare_access:
+      principal: "89a485d99f1d148579326ed273f92d16.access"
+      instance: "https://delonet.cloudflareaccess.com"
+      credential_ref: "op://DeLoSecrets/mrtiqvegawfdotoybfbgckehpm/egzv27be2irbvbddb5w7vvi46i"
