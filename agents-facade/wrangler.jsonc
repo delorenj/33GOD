@@ -34,10 +34,15 @@
 	// The routing projection: enrolled addresses live in KV as
 	// `allowlist/<address>` keys, written by `flume identity provision` — hiring
 	// never redeploys this worker. A missing key means the recipient is rejected.
+	// The id MUST be the namespace `flume identity provision` manages
+	// (~/.config/flume/identity-provisioning.yaml → kv_namespace_id,
+	// titled "agents-facade-allowlist"). Deploying with a different namespace id
+	// (e.g. one wrangler auto-created from the binding name) makes the worker
+	// reject every enrolled address at SMTP time.
 	"kv_namespaces": [
 		{
 			"binding": "MAILBOX_ALLOWLIST",
-			"id": "6bc4a16cfaa54c2894793ec67a9a8334",
+			"id": "f743f783d25444c4a3272d84f52f4ac7",
 		},
 	],
 
