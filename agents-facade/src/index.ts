@@ -27,6 +27,17 @@ declare global {
 }
 
 const ACCESS_REQUEST_PATH = '/v1/access/requests'; // flume-hr ACCESS_REQUEST_PATH
+// FLUME-53: employee-authenticated mail read. The Worker owns the R2 binding; the
+// flume access facade (the origin) owns identity and employment status. The Worker
+// asks the origin who the verified employee is and whether they are active, and
+// reads ONLY that employee's prefix. Nothing in the request selects a mailbox.
+const MAIL_MESSAGES_PATH = '/v1/mail/messages';
+const MAIL_AUTHORIZE_PATH = '/v1/mail/authorize'; // flume-hr MAIL_AUTHORIZE_PATH
+const MAIL_DOMAIN = 'agents.delo.sh';
+const HANDLE = /^[a-z0-9][a-z0-9_-]{0,57}$/u;
+const MESSAGE_ID = /^[0-9a-f]{64}$/u;
+const MAX_MAIL_REQUEST_BYTES = 1024;
+const MAIL_LIST_LIMIT = 100;
 const DEFAULT_MAX_MESSAGE_BYTES = 10 * 1024 * 1024;
 
 function refusal(status: number, code: string, detail: string): Response {
@@ -57,6 +68,104 @@ function logMail(event: string, fields: Record<string, unknown>): void {
 	console.log(JSON.stringify({ event, at: new Date().toISOString(), ...fields }));
 }
 
+interface MailAuthorization { ok?: boolean; status?: string; handle?: string; subject?: string; run_id?: string; harness?: string }
+
+/**
+ * FLUME-53 mail read. Order matters and nothing is read before step 4:
+ * 1. POST only, an Access assertion present (the origin re-verifies it), origin provisioned.
+ * 2. Bounded, closed request body: {operation: list|read, message_id?: sha256 hex}.
+ * 3. The origin decides identity and employment status. Any non-authorized answer
+ *    (suspended, retired, unknown client, bad run) is returned to the caller unchanged and
+ *    NOTHING is read from storage.
+ * 4. The allowlist projection must still hold the employee's address: suspension removes
+ *    that key, so a mailbox whose projection is gone is closed even if the origin were stale.
+ * 5. Only `mail/<handle>/` of the AUTHENTICATED handle is listed or read.
+ * Mail is data: it is returned, never parsed, followed or acted on, and never logged.
+ */
+async function readMail(request: Request, env: Env): Promise<Response> {
+	if (request.method !== 'POST') return refusal(405, 'method-not-allowed', 'POST only');
+	if (!request.headers.get('cf-access-jwt-assertion')) {
+		return refusal(401, 'missing-assertion', 'no Cloudflare Access assertion; mail is readable only through Access');
+	}
+	if (!env.ACCESS_FACADE_ORIGIN) {
+		return refusal(501, 'facade-not-provisioned', 'the access facade origin is not provisioned');
+	}
+	const text = await request.text();
+	if (new TextEncoder().encode(text).byteLength > MAX_MAIL_REQUEST_BYTES) return refusal(413, 'request-too-large', 'mail request body exceeds the limit');
+	let parsed: { operation?: unknown; message_id?: unknown };
+	try { parsed = JSON.parse(text); } catch { return refusal(400, 'invalid-request', 'body must be JSON'); }
+	if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return refusal(400, 'invalid-request', 'body must be an object');
+	const extra = Object.keys(parsed).filter((k) => k !== 'operation' && k !== 'message_id');
+	if (extra.length) return refusal(400, 'invalid-request', `unknown field: ${extra[0]}`);
+	if (parsed.operation !== 'list' && parsed.operation !== 'read') return refusal(400, 'invalid-request', 'operation must be list or read');
+	if (parsed.operation === 'read' && !(typeof parsed.message_id === 'string' && MESSAGE_ID.test(parsed.message_id))) {
+		return refusal(400, 'invalid-request', 'read requires message_id: a 64-hex content hash');
+	}
+	if (parsed.operation === 'list' && parsed.message_id !== undefined) return refusal(400, 'invalid-request', 'list takes no message_id');
+
+	const upstream = new URL(MAIL_AUTHORIZE_PATH, env.ACCESS_FACADE_ORIGIN);
+	const authorize = await fetch(new Request(upstream, { method: 'POST', headers: request.headers, body: text }));
+	let auth: MailAuthorization;
+	try { auth = (await authorize.json()) as MailAuthorization; } catch {
+		return refusal(502, 'bad-origin-response', `the access facade answered HTTP ${authorize.status} without JSON`);
+	}
+	if (authorize.status !== 200 || auth.status !== 'authorized') {
+		// Pass the facade's own refusal through unchanged; storage was never touched.
+		return Response.json(auth, { status: authorize.status === 200 ? 403 : authorize.status, headers: { 'cache-control': 'no-store' } });
+	}
+	const handle = auth.handle;
+	if (typeof handle !== 'string' || !HANDLE.test(handle)) return refusal(502, 'bad-origin-response', 'the access facade returned no valid handle');
+
+	if (!(await allowlisted(env, `${handle}@${MAIL_DOMAIN}`))) {
+		logMail('mail.read.denied', { handle, reason: 'mailbox-closed', run_id: auth.run_id ?? null });
+		return Response.json({ ok: false, status: 'denied', code: 'mailbox-closed', detail: 'the mailbox allowlist entry is absent; the mailbox is closed to reads until the employee is restored' }, { status: 403, headers: { 'cache-control': 'no-store' } });
+	}
+
+	const prefix = `mail/${handle}/`;
+	const correlation = { handle, subject: auth.subject ?? null, run_id: auth.run_id ?? null, harness: auth.harness ?? null };
+	if (parsed.operation === 'list') {
+		const messages: Array<Record<string, unknown>> = [];
+		let cursor: string | undefined;
+		do {
+			const page = await env.MAILBOX.list({ prefix, limit: MAIL_LIST_LIMIT, cursor, include: ['customMetadata'] });
+			for (const object of page.objects) {
+				messages.push({
+					id: object.key.slice(object.key.lastIndexOf('/') + 1).replace(/\.eml$/u, ''),
+					size: object.size,
+					received_at: object.customMetadata?.['received-at'] ?? object.uploaded.toISOString(),
+					from: object.customMetadata?.from ?? null,
+					subject: object.customMetadata?.subject ?? null,
+				});
+			}
+			cursor = page.truncated ? page.cursor : undefined;
+		} while (cursor && messages.length < 1000);
+		logMail('mail.read', { operation: 'list', count: messages.length, ...correlation });
+		return Response.json({ ok: true, status: 'listed', ...correlation, count: messages.length, messages }, { headers: { 'cache-control': 'no-store' } });
+	}
+
+	const wanted = parsed.message_id as string;
+	let found: string | null = null;
+	let cursor: string | undefined;
+	do {
+		const page = await env.MAILBOX.list({ prefix, limit: MAIL_LIST_LIMIT, cursor });
+		found = page.objects.find((o) => o.key.endsWith(`/${wanted}.eml`))?.key ?? null;
+		cursor = found || !page.truncated ? undefined : page.cursor;
+	} while (cursor);
+	const object = found ? await env.MAILBOX.get(found) : null;
+	if (!object) {
+		logMail('mail.read.denied', { reason: 'not-found', ...correlation });
+		// Another employee's message id and a nonexistent one are indistinguishable.
+		return Response.json({ ok: false, status: 'error', code: 'message-not-found', detail: 'no such message in this mailbox' }, { status: 404, headers: { 'cache-control': 'no-store' } });
+	}
+	const raw = await object.text();
+	logMail('mail.read', { operation: 'read', id: wanted, bytes: object.size, ...correlation });
+	return Response.json({
+		ok: true, status: 'read', ...correlation, id: wanted, size: object.size,
+		received_at: object.customMetadata?.['received-at'] ?? object.uploaded.toISOString(),
+		from: object.customMetadata?.from ?? null, subject: object.customMetadata?.subject ?? null, raw,
+	}, { headers: { 'cache-control': 'no-store' } });
+}
+
 export default {
 	// FLUME-48: HTTP Access Facade
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -77,6 +186,8 @@ export default {
 			const upstream = new URL(url.pathname + url.search, env.ACCESS_FACADE_ORIGIN);
 			return fetch(new Request(upstream, request));
 		}
+
+		if (url.pathname === MAIL_MESSAGES_PATH) return readMail(request, env);
 
 		if (url.pathname === '/' || url.pathname === '/health') {
 			return Response.json({
