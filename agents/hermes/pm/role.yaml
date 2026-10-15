@@ -136,3 +136,9 @@ company_identity:
       credential_ref: "op://DeLoSecrets/mrtiqvegawfdotoybfbgckehpm/2j7ayqlhuchnxh2vz4pyh4kzq4"
       attribution_mode: "native"
       native_actor_id: "341820121"
+    plane:
+      principal: "292ac356-3640-474e-ac01-8b0611ed6a91"
+      instance: "https://plane.delo.sh/33god"
+      credential_ref: "op://DeLoSecrets/mrtiqvegawfdotoybfbgckehpm/5td5eddyyhjnbbsgfoovfi5x2y"
+      attribution_mode: "native"
+      native_actor_id: "292ac356-3640-474e-ac01-8b0611ed6a91"
