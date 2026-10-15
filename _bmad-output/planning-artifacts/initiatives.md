@@ -313,8 +313,25 @@ stops access while preserving the identity behind historical work.
 **Owner:** `33god` for integrated acceptance, parent ticket `33GOD-82`.
 Flume owns the employment/contact/access-binding epic `FLUME-46`; its seven
 implementation stories live in Flume's own planning artifacts and board.
-Pilot's owner request is `PX-13`. No implementation or activation is claimed by this
-planning entry. User directed autonomous research/planning on 2026-10-10.
+Pilot's owner request is `PX-13`. User directed autonomous research/planning on 2026-10-10.
+
+**Status (2026-10-15, independently verified; one operator step from Done).**
+Implemented and live-proven: `FLUME-47` enrollment, `FLUME-48` Access-authenticated
+requests, `FLUME-49` company mail, `FLUME-50` scoped GitHub installation tokens (Grolf),
+`FLUME-52` native Plane identities (Grolf and Rererere), `FLUME-55`, `FLUME-56`, and
+`PX-13` (`px identity verify|comment`) are Done. Read back by the verifier: Grolf's
+conversation and inline sandbox comments are authored by `gr0lfbot[bot]` (id
+341820121); the two Plane sandbox comments on TEST-14 carry distinct actors
+`292ac356` (Grolf) and `ba82e3bd` (Rererere). `FLUME-53` (retirement) is built, twice
+independently reviewed and canaried live on Rererere (suspend/restore, disposable
+retirement) but stays in E2E; `FLUME-51` (code-review authorship) is built and proven for
+Grolf but stays In Progress. **Both are blocked on one operator action:** the
+`colrerererebot` GitHub App (5296560) has no installation, because the GitHub
+passkey ("Confirm access") prompt for its install on `delorenj/flume-identity-sandbox` is
+waiting in the operator's browser. Without it, the "two distinct native GitHub bots"
+acceptance criterion is unproven. `FLUME-46` therefore stays open. Not claimed: any board
+cutover (Grolf's Hermes PM still resolves Plane as the operator), Plane token expiry
+(unobservable through the key), FLUME-39 gateway evidence (gateway link `unverified`).
 
 ```yaml
 owner_project: 33god
