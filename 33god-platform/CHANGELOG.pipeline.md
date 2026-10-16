@@ -3,6 +3,26 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-10-16
+
+### Holocene Wax tab released over the HeyMa control surface
+
+Holocene's read-only Wax tab shipped to production (holocene `caeb75b..aac0916`).
+The API route `/api/modules/wax/catalog` reads `wax catalog --json` from the live
+HeyMa checkout, allowlist-projects the payload (no env, no command bodies, no
+stderr), caches within a TTL, and reports a DOWN source on CLI failure rather
+than healthy emptiness. The tab draws passes with bounded outcome counts,
+pipeline cards with authored/compiled drift, recent runs with machine reason
+codes only, and the worker freshness strip (live heartbeat, busy state).
+Deployed and verified live: `holocene-api.service` rebuilt and restarted, the
+`holocene-web` container force-restarted under compose project `33god-platform`
+and healthy with `/wax` in the build manifest, and an authenticated browser
+check of `https://holocene.delo.sh/wax` rendered live data with zero console
+errors. Boundary unchanged: Holocene stays read-only — pass enablement, pipeline
+compiles and runs happen only in the Wax CLI or n8n, and n8n can never become a
+second scheduler. The Wax daemon + n8n adapter deploy in HeyMa is a separate
+slice owned there. Parent integration: holocene gitlink `a8bdfa9` → `aac0916`.
+
 ## 2026-10-03
 
 ### Pilot adopted as a monorepo submodule (33GOD-79)
