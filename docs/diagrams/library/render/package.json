@@ -1,0 +1,9 @@
+{
+  "name": "33god-excalidraw-render",
+  "private": true,
+  "type": "module",
+  "description": "Renders .excalidraw / .excalidrawlib files to PNG with the real Excalidraw exporter in headless Chromium.",
+  "dependencies": {
+    "playwright": "1.56.1"
+  }
+}

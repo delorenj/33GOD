@@ -1,0 +1,4 @@
+dist/
+render/node_modules/
+render/package-lock.json
+__pycache__/
