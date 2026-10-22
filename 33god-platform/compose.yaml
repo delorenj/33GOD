@@ -289,7 +289,7 @@ services:
     image: enricher:local
     container_name: enricher
     environment:
-      DATABASE_URL: postgresql://candystore:***@candystore-postgres:5432/candystore
+      DATABASE_URL: postgresql://candystore:${CANDYSTORE_DB_PASSWORD:-candystore}@candystore-postgres:5432/candystore
       # LLM calls target the AutomaticAI gateway (OpenAI-compatible). Keys
       # resolve per call (JEV_API_KEY, SUMMARY_API_KEY) with a shared
       # OPENAI_COMPAT_API_KEY fallback; endpoints/models are env-overridable
