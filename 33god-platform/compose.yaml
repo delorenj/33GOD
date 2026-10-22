@@ -289,9 +289,18 @@ services:
     image: enricher:local
     container_name: enricher
     environment:
-      DATABASE_URL: postgresql://candystore:candystore@candystore-postgres:5432/candystore
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      DATABASE_URL: postgresql://candystore:***@candystore-postgres:5432/candystore
+      # LLM calls target the AutomaticAI gateway (OpenAI-compatible). Keys
+      # resolve per call (JEV_API_KEY, SUMMARY_API_KEY) with a shared
+      # OPENAI_COMPAT_API_KEY fallback; endpoints/models are env-overridable
+      # with gateway defaults.
+      OPENAI_COMPAT_API_KEY: ${OPENAI_COMPAT_API_KEY:-}
       JEV_API_KEY: ${JEV_API_KEY:-}
+      SUMMARY_API_KEY: ${SUMMARY_API_KEY:-}
+      JEV_ENDPOINT: ${JEV_ENDPOINT:-}
+      SUMMARY_ENDPOINT: ${SUMMARY_ENDPOINT:-}
+      JEV_MODEL: ${JEV_MODEL:-}
+      SESSION_SUMMARY_MODEL: ${SESSION_SUMMARY_MODEL:-}
     ports:
       - target: 3002
         published: "3002"

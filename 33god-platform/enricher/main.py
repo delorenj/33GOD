@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI, Request, Response
 from sentence_transformers import SentenceTransformer
 import psycopg2
+import requests
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("enricher")
@@ -15,10 +16,66 @@ logger.info("Loading SentenceTransformer model BAAI/bge-small-en-v1.5...")
 model = SentenceTransformer('BAAI/bge-small-en-v1.5')
 logger.info("Model loaded.")
 
-DB_URL = os.environ.get("DATABASE_URL", "postgresql://candystore:candystore@candystore-postgres:5432/candystore")
+DB_URL = os.environ.get("DATABASE_URL", "postgresql://candystore:***@candystore-postgres:5432/candystore")
 
 def get_db():
     return psycopg2.connect(DB_URL)
+
+# Both LLM calls (slop gate and session summary) target the AutomaticAI
+# gateway, an OpenAI-compatible chat-completions endpoint. Per-call overrides:
+# JEV_ENDPOINT/JEV_MODEL for the slop gate, SUMMARY_ENDPOINT/SESSION_SUMMARY_MODEL
+# for the summary. Keys resolve the call-specific JEV_API_KEY / SUMMARY_API_KEY
+# first and fall back to a shared OPENAI_COMPAT_API_KEY.
+GATEWAY_CHAT_URL = "https://api.automaticai.io/v1/chat/completions"
+GATEWAY_DEFAULT_MODEL = "automaticai/auto/fast"
+
+def _gateway_endpoint(env_override: str) -> str:
+    value = os.environ.get(env_override, "")
+    return value or GATEWAY_CHAT_URL
+
+def _gateway_model(env_override: str) -> str:
+    value = os.environ.get(env_override, "")
+    return value or GATEWAY_DEFAULT_MODEL
+
+def _gateway_key(specific_key_env: str) -> str | None:
+    return os.environ.get(specific_key_env, "") or os.environ.get("OPENAI_COMPAT_API_KEY", "") or None
+
+def _chat_completion(endpoint: str, api_key: str, model: str, messages: list, response_format: dict | None = None, timeout: int = 10) -> str:
+    """POST one chat completion and return the assistant content.
+
+    The gateway forwards response_format to the upstream model, but not every
+    upstream accepts json_schema; on a 400 we retry once without
+    response_format, so callers must parse the returned content defensively.
+    """
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    payload = {"model": model, "messages": messages}
+    if response_format is not None:
+        payload["response_format"] = response_format
+    r = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
+    if r.status_code == 400 and "response_format" in payload:
+        logger.warning(f"{model} rejected response_format ({r.text[:200]}); retrying without it")
+        del payload["response_format"]
+        r = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"]
+
+def _parse_json_content(content) -> dict | None:
+    """Best-effort JSON parse of assistant content; tolerates markdown fences.
+
+    Returns None whenever the content is empty or not valid JSON — the slop
+    gate then just skips annotation instead of crashing the event handler.
+    """
+    if not content:
+        return None
+    text = str(content).strip()
+    if text.startswith("```"):
+        text = "\n".join(line for line in text.splitlines() if not line.strip().startswith("```")).strip()
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        logger.error(f"LLM content was not parseable JSON: {text[:200]}")
+        return None
+    return parsed if isinstance(parsed, dict) else None
 
 @app.get("/dapr/subscribe")
 def subscribe():
@@ -85,24 +142,24 @@ async def _do_handle_tool_completed(body: dict):
     logger.info(f"Successfully embedded tool event {event_id}")
     
     # ---------------------------------------------------------
-    # JEV Anti-Slop (System One classification) via OpenRouter
+    # JEV Anti-Slop (System One classification) via AutomaticAI gateway
     # ---------------------------------------------------------
-    jev_endpoint = os.environ.get("JEV_ENDPOINT", "https://openrouter.ai/api/v1/chat/completions")
-    jev_api_key = os.environ.get("JEV_API_KEY")
-    jev_model = os.environ.get("JEV_MODEL", "meta-llama/llama-3.1-8b-instruct")
+    jev_api_key = _gateway_key("JEV_API_KEY")
+    jev_model = _gateway_model("JEV_MODEL")
     if jev_api_key:
         try:
-            logger.info(f"Calling OpenRouter JEV route ({jev_model}) for slop classification on {event_id}...")
-            r = requests.post(jev_endpoint, headers={
-                "Authorization": f"Bearer {jev_api_key}",
-                "Content-Type": "application/json"
-            }, json={
-                "model": jev_model,
-                "messages": [
-                    {"role": "system", "content": "You are a classifier checking for 'slop' (unhelpful, generic, or unwanted automated AI output). Classify this event payload."},
+            logger.info(f"Calling gateway JEV route ({jev_model}) for slop classification on {event_id}...")
+            content = _chat_completion(
+                _gateway_endpoint("JEV_ENDPOINT"),
+                jev_api_key,
+                jev_model,
+                messages=[
+                    {"role": "system", "content": "You are a classifier checking for 'slop' (unhelpful, generic, or unwanted automated AI output). Classify this event payload. Reply with JSON only: {\"is_slop\": boolean, \"confidence\": number, \"reason\": string}."},
                     {"role": "user", "content": text_to_embed}
                 ],
-                "response_format": {
+                # json_schema preferred; _chat_completion drops it and retries
+                # when an upstream rejects it, so parsing stays defensive.
+                response_format={
                     "type": "json_schema",
                     "json_schema": {
                         "name": "slop_classification",
@@ -119,45 +176,32 @@ async def _do_handle_tool_completed(body: dict):
                         "strict": True
                     }
                 }
-            }, timeout=10)
-            if not r.ok:
-                logger.error(f"JEV API call returned {r.status_code}: {r.text}")
-            r.raise_for_status()
-            res = r.json()
-            
-            # Parse the structured output
-            content = res.get("choices", [{}])[0].get("message", {}).get("content", "")
-            if content:
-                try:
-                    result = json.loads(content)
-                    if result.get("is_slop"):
-                        logger.info(f"JEV detected slop in {event_id}. Emitting bloodbank.review.slop.annotated...")
-                        session_id = body.get("correlationid")
-                        cwd = (
-                            event_data.get("working_directory")
-                            or event_data.get("cwd")
-                            or (arguments.get("Cwd") if isinstance(arguments, dict) else None)
-                        )
-                        emit_event("bloodbank.evt.review.slop.annotated", {
-                            "target_event_id": event_id,
-                            "session_id": session_id,
-                            "cwd": cwd,
-                            "tool_name": tool_name,
-                            "arguments": arguments,
-                            "confidence": result.get("confidence"),
-                            "reason": result.get("reason")
-                        })
-                except json.JSONDecodeError:
-                    logger.error(f"Failed to parse JEV JSON response: {content}")
+            )
+            result = _parse_json_content(content)
+            if result is not None and result.get("is_slop"):
+                logger.info(f"JEV detected slop in {event_id}. Emitting bloodbank.review.slop.annotated...")
+                session_id = body.get("correlationid")
+                cwd = (
+                    event_data.get("working_directory")
+                    or event_data.get("cwd")
+                    or (arguments.get("Cwd") if isinstance(arguments, dict) else None)
+                )
+                emit_event("bloodbank.evt.review.slop.annotated", {
+                    "target_event_id": event_id,
+                    "session_id": session_id,
+                    "cwd": cwd,
+                    "tool_name": tool_name,
+                    "arguments": arguments,
+                    "confidence": result.get("confidence"),
+                    "reason": result.get("reason")
+                })
         except Exception as err:
             logger.error(f"JEV API call failed: {err}")
     else:
-        logger.info("JEV_API_KEY not set. Skipping live JEV evaluation.")
+        logger.info("No JEV_API_KEY/OPENAI_COMPAT_API_KEY set. Skipping live JEV evaluation.")
 
     return {"status": "SUCCESS"}
 
-
-import requests
 
 def emit_event(topic: str, payload: dict):
     # Dapr sidecar is at enricher-daprd:3501 (as mapped in compose.yaml for enricher-daprd)
@@ -214,32 +258,28 @@ async def _do_handle_session_ended(body: dict):
     tool_text = "\n".join(tool_logs)
 
     # ---------------------------------------------------------
-    # CALL LLM (e.g., OpenRouter) TO SUMMARIZE SESSION
+    # CALL LLM (AutomaticAI gateway) TO SUMMARIZE SESSION
     # ---------------------------------------------------------
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    summary_model = os.environ.get("SESSION_SUMMARY_MODEL", "meta-llama/llama-3.1-8b-instruct")
+    api_key = _gateway_key("SUMMARY_API_KEY")
+    summary_model = _gateway_model("SESSION_SUMMARY_MODEL")
     summary = ""
     if api_key:
-        logger.info(f"Calling OpenRouter ({summary_model}) for session summary...")
+        logger.info(f"Calling gateway ({summary_model}) for session summary...")
         try:
-            r = requests.post("https://openrouter.ai/api/v1/chat/completions", headers={
-                "Authorization": f"Bearer {api_key}"
-            }, json={
-                "model": summary_model,
-                "messages": [
+            summary = _chat_completion(
+                _gateway_endpoint("SUMMARY_ENDPOINT"),
+                api_key,
+                summary_model,
+                messages=[
                     {"role": "system", "content": "Summarize this agent session into a short dense paragraph (3-4 sentences max). Focus on what was achieved."},
                     {"role": "user", "content": f"Session Tool Calls:\n{tool_text}"}
                 ]
-            }, timeout=10)
-            if not r.ok:
-                logger.error(f"OpenRouter LLM call returned {r.status_code}: {r.text}")
-            r.raise_for_status()
-            summary = r.json()["choices"][0]["message"]["content"]
+            )
         except Exception as err:
-            logger.error(f"OpenRouter LLM call failed: {err}")
+            logger.error(f"Gateway LLM call failed: {err}")
             summary = f"Automated summary failed. Included {len(events)} events."
     else:
-        logger.info("No OPENROUTER_API_KEY set, generating basic heuristic summary.")
+        logger.info("No SUMMARY_API_KEY/OPENAI_COMPAT_API_KEY set, generating basic heuristic summary.")
         summary = f"Session completed with {len(tool_logs)} tool invocations."
 
     # Emit the session completed report
