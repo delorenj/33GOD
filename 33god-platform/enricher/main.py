@@ -40,7 +40,7 @@ def _gateway_model(env_override: str) -> str:
 def _gateway_key(specific_key_env: str) -> str | None:
     return os.environ.get(specific_key_env, "") or os.environ.get("OPENAI_COMPAT_API_KEY", "") or None
 
-def _chat_completion(endpoint: str, api_key: str, model: str, messages: list, response_format: dict | None = None, timeout: int = 10) -> str:
+def _chat_completion(endpoint: str, api_key: str, model: str, messages: list, response_format: dict | None = None, timeout: int = 30) -> str:
     """POST one chat completion and return the assistant content.
 
     The gateway forwards response_format to the upstream model, but not every
@@ -52,12 +52,26 @@ def _chat_completion(endpoint: str, api_key: str, model: str, messages: list, re
     if response_format is not None:
         payload["response_format"] = response_format
     r = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
-    if r.status_code == 400 and "response_format" in payload:
-        logger.warning(f"{model} rejected response_format ({r.text[:200]}); retrying without it")
+    content = ""
+    try:
+        content = (r.json().get("choices") or [{}])[0].get("message", {}).get("content") or ""
+    except Exception:
+        pass
+    # Two retry triggers, once each: (a) upstream rejects response_format with
+    # a 400; (b) 200 with EMPTY content — glm-5.3-flash spends small budgets on
+    # reasoning_content and returns an empty completion under response_format
+    # (seen live 2026-10-22: json_schema 200-empty, plain prompt 200 with JSON).
+    retry_worthy = (r.status_code == 400) or (r.status_code < 300 and not content.strip())
+    if retry_worthy and "response_format" in payload:
+        logger.warning(f"{model} empty/rejected response_format (status {r.status_code}); retrying without it")
         del payload["response_format"]
         r = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
+        try:
+            content = (r.json().get("choices") or [{}])[0].get("message", {}).get("content") or ""
+        except Exception:
+            content = ""
     r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
+    return content
 
 def _parse_json_content(content) -> dict | None:
     """Best-effort JSON parse of assistant content; tolerates markdown fences.
