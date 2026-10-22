@@ -41,5 +41,13 @@
       "session_start_enabled": false,
       "session_capture_enabled": false
     }
+  },
+  "bmad": {
+    "companion": {
+      "adapter": {
+        "module": "./.agents/skills/g33-33god-integration/scripts/g33_pjangler_bridge.mjs",
+        "exportName": "g33Companion"
+      }
+    }
   }
 }

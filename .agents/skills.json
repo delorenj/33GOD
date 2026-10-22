@@ -5,7 +5,8 @@
     "automaticai-gateway-ops",
     "crank-engine",
     "litellm-fallback-ladders",
-    "typesafe-ai"
+    "typesafe-ai",
+    "g33-33god-integration"
   ],
   "exclude": [
     "bmad-advanced-elicitation",
