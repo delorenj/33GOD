@@ -22,6 +22,8 @@ PROFILE_SERVICES = {
         "candystore-daprd",
         "holocene-api-preflight",
         "holocene-web",
+        "enricher",
+        "enricher-daprd",
     },
     "tools": {
         "bloodbank-nats",
@@ -34,6 +36,8 @@ PROFILE_SERVICES = {
         "holocene-web",
         "pjangler-cli",
         "pjangler-mcp",
+        "enricher",
+        "enricher-daprd",
     },
     "full": {
         "bloodbank-nats",
@@ -46,6 +50,8 @@ PROFILE_SERVICES = {
         "holocene-web",
         "pjangler-cli",
         "pjangler-mcp",
+        "enricher",
+        "enricher-daprd",
     },
     "cloud": {
         "bloodbank-nats",
@@ -57,6 +63,8 @@ PROFILE_SERVICES = {
         "holocene-api-preflight",
         "holocene-web",
         "cloud-unsupported",
+        "enricher",
+        "enricher-daprd",
     },
 }
 
@@ -90,6 +98,8 @@ EXPECTED_SERVICE_NETWORKS = {
     "candystore-daprd": {"candystore-internal", "bloodbank-network"},
     "holocene-api-preflight": {"candystore-internal"},
     "holocene-web": {"proxy"},
+    "enricher": {"candystore-internal"},
+    "enricher-daprd": {"candystore-internal", "bloodbank-network"},
     "pjangler-cli": {"default"},
     "pjangler-mcp": {"default"},
     "cloud-unsupported": set(),
