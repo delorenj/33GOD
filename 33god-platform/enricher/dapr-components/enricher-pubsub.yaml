@@ -18,5 +18,12 @@ spec:
       value: "BLOODBANK_EVENTS"
     - name: deliverPolicy
       value: "new"
+    # Each event waits on an LLM slop classification (~1-2 s). With the default
+    # 1000 in flight and a 30 s ackWait, most of the window expired before the
+    # enricher reached it and JetStream redelivered it: a redelivery storm that
+    # grew the backlog (2026-10-22). Keep in-flight near what the app can work
+    # and give each message time to finish.
     - name: ackWait
-      value: "30s"
+      value: "300s"
+    - name: maxAckPending
+      value: "32"

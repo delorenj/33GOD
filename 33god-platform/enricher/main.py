@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from fastapi import FastAPI, Request, Response
+from fastapi.concurrency import run_in_threadpool
 from sentence_transformers import SentenceTransformer
 import psycopg2
 import requests
@@ -108,15 +109,18 @@ async def handle_all_events(request: Request):
     except json.JSONDecodeError:
         return Response(status_code=200)
 
+    # The handlers block (embedding, Postgres, two gateway LLM calls). Run them
+    # in the threadpool: inside the event loop they serialized every delivery
+    # and the JetStream backlog outgrew the enricher (2026-10-22).
     event_type = body.get("type", "")
     if "agent.tool.completed" in event_type:
-        return await _do_handle_tool_completed(body)
+        return await run_in_threadpool(_do_handle_tool_completed, body)
     elif "agent.session.ended" in event_type:
-        return await _do_handle_session_ended(body)
+        return await run_in_threadpool(_do_handle_session_ended, body)
     
     return {"status": "SUCCESS"} # Ignore others
 
-async def _do_handle_tool_completed(body: dict):
+def _do_handle_tool_completed(body: dict):
     event_id = body.get("id")
     event_data = body.get("data", {})
     
@@ -226,7 +230,7 @@ def emit_event(topic: str, payload: dict):
     except Exception as e:
         logger.error(f"Failed to emit {topic}: {e}")
 
-async def _do_handle_session_ended(body: dict):
+def _do_handle_session_ended(body: dict):
     
     session_id = body.get("correlationid")
     event_data = body.get("data", {})
