@@ -1,7 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/delorenj/skillex/main/skills.schema.json",
   "inherit_global": true,
-  "skills": [],
+  "skills": [
+    "automaticai-gateway-ops",
+    "crank-engine",
+    "litellm-fallback-ladders",
+    "typesafe-ai"
+  ],
   "exclude": [
     "bmad-advanced-elicitation",
     "bmad-agent-analyst",
