@@ -379,3 +379,25 @@ No workforce rollout or board-mode cutover is part of this planning pass.
 with requirements, architecture and cited research alongside it. Child stories
 are not duplicated here. Planning publication advances the Flume gitlink only;
 unrelated component pins and main-checkout work are preserved.
+
+## I-6 Aperture — productize and monetize the 33GOD stack
+
+**Outcome.** The 8-domain stack ships as per-group Docker images + one compose
+bring-up, proven on Damien's machine (dogfood), with monetization avenues
+evaluated and the first one selected for execution.
+**Owner:** `33god` (Grolf). Project home: `33god-platform/aperture/` — all
+implementation artifacts live there; children contribute images for their own
+components on delegation.
+**Phase 1:** wrap the 8 groups (ship board: 38 components) as images, deploy
+on Damien's machine group by group, check off live.
+**Phase 2:** evaluate monetization avenues (lease agents / license stack /
+productize subsystems / ecosystem story) — notes in
+`33god-platform/aperture/research/monetization/`.
+**Phase 3:** generalization (GOD_* config surface, secrets pattern, docs).
+
+```yaml
+owner_project: 33god
+project_home: 33god-platform/aperture
+dogfood_target: Damien
+depends_on: []
+```
