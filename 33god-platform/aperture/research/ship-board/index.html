@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>33GOD Ship Board</title>
+<style>
+  :root{
+    --bg:#0b0e14;--panel:#12161f;--panel2:#161b26;--line:#232a38;
+    --txt:#d7dce6;--dim:#8b93a5;--faint:#5a6274;
+    --accent:#4f9cf9;--green:#3fb96b;--amber:#e0a640;--red:#e05a5a;
+    --chip:#1b2230;--chipB:#2a3346;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px 28px 80px}
+  h1{font-size:21px;letter-spacing:.3px;margin-bottom:2px}
+  .sub{color:var(--dim);font-size:12.5px;margin-bottom:20px;max-width:900px}
+  .meta{color:var(--faint);font-size:11px;margin-bottom:16px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+  .btn{background:var(--chip);border:1px solid var(--line);color:var(--txt);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12.5px}
+  .btn:hover{background:var(--chipB)}
+  .progress-wrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:22px}
+  .progress-bar-outer{height:10px;background:var(--chip);border-radius:6px;overflow:hidden;margin-top:8px}
+  .progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));width:0%;transition:width .4s;border-radius:6px}
+  .progress-label{font-size:12.5px;color:var(--dim)}
+  .progress-label b{color:var(--txt)}
+  .group{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:18px;overflow:hidden}
+  .group-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+  .group-head:hover{background:var(--panel2)}
+  .gcheck{width:22px;height:22px;border:2px solid var(--chipB);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:14px;color:transparent;background:var(--chip)}
+  .gcheck.on{background:var(--green);border-color:var(--green);color:#08130b}
+  .gname{font-weight:600;font-size:15px}
+  .gphase{font-size:10.5px;color:var(--faint);background:var(--chip);padding:2px 8px;border-radius:10px;white-space:nowrap}
+  .gcount{margin-left:auto;font-size:11.5px;color:var(--dim);white-space:nowrap}
+  .gdesc{padding:0 18px 12px 52px;color:var(--dim);font-size:12.5px;max-width:860px}
+  .gbody{padding:6px 18px 16px 52px;display:none}
+  .group.open .gbody{display:block}
+  .group.open .gdesc{display:block}
+  .group:not(.open) .gdesc{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{color:var(--faint);text-align:left;font-weight:500;padding:6px 10px;border-bottom:1px solid var(--line);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .ccheck{width:18px;height:18px;border:2px solid var(--chipB);border-radius:5px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:transparent;background:var(--chip)}
+  .ccheck.on{background:var(--green);border-color:var(--green);color:#08130b}
+  tr.done td{color:var(--faint)}
+  tr.done .cname{text-decoration:line-through;text-decoration-color:var(--faint)}
+  .cname{font-weight:600;white-space:nowrap}
+  .kind{font-size:10px;padding:2px 7px;border-radius:8px;white-space:nowrap}
+  .kind.container{background:#14303f;color:#5fc3f7}
+  .kind.process{background:#2b2340;color:#b193f5}
+  .kind.systemd{background:#3a2b18;color:#e8b96a}
+  .kind.repo{background:#163723;color:#67d189}
+  .kind.workflow{background:#331c2c;color:#ef8bc4}
+  .kind.external{background:#3d1d1d;color:#ef7d7d}
+  .kind.adapter{background:#3d3a1d;color:#d9d36b}
+  .kind.wrap{background:#1d2f3d;color:#7dc4ef}
+  .deps{font-size:11.5px;color:var(--dim)}
+  .deps .dep{color:var(--accent)}
+  .notes{color:var(--dim);font-size:11.5px;max-width:420px}
+  .ship{font-size:10px;padding:2px 7px;border-radius:8px;white-space:nowrap}
+  .ship.yes{background:#143024;color:#5fd38d}
+  .ship.wrap{background:#33290f;color:#e5c25f}
+  .ship.adapter{background:#331c2c;color:#ef8bc4}
+  .ship.skip{background:#2a2a2a;color:#8a8a8a}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 18px;color:var(--dim);font-size:11.5px;align-items:center}
+  .legend .kind{margin-right:2px}
+  .blocked{font-size:11px;color:var(--amber)}
+  .ready{font-size:11px;color:var(--green)}
+  h2{font-size:15px;margin:28px 0 10px;color:var(--txt)}
+  .notshipped{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+  .notshipped ul{margin-left:18px;color:var(--dim);font-size:12.5px}
+  .notshipped li{margin-bottom:5px}
+  .foot{margin-top:26px;color:var(--faint);font-size:11px}
+  .dep-warn td{background:rgba(224,166,64,.04)}
+</style>
+</head>
+<body>
+<h1>33GOD Ship Board</h1>
+<div class="sub">Full system inventory → 8 deployable component groups → dependency-ordered install plan. Each group becomes a Docker Compose bundle, wrapped and deployed on Damien's system one at a time. Check off as you go — state saves in this browser.</div>
+<div class="meta">Generated 2026-10-23 · ground truth: 33GOD repo + 10 submodules · 150 running containers · 104 systemd user units · bloodbank compose + services · n8n 2.18.4 · cron fleet</div>
+
+<div class="controls">
+  <button class="btn" onclick="expandAll(true)">Expand all</button>
+  <button class="btn" onclick="expandAll(false)">Collapse all</button>
+  <button class="btn" onclick="resetAll()">Reset checks</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-label" id="progLabel"></div>
+  <div class="progress-bar-outer"><div class="progress-bar-inner" id="progBar"></div></div>
+</div>
+
+<div class="legend">
+  <span><span class="kind container">container</span> runs in Docker today</span>
+  <span><span class="kind wrap">wrap</span> runs on host, needs containerizing</span>
+  <span><span class="kind systemd">systemd</span> user service</span>
+  <span><span class="kind process">process</span> bare process</span>
+  <span><span class="kind repo">repo</span> repo/CLI</span>
+  <span><span class="kind workflow">workflow</span> n8n workflow</span>
+  <span><span class="kind adapter">adapter</span> per-site config needed</span>
+  <span><span class="kind external">external</span> Jarad-only, not shipped</span>
+</div>
+
+<div id="board"></div>
+
+<h2>Deliberately not shipped</h2>
+<div class="notshipped"><ul id="notshipped"></ul></div>
+
+<div class="foot">Dependency rule: a group is installable when every group it depends on is fully checked. Phases encode the safe order: G1 bus → G2 integration → G3 fleet → G4 observability → G5 tooling → G6 voice → G7 enrichment → G8 orchestration.</div>
+
+<script>
+const DATA = {
+ "meta": {
+  "title": "33GOD Ship Board",
+  "subtitle": "Full system inventory \u2192 deployable component groups \u2192 dependency-ordered install plan. Target: Docker Compose per group, deploying to Damien's system.",
+  "generated": "2026-10-23",
+  "source": "Ground truth sweep: 33GOD repo + submodules, docker ps (150 containers), 104 systemd user units, bloodbank services/compose, n8n, cron, skills"
+ },
+ "groups": [
+  {
+   "id": "g1",
+   "name": "G1 \u00b7 Bloodbank Core Bus",
+   "phase": 1,
+   "desc": "The event backbone everything else publishes to. NATS + Dapr + schema registry + audit trail. Zero dependencies \u2014 install first.",
+   "components": [
+    {
+     "id": "bb-nats",
+     "name": "bloodbank-nats",
+     "kind": "container",
+     "where": "bloodbank/compose",
+     "ship": "yes",
+     "deps": [],
+     "notes": "NATS 2.10 + nats-init streams/subjects"
+    },
+    {
+     "id": "bb-dapr",
+     "name": "bloodbank-dapr-placement",
+     "kind": "container",
+     "where": "bloodbank/compose",
+     "ship": "yes",
+     "deps": [],
+     "notes": "Dapr 1.13 sidecar placement service"
+    },
+    {
+     "id": "bb-apicurio",
+     "name": "apicurio-registry",
+     "kind": "container",
+     "where": "bloodbank/compose",
+     "ship": "yes",
+     "deps": [],
+     "notes": "CloudEvents schema registry"
+    },
+    {
+     "id": "bb-catalog",
+     "name": "eventcatalog",
+     "kind": "container",
+     "where": "bloodbank/compose",
+     "ship": "yes",
+     "deps": [
+      "bb-nats"
+     ],
+     "notes": "Event catalog UI"
+    },
+    {
+     "id": "candystore",
+     "name": "candystore + postgres + daprd",
+     "kind": "container",
+     "where": "33god-platform/compose.yaml",
+     "ship": "yes",
+     "deps": [
+      "bb-nats",
+      "bb-dapr"
+     ],
+     "notes": "Durable event audit trail (CloudEvents \u2192 PostgreSQL + query API + UI)"
+    }
+   ]
+  },
+  {
+   "id": "g2",
+   "name": "G2 \u00b7 Integration Plane (n8n + webhooks)",
+   "phase": 2,
+   "desc": "n8n is a prereq for dev-journal, HeyMa workflows, and the Plane\u2192Bloodbank webhook. Runs as node binary today; wrap in container.",
+   "components": [
+    {
+     "id": "n8n",
+     "name": "n8n (v2.18.4)",
+     "kind": "process",
+     "where": "~/.local/bin/n8n :5678",
+     "ship": "wrap",
+     "deps": [],
+     "notes": "Containerize; export workflows from integrations/n8n-workflows"
+    },
+    {
+     "id": "n8n-nodes-bb",
+     "name": "n8n-nodes-bloodbank",
+     "kind": "repo",
+     "where": "bloodbank/integrations/n8n-nodes-bloodbank",
+     "ship": "yes",
+     "deps": [
+      "n8n"
+     ],
+     "notes": "Custom node package \u2014 installs into n8n image"
+    },
+    {
+     "id": "n8n-devjournal",
+     "name": "dev-journal workflows (ingress/processor/rollups/incidents/deadline)",
+     "kind": "workflow",
+     "where": "bloodbank/integrations/n8n-workflows/dev-journal",
+     "ship": "yes",
+     "deps": [
+      "n8n",
+      "n8n-nodes-bb",
+      "bb-nats"
+     ],
+     "notes": "6 workflow JSONs + build.mjs"
+    },
+    {
+     "id": "curator",
+     "name": "folder-curator (curator-serve + curator-drain) + pdf2md-serve",
+     "kind": "systemd",
+     "where": "user systemd",
+     "ship": "wrap",
+     "deps": [
+      "n8n",
+      "bb-nats"
+     ],
+     "notes": "Bloodbank\u2192n8n drain with backpressure; pdf2md HTTP converter"
+    },
+    {
+     "id": "plane-hook",
+     "name": "Plane \u2192 Bloodbank webhook",
+     "kind": "workflow",
+     "where": "n8n (live)",
+     "ship": "adapter",
+     "deps": [
+      "n8n",
+      "bb-nats"
+     ],
+     "notes": "Plane owns ticket facts; on Damien's: swap Plane for his tracker or ship Plane stack (plane-* \u00d79 containers)"
+    }
+   ]
+  },
+  {
+   "id": "g3",
+   "name": "G3 \u00b7 Agent Fleet Runtime",
+   "phase": 3,
+   "desc": "Hermes gateway + hook-hub + lifecycle services. The fleet that does the work.",
+   "components": [
+    {
+     "id": "hermes-gw",
+     "name": "hermes-gateway + hermes-dashboard",
+     "kind": "systemd",
+     "where": "user systemd",
+     "ship": "wrap",
+     "deps": [
+      "bb-nats"
+     ],
+     "notes": "Telegram/messaging ingress for the fleet; container image hermes-agent"
+    },
+    {
+     "id": "hook-hub",
+     "name": "hook-hub (bb-hook dispatcher)",
+     "kind": "systemd",
+     "where": "bloodbank/services/hook-hub",
+     "ship": "yes",
+     "deps": [
+      "bb-nats"
+     ],
+     "notes": "One dispatcher for every agent CLI's hooks; owns event publication"
+    },
+    {
+     "id": "bb-services",
+     "name": "lifecycle-controller + heartbeat-tick + agent-hooks",
+     "kind": "repo",
+     "where": "bloodbank/services",
+     "ship": "yes",
+     "deps": [
+      "bb-nats",
+      "hook-hub"
+     ],
+     "notes": "Task lifecycle + heartbeat cadence"
+    },
+    {
+     "id": "ntfy-router",
+     "name": "bloodbank-ntfy-router",
+     "kind": "container",
+     "where": "bloodbank/services/ntfy-router",
+     "ship": "yes",
+     "deps": [
+      "bb-nats"
+     ],
+     "notes": "Routes bus notifications to ntfy"
+    },
+    {
+     "id": "ntfy",
+     "name": "ntfy + ntfy-upstream-gate",
+     "kind": "container",
+     "where": "monitoring/compose",
+     "ship": "yes",
+     "deps": [],
+     "notes": "Push notification transport"
+    }
+   ]
+  },
+  {
+   "id": "g4",
+   "name": "G4 \u00b7 Observability",
+   "phase": 4,
+   "desc": "The monitoring stack \u2014 self-contained compose in monitoring/ repo.",
+   "components": [
+    {
+     "id": "mon-core",
+     "name": "prometheus + grafana + loki + alloy + otel-collector",
+     "kind": "container",
+     "where": "monitoring/compose.yml",
+     "ship": "yes",
+     "deps": [],
+     "notes": "Full compose exists; scrapes everything below"
+    },
+    {
+     "id": "mon-alerts",
+     "name": "alertmanager + uptime-kuma + dockge + health-monitor",
+     "kind": "container",
+     "where": "monitoring/compose.yml",
+     "ship": "yes",
+     "deps": [
+      "mon-core"
+     ],
+     "notes": "Alerting + uptime + container ops UI"
+    },
+    {
+     "id": "mon-exporters",
+     "name": "exporters: node / cadvisor / process / nats + aai-llm-observability",
+     "kind": "container",
+     "where": "monitoring/compose.yml",
+     "ship": "yes",
+     "deps": [
+      "mon-core",
+      "bb-nats"
+     ],
+     "notes": "aai-llm-observability tracks LLM spend (adapter: points at AAI gateway or any OpenAI-compatible)"
+    }
+   ]
+  },
+  {
+   "id": "g5",
+   "name": "G5 \u00b7 Project Tooling (PJangler + Skillex + CommonProject)",
+   "phase": 5,
+   "desc": "Operator-called-out dependency cluster: PJangler relies on Skillex (npm @delorenj/skillex) + CommonProject (copier template).",
+   "components": [
+    {
+     "id": "skillex",
+     "name": "Skillex (skill registry + packs + MCP servers)",
+     "kind": "repo",
+     "where": "~/code/skillex",
+     "ship": "yes",
+     "deps": [],
+     "notes": "npm package @delorenj/skillex 0.1.2 + ~/.agents/skills runtime dir"
+    },
+    {
+     "id": "commonproject",
+     "name": "CommonProject (copier project template)",
+     "kind": "repo",
+     "where": "~/code/CommonProject",
+     "ship": "yes",
+     "deps": [],
+     "notes": "Jinja template: mise/AGENTS/CLAUDE/obsidian-plugin scaffolding"
+    },
+    {
+     "id": "pjangler",
+     "name": "PJangler (Commands, Project Notebook, registry)",
+     "kind": "repo",
+     "where": "33GOD/pjangler",
+     "ship": "yes",
+     "deps": [
+      "skillex",
+      "commonproject",
+      "bb-nats"
+     ],
+     "notes": "pj CLI + pjangler-mcp + journal-notebook + project-registry services (compose services exist in 33god-platform)"
+    },
+    {
+     "id": "mcp-hub",
+     "name": "mcp-hub",
+     "kind": "repo",
+     "where": "33GOD/mcp-hub",
+     "ship": "yes",
+     "deps": [],
+     "notes": "MCP server hub (has Dockerfile)"
+    }
+   ]
+  },
+  {
+   "id": "g6",
+   "name": "G6 \u00b7 Voice Pipeline (HeyMa: Wax + Vinyl)",
+   "phase": 6,
+   "desc": "Operator example: 'install HeyMa \u2192 includes Wax and Vinyl + enrichment passes. n8n is a prereq. Bloodbank needed.'",
+   "components": [
+    {
+     "id": "wax",
+     "name": "Wax (recorder + pipeline engine + 11 passes)",
+     "kind": "repo",
+     "where": "HeyMa/components/wax",
+     "ship": "wrap",
+     "deps": [
+      "n8n",
+      "bb-nats"
+     ],
+     "notes": "waxd systemd; passes.d: classification, diarization, frontmatter, wikification, title-slug, transcription-enhance, domain-curation, project-extraction, ticketable, mem-ops, clipboard-copy; pipelines: doc-standard, transcript-standard"
+    },
+    {
+     "id": "vinyl",
+     "name": "Vinyl (dictation: vinyld + vinyld-serve + tray)",
+     "kind": "repo",
+     "where": "~/code/vinyl",
+     "ship": "wrap",
+     "deps": [],
+     "notes": "sherpa-onnx parakeet recognizer; thin-client dictation server"
+    },
+    {
+     "id": "transcribe",
+     "name": "transcription-service (workers 1+2)",
+     "kind": "container",
+     "where": "transcription-service compose",
+     "ship": "yes",
+     "deps": [],
+     "notes": "faster-whisper large-v3 + diarization (GPU); env -u PYTHONPATH quirk"
+    },
+    {
+     "id": "heyma-n8n",
+     "name": "HeyMa n8n workflows + n8n-nodes-heyma",
+     "kind": "workflow",
+     "where": "HeyMa/components/n8n-workflows",
+     "ship": "yes",
+     "deps": [
+      "n8n",
+      "wax"
+     ],
+     "notes": "format-intake/format-completion + release.py"
+    },
+    {
+     "id": "intake",
+     "name": "Audio intake: telnyx-s3-intake + syncthing-audio + remote-audio",
+     "kind": "repo",
+     "where": "HeyMa/components",
+     "ship": "adapter",
+     "deps": [
+      "wax"
+     ],
+     "notes": "Pick transport per deployment (S3 bucket / syncthing / LAN)"
+    },
+    {
+     "id": "vox",
+     "name": "Voxxy TTS (vox + voxxy-engine-voxcpm)",
+     "kind": "container",
+     "where": "~/docker/stacks/ai",
+     "ship": "yes",
+     "deps": [],
+     "notes": "Self-hosted TTS for spoken replies"
+    }
+   ]
+  },
+  {
+   "id": "g7",
+   "name": "G7 \u00b7 Enrichment + Memory (LLM-touching services)",
+   "phase": 7,
+   "desc": "Everything that calls an LLM. All repointed to OpenAI-compatible endpoints \u2014 for Damien's deployment these become config, not code.",
+   "components": [
+    {
+     "id": "enricher",
+     "name": "IPM enricher (33god-platform)",
+     "kind": "container",
+     "where": "33god-platform/enricher",
+     "ship": "yes",
+     "deps": [
+      "bb-nats",
+      "candystore"
+     ],
+     "notes": "Deployed via compose; LLM = any OpenAI-compatible endpoint via OPENAI_COMPAT_API_KEY; 33 tests"
+    },
+    {
+     "id": "turn-enricher",
+     "name": "bloodbank-turn-enricher",
+     "kind": "container",
+     "where": "bloodbank/services/turn-enricher",
+     "ship": "yes",
+     "deps": [
+      "bb-nats"
+     ],
+     "notes": "Bloodbank turn signal enrichment; JEV_URL \u2192 any endpoint"
+    },
+    {
+     "id": "cost-bridge",
+     "name": "bloodbank-cost-bridge",
+     "kind": "container",
+     "where": "bloodbank/services/cost-bridge",
+     "ship": "yes",
+     "deps": [
+      "bb-nats"
+     ],
+     "notes": "LLM cost events onto the bus"
+    },
+    {
+     "id": "hindsight",
+     "name": "Hindsight memory + hindsight-litellm ladder + reranker",
+     "kind": "container",
+     "where": "~/docker/stacks/ai/hindsight",
+     "ship": "yes",
+     "deps": [],
+     "notes": "vectorize 0.10.1 + TEI reranker + LiteLLM fallback ladder (provider-agnostic: point ladder at his endpoints)"
+    },
+    {
+     "id": "aai-note",
+     "name": "AAI gateway + jev-litellm ingress",
+     "kind": "external",
+     "where": "aai-gateway host",
+     "ship": "skip",
+     "deps": [],
+     "notes": "Jarad's personal LLM front door \u2014 NOT shipped; Damien brings his own endpoint. Enrichers take any OpenAI-compatible base_url"
+    }
+   ]
+  },
+  {
+   "id": "g8",
+   "name": "G8 \u00b7 Orchestration + Apps (Momo/Krebs/Flume/Holocene)",
+   "phase": 8,
+   "desc": "Top of the stack: the PM orchestrator, execution enrollment, fleet ops, and the Holocene app.",
+   "components": [
+    {
+     "id": "momo",
+     "name": "Momo (PM orchestrator: pillars + adapter + skill)",
+     "kind": "repo",
+     "where": "33GOD/momo",
+     "ship": "yes",
+     "deps": [
+      "hermes-gw",
+      "pjangler"
+     ],
+     "notes": "Human-drivable twin; shares board + Hindsight bank with Grolf"
+    },
+    {
+     "id": "krebs",
+     "name": "Krebs (execution enrollment: adapters + MCP + observability)",
+     "kind": "repo",
+     "where": "33GOD/krebs",
+     "ship": "yes",
+     "deps": [
+      "pjangler"
+     ],
+     "notes": "policyVersion-2 executionReadiness; pip wheel built (dist/)"
+    },
+    {
+     "id": "flume",
+     "name": "Flume (agent fleet operations + pm-scaffold)",
+     "kind": "repo",
+     "where": "33GOD/flume",
+     "ship": "yes",
+     "deps": [
+      "hermes-gw"
+     ],
+     "notes": "Provisions Hermes agents; identity.delo.sh access facade optional"
+    },
+    {
+     "id": "pilot",
+     "name": "Pilot (px Plane CLI)",
+     "kind": "repo",
+     "where": "33GOD/pilot",
+     "ship": "yes",
+     "deps": [],
+     "notes": "Canonical ticketing CLI \u2014 needs Plane or a Plane-compatible board"
+    },
+    {
+     "id": "holocene",
+     "name": "Holocene (apps + API + web)",
+     "kind": "container",
+     "where": "33GOD/holocene + compose",
+     "ship": "yes",
+     "deps": [
+      "bb-nats",
+      "candystore"
+     ],
+     "notes": "holocene-api systemd + holocene-web container + inbox-watcher voice memo loop"
+    }
+   ]
+  }
+ ],
+ "notshipped": [
+  "Operator desktop layer (stays on Jarad's machine): zellij Workspace + asm painters, deckard, orca-server, opencode serve, crank/zcrank crons, dashboard tabs",
+  "DeLoNET shared infra (per-site decision): traefik, cloudflare tunnels, 1Password Connect, MinIO, pgadmin \u2014 Damien's site brings his own edge + secrets",
+  "Media/household stacks (jellyfin, qbittorrent, rustdesk, adguard\u2026) \u2014 unrelated to 33GOD",
+  "Hindsight identity bank 'agent-grolf', personal memory \u2014 per-operator config"
+ ]
+};
+const LS_KEY = 'g33-ship-board-v1';
+let state = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function depStatus(g){
+  // returns {ready:bool, missing:[names]}
+  const missing = [];
+  for(const c of g.components){
+    for(const d of c.deps){
+      if(!state[d]){ const dep = findComp(d); if(dep) missing.push(dep.name); }
+    }
+  }
+  return {ready: missing.length===0, missing:[...new Set(missing)]};
+}
+function findComp(id){
+  for(const g of DATA.groups) for(const c of g.components) if(c.id===id) return c;
+  return null;
+}
+function groupDone(g){ return g.components.every(c=>state[c.id]); }
+
+function render(){
+  const board = document.getElementById('board');
+  board.innerHTML='';
+  let total=0, done=0;
+  for(const g of DATA.groups){
+    total += g.components.length;
+    done += g.components.filter(c=>state[c.id]).length;
+    const el = document.createElement('div');
+    el.className = 'group' + (state['open-'+g.id] ? ' open' : '');
+    const ds = depStatus(g);
+    const gd = groupDone(g);
+    let depNote = gd ? '' : (ds.ready ? '<span class="ready">✓ dependencies satisfied</span>' : '<span class="blocked">⚠ blocked by: '+ds.missing.join(', ')+'</span>');
+    el.innerHTML = `
+      <div class="group-head" onclick="toggleGroup('${g.id}')">
+        <div class="gcheck ${gd?'on':''}" onclick="event.stopPropagation();toggleGroupAll('${g.id}')">✓</div>
+        <span class="gname">${g.name}</span>
+        <span class="gphase">phase ${g.phase}</span>
+        <span class="gcount">${g.components.filter(c=>state[c.id]).length}/${g.components.length} ${depNote}</span>
+      </div>
+      <div class="gdesc">${g.desc}</div>
+      <div class="gbody">
+        <table>
+          <tr><th style="width:26px"></th><th>Component</th><th style="width:70px">Kind</th><th style="width:60px">Ship</th><th style="width:170px">Depends on</th><th>Notes</th></tr>
+          ${g.components.map(c=>{
+            const dnames = c.deps.map(d=>{const dc=findComp(d);return dc?`<span class="dep">${dc.name.split(' (')[0]}</span>`:d}).join(', ')||'<span style="color:var(--faint)">—</span>';
+            const blocked = c.deps.some(d=>!state[d]);
+            return `<tr class="${state[c.id]?'done':''} ${blocked&&!state[c.id]?'dep-warn':''}">
+              <td><span class="ccheck ${state[c.id]?'on':''}" onclick="event.stopPropagation();toggle('${c.id}',this)">✓</span></td>
+              <td class="cname">${c.name}</td>
+              <td><span class="kind ${c.kind}">${c.kind}</span></td>
+              <td><span class="ship ${c.ship}">${c.ship}</span></td>
+              <td class="deps">${dnames}</td>
+              <td class="notes">${c.notes}</td>
+            </tr>`;}).join('')}
+        </table>
+      </div>`;
+    board.appendChild(el);
+  }
+  const pct = total? Math.round(done/total*100):0;
+  document.getElementById('progLabel').innerHTML = `<b>${done}/${total}</b> components wrapped &amp; deployed · ${pct}%`;
+  document.getElementById('progBar').style.width = pct+'%';
+  const ul = document.getElementById('notshipped');
+  ul.innerHTML = DATA.notshipped.map(n=>`<li>${n}</li>`).join('');
+  save();
+}
+function toggle(id){ state[id]=!state[id]; render(); }
+function toggleGroup(gid){ state['open-'+gid]=!state['open-'+gid]; render(); }
+function toggleGroupAll(gid){
+  const g = DATA.groups.find(x=>x.id===gid);
+  const all = groupDone(g);
+  for(const c of g.components) state[c.id] = !all;
+  render();
+}
+function expandAll(v){ for(const g of DATA.groups) state['open-'+g.id]=v; render(); }
+function resetAll(){ if(confirm('Clear all checkmarks?')){ const opens={}; for(const k in state) if(k.startsWith('open-')) opens[k]=state[k]; state=opens; render(); } }
+render();
+</script>
+</body>
+</html>
