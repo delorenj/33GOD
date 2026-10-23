@@ -196,8 +196,10 @@ content ships.
 - **D3 bounded honestly:** no Telegram/webhook ingress; the container proves
   heartbeat → task → CloudEvent publish → correlated readback. Interactive
   ingress is G4.
-- **D5 attach not wired:** `GOD_G1_BUS_ATTACH` is documented (README) but not
-  exercised; joining G1's bus is a separately reviewed coupling.
+- **D5 attach as overlay, not default:** `compose.attach.yml` mirrors G2's
+  seam contract (external `g1-bus` network, `BLOODBANK_EVENTS` retarget for
+  the outbox only; both Compose variants validate). Not exercised against a
+  live G1 bus in this proof; standalone mode is what ran here.
 - **arm64 runtime:** all external images are arm64-manifest-verified, but only
   amd64 runtime execution was performed on this build host. Real arm64
   acceptance (Rererere's hardware) remains open.

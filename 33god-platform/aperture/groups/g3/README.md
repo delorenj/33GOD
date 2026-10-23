@@ -101,10 +101,12 @@ G2's outbox). `outbox` accepts only the fixed synthetic
 `bloodbank.evt.aperture.smoke.g3` subject for direct HTTP publish; its
 `GET /latest?subject=<s>` reads back any retained G3 event.
 
-Connecting to G1 (D5) is **not** wired by default: `GOD_G1_BUS_ATTACH` names an
-existing bus network, and joining it is a separately reviewed coupling — the
-G3 stream and subjects are self-contained and attach is a documented override,
-not a shipped link.
+Connecting to G1 (D5) uses the same seam contract as G2: the
+`compose.attach.yml` overlay retargets only the outbox adapter at an existing
+bus network (`GOD_G1_BUS_NETWORK`, external), pointing its publish/readback at
+`BLOODBANK_EVENTS` (`G3_ATTACH_STREAM`). Standalone mode — the default — keeps
+everything on the internal `G3_EVENTS` stream. Attachment is an explicit,
+separately reviewed choice, not a shipped link; see `../SEAM-G1-G2.md`.
 
 ## Resource envelope
 
