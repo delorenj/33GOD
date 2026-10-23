@@ -1,0 +1,190 @@
+{
+  "id": "apertureG2Smoke01",
+  "name": "Aperture G2 — synthetic webhook to NATS",
+  "active": false,
+  "nodes": [
+    {
+      "id": "webhook-in",
+      "name": "Webhook in",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aperture-g2-smoke",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "aperture-g2-smoke"
+    },
+    {
+      "id": "validate-and-envelope",
+      "name": "Validate and envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst body = input.body;\nif (input.headers?.['x-aperture-demo'] !== $env.GOD_DEMO_HEADER_TOKEN) {\n  return [{json: {ok: false, status: 401, error: 'demo header required'}}];\n}\nif (!body || body.ping !== true || typeof body.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.id)) {\n  return [{json: {ok: false, status: 400, error: 'synthetic UUIDv4 and ping=true required'}}];\n}\nconst subject = 'bloodbank.evt.aperture.smoke.g2';\nreturn [{json: {ok: true, event: {\n  specversion: '1.0', id: body.id, source: 'urn:33god:aperture:g2',\n  type: subject, subject, time: new Date().toISOString(),\n  datacontenttype: 'application/json', correlationid: body.id,\n  producer: 'aperture-g2-n8n', data: {ping: true, via: 'n8n-webhook'}\n}}}];"
+      }
+    },
+    {
+      "id": "valid",
+      "name": "Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "nats-publish-via-outbox",
+      "name": "NATS publish via outbox",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.GOD_OUTBOX_URL + \"/publish\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Aperture-Demo",
+              "value": "={{ $env.GOD_DEMO_HEADER_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.event) }}",
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "published-response",
+      "name": "Published response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        880,
+        -80
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "rejected-response",
+      "name": "Rejected response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        660,
+        140
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({error: $json.error}) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook in": {
+      "main": [
+        [
+          {
+            "node": "Validate and envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and envelope": {
+      "main": [
+        [
+          {
+            "node": "Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid": {
+      "main": [
+        [
+          {
+            "node": "NATS publish via outbox",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rejected response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NATS publish via outbox": {
+      "main": [
+        [
+          {
+            "node": "Published response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

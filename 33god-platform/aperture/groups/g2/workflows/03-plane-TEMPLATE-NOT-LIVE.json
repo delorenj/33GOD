@@ -1,0 +1,111 @@
+{
+  "id": "apertureG2Plane01",
+  "name": "TEMPLATE-NOT-LIVE — Plane webhook to CloudEvent",
+  "active": false,
+  "nodes": [
+    {
+      "id": "plane-webhook-template",
+      "name": "Plane webhook TEMPLATE",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "TEMPLATE-NOT-LIVE-plane",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "aperture-g2-plane-template"
+    },
+    {
+      "id": "validate-template-not-live",
+      "name": "Validate TEMPLATE NOT LIVE",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "throw new Error('TEMPLATE-NOT-LIVE: implement raw-body HMAC and deployment-owned webhook-id mapping before enabling. No live URL, credential, or project routing is included.');"
+      }
+    },
+    {
+      "id": "publish-template",
+      "name": "Publish TEMPLATE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.GOD_OUTBOX_URL + \"/publish\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Aperture-Demo",
+              "value": "={{ $env.GOD_DEMO_HEADER_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.event) }}",
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "template-not-live",
+      "name": "TEMPLATE NOT LIVE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "content": "TEMPLATE-NOT-LIVE. Shape only: webhook → validate → CloudEvent publish. Deliberately inactive and fail-closed. No Plane endpoint, secret lookup, live workflow export, custom node or production topic. Demo outbox only accepts the G2 smoke event.",
+        "height": 200,
+        "width": 550
+      }
+    }
+  ],
+  "connections": {
+    "Plane webhook TEMPLATE": {
+      "main": [
+        [
+          {
+            "node": "Validate TEMPLATE NOT LIVE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate TEMPLATE NOT LIVE": {
+      "main": [
+        [
+          {
+            "node": "Publish TEMPLATE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

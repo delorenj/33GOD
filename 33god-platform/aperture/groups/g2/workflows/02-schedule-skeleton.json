@@ -1,0 +1,70 @@
+{
+  "id": "apertureG2Sched01",
+  "name": "Aperture G2 — schedule skeleton (inactive)",
+  "active": false,
+  "nodes": [
+    {
+      "id": "schedule-skeleton",
+      "name": "Schedule skeleton",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "no-side-effects",
+      "name": "No side effects",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "operator-note",
+      "name": "Operator note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {
+        "content": "SKELETON: inactive. No external requests, credentials, or dispatch. Bind an owned task before activating.",
+        "height": 160,
+        "width": 360
+      }
+    }
+  ],
+  "connections": {
+    "Schedule skeleton": {
+      "main": [
+        [
+          {
+            "node": "No side effects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

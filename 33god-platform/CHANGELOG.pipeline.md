@@ -3,6 +3,21 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-10-23
+
+### Aperture G2 isolated integration-plane artifact
+
+Added the `god-g2` bundle: fresh n8n/Postgres, three newly authored sanitized
+workflows and a local HTTP→JetStream demo outbox. The synthetic webhook is the
+only active workflow; Plane ingress is an inactive fail-closed
+`TEMPLATE-NOT-LIVE`, with credential binding explicitly unresolved. No live n8n
+state, credentials, host ports or production networks are adopted. Curator is
+explicitly deferred pending extraction from its vault-local implementation.
+Per-image arm64/amd64 manifest checks and host execution evidence live in the
+bundle's `PROOF.md`; amd64 proof is not arm64 deployment acceptance. No G1
+attachment, production cutover or paid-hosting authorization is implied.
+
+
 ## 2026-10-16
 
 ### Holocene Wax tab released over the HeyMa control surface
