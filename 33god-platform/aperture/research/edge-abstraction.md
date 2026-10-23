@@ -15,7 +15,10 @@ edge module. That single rule makes the edge swappable.
 ## Mechanism: Compose `include` + profiles
 
 Docker Compose ≥2.20 supports `include:` — a base file pulls in other compose
-files and they share networks/volumes by name. Combined with `profiles:`:
+files and they share networks/volumes by name. Combined with `profiles:`.
+Adopted refinement (Rererere handoff 2026-10-23): incompatible selections
+(e.g. two edges at once) are rejected at **config-render time** by a
+pre-flight validator — never by a late runtime rejection container.
 
 ```
 33god-stack/
