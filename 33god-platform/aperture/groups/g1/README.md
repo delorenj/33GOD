@@ -113,3 +113,22 @@ Deviations from crib sources (all intentional, all about isolation):
 - **Production aliases** — services answer to `nats`, `postgres`,
   `candystore-app`, `dapr-placement` *inside the bundle's networks only*; the
   host's `bloodbank-network` / `candystore-internal` are untouched.
+
+
+## Platform support (linux/arm64 verified 2026-10-23)
+
+Per Damian's hardware profile (M3 Ultra, linux/arm64 target) every pinned
+image was manifest-verified for both amd64 and arm64:
+
+| Image | amd64 | arm64 |
+|---|---|---|
+| nats:2.10-alpine | ✅ | ✅ |
+| natsio/nats-box:0.14.5 | ✅ | ✅ |
+| daprio/dapr:1.13.0 | ✅ | ✅ |
+| pgvector/pgvector:pg16 | ✅ | ✅ |
+| daprio/daprd:1.13.0 | ✅ | ✅ |
+
+Verified via `docker manifest inspect` (PM re-check, 2026-10-23). The
+candystore image builds from source, so it inherits the builder's platform —
+on arm64 it must be built ON an arm64 builder (Docker Desktop handles this
+natively; note it for the Damian deploy runbook).
