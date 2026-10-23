@@ -1,0 +1,20 @@
+# Attached-mode overlay — join G3 to an existing bus (G1).
+# Usage: docker compose -f compose.yml -f compose.attach.yml up -d
+# Requires: the G1 bundle (or any bus exposing BLOODBANK_EVENTS) running and
+# GOD_G1_BUS_NETWORK / GOD_NATS_URL / G3_STREAM set in .env — the same seam
+# contract as G2 (see ../SEAM-G1-G2.md). Standalone health/readback stays on
+# the internal G3_EVENTS stream; this overlay retargets ONLY the outbox
+# adapter (publish + /latest readback) at the shared bus, so the acceptance
+# signal is the downstream consumer's readback, exactly as in G2.
+services:
+  outbox:
+    environment:
+      GOD_NATS_URL: ${GOD_NATS_URL:-nats://nats:4222}
+      G3_STREAM: ${G3_ATTACH_STREAM:-BLOODBANK_EVENTS}
+    networks:
+      - g3-internal
+      - g1-bus
+networks:
+  g1-bus:
+    name: ${GOD_G1_BUS_NETWORK:-g1-bus}
+    external: true

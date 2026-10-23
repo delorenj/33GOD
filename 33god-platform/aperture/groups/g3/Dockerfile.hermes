@@ -1,0 +1,40 @@
+# Aperture G3 — containerized Hermes agent (D2).
+#
+# Build context is the g3 directory (this Dockerfile + hermes/). The Bloodbank
+# hermes-gateway plugin is vendored under hermes/vendor/hermes-gateway and
+# installed via pip; GOD_BLOODBANK_CONTEXT is the override point for a
+# deployment re-vendoring from a different Bloodbank checkout. The shared
+# stdlib NATS publisher (hermes/nats_publish.py) is the same crib every G3
+# service uses.
+#
+# Multi-arch: python:3.12-slim and every dependency (hermes-agent wheel, uv)
+# publish linux/arm64 + linux/amd64. No secrets, tokens or provider keys are
+# baked into the image; runtime config is env-only.
+ARG GOD_PYTHON_IMAGE=python:3.12-slim
+ARG GOD_BLOODBANK_CONTEXT=hermes/vendor
+
+FROM ${GOD_PYTHON_IMAGE}
+
+ARG GOD_BLOODBANK_CONTEXT=hermes/vendor
+
+ENV HOME=/tmp \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+# uv for fast, lock-free PyPI installs (arm64 + amd64 wheels).
+RUN pip install --no-cache-dir uv
+
+# The Hermes agent framework from PyPI — gateway-agnostic, OpenAI-compatible
+# provider wiring is deployment-owned (GOD_LLM_*), no provider is baked in.
+RUN uv pip install --system --no-cache hermes-agent
+
+# Vendored Bloodbank hermes-gateway plugin (registry entry point
+# hermes_agent.plugins -> bloodbank-platform).
+COPY ${GOD_BLOODBANK_CONTEXT}/hermes-gateway /opt/hermes-gateway
+RUN uv pip install --system --no-cache /opt/hermes-gateway
+
+# G3 hermes container assets: the heartbeat task (D3 proof) + shared publisher.
+COPY hermes/heartbeat_task.py hermes/nats_publish.py /opt/hermes/
+
+WORKDIR /opt/hermes
+ENTRYPOINT ["python", "-u", "/opt/hermes/heartbeat_task.py"]
