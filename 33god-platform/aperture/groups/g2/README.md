@@ -105,7 +105,7 @@ and real Plane HMAC are not implemented or proved in v0.1.
 ## Outbox and proof boundary
 
 `nats-outbox-broker` is an owned, isolated JetStream server, not G1 or the host
-Bloodbank. `nats-outbox` is a  stdlib HTTP→NATS adapter (not an n8n custom node).
+Bloodbank. `nats-outbox` is a stdlib HTTP→NATS adapter (not an n8n custom node).
 It accepts only `bloodbank.evt.aperture.smoke.g2`, validates the CloudEvent and
 waits for JetStream's persistence acknowledgment. `GET /latest` **queries the
 NATS stream**; no HTTP cache stands in for bus evidence. Bounded retention:
