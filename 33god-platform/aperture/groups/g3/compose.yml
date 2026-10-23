@@ -1,0 +1,212 @@
+# Aperture G3 v0.1 — Agent Fleet Runtime (self-contained, no G1/G2 link).
+# Proven on this host (amd64); every external image is manifest-verified for
+# arm64+amd64 in PROOF.md. No published host ports, no AAI content, no secrets.
+# hook-hub and agent-hooks are documented-deferred (see their DEFERRED.md):
+# they are host agent-CLI / Hindsight / AAI-routing bound, not containerizable
+# honestly. G1 conventions: GOD_* vars, owned volumes/networks, no container_name.
+name: god-g3
+
+networks:
+  g3-internal:
+    name: g3-internal
+    driver: bridge
+
+volumes:
+  nats-data:
+    name: god-g3-nats-data
+  ntfy-cache:
+    name: god-g3-ntfy-cache
+  ntfy-data:
+    name: god-g3-ntfy-data
+
+services:
+  # G3 bus: owned, isolated JetStream broker. NOT G1's bus, NOT the host
+  # Bloodbank. Every G3 event lands here under the G3_EVENTS stream.
+  nats:
+    image: ${GOD_NATS_IMAGE:-nats:2.10-alpine}
+    command: [-js, -sd, /data/jetstream, -m, '8222']
+    volumes: [nats-data:/data/jetstream]
+    healthcheck:
+      test: [CMD-SHELL, 'wget -qO- http://127.0.0.1:8222/healthz >/dev/null']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 128m
+    cpus: 0.25
+    networks: [g3-internal]
+    restart: unless-stopped
+
+  # Standalone proof adapter: stdlib HTTP -> JetStream. Fixed synthetic smoke
+  # subject only; GET /latest?subject=<s> reads back any G3_EVENTS event.
+  outbox:
+    build:
+      context: ./outbox
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g3-outbox:0.1
+    environment:
+      GOD_NATS_HOST: nats
+      GOD_DEMO_HEADER_TOKEN: ${GOD_DEMO_HEADER_TOKEN:-aperture-g3-demo-only}
+      PYTHONDONTWRITEBYTECODE: '1'
+    depends_on:
+      nats: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8789/healthz', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 96m
+    cpus: 0.25
+    networks: [g3-internal]
+    restart: unless-stopped
+
+  # Heartbeat tick producer (cribbed from bloodbank heartbeat-tick; Dapr
+  # transport swapped for the stdlib NATS JetStream publisher).
+  heartbeat-tick:
+    build:
+      context: ./heartbeat
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g3-heartbeat-tick:0.1
+    environment:
+      GOD_NATS_HOST: nats
+      HEARTBEAT_INTERVAL: ${GOD_G3_HEARTBEAT_INTERVAL:-3}
+      GOD_HEALTHZ_PORT: '8786'
+      PYTHONDONTWRITEBYTECODE: '1'
+    depends_on:
+      nats: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8786/healthz', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 96m
+    cpus: 0.25
+    networks: [g3-internal]
+    restart: unless-stopped
+
+  # Lifecycle controller: verbatim-cribbed reconciler over one synthetic task
+  # envelope, publishing bloodbank.lifecycle.status.updated with a JetStream ack.
+  lifecycle-controller:
+    build:
+      context: ./lifecycle
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g3-lifecycle-controller:0.1
+    environment:
+      GOD_NATS_HOST: nats
+      GOD_G3_LIFECYCLE_ID: ${GOD_G3_LIFECYCLE_ID:-a0e5e0d0-0000-4000-8000-000000000003}
+      GOD_G3_RECONCILE_INTERVAL: ${GOD_G3_RECONCILE_INTERVAL:-15}
+      GOD_HEALTHZ_PORT: '8788'
+      PYTHONDONTWRITEBYTECODE: '1'
+    depends_on:
+      nats: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8788/healthz', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 96m
+    cpus: 0.25
+    networks: [g3-internal]
+    restart: unless-stopped
+
+  # Containerized Hermes agent (D2 image): heartbeat -> task -> publish ->
+  # readback. No Telegram/webhook ingress (G4 edge); see README.
+  hermes-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.hermes
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_HERMES_PYTHON_IMAGE:-python:3.12-slim}
+        GOD_BLOODBANK_CONTEXT: ${GOD_BLOODBANK_CONTEXT:-hermes/vendor}
+    image: god-g3-hermes-agent:0.1
+    environment:
+      GOD_NATS_HOST: nats
+      GOD_G3_PROFILE: ${GOD_G3_PROFILE:-g3-demo}
+      GOD_G3_HEARTBEAT_INTERVAL: ${GOD_G3_HEARTBEAT_INTERVAL:-5}
+      GOD_HEALTHZ_PORT: '8787'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOME: /tmp
+    depends_on:
+      nats: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 6s
+      start_period: 30s
+      retries: 20
+    cap_drop: [ALL]
+    mem_limit: 512m
+    cpus: 0.5
+    networks: [g3-internal]
+    restart: unless-stopped
+
+  # Self-contained notification transport. No host port, no upstream creds.
+  ntfy:
+    image: ${GOD_NTFY_IMAGE:-binwiederhier/ntfy:v2.33.1}
+    command: serve
+    environment:
+      NTFY_LISTEN_HTTP: ':80'
+      NTFY_AUTH_DEFAULT_ACCESS: read-write
+      NTFY_ENABLE_LOGIN: 'false'
+      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
+      NTFY_CACHE_DURATION: 12h
+    volumes:
+      - ntfy-cache:/var/cache/ntfy
+      - ntfy-data:/var/lib/ntfy
+    healthcheck:
+      test: [CMD-SHELL, 'wget -qO- http://127.0.0.1:80/v1/health >/dev/null']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 96m
+    cpus: 0.25
+    networks: [g3-internal]
+    restart: unless-stopped
+
+  # Optional upstream forwarder (profile: upstream). Inert without
+  # GOD_NTFY_UPSTREAM_URL/TOPIC — any real upstream gate is deployment-owned.
+  ntfy-upstream-gate:
+    build:
+      context: ./ntfy-gate
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g3-ntfy-upstream-gate:0.1
+    profiles: [upstream]
+    environment:
+      GOD_NTFY_SOURCE_URL: http://ntfy
+      GOD_NTFY_SOURCE_TOPIC: ${GOD_NTFY_SOURCE_TOPIC:-deploys}
+      GOD_NTFY_UPSTREAM_URL: ${GOD_NTFY_UPSTREAM_URL:-}
+      GOD_NTFY_UPSTREAM_TOPIC: ${GOD_NTFY_UPSTREAM_TOPIC:-}
+      GOD_HEALTHZ_PORT: '8790'
+      PYTHONDONTWRITEBYTECODE: '1'
+    depends_on:
+      ntfy: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8790/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 20
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 64m
+    cpus: 0.25
+    networks: [g3-internal]
+    restart: unless-stopped
+
+  # In-network curl for the smoke proof (profile: tools).
+  smoke-client:
+    image: ${GOD_CURL_IMAGE:-curlimages/curl:8.12.1}
+    profiles: [tools]
+    environment:
+      GOD_DEMO_HEADER_TOKEN: ${GOD_DEMO_HEADER_TOKEN:-aperture-g3-demo-only}
+    entrypoint: [curl]
+    mem_limit: 64m
+    networks: [g3-internal]
