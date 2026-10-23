@@ -96,10 +96,19 @@ services:
     environment:
       GOD_NATS_HOST: nats-outbox-broker
       GOD_DEMO_HEADER_TOKEN: ${GOD_DEMO_HEADER_TOKEN:-aperture-g2-demo-only}
+      # Attached mode (see ../SEAM-G1-G2.md): set GOD_BUS_NATS_URL to the
+      # shared bus (nats://nats:4222) and join its network via
+      # GOD_G1_BUS_ATTACH=true in .env — the outbox then publishes into
+      # GOD_OUTBOX_STREAM (BLOODBANK_EVENTS) instead of its own broker.
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-G2_SMOKE}
       PYTHONDONTWRITEBYTECODE: '1'
     depends_on:
       nats-outbox-broker: {condition: service_healthy}
     healthcheck:
+      # In attached mode the standalone broker is not the publish target;
+      # health comes from the /healthz attached probe instead.
+      disable: ${GOD_G1_BUS_ATTACH:-false}
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8789/healthz', timeout=3)"]
       interval: 5s
       timeout: 4s
@@ -108,7 +117,10 @@ services:
     cap_drop: [ALL]
     mem_limit: 96m
     cpus: 0.25
-    networks: [g2-internal]
+    networks:
+      - g2-internal
+      # Attached mode: docker compose -f compose.yml -f compose.attach.yml
+      # (see compose.attach.yml and ../SEAM-G1-G2.md)
     restart: unless-stopped
 
   n8n-import:

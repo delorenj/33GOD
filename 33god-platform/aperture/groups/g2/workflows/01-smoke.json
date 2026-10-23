@@ -1,6 +1,6 @@
 {
   "id": "apertureG2Smoke01",
-  "name": "Aperture G2 — synthetic webhook to NATS",
+  "name": "Aperture G2 \u2014 synthetic webhook to NATS",
   "active": false,
   "nodes": [
     {
@@ -30,7 +30,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst body = input.body;\nif (input.headers?.['x-aperture-demo'] !== $env.GOD_DEMO_HEADER_TOKEN) {\n  return [{json: {ok: false, status: 401, error: 'demo header required'}}];\n}\nif (!body || body.ping !== true || typeof body.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.id)) {\n  return [{json: {ok: false, status: 400, error: 'synthetic UUIDv4 and ping=true required'}}];\n}\nconst subject = 'bloodbank.evt.aperture.smoke.g2';\nreturn [{json: {ok: true, event: {\n  specversion: '1.0', id: body.id, source: 'urn:33god:aperture:g2',\n  type: subject, subject, time: new Date().toISOString(),\n  datacontenttype: 'application/json', correlationid: body.id,\n  producer: 'aperture-g2-n8n', data: {ping: true, via: 'n8n-webhook'}\n}}}];"
+        "jsCode": "const input = $input.first().json;\nconst body = input.body;\nif (input.headers?.['x-aperture-demo'] !== $env.GOD_DEMO_HEADER_TOKEN) {\n  return [{json: {ok: false, status: 401, error: 'demo header required'}}];\n}\nif (!body || body.ping !== true || typeof body.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.id)) {\n  return [{json: {ok: false, status: 400, error: 'synthetic UUIDv4 and ping=true required'}}];\n}\nconst subject = 'bloodbank.evt.aperture.smoke.g2';\nreturn [{json: {ok: true, event: {\n  specversion: '1.0', id: body.id, source: 'urn:33god:aperture:g2',\n  type: subject, subject, time: new Date().toISOString(),\n  datacontenttype: 'application/json', correlationid: body.id,\n  // Bloodbank envelope extension required by candystore ingest validation:\n  service: 'aperture', domain: 'g2', kind: 'smoke',\n  producer: 'aperture-g2-n8n', data: {ping: true, via: 'n8n-webhook'}\n}}}];"
       }
     },
     {

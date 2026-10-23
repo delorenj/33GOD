@@ -21,6 +21,14 @@ G2's outbox currently publishes to its **own** `G2_SMOKE` stream on an
 | 1 | **Network reachability** — G2's outbox cannot see G1's NATS | `GOD_BUS_NATS_URL` env on G2's outbox: default empty (standalone mode, current behavior); set to `nats://nats:4222` + `external_network: g1-bus` when attaching. Compose: `GOD_G1_BUS_ATTACH` flag adds the external net + `GOD_BUS_NATS_URL` default flip. |
 | 2 | **Stream mismatch** — outbox creates `G2_SMOKE`; G1's `BLOODBANK_EVENTS` covers `bloodbank.evt.>` | Outbox stream name configurable: `GOD_OUTBOX_STREAM` (default `G2_SMOKE` standalone; when attached, publish into `BLOODBANK_EVENTS` — no own stream — so candystore's durable consumer sees `bloodbank.evt.aperture.smoke.g2`). |
 | 3 | **Auth on the bus** — G1 NATS has no auth today | None required for v1 (single-host, internal-only). Noted for the generalization phase: `GOD_NATS_USER`/`GOD_NATS_PASS` (or nkey) surface in both bundles. |
+| 4 | **Envelope extension** — candystore ingest drops base CloudEvents; requires `service`/`domain`/`kind` (discovered firing the real seam 2026-10-23: `DROP event (malformed): missing CloudEvents fields`) | Emitters must carry the Bloodbank envelope extension. G2's workflow patched (`service: aperture, domain: g2, kind: smoke`). This is a contract for EVERY future emitter bundle — document in each group's README. |
+
+**Proven attached-mode integration (2026-10-23, build host):** G2 up with
+`-f compose.yml -f compose.attach.yml` → webhook POST `{id, ping}` → n8n →
+outbox publishes into `BLOODBANK_EVENTS` on G1's bus (seq 2) → dapr delivers
+→ candystore `GET /events/<id>/raw` returns **200 with the full envelope**
+(id/type/subject/correlation/service/domain/kind/producer/data all present).
+This is the acceptance signal from §2, achieved.
 
 **Acceptance for "attached" mode** (what makes the seam real, G2's runner on
 Damian's box): bring G2 up attached → its webhook→CloudEvent appears in

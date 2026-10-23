@@ -1,0 +1,16 @@
+# Attached-mode overlay — join G2 to an existing bus (G1).
+# Usage: docker compose -f compose.yml -f compose.attach.yml up -d
+# Requires: the G1 bundle (or any bus exposing BLOODBANK_EVENTS) running and
+# GOD_G1_BUS_NETWORK / GOD_BUS_NATS_URL set in .env — see ../SEAM-G1-G2.md.
+services:
+  nats-outbox:
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+    networks:
+      - g2-internal
+      - g1-bus
+networks:
+  g1-bus:
+    name: ${GOD_G1_BUS_NETWORK:-g1-bus}
+    external: true

@@ -13,9 +13,17 @@ import socket
 import uuid
 
 SUBJECT = "bloodbank.evt.aperture.smoke.g2"
-STREAM = "G2_SMOKE"
+STREAM = os.environ.get("GOD_OUTBOX_STREAM", "G2_SMOKE")
+# Attached mode: publish into an existing bus (e.g. G1's BLOODBANK_EVENTS)
+# without owning a stream there — see groups/SEAM-G1-G2.md. Host default is
+# the standalone broker service; GOD_BUS_NATS_URL overrides with any
+# nats://host:port when the bundle is attached to an external network.
+BUS_URL = os.environ.get("GOD_BUS_NATS_URL", "")
+BUS_HOST, _, BUS_PORT = BUS_URL.partition("nats://")[2].partition(":") if BUS_URL else ("", "", "")
+TARGET_HOST = BUS_HOST or os.environ.get("GOD_NATS_HOST", "nats-outbox-broker")
+TARGET_PORT = int(BUS_PORT or 4222)
+ATTACHED = bool(BUS_HOST)
 TOKEN = os.environ.get("GOD_DEMO_HEADER_TOKEN", "aperture-g2-demo-only")
-HOST = os.environ.get("GOD_NATS_HOST", "nats-outbox-broker")
 MAX_BODY = 65536
 
 
@@ -23,7 +31,7 @@ def request(subject, data):
     """One bounded NATS request/reply; tolerate server PING interleaving."""
     inbox = "_INBOX.g2." + uuid.uuid4().hex
     payload = json.dumps(data, separators=(",", ":")).encode()
-    with socket.create_connection((HOST, 4222), timeout=5) as conn:
+    with socket.create_connection((TARGET_HOST, TARGET_PORT), timeout=5) as conn:
         conn.settimeout(5)
         reader = conn.makefile("rb")
         if not reader.readline().startswith(b"INFO "):
@@ -93,6 +101,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.respond(401, {"error": "demo header required"})
         try:
             if self.path == "/healthz":
+                if ATTACHED:
+                    return self.respond(200, {"ready": True, "attached": True})
                 result = request(f"$JS.API.STREAM.INFO.{STREAM}", {})
                 return self.respond(200, {"ready": result["config"]["subjects"] == [SUBJECT]})
             result = request(f"$JS.API.STREAM.MSG.GET.{STREAM}", {"last_by_subj": SUBJECT})
@@ -130,5 +140,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    setup_stream()
+    if not ATTACHED:
+        # Standalone mode owns its demo stream. Attached mode (GOD_BUS_NATS_URL)
+        # publishes into the existing bus stream and must NOT create streams.
+        setup_stream()
     ThreadingHTTPServer(("0.0.0.0", 8789), Handler).serve_forever()
