@@ -7,9 +7,15 @@ import server
 
 
 def event():
-    return {"id": str(uuid.uuid4()), "source": "urn:33god:aperture:g2", "specversion": "1.0",
-            "type": server.SUBJECT, "subject": server.SUBJECT,
-            "time": "2026-10-23T18:00:00Z", "datacontenttype": "application/json", "data": {"ping": True}}
+    eid = str(uuid.uuid4())
+    return {"id": eid, "source": "urn:33god:aperture:g2", "specversion": "1.0",
+            "type": server.SUBJECT_TYPE, "subject": server.SUBJECT,
+            "time": "2026-10-23T18:00:00Z", "datacontenttype": "application/json",
+            "correlationid": eid, "causationid": eid,
+            "producer": "aperture-g2-n8n", "service": "aperture-g2", "domain": "aperture",
+            "kind": "event", "ordering_key": "aperture:g2:smoke",
+            "actor": {"type": "service", "agent_id": "aperture-g2-n8n"},
+            "data": {"ping": True}}
 
 
 class Connection:

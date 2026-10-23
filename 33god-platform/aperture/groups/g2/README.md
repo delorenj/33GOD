@@ -119,6 +119,20 @@ There is no G1→Candystore delivery claim. Connecting to G1 requires a separate
 reviewed network, authentication and transport contract; this demo adapter is
 not a second production Bloodbank ingress.
 
+## Workflow upgrade path (running deployments)
+
+The first-boot importer is one-shot by design (marker file prevents
+overwrites). To push corrected workflow JSON to a box that already has the
+marker, use the n8n CLI re-import path — note that import **deactivates** the
+workflow on 1.120.4 (verified this session), so re-activate the smoke
+endpoint after:
+
+  docker compose exec n8n n8n import:workflow --separate --input=/bundle/workflows
+  docker compose exec n8n n8n update:workflow --id=apertureG2Smoke01 --active=true
+
+Leave Plane template + schedule inactive. Do not delete the importer marker
+and do not reset the DB. See [G1-G2-REPROOF-HANDBACK.md](../G1-G2-REPROOF-HANDBACK.md).
+
 ## Resource envelope
 
 | Service | Hard memory cap |
