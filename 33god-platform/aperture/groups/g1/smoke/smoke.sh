@@ -145,15 +145,15 @@ docker run --rm --quiet \
 if [ $? -eq 0 ]; then ok "CloudEvent published to ${TOPIC} via NATS (nats-box, in-network)"; else bad "NATS publish failed"; fi
 
 # ----------------------------------------------- 4. wait for Dapr delivery ----
-step "4/5 wait for Dapr delivery + storage (poll GET /events/<id>, up to 60s)"
+step "4/5 wait for Dapr delivery + storage (poll GET /events/<id>/raw, up to 60s)"
 STORED=""
 for ((i = 0; i < 30; i += 1)); do
-  STORED="$(candystore_get "/events/${EVENT_ID}" || true)"
+  STORED="$(candystore_get "/events/${EVENT_ID}/raw" || true)"
   [ -n "$STORED" ] && break
   sleep 2
 done
 if [ -n "$STORED" ]; then
-  ok "query API returned the stored envelope for id ${EVENT_ID}"
+  ok "query API returned the stored raw envelope for id ${EVENT_ID}"
 else
   bad "event ${EVENT_ID} never appeared in the query API"
 fi
@@ -161,10 +161,12 @@ fi
 # ----------------------------------------------------------- 5. round-trip ----
 step "5/5 assert round-trip fidelity (envelope served == envelope published)"
 if [ -n "$STORED" ]; then
-  echo "$STORED" | python3 - "$EVENT_ID" "$TOPIC" "$CORRELATION_ID" <<'PY' && ok "envelope matches: id, type, subject, correlationid, producer, data.ping" || bad "stored envelope differs from the published one"
+  STORED_JSON="$TMPDIR_SMOK/stored.json"
+  printf '%s' "$STORED" > "$STORED_JSON"
+  python3 - "$STORED_JSON" "$EVENT_ID" "$TOPIC" "$CORRELATION_ID" <<'PY' && ok "envelope matches: id, type, subject, correlationid, producer, data.ping" || bad "stored envelope differs from the published one"
 import json, sys
-expected_id, expected_type, expected_corr = sys.argv[1:4]
-env = json.load(sys.stdin)
+path, expected_id, expected_type, expected_corr = sys.argv[1:5]
+env = json.load(open(path))
 assert env["id"] == expected_id, f"id mismatch: {env.get('id')}"
 assert env["type"] == expected_type, f"type mismatch: {env.get('type')}"
 assert env["subject"] == expected_type, "subject mismatch"

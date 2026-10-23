@@ -60,8 +60,8 @@ Proves the full round trip with evidence at every step:
 2. `BLOODBANK_EVENTS` stream exists with the `bloodbank.evt.>` binding.
 3. A CloudEvent is published **directly onto the NATS subject** (nats-box,
    in-network) — the same subject the Dapr sidecar's consumer filters on.
-4. The envelope appears via the query API `GET /events/<id>` (read through the
-   network alias, not by peeking at Postgres).
+4. The envelope appears via the query API `GET /events/<id>/raw` (read through
+   the network alias, not by peeking at Postgres).
 5. Round-trip fidelity asserted: `id`, `type`, `subject`, `correlationid`,
    `producer`, `data.ping`/`data.via` all match what was published.
 
