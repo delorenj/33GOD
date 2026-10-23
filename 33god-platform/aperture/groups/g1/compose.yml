@@ -1,0 +1,249 @@
+# Aperture G1 — Bloodbank core bus (self-contained Compose bundle)
+#
+# WHAT: NATS JetStream + Dapr placement + Candystore audit trail (app + pgvector
+# Postgres + daprd sidecar). The event backbone every later Aperture group
+# publishes to. Zero dependencies — install first (see aperture/README.md).
+#
+# COLLISION SAFETY: this bundle is designed to run BESIDE the production
+# stacks on the build host without touching them:
+#   - compose project name is locked to `god-g1`
+#   - NO container_name is set (compose generates god-g1-<svc>-1)
+#   - NO published host ports at all — services are reachable only on the
+#     bundle's own bridge networks (g1-bus, g1-internal). Edge/ingress is a
+#     later Aperture group; use `docker compose exec` or port-forwarding to
+#     poke at services from the host.
+#   - own volumes (god-g1-nats-data, god-g1-candystore-pgdata) and networks
+#     (g1-bus, g1-internal), prefixed and named explicitly.
+#
+# CRIB SOURCES (do not drift):
+#   - bloodbank/compose/docker-compose.yml        (nats, nats-init, dapr-placement)
+#   - bloodbank/compose/nats/{streams.json,init.sh}  (copied verbatim into ./nats/)
+#   - 33god-platform/compose.yaml                 (validated candystore projection)
+#   - candystore/dapr-components/pubsub.yaml      (copied verbatim into ./dapr/)
+#
+# The candystore image is BUILT from the candystore submodule. The build
+# context defaults to the monorepo checkout root's candystore/ (relative to
+# this file: ../../../../candystore). On a clean checkout run
+# `git submodule update --init candystore` first, or point
+# GOD_CANDYSTORE_CONTEXT at any candystore checkout.
+
+name: god-g1
+
+networks:
+  g1-bus:
+    # NATS + Dapr placement + sidecars. The pubsub component hardcodes
+    # nats://nats:4222 (service alias `nats`), matching production.
+    name: g1-bus
+    driver: bridge
+  g1-internal:
+    # Candystore app + its Postgres (alias `postgres`). Mirrors the
+    # production candystore-internal network from 33god-platform/compose.yaml.
+    name: g1-internal
+    driver: bridge
+
+volumes:
+  nats-data:
+    name: god-g1-nats-data
+  candystore-pgdata:
+    name: god-g1-candystore-pgdata
+  apicurio-data:
+    name: god-g1-apicurio-data
+
+services:
+  nats:
+    # NATS JetStream broker for the event backbone. Command flags, JetStream
+    # store dir, and the wget /healthz probe are cribbed verbatim from
+    # bloodbank/compose (nats:2.10-alpine ships busybox wget).
+    image: ${GOD_NATS_IMAGE:-nats:2.10-alpine}
+    command: ["-js", "-sd", "/data/jetstream", "-m", "8222", "-DV"]
+    volumes:
+      - nats-data:/data/jetstream
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      g1-bus:
+        aliases: [nats]
+    restart: unless-stopped
+
+  nats-init:
+    # One-shot: applies ./nats/streams.json (BLOODBANK_EVENTS, BLOODBANK_COMMANDS,
+    # GIB_EVENTS) so the first publish never hits "no stream matched subject".
+    # Idempotent and zombie-consumer-reaping; see ./nats/init.sh (verbatim copy
+    # from bloodbank/compose/nats/init.sh).
+    image: ${GOD_NATS_BOX_IMAGE:-natsio/nats-box:0.14.5}
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      NATS_URL: ${GOD_NATS_URL:-nats://nats:4222}
+    volumes:
+      - type: bind
+        source: ${GOD_NATS_STREAMS_JSON:-./nats/streams.json}
+        target: /work/streams.json
+        read_only: true
+      - type: bind
+        source: ${GOD_NATS_INIT_SH:-./nats/init.sh}
+        target: /work/init.sh
+        read_only: true
+    entrypoint: ["/bin/sh", "/work/init.sh"]
+    networks: [g1-bus]
+    restart: "no"
+
+  dapr-placement:
+    # Dapr placement service (actor/sidecar rendezvous). Sidecars resolve
+    # through it at `dapr-placement:50005` on g1-bus.
+    image: ${GOD_DAPR_PLACEMENT_IMAGE:-daprio/dapr:1.13.0}
+    command: ["./placement", "--port", "50005"]
+    networks:
+      g1-bus:
+        aliases: [dapr-placement]
+    restart: unless-stopped
+
+  candystore-postgres:
+    # pgvector image is required: candystore migration 010 creates
+    # `CREATE EXTENSION vector` + an HNSW index. Cribbed from the validated
+    # 33god-platform projection (pgvector/pgvector:pg16).
+    image: ${GOD_POSTGRES_IMAGE:-pgvector/pgvector:pg16}
+    environment:
+      POSTGRES_USER: ${GOD_POSTGRES_USER:-candystore}
+      POSTGRES_PASSWORD: ${GOD_POSTGRES_PASSWORD:-candystore}
+      POSTGRES_DB: ${GOD_POSTGRES_DB:-candystore}
+    volumes:
+      - candystore-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${GOD_POSTGRES_USER:-candystore} -d ${GOD_POSTGRES_DB:-candystore}",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      g1-internal:
+        aliases: [postgres]
+    restart: unless-stopped
+
+  candystore:
+    # Durable Bloodbank event audit trail. Built from the candystore submodule
+    # Dockerfile (stdlib Python app; migrations run from the image at boot via
+    # init_schema(), so no migration bind-mount is needed here).
+    build:
+      context: ${GOD_CANDYSTORE_CONTEXT:-../../../../candystore}
+    image: ${GOD_CANDYSTORE_IMAGE:-candystore:g1}
+    environment:
+      APP_PORT: "3001"
+      APP_HOST: 0.0.0.0
+      DATABASE_URL: postgresql://${GOD_POSTGRES_USER:-candystore}:${GOD_POSTGRES_PASSWORD:-candystore}@postgres:5432/${GOD_POSTGRES_DB:-candystore}
+      # Cribbed from the validated projection — one wildcard topic bound to
+      # the BLOODBANK_EVENTS stream subjects (see candystore/ingest.py for why
+      # it must stay a single wildcard subject).
+      SUBSCRIBE_PUBSUB: bloodbank-pubsub
+      SUBSCRIBE_TOPIC: bloodbank.evt.>
+      SUBSCRIBE_ROUTE: /events/all
+    depends_on:
+      candystore-postgres:
+        condition: service_healthy
+    healthcheck:
+      # /readyz checks the DB connection (candystore/main.py), unlike /healthz
+      # which is process-only. Cribbed from 33god-platform/compose.yaml.
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/readyz', timeout=3)\"",
+        ]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      g1-internal:
+        aliases: [candystore-app]
+    restart: unless-stopped
+
+  candystore-daprd:
+    # Dapr sidecar for candystore: subscribes to bloodbank.evt.> via the
+    # pubsub.jetstream component in ./dapr/ (verbatim copy of
+    # candystore/dapr-components/pubsub.yaml — durableName candystore-events,
+    # queueGroupName candystore, streamName BLOODBANK_EVENTS) and delivers to
+    # the app's POST /events/all.
+    #
+    # No container healthcheck on purpose: daprio/daprd is distroless (no
+    # shell), so CMD-SHELL probes never run and would mark a healthy sidecar
+    # unhealthy. Readiness is verified externally via :3500/v1.0/healthz —
+    # smoke/smoke.sh does exactly that from inside the network.
+    image: ${GOD_DAPRD_IMAGE:-daprio/daprd:1.13.0}
+    command:
+      - ./daprd
+      - --app-id=candystore
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --app-port=3001
+      - --app-channel-address=candystore-app
+      - --app-protocol=http
+      - --resources-path=/components
+      - --placement-host-address=dapr-placement:50005
+      - --log-level=info
+    volumes:
+      - type: bind
+        source: ./dapr
+        target: /components
+        read_only: true
+    depends_on:
+      nats-init:
+        condition: service_completed_successfully
+      dapr-placement:
+        condition: service_started
+      candystore:
+        condition: service_healthy
+    networks: [g1-bus, g1-internal]
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Optional `catalog` profile: schema registry + event catalog UI.
+  # Not required for the bus to function; Apicurio has no schemas until a
+  # Holyfields-equivalent ships, and EventCatalog renders an empty site.
+  # Neither publishes a host port (bundle rule); inspect in-network or via
+  # `docker compose exec apicurio-registry wget -qO- http://127.0.0.1:8080/...`
+  # or an SSH tunnel.
+  # ---------------------------------------------------------------------------
+  apicurio-registry:
+    image: ${GOD_APICURIO_IMAGE:-apicurio/apicurio-registry:3.0.6}
+    profiles: [catalog]
+    environment:
+      QUARKUS_HTTP_HOST: "0.0.0.0"
+      QUARKUS_HTTP_PORT: "8080"
+      APICURIO_STORAGE_KIND: "sql"
+      APICURIO_STORAGE_SQL_KIND: "h2"
+    volumes:
+      - apicurio-data:/var/apicurio/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/q/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [g1-bus]
+    restart: unless-stopped
+
+  eventcatalog:
+    image: ${GOD_EVENTCATALOG_IMAGE:-quay.io/eventcatalog/eventcatalog:2.11.1}
+    profiles: [catalog]
+    environment:
+      PORT: "3000"
+      NODE_ENV: "production"
+    volumes:
+      - type: bind
+        source: ./catalog/site
+        target: /app/site
+        read_only: true
+    depends_on:
+      apicurio-registry:
+        condition: service_healthy
+    networks: [g1-bus]
+    restart: unless-stopped
