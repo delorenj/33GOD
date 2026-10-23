@@ -55,32 +55,32 @@ Final run started from **no G2 containers/volumes** (a previous disposable test
 was fully removed). `docker compose up -d --build` → exit 0. Trimmed actual output:
 
 ```text
- Container god-g2-nats-outbox-broker-1 Created 
- Container god-g2-nats-outbox-1 Creating 
- Container god-g2-n8n-postgres-1 Created 
- Container god-g2-n8n-import-1 Creating 
- Container god-g2-nats-outbox-1 Created 
- Container god-g2-n8n-import-1 Created 
- Container god-g2-n8n-1 Creating 
- Container god-g2-n8n-1 Created 
- Container god-g2-nats-outbox-broker-1 Starting 
- Container god-g2-n8n-postgres-1 Starting 
- Container god-g2-nats-outbox-broker-1 Started 
- Container god-g2-nats-outbox-broker-1 Waiting 
- Container god-g2-n8n-postgres-1 Started 
- Container god-g2-n8n-postgres-1 Waiting 
- Container god-g2-nats-outbox-broker-1 Healthy 
- Container god-g2-nats-outbox-1 Starting 
- Container god-g2-n8n-postgres-1 Healthy 
- Container god-g2-n8n-import-1 Starting 
- Container god-g2-n8n-import-1 Started 
- Container god-g2-nats-outbox-1 Started 
- Container god-g2-nats-outbox-1 Waiting 
- Container god-g2-n8n-import-1 Waiting 
- Container god-g2-n8n-import-1 Exited 
- Container god-g2-nats-outbox-1 Healthy 
- Container god-g2-n8n-1 Starting 
- Container god-g2-n8n-1 Started 
+ Container god-g2-nats-outbox-broker-1 Created
+ Container god-g2-nats-outbox-1 Creating
+ Container god-g2-n8n-postgres-1 Created
+ Container god-g2-n8n-import-1 Creating
+ Container god-g2-nats-outbox-1 Created
+ Container god-g2-n8n-import-1 Created
+ Container god-g2-n8n-1 Creating
+ Container god-g2-n8n-1 Created
+ Container god-g2-nats-outbox-broker-1 Starting
+ Container god-g2-n8n-postgres-1 Starting
+ Container god-g2-nats-outbox-broker-1 Started
+ Container god-g2-nats-outbox-broker-1 Waiting
+ Container god-g2-n8n-postgres-1 Started
+ Container god-g2-n8n-postgres-1 Waiting
+ Container god-g2-nats-outbox-broker-1 Healthy
+ Container god-g2-nats-outbox-1 Starting
+ Container god-g2-n8n-postgres-1 Healthy
+ Container god-g2-n8n-import-1 Starting
+ Container god-g2-n8n-import-1 Started
+ Container god-g2-nats-outbox-1 Started
+ Container god-g2-nats-outbox-1 Waiting
+ Container god-g2-n8n-import-1 Waiting
+ Container god-g2-n8n-import-1 Exited
+ Container god-g2-nats-outbox-1 Healthy
+ Container god-g2-n8n-1 Starting
+ Container god-g2-n8n-1 Started
 ```
 
 `docker compose ps -a` → exit 0:
@@ -88,9 +88,9 @@ was fully removed). `docker compose up -d --build` → exit 0. Trimmed actual ou
 ```text
 NAME                          IMAGE                COMMAND                  SERVICE              CREATED          STATUS                      PORTS
 god-g2-n8n-1                  n8nio/n8n:1.120.4    "tini -- /docker-ent…"   n8n                  20 seconds ago   Up 8 seconds (healthy)      5678/tcp
-god-g2-n8n-import-1           n8nio/n8n:1.120.4    "/bin/sh /bundle/boo…"   n8n-import           20 seconds ago   Exited (0) 10 seconds ago   
+god-g2-n8n-import-1           n8nio/n8n:1.120.4    "/bin/sh /bundle/boo…"   n8n-import           20 seconds ago   Exited (0) 10 seconds ago
 god-g2-n8n-postgres-1         postgres:16-alpine   "docker-entrypoint.s…"   n8n-postgres         20 seconds ago   Up 20 seconds (healthy)     5432/tcp
-god-g2-nats-outbox-1          god-g2-outbox:0.1    "python -u /app/serv…"   nats-outbox          20 seconds ago   Up 14 seconds (healthy)     
+god-g2-nats-outbox-1          god-g2-outbox:0.1    "python -u /app/serv…"   nats-outbox          20 seconds ago   Up 14 seconds (healthy)
 god-g2-nats-outbox-broker-1   nats:2.10-alpine     "docker-entrypoint.s…"   nats-outbox-broker   20 seconds ago   Up 20 seconds (healthy)     4222/tcp, 6222/tcp, 8222/tcp
 ```
 
@@ -200,18 +200,18 @@ has no submodule dependency and its config/build/smoke passed in the worktree.
 `docker compose down -v` → exit 0 (ONLY disposable god-g2 data):
 
 ```text
- Container god-g2-nats-outbox-broker-1 Stopping 
- Container god-g2-nats-outbox-broker-1 Stopped 
- Container god-g2-nats-outbox-broker-1 Removing 
- Container god-g2-nats-outbox-broker-1 Removed 
- Volume god-g2-n8n-data Removing 
- Volume god-g2-n8n-pgdata Removing 
- Volume god-g2-outbox-data Removing 
- Network g2-internal Removing 
- Volume god-g2-n8n-pgdata Removed 
- Volume god-g2-n8n-data Removed 
- Volume god-g2-outbox-data Removed 
- Network g2-internal Removed 
+ Container god-g2-nats-outbox-broker-1 Stopping
+ Container god-g2-nats-outbox-broker-1 Stopped
+ Container god-g2-nats-outbox-broker-1 Removing
+ Container god-g2-nats-outbox-broker-1 Removed
+ Volume god-g2-n8n-data Removing
+ Volume god-g2-n8n-pgdata Removing
+ Volume god-g2-outbox-data Removing
+ Network g2-internal Removing
+ Volume god-g2-n8n-pgdata Removed
+ Volume god-g2-n8n-data Removed
+ Volume god-g2-outbox-data Removed
+ Network g2-internal Removed
 ```
 
 ```text
@@ -229,7 +229,7 @@ Before and after: production n8n listener PID 7061, same start time and binary.
 After teardown:
 
 ```text
-State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                    
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
 LISTEN 0      511          0.0.0.0:5678      0.0.0.0:*    users:(("node /home/delo",pid=7061,fd=25))
     PID                  STARTED COMMAND
    7061 Wed Oct 21 21:14:47 2026 node /home/delorenj/.local/share/mise/installs/node/24.6.0/bin/n8n

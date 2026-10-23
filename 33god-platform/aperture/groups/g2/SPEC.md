@@ -35,4 +35,3 @@ memory below 2.5 GiB. Push `aperture/g2-bundle`, do not merge; parent PM reviews
 - Final cold config/up/health/import/auth/validation/JetStream round trip passed. The owned n8n DB has exactly three workflows and zero credential records. All five external image manifests include linux/arm64 and linux/amd64; actual runtime proof is amd64 only.
 - Eight stdlib outbox unit tests passed; repeated up skipped workflow overwrite; outbox restart retained stream sequence. All god-g2 containers/volumes/network removed after proof. PROOF.md contains actual trimmed receipts and known limitations.
 - Root .gitignore hides .env.example; explicitly force-added only the sanitized example template.
-
