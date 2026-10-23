@@ -72,7 +72,13 @@ def main():
     event = stored["event"]
     assert stored["subject"] == ack["subject"] and stored["sequence"] == ack["sequence"], stored
     assert event["id"] == event_id and event["correlationid"] == event_id, event
-    assert event["type"] == event["subject"] == ack["subject"] and event["specversion"] == "1.0", event
+    assert (
+        event["type"] == "bloodbank.aperture.smoke.g2"           # 4 tokens (canonical §2)
+        and event["subject"] == ack["subject"] == "bloodbank.evt.aperture.smoke.g2"  # 5 tokens
+        and event["specversion"] == "1.0"
+        and event["kind"] == "event" and event["actor"]["type"] == "service"
+        and event["service"] == "aperture-g2" and event["domain"] == "aperture"
+    ), event
     assert event["source"] == "urn:33god:aperture:g2" and event["data"] == {"ping": True, "via": "n8n-webhook"}, event
     print("PASS: NATS stream GET (not HTTP cache) CloudEvent fidelity: " + json.dumps(event), flush=True)
     print("SMOKE RESULT: PASS — webhook → validate → CloudEvent → NATS JetStream → readback")

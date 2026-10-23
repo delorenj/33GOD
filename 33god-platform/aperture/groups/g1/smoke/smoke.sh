@@ -24,7 +24,8 @@ cd "$(dirname "$0")/.."   # bundle root (where compose.yml lives)
 PROJECT="god-g1"
 NATS_BOX_IMAGE="${GOD_NATS_BOX_IMAGE:-natsio/nats-box:0.14.5}"
 NATS_URL="${GOD_NATS_URL:-nats://nats:4222}"
-TOPIC="bloodbank.evt.aperture.smoke.ping"   # matches bloodbank.evt.<domain>.<entity>.<action>
+TOPIC="bloodbank.evt.aperture.smoke.ping"   # NATS subject (5 tokens, kind marker)
+CE_TYPE="bloodbank.aperture.smoke.ping"     # CloudEvents type (4 tokens, canonical §2)
 
 PASS=0
 FAIL=0
@@ -106,8 +107,12 @@ fi
 
 # ------------------------------------------------------------- 3. publish ----
 step "3/5 publish test CloudEvent straight onto NATS subject ${TOPIC}"
-EVENT_ID="$(cat /proc/sys/kernel/random/uuid)"
-CORRELATION_ID="$(cat /proc/sys/kernel/random/uuid)"
+# Portable UUIDs: /proc/sys/kernel/random/uuid is Linux-only on the HOST
+# (Damian acceptance: macOS has no /proc). The nats-box container itself is
+# Linux regardless of host OS — generate inside it.
+gen_uuid() { docker run --rm --quiet --entrypoint sh "$NATS_BOX_IMAGE" -c 'cat /proc/sys/kernel/random/uuid'; }
+EVENT_ID="$(gen_uuid)"
+CORRELATION_ID="$(gen_uuid)"
 EVENT_TIME="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 
 TMPDIR_SMOK="$(mktemp -d)"
@@ -118,7 +123,7 @@ cat > "$PAYLOAD" <<JSON
   "specversion": "1.0",
   "id": "${EVENT_ID}",
   "source": "urn:33god:aperture:g1-smoke",
-  "type": "${TOPIC}",
+  "type": "${CE_TYPE}",
   "subject": "${TOPIC}",
   "time": "${EVENT_TIME}",
   "datacontenttype": "application/json",
@@ -163,13 +168,13 @@ step "5/5 assert round-trip fidelity (envelope served == envelope published)"
 if [ -n "$STORED" ]; then
   STORED_JSON="$TMPDIR_SMOK/stored.json"
   printf '%s' "$STORED" > "$STORED_JSON"
-  python3 - "$STORED_JSON" "$EVENT_ID" "$TOPIC" "$CORRELATION_ID" <<'PY' && ok "envelope matches: id, type, subject, correlationid, producer, data.ping" || bad "stored envelope differs from the published one"
+  python3 - "$STORED_JSON" "$EVENT_ID" "$CE_TYPE" "$CORRELATION_ID" <<'PY' && ok "envelope matches: id, type, subject, correlationid, producer, data.ping" || bad "stored envelope differs from the published one"
 import json, sys
 path, expected_id, expected_type, expected_corr = sys.argv[1:5]
 env = json.load(open(path))
 assert env["id"] == expected_id, f"id mismatch: {env.get('id')}"
 assert env["type"] == expected_type, f"type mismatch: {env.get('type')}"
-assert env["subject"] == expected_type, "subject mismatch"
+assert env["subject"] == "bloodbank.evt." + expected_type.split(".", 1)[1], "subject mismatch"
 assert env["correlationid"] == expected_corr, "correlationid mismatch"
 assert env["producer"] == "aperture-g1-smoke", f"producer mismatch: {env.get('producer')}"
 assert env["data"]["ping"] is True and env["data"]["via"] == "nats-direct", "data mismatch"

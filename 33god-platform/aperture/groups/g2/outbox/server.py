@@ -12,7 +12,8 @@ import os
 import socket
 import uuid
 
-SUBJECT = "bloodbank.evt.aperture.smoke.g2"
+SUBJECT = "bloodbank.evt.aperture.smoke.g2"          # NATS subject (5 tokens)
+SUBJECT_TYPE = "bloodbank.aperture.smoke.g2"          # CloudEvents type (4 tokens)
 STREAM = os.environ.get("GOD_OUTBOX_STREAM", "G2_SMOKE")
 # Attached mode: publish into an existing bus (e.g. G1's BLOODBANK_EVENTS)
 # without owning a stream there — see groups/SEAM-G1-G2.md. Host default is
@@ -71,15 +72,27 @@ def setup_stream():
 def validate(event):
     if not isinstance(event, dict):
         raise ValueError("CloudEvent object required")
-    required = {"id", "source", "specversion", "type", "subject", "time", "datacontenttype", "data"}
+    required = {"id", "source", "specversion", "type", "subject", "time", "datacontenttype",
+                "correlationid", "causationid", "producer", "service", "domain", "kind",
+                "ordering_key", "actor", "data"}
     if not required.issubset(event):
         raise ValueError("CloudEvent fields missing")
     uuid.UUID(event["id"])
     datetime.fromisoformat(event["time"].replace("Z", "+00:00"))
-    if (event["specversion"] != "1.0" or event["type"] != SUBJECT
+    # Canonical contract: type = 4 dotted tokens (no kind marker); subject
+    # = 5 tokens with evt marker; the (domain,entity,action) triple must
+    # agree across both. See bloodbank/docs/event-naming.md §2/§3.
+    type_tokens = event["type"].split(".")
+    subj_tokens = event["subject"].split(".")
+    if (len(type_tokens) != 4 or type_tokens[0] != "bloodbank"
+            or event["subject"] != "bloodbank.evt." + event["type"].split(".", 1)[1]):
+        raise ValueError("type/subject must follow canonical 4/5-token shape")
+    if (event["specversion"] != "1.0" or event["type"] != SUBJECT_TYPE
             or event["subject"] != SUBJECT or event["source"] != "urn:33god:aperture:g2"
-            or event["datacontenttype"] != "application/json" or not isinstance(event["data"], dict)):
-        raise ValueError("Only the synthetic G2 CloudEvent is accepted")
+            or event["datacontenttype"] != "application/json"
+            or event["kind"] not in ("event", "command", "reply")
+            or not isinstance(event["data"], dict)):
+        raise ValueError("Only the canonical G2 CloudEvent is accepted")
 
 
 class Handler(BaseHTTPRequestHandler):
