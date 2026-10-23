@@ -1,0 +1,144 @@
+# Aperture G2 v0.1 — isolated integration plane, no production state adopted.
+# Crib: host n8n runs via mise; adapted to official image + fresh Postgres.
+# No host unit is copied verbatim. curator/DEFERRED.md records exact read-only
+# ExecStart/env crib lines and why that service is intentionally not packaged.
+# G1 conventions: GOD_* vars, owned volumes/networks, no container_name or ports.
+name: god-g2
+
+networks:
+  g2-internal:
+    name: g2-internal
+    driver: bridge
+volumes:
+  n8n-data:
+    name: god-g2-n8n-data
+  n8n-pgdata:
+    name: god-g2-n8n-pgdata
+  outbox-data:
+    name: god-g2-outbox-data
+
+x-n8n: &n8n
+  image: ${GOD_N8N_IMAGE:-n8nio/n8n:1.120.4}
+  environment: &n8n-env
+    DB_TYPE: postgresdb
+    DB_POSTGRESDB_HOST: n8n-postgres
+    DB_POSTGRESDB_PORT: '5432'
+    DB_POSTGRESDB_DATABASE: ${GOD_POSTGRES_DB:-n8n}
+    DB_POSTGRESDB_USER: ${GOD_POSTGRES_USER:-n8n}
+    DB_POSTGRESDB_PASSWORD: ${GOD_POSTGRES_PASSWORD:-g2-demo-postgres-only}
+    N8N_ENCRYPTION_KEY: ${GOD_N8N_ENCRYPTION_KEY:-g2-demo-only-replace-before-real-use}
+    N8N_HOST: ${GOD_N8N_HOST:-n8n}
+    N8N_PORT: '5678'
+    N8N_PROTOCOL: http
+    WEBHOOK_URL: ${GOD_WEBHOOK_URL:-http://n8n:5678/}
+    GENERIC_TIMEZONE: ${GOD_TIMEZONE:-UTC}
+    TZ: ${GOD_TIMEZONE:-UTC}
+    N8N_DIAGNOSTICS_ENABLED: 'false'
+    N8N_VERSION_NOTIFICATIONS_ENABLED: 'false'
+    N8N_TEMPLATES_ENABLED: 'false'
+    N8N_COMMUNITY_PACKAGES_ENABLED: 'false'
+    N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
+    N8N_BLOCK_ENV_ACCESS_IN_NODE: 'false' # demo-only env-pattern; see KNOWN GAP
+    N8N_RUNNERS_ENABLED: 'false'
+    N8N_PERSONALIZATION_ENABLED: 'false'
+    EXECUTIONS_DATA_PRUNE: 'true'
+    EXECUTIONS_DATA_MAX_AGE: '24'
+    EXECUTIONS_DATA_SAVE_ON_SUCCESS: none
+    NODE_OPTIONS: --max-old-space-size=768
+    GOD_DEMO_HEADER_TOKEN: ${GOD_DEMO_HEADER_TOKEN:-aperture-g2-demo-only}
+    GOD_OUTBOX_URL: http://nats-outbox:8789
+  volumes:
+    - n8n-data:/home/node/.n8n
+    - ./workflows:/bundle/workflows:ro
+    - ./bootstrap.sh:/bundle/bootstrap.sh:ro
+  networks: [g2-internal]
+
+services:
+  n8n-postgres:
+    image: ${GOD_POSTGRES_IMAGE:-postgres:16-alpine}
+    environment:
+      POSTGRES_USER: ${GOD_POSTGRES_USER:-n8n}
+      POSTGRES_DB: ${GOD_POSTGRES_DB:-n8n}
+      POSTGRES_PASSWORD: ${GOD_POSTGRES_PASSWORD:-g2-demo-postgres-only}
+    command: [postgres, -c, shared_buffers=96MB, -c, max_connections=30]
+    volumes: [n8n-pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    mem_limit: 384m
+    cpus: 0.5
+    networks: [g2-internal]
+    restart: unless-stopped
+
+  # Standalone proof outbox, NOT a second production Bloodbank / no G1 link.
+  nats-outbox-broker:
+    image: ${GOD_NATS_IMAGE:-nats:2.10-alpine}
+    command: [-js, -sd, /data/jetstream, -m, '8222']
+    volumes: [outbox-data:/data/jetstream]
+    healthcheck:
+      test: [CMD-SHELL, 'wget -qO- http://127.0.0.1:8222/healthz >/dev/null']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 128m
+    cpus: 0.25
+    networks: [g2-internal]
+    restart: unless-stopped
+
+  nats-outbox:
+    build:
+      context: ./outbox
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g2-outbox:0.1
+    environment:
+      GOD_NATS_HOST: nats-outbox-broker
+      GOD_DEMO_HEADER_TOKEN: ${GOD_DEMO_HEADER_TOKEN:-aperture-g2-demo-only}
+      PYTHONDONTWRITEBYTECODE: '1'
+    depends_on:
+      nats-outbox-broker: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8789/healthz', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 96m
+    cpus: 0.25
+    networks: [g2-internal]
+    restart: unless-stopped
+
+  n8n-import:
+    <<: *n8n
+    entrypoint: [/bin/sh, /bundle/bootstrap.sh]
+    depends_on:
+      n8n-postgres: {condition: service_healthy}
+    mem_limit: 384m
+    restart: 'no'
+
+  n8n:
+    <<: *n8n
+    depends_on:
+      n8n-import: {condition: service_completed_successfully}
+      nats-outbox: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5678/healthz/readiness').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      start_period: 30s
+      retries: 30
+    mem_limit: 1408m
+    cpus: 1.5
+    restart: unless-stopped
+
+  smoke-client:
+    image: ${GOD_CURL_IMAGE:-curlimages/curl:8.12.1}
+    profiles: [tools]
+    environment:
+      GOD_DEMO_HEADER_TOKEN: ${GOD_DEMO_HEADER_TOKEN:-aperture-g2-demo-only}
+    entrypoint: [curl]
+    mem_limit: 64m
+    networks: [g2-internal]
