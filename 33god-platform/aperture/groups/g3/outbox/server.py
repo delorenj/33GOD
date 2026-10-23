@@ -19,7 +19,8 @@ import uuid
 
 import nats_publish
 
-SUBJECT = "bloodbank.evt.aperture.smoke.g3"
+SUBJECT = "bloodbank.evt.aperture.smoke.g3"          # NATS subject (5 tokens)
+SUBJECT_TYPE = "bloodbank.aperture.smoke.g3"          # CloudEvents type (4 tokens)
 STREAM = nats_publish.G3_STREAM
 TOKEN = os.environ.get("GOD_DEMO_HEADER_TOKEN", "aperture-g3-demo-only")
 MAX_BODY = 65536
@@ -33,8 +34,9 @@ def validate(event):
         raise ValueError("CloudEvent fields missing")
     uuid.UUID(event["id"])
     datetime.fromisoformat(event["time"].replace("Z", "+00:00"))
-    if (event["specversion"] != "1.0" or event["type"] != SUBJECT
+    if (event["specversion"] != "1.0" or event["type"] != SUBJECT_TYPE
             or event["subject"] != SUBJECT or event["source"] != "urn:33god:aperture:g3"
+            or event["kind"] not in ("event", "command", "reply")
             or event["datacontenttype"] != "application/json" or not isinstance(event["data"], dict)):
         raise ValueError("Only the synthetic G3 CloudEvent is accepted")
 

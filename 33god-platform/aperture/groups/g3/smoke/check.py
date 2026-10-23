@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SUBJ_HEARTBEAT = "bloodbank.evt.system.heartbeat.received"
 SUBJ_LIFECYCLE = "bloodbank.evt.lifecycle.status.updated"
 SUBJ_AGENT = "bloodbank.evt.agent.invocation.started"
-SUBJ_SMOKE = "bloodbank.evt.aperture.smoke.g3"
+SUBJ_SMOKE = "bloodbank.evt.aperture.smoke.g3"   # NATS subject (5 tokens)
+CE_TYPE_SMOKE = "bloodbank.aperture.smoke.g3"      # CloudEvents type (4 tokens)
 
 CORE = {"nats", "outbox", "heartbeat-tick", "lifecycle-controller", "hermes-agent", "ntfy"}
 
@@ -116,12 +117,16 @@ def main():
         "specversion": "1.0",
         "id": event_id,
         "source": "urn:33god:aperture:g3",
-        "type": SUBJ_SMOKE,
+        "type": CE_TYPE_SMOKE,
         "subject": SUBJ_SMOKE,
         "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "datacontenttype": "application/json",
         "correlationid": event_id,
-        "producer": "aperture-g3-smoke",
+        "causationid": event_id,
+        "producer": "aperture-g3-smoke", "service": "aperture-g3",
+        "domain": "aperture", "kind": "event",
+        "ordering_key": "aperture:g3:smoke",
+        "actor": {"type": "service", "agent_id": "aperture-g3-smoke"},
         "data": {"ping": True, "via": "g3-outbox"},
     }
     status, ack = http("http://outbox:8789/publish", smoke_event)
@@ -133,7 +138,7 @@ def main():
     assert stored["subject"] == ack["subject"] and stored["sequence"] == ack["sequence"], stored
     ev = stored["event"]
     assert ev["id"] == event_id and ev["correlationid"] == event_id, ev
-    assert ev["type"] == ev["subject"] == SUBJ_SMOKE and ev["specversion"] == "1.0", ev
+    assert ev["type"] == CE_TYPE_SMOKE and ev["subject"] == SUBJ_SMOKE and ev["kind"] == "event", ev
     assert ev["source"] == "urn:33god:aperture:g3" and ev["data"] == {"ping": True, "via": "g3-outbox"}, ev
     print("PASS: NATS stream GET (not HTTP cache) CloudEvent fidelity: " + json.dumps(ev), flush=True)
 
