@@ -1,0 +1,18 @@
+{
+  "images": [
+    {
+      "reference": "node:24.6.0-bookworm-slim@sha256:9b741b28148b0195d62fa456ed84dd6c953c1f17a3761f3e6e6797a754d9edff",
+      "platforms": {
+        "linux/amd64": "sha256:527e3f1e925c5727a98b17575e68d0bb0b577965bf3b60330790bfcf8a0b3035",
+        "linux/arm64": "sha256:798837daa2a12bab9cdf53cf8779a05256c2ce08176f449e239e7577d26225e8"
+      }
+    },
+    {
+      "reference": "python:3.12.12-slim-bookworm@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c",
+      "platforms": {
+        "linux/amd64": "sha256:2986c55feb36e6cae00fa1fefb454283e4b33f35e75ff8bdd123b134130be301",
+        "linux/arm64": "sha256:228390eced221ad2986a3dd77e10b1accca6ba8ceb36f1572de1b346a337cc1a"
+      }
+    }
+  ]
+}

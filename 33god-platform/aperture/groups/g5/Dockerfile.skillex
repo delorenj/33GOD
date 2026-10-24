@@ -1,0 +1,7 @@
+# Source: Skillex package.json, published npm CLI; no registry payload or host config.
+FROM node:24.6.0-bookworm-slim@sha256:9b741b28148b0195d62fa456ed84dd6c953c1f17a3761f3e6e6797a754d9edff
+ARG GOD_SKILLEX_VERSION=0.3.1
+RUN npm install --global --ignore-scripts --no-audit --no-fund "@delorenj/skillex@${GOD_SKILLEX_VERSION}" && npm cache clean --force
+USER node
+WORKDIR /home/node
+ENTRYPOINT ["skillex"]
