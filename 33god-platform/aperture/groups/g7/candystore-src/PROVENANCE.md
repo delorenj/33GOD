@@ -19,9 +19,10 @@ Vendored copy of the `candystore` git submodule of the 33GOD monorepo.
 - Nothing else from the submodule is included (no compose files, no
   dapr-components, no agent notebooks, no docs trees, no `runtime/`, no
   `web/`, no images).
-- Local modification: `Dockerfile` accepts `GOD_PYTHON_IMAGE` build arg to pin
-  the base image the same way every G7 local build does (python:3.12-alpine
-  multi-arch; upstream pins python:3.11-slim). No application code changed.
+- Local modification: **NONE.** The PM crib-fidelity diff (`git archive
+  767ebb5` vs this tree) shows all five copied artifacts byte-identical,
+  Dockerfile included (upstream base `python:3.11-slim`, which is multi-arch —
+  manifest-verified). Do not invent deltas that the evidence does not show.
 
 G1 builds candystore from the live submodule; G7 vendors it so the bundle is
 self-contained on a target host with no monorepo checkout. To re-vendor:

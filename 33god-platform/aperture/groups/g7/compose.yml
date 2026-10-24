@@ -129,8 +129,6 @@ services:
     # the live submodule, G7 vendors so the bundle is self-contained.
     build:
       context: ./candystore-src
-      args:
-        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
     image: ${GOD_CANDYSTORE_IMAGE:-candystore:g7}
     environment:
       APP_PORT: "3001"

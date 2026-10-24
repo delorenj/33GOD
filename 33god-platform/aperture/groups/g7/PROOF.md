@@ -195,7 +195,10 @@ production traffic (client names, report bodies, home-dir paths) — the entire
   BLOODBANK_EVENTS + BLOODBANK_COMMANDS (GIB_EVENTS excluded, documented in
   the file header); per-stream config byte-equivalent.
 - `dapr/pubsub.yaml` — byte-identical copy of `groups/g1/dapr/pubsub.yaml`.
-- `candystore-src/` — vendored at submodule `767ebb5`, clean tree; only
-  delta is the Dockerfile `GOD_PYTHON_IMAGE` build-arg (recorded in
-  PROVENANCE.md). Package + migrations + static are unmodified.
+- `candystore-src/` — vendored at submodule `767ebb5`, clean tree. PM review
+  gate re-ran the byte-exact diff (`git archive 767ebb5` vs the vendor):
+  package, migrations, static, pyproject, **and Dockerfile are IDENTICAL —
+  zero local modification**. (The first PROVENANCE draft claimed a build-arg
+  delta; the diff says otherwise and the record now matches the evidence.
+  Upstream base `python:3.11-slim` is multi-arch — PROOF §4.)
 - ntfy service — G3's pattern (image, command, env, healthcheck, volumes).
