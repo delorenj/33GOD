@@ -526,7 +526,7 @@
    "bundle": "merged",
    "gate": "pending",
    "gate_label": "real recording → verbatim transcript",
-   "note": "voice bundle dispatched (GPU-optional TTS/STT + intake; waxd host-side .deb — no fake container); worker running",
+   "note": "CPU core proven (eSpeak TTS 94KB WAV + int8 whisper STT + Vinyl + intake); VoxCPM GPU-profile-only (needs >1.9GiB CPU); waxd host-side; 6/8 merged",
    "arm64": "verified"
   },
   "g7": {
