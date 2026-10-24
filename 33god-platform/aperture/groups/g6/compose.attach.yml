@@ -1,0 +1,17 @@
+# Overlay convention: G2/G4. Only the transport joins downstream networks.
+# G2 URL intentionally empty: operator must supply an installed receiving workflow.
+services:
+  audio-intake:
+    environment:
+      GOD_N8N_INTAKE_URL: ${GOD_N8N_INTAKE_URL:-}
+      GOD_N8N_INTAKE_KEY: ${GOD_N8N_INTAKE_KEY:-}
+      GOD_NTFY_URL: ${GOD_NTFY_URL:-http://ntfy:80}
+      GOD_NTFY_TOPIC: ${GOD_NTFY_TOPIC:-aperture-g6-alerts}
+    networks: [g6-internal, g2-internal, g3-internal]
+networks:
+  g2-internal:
+    name: ${GOD_G2_NETWORK:-g2-internal}
+    external: true
+  g3-internal:
+    name: ${GOD_G3_NETWORK:-g3-internal}
+    external: true

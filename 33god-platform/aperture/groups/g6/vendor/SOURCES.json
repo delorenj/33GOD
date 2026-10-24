@@ -1,0 +1,96 @@
+{
+  "vox_commit": "be61ad33f9f131d482cd2081e9326c30d89b633c",
+  "vinyl_commit": "4e83353a8374475ab99e76d9317bf83b52a77351",
+  "files": {
+    "vendor/vox/app/__init__.py": {
+      "source": "voxxy/app/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modified": false
+    },
+    "vendor/vox/app/main.py": {
+      "source": "voxxy/app/main.py",
+      "sha256": "66832958798deec578f3d9489dbc04d5626c4148b811486b44a9ca7e6124ba9d",
+      "modified": true
+    },
+    "vendor/vox/app/audio.py": {
+      "source": "voxxy/app/audio.py",
+      "sha256": "2fdf5bb72baa624806b3a4c7243b909ef9fdf7762002b03e85f51a29e7626949",
+      "modified": false
+    },
+    "vendor/vox/app/cache.py": {
+      "source": "voxxy/app/cache.py",
+      "sha256": "aa9704ca526420017a8e0257082d671346041c2cad0b48351fc070b95461962d",
+      "modified": false
+    },
+    "vendor/vox/app/engines.py": {
+      "source": "voxxy/app/engines.py",
+      "sha256": "56fc2e2e3784288933e39d768e1215413b84b3685a31d4d033fd5e8e939b0eae",
+      "modified": false
+    },
+    "vendor/vox/app/engine_contract.py": {
+      "source": "voxxy/app/engine_contract.py",
+      "sha256": "90c89bc62a7d11e756a54371237e084cb32186a3747924fc15b4a07cfb3bfc4f",
+      "modified": false
+    },
+    "vendor/vox/app/sink.py": {
+      "source": "voxxy/app/sink.py",
+      "sha256": "017ad7896d97ab124720b77301345d0af85f3af899b6881aced194323c402fff",
+      "modified": false
+    },
+    "vendor/vox/app/voices.py": {
+      "source": "voxxy/app/voices.py",
+      "sha256": "6d093de19626feb03a799742521b47401d163b49005267b38c9e71ce925cb6f2",
+      "modified": false
+    },
+    "vendor/vinyl/vinyl/__init__.py": {
+      "source": "vinyl/vinyl/__init__.py",
+      "sha256": "924a8b99a636716692693eb92bef3281c11a05b7250b89755fcc4130660a5d4c",
+      "modified": false
+    },
+    "vendor/vinyl/vinyl/server.py": {
+      "source": "vinyl/vinyl/server.py",
+      "sha256": "a68e557a7d630d0545c7b90530b6e748a52bd8f06b3892d16b0fa7e0bba7fe13",
+      "modified": false
+    },
+    "vendor/vinyl/vinyl/protocol.py": {
+      "source": "vinyl/vinyl/protocol.py",
+      "sha256": "7280d86795c2148bb808d2ca3571e8226bbed703db05e0fee6adb827d68d7b0e",
+      "modified": false
+    },
+    "vendor/vinyl/vinyl/streaming.py": {
+      "source": "vinyl/vinyl/streaming.py",
+      "sha256": "c51845a644245e85048ae7e79a105247e19f3163c1667f69b545aafc0b4386ee",
+      "modified": false
+    },
+    "vendor/vinyl/vinyl/trace.py": {
+      "source": "vinyl/vinyl/trace.py",
+      "sha256": "0edb3fa397cbf83a7223e5d5d8306baea72efacb1166910a93569d03f8bc8115",
+      "modified": false
+    },
+    "vendor/vinyl/vinyl/rpc.py": {
+      "source": "vinyl/vinyl/rpc.py",
+      "sha256": "cf1ab79e8ba7afa0b51c56688577c2552949bb9687d40f66599bd5fa2948883b",
+      "modified": false
+    },
+    "vendor/vinyl/vinyl/vad.py": {
+      "source": "vinyl/vinyl/vad.py",
+      "sha256": "2bf5672bf732f058c70eb95244432ecffee6df8313d6390ea93301df2490cd72",
+      "modified": false
+    },
+    "vendor/vox/pyproject.toml": {
+      "source": "voxxy/pyproject.toml",
+      "sha256": "ceef3558eaed03b431c485346d5b6823c59595159e8caa477ceab4ace91b4eac",
+      "modified": false
+    },
+    "vendor/vox/uv.lock": {
+      "source": "voxxy/uv.lock",
+      "sha256": "fe59a8ce2631179eb11dfc19d6175e32d2e556dcee2a2a3ffb09a4a1eb0d33ea",
+      "modified": false
+    },
+    "vendor/vox/init.sql": {
+      "source": "voxxy/init.sql",
+      "sha256": "baeb597bb731552997b0c624f7dc07e76a3a1a63e1f8f2a73009eda366c78b7d",
+      "modified": false
+    }
+  }
+}

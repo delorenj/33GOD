@@ -1,0 +1,283 @@
+# G6 voice pipeline. Upstream packaging cribs: vendor/SOURCES.json.
+# No host ports, desktop devices, personal voices or adopted production state.
+name: god-g6
+services:
+  vox-db:
+    image: ${GOD_POSTGRES_IMAGE:-postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94}
+    runtime: runc
+    environment:
+      POSTGRES_USER: vox
+      POSTGRES_DB: vox
+      POSTGRES_PASSWORD: ${GOD_VOX_DB_PASSWORD:-aperture-local-only}
+    volumes:
+    - vox-db:/var/lib/postgresql/data
+    - ./vendor/vox/init.sql:/docker-entrypoint-initdb.d/01-voices.sql:ro
+    mem_limit: 128m
+    cpus: 0.5
+    networks:
+    - g6-internal
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - pg_isready
+      - -U
+      - vox
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  espeak:
+    build:
+      context: .
+    image: ${GOD_G6_CPU_IMAGE:-god-g6-cpu:0.1}
+    runtime: runc
+    networks:
+    - g6-internal
+    restart: unless-stopped
+    cpus: 1.0
+    command:
+    - uvicorn
+    - runtime.espeak_engine:app
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8000'
+    mem_limit: 96m
+    environment:
+      NVIDIA_VISIBLE_DEVICES: void
+      CUDA_VISIBLE_DEVICES: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8000/healthz',timeout=5));
+        assert d.get('ready',True)
+      interval: 5s
+      timeout: 10s
+      retries: 36
+      start_period: 180s
+  vox:
+    build:
+      context: .
+    image: ${GOD_G6_CPU_IMAGE:-god-g6-cpu:0.1}
+    runtime: runc
+    networks:
+    - g6-internal
+    restart: unless-stopped
+    cpus: 1.0
+    command:
+    - uvicorn
+    - app.main:app
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8000'
+    mem_limit: 320m
+    environment:
+      NVIDIA_VISIBLE_DEVICES: void
+      CUDA_VISIBLE_DEVICES: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      VOX_DATABASE_URL: postgresql://vox:${GOD_VOX_DB_PASSWORD:-aperture-local-only}@vox-db:5432/vox
+      VOX_VOICES_DIR: /data/voices
+      VOX_AUDIO_CACHE_DIR: /data/audio-cache
+      VOX_PUBLIC_BASE_URL: ${GOD_VOX_PUBLIC_URL:-http://vox:8000}
+      VOX_API_KEY: ${GOD_VOX_API_KEY:-}
+      VOX_DEFAULT_VOICE: ''
+      VOX_ENGINES: ${GOD_VOX_ENGINES:-voxcpm=http://voxxy-engine-voxcpm:8000,espeak=http://espeak:8000}
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8000/healthz',timeout=5));
+        assert d.get('ready',True)
+      interval: 5s
+      timeout: 10s
+      retries: 36
+      start_period: 180s
+    volumes:
+    - vox-data:/data
+    depends_on:
+      vox-db:
+        condition: service_healthy
+      espeak:
+        condition: service_healthy
+  whisper:
+    build:
+      context: .
+    image: ${GOD_G6_CPU_IMAGE:-god-g6-cpu:0.1}
+    runtime: runc
+    networks:
+    - g6-internal
+    restart: unless-stopped
+    cpus: 1.0
+    command:
+    - uvicorn
+    - runtime.whisper:app
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8766'
+    mem_limit: 1024m
+    environment:
+      NVIDIA_VISIBLE_DEVICES: void
+      CUDA_VISIBLE_DEVICES: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      GOD_MODEL_OFFLINE: ${GOD_MODEL_OFFLINE:-0}
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8766/healthz',timeout=5));
+        assert d.get('ready',True)
+      interval: 5s
+      timeout: 10s
+      retries: 36
+      start_period: 180s
+    volumes:
+    - models:/models
+  vinyld-serve:
+    build:
+      context: .
+    image: ${GOD_G6_CPU_IMAGE:-god-g6-cpu:0.1}
+    runtime: runc
+    networks:
+    - g6-internal
+    restart: unless-stopped
+    cpus: 1.0
+    command:
+    - python
+    - -m
+    - runtime.vinyl_server
+    mem_limit: 160m
+    environment:
+      NVIDIA_VISIBLE_DEVICES: void
+      CUDA_VISIBLE_DEVICES: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      GOD_WHISPER_URL: http://whisper:8766
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import socket; from pathlib import Path; from vinyl.protocol import send_msg,recv_msg;
+        s=socket.create_connection(('127.0.0.1',7733),timeout=5); send_msg(s,{'type':'hello','token':Path('/home/voice/.config/vinyl/server.token').read_text().strip()});
+        assert recv_msg(s)[0]['type'] in ('ready','busy'); send_msg(s,{'type':'cancel'})
+      interval: 5s
+      timeout: 10s
+      retries: 36
+      start_period: 180s
+    volumes:
+    - models:/models:ro
+    - vinyl-state:/home/voice
+    depends_on:
+      whisper:
+        condition: service_healthy
+  audio-intake:
+    build:
+      context: .
+    image: ${GOD_G6_CPU_IMAGE:-god-g6-cpu:0.1}
+    runtime: runc
+    networks:
+    - g6-internal
+    restart: unless-stopped
+    cpus: 1.0
+    command:
+    - uvicorn
+    - runtime.intake:app
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8000'
+    mem_limit: 128m
+    environment:
+      NVIDIA_VISIBLE_DEVICES: void
+      CUDA_VISIBLE_DEVICES: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      GOD_INTAKE_ENDPOINT: ${GOD_INTAKE_ENDPOINT:-}
+      GOD_INTAKE_ACCESS_KEY: ${GOD_INTAKE_ACCESS_KEY:-}
+      GOD_INTAKE_SECRET_KEY: ${GOD_INTAKE_SECRET_KEY:-}
+      GOD_INTAKE_BUCKET: ${GOD_INTAKE_BUCKET:-}
+      GOD_INTAKE_PREFIX: ${GOD_INTAKE_PREFIX:-}
+      GOD_INTAKE_REGION: ${GOD_INTAKE_REGION:-us-east-1}
+      GOD_INTAKE_POLL_SECONDS: ${GOD_INTAKE_POLL_SECONDS:-2}
+      GOD_N8N_INTAKE_URL: ${GOD_N8N_INTAKE_URL:-}
+      GOD_N8N_INTAKE_KEY: ${GOD_N8N_INTAKE_KEY:-}
+      GOD_NTFY_URL: ${GOD_NTFY_URL:-}
+      GOD_NTFY_TOPIC: ${GOD_NTFY_TOPIC:-aperture-g6-alerts}
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8000/healthz',timeout=5));
+        assert d.get('ready',True)
+      interval: 5s
+      timeout: 10s
+      retries: 36
+      start_period: 180s
+    volumes:
+    - pipeline:/pipeline
+  voxxy-engine-voxcpm:
+    profiles:
+    - gpu
+    build:
+      context: ./gpu
+    image: ${GOD_G6_GPU_IMAGE:-god-g6-voxcpm:0.1}
+    environment:
+      GOD_GPU: ${GOD_GPU:-0}
+      HF_HOME: /models/huggingface
+      VOX_OPTIMIZE: '0'
+    volumes:
+    - gpu-models:/models
+    networks:
+    - g6-internal
+    mem_limit: 8g
+    cpus: 2.0
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/healthz'))['ready']
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 300s
+networks:
+  g6-internal:
+    name: g6-internal
+volumes:
+  vox-db:
+    name: god-g6-vox-db
+  vox-data:
+    name: god-g6-vox-data
+  models:
+    name: god-g6-models
+  vinyl-state:
+    name: god-g6-vinyl-state
+  pipeline:
+    name: god-g6-pipeline
+  gpu-models:
+    name: god-g6-gpu-models
+x-dev-journal:
+  profile: dev-journal
+  status: reserved-no-service
+  contract: DEFERRED.md

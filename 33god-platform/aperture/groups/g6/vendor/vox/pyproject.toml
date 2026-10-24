@@ -1,0 +1,24 @@
+[project]
+name = "vox-service"
+version = "0.1.0"
+description = "Universal TTS service wrapping VoxCPM2"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "fastmcp>=0.4",
+    "asyncpg>=0.30",
+    "pydantic>=2",
+    "python-multipart",
+    "soundfile",
+    "httpx>=0.27",
+]
+
+[tool.uv]
+index-url = "https://pypi.org/simple"
+
+[dependency-groups]
+dev = [
+    "anyio>=4.13.0",
+    "pytest>=9.1.1",
+]
