@@ -48,10 +48,13 @@ if [ -f 33god-platform/aperture/CHARTER.md ]; then touch .aperture/charter-sessi
 git commit -q -m "ship-board: ${GROUP}.${FIELD} = ${VALUE} (charter-ack v1.0)" || true
 git push -q origin HEAD || true
 
-# publish to s3.delo.sh via the html-artifact-delivery skill script
-python3 ~/.agents/skills/html-artifact-delivery/scripts/publish_html_artifact.py \
-  --bundle "$SB" --entry index.html --artifact g33-ship-board \
-  --project-root "$MONO" --harness hermes \
-  --native-session-id "$(cat "$SB/.last-session-id" 2>/dev/null || echo 20261011_013759_c0759c2d)" \
-  --publish 2>&1 | tail -3
+# publish: overwrite the fixed board keys (operator wants a stable URL).
+# The html-artifact-delivery skill has no replace mode (append-only by
+# design), so updates go via mc overwrite with the SAME Cache-Control the
+# original publish set (stops Cloudflare beacon injection on the HTML).
+KEY="delo/projects/33god/a88a63b1-830a-5600-9475-23877bff0e0c/g33-ship-board"
+mc cp "$SB/index.html" "$KEY/index.html" --attr Cache-Control=no-cache,no-transform
+mc cp "$SB/data.json"  "$KEY/data.json"  --attr Cache-Control=no-cache,no-transform
+curl -sf "https://s3.delo.sh/projects/33god/a88a63b1-830a-5600-9475-23877bff0e0c/g33-ship-board/data.json" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); print('live updated:', d['meta']['updated'])"
 echo "board republished"
