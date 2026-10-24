@@ -532,7 +532,8 @@
   "g7": {
    "bundle": "pending",
    "gate": "pending",
-   "gate_label": "recall from stored real history"
+   "gate_label": "recall from stored real history",
+   "note": "memory+enrichment plane dispatched (candystore schema + enrichment causationid chain + hindsight-bridge, client-owned LLM endpoints, zero AAI); worker running"
   },
   "g8": {
    "bundle": "pending",
