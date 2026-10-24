@@ -14,6 +14,13 @@ import uuid
 
 SUBJECT = "bloodbank.evt.aperture.smoke.g2"          # NATS subject (5 tokens)
 SUBJECT_TYPE = "bloodbank.aperture.smoke.g2"          # CloudEvents type (4 tokens)
+# Explicit allowlist: the synthetic smoke event and the client-built studio
+# note (G2 acceptance gate "client ships his first workflow"). Still NOT a
+# general ingress — anything outside these two canonical pairs is rejected.
+ALLOWED = {
+    SUBJECT_TYPE: SUBJECT,
+    "bloodbank.studio.note.recorded": "bloodbank.evt.studio.note.recorded",
+}
 STREAM = os.environ.get("GOD_OUTBOX_STREAM", "G2_SMOKE")
 # Attached mode: publish into an existing bus (e.g. G1's BLOODBANK_EVENTS)
 # without owning a stream there — see groups/SEAM-G1-G2.md. Host default is
@@ -63,7 +70,7 @@ def request(subject, data):
 
 def setup_stream():
     return request(f"$JS.API.STREAM.CREATE.{STREAM}", {
-        "name": STREAM, "subjects": [SUBJECT], "storage": "file",
+        "name": STREAM, "subjects": sorted(ALLOWED.values()), "storage": "file",
         "retention": "limits", "max_msgs": 100, "max_bytes": 1048576,
         "max_age": 86400000000000, "num_replicas": 1,
     })
@@ -87,12 +94,13 @@ def validate(event):
     if (len(type_tokens) != 4 or type_tokens[0] != "bloodbank"
             or event["subject"] != "bloodbank.evt." + event["type"].split(".", 1)[1]):
         raise ValueError("type/subject must follow canonical 4/5-token shape")
-    if (event["specversion"] != "1.0" or event["type"] != SUBJECT_TYPE
-            or event["subject"] != SUBJECT or event["source"] != "urn:33god:aperture:g2"
+    if (event["specversion"] != "1.0"
+            or ALLOWED.get(event["type"]) != event["subject"]
+            or event["source"] not in ("urn:33god:aperture:g2", "urn:33god:aperture:g2-client")
             or event["datacontenttype"] != "application/json"
             or event["kind"] not in ("event", "command", "reply")
             or not isinstance(event["data"], dict)):
-        raise ValueError("Only the canonical G2 CloudEvent is accepted")
+        raise ValueError("Only allowlisted canonical G2 CloudEvents are accepted")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -108,17 +116,22 @@ class Handler(BaseHTTPRequestHandler):
         return hmac.compare_digest(self.headers.get("X-Aperture-Demo", ""), TOKEN)
 
     def do_GET(self):
-        if self.path not in ("/healthz", "/latest"):
+        base, _, query = self.path.partition("?")
+        if base not in ("/healthz", "/latest"):
             return self.respond(404, {"error": "not found"})
-        if self.path != "/healthz" and not self.authorized():
+        if base != "/healthz" and not self.authorized():
             return self.respond(401, {"error": "demo header required"})
         try:
-            if self.path == "/healthz":
+            if base == "/healthz":
                 if ATTACHED:
                     return self.respond(200, {"ready": True, "attached": True})
                 result = request(f"$JS.API.STREAM.INFO.{STREAM}", {})
-                return self.respond(200, {"ready": result["config"]["subjects"] == [SUBJECT]})
-            result = request(f"$JS.API.STREAM.MSG.GET.{STREAM}", {"last_by_subj": SUBJECT})
+                return self.respond(200, {"ready": set(result["config"]["subjects"]) == set(ALLOWED.values())})
+            from urllib.parse import parse_qs
+            subj = (parse_qs(query).get("subject") or [SUBJECT])[0]
+            if subj not in ALLOWED.values():
+                return self.respond(400, {"error": "subject not in allowlist"})
+            result = request(f"$JS.API.STREAM.MSG.GET.{STREAM}", {"last_by_subj": subj})
             msg = result["message"]
             return self.respond(200, {"subject": msg["subject"], "sequence": msg["seq"],
                                       "event": json.loads(base64.b64decode(msg["data"]))})
@@ -139,10 +152,10 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, TypeError, AttributeError) as exc:
             return self.respond(400, {"error": str(exc)})
         try:
-            ack = request(SUBJECT, event)
+            ack = request(event["subject"], event)
             if ack.get("stream") != STREAM or not isinstance(ack.get("seq"), int):
                 raise RuntimeError("JetStream persistence acknowledgment missing")
-            self.respond(200, {"published": True, "id": event["id"], "subject": SUBJECT,
+            self.respond(200, {"published": True, "id": event["id"], "subject": event["subject"],
                                "stream": STREAM, "sequence": ack["seq"]})
         except (OSError, RuntimeError, ValueError) as exc:
             self.respond(503, {"error": str(exc)})

@@ -1,0 +1,77 @@
+{
+  "id": "apertureG2ClientForm01",
+  "name": "Aperture G2 — client form note (ACCEPTANCE TEMPLATE)",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [],
+  "nodes": [
+    {
+      "id": "form-in",
+      "name": "My note form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [0, 0],
+      "parameters": {
+        "formTitle": "Studio note",
+        "formDescription": "Type a note and pick a mood — this is YOUR workflow, built by you.",
+        "formFields": {
+          "values": [
+            { "fieldLabel": "note", "requiredField": true },
+            { "fieldLabel": "mood", "fieldType": "dropdown", "fieldOptions": {
+                "values": [
+                  { "name": "great", "value": "great" },
+                  { "name": "fine", "value": "fine" },
+                  { "name": "rough", "value": "rough" }
+                ]}, "requiredField": true }
+          ]
+        },
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "envelope",
+      "name": "Build canonical envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "parameters": {
+        "jsCode": "// Client-built workflow template: publishes the form values as a canonical\n// Bloodbank envelope through the deployed G2 outbox. Nothing here is a\n// secret: the demo header token comes from the deployment env.\nconst form = $input.first().json;\nconst note = String(form.note ?? '').trim();\nconst mood = String(form.mood ?? '').trim();\nif (!note || !mood) {\n  throw new Error('note and mood are required');\n}\nconst id = require('crypto').randomUUID();\nconst ceType = 'bloodbank.studio.note.recorded';        // 4 tokens, canonical\nconst subject = 'bloodbank.evt.studio.note.recorded';   // 5 tokens\nreturn [{json: {ok: true, event: {\n  specversion: '1.0', id, source: 'urn:33god:aperture:g2-client',\n  type: ceType, subject, time: new Date().toISOString(),\n  datacontenttype: 'application/json',\n  correlationid: id, causationid: id,\n  producer: 'aperture-g2-client', service: 'studio', domain: 'studio',\n  kind: 'event', ordering_key: 'studio:note',\n  actor: {type: 'operator', agent_id: 'operator:studio-client', cli: null, provider: null, model: null},\n  data: {note, mood, via: 'client-form-workflow'}\n}}}];"
+      }
+    },
+    {
+      "id": "publish",
+      "name": "Publish via outbox",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.GOD_OUTBOX_URL + \"/publish\" }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "X-Aperture-Demo", "value": "={{ $env.GOD_DEMO_HEADER_TOKEN }}" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.event) }}",
+        "options": { "timeout": 10000 }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Done",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 0],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ok: true, published: $json.published ?? true, note: $json.event ? $json.event.data.note : 'sent', mood: $json.event ? $json.event.data.mood : 'sent'}) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Form in": { "main": [[{ "node": "Build canonical envelope", "type": "main", "index": 0 }]] },
+    "Build canonical envelope": { "main": [[{ "node": "Publish via outbox", "type": "main", "index": 0 }]] },
+    "Publish via outbox": { "main": [[{ "node": "Done", "type": "main", "index": 0 }]] }
+  }
+}

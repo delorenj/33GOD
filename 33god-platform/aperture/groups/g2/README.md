@@ -119,6 +119,14 @@ There is no G1→Candystore delivery claim. Connecting to G1 requires a separate
 reviewed network, authentication and transport contract; this demo adapter is
 not a second production Bloodbank ingress.
 
+## Outbox allowlist
+
+`outbox/server.py` accepts exactly two canonical (type, subject) pairs:
+the synthetic smoke event and `bloodbank.studio.note.recorded` (the client
+form gate, see `accept/`). Anything else → 400. `GET /latest?subject=…`
+serves either allowlisted subject. Widening the allowlist is a reviewable
+change, never a workflow-side hack.
+
 ## Workflow upgrade path (running deployments)
 
 The first-boot importer is one-shot by design (marker file prevents
