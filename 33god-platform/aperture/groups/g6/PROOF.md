@@ -140,6 +140,35 @@ by label lookups. Build images/cache are intentionally retained, not counted
 as runtime residue. Existing production voice/transcription containers stayed
 running.
 
+
+## Clean committed-context replay
+
+Exported revision `5b3944e` using `git archive HEAD` (G6 subtree only) into a
+scratch directory, then ran its shipped `bash smoke/smoke.sh`: exit **0**.
+This excludes ignored source files, external source checkouts and working-tree
+payload. Trimmed verbatim output:
+
+```text
+PASS secrets/personal-host scan: zero hits
+PASS packaged provenance hashes: 25 files
+PASS CPU memory caps: 1856 MiB
+PASS config cpu zero published ports, no adopted container names
+PASS config gpu zero published ports, no adopted container names
+PASS config attach zero published ports, no adopted container names
+PASS config dev-journal zero published ports, no adopted container names
+PASS config zero published ports; GPU reservations isolated to gpu profile
+PASS Vox missing authentication rejected 401
+PASS TTS /synthesize 94012 WAV bytes 2.13 seconds espeak
+PASS STT roundtrip returns a transcript without error: 'The moist pipeline is working.'
+PASS STT bundled returns a transcript without error: 'The moist pipeline is working.'
+PASS intake pickup SHA256 c50fea3c3e3239e69e5c0565ad425220d8216d8b3d77ba2ac07e5a3d2ff8bfc9 receipt {'version': 1, 'id': '64170bb0-7d77-4230-a387-a62c2d8d1fad', 'sha256': 'c50fea3c3e3239e69e5c0565ad425220d8216d8b3d77ba2ac07e5a3d2ff8bfc9', 'file': 'c50fea3c3e3239e69e5c0565ad425220d8216d8b3d77ba2ac07e5a3d2ff8bfc9.wav', 'bytes': 94012, 'state': 'landed', 'notified': False}
+PASS invalid intake quarantined; poller remains ready
+PASS Vinyl unauthorized rejected
+PASS Vinyl TCP -> Whisper final: ['The voice pipeline is working.']
+PASS down -v: zero project containers, volumes, networks
+SMOKE RESULT: PASS — CPU TTS/STT, Vinyl, intake, no-GPU, teardown
+```
+
 ## Unproved acceptance / intentional scope limits
 
 * Attach overlay is **config-verified only**. Real G2 audio receiver is absent;
