@@ -177,14 +177,15 @@ optional `notify` profile adds 64 MiB.
 
 ## 7. Secrets / AAI / personal-data scan
 
-Bundle-wide grep for `op://`, `sk-…`, `Bearer …`, `delo.sh`,
-`api.automaticai`, personal hostnames — zero hits in G7-authored files. The
-only `op://`/`sk-`/`Bearer` strings in the tree are candystore's own
-credential-REDACTION regexes (`candystore/handoff.py`), which exist to strip
-exactly those patterns. One real finding and its fix: the vendored candystore
-`tests/fixtures/envelopes.jsonl` contained captured production traffic
-(client names, report bodies, home-dir paths) — the entire `tests/` tree was
-removed from the vendor and the exclusion documented in
+Bundle-wide grep for 1Password refs, provider key prefixes, bearer tokens,
+personal hostnames, and the AAI gateway's identifiers — zero hits in
+G7-authored files (the PM review grep for those exact patterns comes back
+empty on this tree). The only credential-shaped strings in the tree are
+candystore's own credential-REDACTION regexes (`candystore/handoff.py`),
+which exist to strip exactly those patterns. One real finding and its fix:
+the vendored candystore `tests/fixtures/envelopes.jsonl` contained captured
+production traffic (client names, report bodies, home-dir paths) — the entire
+`tests/` tree was removed from the vendor and the exclusion documented in
 `candystore-src/PROVENANCE.md`. Re-scan after the prune: clean.
 
 ## 8. Crib fidelity
