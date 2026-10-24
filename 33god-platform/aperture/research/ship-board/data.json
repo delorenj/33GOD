@@ -533,7 +533,7 @@
    "bundle": "merged",
    "gate": "pending",
    "gate_label": "recall from stored real history",
-   "note": "not yet deployed to target; standalone + attach both proven on build host",
+   "note": "accept/ kit authored per Rererere ack shape — 11/11 PASS on build host; awaiting Damian's run (recall from stored real history, degraded+zero-credentials)",
    "arm64": "manifest",
    "studio": "pending"
   },
