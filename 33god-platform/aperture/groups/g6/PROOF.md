@@ -179,3 +179,28 @@ SMOKE RESULT: PASS — CPU TTS/STT, Vinyl, intake, no-GPU, teardown
   multi-group VM coexistence peak, desktop capture and host package install
   are not proved.
 * PM independently re-runs review before merge. See `DEFERRED.md`.
+
+
+## GPU-positive inference (PM addendum, 2026-10-24)
+
+Proven on the build host RTX 3090 after the merge (previously deferred):
+
+- `GOD_GPU=1 docker compose --profile gpu up -d` -> voxcpm engine loads
+  VoxCPM2 on `cuda, dtype: bfloat16`, healthz:
+  `{'engine': 'voxcpm', 'status': 'ready', 'model_loaded': True, 'ready': True,
+  'capabilities': {'accepts_reference_audio': True, 'max_ref_seconds': 30.0}}`
+- Real neural synthesis through the stack: `POST vox:8000/synthesize`
+  -> `200 audio/wav 337964 bytes` (eSpeak CPU fallback produced 94,012).
+- Build-host caveat, NOT a bundle defect: the 3090 here is shared with 19
+  production processes (19.2/24.5 GiB used); the first GPU load attempt OOM'd
+  with only 220 MiB free. Freeing ~6 GiB (temporarily stopping the host's own
+  voxxy-engine-voxcpm) let the bundle's engine load and synthesize. A client
+  host with a dedicated modern GPU (e.g. 96 GiB) has no such contention —
+  the `gpu` profile with `deploy.resources.reservations.devices` (driver
+  nvidia, capabilities [gpu]) is the intended tap.
+- Verified the env contract: `GOD_GPU` must be exported at compose-invocation
+  time (recreating without it re-interpolates to 0 -> engine stays degraded
+  by design). Document `GOD_GPU=1` in the bring-up command, not just .env.
+
+Teardown: `down -v` clean; production voxxy-engine-voxcpm restarted and
+healthy (17.5 GiB back on the GPU).
