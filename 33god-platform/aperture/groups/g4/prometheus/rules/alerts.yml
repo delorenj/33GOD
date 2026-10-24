@@ -1,0 +1,41 @@
+# G4 minimum alert rules.
+#
+# InstanceDown is cribbed from the live monitoring stack's alert_rules.yml
+# (ContainerDown `up == 0` shape), generalised to every scrape target.
+#
+# ContainerGone uses the synthetic canary beacon (aperture_canary_up) rather
+# than a cadvisor signal. That is the spec's documented fallback and it is
+# intentional: on this host cadvisor's `container_last_seen` only goes stale
+# on `docker rm` (it keeps refreshing exited containers it still sees in the
+# Docker API), and `container_tasks_state` reads cgroup task states that
+# require a privileged container — so neither detects a `docker stop`
+# reliably in a non-privileged bundle. The canary is stopped/started by the
+# smoke to prove the full fire->resolve path. See PROOF.md §4.
+groups:
+  - name: g4_availability
+    rules:
+      # A scrape target (self, node-exporter, cadvisor, or the canary) has
+      # been down for 30s.
+      - alert: InstanceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} is down"
+          description: "Prometheus has failed to scrape {{ $labels.job }} ({{ $labels.instance }}) for 30s"
+
+      # The canary application's liveness beacon has vanished — the synthetic
+      # scrape target is gone (stopped or removed).
+      - alert: ContainerGone
+        expr: absent(aperture_canary_up)
+        for: 30s
+        labels:
+          severity: critical
+          container: god-g4-canary-1
+        annotations:
+          # NOTE: the container name is hardcoded in the summary because
+          # `{{ $labels.container }}` renders empty for absent() expressions
+          # (rule-level labels are not exposed as $labels.* in that case).
+          summary: "Canary container god-g4-canary-1 is gone"
+          description: "The G4 canary's liveness beacon (aperture_canary_up) has not been scraped for 30s"

@@ -1,0 +1,17 @@
+# G4 Alertmanager — routes every alert to the in-bundle alert-bridge webhook.
+# Cribbed from the live monitoring stack's route/receiver shape; Telegram and
+# Discord receivers, their tokens, and all personal endpoints are NOT copied.
+global: {}
+
+route:
+  receiver: "alert-bridge"
+  group_by: ["alertname"]
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+
+receivers:
+  - name: "alert-bridge"
+    webhook_configs:
+      - url: "http://alert-bridge:8789/webhook"
+        send_resolved: true

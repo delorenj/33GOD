@@ -1,0 +1,319 @@
+# Aperture G4 v0.1 — Observability (self-contained Compose bundle)
+#
+# WHAT: prometheus + grafana + alertmanager + node-exporter + cadvisor + a
+# small stdlib alert-bridge, plus a smoke canary. Opt-in profiles add
+# 'logs' (loki + alloy) and 'otel' (otel-collector). Default `up` = core only.
+#
+# COLLISION SAFETY: runs BESIDE the live monitoring stack on this host
+# without touching it:
+#   - compose project name locked to `god-g4`; NO container_name overrides
+#   - ZERO published host ports — every service is reachable only on the
+#     bundle's own bridge network `g4-internal` (external name `g4-internal`).
+#   - own volumes (god-g4-{prometheus,grafana,alertmanager}-data) and network.
+#   - node-exporter/cadvisor mount the HOST read-only (they must, to report
+#     host/container metrics) but publish nothing and write nothing.
+#
+# CRIB SOURCES (style cribbed, everything re-parameterized as GOD_* vars):
+#   - ~/docker/stacks/monitoring/compose.yml (prometheus/grafana/alertmanager/
+#     node-exporter/cadvisor/loki/alloy/otel service shapes + cadvisor flags)
+#   - ~/docker/stacks/monitoring/prometheus/{prometheus.yml,alert_rules.yml}
+#   - ~/docker/stacks/monitoring/alertmanager/config.yml (route/receiver shape;
+#     telegram/discord receivers and all credentials deliberately NOT copied)
+#   - ~/docker/stacks/monitoring/grafana/provisioning/** (datasource/dashboard
+#     provisioning shape)
+#   - ~/docker/stacks/monitoring/{loki/config.yml,alloy/config.alloy,
+#     otel/collector-config.yml} (logs + otel profile configs)
+#   - Aperture G3 outbox adapter pattern for the stdlib-Python alert-bridge
+#     (http.server + urllib, no pip deps, python:3.12-alpine, non-root USER).
+#
+# NOT copied: production hostnames, the operator gateway (LLM observability)
+# service, ALL credentials/tokens, Telegram/Discord webhooks, the `proxy` /
+# `bloodbank-network` / `newapi_new-api-network` external networks, and the
+# production host-bound ports. See README.md and PROOF.md for the secrets
+# scan.
+
+name: god-g4
+
+networks:
+  g4-internal:
+    name: g4-internal
+    driver: bridge
+
+volumes:
+  prometheus-data:
+    name: god-g4-prometheus-data
+  grafana-data:
+    name: god-g4-grafana-data
+  alertmanager-data:
+    name: god-g4-alertmanager-data
+  loki-data:
+    name: god-g4-loki-data
+  alloy-data:
+    name: god-g4-alloy-data
+
+services:
+  # -------------------------------------------------------------------------
+  # Prometheus — scrapes itself + node-exporter + cadvisor + the smoke canary,
+  # and loads the bundled alert rules. Storage is a local volume; no remote
+  # write, no federation. Flags cribbed from the live monitoring compose.
+  # -------------------------------------------------------------------------
+  prometheus:
+    image: ${GOD_PROMETHEUS_IMAGE:-prom/prometheus:v2.53.1}
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:9090/-/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    mem_limit: 300m
+    cpus: 0.75
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Grafana — provisioned datasource (prometheus) + one overview dashboard.
+  # Local volume storage; no external auth. Cribbed provisioning shape.
+  # -------------------------------------------------------------------------
+  grafana:
+    image: ${GOD_GRAFANA_IMAGE:-grafana/grafana:11.1.4}
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GOD_GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GOD_GRAFANA_PASSWORD:-aperture-g4-demo-only}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 220m
+    cpus: 0.5
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Alertmanager — routes every alert to the in-bundle alert-bridge webhook by
+  # default (send_resolved so the smoke can prove the RESOLVED path too).
+  # -------------------------------------------------------------------------
+  alertmanager:
+    image: ${GOD_ALERTMANAGER_IMAGE:-prom/alertmanager:v0.27.0}
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+      - alertmanager-data:/alertmanager
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:9093/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    mem_limit: 48m
+    cpus: 0.25
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # node-exporter — host metrics, read-only mounts. Host path (not GOD_*)
+  # because it is reporting ON the host by definition; nothing is written.
+  # -------------------------------------------------------------------------
+  node-exporter:
+    image: ${GOD_NODE_EXPORTER_IMAGE:-prom/node-exporter:v1.8.2}
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:9100/metrics || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    mem_limit: 64m
+    cpus: 0.25
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # cadvisor — container metrics. Standard cadvisor pattern (docker.sock +
+  # rootfs, read-only); no `privileged`, so no device/kmsg access. The image
+  # ships its own HEALTHCHECK (wget --spider on /healthz). NOTE: without
+  # privileged cgroup access some metrics (e.g. container_tasks_state) read
+  # zero and `container_last_seen` only goes stale on `docker rm` — which is
+  # why the smoke's ContainerGone rule uses the synthetic canary beacon
+  # instead of a cadvisor signal (see PROOF.md §4).
+  # ---------------------------------------------------------------------------
+  cadvisor:
+    image: ${GOD_CADVISOR_IMAGE:-gcr.io/cadvisor/cadvisor:v0.49.1}
+    command:
+      - "--housekeeping_interval=30s"
+      - "--docker_only=true"
+      - "--store_container_labels=false"
+      - "--disable_metrics=cpu_topology,disk,diskIO,memory_numa,hugetlb,referenced_memory,resctrl,udp,advtcp,sched,process,percpu"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    mem_limit: 256m
+    cpus: 0.5
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # alert-bridge — stdlib-Python Alertmanager webhook -> ntfy. Formats one
+  # human line per alert and POSTs to GOD_NTFY_URL (empty by default in
+  # standalone mode = bridge logs visibly and keeps serving, never a SPOF).
+  # Attached mode (compose.attach.yml) joins god-g3's network and points at
+  # G3's ntfy (http://ntfy:80).
+  # -------------------------------------------------------------------------
+  alert-bridge:
+    build:
+      context: ./alert-bridge
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g4-alert-bridge:0.1
+    environment:
+      GOD_NTFY_URL: ${GOD_NTFY_URL:-}
+      GOD_NTFY_TOPIC: ${GOD_NTFY_TOPIC:-aperture-g4-alerts}
+      GOD_HEALTHZ_PORT: "8789"
+      PYTHONDONTWRITEBYTECODE: "1"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8789/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 10
+      start_period: 5s
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 48m
+    cpus: 0.25
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # canary — a tiny synthetic scrape target. The smoke stops/starts it to
+  # prove the InstanceDown + ContainerGone alert path end-to-end. Real
+  # god-g4 container, no profile; documented as a smoke fixture, not an
+  # observability component.
+  # -------------------------------------------------------------------------
+  canary:
+    build:
+      context: ./canary
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g4-canary:0.1
+    environment:
+      GOD_HEALTHZ_PORT: "8791"
+      PYTHONDONTWRITEBYTECODE: "1"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8791/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 10
+      start_period: 5s
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 32m
+    cpus: 0.25
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # OPTIONAL 'logs' profile — loki (local filesystem storage) + alloy
+  # (docker socket log shipper). Cribbed from the live monitoring stack,
+  # re-pointed at this bundle's loki and scoped to this bundle's containers.
+  # -------------------------------------------------------------------------
+  loki:
+    image: ${GOD_LOKI_IMAGE:-grafana/loki:3.1.1}
+    profiles: [logs]
+    command: ["-config.file=/etc/loki/config.yml"]
+    # Root matches the live monitoring stack's loki: the image's default
+    # non-root user cannot mkdir under the fresh /var/loki data volume.
+    user: "0"
+    volumes:
+      - ./loki:/etc/loki:ro
+      - loki-data:/var/loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 256m
+    cpus: 0.5
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  alloy:
+    image: ${GOD_ALLOY_IMAGE:-grafana/alloy:v1.3.1}
+    profiles: [logs]
+    command:
+      - "run"
+      - "/etc/alloy/config.alloy"
+      - "--storage.path=/var/lib/alloy/data"
+      - "--server.http.listen-addr=0.0.0.0:12345"
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    depends_on:
+      loki:
+        condition: service_healthy
+    mem_limit: 128m
+    cpus: 0.5
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # OPTIONAL 'otel' profile — otel-collector (contrib), cribbed pipeline
+  # (otlp -> prometheus metrics exporter + loki otlp-http logs exporter).
+  # -------------------------------------------------------------------------
+  otel-collector:
+    image: ${GOD_OTEL_IMAGE:-otel/opentelemetry-collector-contrib:0.105.0}
+    profiles: [otel]
+    command: ["--config=/etc/otelcol-contrib/config.yml"]
+    volumes:
+      - ./otel/collector-config.yml:/etc/otelcol-contrib/config.yml:ro
+    # No healthcheck: the contrib image ships no shell/wget to run a probe
+    # against the health_check extension (:13133); readiness is "container
+    # running" (restart: unless-stopped recovers crashes), same as alloy.
+    mem_limit: 256m
+    cpus: 0.5
+    networks: [g4-internal]
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # In-network curl for the smoke proof (profile: tools).
+  # -------------------------------------------------------------------------
+  smoke-client:
+    image: ${GOD_CURL_IMAGE:-curlimages/curl:8.12.1}
+    profiles: [tools]
+    entrypoint: [curl]
+    mem_limit: 64m
+    networks: [g4-internal]
