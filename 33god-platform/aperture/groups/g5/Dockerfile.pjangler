@@ -1,0 +1,19 @@
+# Source: PJangler package.json and src/index.ts; selective read-only build context.
+# PJangler is Node >=24, not a Python distribution (see README).
+FROM node:24.6.0-bookworm-slim@sha256:9b741b28148b0195d62fa456ed84dd6c953c1f17a3761f3e6e6797a754d9edff AS build
+WORKDIR /build
+COPY --from=pjangler package.json package-lock.json ./
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY --from=pjangler src/ ./src/
+RUN ./node_modules/.bin/esbuild src/index.ts --bundle --packages=external --platform=node --format=esm --outfile=dist/index.js
+COPY --from=pjangler dist/assets/project-notebook-skill/ ./dist/assets/project-notebook-skill/
+
+FROM node:24.6.0-bookworm-slim@sha256:9b741b28148b0195d62fa456ed84dd6c953c1f17a3761f3e6e6797a754d9edff
+WORKDIR /opt/pjangler
+COPY --from=pjangler package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund && npm cache clean --force
+COPY --from=build /build/dist/ ./dist/
+RUN ln -s /opt/pjangler/dist/index.js /usr/local/bin/pj && chmod 755 dist/index.js
+USER node
+WORKDIR /home/node
+ENTRYPOINT ["pj"]

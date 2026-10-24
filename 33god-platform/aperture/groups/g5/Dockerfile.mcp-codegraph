@@ -1,0 +1,12 @@
+# Source: Skillex mcp-servers/codegraph-voyage-mcp/pyproject.toml and src/.
+FROM python:3.12.12-slim-bookworm@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_NO_CACHE=1
+RUN python -m pip install --no-cache-dir uv==0.13.5
+WORKDIR /src
+COPY --from=codegraph pyproject.toml README.md ./
+COPY --from=codegraph src/codegraph_voyage_mcp/*.py ./src/codegraph_voyage_mcp/
+RUN uv pip install --system . && rm -rf /src && useradd --create-home --uid 10001 tool
+USER tool
+WORKDIR /home/tool
+ENTRYPOINT ["codegraph-voyage-mcp"]
+CMD ["--transport", "stdio"]
