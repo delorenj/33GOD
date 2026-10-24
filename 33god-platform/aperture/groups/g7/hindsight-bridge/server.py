@@ -233,6 +233,9 @@ class Handler(BaseHTTPRequestHandler):
             "llm": llm_status(),
             "backends": dict(MEMORY_BACKENDS),
             "backend_count": len(MEMORY_BACKENDS),
+            # bus consumption acked != memory stored: this counter is the
+            # visible seam between the two (Rererere follow-up 2026-10-24).
+            "backend_errors": HEALTH["backend_errors"],
             "bus": HEALTH["bus"],
             "tailed": HEALTH["tailed"],
         })

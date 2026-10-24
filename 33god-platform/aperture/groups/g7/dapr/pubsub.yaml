@@ -1,3 +1,18 @@
+# G7 candystore subscription — G1's pubsub.jetstream component with ONE
+# deliberate divergence: this group's OWN durable + queue-group names.
+#
+# WHY (coexistence, Rererere's ack 2026-10-24): JetStream delivers each
+# message to a durable ONCE. If two deployments share durable
+# "candystore-events" / queue group "candystore" (G1's names, which this
+# file cribbed verbatim in the first cut), the bus round-robins between the
+# two sidecars and each store keeps only the events its sidecar happened to
+# win — silent event splitting between two databases. Candystore's own
+# AGENTS.md warns exactly this about the legacy profile.
+#
+# OWNERSHIP SETTLED: G1 keeps "candystore-events"/"candystore" (never
+# touched, never replaced). G7 owns "g7-candystore-events"/"g7-candystore".
+# With distinct durables, one publish is delivered once per durable — every
+# event lands in BOTH stores. Proven in smoke/coexist.sh.
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -11,9 +26,9 @@ spec:
     - name: name
       value: "bloodbank-pubsub"
     - name: durableName
-      value: "candystore-events"
+      value: "g7-candystore-events"
     - name: queueGroupName
-      value: "candystore"
+      value: "g7-candystore"
     - name: streamName
       value: "BLOODBANK_EVENTS"
     - name: deliverPolicy

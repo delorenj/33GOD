@@ -58,16 +58,26 @@ def _search_text(envelope: dict) -> str:
 
 
 def ingest(events: list[dict]) -> int:
+    """Idempotent ingest: replaying the same events (bridge restart, JetStream
+    redelivery, a re-run ingest) stores each event id once. FTS5 has no
+    UNIQUE constraint, so dedupe = delete-then-insert per event id inside the
+    write lock. Returns the count of DISTINCT event ids ingested."""
     conn = db()
     stored = 0
+    seen: set[str] = set()
     with LOCK, conn:
         for env in events:
             if not isinstance(env, dict) or not env.get("id"):
                 continue
+            eid = str(env["id"])
+            if eid in seen:
+                continue
+            seen.add(eid)
+            conn.execute("DELETE FROM memory WHERE event_id = ?", (eid,))
             conn.execute(
                 "INSERT INTO memory (event_id, type, subject, producer, service, "
                 "domain, actor_cli, text, data_json) VALUES (?,?,?,?,?,?,?,?,?)",
-                (str(env["id"]), str(env.get("type") or ""),
+                (eid, str(env.get("type") or ""),
                  str(env.get("subject") or ""), str(env.get("producer") or ""),
                  str(env.get("service") or ""), str(env.get("domain") or ""),
                  str((env.get("actor") or {}).get("cli") or ""),

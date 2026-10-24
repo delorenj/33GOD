@@ -75,6 +75,14 @@ class BridgeDegradedTests(unittest.TestCase):
         report = bridge.fan_out([event()])
         self.assertIn("error", report["dead"])
 
+    def test_healthz_exposes_backend_errors(self):
+        # Rererere follow-up 2026-10-24: acked bus consumption != stored
+        # memory; the error counter must be visible in healthz.
+        bridge = _load_bridge({"GOD_MEMORY_BACKENDS": "dead=http://127.0.0.1:1",
+                               "GOD_LLM_BASE_URL": "", "GOD_LLM_API_KEY": ""})
+        bridge.fan_out([event()])
+        self.assertGreaterEqual(bridge.HEALTH["backend_errors"], 1)
+
 
 class MemoryReferenceTests(unittest.TestCase):
     def _load_memory(self):
@@ -111,6 +119,21 @@ class MemoryReferenceTests(unittest.TestCase):
         # data.* project field is searchable (contract includes select data keys)
         hits = self.memory.query("33GOD", 10)
         self.assertEqual(len(hits), 2)
+
+    def test_ingest_is_idempotent_on_replay(self):
+        # Rererere follow-up 2026-10-24: replayed events (bridge restart,
+        # JetStream redelivery) must not duplicate. Recall must be deduped.
+        e = event()
+        self.assertEqual(self.memory.ingest([e]), 1)
+        self.assertEqual(self.memory.ingest([e]), 1)      # exact replay
+        self.assertEqual(self.memory.ingest([e, e]), 1)   # replay in one batch
+        other = event("bloodbank.voice.recording.landed")
+        self.assertEqual(self.memory.ingest([e, other]), 2)  # mixed batch
+        for term in ("pyramid", "33GOD", "g7-test-cli"):
+            hits = self.memory.query(term, 10)
+            ids = [h["event_id"] for h in hits]
+            self.assertEqual(ids, list(dict.fromkeys(ids)), f"duplicates for {term}")
+            self.assertEqual(len(hits), 2, f"expected both events for {term}")
 
     def test_fts_syntax_is_escaped(self):
         self.memory.ingest([event()])

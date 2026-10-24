@@ -29,10 +29,13 @@ self-contained on a target host with no monorepo checkout. To re-vendor:
 
 ```sh
 rsync -a --exclude='__pycache__' --exclude='*.pyc' \
-  /path/to/monorepo/candystore/{candystore,migrations,static,tests,pyproject.toml,Dockerfile} ./
+  /path/to/monorepo/candystore/{candystore,migrations,static,pyproject.toml,Dockerfile} ./
+# tests/ is deliberately NOT vendored (see the exclusion note above)
 git -C /path/to/monorepo/candystore rev-parse HEAD   # update this file
 ```
 
-Crib-fidelity check (PM review gate): `diff -r` the vendored tree against the
-submodule at the pinned commit, expecting only the Dockerfile build-arg change
-and no `__pycache__` differences.
+Crib-fidelity check (PM review gate): `git archive <pin>` the submodule and
+`diff -r` against this tree — all five copied artifacts must be IDENTICAL
+(zero local modification; this includes the Dockerfile). Any delta you did
+not deliberately introduce is drift: fix it or document it, never record a
+modification the diff does not show.

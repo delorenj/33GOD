@@ -104,6 +104,29 @@ assert h["llm"]["configured"] is False and h["llm"]["base_url"] is None, h
 assert h["backend_count"] >= 1, "reference backend missing"
 PY
 
+step "1.5/7 readiness canary: bus -> candystore round-trip"
+# Freshly started dapr sidecars can take 10-60s to bind their durable and
+# deliver; publishing before that silently loses the event to the store's
+# delivery lag (seen in cold runs). Wait for a canary round-trip first.
+CANARY_ID="$(gen_uuid)"
+CANARY_TIME="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+cat > "$TMP/canary.json" <<JSON
+{"specversion":"1.0","id":"${CANARY_ID}","source":"urn:33god:aperture:g7-smoke","type":"bloodbank.aperture.canary.g7","subject":"bloodbank.evt.aperture.canary.g7","time":"${CANARY_TIME}","datacontenttype":"application/json","correlationid":"${CANARY_ID}","causationid":"${CANARY_ID}","producer":"aperture-g7-smoke","service":"smoke","domain":"aperture","kind":"event","ordering_key":"g7:canary","actor":{"type":"operator","agent_id":"o"},"data":{"canary":true}}
+JSON
+docker run --rm --quiet --network g7-bus -v "$TMP/canary.json:/payload.json:ro" "$NATS_BOX" \
+  sh -c 'nats --server nats://nats:4222 pub bloodbank.evt.aperture.canary.g7 "$(cat /payload.json)"' >/dev/null 2>&1 || true
+CANARY_OK=""
+for ((i = 0; i < 60; i += 1)); do
+  C="$(docker compose exec -T candystore python -c "
+import urllib.request
+try: print(urllib.request.urlopen('http://candystore-app:3001/events/${CANARY_ID}/raw', timeout=5).read().decode())
+except Exception: pass" 2>/dev/null || true)"
+  [ -n "$C" ] && { CANARY_OK=1; break; }
+  sleep 2
+done
+[ -n "$CANARY_OK" ] && ok "canary round-tripped candystore (delivery bound)" \
+                    || bad "candystore never ingested canary within 120s (delivery not ready)"
+
 step "2/7 publish canonical source event -> derived event with causationid chain"
 SRC_ID="$(gen_uuid)"
 CORR_ID="$(gen_uuid)"
