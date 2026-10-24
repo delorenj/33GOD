@@ -489,7 +489,7 @@
    "studio": "running",
    "gate": "pending",
    "gate_label": "founder decision record",
-   "note": "smoke 10/10 on Studio; canonical release fac8710 staged for re-test"
+   "note": "gate kit ready (accept/accept-g1.sh, proven build-host ALL PASS); awaiting Studio run"
   },
   "g2": {
    "bundle": "merged",
