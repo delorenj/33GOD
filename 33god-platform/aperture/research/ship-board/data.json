@@ -512,7 +512,8 @@
   "g4": {
    "bundle": "merged",
    "gate": "pending",
-   "gate_label": "dead container pages you"
+   "gate_label": "dead container pages you",
+   "arm64": "verified"
   },
   "g5": {
    "bundle": "pending",
