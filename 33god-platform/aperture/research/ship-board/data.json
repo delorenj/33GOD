@@ -523,7 +523,7 @@
    "note": "honest artifacts (tool images; NO compose daemon); PRIMARY install = npm @delorenj/pjangler+skillex, uvx MCP, copier; images = fleet channel"
   },
   "g6": {
-   "bundle": "pending",
+   "bundle": "merged",
    "gate": "pending",
    "gate_label": "real recording → verbatim transcript",
    "note": "voice bundle dispatched (GPU-optional TTS/STT + intake; waxd host-side .deb — no fake container); worker running"
