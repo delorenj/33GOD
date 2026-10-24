@@ -5,6 +5,30 @@ volume lifecycle, or published host ports. Other groups' agent hosts invoke
 these artifacts when needed. Nothing is started merely by building G5.
 [Charter](../../CHARTER.md) applies; PM review precedes merge.
 
+## Idiomatic distribution (the PRIMARY install path)
+
+Registries first, containers second. On a client machine you do NOT need
+these Docker images — the idiomatic install is:
+
+```bash
+# Node CLIs — both published to npm (engines: node >= 24; mise/nvm can pin it)
+npm install -g @delorenj/pjangler      # pj   (v1.5.18)
+npm install -g @delorenj/skillex       # skillex (v0.3.1)
+
+# Python MCP server — uvx is the canonical invocation for stdio MCP
+# servers in every MCP host config (Claude/Codex/Hermes/etc.)
+uvx codegraph-voyage-mcp               # or: uv tool install codegraph-voyage-mcp
+
+# CommonProject — copier template at an immutable git tag
+copier copy --vcs-ref <tag> git@github.com:delorenj/CommonProject.git <dest>
+```
+
+The Docker tool images below are the **fleet channel**: bit-exact
+reproduction, CI, air-gapped hosts, and the Aperture manifest-verified
+arm64 story. A versioned manifest (which package/image at which digest)
+plus an umbrella installer (`pj` as the front door) is the stack-level
+distribution path per the root architecture contract.
+
 ## Why there is no g5 compose.yml
 
 The governing root architecture directive is: **“No component receives a fake
