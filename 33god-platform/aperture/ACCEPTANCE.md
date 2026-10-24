@@ -1,13 +1,22 @@
-# Aperture acceptance criteria — real-task dogfood gates (v1)
+# Aperture acceptance criteria — real-task dogfood gates (v1.1)
 
 _Operator directive 2026-10-23: each group G1–G8 gates on a REAL task that
-dogfoods the stack, not synthetic pings. Criteria below are binary, evidence-
-backed, and run wherever the group is deployed (build host first, Damian's
-Studio for integration acceptance). PILLARS: evidence > status; a claim
-without repo/bus evidence is not acceptance._
+dogfoods the stack, not synthetic pings. Criteria are binary, evidence-
+backed, and run wherever the group is deployed. Standing rule 0 makes every
+gate CLIENT-EXECUTABLE: completable by Damian on the deployed system ALONE —
+no upstream monorepo, no host tools (`px`/`pj`), no PM-host board or
+candystore. Real data is generated locally (typed by the client or measured
+from his own machine). PILLARS: evidence > status; a claim without
+repo/bus evidence is not acceptance._
 
 ## Standing rules (apply to every group)
 
+0. **Client-executable** — every gate must be completable BY THE CLIENT on
+   the deployed system ALONE: no upstream monorepo, no host tools (`px`,
+   `pj`), no PM-host Plane board, no PM-host candystore/Hindsight. Real data
+   is generated locally (typed by the client or measured from their own
+   machine). If a gate needs credentials (LLM, external SaaS), they are
+   deployment-owned and optional-stage unless the gate says otherwise.
 1. **Canonical envelope or it didn't happen** — every event must satisfy the
    4-token `type` / 5-token `subject` / `kind` / `actor` / `ordering_key`
    contract (bloodbank/docs/event-naming.md). Cross-group acceptance signal
@@ -21,60 +30,66 @@ without repo/bus evidence is not acceptance._
 
 ---
 
-## G1 — Bloodbank Core Bus: "the real commit in the audit trail"
+## G1 — Bloodbank Core Bus: "the founder's decision is on the record"
 
-**Real task**: take a REAL commit from this monorepo (actual `git log` data)
-and make it queryable in the deployed candystore.
+**Real task (client-executable)**: Damian records a REAL decision he made
+that day — his own words, typed by him (e.g. "we'll price the starter tier
+at $49") — plus one real machine-measured fact from his own Studio (e.g.
+current `docker ps` container count or disk free), published as a canonical
+`bloodbank.studio.decision.recorded` event via the provided publish script.
 
-- Publish the real commit (sha, author, message, files-changed count) as a
-  canonical `bloodbank.repo.commit.observed` event via NATS.
 - **PASS** when all of:
-  - [ ] candystore `GET /events/<id>/raw` returns the envelope (real sha in `data`)
-  - [ ] candystore free-text search (`?q=<first-8-of-sha>`) finds it
-  - [ ] a deliberately malformed envelope lands in dead-letter with a reason
-        string (not silently dropped, not retried forever)
-  - [ ] after full stack restart, the search still finds it
-- *Why real*: uses actual repo history; the search path is the feature real
-  agents consume daily (`candystore context latest` depends on it).
+  - [ ] candystore `GET /events/<id>/raw` returns his envelope (his exact
+        words in `data.decision`, machine fact in `data.context`)
+  - [ ] candystore free-text search for a word FROM HIS OWN SENTENCE finds
+        it (`?q=<word>`)
+  - [ ] a deliberately malformed envelope he also sends lands in dead-letter
+        with a reason string (not silently dropped)
+  - [ ] after full stack restart (`down`/`up -d`), the search STILL finds it
+- *Why real*: the data exists only on his deployment, authored by him; the
+  search-and-survive path is the feature real agents consume daily.
+- Build-host variant (PM): same gate with a real monorepo commit as the
+  payload.
 
-## G2 — Integration Plane: "the real Plane ticket becomes an event"
+## G2 — Integration Plane: "the client ships his first workflow"
 
-**Real task**: a REAL ticket created on the 33GOD Plane board (via `px`)
-shows up in candystore as a canonical event — no synthetic webhook input.
+**Real task (client-executable)**: Damian builds a REAL workflow HIMSELF in
+the deployed n8n UI — Form trigger ("note" + "mood" fields he designs) →
+publish to the bus with canonical envelope (template code node provided) →
+candystore readback. No upstream, no Plane, nothing of ours.
 
-- Deployment-owned Plane credentials (token env, never shipped in bundle);
-  n8n workflow: schedule trigger → Plane API list-tickets → publish
-  `bloodbank.repo.task.observed` per new ticket → bus (attached mode).
 - **PASS** when:
-  - [ ] a ticket created by `px task create` (title chosen at test time,
-        recorded in the evidence) appears in candystore ≤60s later
-  - [ ] `data` matches Plane truth (title, id) — cross-checked via `px`
-  - [ ] the event is visible in the SHARED candystore when attached (not
-        just G2's local stream)
-  - [ ] removing/rotating the Plane token produces a 401 error event or
-        workflow failure visible in n8n — no silent no-op
-- *Why real*: Plane→Bloodbank is the flagship integration this group exists
-  to ship; this is it, live, with real credentials.
+  - [ ] he submits his own form once; the event appears in candystore
+        `/events/<id>/raw` ≤60s later with his exact form values
+  - [ ] the webhook-rejection path still holds on HIS build (missing auth
+        header → 401) — he tests it himself with curl
+  - [ ] free-text search finds the event by a word from his form input
+  - [ ] n8n shows the execution as succeeded; killing the workflow
+        (deactivate) stops events — no ghost deliveries
+- *Why real*: proves the client can BUILD on the platform unaided — the
+  actual product question for G2. Building it is the test.
+- Build-host variant (PM): real Plane ticket via `px` → event.
 
 ## G3 — Agent Fleet Runtime: "the phone buzzes from the Studio"
 
-**Real task**: the containerized fleet runs a REAL agent turn on a schedule
-and a human receives the result as a push notification.
+**Real task (client-executable)**: the Studio's own fleet does a real
+scheduled job and tells Damian about it.
 
-- heartbeat-tick fires → lifecycle-controller transitions a real tracked
-  item → hermes-agent executes one real turn (external LLM creds, real
-  prompt: "summarize today's heartbeat stream and name anything stalled")
-  → result posted to ntfy → **notification received on Damian's phone**
-  (ntfy app subscribed to the topic).
-- **PASS** when:
-  - [ ] a real ntfy push arrives on-device (screenshot in evidence bundle)
-  - [ ] the agent's summary references ACTUAL heartbeat data from the last
-        24h (spot-check numbers against the stream)
-  - [ ] the invocation (command → started → result) is a complete causal
-        chain in candystore (correlationid linked)
-  - [ ] LLM call went through the external-LLM pattern (zero AAI traffic)
-- *Why real*: it's the fleet doing fleet work end-to-end — schedule, LLM,
-  bus, notification, human.
+- Stage 1 (no external creds needed): heartbeat-tick fires →
+  lifecycle-controller transitions a real item DAMIAN creates (small client
+  script: "watch this project") → ntfy push with the transition lands on
+  HIS phone (he subscribes to the topic in the ntfy app).
+- Stage 2 (optional, his LLM key if he wants it): agent turn summarizes the
+  last 24h of heartbeats → push.
+- **PASS when stage 1 holds**:
+  - [ ] real ntfy push on-device (screenshot filed)
+  - [ ] the transition chain (command → started → result) is a complete
+        linked correlationid chain in candystore
+  - [ ] the heartbeat stream shows ≥1 tick/interval for the past hour
+        (spot-check count)
+  - [ ] stopping the heartbeat container pauses ticks; restart resumes with
+        sequence continuity
+- *Why real*: his schedule, his item, his phone — no upstream involvement.
 
 ## G4 — Observability: "the dead container pages you"
 
@@ -155,13 +170,9 @@ the human only initiating.
 
 ## Gate order & current state (2026-10-23)
 
-- G1: synthetic proof done (10/10 smoke + Studio arm64); **real-commit gate
-  pending** — replaces ping-shaped evidence for final acceptance.
-- G2: canonical + seam proven; **real-Plane-ticket gate pending** (needs
-  deployment-owned Plane token + schedule workflow on Studio).
-- G3: merged, build-host proven; **phone-buzz gate pending** (needs ntfy
-  topic subscribe on Damian's device + external LLM creds).
+- G1: synthetic proof done (10/10 smoke + Studio arm64); **decision-record
+  gate pending** (replaces ping-shaped evidence for final acceptance).
+- G2: canonical + seam proven; **client-builds-workflow gate pending**.
+- G3: merged, build-host proven; **phone-buzz stage-1 gate pending** (needs
+  ntfy topic subscribe on Damian's device; LLM stage optional/his key).
 - G4–G8: unbuilt; gates above are the contract for their specs.
-
-Integration acceptance for the Damian deployment = each group's real-task
-gate passing ON THE STUDIO with evidence filed under `aperture/acceptance/`.
