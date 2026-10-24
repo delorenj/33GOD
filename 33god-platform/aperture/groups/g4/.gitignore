@@ -1,0 +1,4 @@
+# .env holds deployment-owned overrides (possibly real secrets) — never commit.
+.env
+# .env.example is the committed safe template (demo defaults only).
+!.env.example

@@ -1,0 +1,47 @@
+# G4 loki (logs profile) — cribbed from the live monitoring stack's
+# loki/config.yml, re-pointed at this bundle's own volume and shortened to a
+# 15-day retention to match prometheus. No auth (in-network only).
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  path_prefix: /var/loki
+  storage:
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  allow_structured_metadata: true
+  retention_period: 360h
+
+compactor:
+  working_directory: /var/loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+frontend:
+  encoding: protobuf

@@ -1,0 +1,21 @@
+# Attached-mode overlay — join G4's alert-bridge to an existing G3 ntfy
+# network so alerts page the phone (see ACCEPTANCE.md G4 gate and G3's ntfy).
+# Usage: docker compose -f compose.yml -f compose.attach.yml up -d
+# Requires: the G3 bundle running (or any ntfy on a reachable network) and
+# GOD_G3_NETWORK / GOD_NTFY_URL / GOD_NTFY_TOPIC set in .env.
+#
+# Standalone mode stays bit-identical: the alert-bridge keeps its empty
+# GOD_NTFY_URL default and simply logs the formatted line. This overlay only
+# retargets the ntfy delivery target and attaches the external network.
+services:
+  alert-bridge:
+    environment:
+      GOD_NTFY_URL: ${GOD_NTFY_URL:-http://ntfy:80}
+      GOD_NTFY_TOPIC: ${GOD_NTFY_TOPIC:-aperture-g4-alerts}
+    networks:
+      - g4-internal
+      - g3-internal
+networks:
+  g3-internal:
+    name: ${GOD_G3_NETWORK:-g3-internal}
+    external: true

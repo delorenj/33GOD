@@ -1,0 +1,71 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 0,
+  "schemaVersion": 39,
+  "title": "G4 Overview",
+  "uid": "g4-overview",
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-15m", "to": "now" },
+  "timezone": "",
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "type": "table",
+      "title": "Node / container up states",
+      "datasource": { "type": "prometheus", "uid": "g4-prometheus" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "up",
+          "legendFormat": "{{instance}} ({{job}})",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "g4-prometheus" },
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "timeseries",
+      "title": "Target up over time",
+      "datasource": { "type": "prometheus", "uid": "g4-prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "up",
+          "legendFormat": "{{instance}} ({{job}})",
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "g4-prometheus" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bool" },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    }
+  ]
+}
