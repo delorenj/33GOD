@@ -4,7 +4,7 @@
   "subtitle": "Full system inventory → deployable component groups → dependency-ordered install plan. Target: Docker Compose per group, deploying to Damien's system.",
   "generated": "2026-10-23",
   "source": "Ground truth sweep: 33GOD repo + submodules, docker ps (150 containers), 104 systemd user units, bloodbank services/compose, n8n, cron, skills",
-  "updated": "2026-10-23 (auto)",
+  "updated": "2026-10-24 (auto)",
   "release": "fac8710"
  },
  "groups": [
@@ -525,7 +525,8 @@
   "g6": {
    "bundle": "pending",
    "gate": "pending",
-   "gate_label": "real recording → verbatim transcript"
+   "gate_label": "real recording → verbatim transcript",
+   "note": "voice bundle dispatched (GPU-optional TTS/STT + intake; waxd host-side .deb — no fake container); worker running"
   },
   "g7": {
    "bundle": "pending",
