@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>33GOD Ship Board</title>
+<style>
+  :root{
+    --bg:#0b0e14;--panel:#12161f;--panel2:#161b26;--line:#232a38;
+    --txt:#d7dce6;--dim:#8b93a5;--faint:#5a6274;
+    --accent:#4f9cf9;--green:#3fb96b;--amber:#e0a640;--red:#e05a5a;
+    --chip:#1b2230;--chipB:#2a3346;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px 28px 80px}
+  h1{font-size:21px;letter-spacing:.3px;margin-bottom:2px}
+  .sub{color:var(--dim);font-size:12.5px;margin-bottom:20px;max-width:900px}
+  .meta{color:var(--faint);font-size:11px;margin-bottom:16px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+  .btn{background:var(--chip);border:1px solid var(--line);color:var(--txt);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12.5px}
+  .btn:hover{background:var(--chipB)}
+  .progress-wrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:22px}
+  .progress-bar-outer{height:10px;background:var(--chip);border-radius:6px;overflow:hidden;margin-top:8px}
+  .progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));width:0%;transition:width .4s;border-radius:6px}
+  .progress-label{font-size:12.5px;color:var(--dim)}
+  .progress-label b{color:var(--txt)}
+  .group{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:18px;overflow:hidden}
+  .group-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+  .group-head:hover{background:var(--panel2)}
+  .gcheck{width:22px;height:22px;border:2px solid var(--chipB);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:14px;color:transparent;background:var(--chip)}
+  .gcheck.on{background:var(--green);border-color:var(--green);color:#08130b}
+  .gname{font-weight:600;font-size:15px}
+  .gphase{font-size:10.5px;color:var(--faint);background:var(--chip);padding:2px 8px;border-radius:10px;white-space:nowrap}
+  .gcount{margin-left:auto;font-size:11.5px;color:var(--dim);white-space:nowrap}
+  .gdesc{padding:0 18px 12px 52px;color:var(--dim);font-size:12.5px;max-width:860px}
+  .gbody{padding:6px 18px 16px 52px;display:none}
+  .group.open .gbody{display:block}
+  .group.open .gdesc{display:block}
+  .group:not(.open) .gdesc{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{color:var(--faint);text-align:left;font-weight:500;padding:6px 10px;border-bottom:1px solid var(--line);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .ccheck{width:18px;height:18px;border:2px solid var(--chipB);border-radius:5px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:transparent;background:var(--chip)}
+  .ccheck.on{background:var(--green);border-color:var(--green);color:#08130b}
+  tr.done td{color:var(--faint)}
+  tr.done .cname{text-decoration:line-through;text-decoration-color:var(--faint)}
+  .cname{font-weight:600;white-space:nowrap}
+  .kind{font-size:10px;padding:2px 7px;border-radius:8px;white-space:nowrap}
+  .kind.container{background:#14303f;color:#5fc3f7}
+  .kind.process{background:#2b2340;color:#b193f5}
+  .kind.systemd{background:#3a2b18;color:#e8b96a}
+  .kind.repo{background:#163723;color:#67d189}
+  .kind.workflow{background:#331c2c;color:#ef8bc4}
+  .kind.external{background:#3d1d1d;color:#ef7d7d}
+  .kind.adapter{background:#3d3a1d;color:#d9d36b}
+  .kind.wrap{background:#1d2f3d;color:#7dc4ef}
+  .deps{font-size:11.5px;color:var(--dim)}
+  .deps .dep{color:var(--accent)}
+  .notes{color:var(--dim);font-size:11.5px;max-width:420px}
+  .ship{font-size:10px;padding:2px 7px;border-radius:8px;white-space:nowrap}
+  .ship.yes{background:#143024;color:#5fd38d}
+  .ship.wrap{background:#33290f;color:#e5c25f}
+  .ship.adapter{background:#331c2c;color:#ef8bc4}
+  .ship.skip{background:#2a2a2a;color:#8a8a8a}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 18px;color:var(--dim);font-size:11.5px;align-items:center}
+  .legend .kind{margin-right:2px}
+  .blocked{font-size:11px;color:var(--amber)}
+  .ready{font-size:11px;color:var(--green)}
+  h2{font-size:15px;margin:28px 0 10px;color:var(--txt)}
+  .notshipped{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+  .notshipped ul{margin-left:18px;color:var(--dim);font-size:12.5px}
+  .notshipped li{margin-bottom:5px}
+  .foot{margin-top:26px;color:var(--faint);font-size:11px}
+  .dep-warn td{background:rgba(224,166,64,.04)}
+.chip{display:inline-block;font-size:10.5px;padding:1px 7px;margin-left:6px;border-radius:9px;border:1px solid var(--faint);color:var(--faint);white-space:nowrap}
+.chip.ok{border-color:#3fb950;color:#3fb950}
+.chip.warn{border-color:#d29922;color:#d29922}
+.chip.note{font-style:italic}
+.gchips{margin-left:8px}
+</style>
+</head>
+<body>
+<h1>33GOD Ship Board</h1>
+<div class="sub">Full system inventory → 8 deployable component groups → dependency-ordered install plan. Each group becomes a Docker Compose bundle, wrapped and deployed on Damien's system one at a time. Check off as you go — state saves in this browser.</div>
+<div class="meta" id="metaLine"></div>
+
+<div class="controls">
+  <button class="btn" onclick="expandAll(true)">Expand all</button>
+  <button class="btn" onclick="expandAll(false)">Collapse all</button>
+  <button class="btn" onclick="resetAll()">Reset checks</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-label" id="progLabel"></div>
+  <div class="progress-bar-outer"><div class="progress-bar-inner" id="progBar"></div></div>
+</div>
+
+<div class="legend">
+  <span><span class="kind container">container</span> runs in Docker today</span>
+  <span><span class="kind wrap">wrap</span> runs on host, needs containerizing</span>
+  <span><span class="kind systemd">systemd</span> user service</span>
+  <span><span class="kind process">process</span> bare process</span>
+  <span><span class="kind repo">repo</span> repo/CLI</span>
+  <span><span class="kind workflow">workflow</span> n8n workflow</span>
+  <span><span class="kind adapter">adapter</span> per-site config needed</span>
+  <span><span class="kind external">external</span> Jarad-only, not shipped</span>
+</div>
+
+<div id="board"></div>
+
+<h2>Deliberately not shipped</h2>
+<div class="notshipped"><ul id="notshipped"></ul></div>
+
+<div class="foot">Dependency rule: a group is installable when every group it depends on is fully checked. Phases encode the safe order: G1 bus → G2 integration → G3 fleet → G4 observability → G5 tooling → G6 voice → G7 enrichment → G8 orchestration.</div>
+
+<script>
+const DATA = __DATA__;
+const LS_KEY = 'g33-ship-board-v1';
+let state = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function depStatus(g){
+  // returns {ready:bool, missing:[names]}
+  const missing = [];
+  for(const c of g.components){
+    for(const d of c.deps){
+      if(!state[d]){ const dep = findComp(d); if(dep) missing.push(dep.name); }
+    }
+  }
+  return {ready: missing.length===0, missing:[...new Set(missing)]};
+}
+function findComp(id){
+  for(const g of DATA.groups) for(const c of g.components) if(c.id===id) return c;
+  return null;
+}
+function groupDone(g){ return g.components.every(c=>state[c.id]); }
+
+function chips(g){
+  const d = (DATA.delivery||{})[g.id];
+  if(!d) return '';
+  const c=(t,cls)=>`<span class="chip ${cls}">${t}</span>`;
+  let out='';
+  out += d.bundle==='merged' ? c('🚢 merged '+d.merge_sha,'ok') : c('bundle: '+(d.bundle||'pending'),'dim');
+  if(d.arm64==='verified') out+=c('arm64 ✓','ok');
+  else if(d.arm64==='manifest') out+=c('arm64: manifests only','warn');
+  if(d.studio==='running') out+=c('Studio: running','ok');
+  else if(d.studio==='retest') out+=c('Studio: re-test pending','warn');
+  out += d.gate==='passed' ? c('gate PASSED','ok') : c('gate: '+(d.gate_label||'pending'),'warn');
+  if(d.note) out+=`<span class="chip note">${d.note}</span>`;
+  return out;
+}
+function render(){
+  const board = document.getElementById('board');
+  board.innerHTML='';
+  let total=0, done=0;
+  for(const g of DATA.groups){
+    total += g.components.length;
+    done += g.components.filter(c=>state[c.id]).length;
+    const el = document.createElement('div');
+    el.className = 'group' + (state['open-'+g.id] ? ' open' : '');
+    const ds = depStatus(g);
+    const gd = groupDone(g);
+    let depNote = gd ? '' : (ds.ready ? '<span class="ready">✓ dependencies satisfied</span>' : '<span class="blocked">⚠ blocked by: '+ds.missing.join(', ')+'</span>');
+    el.innerHTML = `
+      <div class="group-head" onclick="toggleGroup('${g.id}')">
+        <div class="gcheck ${gd?'on':''}" onclick="event.stopPropagation();toggleGroupAll('${g.id}')">✓</div>
+        <span class="gname">${g.name}</span>
+        <span class="gphase">phase ${g.phase}</span>
+        <span class="gchips">${chips(g)}</span>
+        <span class="gcount">${g.components.filter(c=>state[c.id]).length}/${g.components.length} ${depNote}</span>
+      </div>
+      <div class="gdesc">${g.desc}</div>
+      <div class="gbody">
+        <table>
+          <tr><th style="width:26px"></th><th>Component</th><th style="width:70px">Kind</th><th style="width:60px">Ship</th><th style="width:170px">Depends on</th><th>Notes</th></tr>
+          ${g.components.map(c=>{
+            const dnames = c.deps.map(d=>{const dc=findComp(d);return dc?`<span class="dep">${dc.name.split(' (')[0]}</span>`:d}).join(', ')||'<span style="color:var(--faint)">—</span>';
+            const blocked = c.deps.some(d=>!state[d]);
+            return `<tr class="${state[c.id]?'done':''} ${blocked&&!state[c.id]?'dep-warn':''}">
+              <td><span class="ccheck ${state[c.id]?'on':''}" onclick="event.stopPropagation();toggle('${c.id}',this)">✓</span></td>
+              <td class="cname">${c.name}</td>
+              <td><span class="kind ${c.kind}">${c.kind}</span></td>
+              <td><span class="ship ${c.ship}">${c.ship}</span></td>
+              <td class="deps">${dnames}</td>
+              <td class="notes">${c.notes}</td>
+            </tr>`;}).join('')}
+        </table>
+      </div>`;
+    board.appendChild(el);
+  }
+  const pct = total? Math.round(done/total*100):0;
+  const merged = DATA.groups.filter(g=>((DATA.delivery||{})[g.id]||{}).bundle==='merged').length;
+  document.getElementById('progLabel').innerHTML = `<b>${done}/${total}</b> components wrapped &amp; deployed · ${pct}% · <b>${merged}/${DATA.groups.length}</b> bundles merged`;
+  document.getElementById('metaLine').innerHTML = `Inventory ${DATA.meta.generated} · <b>status updated ${DATA.meta.updated||DATA.meta.generated}</b> · ground truth: repo + 10 submodules · 150 containers · 104 units · release ${DATA.meta.release||'—'}`;
+  document.getElementById('progBar').style.width = pct+'%';
+  const ul = document.getElementById('notshipped');
+  ul.innerHTML = DATA.notshipped.map(n=>`<li>${n}</li>`).join('');
+  save();
+}
+function toggle(id){ state[id]=!state[id]; render(); }
+function toggleGroup(gid){ state['open-'+gid]=!state['open-'+gid]; render(); }
+function toggleGroupAll(gid){
+  const g = DATA.groups.find(x=>x.id===gid);
+  const all = groupDone(g);
+  for(const c of g.components) state[c.id] = !all;
+  render();
+}
+function expandAll(v){ for(const g of DATA.groups) state['open-'+g.id]=v; render(); }
+function resetAll(){ if(confirm('Clear all checkmarks?')){ const opens={}; for(const k in state) if(k.startsWith('open-')) opens[k]=state[k]; state=opens; render(); } }
+render();
+</script>
+</body>
+</html>

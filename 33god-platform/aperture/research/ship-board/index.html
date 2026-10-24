@@ -73,12 +73,17 @@
   .notshipped li{margin-bottom:5px}
   .foot{margin-top:26px;color:var(--faint);font-size:11px}
   .dep-warn td{background:rgba(224,166,64,.04)}
+.chip{display:inline-block;font-size:10.5px;padding:1px 7px;margin-left:6px;border-radius:9px;border:1px solid var(--faint);color:var(--faint);white-space:nowrap}
+.chip.ok{border-color:#3fb950;color:#3fb950}
+.chip.warn{border-color:#d29922;color:#d29922}
+.chip.note{font-style:italic}
+.gchips{margin-left:8px}
 </style>
 </head>
 <body>
 <h1>33GOD Ship Board</h1>
 <div class="sub">Full system inventory → 8 deployable component groups → dependency-ordered install plan. Each group becomes a Docker Compose bundle, wrapped and deployed on Damien's system one at a time. Check off as you go — state saves in this browser.</div>
-<div class="meta">Generated 2026-10-23 · ground truth: 33GOD repo + 10 submodules · 150 running containers · 104 systemd user units · bloodbank compose + services · n8n 2.18.4 · cron fleet</div>
+<div class="meta" id="metaLine"></div>
 
 <div class="controls">
   <button class="btn" onclick="expandAll(true)">Expand all</button>
@@ -113,16 +118,18 @@
 const DATA = {
  "meta": {
   "title": "33GOD Ship Board",
-  "subtitle": "Full system inventory \u2192 deployable component groups \u2192 dependency-ordered install plan. Target: Docker Compose per group, deploying to Damien's system.",
+  "subtitle": "Full system inventory → deployable component groups → dependency-ordered install plan. Target: Docker Compose per group, deploying to Damien's system.",
   "generated": "2026-10-23",
-  "source": "Ground truth sweep: 33GOD repo + submodules, docker ps (150 containers), 104 systemd user units, bloodbank services/compose, n8n, cron, skills"
+  "source": "Ground truth sweep: 33GOD repo + submodules, docker ps (150 containers), 104 systemd user units, bloodbank services/compose, n8n, cron, skills",
+  "updated": "2026-10-23 (evening)",
+  "release": "fac8710"
  },
  "groups": [
   {
    "id": "g1",
-   "name": "G1 \u00b7 Bloodbank Core Bus",
+   "name": "G1 · Bloodbank Core Bus",
    "phase": 1,
-   "desc": "The event backbone everything else publishes to. NATS + Dapr + schema registry + audit trail. Zero dependencies \u2014 install first.",
+   "desc": "The event backbone everything else publishes to. NATS + Dapr + schema registry + audit trail. Zero dependencies — install first.",
    "components": [
     {
      "id": "bb-nats",
@@ -172,15 +179,15 @@ const DATA = {
       "bb-nats",
       "bb-dapr"
      ],
-     "notes": "Durable event audit trail (CloudEvents \u2192 PostgreSQL + query API + UI)"
+     "notes": "Durable event audit trail (CloudEvents → PostgreSQL + query API + UI)"
     }
    ]
   },
   {
    "id": "g2",
-   "name": "G2 \u00b7 Integration Plane (n8n + webhooks)",
+   "name": "G2 · Integration Plane (n8n + webhooks)",
    "phase": 2,
-   "desc": "n8n is a prereq for dev-journal, HeyMa workflows, and the Plane\u2192Bloodbank webhook. Runs as node binary today; wrap in container.",
+   "desc": "n8n is a prereq for dev-journal, HeyMa workflows, and the Plane→Bloodbank webhook. Runs as node binary today; wrap in container.",
    "components": [
     {
      "id": "n8n",
@@ -200,7 +207,7 @@ const DATA = {
      "deps": [
       "n8n"
      ],
-     "notes": "Custom node package \u2014 installs into n8n image"
+     "notes": "Custom node package — installs into n8n image"
     },
     {
      "id": "n8n-devjournal",
@@ -225,11 +232,11 @@ const DATA = {
       "n8n",
       "bb-nats"
      ],
-     "notes": "Bloodbank\u2192n8n drain with backpressure; pdf2md HTTP converter"
+     "notes": "Bloodbank→n8n drain with backpressure; pdf2md HTTP converter"
     },
     {
      "id": "plane-hook",
-     "name": "Plane \u2192 Bloodbank webhook",
+     "name": "Plane → Bloodbank webhook",
      "kind": "workflow",
      "where": "n8n (live)",
      "ship": "adapter",
@@ -237,13 +244,13 @@ const DATA = {
       "n8n",
       "bb-nats"
      ],
-     "notes": "Plane owns ticket facts; on Damien's: swap Plane for his tracker or ship Plane stack (plane-* \u00d79 containers)"
+     "notes": "Plane owns ticket facts; on Damien's: swap Plane for his tracker or ship Plane stack (plane-* ×9 containers)"
     }
    ]
   },
   {
    "id": "g3",
-   "name": "G3 \u00b7 Agent Fleet Runtime",
+   "name": "G3 · Agent Fleet Runtime",
    "phase": 3,
    "desc": "Hermes gateway + hook-hub + lifecycle services. The fleet that does the work.",
    "components": [
@@ -305,9 +312,9 @@ const DATA = {
   },
   {
    "id": "g4",
-   "name": "G4 \u00b7 Observability",
+   "name": "G4 · Observability",
    "phase": 4,
-   "desc": "The monitoring stack \u2014 self-contained compose in monitoring/ repo.",
+   "desc": "The monitoring stack — self-contained compose in monitoring/ repo.",
    "components": [
     {
      "id": "mon-core",
@@ -345,7 +352,7 @@ const DATA = {
   },
   {
    "id": "g5",
-   "name": "G5 \u00b7 Project Tooling (PJangler + Skillex + CommonProject)",
+   "name": "G5 · Project Tooling (PJangler + Skillex + CommonProject)",
    "phase": 5,
    "desc": "Operator-called-out dependency cluster: PJangler relies on Skillex (npm @delorenj/skillex) + CommonProject (copier template).",
    "components": [
@@ -393,9 +400,9 @@ const DATA = {
   },
   {
    "id": "g6",
-   "name": "G6 \u00b7 Voice Pipeline (HeyMa: Wax + Vinyl)",
+   "name": "G6 · Voice Pipeline (HeyMa: Wax + Vinyl)",
    "phase": 6,
-   "desc": "Operator example: 'install HeyMa \u2192 includes Wax and Vinyl + enrichment passes. n8n is a prereq. Bloodbank needed.'",
+   "desc": "Operator example: 'install HeyMa → includes Wax and Vinyl + enrichment passes. n8n is a prereq. Bloodbank needed.'",
    "components": [
     {
      "id": "wax",
@@ -463,9 +470,9 @@ const DATA = {
   },
   {
    "id": "g7",
-   "name": "G7 \u00b7 Enrichment + Memory (LLM-touching services)",
+   "name": "G7 · Enrichment + Memory (LLM-touching services)",
    "phase": 7,
-   "desc": "Everything that calls an LLM. All repointed to OpenAI-compatible endpoints \u2014 for Damien's deployment these become config, not code.",
+   "desc": "Everything that calls an LLM. All repointed to OpenAI-compatible endpoints — for Damien's deployment these become config, not code.",
    "components": [
     {
      "id": "enricher",
@@ -488,7 +495,7 @@ const DATA = {
      "deps": [
       "bb-nats"
      ],
-     "notes": "Bloodbank turn signal enrichment; JEV_URL \u2192 any endpoint"
+     "notes": "Bloodbank turn signal enrichment; JEV_URL → any endpoint"
     },
     {
      "id": "cost-bridge",
@@ -517,13 +524,13 @@ const DATA = {
      "where": "aai-gateway host",
      "ship": "skip",
      "deps": [],
-     "notes": "Jarad's personal LLM front door \u2014 NOT shipped; Damien brings his own endpoint. Enrichers take any OpenAI-compatible base_url"
+     "notes": "Jarad's personal LLM front door — NOT shipped; Damien brings his own endpoint. Enrichers take any OpenAI-compatible base_url"
     }
    ]
   },
   {
    "id": "g8",
-   "name": "G8 \u00b7 Orchestration + Apps (Momo/Krebs/Flume/Holocene)",
+   "name": "G8 · Orchestration + Apps (Momo/Krebs/Flume/Holocene)",
    "phase": 8,
    "desc": "Top of the stack: the PM orchestrator, execution enrollment, fleet ops, and the Holocene app.",
    "components": [
@@ -568,7 +575,7 @@ const DATA = {
      "where": "33GOD/pilot",
      "ship": "yes",
      "deps": [],
-     "notes": "Canonical ticketing CLI \u2014 needs Plane or a Plane-compatible board"
+     "notes": "Canonical ticketing CLI — needs Plane or a Plane-compatible board"
     },
     {
      "id": "holocene",
@@ -587,10 +594,64 @@ const DATA = {
  ],
  "notshipped": [
   "Operator desktop layer (stays on Jarad's machine): zellij Workspace + asm painters, deckard, orca-server, opencode serve, crank/zcrank crons, dashboard tabs",
-  "DeLoNET shared infra (per-site decision): traefik, cloudflare tunnels, 1Password Connect, MinIO, pgadmin \u2014 Damien's site brings his own edge + secrets",
-  "Media/household stacks (jellyfin, qbittorrent, rustdesk, adguard\u2026) \u2014 unrelated to 33GOD",
-  "Hindsight identity bank 'agent-grolf', personal memory \u2014 per-operator config"
- ]
+  "DeLoNET shared infra (per-site decision): traefik, cloudflare tunnels, 1Password Connect, MinIO, pgadmin — Damien's site brings his own edge + secrets",
+  "Media/household stacks (jellyfin, qbittorrent, rustdesk, adguard…) — unrelated to 33GOD",
+  "Hindsight identity bank 'agent-grolf', personal memory — per-operator config"
+ ],
+ "delivery": {
+  "g1": {
+   "bundle": "merged",
+   "merge_sha": "e81b3b0",
+   "arm64": "manifest",
+   "studio": "running",
+   "gate": "pending",
+   "gate_label": "founder decision record",
+   "note": "smoke 10/10 on Studio (Rererere acceptance)"
+  },
+  "g2": {
+   "bundle": "merged",
+   "merge_sha": "5de9ba2",
+   "arm64": "manifest",
+   "studio": "retest",
+   "gate": "pending",
+   "gate_label": "client builds own workflow",
+   "note": "canonical envelopes in 29f6ea1+fac8710; Rererere re-testing fac8710"
+  },
+  "g3": {
+   "bundle": "merged",
+   "merge_sha": "e2ea722",
+   "arm64": "manifest",
+   "studio": "pending",
+   "gate": "pending",
+   "gate_label": "phone buzz (ntfy)",
+   "note": "build-host proven; deploy next after G2 re-test"
+  },
+  "g4": {
+   "bundle": "pending",
+   "gate": "pending",
+   "gate_label": "dead container pages you"
+  },
+  "g5": {
+   "bundle": "pending",
+   "gate": "pending",
+   "gate_label": "real project born on stack"
+  },
+  "g6": {
+   "bundle": "pending",
+   "gate": "pending",
+   "gate_label": "real recording → verbatim transcript"
+  },
+  "g7": {
+   "bundle": "pending",
+   "gate": "pending",
+   "gate_label": "recall from stored real history"
+  },
+  "g8": {
+   "bundle": "pending",
+   "gate": "pending",
+   "gate_label": "Momo closes a real ticket"
+  }
+ }
 };
 const LS_KEY = 'g33-ship-board-v1';
 let state = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
@@ -612,6 +673,20 @@ function findComp(id){
 }
 function groupDone(g){ return g.components.every(c=>state[c.id]); }
 
+function chips(g){
+  const d = (DATA.delivery||{})[g.id];
+  if(!d) return '';
+  const c=(t,cls)=>`<span class="chip ${cls}">${t}</span>`;
+  let out='';
+  out += d.bundle==='merged' ? c('🚢 merged '+d.merge_sha,'ok') : c('bundle: '+(d.bundle||'pending'),'dim');
+  if(d.arm64==='verified') out+=c('arm64 ✓','ok');
+  else if(d.arm64==='manifest') out+=c('arm64: manifests only','warn');
+  if(d.studio==='running') out+=c('Studio: running','ok');
+  else if(d.studio==='retest') out+=c('Studio: re-test pending','warn');
+  out += d.gate==='passed' ? c('gate PASSED','ok') : c('gate: '+(d.gate_label||'pending'),'warn');
+  if(d.note) out+=`<span class="chip note">${d.note}</span>`;
+  return out;
+}
 function render(){
   const board = document.getElementById('board');
   board.innerHTML='';
@@ -629,6 +704,7 @@ function render(){
         <div class="gcheck ${gd?'on':''}" onclick="event.stopPropagation();toggleGroupAll('${g.id}')">✓</div>
         <span class="gname">${g.name}</span>
         <span class="gphase">phase ${g.phase}</span>
+        <span class="gchips">${chips(g)}</span>
         <span class="gcount">${g.components.filter(c=>state[c.id]).length}/${g.components.length} ${depNote}</span>
       </div>
       <div class="gdesc">${g.desc}</div>
@@ -651,7 +727,9 @@ function render(){
     board.appendChild(el);
   }
   const pct = total? Math.round(done/total*100):0;
-  document.getElementById('progLabel').innerHTML = `<b>${done}/${total}</b> components wrapped &amp; deployed · ${pct}%`;
+  const merged = DATA.groups.filter(g=>((DATA.delivery||{})[g.id]||{}).bundle==='merged').length;
+  document.getElementById('progLabel').innerHTML = `<b>${done}/${total}</b> components wrapped &amp; deployed · ${pct}% · <b>${merged}/${DATA.groups.length}</b> bundles merged`;
+  document.getElementById('metaLine').innerHTML = `Inventory ${DATA.meta.generated} · <b>status updated ${DATA.meta.updated||DATA.meta.generated}</b> · ground truth: repo + 10 submodules · 150 containers · 104 units · release ${DATA.meta.release||'—'}`;
   document.getElementById('progBar').style.width = pct+'%';
   const ul = document.getElementById('notshipped');
   ul.innerHTML = DATA.notshipped.map(n=>`<li>${n}</li>`).join('');
