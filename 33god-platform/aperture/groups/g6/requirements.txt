@@ -1,0 +1,6 @@
+# Additional CPU/server dependencies; voxxy's own dependencies use vendor/vox/uv.lock.
+faster-whisper==1.2.1
+ctranslate2==4.6.2
+av==15.1.0
+sherpa-onnx==2.0.0
+boto3==1.40.64

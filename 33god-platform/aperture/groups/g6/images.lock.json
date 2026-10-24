@@ -1,0 +1,18 @@
+{
+  "python:3.12-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70": {
+    "linux/amd64": "sha256:57d96f71de145a98e7ceca18ee4ade77bba4103a33a72dfaea026b23625c6bf0",
+    "linux/arm64": "sha256:c3729439afc4ec3f3e159e0c86aeabfadac8030ef46838a0256383d0511c5f5e"
+  },
+  "postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94": {
+    "linux/amd64": "sha256:747d5ed1fdeeb124b880fbe3d7c6557d2c4064ae41d6b6297d417882effce4be",
+    "linux/arm64": "sha256:9b9fb55f7e3b2149854def33c728b781dc44d1c5e86492ad62912a527ae234b3"
+  },
+  "ghcr.io/astral-sh/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142": {
+    "linux/amd64": "sha256:68d029b921923c7234ef0178e669d6d253c8356153f1b54316df8cc3e15f5c01",
+    "linux/arm64": "sha256:3281fd5603637e63ff9903d4e64dc5eb49243f23cf385fd84262c63211d905a8"
+  },
+  "nvidia/cuda:12.4.1-runtime-ubuntu22.04@sha256:517da2300c184c9999ec203c2665244bdebd3578d12fcc7065e83667932643d9": {
+    "linux/arm64": "sha256:9ff288e475bad991c9b745a82597d9055541ba1533968820a7e7c7e00072bdac",
+    "linux/amd64": "sha256:cff3a0d82d2c2b47bab252d67fa9b34a20ef4c50781d98501b5c7367ea9afd10"
+  }
+}

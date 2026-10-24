@@ -1,0 +1,7 @@
+# Bundle runtime source and public configuration examples are distributable.
+!runtime/
+!runtime/**
+!.env.example
+__pycache__/
+*.pyc
+.env

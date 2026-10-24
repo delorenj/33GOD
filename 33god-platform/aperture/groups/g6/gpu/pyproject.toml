@@ -1,0 +1,27 @@
+[project]
+name = "vox-engine-voxcpm"
+version = "0.1.0"
+description = "VoxCPM2 engine microservice for the vox-tts engine-decoupling topology"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2",
+    "voxcpm==2.0.3",
+    "torch>=2.5.0,<2.7",
+    "torchaudio>=2.5.0,<2.7",
+    "soundfile",
+    "numpy",
+]
+
+[tool.uv]
+index-url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+torchaudio = { index = "pytorch-cu124" }
