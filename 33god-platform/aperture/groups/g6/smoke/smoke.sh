@@ -4,11 +4,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 export GOD_GPU=0
 unset COMPOSE_PROFILES
+# Disposable key tests authentication without shipping a credential.
+export GOD_VOX_API_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 compose() { docker compose -f compose.yml "$@"; }
 cleanup() { compose --profile gpu down -v --remove-orphans; }
 trap cleanup EXIT
 cleanup
 python3 smoke/manifests.py
+python3 smoke/audit.py
 python3 - <<'PY'
 import json,subprocess
 cfg=json.loads(subprocess.check_output(['docker','compose','-f','compose.yml','--profile','gpu','config','--format','json']))
@@ -27,7 +30,7 @@ compose ps
 # If explicitly regenerating the fixture, use a REAL TTS engine, never tones/silence.
 # The fixture is checked into the bundle. See smoke/FIXTURE.md.
 compose exec -T audio-intake python -m smoke.unit
-compose exec -T audio-intake python -m smoke.roundtrip
+compose exec -T -e GOD_VOX_API_KEY="$GOD_VOX_API_KEY" audio-intake python -m smoke.roundtrip
 compose exec -T vinyld-serve python -m smoke.vinyl
 for id in $(compose ps -q); do
   docker inspect --format '{{.Name}} health={{.State.Health.Status}} restarts={{.RestartCount}} requests={{json .HostConfig.DeviceRequests}}' "$id"

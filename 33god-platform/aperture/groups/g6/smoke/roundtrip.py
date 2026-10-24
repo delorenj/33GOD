@@ -11,6 +11,10 @@ import httpx
 client = httpx.Client(timeout=120)
 key = os.environ.get("GOD_VOX_API_KEY", "")
 headers = {"X-API-Key": key} if key else {}
+if key:
+    unauthorized = client.post("http://vox:8000/synthesize", json={"text": "unauthorized"})
+    assert unauthorized.status_code == 401, unauthorized.status_code
+    print("PASS Vox missing authentication rejected 401")
 health = client.get("http://espeak:8000/healthz").json()
 assert health["ready"] and health["status"] == "degraded" and health["device"] == "cpu", health
 stt_health = client.get("http://whisper:8766/healthz").json()

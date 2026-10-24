@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
+# The flag owns profile selection; never inherit a stale GPU profile.
+unset COMPOSE_PROFILES
 case "${GOD_GPU:-0}" in
   0) exec docker compose "$@" ;;
   1) exec docker compose --profile gpu "$@" ;;

@@ -256,7 +256,8 @@ services:
       - CMD
       - python
       - -c
-      - import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/healthz'))['ready']
+      - import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/healthz',timeout=8))['status']
+        in ('ready','degraded')
       interval: 30s
       timeout: 10s
       retries: 20
