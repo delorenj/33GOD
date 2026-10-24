@@ -6,7 +6,7 @@
 # Run from anywhere. Commits data.json + republished board to the monorepo
 # (charter gate honored via .aperture/charter-session marker).
 set -euo pipefail
-SB="$(cd "$(dirname "$0")" && pwd)"
+SB="$(cd "$(dirname "$0")/../research/ship-board" && pwd)"
 MONO="$(git -C "$SB" rev-parse --show-toplevel)"
 
 GROUP="$1"; FIELD="$2"; VALUE="$3"; NOTE="${4:-}"
