@@ -520,7 +520,7 @@
    "bundle": "merged",
    "gate": "pending",
    "gate_label": "real project born on stack",
-   "note": "honest artifact taxonomy build (tool images + MCP stdio + copier template; NO fake compose service); worker running"
+   "note": "honest artifacts (tool images; NO compose daemon); PRIMARY install = npm @delorenj/pjangler+skillex, uvx MCP, copier; images = fleet channel"
   },
   "g6": {
    "bundle": "pending",
