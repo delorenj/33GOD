@@ -526,7 +526,8 @@
    "bundle": "merged",
    "gate": "pending",
    "gate_label": "real recording → verbatim transcript",
-   "note": "voice bundle dispatched (GPU-optional TTS/STT + intake; waxd host-side .deb — no fake container); worker running"
+   "note": "voice bundle dispatched (GPU-optional TTS/STT + intake; waxd host-side .deb — no fake container); worker running",
+   "arm64": "verified"
   },
   "g7": {
    "bundle": "pending",
