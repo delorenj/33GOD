@@ -1,0 +1,83 @@
+{
+  "$comment": "G7-scoped copy of the Bloodbank JetStream topology (crib: groups/g1/nats/streams.json). Only the two bloodbank streams G7's plane touches; GIB_EVENTS is not this plane's concern. Stream names/config are byte-equivalent to G1's so an attached G7 meets an identical bus.",
+  "project": "bloodbank",
+  "subject_conventions": {
+    "$comment": "Subjects carry no version token. A CloudEvents type is 4 tokens (bloodbank.<domain>.<entity>.<action>); the NATS subject prefixes the channel, making 5 (bloodbank.<channel>.<domain>.<entity>.<action>). Breaking payload changes get a new action or entity, not a version segment.",
+    "events": {
+      "wildcard": "bloodbank.evt.>",
+      "pattern": "bloodbank.evt.<domain>.<entity>.<action>",
+      "example": "bloodbank.evt.conversation.message.appended"
+    },
+    "commands": {
+      "wildcard": "bloodbank.cmd.>",
+      "pattern": "bloodbank.cmd.<domain>.<entity>.<action>",
+      "example": "bloodbank.cmd.agent.invocation.start"
+    },
+    "replies": {
+      "wildcard": "bloodbank.rpy.>",
+      "pattern": "bloodbank.rpy.<domain>.<entity>.<action>",
+      "example": "bloodbank.rpy.agent.invocation.start"
+    }
+  },
+  "streams": [
+    {
+      "name": "BLOODBANK_EVENTS",
+      "subjects": [
+        "bloodbank.evt.>"
+      ],
+      "retention": "limits",
+      "storage": "file",
+      "discard": "old",
+      "max_age": "7d",
+      "max_msgs": -1,
+      "max_bytes": -1,
+      "num_replicas": 1,
+      "replay_posture": {
+        "replayable": true,
+        "preserves_original_ids": true,
+        "metadata_headers": {
+          "replay_flag": "Bb-Replay",
+          "replay_batch_id": "Bb-Replay-Batch-Id",
+          "replay_reason": "Bb-Replay-Reason",
+          "original_publish_time": "Bb-Original-Publish-Time"
+        },
+        "notes": [
+          "Replays preserve the original CloudEvents id and correlationid.",
+          "Replay metadata is added via NATS message headers, not by mutating the envelope.",
+          "See compose/nats/README.md for the full header contract."
+        ]
+      },
+      "notes": [
+        "Durable home for immutable CloudEvents traffic.",
+        "Consumed by projections, EventCatalog sync jobs, and service consumers via Dapr `bloodbank-pubsub`."
+      ]
+    },
+    {
+      "name": "BLOODBANK_COMMANDS",
+      "subjects": [
+        "bloodbank.cmd.>",
+        "bloodbank.rpy.>"
+      ],
+      "retention": "workqueue",
+      "storage": "file",
+      "discard": "old",
+      "max_age": "1d",
+      "max_msgs": -1,
+      "max_bytes": -1,
+      "num_replicas": 1,
+      "replay_posture": {
+        "replayable": false,
+        "preserves_original_ids": false,
+        "notes": [
+          "Commands are intended to be handled once (workqueue retention).",
+          "Replies are short-lived correlation messages; they are not source-of-truth history.",
+          "Do not use this stream as a replay source for rebuilding projections."
+        ]
+      },
+      "notes": [
+        "Operational traffic only; covers commands (`bloodbank.cmd.>`) and replies (`bloodbank.rpy.>`).",
+        "Dead-letter handling is documented in README.md and will be implemented in V3-007, not here."
+      ]
+    }
+  ]
+}

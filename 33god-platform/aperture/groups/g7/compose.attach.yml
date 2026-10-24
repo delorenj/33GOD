@@ -1,0 +1,37 @@
+# Attached-mode overlay — join G7 to an existing bus (G1's).
+# Usage: docker compose -f compose.yml -f compose.attach.yml up -d
+# Requires: G1 (or any bus exposing BLOODBANK_EVENTS on its network) running,
+# and GOD_G1_BUS_NETWORK / GOD_BUS_NATS_URL set in .env (see README §attach).
+#
+# Convention (G2/G6): ONLY the transport services join the external network.
+# candystore + postgres + memory-reference stay on g7-internal; the daprd
+# sidecar retargets to the external bus. The standalone bus service keeps
+# running (harmless) but the workers publish/consume the EXTERNAL stream.
+services:
+  bus:
+    # In attached mode the standalone broker is not the publish target; do
+    # not let its absence block anything. Kept defined for volume compat.
+    profiles: [standalone-bus]
+  nats-init:
+    # The external bus already has its streams (G1's nats-init owns them);
+    # our copy must not run against it.
+    profiles: [standalone-bus]
+  candystore-daprd:
+    networks: [g1-bus, g7-internal]
+    depends_on: !reset {}
+  enrichment:
+    depends_on: !reset {}
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+      GOD_CONSUME_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+    networks: [g1-bus, g7-internal]
+  hindsight-bridge:
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_CONSUME_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+    networks: [g1-bus, g7-internal]
+networks:
+  g1-bus:
+    name: ${GOD_G1_BUS_NETWORK:-g1-bus}
+    external: true
