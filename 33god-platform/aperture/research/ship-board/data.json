@@ -541,7 +541,7 @@
    "bundle": "merged",
    "gate": "pending",
    "gate_label": "Momo closes a real ticket",
-   "note": "all external images arm64+amd64 (manifests.py PASS)",
+   "note": "accept/accept-g8.sh authored — client-executable on deployed stack; awaiting Damian's run",
    "arm64": "manifest"
   }
  }
