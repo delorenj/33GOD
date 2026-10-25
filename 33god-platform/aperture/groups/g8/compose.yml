@@ -1,0 +1,350 @@
+# Aperture G8 — Orchestration + Apps plane (self-contained Compose bundle)
+#
+# WHAT: the G8 gate plane — "Momo closes a real ticket with real code".
+# momod (Momo-shaped orchestrator, WIP-lease discipline), board adapter (real
+# local sandbox board, Plane state vocabulary), code-worker (real git commits
+# + real test runs on a scratch repo), Holocene-shaped dashboard fed by
+# candystore events, candystore envelope store (vendored, G7 pattern), owned
+# NATS JetStream bus for standalone proof.
+#
+# ZERO AAI: no AAI-gateway content, endpoints, keys or references anywhere.
+# GOD_LLM_* is a client-owned optional reviewer surface with EMPTY defaults
+# (degraded-not-crashed; deterministic evidence review is the default mode).
+#
+# COLLISION SAFETY (G1 conventions): compose project locked to `god-g8`,
+# no container_name, NO published host ports (in-network only; inspect via
+# `docker compose exec` or SSH tunnel), own volumes/networks prefixed g8-.
+#
+# CRIB SOURCES (do not drift):
+#   - candystore-src/  — vendored byte-copy of the candystore submodule
+#     (identical provenance to g7's: commit 767ebb5, no tests/, no local
+#     modification; see candystore-src/PROVENANCE.md).
+#   - groups/g1/nats/{streams.json,init.sh} — stream topology + init script
+#     (via g7's identical copies; stream set = bloodbank streams only).
+#   - groups/g7/dapr/pubsub.yaml — component with G8's OWN durable
+#     g8-candystore-events / queue g8-candystore (never G1/G7 names).
+#   - groups/g7/enrichment/jsclient.py — raw NATS protocol client, copied
+#     BYTE-IDENTICAL into each authored service dir.
+#   - groups/g7/compose.yml — service skeleton/healthcheck conventions.
+
+name: god-g8
+
+networks:
+  g8-internal:
+    name: g8-internal
+    driver: bridge
+  g8-bus:
+    # Standalone bus. Attached mode (compose.attach.yml) moves the transport
+    # services to the EXTERNAL g1-bus network; this one stays owned.
+    name: g8-bus
+    driver: bridge
+
+volumes:
+  nats-data:
+    name: god-g8-nats-data
+  candystore-pgdata:
+    name: god-g8-candystore-pgdata
+  board-data:
+    name: god-g8-board-data
+  code-data:
+    name: god-g8-code-data
+  momo-data:
+    name: god-g8-momo-data
+  dash-data:
+    name: god-g8-dash-data
+
+services:
+  # ------------------------------------------------------------------ bus ---
+  bus:
+    # Owned JetStream broker for standalone proof (crib: G1/G7 nats service).
+    image: ${GOD_NATS_IMAGE:-nats:2.10-alpine}
+    command: ["-js", "-sd", "/data/jetstream", "-m", "8222"]
+    volumes:
+      - nats-data:/data/jetstream
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    mem_limit: 128m
+    cpus: 0.25
+    networks:
+      g8-bus:
+        aliases: [nats]
+    restart: unless-stopped
+
+  nats-init:
+    # Stream initializer + long-running stream guard (g1/g7 crib + G8 guard
+    # addition). Applies ./nats/streams.json (bloodbank streams only), then
+    # stays alive: the healthcheck `nats stream info` reports healthy only
+    # while BOTH streams exist. Dependents gate on service_healthy — this
+    # fixes a real compose-v5 ordering race where daprd subscribed before
+    # the streams existed ("nats: stream not found") and never retried.
+    # See nats/init.sh stream-guard comment for the full story.
+    image: ${GOD_NATS_BOX_IMAGE:-natsio/nats-box:0.14.5}
+    depends_on:
+      bus:
+        condition: service_healthy
+    environment:
+      NATS_URL: ${GOD_NATS_URL:-nats://nats:4222}
+    healthcheck:
+      test: ["CMD-SHELL", "nats --server=${GOD_NATS_URL:-nats://nats:4222} stream info BLOODBANK_EVENTS >/dev/null 2>&1 && nats --server=${GOD_NATS_URL:-nats://nats:4222} stream info BLOODBANK_COMMANDS >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - type: bind
+        source: ./nats/streams.json
+        target: /work/streams.json
+        read_only: true
+      - type: bind
+        source: ./nats/init.sh
+        target: /work/init.sh
+        read_only: true
+    entrypoint: ["/bin/sh", "/work/init.sh"]
+    networks: [g8-bus]
+    # guard (not one-shot): must stay up to hold its healthcheck; the G8
+    # services gate on nats-init service_healthy for a hard stream-ordering
+    # guarantee (see nats/init.sh stream-guard comment)
+    restart: unless-stopped
+
+  # ----------------------------------------------------------- candystore ---
+  candystore-postgres:
+    # pgvector image required: candystore migration 010 creates
+    # CREATE EXTENSION vector + HNSW index (same constraint as G1/G7).
+    image: ${GOD_POSTGRES_IMAGE:-pgvector/pgvector:0.8.0-pg17}
+    environment:
+      POSTGRES_USER: ${GOD_POSTGRES_USER:-candystore}
+      POSTGRES_PASSWORD: ${GOD_POSTGRES_PASSWORD:-candystore}
+      POSTGRES_DB: ${GOD_POSTGRES_DB:-candystore}
+    command: [postgres, -c, shared_buffers=64MB, -c, max_connections=25]
+    volumes:
+      - candystore-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GOD_POSTGRES_USER:-candystore} -d ${GOD_POSTGRES_DB:-candystore}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    mem_limit: 256m
+    cpus: 0.5
+    networks:
+      g8-internal:
+        aliases: [postgres]
+    restart: unless-stopped
+
+  candystore:
+    # Durable Bloodbank event audit trail. BUILT from the vendored
+    # candystore-src/ (identical provenance to G7's vendor).
+    build:
+      context: ./candystore-src
+    image: ${GOD_CANDYSTORE_IMAGE:-candystore:g8}
+    environment:
+      APP_PORT: "3001"
+      APP_HOST: 0.0.0.0
+      DATABASE_URL: postgresql://${GOD_POSTGRES_USER:-candystore}:${GOD_POSTGRES_PASSWORD:-candystore}@postgres:5432/${GOD_POSTGRES_DB:-candystore}
+      SUBSCRIBE_PUBSUB: bloodbank-pubsub
+      SUBSCRIBE_TOPIC: bloodbank.evt.>
+      SUBSCRIBE_ROUTE: /events/all
+      PYTHONDONTWRITEBYTECODE: "1"
+    depends_on:
+      candystore-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/readyz', timeout=3)\""]
+      interval: 15s
+      timeout: 4s
+      retries: 10
+      start_period: 5s
+    mem_limit: 192m
+    cpus: 0.5
+    networks:
+      g8-internal:
+        aliases: [candystore-app]
+    restart: unless-stopped
+
+  candystore-daprd:
+    # Dapr sidecar delivering bloodbank.evt.> to candystore (crib: g7
+    # dapr/pubsub.yaml; durableName g8-candystore-events, queueGroupName
+    # g8-candystore — G8's OWN identity, never G1/G7's).
+    image: ${GOD_DAPRD_IMAGE:-daprio/daprd:1.13.0}
+    command:
+      - ./daprd
+      - --app-id=candystore
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --app-port=3001
+      - --app-channel-address=candystore-app
+      - --app-protocol=http
+      - --resources-path=/components
+      - --placement-host-address=dapr-placement:50005
+      - --log-level=info
+    volumes:
+      - type: bind
+        source: ./dapr/pubsub.yaml
+        target: /components/pubsub.yaml
+        read_only: true
+    depends_on:
+      nats-init:
+        condition: service_healthy
+      candystore:
+        condition: service_healthy
+    networks: [g8-bus, g8-internal]
+    mem_limit: 128m
+    restart: unless-stopped
+
+  dapr-placement:
+    # Sidecar rendezvous (crib: g1/g7 compose).
+    image: ${GOD_DAPR_PLACEMENT_IMAGE:-daprio/dapr:1.13.0}
+    command: ["./placement", "--port", "50005"]
+    networks: [g8-bus]
+    mem_limit: 64m
+    restart: unless-stopped
+
+  # --------------------------------------------------------------- board ----
+  board:
+    # REAL sandbox board with Plane's state vocabulary; publishes canonical
+    # ticket events (create/start/done) with ONE lifecycle correlationid.
+    build:
+      context: ./board
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g8-board:0.1
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+      GOD_BOARD_DB: /data/board.db
+      GOD_BOARD_KIND: ${GOD_BOARD_KIND:-sandbox}
+      APP_PORT: "8793"
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - board-data:/data
+    depends_on:
+      nats-init:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8793/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+      start_period: 5s
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 96m
+    cpus: 0.25
+    networks: [g8-bus, g8-internal]
+    restart: unless-stopped
+
+  # --------------------------------------------------------- code-worker ----
+  code-worker:
+    # The REAL lane: consumes bloodbank.cmd.task.ticket.assigned, writes a
+    # real module + test, RUNS the tests, makes a REAL git commit, publishes
+    # evidence + completion reply. git is in the image (apk add git).
+    build:
+      context: ./code-worker
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g8-code-worker:0.1
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_CONSUME_STREAM: ${GOD_CONSUME_STREAM:-BLOODBANK_COMMANDS}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+      GOD_CONSUME_FILTER: bloodbank.cmd.task.>
+      GOD_WORKBENCH: /data/workbench
+      GOD_CODE_DB: /data/code-worker.db
+      APP_PORT: "8794"
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - code-data:/data
+    depends_on:
+      nats-init:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8794/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+      start_period: 5s
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 128m
+    cpus: 0.5
+    networks: [g8-bus, g8-internal]
+    restart: unless-stopped
+
+  # --------------------------------------------------------------- momod ----
+  momod:
+    # Momo-shaped orchestrator: WIP-lease discipline (acquire/refresh/release
+    # + steal-after-TTL), drives ticket create->done BY EVIDENCE, optional
+    # client-owned reviewer LLM with EMPTY defaults (degraded by default).
+    build:
+      context: ./momod
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g8-momod:0.1
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_CONSUME_STREAM: ${GOD_CONSUME_STREAM:-BLOODBANK_EVENTS}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+      GOD_CONSUME_FILTER: bloodbank.evt.task.ticket.>
+      GOD_BOARD_URL: http://board:8793
+      GOD_CODE_WORKER_URL: http://code-worker:8794
+      GOD_MOMO_DB: /data/momod.db
+      GOD_WIP_LOCK: /data/wip-driver.lock
+      GOD_LLM_BASE_URL: ${GOD_LLM_BASE_URL:-}
+      GOD_LLM_API_KEY: ${GOD_LLM_API_KEY:-}
+      APP_PORT: "8795"
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - momo-data:/data
+    depends_on:
+      nats-init:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8795/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+      start_period: 5s
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 96m
+    cpus: 0.5
+    networks: [g8-bus, g8-internal]
+    restart: unless-stopped
+
+  # ----------------------------------------------------------- dashboard ----
+  dashboard:
+    # Holocene-shaped surface: event-fed work-items projection + in-network
+    # HTML view displaying completed items with commit/test evidence.
+    build:
+      context: ./dashboard
+      args:
+        GOD_PYTHON_IMAGE: ${GOD_PYTHON_IMAGE:-python:3.12-alpine}
+    image: god-g8-dashboard:0.1
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_CONSUME_STREAM: ${GOD_CONSUME_STREAM:-BLOODBANK_EVENTS}
+      GOD_CONSUME_FILTER: bloodbank.evt.>
+      GOD_DASH_DB: /data/dashboard.db
+      APP_PORT: "8796"
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - dash-data:/data
+    depends_on:
+      nats-init:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8796/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+      start_period: 5s
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 96m
+    cpus: 0.25
+    networks: [g8-bus, g8-internal]
+    restart: unless-stopped

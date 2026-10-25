@@ -1,0 +1,53 @@
+# Attached-mode overlay — join G8's transport services to an external bus
+# (G1's). Usage: docker compose -f compose.yml -f compose.attach.yml up -d
+# Requires: G1 (or any bus exposing BLOODBANK_* on its network) running, and
+# GOD_G1_BUS_NETWORK / GOD_BUS_NATS_URL set (see README §attach).
+#
+# Convention (G2/G6/G7): ONLY the transport services join the external
+# network. board/code-worker/momod/dashboard transport join g1-bus; the
+# stores (candystore + postgres) stay on g8-internal; the daprd sidecar
+# retargets to the external bus. candystore-daprd on the external bus uses
+# G8's own durable (g8-candystore-events) so the incumbent G1 store and G8's
+# store BOTH see every event (proven in smoke/coexist.sh).
+services:
+  bus:
+    # In attached mode the standalone broker is not the publish target; do
+    # not let its absence block anything. Kept defined for volume compat.
+    profiles: [standalone-bus]
+  nats-init:
+    # The external bus already has its streams (G1's nats-init owns them);
+    # our copy must not run against it.
+    profiles: [standalone-bus]
+  candystore-daprd:
+    networks: [g1-bus, g8-internal]
+    depends_on: !reset {}
+  board:
+    depends_on: !reset {}
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+    networks: [g1-bus, g8-internal]
+  code-worker:
+    depends_on: !reset {}
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_CONSUME_STREAM: ${GOD_CONSUME_STREAM:-BLOODBANK_COMMANDS}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+    networks: [g1-bus, g8-internal]
+  momod:
+    depends_on: !reset {}
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_CONSUME_STREAM: ${GOD_CONSUME_STREAM:-BLOODBANK_EVENTS}
+      GOD_OUTBOX_STREAM: ${GOD_OUTBOX_STREAM:-BLOODBANK_EVENTS}
+    networks: [g1-bus, g8-internal]
+  dashboard:
+    depends_on: !reset {}
+    environment:
+      GOD_BUS_NATS_URL: ${GOD_BUS_NATS_URL:-nats://nats:4222}
+      GOD_CONSUME_STREAM: ${GOD_CONSUME_STREAM:-BLOODBANK_EVENTS}
+    networks: [g1-bus, g8-internal]
+networks:
+  g1-bus:
+    name: ${GOD_G1_BUS_NETWORK:-g1-bus}
+    external: true

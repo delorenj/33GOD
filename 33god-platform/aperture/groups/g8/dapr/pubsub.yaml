@@ -1,0 +1,31 @@
+# G8 candystore subscription — G1's pubsub.jetstream component with ONE
+# deliberate divergence: this group's OWN durable + queue-group names.
+#
+# crib: groups/g7/dapr/pubsub.yaml (same ownership reasoning — Rererere ack
+# 2026-10-24). G1 keeps "candystore-events"/"candystore"; G7 keeps
+# "g7-candystore-events"/"g7-candystore"; G8 owns "g8-candystore-events"/
+# "g8-candystore". Distinct durables => one publish reaches EVERY store
+# (delivered once per durable); sharing a durable would round-robin and
+# silently split events between stores. Proven in smoke/coexist.sh.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: bloodbank-pubsub
+spec:
+  type: pubsub.jetstream
+  version: v1
+  metadata:
+    - name: natsURL
+      value: "nats://nats:4222"
+    - name: name
+      value: "bloodbank-pubsub"
+    - name: durableName
+      value: "g8-candystore-events"
+    - name: queueGroupName
+      value: "g8-candystore"
+    - name: streamName
+      value: "BLOODBANK_EVENTS"
+    - name: deliverPolicy
+      value: "all"
+    - name: ackWait
+      value: "30s"

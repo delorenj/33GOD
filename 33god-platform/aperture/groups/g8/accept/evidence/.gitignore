@@ -1,0 +1,4 @@
+# Gate kit evidence stays LOCAL by the kit's own contract (a later
+# `git add -A` must never sweep run artifacts into the tree).
+*
+!.gitignore

@@ -1,0 +1,232 @@
+#!/bin/sh
+# Bloodbank — NATS JetStream stream initialization.
+#
+# Reads /work/streams.json and applies each stream definition to the
+# connected NATS server. Idempotent: if a stream already exists with the
+# desired name, this script reconciles its subject list with streams.json and
+# leaves the existing stream data intact.
+#
+# It also removes zombie durable consumers (see reap_zombie_consumers below).
+#
+# Environment:
+#   NATS_URL             -- NATS server URL. Default: nats://nats:4222
+#   NATS_ZOMBIE_ACTION   -- `delete` (default) or `report` for zombie consumers
+#
+# Exit codes:
+#   0 — all streams present after the run (new or pre-existing)
+#   1 — NATS server unreachable, streams.json malformed, or apply failed
+#       for an unexpected reason
+#
+# This script is invoked by the `nats-init` oneshot service in
+# `compose/docker-compose.yml`.
+
+set -eu
+
+NATS_URL="${NATS_URL:-nats://nats:4222}"
+STREAMS_JSON="${STREAMS_JSON:-/work/streams.json}"
+NATS_ZOMBIE_ACTION="${NATS_ZOMBIE_ACTION:-delete}"
+
+if [ ! -f "${STREAMS_JSON}" ]; then
+  echo "nats-init: missing ${STREAMS_JSON}" >&2
+  exit 1
+fi
+
+# Quick reachability check so we fail fast with a clear message.
+# `nats rtt` is a pure client-side round-trip; it does not require system
+# account privileges the way `nats server ping` does.
+if ! nats --server="${NATS_URL}" rtt >/dev/null 2>&1; then
+  echo "nats-init: cannot reach NATS at ${NATS_URL}" >&2
+  exit 1
+fi
+
+apply_stream() {
+  name="$1"
+  subjects="$2"
+  retention="$3"
+  storage="$4"
+  discard="$5"
+  max_age="$6"
+  max_msgs="$7"
+  max_bytes="$8"
+  replicas="$9"
+
+  if nats --server="${NATS_URL}" stream info "${name}" >/dev/null 2>&1; then
+    current_subjects=$(
+      nats --server="${NATS_URL}" stream info "${name}" --json \
+        | jq -r '.config.subjects | join(",")'
+    )
+    if [ "$(normalize_subjects "${current_subjects}")" = "$(normalize_subjects "${subjects}")" ]; then
+      echo "nats-init: stream ${name} already exists with desired subjects, skipping"
+      return 0
+    fi
+
+    echo "nats-init: updating stream ${name} subjects ${current_subjects} -> ${subjects}"
+    nats --server="${NATS_URL}" stream edit "${name}" \
+      --subjects="${subjects}" \
+      --force
+    return 0
+  fi
+
+  echo "nats-init: creating stream ${name} (subjects=${subjects}, retention=${retention})"
+
+  # The NATS JSM API uses `workqueue` for the work-queue retention policy;
+  # the nats CLI enum is `workq` for the same concept. Translate here so
+  # streams.json can stay canonical in API terms.
+  cli_retention="${retention}"
+  if [ "${cli_retention}" = "workqueue" ]; then
+    cli_retention="workq"
+  fi
+
+  # `nats stream add --defaults` suppresses interactive prompts for fields
+  # we don't configure explicitly.
+  nats --server="${NATS_URL}" stream add "${name}" \
+    --subjects="${subjects}" \
+    --retention="${cli_retention}" \
+    --storage="${storage}" \
+    --discard="${discard}" \
+    --max-age="${max_age}" \
+    --max-msgs="${max_msgs}" \
+    --max-bytes="${max_bytes}" \
+    --replicas="${replicas}" \
+    --defaults
+}
+
+normalize_subjects() {
+  printf '%s\n' "$1" \
+    | tr ',' '\n' \
+    | sed '/^$/d' \
+    | sort \
+    | paste -sd, -
+}
+
+# Extract each stream config and apply it. `jq` is included in nats-box.
+streams_count=$(jq '.streams | length' "${STREAMS_JSON}")
+echo "nats-init: applying ${streams_count} stream definition(s) from ${STREAMS_JSON}"
+
+i=0
+while [ "${i}" -lt "${streams_count}" ]; do
+  name=$(jq -r ".streams[${i}].name" "${STREAMS_JSON}")
+  subjects=$(jq -r ".streams[${i}].subjects | join(\",\")" "${STREAMS_JSON}")
+  retention=$(jq -r ".streams[${i}].retention" "${STREAMS_JSON}")
+  storage=$(jq -r ".streams[${i}].storage" "${STREAMS_JSON}")
+  discard=$(jq -r ".streams[${i}].discard" "${STREAMS_JSON}")
+  max_age=$(jq -r ".streams[${i}].max_age" "${STREAMS_JSON}")
+  max_msgs=$(jq -r ".streams[${i}].max_msgs" "${STREAMS_JSON}")
+  max_bytes=$(jq -r ".streams[${i}].max_bytes" "${STREAMS_JSON}")
+  replicas=$(jq -r ".streams[${i}].num_replicas" "${STREAMS_JSON}")
+
+  apply_stream \
+    "${name}" \
+    "${subjects}" \
+    "${retention}" \
+    "${storage}" \
+    "${discard}" \
+    "${max_age}" \
+    "${max_msgs}" \
+    "${max_bytes}" \
+    "${replicas}"
+
+  i=$((i + 1))
+done
+
+# Zombie consumers. An unclean host shutdown can zero-fill a durable
+# consumer's state file (obs/<name>/o.dat). NATS 2.10 then keeps the consumer
+# in the stream's name list but cannot load it: CONSUMER.INFO answers 404
+# (err_code 10014) and CONSUMER.CREATE answers a response with neither an
+# error nor consumer info. Dapr 1.13's pubsub.jetstream dereferences that
+# missing info and panics in Subscribe, so the sidecar restart-loops
+# (enricher-daprd after the 2026-10-22 01:07 UTC crash: 810 restarts). A
+# zombie never delivers again and a NATS restart reloads the same zeroed
+# file, so delete it; the subscriber recreates it from its own deliver policy
+# on its next start. Consumers must be idempotent on event id (see README).
+reap_zombie_consumers() {
+  zombies=0
+  for stream in $(nats --server="${NATS_URL}" stream ls --names 2>/dev/null); do
+    for consumer in $(nats --server="${NATS_URL}" consumer ls "${stream}" --names 2>/dev/null); do
+      code=$(
+        nats --server="${NATS_URL}" request --raw \
+          "\$JS.API.CONSUMER.INFO.${stream}.${consumer}" '' 2>/dev/null \
+          | jq -r '.error.err_code // empty' 2>/dev/null || true
+      )
+      [ "${code}" = "10014" ] || continue
+      zombies=$((zombies + 1))
+      if [ "${NATS_ZOMBIE_ACTION}" != "delete" ]; then
+        echo "nats-init: zombie consumer ${stream}/${consumer} (listed, cannot be loaded)" >&2
+        continue
+      fi
+      echo "nats-init: deleting zombie consumer ${stream}/${consumer} (listed, cannot be loaded)" >&2
+      nats --server="${NATS_URL}" request --raw \
+        "\$JS.API.CONSUMER.DELETE.${stream}.${consumer}" '' >/dev/null 2>&1 || true
+    done
+  done
+  echo "nats-init: zombie consumers found: ${zombies} (action=${NATS_ZOMBIE_ACTION})"
+}
+
+reap_zombie_consumers
+
+# Verification gate: confirm every stream is reachable from a FRESH
+# connection before exiting. JetStream metadata can lag a few hundred ms
+# behind a successful `stream add`; if nats-init exits while the
+# metadata is still propagating, a downstream consumer (e.g. Dapr's
+# pubsub.jetstream) that connects in that window can hit
+# "nats: stream not found" on its initial subscribe binding. Verifying
+# from a separate `nats stream info` call (different connection) forces
+# the propagation to land.
+echo "nats-init: verifying streams are queryable from a fresh connection"
+verify_attempts=10
+i=0
+while [ "${i}" -lt "${streams_count}" ]; do
+  name=$(jq -r ".streams[${i}].name" "${STREAMS_JSON}")
+  attempt=0
+  while [ "${attempt}" -lt "${verify_attempts}" ]; do
+    if nats --server="${NATS_URL}" stream info "${name}" >/dev/null 2>&1; then
+      echo "nats-init: ${name} OK (attempt $((attempt + 1)))"
+      break
+    fi
+    attempt=$((attempt + 1))
+    sleep 0.5
+  done
+  if [ "${attempt}" -ge "${verify_attempts}" ]; then
+    echo "nats-init: ${name} FAILED to verify after ${verify_attempts} attempts" >&2
+    exit 1
+  fi
+  i=$((i + 1))
+done
+
+echo "nats-init: done"
+
+# ---------------------------------------------------------------------------
+# Stream guard (G8 addition to the g1/g7 crib).
+#
+# WHY: compose's `service_completed_successfully` gate proved insufficient —
+# `docker compose up -d --wait` (compose v5) started candystore-daprd
+# BEFORE it observed nats-init's exit (container start ordering race), so
+# daprd's one-shot JetStream bind hit "nats: stream not found" and stayed
+# unsubscribed until restart. Dapr does not re-attempt a failed initial
+# subscription. The Python services bind their own durables with retry and
+# were unaffected — daprd is the fragile one.
+#
+# WHAT: stay alive as a HEALTH-CHECKED stream guard. The compose healthcheck
+# runs `nats stream info`; dependent services gate on `service_healthy` —
+# a hard ordering guarantee that holds across compose versions, with or
+# without `up --wait`.
+NATS_GUARD_POLL="${NATS_GUARD_POLL:-5}"
+if [ "${NATS_GUARD:-1}" = "0" ]; then
+  # one-shot mode (standalone stream init only; used by throwaway-bus setups
+  # in smoke/attach.sh + coexist.sh where a guard container is not managed)
+  echo "nats-init: guard disabled (NATS_GUARD=0) — one-shot exit"
+  exit 0
+fi
+echo "nats-init: stream guard active (poll ${NATS_GUARD_POLL}s)"
+while true; do
+  i=0
+  while [ "${i}" -lt "${streams_count}" ]; do
+    name=$(jq -r ".streams[${i}].name" "${STREAMS_JSON}")
+    if ! nats --server="${NATS_URL}" stream info "${name}" >/dev/null 2>&1; then
+      echo "nats-init: GUARD: stream ${name} missing — re-applying" >&2
+      exec "${0}" "${@}"
+    fi
+    i=$((i + 1))
+  done
+  sleep "${NATS_GUARD_POLL}"
+done
