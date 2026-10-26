@@ -16,7 +16,7 @@ hosted/cloud projection remains validation-only.
 | Unified Agent Skills | Skillex | One skill/capability catalog distributed across coding-agent CLIs. |
 | Persistent Memory | Hindsight | Recall, retain, and journal hooks across sessions. |
 | Tool Gateway | Pipeline MCP Hub | Compact MCP access to Plane, Bloodbank, lifecycle, and future domains. |
-| Visual Topology | Candybar | Event and service topology inspection. |
+| Cron Framework | Candybar | Bloodbank-driven schedules, metered execution, and reversible native-cron migration. |
 | Voice Interface | HeyMa | Voice, meeting, transcription, and TTS integration path. |
 
 ## Integration spines

@@ -1,0 +1,22 @@
+id: candybar
+name: Candybar
+role: bloodbank-cron-framework
+repo: ../candybar
+description: Bloodbank-driven cron registry, minute dispatcher, host executor and reversible native-scheduler migration.
+compose:
+  files: []
+  profiles: [optional]
+health:
+  commands:
+    - curl -fsS https://candybar.delo.sh/healthz
+    - systemctl --user is-active candybar-executor.service
+source_of_truth:
+  - ../candybar/src/candybar
+  - ../candybar/deploy
+  - ../candybar/_bmad-output/planning-artifacts/cron-inventory.md
+changelog:
+  topics: [cron, scheduling, bloodbank, migrations]
+public_card:
+  title: Cron Framework
+  promise: Schedule and meter jobs through Bloodbank with a reversible migration ledger.
+backfills: []

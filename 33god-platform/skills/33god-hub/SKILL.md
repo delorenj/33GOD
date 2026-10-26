@@ -31,7 +31,7 @@ changelog, skill routing, and backfill coordination.
 | Skill packs and agent capability distribution | Skillex |
 | Recall/retain/journal memory hooks | Hindsight |
 | Compact MCP tool gateway | Pipeline MCP Hub |
-| Topology/event visualization | Candybar |
+| Bloodbank-driven cron scheduling, metering and migration | Candybar |
 | Voice/transcription/TTS interface | HeyMa |
 
 ## Platform skills

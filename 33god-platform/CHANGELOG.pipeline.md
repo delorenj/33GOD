@@ -3,6 +3,16 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-10-26
+
+### Candybar component identity corrected
+
+Registered Candybar as the live Bloodbank cron framework, with its registry,
+minute dispatcher, host executor and reversible migration ledger. The platform
+skill route and product card no longer describe the retired topology UI.
+This records the existing component boundary; it does not move scheduler
+ownership into the platform Compose projection.
+
 ## 2026-10-23
 
 ### Aperture G2 isolated integration-plane artifact
