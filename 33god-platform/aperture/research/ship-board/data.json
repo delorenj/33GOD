@@ -514,7 +514,8 @@
    "gate": "pending",
    "gate_label": "dead container pages you",
    "arm64": "verified",
-   "note": "SMOKE 13/13 PASS build-host; kill->firing->resolve->Grafana; production 17/17 untouched"
+   "note": "healthy on Studio per Rererere status 2026-10-25 (relayed by Jarad)",
+   "studio": "running"
   },
   "g5": {
    "bundle": "merged",
