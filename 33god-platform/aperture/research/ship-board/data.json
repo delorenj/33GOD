@@ -495,10 +495,10 @@
    "bundle": "merged",
    "merge_sha": "5de9ba2",
    "arm64": "manifest",
-   "studio": "retest",
+   "studio": "running",
    "gate": "pending",
    "gate_label": "client builds own workflow",
-   "note": "gate kit ready (accept/ template+checker; outbox allowlist 4bb25b7); awaiting re-test fac8710+4bb25b7 + client build"
+   "note": "healthy on Studio per Rererere status 2026-10-25 (relayed by Jarad)"
   },
   "g3": {
    "bundle": "merged",
