@@ -521,7 +521,8 @@
    "bundle": "merged",
    "gate": "pending",
    "gate_label": "real project born on stack",
-   "note": "honest artifacts (tool images; NO compose daemon); PRIMARY install = npm @delorenj/pjangler+skillex, uvx MCP, copier; images = fleet channel"
+   "note": "rollout paused: awaiting Damian approval of Docker restart for 32 GiB RAM, then continue (Rererere 2026-10-25)",
+   "studio": "pending"
   },
   "g6": {
    "bundle": "merged",
