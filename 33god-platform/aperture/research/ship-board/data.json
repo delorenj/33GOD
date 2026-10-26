@@ -4,7 +4,7 @@
   "subtitle": "Full system inventory → deployable component groups → dependency-ordered install plan. Target: Docker Compose per group, deploying to Damien's system.",
   "generated": "2026-10-23",
   "source": "Ground truth sweep: 33GOD repo + submodules, docker ps (150 containers), 104 systemd user units, bloodbank services/compose, n8n, cron, skills",
-  "updated": "2026-10-25 (auto)",
+  "updated": "2026-10-26 (auto)",
   "release": "fac8710"
  },
  "groups": [
@@ -489,7 +489,7 @@
    "studio": "running",
    "gate": "pending",
    "gate_label": "founder decision record",
-   "note": "gate kit ready (accept/accept-g1.sh, proven build-host ALL PASS); awaiting Studio run"
+   "note": "healthy on Studio per Rererere status 2026-10-25 (relayed by Jarad)"
   },
   "g2": {
    "bundle": "merged",
