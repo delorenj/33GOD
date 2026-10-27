@@ -401,3 +401,40 @@ project_home: 33god-platform/aperture
 dogfood_target: Damien
 depends_on: []
 ```
+
+## I-7 Candybar schedule view in Holocene
+
+**Outcome.** The Candybar cron framework, which now runs the homelab's scheduled
+jobs, has a live inbox-style view in Holocene: Definitions and Schedule tabs,
+current, past and upcoming rows with countdowns, a noise toggle, and skip
+operations, patched live from Candybar's SSE stream.
+**Owner:** `33god` (Grolf). Candybar owns the contract and the API (Epic 6 is a
+delegation record only, `CAND-6`). Holocene owns the view.
+
+```yaml
+owner_project: 33god
+delegations:
+  - owner_project: holocene
+    request: build the Candybar schedule view against candybar's holocene-view-contract.md
+    ticket_ref: HOLOC-24
+  - owner_project: candybar
+    request: keep holocene-view-contract.md and the live API in step (contract-parsing tests)
+    ticket_ref: CAND-6
+depends_on: []
+```
+
+**Seam acceptance criteria**
+
+- The view renders `GET /schedule` from `https://candybar.delo.sh` and patches
+  from `GET /schedule/stream` with no polling. A reconnect resumes via
+  `Last-Event-ID`, and a `reset` triggers exactly one refetch.
+- Skip and noise actions taken in the view round-trip through the API and come
+  back as stream events.
+- A contract change lands in candybar first (contract file + Epic 5 story ACs in
+  the same commit). Holocene never reads the Candybar database or bus directly.
+
+**Seam evidence (executable).** `curl -N https://candybar.delo.sh/schedule/stream`
+shows `ready`, then `current.advanced` each minute. Candybar's
+`tests/test_schedule_stream.py` parses the contract's trigger list. On the
+Holocene side, the evidence is the view open beside `GET /schedule` with the two
+agreeing through a minute boundary.
