@@ -3,6 +3,18 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-10-27
+
+### Candybar schedule view handed to Holocene (I-7)
+
+Candybar's `holocene-view-contract.md` now pins the live-stream wire format:
+the SSE event names and payloads, `<candybarId>@<fireTime>` patch keys and
+patch rules, `Last-Event-ID` resume with `reset` on a gap, and the id-only
+frames sent outside a requested window. The API is live at
+`https://candybar.delo.sh`. The view itself is Holocene scope, filed as
+`HOLOC-24`. Candybar keeps the contract and the API in step through tests that
+parse the contract file.
+
 ## 2026-10-26
 
 ### Candybar component identity corrected
