@@ -119,3 +119,51 @@ plist, relaunch the app.
   skillex-resync rule systemd-only; fleet.env `$'...'` quoting) - see the runbook's "Known gaps".
 - **OpenClaw** jobs and the plaintext keys in the dead `ai.openclaw.gateway` plist were not touched.
 - The installer appended a guarded `~/.local/bin` PATH line to `~/.zprofile`.
+
+## Independent verification and fixes (2026-10-28, 19:17-20:10Z)
+
+Session authority: Jarad handed this session the action on Damian's Mac for this task
+(operator decisions of 2026-10-28), overriding charter §3.8 / §1 "only Rererere acts on
+Damian's machine" for this migration only. Recorded here per §3.5; the lane returns to
+Rererere afterwards.
+
+An independent verifier refuted four claims and raised thirteen gaps. What was done:
+
+| Finding | Outcome | Evidence |
+|---|---|---|
+| Skillex receipts refused after a DHCP hostname flip (`Mac.attlocal.net` -> `HelloSub.local`) | fixed in tooling | skillex d20578c keys macOS on `darwin:<IOPlatformUUID>`; installed on the Mac as 0.3.1+d20578c; both desk receipts re-synced, `profile show` exit 0 |
+| `release_provenance` unobserved (no `origin`) | fixed in tooling | flume eb63508 reads `branch.<git_ref>.remote` (else origin) and matches URL spellings; the same defect failed 33 agents on big-chungus (origin = upstream) |
+| flume `~/Code` vs `~/code` false critical errors | fixed (host + tooling) | wrappers/config/vox links/resync plist spell `~/code`; flume eb63508 canonicalizes with realpath(3); review run through the old spelling shows no host errors |
+| "No op:// on the Mac" | scoped + fixed | the Mac's migration log no longer names the item; claim restated as "no 1Password refs in Hermes runtime config or migration-owned files" (other projects on the Mac carry their own refs; not ours) |
+| Rollback booted out the wrong launchd domain | fixed | ROLLBACK.md boots out gui and user, verifies, then deletes plists |
+| Gateway double-load after login | proven not possible | launchd refused a second instance of a label across gui/user in both orders (EIO 5), including the real gateway plist; live gateway untouched |
+| App re-links entry points if opened | not a defect | the app only re-creates missing/dangling payload links, never a regular file; still: do not open it while the gateway runs (double cron) |
+| review / voice_chat rode the main (Opus) model | fixed | base sets voice_chat -> auto/fast, review (a delegated subagent) -> auto/subagent |
+| Direct-provider credentials in the Hermes auth store | fixed | openai-codex OAuth and the openrouter entry removed locally (nothing revoked; Codex CLI untouched), `auth.adopt_external_logins: false` |
+| OpenClaw-backup `.env` 0644 | fixed | 0600 |
+| Deploy-repo commit under Damian's identity | fixed forward | addendum 2d749ed with agent identity + trailer (no history rewrite) |
+| Delta leaves equal to base | kept as pins | commented as deliberate lockdown pins |
+| Mac flume clone behind | fixed | origin/main + template fd953e9, rebuilt |
+
+Proof after the fixes: turns `20261028_160602_c0c371` (aai-team) and `20261028_160608_d027ab`
+(private-desk) answered on `auto/orchestrator`; ledger rows 536984/536989 (opus) and
+536990/536991 (haiku helpers), all `claude-damien`, channel 10, quota 0. Fresh markers retained
+and recalled in both desk banks; the Hindsight boundary is unchanged elsewhere (401/403/200).
+
+Still open (not hacked to green):
+
+- **flume structural checks for portable desks** (`12 singleton entries are not a link into this
+  agent's role-local runtime`, 8 template_scaffold errors per desk, no role_dir, no board): the
+  operator's own rererere fails identically. Needs an operator design decision (exempt portable
+  specialists, or give them a runtime under the desk path).
+- **`flume audit --employee`** stays "unable to assess": the `global` set cannot resolve against
+  Damian's catalog checkout (`all-skills` @ 9ab19b2, staged deletions). His to repair.
+- **BTM login-item store** needs admin to read (`sudo sfltool dumpbtm`); unobserved.
+- **Concurrent work observed:** another agent hired two desks on the Mac during this run
+  (`hello-subconscious-team-inbox-team-inbox`, `lamp-ops-task-agent-team-inbox`) and committed a
+  local flume role (now rebased as 0cd0e18, unpushed, Damian's identity). Their configs were
+  re-rendered for the base change; the lamp-ops desk's recorded Skillex project directory does not
+  exist, so the resync agent reports ATTENTION for that desk only.
+
+Not included: no change to Jarad's systems, the gateway, OpenClaw, Docker/Aperture god-g*
+stacks, Plane, n8n or the pjangler registry; nothing of Jarad's memory was copied.
