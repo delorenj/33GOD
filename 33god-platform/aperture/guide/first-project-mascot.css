@@ -1,0 +1,112 @@
+/* Actual user-artwork paper puppets. Each scene is a bounded 4–6 second loop. */
+.top-controls { display:flex; gap:1.1rem; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+.top-controls a { color:#e4ebff; font-size:.8rem; }
+#pause-antics { display:none; color:white; background:transparent; border:1px solid #98b4ff; font-size:.76rem; padding:.4rem .7rem; min-height:34px; }
+.js #pause-antics { display:inline-block; }
+#pause-antics:hover { background:#244aa6; }
+#pause-antics:focus-visible { outline-color:#ffe18a; }
+.mascot { margin:1.1rem 0 0; max-width:100%; color:var(--ink); border-top:1px solid var(--line); }
+.mascot-stage { position:relative; height:201px; overflow:hidden; background:repeating-linear-gradient(0deg,#f7f7f0 0px,#f7f7f0 23px,#c4d4df 24px,#f7f7f0 25px); isolation:isolate; border-bottom:1px solid #b3c4cf; }
+.mascot-stage:after { content:""; position:absolute; left:7%; right:7%; height:1px; bottom:9px; background:#6a7886; z-index:-1; }
+.mascot-paper-label { position:absolute; top:8px; left:10px; color:#56606a; font-size:9px; font-weight:700; transform:rotate(-4deg); }
+.mascot figcaption { padding:.45rem .1rem; font-size:.76rem; color:var(--muted); line-height:1.3; }
+.puppet { position:absolute; top:2px; left:27%; width:165px; height:191px; display:block; transform-origin:40% 90%; }
+.part { position:absolute; display:block; height:auto; max-width:none; }
+.part-body { width:54px; left:14px; top:49px; z-index:3; transform-origin:50% 85%; }
+.part-rocket { width:98px; left:0; top:0; z-index:4; transform-origin:60% 72%; }
+.part-brimley-foot { width:28px; left:12px; top:141px; z-index:2; transform-origin:50% 0%; }
+.part-bare-foot { width:25px; left:52px; top:138px; z-index:2; transform-origin:25% 0%; }
+.part-dog-tail { width:94px; left:66px; top:136px; z-index:1; transform-origin:0 40%; }
+.part-speech { width:57px; left:57px; top:40px; z-index:5; transform-origin:0 60%; }
+.prop { position:absolute; display:block; font-weight:700; font-size:9px; color:#263a65; font-family:Arial,Helvetica,sans-serif; text-align:center; }
+.gag-terminal-window { position:absolute; right:9%; top:42px; width:98px; height:104px; background:#eaf1ff; border:2px solid #263a65; color:#263a65; transform:rotate(2deg); }
+.gag-terminal-window b { display:block; padding:5px; font:700 10px Arial,sans-serif; border-bottom:1px solid #263a65; }
+.gag-terminal-window i { display:block; font:8px Arial,sans-serif; padding:22px 4px; }
+.gag-folder { top:135px; left:46%; background:#b8ceff; border:2px solid #263a65; padding:8px 15px; transform:rotate(-12deg); z-index:6; }
+.gag-folder:before { content:""; position:absolute; top:-6px; left:0; background:#b8ceff; width:15px; height:5px; border:1px solid #263a65; }
+.gag-blueprint { left:57%; top:56px; padding:22px 14px; border:1px dashed #294a91; background:#dde8fc; transform:rotate(180deg); }
+.gag-key { top:164px; left:24%; padding:8px 14px; background:white; border:2px solid #56606a; border-bottom-width:5px; border-radius:4px; z-index:0; }
+.prop.gag-door { left:55%; top:68px; height:115px; width:61px; padding:37px 1px 0; background:#b8ceff; border:3px solid #263a65; }
+.prop.gag-copier { right:15%; top:111px; width:90px; padding:16px 6px; background:#c6d2df; border:2px solid #263a65; z-index:5; }
+.gag-clone { width:37px; right:22%; top:107px; z-index:4; }
+.gag-file { left:25%; top:17px; background:white; border:1px solid #263a65; width:71px; height:44px; padding-top:10px; transform:rotate(-7deg); z-index:7; }
+.gag-id { top:144px; left:31%; background:#dbe5f7; border:2px solid #263a65; padding:9px 5px; z-index:6; transform:rotate(7deg); }
+.gag-id b { display:block; font-size:11px; }
+.gag-books { right:12%; top:119px; display:flex; gap:3px; border-bottom:3px solid #263a65; }
+.gag-books i { writing-mode:vertical-rl; background:#c6d6fb; padding:9px 7px; border:1px solid #263a65; font-style:normal; }
+.gag-globe { right:17%; top:109px; border:2px solid #263a65; background:#c6d6fb; width:62px; height:62px; border-radius:50%; padding-top:22px; }
+.gag-globe:before,.gag-globe:after { content:""; position:absolute; border:1px solid #7189b3; border-radius:50%; inset:0 17px; }
+.gag-globe:after { inset:17px 0; }
+.gag-scanner { right:21%; top:109px; width:65px; border-bottom:1px solid #263a65; }
+.gag-scanner b { display:block; font-size:38px; line-height:1; }
+.prop.gag-juggle { left:23%; top:71px; padding:6px; background:#c6d6fb; border:1px solid #263a65; transform:rotate(-12deg); z-index:6; }
+.gag-juggle.second { left:51%; top:48px; }
+.gag-juggle.third { left:67%; top:79px; }
+.prop.gag-conveyor { left:45%; right:5%; top:181px; height:15px; border:2px solid #263a65; border-radius:8px; background:repeating-linear-gradient(90deg,#c6d6fb 0px,#c6d6fb 7px,#263a65 8px,#c6d6fb 9px); font-size:8px; }
+.prop.gag-toolkit { right:15%; top:124px; border:2px solid #263a65; background:#b8ceff; padding:14px 10px; z-index:5; }
+.gag-toolkit:before { content:""; position:absolute; top:-9px; left:21px; width:27px; height:9px; border:2px solid #263a65; }
+.gag-glass { left:32%; top:112px; width:48px; height:48px; border:5px solid #263a65; border-radius:50%; background:#c6e2ff55; z-index:8; }
+.gag-glass:after { content:""; position:absolute; width:9px; height:33px; background:#263a65; top:32px; left:35px; transform:rotate(-40deg); transform-origin:top; }
+.gag-ruler { left:42%; top:126px; background:#f4d57e; border:1px solid #8e7c47; width:112px; height:24px; padding-top:3px; transform:rotate(-8deg); z-index:6; }
+.gag-launchpad { right:15%; top:161px; padding:4px 10px; background:#c6d6fb; border:1px solid #263a65; }
+.gag-finish-line { top:136px; left:18%; right:11%; padding:6px; border-top:2px dashed #263a65; border-bottom:2px dashed #263a65; z-index:0; font-size:11px; }
+/* Animation declarations stay paused unless a visible stage is explicitly active. */
+.mascot * { animation-play-state:paused!important; animation-timing-function:ease-in-out; animation-iteration-count:infinite; animation-duration:4.8s; }
+.js .mascot.in-view * { animation-play-state:running!important; }
+.js.antics-paused .mascot * { animation-play-state:paused!important; }
+.gag-terminal .puppet { animation-name:terminal-bounce; }
+.gag-shelf .gag-folder { animation-name:folder-shoe; }
+.gag-shelf .part-bare-foot { animation-name:foot-poke; }
+.gag-preview .part-rocket { animation-name:wrong-rocket; animation-duration:5.5s; }
+.gag-preview .gag-blueprint { animation-name:plan-wobble; }
+.gag-enter .part-brimley-foot { animation-name:brimley-enter; animation-duration:4s; }
+.gag-enter .gag-key { animation-name:key-down; animation-duration:4s; }
+.gag-door .puppet { animation-name:door-squeeze; animation-duration:5s; }
+.gag-copier .gag-clone { animation-name:photocopy; animation-duration:5s; }
+.gag-copier .part-body { animation-name:copy-flinch; animation-duration:5s; }
+.gag-hat .gag-file { animation-name:file-hat; }
+.gag-identity .gag-id { animation-name:wrong-id; }
+.gag-local .part-bare-foot { animation-name:shelf-foot; }
+.gag-global .gag-globe { animation-name:globe-shoe; animation-duration:5.6s; }
+.gag-status .gag-scanner { animation-name:foot-scanner; }
+.gag-juggle .gag-juggle { animation-name:juggle-fail; animation-duration:5.2s; }
+.gag-juggle .second { animation-delay:-1.7s; }
+.gag-juggle .third { animation-delay:-3.4s; }
+.gag-conveyor .part-dog-tail { animation-name:dog-conveyor; animation-duration:5.8s; }
+.gag-toolkit .part-bare-foot { animation-name:toolkit-foot; }
+.gag-audit .gag-glass { animation-name:butt-audit; animation-duration:5.8s; }
+.gag-measure .gag-ruler { animation-name:ruler-launch; animation-duration:5.4s; }
+.gag-launch .part-bare-foot { animation-name:foot-launch; animation-duration:5.6s; z-index:6; }
+.gag-launch .part-rocket { animation-name:foot-rocket; animation-duration:5.6s; }
+.gag-finish .part-body { animation-name:chocolate-bow; animation-duration:5.4s; }
+.gag-finish .part-speech { animation-name:poop-encore; animation-duration:5.4s; }
+@keyframes terminal-bounce { 0%,15%,100% { transform:translateX(-24px); } 40% { transform:translateX(40px) rotate(3deg); } 48% { transform:translateX(28px) rotate(-13deg); } 65% { transform:translateX(-34px) rotate(-4deg); } }
+@keyframes folder-shoe { 0%,100% { transform:translate(0,0) rotate(-12deg); } 35% { transform:translate(-34px,19px) rotate(35deg); } 60% { transform:translate(38px,-45px) rotate(100deg); } }
+@keyframes foot-poke { 0%,100% { transform:rotate(0); } 35%,50% { transform:rotate(-45deg); } }
+@keyframes wrong-rocket { 0%,100% { transform:rotate(0); } 35%,65% { transform:rotate(150deg) translateX(-8px); } }
+@keyframes plan-wobble { 0%,100% { transform:rotate(180deg); } 50% { transform:rotate(165deg); } }
+@keyframes brimley-enter { 0%,100% { transform:translate(0,0) rotate(0); } 40%,55% { transform:translate(-9px,8px) rotate(14deg); } 70% { transform:translate(3px,-7px); } }
+@keyframes key-down { 0%,100% { transform:translateY(0); } 40%,55% { transform:translateY(4px); } }
+@keyframes door-squeeze { 0%,100% { transform:translateX(-22px); } 40%,55% { transform:translateX(55px) scaleX(.7) rotate(5deg); } 70% { transform:translateX(-28px) rotate(-8deg); } }
+@keyframes photocopy { 0%,15%,100% { transform:translateY(0) rotate(0); } 40% { transform:translateY(-70px) rotate(3deg); } 70%,85% { transform:translate(42px,-8px) rotate(35deg); } }
+@keyframes copy-flinch { 0%,100% { transform:rotate(0); } 40% { transform:rotate(-10deg); } }
+@keyframes file-hat { 0%,100% { transform:translateY(0) rotate(-7deg); } 35% { transform:translate(-12px,20px) rotate(9deg); } 70% { transform:translate(72px,117px) rotate(80deg); } }
+@keyframes wrong-id { 0%,100% { transform:translateY(0) rotate(7deg); } 40%,70% { transform:translate(-19px,40px) rotate(-5deg); } }
+@keyframes shelf-foot { 0%,100% { transform:translateX(0); } 35%,65% { transform:translate(76px,-26px) rotate(70deg); } }
+@keyframes globe-shoe { 0%,100% { transform:translate(0,0) rotate(0); } 40% { transform:translate(-70px,40px) rotate(-65deg); } 70% { transform:translate(5px,17px) rotate(110deg); } }
+@keyframes foot-scanner { 0%,100% { transform:translateX(0); } 50% { transform:translateX(-100px) rotate(-15deg); } }
+@keyframes juggle-fail { 0%,100% { transform:translate(0,0) rotate(-12deg); } 30% { transform:translate(25px,-28px) rotate(25deg); } 65% { transform:translate(20px,60px) rotate(110deg); } 80% { transform:translate(-10px,65px) rotate(90deg); } }
+@keyframes dog-conveyor { 0%,100% { transform:translateX(0); } 45%,65% { transform:translateX(50px) rotate(-5deg); } }
+@keyframes toolkit-foot { 0%,100% { transform:translate(0,0); } 40% { transform:translate(91px,-10px) rotate(40deg); } 65% { transform:translate(27px,-75px) rotate(120deg); } }
+@keyframes butt-audit { 0%,100% { transform:translate(0,0) rotate(-10deg); } 35% { transform:translate(-27px,-9px) rotate(15deg); } 65% { transform:translate(14px,16px) rotate(-12deg); } }
+@keyframes ruler-launch { 0%,100% { transform:translate(0,0) rotate(-8deg); } 35% { transform:translate(-20px,-20px) rotate(60deg); } 65% { transform:translate(74px,-105px) rotate(150deg); } 80% { transform:translate(100px,-135px) rotate(170deg); } }
+@keyframes foot-launch { 0%,15%,100% { transform:translate(0,0) rotate(0); } 35% { transform:translate(48px,-35px) rotate(20deg); } 65%,80% { transform:translate(78px,-130px) rotate(70deg); } }
+@keyframes foot-rocket { 0%,15%,100% { transform:translate(0,0) rotate(0); } 35% { transform:translate(65px,95px) rotate(-35deg); } 65%,80% { transform:translate(100px,-35px) rotate(-50deg); } }
+@keyframes chocolate-bow { 0%,100% { transform:rotate(0); } 35%,55% { transform:rotate(18deg) translateY(7px); } }
+@keyframes poop-encore { 0%,100% { transform:scale(.85); } 45%,65% { transform:scale(1.17) rotate(8deg); } }
+.original-art img { display:block; width:100%; max-width:440px; height:auto; margin-top:1rem; }
+.finish .original-art summary { color:white; }
+.finish .mascot figcaption { color:#d5e0ff; }
+@media (max-width:760px) { .top-controls { gap:.4rem; } .top-controls a { display:none; } #pause-antics { font-size:.7rem; min-height:44px; padding:.35rem .6rem; } .mascot-stage { height:201px; } }
+@media (prefers-reduced-motion:reduce) { .mascot *, .js .mascot.in-view * { animation:none!important; animation-play-state:paused!important; } }
+@media print { .mascot,#pause-antics,.original-art { display:none!important; } }

@@ -1,0 +1,252 @@
+{
+  "verified_date": "2026-10-27",
+  "scope": "Static UI tests on local Linux headless Chromium. No Studio/bootstrap/provider acceptance.",
+  "ui": {
+    "status": "PASS",
+    "slides": 18,
+    "copyButtons": 16,
+    "internalAnchors": 10,
+    "clipboardSuccess": true,
+    "clipboardFailureRecovery": true,
+    "copyHasNoExecution": true,
+    "upgradeCopyGated": true,
+    "approvalNotPersisted": true,
+    "checklistPersistence": true,
+    "anchorsAndReadingRail": true,
+    "keyboardSkipLink": true,
+    "noJSContent": true,
+    "printPDF": true,
+    "reducedMotion": true,
+    "layout": [
+      {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "overflowElements": []
+      },
+      {
+        "width": 1024,
+        "height": 768,
+        "scrollWidth": 1024,
+        "overflowElements": []
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "scrollWidth": 768,
+        "overflowElements": []
+      },
+      {
+        "width": 760,
+        "height": 900,
+        "scrollWidth": 760,
+        "overflowElements": []
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "overflowElements": []
+      },
+      {
+        "width": 320,
+        "height": 740,
+        "scrollWidth": 320,
+        "overflowElements": []
+      }
+    ],
+    "consoleErrors": [],
+    "remoteRequests": []
+  },
+  "mascot": {
+    "status": "PASS",
+    "axeViolations": 0,
+    "mascotStages": [
+      {
+        "scene": "terminal",
+        "animations": [
+          "terminal-bounce"
+        ],
+        "durationMs": [
+          4800
+        ]
+      },
+      {
+        "scene": "shelf",
+        "animations": [
+          "folder-shoe",
+          "foot-poke"
+        ],
+        "durationMs": [
+          4800,
+          4800
+        ]
+      },
+      {
+        "scene": "preview",
+        "animations": [
+          "plan-wobble",
+          "wrong-rocket"
+        ],
+        "durationMs": [
+          4800,
+          5500
+        ]
+      },
+      {
+        "scene": "enter",
+        "animations": [
+          "key-down",
+          "brimley-enter"
+        ],
+        "durationMs": [
+          4000,
+          4000
+        ]
+      },
+      {
+        "scene": "door",
+        "animations": [
+          "door-squeeze"
+        ],
+        "durationMs": [
+          5000
+        ]
+      },
+      {
+        "scene": "copier",
+        "animations": [
+          "photocopy",
+          "copy-flinch"
+        ],
+        "durationMs": [
+          5000,
+          5000
+        ]
+      },
+      {
+        "scene": "hat",
+        "animations": [
+          "file-hat"
+        ],
+        "durationMs": [
+          4800
+        ]
+      },
+      {
+        "scene": "identity",
+        "animations": [
+          "wrong-id"
+        ],
+        "durationMs": [
+          4800
+        ]
+      },
+      {
+        "scene": "local",
+        "animations": [
+          "shelf-foot"
+        ],
+        "durationMs": [
+          4800
+        ]
+      },
+      {
+        "scene": "global",
+        "animations": [
+          "globe-shoe"
+        ],
+        "durationMs": [
+          5600
+        ]
+      },
+      {
+        "scene": "status",
+        "animations": [
+          "foot-scanner"
+        ],
+        "durationMs": [
+          4800
+        ]
+      },
+      {
+        "scene": "juggle",
+        "animations": [
+          "juggle-fail",
+          "juggle-fail",
+          "juggle-fail"
+        ],
+        "durationMs": [
+          5200,
+          5200,
+          5200
+        ]
+      },
+      {
+        "scene": "conveyor",
+        "animations": [
+          "dog-conveyor"
+        ],
+        "durationMs": [
+          5800
+        ]
+      },
+      {
+        "scene": "toolkit",
+        "animations": [
+          "toolkit-foot"
+        ],
+        "durationMs": [
+          4800
+        ]
+      },
+      {
+        "scene": "audit",
+        "animations": [
+          "butt-audit"
+        ],
+        "durationMs": [
+          5800
+        ]
+      },
+      {
+        "scene": "measure",
+        "animations": [
+          "ruler-launch"
+        ],
+        "durationMs": [
+          5400
+        ]
+      },
+      {
+        "scene": "launch",
+        "animations": [
+          "foot-rocket",
+          "foot-launch"
+        ],
+        "durationMs": [
+          5600,
+          5600
+        ]
+      },
+      {
+        "scene": "finish",
+        "animations": [
+          "chocolate-bow",
+          "poop-encore"
+        ],
+        "durationMs": [
+          5400,
+          5400
+        ]
+      }
+    ],
+    "visibleAnimationChanges": true,
+    "pausedAnimationStable": true,
+    "reducedMotionStatic": true,
+    "printHidden": true,
+    "commandsNotCovered": true
+  },
+  "application_operations_executed": false,
+  "published": false
+}
