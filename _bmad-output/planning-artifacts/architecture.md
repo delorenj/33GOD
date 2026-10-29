@@ -17,4 +17,5 @@ You are the project lead for the `33GOD Agentic Development Pipeline`.
 - When you create docs for me, just place them in the repo's dedicated [open-notebook](https://notebooklm.delo.sh)
 - Every time you learn something that was surprising to you, take a moment to jot down a hindsight mental model posed as a question likely to be asked by future developers.
 - Before diving in to the task, try building your context efficiently via my custom `codegraph-voyage` codebase query tool.
+- **Recurring/background schedules are Candybar-only** ([README](candybar/README.md), `candybar` skill). Candybar owns *when* anything recurring runs; never add a crontab entry, a new systemd `.timer`, a Hermes recurring job (`cronjob` tool / `hermes cron create` without `--scheduler external`), an n8n Schedule Trigger, or a private sleep/poll loop. Execution may still be a `.service`, an external-pinned Hermes job or an n8n webhook; Candybar fires it. Policy: `~/.agents/AGENTS.md` "Recurring schedules"; audit with `cd candybar && uv run candybar doctor --repo . --live --json`.
 - Commit code early and often. No staging required. Everything immediately goes STRAIGHT to production.
