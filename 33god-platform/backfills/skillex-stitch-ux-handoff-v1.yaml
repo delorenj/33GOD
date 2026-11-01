@@ -1,0 +1,36 @@
+id: skillex-stitch-ux-handoff-v1
+title: Verify bounded canonical Stitch to BMAD UX handoff links
+owner_component: skillex
+kind: check-only
+summary: >
+  Confirm canonical Stitch skill selection, hub routing, and BMAD UX handoff
+  references without generating designs, scanning runtime profiles or certifying
+  global activation. An unavailable Skillex checkout is NOT VERIFIED, not healthy.
+search_paths: []
+forbidden_patterns: []
+external_root: ../../skillex
+required_contents:
+  all-skills/stitch/SKILL.md:
+    - 'references/33god-handoff.md'
+    - 'Before any remote creation/upload/generation'
+  all-skills/stitch/references/33god-handoff.md:
+    - '.working/stitch/<screen-id>/<unique-export>/'
+    - '.working/stitch/handoff.md'
+    - 'DESIGN.md owns appearance and EXPERIENCE.md owns behavior'
+  all-skills/33god-hub/SKILL.md:
+    - '[stitch](../stitch/SKILL.md)'
+    - '`bmad-ux` owns Discovery and final DESIGN.md / EXPERIENCE.md'
+  all-skills/bmad-ux/SKILL.md:
+    - 'references/stitch-handoff.md'
+  all-skills/bmad-ux/references/stitch-handoff.md:
+    - '../../stitch/references/33god-handoff.md'
+    - '.working/stitch/<screen-id>/<unique-export>/'
+  all-skills/bmad-ux/customize.toml:
+    - 'skill:stitch'
+    - 'references/stitch-handoff.md'
+required_symlinks:
+  sets/min-global/stitch: ../../all-skills/stitch
+remediation: >
+  Repair only the named canonical Skillex source, local min-global selection,
+  or handoff references after review. This check cannot prove CLI auth, generation,
+  global activation, a fleet rollout, or a finalized BMAD workspace.

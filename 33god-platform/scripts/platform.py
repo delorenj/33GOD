@@ -138,6 +138,24 @@ def validate_backfill_manifests() -> list[str]:
             errors.append(f"{path}: search_paths must be a list")
         if not isinstance(item.get("forbidden_patterns"), list):
             errors.append(f"{path}: forbidden_patterns must be a list")
+        contents = item.get("required_contents", {})
+        if not isinstance(contents, dict) or not all(
+            isinstance(name, str)
+            and isinstance(needles, list)
+            and all(isinstance(needle, str) and needle for needle in needles)
+            for name, needles in contents.items()
+        ):
+            errors.append(f"{path}: required_contents must map paths to lists of non-empty strings")
+        symlinks = item.get("required_symlinks", {})
+        if not isinstance(symlinks, dict) or not all(
+            isinstance(name, str) and isinstance(target, str) and target
+            for name, target in symlinks.items()
+        ):
+            errors.append(f"{path}: required_symlinks must map paths to targets")
+        if "external_root" in item and (not isinstance(item["external_root"], str) or not item["external_root"].strip()):
+            errors.append(f"{path}: external_root must be a non-empty path string")
+        if (item.get("required_contents") or item.get("required_symlinks")) and not item.get("external_root"):
+            errors.append(f"{path}: external_root is required for required checks")
     return errors
 
 
@@ -219,19 +237,78 @@ def scan_backfill(path: Path) -> tuple[str, list[str]]:
     return manifest["id"], findings
 
 
+def check_required_contract(manifest: dict[str, Any]) -> tuple[str, list[str]]:
+    """Check explicit external files and skill memberships without sweeping a repo."""
+    if "external_root" not in manifest:
+        if manifest.get("required_contents") or manifest.get("required_symlinks"):
+            return "NOT VERIFIED", ["external_root missing for required checks"]
+        return "OK", []
+    root = resolve_path(manifest["external_root"])
+    if not root.is_dir():
+        return "NOT VERIFIED", [f"external source unavailable: {root}"]
+    root = root.resolve()
+    findings: list[str] = []
+
+    def contained_path(relative: str) -> Path | None:
+        candidate = Path(relative)
+        if candidate.is_absolute() or ".." in candidate.parts:
+            findings.append(f"{relative!r}: expected path within external_root")
+            return None
+        path = root / candidate
+        try:
+            path.resolve().relative_to(root)
+        except (ValueError, OSError, RuntimeError):
+            findings.append(f"{relative!r}: path escapes external_root or cannot resolve")
+            return None
+        return path
+
+    for relative, needles in manifest.get("required_contents", {}).items():
+        path = contained_path(relative)
+        if path is None:
+            continue
+        if path.is_symlink() or not path.is_file():
+            findings.append(f"{path}: expected regular file")
+            continue
+        try:
+            if path.stat().st_size > MAX_SCAN_FILE_BYTES:
+                findings.append(f"{path}: exceeds maximum scan size")
+                continue
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            return "NOT VERIFIED", [f"cannot read {path}: {exc}"]
+        for needle in needles:
+            if needle not in text:
+                findings.append(f"{path}: missing {needle!r}")
+    for relative, target in manifest.get("required_symlinks", {}).items():
+        path = contained_path(relative)
+        if path is None:
+            continue
+        if not path.is_symlink():
+            findings.append(f"{path}: expected symlink to {target!r}")
+        elif os.readlink(path) != target or not path.is_dir():
+            findings.append(f"{path}: expected resolved symlink to {target!r}")
+    return ("STALE" if findings else "OK"), findings
+
+
 def cmd_backfills_check(_: argparse.Namespace) -> int:
     failures = 0
     for path in sorted((ROOT / "backfills").glob("*.yaml")):
-        backfill_id, findings = scan_backfill(path)
-        if findings:
+        backfill_id, forbidden_findings = scan_backfill(path)
+        manifest = load_yaml(path)
+        contract_status, contract_findings = check_required_contract(manifest)
+        findings = forbidden_findings + contract_findings
+        status = (
+            "NOT VERIFIED" if contract_status == "NOT VERIFIED"
+            else "STALE" if forbidden_findings or contract_status == "STALE"
+            else contract_status
+        )
+        if status != "OK":
             failures += 1
-            print(f"STALE {backfill_id}")
-            for finding in findings[:20]:
-                print(f"  {finding}")
-            if len(findings) > 20:
-                print(f"  ... {len(findings) - 20} more")
-        else:
-            print(f"OK {backfill_id}")
+        print(f"{status} {backfill_id}")
+        for finding in findings[:20]:
+            print(f"  {finding}")
+        if len(findings) > 20:
+            print(f"  ... {len(findings) - 20} more")
     return 1 if failures else 0
 
 

@@ -3,6 +3,24 @@
 This changelog records changes that affect more than one 33GOD component. It is
 fed by `changes/*.jsonl`; update both when a contract shifts.
 
+## 2026-11-01
+
+### Stitch UX ideation handed into BMAD UX
+
+Skillex selects the canonical Stitch CLI 0.12.1 skill in `min-global`, and the
+33GOD hub routes UX ideation through Stitch and BMAD UX. BMAD Discovery captures
+intent first. Screen/variant generation is optional and requires authorization
+for the target project and external content; generated concepts are not UX
+decisions. The user chooses a direction, exports live under the BMAD run's
+`.working/stitch/<screen-id>/<unique-export>/`, and `.working/stitch/handoff.md`
+records prompts, IDs, provenance, selection and open questions. BMAD Finalize
+reconciles chosen ideas into DESIGN.md and EXPERIENCE.md; those spines win on
+conflict. The bounded read-only backfill checks canonical links and set membership,
+not CLI authentication, actual generation, or global/fleet activation. The
+pre-existing global activation ownership blocker remains outside this slice.
+The tracked `skills/33god-hub` directory is a separate stale copy, not treated
+as canonical or silently migrated here.
+
 ## 2026-10-27
 
 ### Candybar schedule view handed to Holocene (I-7)
