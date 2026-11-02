@@ -22,13 +22,13 @@ DB_URL = os.environ.get("DATABASE_URL", "postgresql://candystore:***@candystore-
 def get_db():
     return psycopg2.connect(DB_URL)
 
-# Both LLM calls (slop gate and session summary) target the AutomaticAI
-# gateway, an OpenAI-compatible chat-completions endpoint. Per-call overrides:
-# JEV_ENDPOINT/JEV_MODEL for the slop gate, SUMMARY_ENDPOINT/SESSION_SUMMARY_MODEL
-# for the summary. Keys resolve the call-specific JEV_API_KEY / SUMMARY_API_KEY
-# first and fall back to a shared OPENAI_COMPAT_API_KEY.
+# Session-end summary optionally targets the AutomaticAI gateway when
+# SUMMARY_API_KEY / OPENAI_COMPAT_API_KEY is explicitly configured, defaulting
+# to automaticai/free so background summaries never burn subscription pools.
+# Per-tool-call LLM slop classification is intentionally retired: tool events
+# fire multiple times per second across the fleet and are embedded locally only.
 GATEWAY_CHAT_URL = "https://api.automaticai.io/v1/chat/completions"
-GATEWAY_DEFAULT_MODEL = "automaticai/auto/fast"
+GATEWAY_DEFAULT_MODEL = "automaticai/free"
 
 def _gateway_endpoint(env_override: str) -> str:
     value = os.environ.get(env_override, "")
@@ -158,66 +158,6 @@ def _do_handle_tool_completed(body: dict):
         return {"status": "RETRY"}
 
     logger.info(f"Successfully embedded tool event {event_id}")
-    
-    # ---------------------------------------------------------
-    # JEV Anti-Slop (System One classification) via AutomaticAI gateway
-    # ---------------------------------------------------------
-    jev_api_key = _gateway_key("JEV_API_KEY")
-    jev_model = _gateway_model("JEV_MODEL")
-    if jev_api_key:
-        try:
-            logger.info(f"Calling gateway JEV route ({jev_model}) for slop classification on {event_id}...")
-            content = _chat_completion(
-                _gateway_endpoint("JEV_ENDPOINT"),
-                jev_api_key,
-                jev_model,
-                messages=[
-                    {"role": "system", "content": "You are a classifier checking for 'slop' (unhelpful, generic, or unwanted automated AI output). Classify this event payload. Reply with JSON only: {\"is_slop\": boolean, \"confidence\": number, \"reason\": string}."},
-                    {"role": "user", "content": text_to_embed}
-                ],
-                # json_schema preferred; _chat_completion drops it and retries
-                # when an upstream rejects it, so parsing stays defensive.
-                response_format={
-                    "type": "json_schema",
-                    "json_schema": {
-                        "name": "slop_classification",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "is_slop": {"type": "boolean"},
-                                "confidence": {"type": "number"},
-                                "reason": {"type": "string"}
-                            },
-                            "required": ["is_slop", "confidence", "reason"],
-                            "additionalProperties": False
-                        },
-                        "strict": True
-                    }
-                }
-            )
-            result = _parse_json_content(content)
-            if result is not None and result.get("is_slop"):
-                logger.info(f"JEV detected slop in {event_id}. Emitting bloodbank.review.slop.annotated...")
-                session_id = body.get("correlationid")
-                cwd = (
-                    event_data.get("working_directory")
-                    or event_data.get("cwd")
-                    or (arguments.get("Cwd") if isinstance(arguments, dict) else None)
-                )
-                emit_event("bloodbank.evt.review.slop.annotated", {
-                    "target_event_id": event_id,
-                    "session_id": session_id,
-                    "cwd": cwd,
-                    "tool_name": tool_name,
-                    "arguments": arguments,
-                    "confidence": result.get("confidence"),
-                    "reason": result.get("reason")
-                })
-        except Exception as err:
-            logger.error(f"JEV API call failed: {err}")
-    else:
-        logger.info("No JEV_API_KEY/OPENAI_COMPAT_API_KEY set. Skipping live JEV evaluation.")
-
     return {"status": "SUCCESS"}
 
 

@@ -22,7 +22,7 @@ from unittest import mock
 PLATFORM_ROOT = Path(__file__).resolve().parents[1]
 
 GATEWAY_URL = "https://api.automaticai.io/v1/chat/completions"
-DEFAULT_MODEL = "automaticai/auto/fast"
+DEFAULT_MODEL = "automaticai/free"
 
 
 class FakeHTTPError(Exception):
@@ -66,9 +66,17 @@ def _install_stubs() -> tuple[types.ModuleType, list[dict]]:
     requests_stub.exceptions = types.SimpleNamespace(HTTPError=FakeHTTPError)
 
     fastapi_stub = types.ModuleType("fastapi")
+    fastapi_stub.__path__ = []
     fastapi_stub.FastAPI = lambda: types.SimpleNamespace(get=lambda *a, **k: (lambda f: f), post=lambda *a, **k: (lambda f: f))
     fastapi_stub.Request = object
     fastapi_stub.Response = lambda **kwargs: types.SimpleNamespace(status_code=kwargs.get("status_code", 200))
+    fastapi_concurrency_stub = types.ModuleType("fastapi.concurrency")
+
+    async def _run_in_threadpool(func, *args, **kwargs):
+        return func(*args, **kwargs)
+
+    fastapi_concurrency_stub.run_in_threadpool = _run_in_threadpool
+    fastapi_stub.concurrency = fastapi_concurrency_stub
 
     sentence_transformers_stub = types.ModuleType("sentence_transformers")
 
@@ -105,6 +113,7 @@ def _install_stubs() -> tuple[types.ModuleType, list[dict]]:
 
     for name, module in (
         ("fastapi", fastapi_stub),
+        ("fastapi.concurrency", fastapi_concurrency_stub),
         ("sentence_transformers", sentence_transformers_stub),
         ("psycopg2", psycopg2_stub),
         ("requests", requests_stub),
@@ -267,7 +276,7 @@ class SessionSummaryHandlerTests(unittest.TestCase):
         STUBS.responses.clear()
 
     def _run(self, body: dict) -> None:
-        asyncio.run(main._do_handle_session_ended(body))
+        main._do_handle_session_ended(body)
 
     def test_summary_targets_gateway_defaults_and_emits_report(self) -> None:
         events = [
@@ -322,68 +331,21 @@ class SessionSummaryHandlerTests(unittest.TestCase):
         self.assertEqual(STUBS.posts[0]["headers"]["Authorization"], "Bearer sum-token")
 
 
-class SlopGateHandlerTests(unittest.TestCase):
+class ToolCompletedEmbeddingOnlyTests(unittest.TestCase):
     def setUp(self) -> None:
         STUBS.posts.clear()
         STUBS.responses.clear()
 
-    def _run(self, body: dict) -> dict:
-        return asyncio.run(main._do_handle_tool_completed(body))
-
-    def test_slop_detection_round_trip_through_gateway(self) -> None:
-        STUBS.responses.append(_chat_ok('{"is_slop": true, "confidence": 0.88, "reason": "generic filler"}'))
+    def test_tool_completed_embeds_locally_and_never_calls_llm(self) -> None:
         emitted = {}
-        with mock.patch.dict(main.os.environ, {"PATH": "/usr/bin", "OPENAI_COMPAT_API_KEY": "shared"}, clear=True):
+        env = {
+            "PATH": "/usr/bin",
+            "OPENAI_COMPAT_API_KEY": "shared",
+            "JEV_API_KEY": "jev-token",
+        }
+        with mock.patch.dict(main.os.environ, env, clear=True):
             with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                status = self._run(_tool_event_body())
-        self.assertEqual(status, {"status": "SUCCESS"})
-        post = STUBS.posts[0]
-        self.assertEqual(post["url"], GATEWAY_URL)
-        self.assertEqual(post["json"]["model"], DEFAULT_MODEL)
-        self.assertEqual(post["headers"]["Authorization"], "Bearer shared")
-        self.assertEqual(post["json"]["response_format"]["type"], "json_schema")
-        self.assertEqual(emitted["topic"], "bloodbank.evt.review.slop.annotated")
-        self.assertEqual(emitted["payload"]["target_event_id"], "evt-1")
-        self.assertEqual(emitted["payload"]["confidence"], 0.88)
-        self.assertEqual(emitted["payload"]["reason"], "generic filler")
-        self.assertEqual(emitted["payload"]["cwd"], "/repo")
-
-    def test_schema_rejection_falls_back_to_bare_json_and_still_annotates(self) -> None:
-        STUBS.responses.extend([
-            FakeResponse(status_code=400, text="json_schema unsupported upstream"),
-            _chat_ok('```json\n{"is_slop": true, "confidence": 0.5, "reason": "fenced"}\n```'),
-        ])
-        emitted = {}
-        with mock.patch.dict(main.os.environ, {"PATH": "/usr/bin", "OPENAI_COMPAT_API_KEY": "shared"}, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                status = self._run(_tool_event_body())
-        self.assertEqual(status, {"status": "SUCCESS"})
-        self.assertEqual(len(STUBS.posts), 2)
-        self.assertNotIn("response_format", STUBS.posts[1]["json"])
-        self.assertEqual(emitted["payload"]["confidence"], 0.5)
-
-    def test_unparseable_content_skips_annotation_without_failing(self) -> None:
-        STUBS.responses.append(_chat_ok("definitely not json"))
-        emitted = {}
-        with mock.patch.dict(main.os.environ, {"PATH": "/usr/bin", "OPENAI_COMPAT_API_KEY": "shared"}, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                status = self._run(_tool_event_body())
-        self.assertEqual(status, {"status": "SUCCESS"})
-        self.assertEqual(emitted, {})
-
-    def test_not_slop_emits_nothing(self) -> None:
-        STUBS.responses.append(_chat_ok('{"is_slop": false, "confidence": 0.02, "reason": "real work"}'))
-        emitted = {}
-        with mock.patch.dict(main.os.environ, {"PATH": "/usr/bin", "OPENAI_COMPAT_API_KEY": "shared"}, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                self._run(_tool_event_body())
-        self.assertEqual(emitted, {})
-
-    def test_no_key_skips_llm_entirely(self) -> None:
-        emitted = {}
-        with mock.patch.dict(main.os.environ, {"PATH": "/usr/bin"}, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                status = self._run(_tool_event_body())
+                status = main._do_handle_tool_completed(_tool_event_body())
         self.assertEqual(status, {"status": "SUCCESS"})
         self.assertEqual(STUBS.posts, [])
         self.assertEqual(emitted, {})

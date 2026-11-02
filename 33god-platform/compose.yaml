@@ -290,16 +290,12 @@ services:
     container_name: enricher
     environment:
       DATABASE_URL: postgresql://candystore:${CANDYSTORE_DB_PASSWORD:-candystore}@candystore-postgres:5432/candystore
-      # LLM calls target the AutomaticAI gateway (OpenAI-compatible). Keys
-      # resolve per call (JEV_API_KEY, SUMMARY_API_KEY) with a shared
-      # OPENAI_COMPAT_API_KEY fallback; endpoints/models are env-overridable
-      # with gateway defaults.
+      # Session-end summary optionally calls the AutomaticAI gateway when
+      # SUMMARY_API_KEY / OPENAI_COMPAT_API_KEY is explicitly supplied
+      # (defaults to heuristic summary with zero LLM calls when unset).
       OPENAI_COMPAT_API_KEY: ${OPENAI_COMPAT_API_KEY:-}
-      JEV_API_KEY: ${JEV_API_KEY:-}
       SUMMARY_API_KEY: ${SUMMARY_API_KEY:-}
-      JEV_ENDPOINT: ${JEV_ENDPOINT:-}
       SUMMARY_ENDPOINT: ${SUMMARY_ENDPOINT:-}
-      JEV_MODEL: ${JEV_MODEL:-}
       SESSION_SUMMARY_MODEL: ${SESSION_SUMMARY_MODEL:-}
     ports:
       - target: 3002
