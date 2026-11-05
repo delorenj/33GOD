@@ -438,3 +438,51 @@ shows `ready`, then `current.advanced` each minute. Candybar's
 `tests/test_schedule_stream.py` parses the contract's trigger list. On the
 Holocene side, the evidence is the view open beside `GET /schedule` with the two
 agreeing through a minute boundary.
+
+## I-8 Pane-bound crank
+
+**Outcome.** A crank is bound to one live agent pane (Claude, OpenCode, Kimi,
+Codex…) and its agent session, not to a project or a tab name. The crank TUI
+lists the panes being driven. Each crank has a durable record (tab, pane, agent
+CLI, session id, workspace path, crank count, Candystore history link) and its
+own workspace of deterministic scripts. Each beat costs a short brief instead of
+a ~600k-token sweep. The Hermes economics cap on crank-beat (`777c511a009c`) is
+removed only after this lands. Until then the cap stays, and Candybar remains the
+only clock.
+**Owner:** `33god` (Grolf). pjangler owns `pj crank` (discovery, registry, TUI).
+The zcrank engine (`~/.agents/tools/jev-clairic`, delorenj/agents) has no board
+yet. Deckard's `deckard-mux/src/proc.rs` is the reference contract for pane
+attribution; it is not a runtime dependency.
+
+```yaml
+owner_project: 33god
+delegations:
+  - owner_project: pjangler
+    request: exact read-only inventory of live agent panes (pane -> pid -> agent CLI -> session id/status)
+    ticket_ref: PJAN-202
+  - owner_project: pjangler
+    request: crank registry keyed by pane + agent session, and a TUI that lists panes; migrate existing tab keys
+    ticket_ref: pending
+  - owner_project: agents
+    owner_component: jev-clairic
+    request: zcrank engine consumes the pane inventory and registry; lean beat; suggestion accept via TAB
+    ticket_ref: pending
+  - owner_project: candybar
+    request: record a Hermes economics refusal as a failure, not success
+    ticket_ref: pending
+depends_on: []
+```
+
+**Seam acceptance criteria**
+
+- `pj crank panes --json` and the engine name the same agent panes, and their
+  per-tab counts equal `deckard status` `agents=` on the live session.
+- A tab rename, or a pane moved between tabs, never changes which pane a crank
+  drives. After a zellij restart, the agent session id re-finds the pane.
+- A pane with no agent process cannot hold an enabled crank.
+- The cap is lifted only after the slices above are Done, as one recorded change
+  to the job economics.
+
+**Seam evidence (executable).** `pj crank panes --json` beside `deckard status`
+on the live `Workspace` session; Claude rows cross-checked against
+`~/.claude/sessions/<pid>.json`.
