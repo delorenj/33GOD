@@ -26,13 +26,13 @@ states:
   - phase: ready
     tp_band: unstarted
     terminal: false
-    description: AC is sufficient; eligible to pull under WIP=1.
+    description: AC is sufficient; eligible to pull.
 
   - phase: in_progress
     tp_band: started
     terminal: false
     staleness_minutes: 120
-    description: Exactly one implementer worker active (WIP=1).
+    description: One implementer worker owns this ticket; other tickets run their own workers in parallel.
 
   - phase: review
     tp_band: in_review

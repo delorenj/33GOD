@@ -17,8 +17,8 @@ bundle delivers the **G8 gate contract** (ACCEPTANCE.md G8: "Momo closes a
 real ticket with real code") as a self-contained portable Compose project
 with REAL work in every lane:
 
-- **momod** — Momo-shaped orchestration worker: WIP=1 lease discipline
-  (momo-wip-lock protocol), ticket lifecycle driver emitting the full
+- **momod** — Momo-shaped orchestration worker: board-driver lease
+  discipline (momo-wip-lock protocol; serializes board writes, not a WIP cap), ticket lifecycle driver emitting the full
   canonical event chain with ONE correlationid.
 - **board** — board adapter: a REAL local sandbox board (SQLite) speaking
   Plane's state vocabulary (Backlog/In Progress/Done), with an honest

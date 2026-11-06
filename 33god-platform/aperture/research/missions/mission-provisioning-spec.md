@@ -52,7 +52,7 @@ deliverables:
    `agent-damian-alpha` + mission banks).
 2. **Charter the SOUL**: pillars imported verbatim; client context loaded as
    standing context; decision compass cites THEIR pillars; crank doctrine +
-   reviewer≠implementer + WIP=1 baked in (our defaults, not negotiable —
+   reviewer≠implementer baked in (our defaults, not negotiable —
    they're what makes the autonomy safe).
 3. **Mint gateway token**: group per pricing tier (e.g. `lease-fast` =
    auto/fast tier only; `lease-strong` adds strong tier), quota +

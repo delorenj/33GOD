@@ -265,7 +265,7 @@ def krebs_track(x=0, y=0, current="in_progress"):
     cw = _chip_w("Working", kind="working")
     els += chip(nx[current] + (nw - cw) / 2, y + 40, "Working", kind="working")
     ny2 = ny + nh + 8
-    els.append(text(nx["in_progress"] + 22, ny2, "WIP = 1", size=SIZE_DATA,
+    els.append(text(nx["in_progress"] + 22, ny2, "parallel", size=SIZE_DATA,
                     family=MONO, color=INK_3))
     els.append(text(nx["review"] + 22, ny2, "reviewer ≠\nimplementer", size=SIZE_DATA,
                     family=MONO, color=INK_3))
