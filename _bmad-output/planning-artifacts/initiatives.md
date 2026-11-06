@@ -486,3 +486,78 @@ depends_on: []
 **Seam evidence (executable).** `pj crank panes --json` beside `deckard status`
 on the live `Workspace` session; Claude rows cross-checked against
 `~/.claude/sessions/<pid>.json`.
+
+**Pending amendment (I-9, proposed 2026-11-06, awaiting operator approval).** The
+ASM ownership study (`33god-features/asm-ownership-study.md`) recommends: bind a
+crank to the agent's session (cli + session id) and look the pane up live on each
+beat, because the ASM's design rejects a pane as agent identity; discovery moves
+from pjangler to the ASM (PJAN-202's rules become the reference, not Deckard's
+`proc.rs`, which caches by pid alone); the crank registry lives in `delorenj/crank`;
+pane input goes through `zellij-driver`; and the oracle becomes
+`asmctl agents --json --topology` instead of `deckard status`. Until approved, the
+text above stands. The cap still stays until I-8 lands.
+
+## I-9 33GOD features: formal repos, one owner per atom
+
+**Outcome.** Every 33GOD feature (crank, hindsight hooks, tab painting, target-watch…)
+lives in a formal repo and is listed in the catalog `features.toml` at this repo's
+root. Every shared building block ("atom": which panes exist, which agent is in a
+pane, its session, its live state, project identity, the clock) has exactly one
+owning repo; every other copy is provisional or retired. Agents follow the
+`33god-features` global skill while the migration runs. Crank dogfoods it first.
+
+**Decided by the operator (2026-11-06).**
+- F1: anything declared a feature is tracked in a formal repo. Crank goes first.
+- F2: `features.toml` here is the full catalog and the planning map. An install
+  disables features in its own untracked `~/.config/33god/features.toml`.
+- F3: no pins. A pin is a temporary bandage with a reason and an exit ticket;
+  features merge to main. CAND-49's pinned Hermes image is gone (CAND-52, Done).
+
+**Proposed, awaiting approval** (`33god-features/asm-ownership-study.md`): split the
+primitives. A new `delorenj/asm` (out of bloodbank) owns agent facts: process
+detection, identity, native session binding, live state and attention.
+`delorenj/zellij-driver`, repurposed with Deckard's deckard-mux code, owns
+everything that talks to zellij: topology, focus, rename, pane input. Deckard,
+pjangler, Holocene, Wingman and Flume consume. The design of features themselves
+is `33god-features/feature-packaging-design.md`.
+
+**Owner:** `33god`. Each slice is delegated to its owning repo's board.
+
+```yaml
+owner_project: 33god
+delegations:
+  - owner_project: candybar
+    request: drop the CAND-49 pinned Hermes image; crank-beat back on the native hermes runner
+    ticket_ref: CAND-52 (Done, 79ad305)
+  - owner_project: bloodbank
+    request: ASM tests never touch production Redis (throwaway redis, prefix, CI)
+    ticket_ref: BB-32
+  - owner_project: bloodbank
+    request: fix ASM identity (BB_HOOK_PARENT_PID, session_id, one row per agent, ghost purge)
+    ticket_ref: BB-33
+  - owner_project: asm (new repo, pending approval)
+    request: extract the ASM with history; asmctl --json verbs; PJAN-202 detection rules
+    ticket_ref: pending
+  - owner_project: zellij-driver (pending approval)
+    request: terminal driver lifted from deckard-mux; zdrive tabs|panes|focus|rename|send --json
+    ticket_ref: pending
+  - owner_project: crank (new repo)
+    request: create delorenj/crank as the first formal feature repo; feature.toml; adopt live candybar rows
+    ticket_ref: pending
+  - owner_project: pjangler
+    request: pj feature check (read-only) against features.toml and feature.toml
+    ticket_ref: pending
+depends_on: [I-8]
+```
+
+**Seam acceptance criteria**
+
+- Every `[feature.*]` in `features.toml` has `status = "formal"`: its repo exists,
+  has a board, a `feature.toml`, and is a 33GOD submodule.
+- Every `[atoms]` row is `owned`; `pj feature why <atom>` lists no duplicate copy
+  that is not declared provisional or `[[implements]]`.
+- No pin without a reason and an open ticket; no hardcoded job id, candybar id,
+  session name or home path in any feature (lint).
+- `asmctl doctor --json` reports no duplicate rows, no ghost rows and no empty
+  session ids on the live box.
+

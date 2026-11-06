@@ -1,0 +1,136 @@
+# 33GOD feature catalog: the full set of features in the pipeline.
+#
+# Load the `33god-features` skill before editing. Decisions (operator, 2026-11-06):
+#   F1  Every feature is tracked in a formal repo (own GitHub repo, .project.json,
+#       Plane board, BMAD, registered with pj, a 33GOD submodule). Crank dogfoods it.
+#   F2  This file is the catalog and the planning map, read or not. An install or
+#       container turns features off in its own untracked override,
+#       ~/.config/33god/features.toml:   [disable]  crank = "reason"
+#       Missing override = everything on.
+#   F3  Features track main. No version ranges. A pin is a temporary bandage with a
+#       reason and an exit ticket (`pin = { ref, reason, ticket }`), never a home.
+#
+# status:  formal     own formal repo, feature.toml at its root
+#          embedded   lives as a folder inside another repo (allowed only if the
+#                     operator approves embedded features; see I-9 decisions)
+#          scattered  pieces spread across repos and runtime dirs, no home
+#          planned    named, not built
+# `today` lists where the pieces live now; `repo` is the target home.
+# `requires` names atoms (shared building blocks); owners are in [atoms] below.
+
+schema = 1
+
+# --- Atoms: one owner each. PROPOSED owners await operator approval (I-9). -----
+# A non-owner may serve an atom only as `provisional` until the owner's interface
+# exists and passes a live differential against it.
+[atoms]
+"pane.topology"    = { owner = "zellij-driver", state = "proposed", provisional = "pjangler: pj crank panes --json" }
+"zellij.invoke"    = { owner = "zellij-driver", state = "proposed" }
+"tab.focus"        = { owner = "zellij-driver", state = "proposed" }
+"tab.rename"       = { owner = "zellij-driver", state = "proposed" }
+"pane.input"       = { owner = "zellij-driver", state = "proposed" }
+"agent.process"    = { owner = "asm", state = "proposed", provisional = "pjangler: pj crank panes --json" }
+"agent.identity"   = { owner = "asm", state = "proposed", today = "bloodbank services/agent-hooks/core/asm.py" }
+"agent.session"    = { owner = "asm", state = "proposed", provisional = "pjangler: pj crank panes --json" }
+"agent.state"      = { owner = "asm", state = "proposed", today = "bloodbank services/agent-hooks/core/asm.lua" }
+"agent.attention"  = { owner = "asm", state = "proposed" }
+"agent.hooks"      = { owner = "bloodbank", state = "owned", interface = "hooks.master.json + sync.py --check" }
+"project.identity" = { owner = "pjangler", state = "owned", interface = "registry :8764 (/v1/resolve planned)" }
+"agent.job"        = { owner = "hermes-agent", state = "owned" }
+"clock"            = { owner = "candybar", state = "owned", interface = ".candybars/*.candybar.toml" }
+"crank.binding"    = { owner = "crank", state = "proposed", note = "keyed by agent session (cli + session id); pane looked up live" }
+
+# --- Features ------------------------------------------------------------------
+
+[feature.crank]
+summary = "Periodic LLM prodding of stalled agent panes; first feature to dogfood F1"
+repo = "delorenj/crank"
+status = "scattered"
+today = ["delorenj/agents tools/jev-clairic (engine, gate, ctl, watchdog)", "pjangler src/crank (pj crank, TUI)",
+         "skillex all-skills/crank-engine", "candybar deploy/migration/manifests/crank-*",
+         "hermes profile 33god-pm (job 777c511a009c, scripts/)"]
+requires = ["agent.state", "agent.session", "pane.topology", "pane.input", "project.identity", "agent.job", "clock"]
+platforms = ["linux"]
+initiatives = ["I-8", "I-9"]
+
+[feature.jev-clairic]
+summary = "Triage, forecast and rollup jobs that share crank's attention extractors"
+repo = "delorenj/jev-clairic"
+status = "embedded"
+today = ["delorenj/agents tools/jev-clairic", "hermes profile 33god-pm", "candybar manifests"]
+requires = ["agent.job", "clock"]
+initiatives = ["I-9"]
+
+[feature.tab-status-paint]
+summary = "Paint live agent state onto zellij tab names and Orca"
+repo = "delorenj/asm"                     # proposed: an optional surface shipped by the asm repo
+status = "embedded"
+today = ["bloodbank services/agent-hooks/bin/asm-tabpaint, asm-orcapaint"]
+requires = ["agent.state", "tab.rename", "pane.topology"]
+platforms = ["linux"]
+initiatives = ["I-9"]
+
+[feature.hindsight-hooks]
+summary = "SessionStart briefing, per-prompt recall and retain-on-end from the hindsight memory service"
+repo = "delorenj/hindsight-hooks"
+status = "embedded"
+today = ["bloodbank hook-hub hindsight-* handlers", "candybar manifests hindsight-*"]
+requires = ["agent.hooks", "project.identity", "agent.session", "clock"]
+initiatives = ["I-9"]
+
+[feature.candystore-handoff]
+summary = "Inject a handoff from the last sessions across CLIs at SessionStart"
+repo = "delorenj/candystore-handoff"
+status = "embedded"
+today = ["bloodbank hook-hub concerns.py", "candystore"]
+requires = ["agent.hooks", "project.identity"]
+initiatives = ["I-9"]
+
+[feature.project-notebook-hooks]
+summary = "Sync a project's open-notebook at session start and end"
+repo = "delorenj/project-notebook-hooks"
+status = "embedded"
+today = ["bloodbank hook-hub", "skillex all-skills/project-notebook"]
+requires = ["agent.hooks", "project.identity"]
+initiatives = ["I-9"]
+
+[feature.target-watch]
+summary = "Watch client-repo targets (.watch/*.toml) and sink matches to Plane or notifications"
+repo = "delorenj/target-watch"
+status = "embedded"
+today = ["bloodbank services/target-watch", "skillex all-skills/target-watch"]
+requires = ["project.identity", "clock"]
+initiatives = ["I-9"]
+
+[feature.g33-companion]
+summary = "BMAD expansion module that enrolls a repo in 33GOD (binding, Krebs, tools)"
+repo = "delorenj/g33"
+status = "embedded"
+today = ["skillex all-skills/g33-33god-integration", "pjangler src/bmad/companion.ts, src/parity/rules.ts"]
+requires = ["project.identity"]
+initiatives = ["I-4", "I-9"]
+
+[feature.git-guards]
+summary = "Global pre-commit/pre-push/post-commit guards and `git unpushed`"
+repo = "delorenj/git-guards"
+status = "embedded"
+today = ["delorenj/agents git/hooks, bin/git-unpushed", "~/.config/git (core.hooksPath)"]
+requires = []
+initiatives = ["I-9"]
+
+[feature.agent-pane-resurrection]
+summary = "Launcher that keeps `claude -c` as the pane's parent so a resurrected pane resumes its session"
+repo = "delorenj/agent-pane-resurrection"
+status = "embedded"
+today = ["dotfiles ~/.config/zshyzsh/zellij/scripts/agent-pane"]
+requires = ["pane.topology"]
+platforms = ["linux"]
+initiatives = ["I-9"]
+
+[feature.skill-reminders]
+summary = "Hooks that remind agents of skills and lint skill files"
+repo = "delorenj/skill-reminders"
+status = "embedded"
+today = ["agent config hooks", "skillex all-skills", "pjangler parity rules"]
+requires = ["agent.hooks"]
+initiatives = ["I-9"]
