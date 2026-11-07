@@ -449,10 +449,11 @@ own workspace of deterministic scripts. Each beat costs a short brief instead of
 a ~600k-token sweep. The Hermes economics cap on crank-beat (`777c511a009c`) is
 removed only after this lands. Until then the cap stays, and Candybar remains the
 only clock.
-**Owner:** `33god` (Grolf). pjangler owns `pj crank` (discovery, registry, TUI).
-The zcrank engine (`~/.agents/tools/jev-clairic`, delorenj/agents) has no board
-yet. Deckard's `deckard-mux/src/proc.rs` is the reference contract for pane
-attribution; it is not a runtime dependency.
+**Owner:** `33god` (Grolf). ASM owns agent discovery, identity, session and state;
+the terminal driver owns topology and terminal actions. `delorenj/crank` owns the
+crank registry and engine; pjangler remains the `pj crank` CLI/TUI control surface.
+These boundaries were approved on 2026-11-07; implementation has not migrated yet.
+PJAN-202 is the provisional read-only provider until the owner APIs land.
 
 ```yaml
 owner_project: 33god
@@ -460,12 +461,11 @@ delegations:
   - owner_project: pjangler
     request: exact read-only inventory of live agent panes (pane -> pid -> agent CLI -> session id/status)
     ticket_ref: PJAN-202
-  - owner_project: pjangler
-    request: crank registry keyed by pane + agent session, and a TUI that lists panes; migrate existing tab keys
+  - owner_project: crank
+    request: crank-owned bindings to agent sessions and a lean engine; migrate existing tab keys
     ticket_ref: pending
-  - owner_project: agents
-    owner_component: jev-clairic
-    request: zcrank engine consumes the pane inventory and registry; lean beat; suggestion accept via TAB
+  - owner_project: pjangler
+    request: pj crank wraps the crank-owned registry and ASM inventory; TUI lists the driven agents and current panes
     ticket_ref: pending
   - owner_project: candybar
     request: record a Hermes economics refusal as a failure, not success
@@ -475,8 +475,9 @@ depends_on: []
 
 **Seam acceptance criteria**
 
-- `pj crank panes --json` and the engine name the same agent panes, and their
-  per-tab counts equal `deckard status` `agents=` on the live session.
+- `pj crank panes --json`, the engine and Deckard agree with the ASM inventory
+  joined to terminal topology. Provisional providers remain until owner APIs land;
+  an independent process/session check validates the ASM, not just its consumers.
 - A tab rename, or a pane moved between tabs, never changes which pane a crank
   drives. After a zellij restart, the agent session id re-finds the pane.
 - A pane with no agent process cannot hold an enabled crank.
@@ -487,39 +488,54 @@ depends_on: []
 on the live `Workspace` session; Claude rows cross-checked against
 `~/.claude/sessions/<pid>.json`.
 
-**Pending amendment (I-9, proposed 2026-11-06, awaiting operator approval).** The
-ASM ownership study (`33god-features/asm-ownership-study.md`) recommends: bind a
-crank to the agent's session (cli + session id) and look the pane up live on each
-beat, because the ASM's design rejects a pane as agent identity; discovery moves
-from pjangler to the ASM (PJAN-202's rules become the reference, not Deckard's
-`proc.rs`, which caches by pid alone); the crank registry lives in `delorenj/crank`;
-pane input goes through `zellij-driver`; and the oracle becomes
-`asmctl agents --json --topology` instead of `deckard status`. Until approved, the
-text above stands. The cap still stays until I-8 lands.
+**Approved amendment (2026-11-07).** Bind crank to agent identity/session, with the
+pane treated as its current location. Session rotation/resume and process reuse
+must be resolved explicitly in the architecture before writes migrate; never
+silently retarget a binding by cwd or pane alone. The registry belongs to crank,
+not pjangler. ASM and terminal ownership are split; Deckard requires ASM, with no
+second fallback state fold. I-9 carries shared foundation outcomes; I-8 depends
+only on its required contracts, not on completion of every I-9 consumer migration.
 
 ## I-9 33GOD features: formal repos, one owner per atom
 
-**Outcome.** Every 33GOD feature (crank, hindsight hooks, tab painting, target-watch…)
-lives in a formal repo and is listed in the catalog `features.toml` at this repo's
-root. Every shared building block ("atom": which panes exist, which agent is in a
-pane, its session, its live state, project identity, the clock) has exactly one
-owning repo; every other copy is provisional or retired. Agents follow the
-`33god-features` global skill while the migration runs. Crank dogfoods it first.
+**Outcome.** Cross-repo capabilities that become hard to maintain or extend can
+be promoted to features with a dedicated formal hub repo, listed in root
+`features.toml`. Single-repo functionality remains a component; it does not need
+a feature repo. The hub binds all participant parts through contracts, links and
+seam acceptance; it does not absorb their implementation backlogs. Every shared
+building block ("atom") has exactly one owning repo. Agents follow the
+`33god-features` global skill. Crank is the first promoted feature; the initial
+survey's other entries are candidates, not eleven approved repo extractions.
 
 **Decided by the operator (2026-11-06).**
-- F1: anything declared a feature is tracked in a formal repo. Crank goes first.
+- F1 (clarified 2026-11-07): a feature is a cross-repo capability promoted because
+  its parts are hard to maintain/extend. Its dedicated formal repo is the tracked
+  hub; single-repo work is a component. Crank goes first and owns its registry;
+  pjangler's CLI/TUI integration is a participating part of the feature.
 - F2: `features.toml` here is the full catalog and the planning map. An install
   disables features in its own untracked `~/.config/33god/features.toml`.
 - F3: no pins. A pin is a temporary bandage with a reason and an exit ticket;
   features merge to main. CAND-49's pinned Hermes image is gone (CAND-52, Done).
 
-**Proposed, awaiting approval** (`33god-features/asm-ownership-study.md`): split the
-primitives. A new `delorenj/asm` (out of bloodbank) owns agent facts: process
-detection, identity, native session binding, live state and attention.
-`delorenj/zellij-driver`, repurposed with Deckard's deckard-mux code, owns
-everything that talks to zellij: topology, focus, rename, pane input. Deckard,
-pjangler, Holocene, Wingman and Flume consume. The design of features themselves
-is `33god-features/feature-packaging-design.md`.
+**Approved direction (2026-11-07)** (study:
+`33god-features/asm-ownership-study.md`): split the primitives. ASM owns agent facts;
+a separate terminal driver owns topology, focus, rename and pane input. The
+operator delegated repo choice; the architect selected **new
+`delorenj/terminal-driver`**, not repurposing `zellij-driver`. Perth is implemented
+code with intent/snapshot storage, an installed `zdrive` CLI and an Agentboard
+bridge contract; its dormant service is not evidence of safe replacement. Leave
+it unchanged and do not reuse `zdrive`. Extract neutral terminal code from
+Deckard without a reverse dependency on deckard-core; keep agent detection in ASM.
+Start with Zellij only. Deckard requires ASM: retire its
+second state fold rather than preserve a no-Redis fallback. pjangler, Holocene,
+Wingman and Flume consume. These are target boundaries, not deployment claims.
+The initial feature design remains research input, not a finalized BMAD architecture.
+
+**BMAD next:** a scoped platform PRD for I-9, then shared architecture and a
+contract/migration review. Reuse the survey and recorded decisions; do not restart
+discovery or replace unrelated platform documents. Child PMs own implementation
+epics/stories, with detail generated just in time for each migration wave. Explain
+the method as it is used: learning BMAD is an explicit secondary goal.
 
 **Owner:** `33god`. Each slice is delegated to its owning repo's board.
 
@@ -535,11 +551,11 @@ delegations:
   - owner_project: bloodbank
     request: fix ASM identity (BB_HOOK_PARENT_PID, session_id, one row per agent, ghost purge)
     ticket_ref: BB-33
-  - owner_project: asm (new repo, pending approval)
+  - owner_project: asm (new repo, split approved; extraction pending)
     request: extract the ASM with history; asmctl --json verbs; PJAN-202 detection rules
     ticket_ref: pending
-  - owner_project: zellij-driver (pending approval)
-    request: terminal driver lifted from deckard-mux; zdrive tabs|panes|focus|rename|send --json
+  - owner_project: terminal-driver (new component repo; creation pending)
+    request: terminal-only library/API extracted from deckard-mux with neutral types; no agent logic or deckard-core dependency
     ticket_ref: pending
   - owner_project: crank (new repo)
     request: create delorenj/crank as the first formal feature repo; feature.toml; adopt live candybar rows
@@ -547,13 +563,15 @@ delegations:
   - owner_project: pjangler
     request: pj feature check (read-only) against features.toml and feature.toml
     ticket_ref: pending
-depends_on: [I-8]
+depends_on: []
+related_initiatives: [I-8]
 ```
 
 **Seam acceptance criteria**
 
-- Every `[feature.*]` in `features.toml` has `status = "formal"`: its repo exists,
-  has a board, a `feature.toml`, and is a 33GOD submodule.
+- Every promoted `[feature.*]` in `features.toml` has a dedicated formal hub;
+  `[candidate.*]` entries are not automatically promoted. The hub links participant
+  contributions without taking ownership of their component internals.
 - Every `[atoms]` row is `owned`; `pj feature why <atom>` lists no duplicate copy
   that is not declared provisional or `[[implements]]`.
 - No pin without a reason and an open ticket; no hardcoded job id, candybar id,

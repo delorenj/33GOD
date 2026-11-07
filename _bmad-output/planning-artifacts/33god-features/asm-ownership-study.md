@@ -1,6 +1,15 @@
 # ASM ownership study (2026-11-06)
 
-Status: **proposal, awaiting operator decisions** (see the end). Initiative: I-9 in `../initiatives.md`.
+Status: **research input, partially accepted 2026-11-07; not a finalized BMAD architecture**.
+Initiative: I-9 in `../initiatives.md`.
+
+Operator updates supersede recommendations below: the ASM/terminal split is
+approved; Deckard requires ASM (no fallback state fold); single-repo functionality
+is a component, while a promoted cross-repo feature gets a dedicated hub repo;
+crank owns its registry/domain and tracks the pjangler integration as a participant.
+Terminal repository selection is delegated to the architect. Remaining semantics
+and the deployment/migration protocol belong in the scoped PRD and architecture.
+The original study is retained below as dated evidence, not current authority.
 
 Method: three read-only readers (ASM internals, every consumer, intended ownership in the docs) and one judge told to try to refute the operator's hunch that the ASM is the rightful owner. Reader reports are in `evidence/`. Key defects were re-verified live afterwards (publisher imports the ASM in-process; asm.py never reads `BB_HOOK_PARENT_PID`; ghost rows `asm:a:*:x:22822.11015` exist; `session_id` is empty on every row).
 
