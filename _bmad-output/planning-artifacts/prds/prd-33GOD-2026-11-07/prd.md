@@ -34,7 +34,7 @@ I-9 succeeds, and what observable difference would show the migration paid off.
 ## Source inputs
 
 - [Initiatives I-8 and I-9](../../initiatives.md)
-- [Feature catalog](../../../../../features.toml)
+- [Feature catalog](../../../../features.toml)
 - [ASM ownership study](../../33god-features/asm-ownership-study.md)
 - [Initial packaging research](../../33god-features/feature-packaging-design.md)
 - [Director Rule](../../director-rule-plan.md)
