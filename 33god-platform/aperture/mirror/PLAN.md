@@ -163,6 +163,17 @@ Decision 5 is binding: same stack, CLI, hooks and bank rules as big-chungus, wit
 > - W8-2 then does the brew install, `vinyl setup --server <big-chungus MagicDNS>:7733` and `brew services start`, with Damian at the GUI for TCC.
 > - Step 2, the macOS port of vinyld/waxd, is a HeyMa epic. Damian's audio stays on big-chungus's server until it lands.
 > - Interim limit: `session_lock` serves one dictation session at a time, so if Jarad and Damian dictate together, one of them gets `busy`.
+> - **Step 1 DONE 2026-11-10 (heyma-b6).**
+>   - Commits: vinyl main 6ea1490, 6ea3faa, 19e31fa.
+>   - big-chungus runs deb 0.4.1.1 (hotfix tag v0.4.1.1 on top of 81ed5ec); vinyld-serve was restarted 13:39:55.
+>   - `damian-studio` token is at the Mac's `~/.config/vinyl/token` (0600); its sha256 prefix matches the server's `clients.d` copy (orchestrator check).
+>   - Tests: 452 OK, including 15 new ones.
+>   - Live probe results: client token, server token and `damian-studio` get `ready`; revoked and wrong tokens get `unauthorized`.
+> - **BLOCKER for W8-2 (Jarad + Damian):**
+>   - The Mac is on Damian's tailnet `tuxedo-morpho.ts.net` and is shared *into* burro-salmon, but big-chungus is not shared to him. Sharing goes one way only.
+>   - Result: `big-chungus.burro-salmon.ts.net` does not resolve from the Mac, and `nc` fails.
+>   - Fix: Jarad shares the big-chungus machine with Damian in the Tailscale admin console, and Damian accepts.
+>   - Check from the Mac: `nc -z -G 5 big-chungus.burro-salmon.ts.net 7733`.
 >
 > *Original question:* under the one-33GOD-per-network rule Damian's HeyMa should not depend on big-chungus, but Wax + the Vinyl server have no Mac port. Options: (a) Damian's client pairs to big-chungus's server — requires sharing its pairing token, which is that server's ONLY auth (lane flags this), and his audio leaves his network; (b) port vinyld/waxd to macOS (Apple Silicon transcription, launchd) as a HeyMa-lane epic, Damian's dictation waits; (c) (a) now with a per-client token added to the Vinyl server first, then (b). Recommended: (c).
 
