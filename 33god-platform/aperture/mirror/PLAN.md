@@ -106,6 +106,10 @@ Executors: **`aai`** = local subagent on big-chungus driving the Mac over ssh (a
 
 ### W4 — PJangler registry + board strategy
 
+Damian's local Plane (plane.local) is the canonical 33GOD board for his
+machine; he keeps a seat on Jarad's plane.delo.sh for cross-peer initiatives.
+Acceptance: `px <project-scoped command>` succeeds against the local Plane.
+
 | Task | Domain | Executor | Steps | Verification proof | Blocked on |
 |---|---|---|---|---|---|
 | W4-1 | secrets | codex | Rotate the pjangler registry Postgres password (exposed in survey tool output — treat as compromised); store the new value ONLY in the interim 0600 store; update runner config via the resolver; **coordinate the change with all dependents and reconnect-verify each**; never in a plist or tracked file. | Old password rejected, new accepted on `18765`; no value in any tracked file or plist; dependent services reconnected. | W0-5 |
@@ -212,6 +216,22 @@ All items are `aai`-executor changes committed + pushed to the owning repo's mai
 - **New competing clocks** — no launchd `StartInterval`/`StartCalendarInterval`, cron, Hermes recurring jobs (unless `--scheduler external`), or n8n Schedule Triggers. Candybar only.
 
 ## 5. Owner actions
+
+### Resolved by operator (2026-11-10, mid-W0)
+
+- **W8-2 TCC grants + W9-2 Resend sender**: one interactive script —
+  `scripts/damian-setup.sh` in this directory (also at `~/damian-setup.sh` on
+  the Mac). Damian runs it once; it does the TCC permission panes, the Resend
+  sender check (delo.sh is already a verified domain — he confirms it in the
+  Resend UI), and the never-sleep policy. `--dry-run` prints every step.
+- **lamp-skills**: stays stopped; keep the volume as backup. (Damian, 2026-11-10)
+- **Mac sleep policy**: NEVER sleep — `pmset sleep 0, womp 1, autorestart 1`;
+  applied by the setup script (Damian) or any installer with sudo. (Jarad, 2026-11-10)
+- **Plane**: his local Mac Plane is the **canonical 33GOD instance**; he also keeps
+  a seat on Jarad's plane.delo.sh. W4-3 = keep + wire `px`/pilot to `plane.local`;
+  **acceptance: a project-scoped `px` command succeeds on the Mac.**
+- **Event stores**: 1-1 mapped by network/tailnet — each machine runs its own
+  singleton (Damian's on the Mac, Jarad's on big-chungus). No federation.
 
 ### Damian-only (hands-on-keyboard / his accounts)
 
