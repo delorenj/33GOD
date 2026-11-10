@@ -158,7 +158,13 @@ Decision 5 is binding: same stack, CLI, hooks and bank rules as big-chungus, wit
 > 4. Mic + Accessibility granted by a person at the GUI at first dictation (`~/damian-setup.sh` step A).
 > Don'ts: no direct-installer tarball (`install.sh`, `~/.local/share/vinyl`) on a Brew Mac, never both; never hand-copy HeyMa.app. **Wax (waxd/transcribe) and the Vinyl server are Linux-only today (big-chungus); there is no Mac install of them.** Refs: `~/HeyMa/components/vinyl/skills/vinyl/references/packaging-and-release.md`, tap `~/code/homebrew-tap` (CI tests formula+cask on Apple Silicon + Intel).
 >
-> **OPEN — Jarad decision before W8-2:** under the one-33GOD-per-network rule Damian's HeyMa should not depend on big-chungus, but Wax + the Vinyl server have no Mac port. Options: (a) Damian's client pairs to big-chungus's server — requires sharing its pairing token, which is that server's ONLY auth (lane flags this), and his audio leaves his network; (b) port vinyld/waxd to macOS (Apple Silicon transcription, launchd) as a HeyMa-lane epic, Damian's dictation waits; (c) (a) now with a per-client token added to the Vinyl server first, then (b). Recommended: (c).
+> **RESOLVED 2026-11-10 — Jarad chose (c).**
+> - Step 1 is owned by the HeyMa packaging lane (heyma-b6) and was requested on 2026-11-10. The work: named per-client tokens on `vinyl serve` (one file per client, revocable without a restart; `server.token` keeps working), mint/list/revoke commands, tests, a bumped deb on big-chungus, and a `damian-studio` token scp'd straight to the Mac as `~/.config/vinyl/token` (0600). The token never goes in chat or git.
+> - W8-2 then does the brew install, `vinyl setup --server <big-chungus MagicDNS>:7733` and `brew services start`, with Damian at the GUI for TCC.
+> - Step 2, the macOS port of vinyld/waxd, is a HeyMa epic. Damian's audio stays on big-chungus's server until it lands.
+> - Interim limit: `session_lock` serves one dictation session at a time, so if Jarad and Damian dictate together, one of them gets `busy`.
+>
+> *Original question:* under the one-33GOD-per-network rule Damian's HeyMa should not depend on big-chungus, but Wax + the Vinyl server have no Mac port. Options: (a) Damian's client pairs to big-chungus's server — requires sharing its pairing token, which is that server's ONLY auth (lane flags this), and his audio leaves his network; (b) port vinyld/waxd to macOS (Apple Silicon transcription, launchd) as a HeyMa-lane epic, Damian's dictation waits; (c) (a) now with a per-client token added to the Vinyl server first, then (b). Recommended: (c).
 
 | Task | Domain | Executor | Steps | Verification proof | Blocked on |
 |---|---|---|---|---|---|
