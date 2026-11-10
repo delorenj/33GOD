@@ -1,0 +1,149 @@
+# 33GOD Candystore for the Mac peer install (PLAN.md W3-1).
+#
+# Standalone compose project "33god-store": candystore-postgres + candystore +
+# candystore-daprd, the same three services as 33god-platform/compose.yaml
+# (and candystore/compose.yml), attached to the Bloodbank bus that W2-2 brought
+# up as project "33god-bus" (network `bloodbank-network`, NATS alias `nats`,
+# placement alias `dapr-placement`).
+#
+# Like compose.bus.yaml this is NOT merged onto the main compose.yaml (that
+# file's networks/volumes are `external: true`, host-created on big-chungus).
+# compose.yaml and validate-compose.py stay untouched.
+#
+# Deviations from 33god-platform/compose.yaml (everything else identical):
+#   - DB password is NOT the literal "candystore": it comes from
+#     ${CANDYSTORE_DB_PASSWORD}, injected by env-op-resolve from the Mac's
+#     interim store (see store.env.op beside this file). `:?` makes compose
+#     refuse to render without it, so a bare `up` can never recreate the stack
+#     with an empty or default password.
+#   - candystore app is a LOCAL arm64 build of the pinned candystore submodule
+#     (tag candystore:mac-<pin>@<local index digest>), built once by hand;
+#     `pull_policy: never` and no `build:` section, so `up` never rebuilds or
+#     pulls it. Rebuild recipe (from the pinned checkout, arm64):
+#       docker --context colima build --platform linux/arm64 \
+#         -t candystore:mac-<pin> ~/code/33GOD/candystore
+#     then update the digest here.
+#   - pgvector and daprd pinned tag@digest: the exact digests big-chungus runs
+#     (both indexes carry linux/arm64).
+#   - no `proxy` network (no Traefik on the Mac); the API stays loopback-only.
+#   - candystore-internal and the data volume are project-owned, not external.
+#     The network keeps the name `candystore-internal` so later consumers
+#     lifted from the main compose (enricher, W8-3) attach unchanged.
+#   - no depends_on nats-init/dapr-placement: those live in project 33god-bus.
+#     Start 33god-bus first; daprd retries until NATS answers.
+#   - bind source for dapr-components defaults to ${HOME}/code/33GOD.
+#
+# Usage on the Mac (always pin the context; the Docker default there is
+# desktop-linux, which must not be touched):
+#   cd ~/.local/share/33god/candystore
+#   env-op-resolve exec --env-file store.env.op -- \
+#     /usr/local/bin/docker --context colima compose -p 33god-store \
+#       -f compose.store.yaml up -d candystore-postgres   # then candystore, then candystore-daprd
+#
+# daprd's jetstream component (candystore/dapr-components/pubsub.yaml) creates
+# the durable push consumer `candystore-events` (queue group `candystore`,
+# filter `bloodbank.evt.>`, deliver all) on BLOODBANK_EVENTS by itself, exactly
+# as on big-chungus. Do not pre-create it.
+
+name: 33god-store
+
+services:
+  candystore-postgres:
+    image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
+    container_name: candystore-postgres
+    environment:
+      POSTGRES_USER: candystore
+      POSTGRES_PASSWORD: ${CANDYSTORE_DB_PASSWORD:?CANDYSTORE_DB_PASSWORD must come from env-op-resolve}
+      POSTGRES_DB: candystore
+    volumes:
+      - candystore-pgdata:/var/lib/postgresql/data
+    ports:
+      - target: 5432
+        published: "${CANDYSTORE_POSTGRES_PORT:-5434}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U candystore -d candystore"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      candystore-internal:
+        aliases: [postgres]
+    restart: unless-stopped
+
+  candystore:
+    # Local arm64 build of candystore@1ec755a (no registry; the digest is the
+    # containerd image-store index digest, which resolves locally).
+    image: candystore:mac-1ec755a@sha256:dfc59964e64a8852805b278927ceac5bb732d92e793bbdbfc71d0ba659dc1a4d
+    pull_policy: never
+    container_name: candystore
+    environment:
+      APP_PORT: "3001"
+      APP_HOST: 0.0.0.0
+      DATABASE_URL: postgresql://candystore:${CANDYSTORE_DB_PASSWORD:?CANDYSTORE_DB_PASSWORD must come from env-op-resolve}@candystore-postgres:5432/candystore
+      SUBSCRIBE_PUBSUB: bloodbank-pubsub
+      SUBSCRIBE_TOPIC: bloodbank.evt.>
+      SUBSCRIBE_ROUTE: /events/all
+    ports:
+      - target: 3001
+        published: "${CANDYSTORE_PORT:-8683}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      candystore-postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/readyz', timeout=3)"
+      interval: 30s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      candystore-internal:
+        aliases: [candystore-app]
+    restart: unless-stopped
+
+  candystore-daprd:
+    image: daprio/daprd:1.13.0@sha256:286806d0eac7edc37c310427e7813da403257f51395eeec912cdd2889f9a9b37
+    container_name: candystore-daprd
+    command:
+      - ./daprd
+      - --app-id=candystore
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --app-port=3001
+      - --app-channel-address=candystore-app
+      - --app-protocol=http
+      - --resources-path=/components
+      - --placement-host-address=dapr-placement:50005
+      - --log-level=info
+    volumes:
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-${HOME}/code/33GOD}/candystore/dapr-components
+        target: /components
+        read_only: true
+    ports:
+      - target: 3500
+        published: "${CANDYSTORE_DAPR_HTTP_PORT:-3504}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    depends_on:
+      candystore:
+        condition: service_healthy
+    networks: [candystore-internal, bloodbank-network]
+    restart: unless-stopped
+
+networks:
+  candystore-internal:
+    name: candystore-internal
+  bloodbank-network:
+    external: true
+    name: bloodbank-network
+
+volumes:
+  candystore-pgdata:
+    name: 33god-store_candystore-pgdata
