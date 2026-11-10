@@ -1,0 +1,100 @@
+# 33GOD Bloodbank bus substrate for the Mac peer install (PLAN.md W2-2).
+#
+# Standalone compose project "33god-bus", subset of 33god-platform/compose.yaml:
+#   bloodbank-nats, nats-init, dapr-placement.
+# It is NOT an overlay merged onto the main compose.yaml: that file's networks
+# and volumes are `external: true` (host-created, Linux/G1 era). This file
+# declares its own project-scoped network + volume instead, and adds nothing
+# Linux-only (no host.docker.internal host-gateway, no /proc or device mounts).
+#
+# Deviations from 33god-platform/compose.yaml (everything else identical):
+#   - nats started without -DV (debug+trace logging; Colima wedged once under
+#     proxy load, and verbose logging on a 12-CPU shared VM buys nothing).
+#   - all published ports bound to 127.0.0.1 (the main file binds 0.0.0.0).
+#   - network and data volume are project-owned, not external. The network keeps
+#     the name `bloodbank-network` so W3+ services taken from the main compose
+#     (which reference it as external) attach unchanged.
+#   - images pinned tag@digest (digests verified to carry linux/arm64).
+#
+# Usage (always pin the context; the Docker default on this Mac is desktop-linux):
+#   docker --context colima compose -p 33god-bus \
+#     -f ~/33god-migration/2026-11-10/w2-2/compose.bus.yaml up -d bloodbank-nats
+#   ... then nats-init, then dapr-placement (one at a time).
+# No secrets live here: NATS is unauthenticated on loopback, like big-chungus.
+
+name: 33god-bus
+
+services:
+  bloodbank-nats:
+    image: nats:2.10-alpine@sha256:b83efabe3e7def1e0a4a31ec6e078999bb17c80363f881df35edc70fcb6bb927
+    container_name: bloodbank-nats
+    command: ["-js", "-sd", "/data/jetstream", "-m", "8222"]
+    ports:
+      - target: 4222
+        published: "${BLOODBANK_NATS_CLIENT_PORT:-4222}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+      - target: 8222
+        published: "${BLOODBANK_NATS_MONITOR_PORT:-8222}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    volumes:
+      - bloodbank-nats-data:/data/jetstream
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet --timeout=3 http://127.0.0.1:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      bloodbank-network:
+        aliases: [nats]
+    restart: unless-stopped
+
+  nats-init:
+    image: natsio/nats-box:0.14.5@sha256:0784ab710aefaf6ef037ed797ee7dcde613c6ad208c4dbff1945fc7c1b5b5375
+    container_name: bloodbank-nats-init
+    depends_on:
+      bloodbank-nats:
+        condition: service_healthy
+    environment:
+      NATS_URL: nats://nats:4222
+    volumes:
+      # Read-only, from the Mac's 33GOD checkout (under /Users/<user>, which
+      # Colima mounts via virtiofs). Same files as big-chungus (md5-verified).
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-${HOME}/code/33GOD}/bloodbank/compose/nats/streams.json
+        target: /work/streams.json
+        read_only: true
+      - type: bind
+        source: ${GOD_SOURCE_ROOT:-${HOME}/code/33GOD}/bloodbank/compose/nats/init.sh
+        target: /work/init.sh
+        read_only: true
+    entrypoint: ["/bin/sh", "/work/init.sh"]
+    networks: [bloodbank-network]
+    restart: "no"
+
+  dapr-placement:
+    image: daprio/dapr:1.13.0@sha256:0d9dbe22d81dad91f3cde6f85a31ad0185ceaa55f82a4ba29cc46020f31a79d4
+    container_name: bloodbank-dapr-placement
+    # --healthz-port 8080 is the placement default; stated so the probe in the
+    # evidence is not an assumption. The image is distroless (no shell), so a
+    # compose healthcheck cannot exec; health is probed from a sibling container.
+    command: ["./placement", "--port", "50005", "--healthz-port", "8080"]
+    ports:
+      - target: 50005
+        published: "${BLOODBANK_DAPR_PLACEMENT_PORT:-50005}"
+        host_ip: 127.0.0.1
+        protocol: tcp
+    networks:
+      bloodbank-network:
+        aliases: [dapr-placement]
+    restart: unless-stopped
+
+networks:
+  bloodbank-network:
+    name: bloodbank-network
+
+volumes:
+  bloodbank-nats-data:
+    name: 33god-bus_bloodbank-nats-data
