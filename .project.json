@@ -1,7 +1,7 @@
 {
   "project_name": "33GOD",
   "project_description": "",
-  "repo_path": "/home/delorenj/code/33GOD",
+  "repo_path": "~/code/33GOD",
   "ticket_provider": {
     "type": "plane",
     "workspace": "33god",
