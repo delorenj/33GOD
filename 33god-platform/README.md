@@ -54,7 +54,9 @@ configuration boundaries:
 - Holocene web reads the optional component-owned
   `holocene/.env.holocene-web`; sensitive inputs originate from its ignored
   environment/1Password-reference workflow. The host API unit owns
-  `CANDYSTORE_API_URL` and related host-service configuration.
+  `CANDYSTORE_API_URL` and related host-service configuration; unset, holocene-api
+  falls back to `CANDYSTORE_URL`, then the `127.0.0.1:8683` port contract that
+  `scripts/validate-compose.py` pins for the `candystore-app` publish.
 - PJangler registry/provider settings remain host-scoped and are not forwarded
   wholesale into the tool containers.
 

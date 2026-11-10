@@ -44,7 +44,7 @@ The production container bind-mounts source and rebuilds on start, which updates
 
 ## Required Local Configuration
 
-For the current host API plus standalone Candystore topology, set `CANDYSTORE_API_URL=http://127.0.0.1:8683`. Do not rely on the default `http://candystore:8080`. Confirm Redis, Hermes registry, systemd bus, Prometheus, and Traefik paths for the host.
+For the current host API plus standalone Candystore topology no setting is needed: holocene-api resolves `CANDYSTORE_API_URL`, then `CANDYSTORE_URL`, then `http://127.0.0.1:8683` (the cross-peer Candystore port contract, `candystore/README.md` "Port contract"; `apps/api/src/candystore-url.ts`). Set one only for a non-default store. Confirm Redis, Hermes registry, systemd bus, Prometheus, and Traefik paths for the host.
 
 ## Security Gate
 

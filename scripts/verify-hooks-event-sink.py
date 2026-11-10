@@ -107,10 +107,20 @@ def wait_json(url: str, predicate, timeout: float = 20):
     raise TimeoutError(f"Acceptance condition not reached: {urllib.parse.urlparse(url).path}")
 
 
+CANDYSTORE_DEFAULT_URL = "http://127.0.0.1:8683"  # the cross-peer loopback port contract
+
+
+def candystore_default(env=None) -> str:
+    """$CANDYSTORE_URL, then the 8683 contract; a blank value falls back."""
+    env = os.environ if env is None else env
+    return (env.get("CANDYSTORE_URL") or "").strip().rstrip("/") or CANDYSTORE_DEFAULT_URL
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--api", default="http://localhost:4000")
-    parser.add_argument("--candystore", default="http://localhost:8683")
+    parser.add_argument("--candystore", default=candystore_default(),
+                        help="Candystore API base (default: $CANDYSTORE_URL, then %s)" % CANDYSTORE_DEFAULT_URL)
     parser.add_argument("--socket", default=f"/run/user/{os.getuid()}/33god/hook-hub.sock")
     parser.add_argument("--cli", default="codex")
     parser.add_argument("--native", default="PreToolUse")
