@@ -147,6 +147,15 @@ Decision 5 is binding: same stack, CLI, hooks and bank rules as big-chungus, wit
 
 ### W8 — HeyMa pipeline + single n8n + enrichment
 
+> **HeyMa packaging lane input (heyma-b6, 2026-11-10) — W8-2 follows this, not a source install:**
+> 1. `brew install delorenj/tap/vinyl-client` (always the full `delorenj/tap/...` name; Homebrew 7 refuses untrusted taps otherwise).
+> 2. Pair: `mkdir -p ~/.config/vinyl`, install a pairing token as `~/.config/vinyl/token`, `vinyl setup --server <vinyl server>:7733`, `brew services start vinyl-client` (LaunchAgent `sh.delo.vinyl.client`).
+> 3. `brew install --cask delorenj/tap/heyma` (0.4.4 menu-bar/settings app, bundle `sh.delo.heyma`, /Applications; the cask clears quarantine — no `--no-quarantine`).
+> 4. Mic + Accessibility granted by a person at the GUI at first dictation (`~/damian-setup.sh` step A).
+> Don'ts: no direct-installer tarball (`install.sh`, `~/.local/share/vinyl`) on a Brew Mac, never both; never hand-copy HeyMa.app. **Wax (waxd/transcribe) and the Vinyl server are Linux-only today (big-chungus); there is no Mac install of them.** Refs: `~/HeyMa/components/vinyl/skills/vinyl/references/packaging-and-release.md`, tap `~/code/homebrew-tap` (CI tests formula+cask on Apple Silicon + Intel).
+>
+> **OPEN — Jarad decision before W8-2:** under the one-33GOD-per-network rule Damian's HeyMa should not depend on big-chungus, but Wax + the Vinyl server have no Mac port. Options: (a) Damian's client pairs to big-chungus's server — requires sharing its pairing token, which is that server's ONLY auth (lane flags this), and his audio leaves his network; (b) port vinyld/waxd to macOS (Apple Silicon transcription, launchd) as a HeyMa-lane epic, Damian's dictation waits; (c) (a) now with a per-client token added to the Vinyl server first, then (b). Recommended: (c).
+
 | Task | Domain | Executor | Steps | Verification proof | Blocked on |
 |---|---|---|---|---|---|
 | W8-1 | n8n | owner | **Decision:** the ONE n8n — recommend keeping `n8n-foundation` (:5678, 2.44.4). **Guardrail (Codex high):** the 2.18.4 parity pin is OLDER than foundation's 2.44.4 — never run an older image against foundation's data volume (no assumed safe downgrade); foundation's data volume and encryption key are preserved regardless; G2's workflows are inventoried before its retirement (W0-4 records them) and only Damian-authorized workflows migrate, rehearsed first on a compatible isolated instance if parity matters. No Schedule Triggers either way (Candybar owns recurrence; webhooks only). | Decision recorded; foundation data + key verified preserved; chosen instance healthy post-W0 migration. | W0-3 |
