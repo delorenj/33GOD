@@ -402,6 +402,16 @@ dogfood_target: Damien
 depends_on: []
 ```
 
+### I-6.1 Damian Studio peer install (source mirror)
+
+Install a full 33GOD peer on Damian's Mac Studio (tuxedo-morpho.ts.net) from
+source, replacing Docker Desktop with headless Colima and migrating Damian's
+five existing stacks with data intact. Interim `secrets.env` store (0600,
+outside repos) stands in for deferred 1Password; Jev is used only as a remote
+LiteLLM pass-through with Damian's `damian-studio` key, all other inference via
+the AutomaticAI gateway. Plan and evidence: `33god-platform/aperture/mirror/PLAN.md`
+(+ `survey-2026-11-10.json`).
+
 ## I-7 Candybar schedule view in Holocene
 
 **Outcome.** The Candybar cron framework, which now runs the homelab's scheduled
