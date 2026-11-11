@@ -44,7 +44,17 @@ Select checks that demonstrate the slice's actual behavior:
 - Holocene code changes: typecheck and build; add browser interaction or live
   route verification when the changed behavior is visible there.
 - Release-console uploads: a platform consumes a version/build identifier once it enters any release draft, so `already used` means attached to a draft elsewhere, not uploaded. Before minting a new identifier or re-dropping the same artifact, read the track's drafts, its artifact library, and sibling tracks read-only to find the owning draft, and add from the library rather than re-uploading. Page metadata can lag processing or drop entries; decode the artifact's own manifest and signature to confirm version, package, and signing identity.
-- Compose or systemd changes: resolve the effective configuration, restart only affected units, and verify the running artifact.
+- Configuration or credential-location changes: inspect consumers of the old
+  location, including scheduled jobs, before removing it. Preserve unrelated
+  native settings; exercise affected consumers with their actual scheduler or
+  noninteractive environment, not just the newly working CLI. Do not restore a
+  plaintext credential to satisfy a legacy reader; migrate that reader.
+- Compose, systemd, or launchd changes: resolve the effective configuration;
+  select container contexts explicitly and restart only affected units.
+  Verify the running artifact and intended client's reachability, not just
+  server-local health. For changed readiness probes, prove an unreachable
+  endpoint fails. For startup changes, distinguish service restart, GUI login,
+  and boot recovery; claim only the path exercised.
 - Template or generator changes: render an affected existing role into an
   isolated directory and compare owned files, executable modes, and retained
   routing fields while preserving foreign settings. Include a role that omits

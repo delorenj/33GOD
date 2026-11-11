@@ -55,9 +55,12 @@ Changes to these boundaries require an explicit product decision. Routine implem
 4. Run checks sufficient to prove the changed behavior. Fix reproduced failures.
    Follow asynchronous work to its actual receipt: a successful n8n run may
    have skipped dispatch, and a PM handoff does not prove a worker claimed or
-   executed the ticket. A stopped workflow is unfinished evidence, not failure;
-   read its run and output state, then replay only an incomplete phase. When
-   moving an existing delivery target, confirm the replacement's delivery
+   executed the ticket. If a remote target becomes unreachable, bound the
+   health probes and stop dependent work rather than polling for hours. After
+   recovery, check affected services, read completed task and verifier outputs,
+   and resume only unfinished tasks. A workflow completion notice is not an
+   acceptance result; report partial passes or missing verification as such.
+   When moving an existing delivery target, confirm the replacement's delivery
    receipt before disabling the old path.
    When a change crosses a nested component boundary, run that component's
    focused checks and land its canonical commit before parent gates that inspect
