@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The 33GOD Manual</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700&display=swap">
+<style>
+/* Layout: a single printed manual sheet (tan paper, 3:4) lying on a theme-aware table; quiet controls under it. */
+:root {
+  --table: #E6E0D3;
+  --table-ink: #2B2823;
+  --table-muted: #6A6457;
+  --table-line: #CFC6B4;
+  --chip: #F7F2E7;
+  --focus: #0055BF;
+  /* Sheet palette: grammar v0 section 5, fixed in both themes (paper is never dark). */
+  --paper: #F3E9D2;
+  --paper-2: #FBF5E6;
+  --ink: #1B1B1B;
+  --yellow: #F2CD37;
+  --blue: #0055BF;
+  --blue-top: #2F78D8;
+  --blue-side: #003A85;
+  --orange: #FE8A18;
+  --purple: #6C3FA0;
+  --grey: #9BA19D;
+  --red: #C91A09;
+  --green: #237841;
+  --white: #FFFDF6;
+  --face: "Fredoka", "Baloo 2", "Arial Rounded MT Bold", ui-rounded, system-ui, sans-serif;
+  --body: "Nunito", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --table: #1D1B18; --table-ink: #EEE7D8; --table-muted: #A69E8E; --table-line: #3A362F; --chip: #2A2722; --focus: #7FB2FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --table: #1D1B18; --table-ink: #EEE7D8; --table-muted: #A69E8E; --table-line: #3A362F; --chip: #2A2722; --focus: #7FB2FF;
+  color-scheme: dark;
+}
+body { margin: 0; }
+html, body { background: var(--table); color: var(--table-ink); }
+body {
+  font-family: var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 600px; margin: 0 auto; display: grid; gap: 14px; }
+.eyebrow {
+  font-family: var(--face); font-weight: 600; font-size: 0.8rem;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--table-muted);
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.sheet {
+  background: var(--paper); border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.06), 0 10px 30px rgba(0,0,0,.18);
+  overflow: hidden;
+}
+.sheet svg { display: block; width: 100%; height: auto; }
+.lbl { font-family: var(--face); font-weight: 600; fill: var(--ink); }
+[hidden] { display: none !important; }
+.ev { display: none; }
+svg.show-ev .ev { display: inline; }
+.ev circle { fill: #5E625F; stroke: var(--paper); stroke-width: 3; }
+.ev text { font-family: var(--face); font-weight: 700; font-size: 15px; fill: #FFFFFF; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.btn {
+  font: 600 0.9rem/1 var(--face); color: var(--table-ink); background: var(--chip);
+  border: 1.5px solid var(--table-line); border-radius: 999px; padding: 10px 16px; cursor: pointer;
+}
+.btn[aria-pressed="true"] { background: var(--table-ink); color: var(--table); border-color: var(--table-ink); }
+.btn:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+details { flex: 1 1 260px; min-width: 0; }
+summary {
+  font: 600 0.9rem/1 var(--face); list-style: none; cursor: pointer; display: inline-block;
+  background: var(--chip); border: 1.5px solid var(--table-line); border-radius: 999px; padding: 10px 16px;
+}
+summary::-webkit-details-marker { display: none; }
+.twin { margin: 10px 0 0; line-height: 1.6; max-width: 62ch; }
+.sources { display: grid; gap: 10px; border-top: 1.5px solid var(--table-line); padding-top: 14px; }
+.sources h2 { font: 700 0.95rem/1.2 var(--face); margin: 0; letter-spacing: .02em; }
+.sources ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 10px; counter-reset: ev; }
+.sources li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; line-height: 1.5; font-size: 0.9rem; counter-increment: ev; }
+.sources li::before {
+  content: counter(ev); width: 24px; height: 24px; border-radius: 50%; background: #5E625F; color: #fff;
+  font: 700 0.8rem/24px var(--face); text-align: center;
+}
+.sources li > div { min-width: 0; overflow-wrap: anywhere; }
+.sources code { font-size: 0.82rem; background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+.tellback { background: var(--chip); border: 1.5px solid var(--table-line); border-radius: 10px; padding: 12px 14px; line-height: 1.5; font-size: 0.92rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .blip { animation: hop 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
+  @keyframes hop { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(-6px); } 90% { transform: translateY(0); } }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow"><span>The 33GOD Manual</span><span>Book 1 · Page 1</span></div>
+
+  <div class="sheet">
+  <svg id="page" viewBox="0 0 600 800" role="img" aria-labelledby="pg-title pg-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="pg-title">Book 1, page 1: Press Enter</title>
+    <desc id="pg-desc">A person presses Enter in an AI helper, which waits for a small program called hook-hub. hook-hub makes a yellow note and pins it on a tall blue wall called the bus. A calendar on the wall says seven days. Candystore reads its own copy from the wall. A small picture crosses out phoning each listener.</desc>
+    <defs>
+      <!-- pinned note tile on the wall: yellow, speech-bubble print (domain: conversation) -->
+      <symbol id="tile" viewBox="0 0 30 24" overflow="visible">
+        <rect x="0" y="0" width="30" height="24" rx="4" fill="#F2CD37" stroke="#1B1B1B" stroke-width="2"/>
+        <rect x="8" y="6" width="14" height="9" rx="3" fill="#FFFDF6" stroke="#1B1B1B" stroke-width="1.2"/>
+        <path d="M11 15 l-1 4 l4 -4z" fill="#FFFDF6" stroke="#1B1B1B" stroke-width="1.2" stroke-linejoin="round"/>
+      </symbol>
+      <!-- horizontal coiled ASK cord with an hourglass in the middle (for the small frame drawings) -->
+      <symbol id="coilH" overflow="visible">
+        <path d="M0 0 c0 -7 5 -7 5 0 c0 7 5 7 5 0 c0 -7 5 -7 5 0 c0 7 5 7 5 0 c0 -7 5 -7 5 0 c0 7 5 7 5 0 c0 -7 5 -7 5 0 c0 7 5 7 5 0" fill="none" stroke="#1B1B1B" stroke-width="2.4"/>
+        <path d="M42 -7 h12 l-12 14 h12 z" fill="#FFFDF6" stroke="#1B1B1B" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M58 0 c0 -7 5 -7 5 0 c0 7 5 7 5 0 c0 -7 5 -7 5 0 c0 7 5 7 5 0 c0 -7 5 -7 5 0 c0 7 5 7 5 0 c0 -7 5 -7 5 0" fill="none" stroke="#1B1B1B" stroke-width="2.4"/>
+        <path d="M93 -6 l9 6 l-9 6 z" fill="#1B1B1B"/>
+      </symbol>
+      <filter id="greyed"><feColorMatrix type="saturate" values="0"/></filter>
+    </defs>
+
+    <!-- paper -->
+    <rect x="0" y="0" width="600" height="800" fill="#F3E9D2"/>
+
+    <!-- R1 header: step numeral + title -->
+    <text x="26" y="84" class="lbl" font-size="96" font-weight="700">1</text>
+    <text x="96" y="72" class="lbl" font-size="42">Press Enter</text>
+
+    <!-- R2 left: you at the laptop -->
+    <g stroke="#1B1B1B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <!-- you (outline, not yellow) -->
+      <circle cx="44" cy="146" r="19" fill="#F3E9D2"/>
+      <path d="M12 216 Q 14 172 44 170 Q 74 172 76 216 Z" fill="#F3E9D2"/>
+      <path d="M64 196 Q 110 252 180 232" fill="none" stroke-width="4"/>
+      <!-- laptop -->
+      <rect x="92" y="114" width="100" height="82" rx="7" fill="#9BA19D"/>
+      <rect x="100" y="122" width="84" height="66" rx="4" fill="#FFFDF6" stroke-width="2"/>
+      <path d="M80 196 H 206 L 212 210 H 74 Z" fill="#9BA19D"/>
+      <!-- chat bubbles on screen -->
+      <rect x="108" y="160" width="40" height="9" rx="4.5" fill="#D8D2C4" stroke="none"/>
+      <rect x="136" y="173" width="40" height="9" rx="4.5" fill="#D8D2C4" stroke="none"/>
+      <!-- Enter keycap -->
+      <rect x="140" y="220" width="56" height="34" rx="7" fill="#FFFDF6"/>
+      <path d="M166 228 v11 h-18" fill="none" stroke-width="3"/>
+      <path d="M153 233 l-6 6 l6 6" fill="none" stroke-width="3"/>
+      <!-- finger -->
+      <circle cx="184" cy="228" r="7" fill="#F3E9D2"/>
+      <!-- press burst -->
+      <path d="M204 216 l9 -7 M208 236 h11 M204 254 l9 7" fill="none" stroke-width="3"/>
+    </g>
+    <text x="142" y="149" class="lbl" font-size="24" text-anchor="middle">Codex</text>
+
+    <!-- ASK cord: laptop <-> hook-hub (coiled, arrowheads both ends, hourglass) -->
+    <g stroke="#1B1B1B" stroke-linejoin="round">
+      <path d="M92 213 l-7 11 h14 z" fill="#1B1B1B"/>
+      <path d="M92 224 c11 0 11 5 0 5 c-11 0 -11 5 0 5 c11 0 11 5 0 5 c-11 0 -11 5 0 5" fill="none" stroke-width="2.8"/>
+      <path d="M81 247 h22 l-22 22 h22 z" fill="#FFFDF6" stroke-width="2.5"/>
+      <path d="M86 249 h12 l-6 7 z" fill="#C9B98F" stroke="none"/>
+      <path d="M92 272 c11 0 11 5 0 5 c-11 0 -11 5 0 5 c11 0 11 5 0 5 c-11 0 -11 5 0 5 c11 0 11 5 0 5 c-11 0 -11 5 0 5 c11 0 11 5 0 5 c-11 0 -11 5 0 5 c11 0 11 5 0 5 c-11 0 -11 5 0 5 c11 0 11 5 0 5" fill="none" stroke-width="2.8"/>
+      <path d="M92 341 l-7 -12 h14 z" fill="#1B1B1B"/>
+    </g>
+    <!-- squint (wink) badge: bb-hook hides here, drawn on page 3 -->
+    <g stroke="#1B1B1B" stroke-linecap="round">
+      <circle cx="132" cy="298" r="15" fill="#FFFDF6" stroke-width="2.5"/>
+      <circle cx="126" cy="294" r="2.2" fill="#1B1B1B" stroke="none"/>
+      <path d="M134 294 h6" stroke-width="2.4"/>
+      <path d="M125 303 Q 132 309 139 303" fill="none" stroke-width="2.4"/>
+      <circle cx="147" cy="284" r="9.5" fill="#1B1B1B" stroke="none"/>
+    </g>
+    <text x="147" y="289.5" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="#FFFFFF" text-anchor="middle">3</text>
+
+    <!-- hook-hub brick (orange = doer): stamp + megaphone + conversation tile -->
+    <g stroke="#1B1B1B" stroke-width="3" stroke-linejoin="round">
+      <rect x="32" y="342" width="22" height="10" rx="3" fill="#FE8A18"/>
+      <rect x="64" y="342" width="22" height="10" rx="3" fill="#FE8A18"/>
+      <rect x="96" y="342" width="22" height="10" rx="3" fill="#FE8A18"/>
+      <rect x="128" y="342" width="22" height="10" rx="3" fill="#FE8A18"/>
+      <rect x="22" y="352" width="148" height="74" rx="6" fill="#FE8A18"/>
+      <!-- stamp -->
+      <circle cx="46" cy="372" r="6" fill="#1B1B1B" stroke="none"/>
+      <rect x="43" y="377" width="6" height="8" fill="#1B1B1B" stroke="none"/>
+      <rect x="34" y="385" width="24" height="10" rx="2" fill="#1B1B1B" stroke="none"/>
+      <rect x="32" y="398" width="28" height="4" rx="2" fill="#F2CD37" stroke="none"/>
+      <!-- megaphone (speaks) -->
+      <path d="M78 382 h8 v12 h-8 z" fill="#1B1B1B" stroke="none"/>
+      <path d="M86 382 L 110 370 V 406 L 86 394 Z" fill="#1B1B1B" stroke="none"/>
+      <path d="M90 396 l3 12 h6 l-3 -10" fill="#1B1B1B" stroke="none"/>
+      <!-- conversation tile -->
+      <rect x="120" y="374" width="34" height="26" rx="4" fill="#FFFDF6" stroke-width="2"/>
+      <rect x="127" y="380" width="20" height="11" rx="4" fill="none" stroke-width="1.8"/>
+      <path d="M131 391 l-2 5 l5 -5" fill="none" stroke-width="1.8"/>
+    </g>
+    <text x="96" y="458" class="lbl" font-size="26" text-anchor="middle">hook-hub</text>
+
+    <!-- NOTE line 1: hook-hub -> wall slot (fat arrow, round-dot tail, no hourglass) -->
+    <g fill="#1B1B1B">
+      <circle cx="182" cy="392" r="8"/>
+      <rect x="184" y="383" width="68" height="18"/>
+      <path d="M250 370 L 272 392 L 250 414 Z"/>
+    </g>
+    <!-- Blip: one event, riding the NOTE arrow -->
+    <text x="225" y="286" class="lbl" font-size="24" text-anchor="middle">note</text>
+    <g class="blip">
+      <g stroke="#1B1B1B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M210 360 l-3 20" fill="none" stroke-width="5"/>
+        <path d="M240 360 l3 20" fill="none" stroke-width="5"/>
+        <ellipse cx="204" cy="382" rx="8" ry="3.5" fill="#1B1B1B"/>
+        <ellipse cx="246" cy="382" rx="8" ry="3.5" fill="#1B1B1B"/>
+        <rect x="188" y="294" width="74" height="68" rx="10" fill="#F2CD37"/>
+        <circle cx="212" cy="316" r="3.6" fill="#1B1B1B" stroke="none"/>
+        <circle cx="238" cy="316" r="3.6" fill="#1B1B1B" stroke="none"/>
+        <path d="M213 326 Q 225 334 237 326" fill="none" stroke-width="2.6"/>
+        <rect x="211" y="336" width="28" height="16" rx="5" fill="#FFFDF6" stroke-width="2"/>
+        <path d="M216 352 l-2 5 l6 -5" fill="#FFFDF6" stroke-width="2"/>
+      </g>
+    </g>
+
+    <!-- The wall: the bus (one NATS JetStream stream), blue only -->
+    <g stroke="#1B1B1B" stroke-width="3" stroke-linejoin="round">
+      <path d="M272 112 L 290 98 H 380 L 362 112 Z" fill="#2F78D8"/>
+      <path d="M362 112 L 380 98 V 514 L 362 528 Z" fill="#003A85"/>
+      <rect x="272" y="112" width="90" height="416" fill="#0055BF"/>
+      <rect x="273" y="376" width="9" height="32" rx="2" fill="#0A2350" stroke="none"/>
+    </g>
+    <text x="317" y="152" font-family="Fredoka, sans-serif" font-weight="700" font-size="30" fill="#FFFFFF" text-anchor="middle">bus</text>
+    <!-- pinned notes, newest on top; the original Blip is pinned top-left with its face -->
+    <g>
+      <use href="#tile" x="286" y="176" width="30" height="24"/>
+      <use href="#tile" x="324" y="176" width="30" height="24"/>
+      <use href="#tile" x="286" y="214" width="30" height="24"/>
+      <use href="#tile" x="324" y="214" width="30" height="24"/>
+      <use href="#tile" x="286" y="252" width="30" height="24"/>
+      <use href="#tile" x="324" y="252" width="30" height="24"/>
+      <use href="#tile" x="286" y="290" width="30" height="24"/>
+      <use href="#tile" x="324" y="290" width="30" height="24"/>
+      <use href="#tile" x="286" y="328" width="30" height="24"/>
+      <use href="#tile" x="324" y="328" width="30" height="24"/>
+      <use href="#tile" x="290" y="366" width="30" height="24"/>
+      <use href="#tile" x="324" y="366" width="30" height="24"/>
+      <use href="#tile" x="290" y="404" width="30" height="24"/>
+      <use href="#tile" x="324" y="404" width="30" height="24"/>
+      <use href="#tile" x="286" y="442" width="30" height="24"/>
+      <use href="#tile" x="324" y="442" width="30" height="24"/>
+      <use href="#tile" x="286" y="480" width="30" height="24"/>
+      <!-- oldest note, fading and tipping off the bottom after 7 days -->
+      <g opacity="0.35" transform="rotate(24 339 512)"><use href="#tile" x="324" y="500" width="30" height="24"/></g>
+    </g>
+    <!-- original Blip, pinned and solid -->
+    <g stroke="#1B1B1B" stroke-linecap="round">
+      <rect x="286" y="176" width="30" height="24" rx="4" fill="#F2CD37" stroke-width="2.4"/>
+      <circle cx="296" cy="186" r="1.8" fill="#1B1B1B" stroke="none"/>
+      <circle cx="306" cy="186" r="1.8" fill="#1B1B1B" stroke="none"/>
+      <path d="M296 192 Q 301 196 306 192" fill="none" stroke-width="1.6"/>
+      <circle cx="301" cy="174" r="4" fill="#9BA19D" stroke-width="2"/>
+    </g>
+
+    <!-- tear-off calendar on the wall: notes stay about a week -->
+    <g stroke="#1B1B1B" stroke-width="2.6" stroke-linejoin="round">
+      <rect x="370" y="122" width="72" height="88" rx="6" fill="#FFFDF6"/>
+      <path d="M373 213 h66 M376 216 h60" fill="none" stroke-width="1.6"/>
+      <rect x="370" y="122" width="72" height="16" rx="6" fill="#1B1B1B"/>
+      <circle cx="390" cy="122" r="4" fill="#9BA19D"/>
+      <circle cx="422" cy="122" r="4" fill="#9BA19D"/>
+      <circle cx="406" cy="161" r="18" fill="none" stroke-width="3"/>
+    </g>
+    <text x="406" y="171" class="lbl" font-size="28" font-weight="700" text-anchor="middle">7</text>
+    <text x="406" y="203" class="lbl" font-size="24" text-anchor="middle">days</text>
+
+    <!-- NOTE line 2: wall -> Candystore, carrying a translucent twin (a copy; the original stays pinned) -->
+    <g fill="#1B1B1B">
+      <circle cx="392" cy="360" r="8"/>
+      <rect x="394" y="351" width="40" height="18"/>
+      <path d="M432 338 L 454 360 L 432 382 Z"/>
+    </g>
+    <g stroke="#1B1B1B" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.65">
+      <path d="M408 340 l-2 9" stroke-width="4" fill="none"/>
+      <path d="M428 340 l2 9" stroke-width="4" fill="none"/>
+      <rect x="392" y="292" width="52" height="48" rx="8" fill="#F2CD37" fill-opacity="0.5" stroke-width="2.6"/>
+      <circle cx="410" cy="308" r="2.6" fill="#1B1B1B" fill-opacity="0.65" stroke="none"/>
+      <circle cx="426" cy="308" r="2.6" fill="#1B1B1B" fill-opacity="0.65" stroke="none"/>
+      <path d="M410 316 Q 418 322 426 316" fill="none" stroke-width="2"/>
+      <rect x="408" y="324" width="20" height="10" rx="3.5" fill="#FFFDF6" fill-opacity="0.6" stroke-width="1.6"/>
+    </g>
+    <!-- squint badge: the sidecar helper hides here, drawn on page 7 -->
+    <g stroke="#1B1B1B" stroke-linecap="round">
+      <circle cx="420" cy="410" r="15" fill="#FFFDF6" stroke-width="2.5"/>
+      <circle cx="414" cy="406" r="2.2" fill="#1B1B1B" stroke="none"/>
+      <path d="M422 406 h6" stroke-width="2.4"/>
+      <path d="M413 415 Q 420 421 427 415" fill="none" stroke-width="2.4"/>
+      <circle cx="435" cy="396" r="9.5" fill="#1B1B1B" stroke="none"/>
+    </g>
+    <text x="435" y="401.5" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="#FFFFFF" text-anchor="middle">7</text>
+
+    <!-- Candystore: orange doer with a purple keeper drum bolted under it; ear = listens -->
+    <g stroke="#1B1B1B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="464" y="320" width="20" height="10" rx="3" fill="#FE8A18"/>
+      <rect x="494" y="320" width="20" height="10" rx="3" fill="#FE8A18"/>
+      <rect x="524" y="320" width="20" height="10" rx="3" fill="#FE8A18"/>
+      <rect x="554" y="320" width="20" height="10" rx="3" fill="#FE8A18"/>
+      <path d="M470 408 V 458 A 48 10 0 0 0 566 458 V 408" fill="#6C3FA0"/>
+      <ellipse cx="518" cy="408" rx="48" ry="10" fill="#8A5FC0"/>
+      <rect x="454" y="330" width="130" height="72" rx="6" fill="#FE8A18"/>
+      <circle cx="486" cy="404" r="4" fill="#9BA19D" stroke-width="2"/>
+      <circle cx="550" cy="404" r="4" fill="#9BA19D" stroke-width="2"/>
+      <!-- ear (listens) -->
+      <path d="M482 390 C 475 390 472 383 475 377 C 468 370 468 352 481 345 C 494 338 512 345 512 361 C 512 372 505 376 503 382 C 501 391 492 395 482 390 Z" fill="#FFFDF6" stroke-width="3"/>
+      <path d="M485 374 C 482 363 488 356 495 356 C 502 356 505 363 502 369 C 500 373 495 373 495 378" fill="none" stroke-width="2.6"/>
+      <!-- conversation tile -->
+      <rect x="526" y="352" width="34" height="26" rx="4" fill="#FFFDF6" stroke-width="2"/>
+      <rect x="533" y="358" width="20" height="11" rx="4" fill="none" stroke-width="1.8"/>
+      <path d="M537 369 l-2 5 l5 -5" fill="none" stroke-width="1.8"/>
+    </g>
+    <text x="518" y="500" class="lbl" font-size="26" text-anchor="middle">Candystore</text>
+
+    <!-- R3 frame: wrong picture (real ASK cords, greyed, red X) beside the true one (green check) -->
+    <rect x="16" y="552" width="568" height="178" rx="14" fill="#FBF5E6" stroke="#1B1B1B" stroke-width="3"/>
+    <path d="M300 566 V 716" stroke="#1B1B1B" stroke-width="2" stroke-dasharray="0" opacity="0.35"/>
+    <!-- X badge -->
+    <circle cx="42" cy="580" r="14" fill="#C91A09" stroke="#1B1B1B" stroke-width="2"/>
+    <path d="M36 574 l12 12 M48 574 l-12 12" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+    <text x="64" y="589" class="lbl" font-size="24">ask each</text>
+    <g filter="url(#greyed)" opacity="0.55">
+      <g stroke="#1B1B1B" stroke-width="2.6" stroke-linejoin="round">
+        <rect x="40" y="636" width="16" height="8" rx="2" fill="#FE8A18"/>
+        <rect x="70" y="636" width="16" height="8" rx="2" fill="#FE8A18"/>
+        <rect x="32" y="644" width="64" height="36" rx="5" fill="#FE8A18"/>
+        <rect x="212" y="606" width="56" height="26" rx="4" fill="#FE8A18"/>
+        <rect x="212" y="648" width="56" height="26" rx="4" fill="#FE8A18"/>
+        <rect x="212" y="690" width="56" height="26" rx="4" fill="#FE8A18"/>
+      </g>
+      <g transform="translate(100 656) rotate(-21)"><use href="#coilH"/></g>
+      <g transform="translate(100 662)"><use href="#coilH"/></g>
+      <g transform="translate(100 668) rotate(21)"><use href="#coilH"/></g>
+      <!-- handset dangling off its hook -->
+      <g transform="rotate(28 282 714)" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round">
+        <path d="M272 700 h20 v6 a5 5 0 0 1 -5 5 h-10 a5 5 0 0 1 -5 -5 z" fill="#9BA19D"/>
+      </g>
+    </g>
+    <!-- check badge -->
+    <circle cx="326" cy="580" r="14" fill="#237841" stroke="#1B1B1B" stroke-width="2"/>
+    <path d="M319 580 l5 5 l9 -10" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="348" y="589" class="lbl" font-size="24">note once</text>
+    <g stroke="#1B1B1B" stroke-width="2.6" stroke-linejoin="round">
+      <rect x="326" y="640" width="16" height="8" rx="2" fill="#FE8A18"/>
+      <rect x="352" y="640" width="16" height="8" rx="2" fill="#FE8A18"/>
+      <rect x="318" y="648" width="58" height="34" rx="5" fill="#FE8A18"/>
+      <path d="M422 606 L 430 600 H 454 L 446 606 Z" fill="#2F78D8"/>
+      <path d="M446 606 L 454 600 V 708 L 446 714 Z" fill="#003A85"/>
+      <rect x="422" y="606" width="24" height="108" fill="#0055BF"/>
+      <rect x="504" y="606" width="56" height="26" rx="4" fill="#FE8A18"/>
+      <rect x="504" y="648" width="56" height="26" rx="4" fill="#FE8A18"/>
+      <rect x="504" y="690" width="56" height="26" rx="4" fill="#FE8A18"/>
+    </g>
+    <g fill="#1B1B1B">
+      <circle cx="382" cy="665" r="5"/><rect x="383" y="660" width="26" height="10"/><path d="M407 652 L 421 665 L 407 678 Z"/>
+      <circle cx="460" cy="619" r="5"/><rect x="461" y="614" width="30" height="10"/><path d="M489 607 L 503 619 L 489 631 Z"/>
+      <circle cx="460" cy="661" r="5"/><rect x="461" y="656" width="30" height="10"/><path d="M489 649 L 503 661 L 489 673 Z"/>
+      <circle cx="460" cy="703" r="5"/><rect x="461" y="698" width="30" height="10"/><path d="M489 691 L 503 703 L 489 715 Z"/>
+    </g>
+    <g fill="#F2CD37" stroke="#1B1B1B" stroke-width="1.8">
+      <rect x="388" y="642" width="16" height="13" rx="2.5"/>
+      <rect x="467" y="597" width="15" height="12" rx="2.5" fill-opacity="0.5" stroke-opacity="0.65"/>
+      <rect x="467" y="639" width="15" height="12" rx="2.5" fill-opacity="0.5" stroke-opacity="0.65"/>
+      <rect x="467" y="681" width="15" height="12" rx="2.5" fill-opacity="0.5" stroke-opacity="0.65"/>
+    </g>
+
+    <!-- R4 foot: edition stamp + exit hook (thumbnail of page 2) -->
+    <g stroke="#1B1B1B" stroke-linejoin="round">
+      <rect x="22" y="756" width="40" height="28" rx="6" fill="#9BA19D" stroke-width="2.4"/>
+      <path d="M30 776 h12" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="54" cy="776" r="2.2" fill="#1B1B1B" stroke="none"/>
+    </g>
+    <text x="72" y="779" class="lbl" font-size="22">11/11</text>
+
+    <g stroke="#1B1B1B" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M416 744 H 540 L 556 760 V 794 H 416 Z" fill="#FBF5E6" stroke-width="2.4"/>
+      <path d="M540 744 V 760 H 556" fill="#E7DCC3" stroke-width="2"/>
+      <!-- mini Blip waving -->
+      <rect x="426" y="764" width="22" height="20" rx="4" fill="#F2CD37" stroke-width="1.8"/>
+      <path d="M447 768 l7 -9" stroke-width="2.2" fill="none"/>
+      <circle cx="433" cy="772" r="1.4" fill="#1B1B1B" stroke="none"/>
+      <circle cx="441" cy="772" r="1.4" fill="#1B1B1B" stroke="none"/>
+      <!-- mini wall with a bookmark flag left standing -->
+      <rect x="464" y="752" width="14" height="38" fill="#0055BF" stroke-width="1.8"/>
+      <path d="M471 756 v16" stroke-width="1.8"/>
+      <path d="M471 756 l10 4 l-10 4 z" fill="#FFFDF6" stroke-width="1.6"/>
+      <!-- mini Candystore asleep -->
+      <rect x="490" y="770" width="40" height="18" rx="3" fill="#FE8A18" stroke-width="1.8"/>
+      <path d="M498 778 q3 2 6 0 M512 778 q3 2 6 0" fill="none" stroke-width="1.6"/>
+    </g>
+    <text x="532" y="766" font-family="Fredoka, sans-serif" font-weight="700" font-size="9" fill="#1B1B1B">z</text>
+    <text x="538" y="759" font-family="Fredoka, sans-serif" font-weight="700" font-size="11" fill="#1B1B1B">z</text>
+    <path d="M564 778 q 14 -20 28 -4" fill="none" stroke="#1B1B1B" stroke-width="3" stroke-linecap="round"/>
+    <path d="M594 766 l-1 12 l-10 -4 z" fill="#1B1B1B"/>
+
+    <!-- maintainer view: evidence dots (hidden by default) -->
+    <g class="ev"><circle cx="372" cy="58" r="12"/><text x="372" y="63.5" text-anchor="middle">1</text></g>
+    <g class="ev"><circle cx="64" cy="300" r="12"/><text x="64" y="305.5" text-anchor="middle">2</text></g>
+    <g class="ev"><circle cx="218" cy="428" r="12"/><text x="218" y="433.5" text-anchor="middle">3</text></g>
+    <g class="ev"><circle cx="406" cy="240" r="12"/><text x="406" y="245.5" text-anchor="middle">4</text></g>
+    <g class="ev"><circle cx="574" cy="300" r="12"/><text x="574" y="305.5" text-anchor="middle">5</text></g>
+    <g class="ev"><circle cx="566" cy="572" r="12"/><text x="566" y="577.5" text-anchor="middle">6</text></g>
+    <g class="ev"><circle cx="400" cy="770" r="12"/><text x="400" y="775.5" text-anchor="middle">7</text></g>
+  </svg>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="ev-toggle" type="button" aria-pressed="false" aria-controls="sources">Show sources</button>
+    <details id="twin">
+      <summary>Words version</summary>
+      <p class="twin">A person presses Enter in an AI helper, which waits for a small program called hook-hub. hook-hub makes a yellow note and pins it on a tall blue wall called the bus. A calendar on the wall says seven days. Candystore reads its own copy from the wall. A small picture crosses out phoning each listener.</p>
+    </details>
+  </div>
+
+  <section class="sources" id="sources" hidden>
+    <h2>Where each claim comes from</h2>
+    <ol>
+      <li><div>Pressing Enter in Codex fires a hook that becomes <code>bloodbank.conversation.turn.started</code>. <code>bloodbank/services/agent-hooks/codex/event_map.generated.json:12-14</code></div></li>
+      <li><div>Codex waits for its hook, a real ask with an answer. On Damian's Mac the wait is bounded to about 1 s, so the page claims the wait and never a duration. <code>aperture/mirror/evidence/W2-4.md:211</code></div></li>
+      <li><div>hook-hub's publisher runs async and does a one-shot raw NATS publish, with no Dapr on the speaking side. <code>bloodbank/services/hook-hub/hub.py:611</code>, <code>bloodbank/services/agent-hooks/core/nats_publish.py</code></div></li>
+      <li><div>The bus is the JetStream stream <code>BLOODBANK_EVENTS</code>: subjects <code>bloodbank.evt.&gt;</code>, limits retention, max age 7 days, discard old. A note stays pinned after it is read. <code>bloodbank/compose/nats/streams.json</code>; Mac copy in <code>W2-2.md</code> §4</div></li>
+      <li><div>Candystore reads its own copy through a Dapr sidecar: <code>pubsub.jetstream</code>, durable <code>candystore-events</code>, deliver all. It is a stdlib HTTP server over Postgres (pgvector pg16) with an idempotent insert. <code>candystore/dapr-components/pubsub.yaml</code>, <code>candystore/candystore/main.py:380</code>, <code>db.py:93</code></div></li>
+      <li><div>Several listeners read the same wall (<code>candystore-events</code>, <code>enricher-events</code>). The crossed-out "ask each" picture is our guess at the wrong model a newcomer brings. Replace it if Damian's tell-back shows a different one.</div></li>
+      <li><div>Next page: Candystore was started after hook-hub had been publishing and caught up 728 notes in 20 s. <code>aperture/mirror/evidence/W3-1.md:148</code></div></li>
+    </ol>
+    <div class="tellback"><strong>Tell-back question for Damian:</strong> "Tell me what happens when you press Enter, as if you were telling your business partner." A complete answer names the speaker (hook-hub), says the bus keeps notes about a week, and says Candystore reads from the bus.</div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle');
+  var svg = document.getElementById('page');
+  var src = document.getElementById('sources');
+  btn.addEventListener('click', function () {
+    var on = btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Hide sources' : 'Show sources';
+    svg.classList.toggle('show-ev', on);
+    src.hidden = !on;
+  });
+})();
+</script>
+</body>
+</html>

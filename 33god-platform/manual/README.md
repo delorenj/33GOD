@@ -40,3 +40,7 @@ draft page ──► Damian reads ──► tell-back + comments ──► feedb
 - Docs here go stale in days. Use file mtimes as a compass, and print only stable facts (7 days), never live counts.
 - The Director Rule: this directory holds the manual. A child project that wants a "what my component is" page gets a delegated ticket, not work done here.
 - Generic bricks, no LEGO logo or type. Say "LEGO-style".
+
+## Live
+
+Published pages are served from `books/` at **https://manual.delo.sh** (nginx bind mount via `~/docker/stacks/websites/manual`, so a committed edit is live on refresh). Book 1 page 1: https://manual.delo.sh/book-01/page-01.html. The drawing is hand-written SVG inside the page; "Show sources" reveals the evidence dots and list.
