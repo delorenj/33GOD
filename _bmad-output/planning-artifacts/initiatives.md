@@ -589,3 +589,47 @@ related_initiatives: [I-8]
 - `asmctl doctor --json` reports no duplicate rows, no ghost rows and no empty
   session ids on the live box.
 
+
+## I-10 The Manual — LEGO-style picture manuals for 33GOD
+
+**Outcome.** Anyone who does not have Jarad's attention span can understand
+33GOD from a manual built like a LEGO instruction booklet. Each page is one
+page or less. Pictures and arrows do the work, and the reader comes away with an
+accurate mental model of the platform, not a simplified false one. The manual is
+built from a small, fixed visual grammar that maps LEGO manual atoms onto
+software concepts. One example: the 1:1 scale bar becomes a nesting-level meter.
+The 33GOD platform is the long bar, HeyMa a shorter bar inside it, wax and vinyl
+shorter bars inside HeyMa, and so on down. Every page is drawn from that grammar.
+
+**Dogfood:** Damian, the first reader, who freezes at a wall of text. A page is
+done when Damian can tell it back correctly after one read. Feedback arrives as
+comments on the published page.
+
+**Owner:** `33god`. Project home: `33god-platform/manual/` (grammar spec,
+storyboards, page sources, feedback log). Vision: `THE_MANUAL.md`. Brief:
+`briefs/brief-the-manual-2026-11-11/`. Each child may later be asked for one
+"what my component is" page, drawn in the shared grammar. Those requests are
+delegations, not work done here.
+
+```yaml
+owner_project: 33god
+project_home: 33god-platform/manual
+vision: THE_MANUAL.md
+dogfood_target: Damian
+delegations: []
+depends_on: []
+related_initiatives: [I-6.1]
+```
+
+**Seam acceptance criteria**
+
+- One visual grammar (v0 and later) is versioned in the project home. Every page
+  uses only the atoms the grammar defines, and a new atom needs a grammar change
+  first.
+- Every page fits on one screen or printed page. Words are labels, not
+  paragraphs, and the word budget is set by the grammar.
+- Every claim a page draws about the system can be traced to live code or config
+  (the page's source lists its evidence). A page is never shipped for being
+  pretty when it is wrong.
+- Damian's tell-back of each published page is recorded in the feedback log, and
+  each change to the grammar cites the feedback that drove it.
