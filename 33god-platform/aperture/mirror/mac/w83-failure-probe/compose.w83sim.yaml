@@ -1,0 +1,71 @@
+# W8-3 failure-path probes: four throwaway turn-enricher instances from the
+# SAME image as the live one, on private subjects w83sim.<mode>.in/out (NOT
+# captured by BLOODBANK_EVENTS, so nothing reaches Candystore). Own compose
+# project "33god-enricher-sim"; torn down after the probes. No volumes.
+# Keys arrive only as environment from the driver's stdin; never stored.
+name: 33god-enricher-sim
+
+x-base: &base
+  image: turn-enricher:mac-6b2a2bf@sha256:803143ee652eb22c12c603155d786599a9ab160649b60ae402c97cfa276d9992
+  pull_policy: never
+  networks: [bloodbank-network]
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  mem_limit: 128m
+  pids_limit: 64
+  restart: "no"
+
+services:
+  sim-rpm:        # real jev.delo.sh, throwaway key with rpm_limit=1 -> real 429
+    <<: *base
+    container_name: w83sim-rpm
+    environment:
+      NATS_URL: "nats://nats:4222"
+      SUBJECT_FILTER: "w83sim.rpm.in"
+      PUBLISH_SUBJECT: "w83sim.rpm.out"
+      JEV_URL: "https://jev.delo.sh/typesafe/v1/systemone"
+      JEV_MODEL: "jev-latest"
+      JEV_API_KEY: ${SIM_KEY_RPM:?}
+      CLAIRIC_ENABLED: "false"
+      STATS_SECONDS: "5"
+  sim-budget:     # real jev.delo.sh, throwaway key with max_budget=1e-5 -> real budget_exceeded
+    <<: *base
+    container_name: w83sim-budget
+    environment:
+      NATS_URL: "nats://nats:4222"
+      SUBJECT_FILTER: "w83sim.budget.in"
+      PUBLISH_SUBJECT: "w83sim.budget.out"
+      JEV_URL: "https://jev.delo.sh/typesafe/v1/systemone"
+      JEV_MODEL: "jev-latest"
+      JEV_API_KEY: ${SIM_KEY_BUDGET:?}
+      CLAIRIC_ENABLED: "false"
+      STATS_SECONDS: "5"
+  sim-badkey:     # real jev.delo.sh, invalid key -> real 401, zero spend
+    <<: *base
+    container_name: w83sim-badkey
+    environment:
+      NATS_URL: "nats://nats:4222"
+      SUBJECT_FILTER: "w83sim.badkey.in"
+      PUBLISH_SUBJECT: "w83sim.badkey.out"
+      JEV_URL: "https://jev.delo.sh/typesafe/v1/systemone"
+      JEV_MODEL: "jev-latest"
+      JEV_API_KEY: "sk-w83-invalid-probe-key"
+      CLAIRIC_ENABLED: "false"
+      STATS_SECONDS: "5"
+  sim-down:       # unresolvable host -> transport error (status 0)
+    <<: *base
+    container_name: w83sim-down
+    environment:
+      NATS_URL: "nats://nats:4222"
+      SUBJECT_FILTER: "w83sim.down.in"
+      PUBLISH_SUBJECT: "w83sim.down.out"
+      JEV_URL: "http://w83-no-such-host.invalid/typesafe/v1/systemone"
+      JEV_MODEL: "jev-latest"
+      JEV_API_KEY: "sk-w83-unused"
+      CLAIRIC_ENABLED: "false"
+      STATS_SECONDS: "5"
+
+networks:
+  bloodbank-network:
+    external: true
+    name: bloodbank-network

@@ -1,0 +1,83 @@
+# 33GOD turn-enricher for the Mac peer install (PLAN.md W8-3).
+#
+# Standalone compose project "33god-enricher": one container, the bloodbank
+# turn-enricher (services/turn-enricher), attached to the Bloodbank bus that
+# W2-2 brought up as project "33god-bus" (network `bloodbank-network`, NATS
+# alias `nats`). Like compose.bus.yaml / compose.store.yaml it is NOT merged
+# onto the main compose.yaml.
+#
+# What it is: a plain nats-py CORE subscriber on
+# bloodbank.evt.conversation.turn.completed that republishes each substantive
+# turn as bloodbank.evt.conversation.turn.annotated (BLOODBANK_EVENTS captures
+# it; Candystore archives it). It has NO Dapr sidecar, so there is no
+# dapr-placement or daprd bump in this project (the "daprd > 1.13.0" note in
+# PLAN section 1 belongs to the embeddings enricher-daprd, a different service).
+#
+# Deviations from bloodbank/services/turn-enricher/compose.yml:
+#   - image is a LOCAL arm64 build of bloodbank 6b2a2bf (tag
+#     turn-enricher:mac-6b2a2bf@<containerd index digest>), built once by hand;
+#     `pull_policy: never` and no `build:` section, so `up` never rebuilds or
+#     pulls. Rebuild recipe (build context is bloodbank's services/ directory;
+#     the base python:3.12-alpine was pulled by index digest
+#     sha256:c5ba3dee... and tagged locally so the unpinned FROM resolves to it):
+#       git -C <bloodbank> archive <sha> services/turn-enricher services/agent-hooks/core \
+#         | tar -x -C ~/.local/share/33god/turn-enricher/src
+#       cd ~/.local/share/33god/turn-enricher/src/services
+#       docker --context colima build --platform linux/arm64 --pull=false \
+#         -t turn-enricher:mac-<sha> -f turn-enricher/Dockerfile .
+#     then update the digest below.
+#   - JEV_API_KEY is ${JEV_API_KEY:?...}: injected by env-op-resolve from the
+#     Mac's interim 0600 store (enricher.env.op beside this file). `:?` makes
+#     compose refuse to render without it, so a bare `up` can never start the
+#     container with an empty key. The value is visible to `docker inspect` on
+#     this host (the recorded interim-store trade-off).
+#   - CLAIRIC_ENABLED=false: the Mac has no Cloudflare Workers AI account, so
+#     the enricher runs Jev-only (signal gate) and every event names
+#     extractors={"jev": ...} only. No CF_* values exist on this host.
+#   - Jev route is pinned explicitly (jev.delo.sh SystemOne ingress, jev-latest)
+#     with Damian's own `damian-studio` virtual key (budget $1/day, 120 rpm).
+#   - no host ports; json-file log rotation; modest resource caps.
+#
+# Usage on the Mac (always pin the context; the Docker default there is
+# desktop-linux, which must not be touched):
+#   cd ~/.local/share/33god/turn-enricher
+#   env-op-resolve exec --env-file enricher.env.op -- \
+#     /usr/local/bin/docker --context colima compose -p 33god-enricher \
+#       -f compose.enricher.yaml up -d
+#
+# Stop (own project only; never `down -v`, there are no volumes anyway):
+#   /usr/local/bin/docker --context colima stop bloodbank-turn-enricher
+
+name: 33god-enricher
+
+services:
+  turn-enricher:
+    image: turn-enricher:mac-6b2a2bf@sha256:803143ee652eb22c12c603155d786599a9ab160649b60ae402c97cfa276d9992
+    pull_policy: never
+    container_name: bloodbank-turn-enricher
+    environment:
+      NATS_URL: "nats://nats:4222"
+      SUBJECT_FILTER: "bloodbank.evt.conversation.turn.completed"
+      PUBLISH_SUBJECT: "bloodbank.evt.conversation.turn.annotated"
+      JEV_URL: "https://jev.delo.sh/typesafe/v1/systemone"
+      JEV_MODEL: "jev-latest"
+      JEV_API_KEY: ${JEV_API_KEY:?JEV_API_KEY must come from env-op-resolve}
+      CLAIRIC_ENABLED: "false"
+      LOG_LEVEL: "INFO"
+    networks: [bloodbank-network]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 256m
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+networks:
+  bloodbank-network:
+    external: true
+    name: bloodbank-network
