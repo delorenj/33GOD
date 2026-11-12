@@ -3,7 +3,7 @@ import { music } from './audio/music'
 import { voice } from './audio/voice'
 import { BULBS, STATIONS, bulbById, stationById, type StationId } from './content'
 import { domainById } from './domains'
-import { MapOverlay } from './map/MapOverlay'
+import { MapOverlay, mapNav } from './map/MapOverlay'
 import { HANDS_SLOT, TRAY_SLOT, hoursNow, ui, useWorld } from './sim/store'
 import { TourHud, tour } from './tour/TourHud'
 
@@ -272,7 +272,7 @@ export function Hud() {
       if (s.intro || (s.mode === 'tour' && !s.bulb)) return
       // Esc: close a pop-up first; otherwise rise to the top view and open the map (Esc again closes the map)
       if (s.bulb) useWorld.setState({ bulb: null })
-      else if (s.mapOpen) useWorld.setState({ mapOpen: false })
+      else if (s.mapOpen) { if (!mapNav.back()) useWorld.setState({ mapOpen: false }) }
       else ui.top(true)
     }
     window.addEventListener('keydown', onKey)
