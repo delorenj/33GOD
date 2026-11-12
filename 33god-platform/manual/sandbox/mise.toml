@@ -1,0 +1,14 @@
+[tools]
+node = "24"
+
+[tasks.dev]
+description = "Run the factory sandbox with hot reload"
+run = "npm run dev"
+
+[tasks.build]
+description = "Typecheck and build into ../books/sandbox (served live at manual.delo.sh/sandbox/)"
+run = "npm ci --silent && npm run build"
+
+[tasks.deploy]
+description = "Same as build: nginx bind-mounts ../books, so a build is a deploy"
+depends = ["build"]
