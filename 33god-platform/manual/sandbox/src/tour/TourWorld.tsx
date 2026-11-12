@@ -44,10 +44,24 @@ function Figure({ color, accent, height, speaking, isNew }: { color: string; acc
         </mesh>
       </group>
       {isNew && (
-        <mesh position={[0.12, 0.75, 0.23]}>
-          <boxGeometry args={[0.16, 0.2, 0.02]} />
-          <meshStandardMaterial color="#FFFFFF" />
-        </mesh>
+        <group>
+          {/* the knee-length hi-vis vest that says "new": a size too big, with reflective trim */}
+          <mesh position={[0, 0.5, 0]} castShadow>
+            <cylinderGeometry args={[0.27, 0.31, 0.78, 18, 1, true]} />
+            <meshStandardMaterial color="#FB923C" emissive="#F97316" emissiveIntensity={0.15} roughness={0.6} side={THREE.DoubleSide} />
+          </mesh>
+          {[0.32, 0.62].map((y) => (
+            <mesh key={y} position={[0, y, 0]}>
+              <cylinderGeometry args={[0.285 + (0.62 - y) * 0.05, 0.29 + (0.62 - y) * 0.05, 0.05, 18, 1, true]} />
+              <meshStandardMaterial color="#F5F5F4" emissive="#FDE68A" emissiveIntensity={0.5} side={THREE.DoubleSide} />
+            </mesh>
+          ))}
+          {/* visitor's lanyard */}
+          <mesh position={[0.1, 0.82, 0.29]}>
+            <boxGeometry args={[0.14, 0.18, 0.02]} />
+            <meshStandardMaterial color="#FFFFFF" />
+          </mesh>
+        </group>
       )}
     </group>
   )

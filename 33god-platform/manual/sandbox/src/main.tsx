@@ -30,13 +30,16 @@ function App() {
 }
 
 seed()
-// Deep links: ?walk skips the intro; ?at=<station> starts there; ?bulb=<id> opens a lightbulb.
+// Deep links: ?walk skips the intro; ?at=<station> starts there; ?bulb=<id> opens a lightbulb; ?tour[=N] starts the tour (at stop N).
 {
   const q = new URLSearchParams(location.search)
   const at = q.get('at')
   const bulb = q.get('bulb')
   if (q.has('walk') || at || bulb) useWorld.setState({ intro: false })
-  if (q.has('tour')) setTimeout(() => tour.start(), 300)
+  if (q.has('tour')) {
+    const n = Number(q.get('tour'))
+    setTimeout(() => (n >= 1 ? tour.go(n - 1) : tour.start()), 300)
+  }
   if (at && at in stationById) setTimeout(() => ui.openStation(at as StationId), 400)
   if (bulb && bulb in bulbById) setTimeout(() => ui.openBulb(bulb as BulbId), 600)
 }

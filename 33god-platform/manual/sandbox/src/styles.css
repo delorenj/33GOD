@@ -143,11 +143,15 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .tour-top > * { pointer-events: auto; }
 .tour-caption { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 6px 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
 .tour-caption b { font: 600 18px Fredoka, sans-serif; }
+.side-ribbon { display: inline-block; margin-top: 2px; font: 700 11px Fredoka, sans-serif; letter-spacing: 0.05em; text-transform: uppercase; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 1px 8px; align-self: flex-start; }
+.padclock { display: flex; align-items: center; gap: 6px; background: #1c1917; color: #fde68a; border-radius: 10px; padding: 6px 12px; font: 600 14px ui-monospace, Menlo, monospace; box-shadow: var(--shadow); white-space: nowrap; }
+.padclock span { font-size: 14px; }
 .tour-dots { display: flex; gap: 5px; flex: 1; flex-wrap: wrap; }
 .tour-dots i { width: 9px; height: 9px; border-radius: 99px; background: rgba(42,36,24,0.18); }
 .tour-dots i.past { background: var(--bb); }
 .tour-dots i.now { background: var(--bulb); box-shadow: 0 0 0 3px rgba(245,184,28,0.3); }
 .tour-leave { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; font-weight: 600; box-shadow: var(--shadow); }
+.tour-on .tick, .tour-on .parcel-tag, .tour-on .tag-teal, .tour-on .puff, .tour-on .tag-red { display: none; }
 .notebook { position: fixed; top: 84px; left: 16px; width: 280px; max-height: 40vh; overflow: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; box-shadow: var(--shadow); z-index: 39; font-size: 13.5px; }
 .notebook summary { font: 600 14px Fredoka, sans-serif; cursor: pointer; }
 .notebook ol { margin: 6px 0 2px; padding-left: 20px; }
@@ -171,7 +175,10 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .learned-list li { margin: 5px 0; }
 @media (max-width: 720px) {
   .tour-dots { display: none; }
-  .notebook { top: auto; bottom: 200px; left: 12px; right: 12px; width: auto; max-height: 30vh; }
+  .tour-top { flex-wrap: wrap; gap: 8px; }
+  .padclock { font-size: 12px; padding: 4px 9px; order: 3; }
+  .notebook { top: 124px; bottom: auto; left: 12px; right: auto; width: auto; max-width: calc(100vw - 24px); max-height: 30vh; padding: 4px 10px; }
+  .notebook[open] { right: 12px; }
   .say { font-size: 16.5px; }
   .dialogue { padding: 24px 16px 10px; }
 }

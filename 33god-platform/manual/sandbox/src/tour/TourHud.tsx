@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { bulbById } from '../content'
+import { bulbById, isPortrait, type Vec3 } from '../content'
 import { ui, useWorld } from '../sim/store'
 import { CAST, END_CARD, OFF_ROUTE, TOUR } from './script'
 import { setFor } from './sets'
@@ -24,6 +24,12 @@ export const tour = {
       fly(s.beat + 1)
     } else useWorld.setState({ line: beat.lines.length }) // the end card
   },
+  /** Jump straight to a stop (deep link ?tour=N, 1-based). */
+  go(i: number) {
+    const k = Math.max(0, Math.min(TOUR.length - 1, i))
+    useWorld.setState({ mode: 'tour', intro: false, beat: k, line: 0, station: null, inspect: null, bulb: null })
+    fly(k)
+  },
   back() {
     const s = useWorld.getState()
     if (s.line > 0) return useWorld.setState({ line: s.line - 1 })
@@ -36,7 +42,12 @@ export const tour = {
 }
 
 function fly(i: number) {
-  const v = setFor(TOUR[i].set).view
+  const set = setFor(TOUR[i].set)
+  const base = set.view
+  // a phone is narrow: back the camera off along its own line so the speakers either side stay in frame
+  const k = isPortrait() ? (set.portraitK ?? 1.6) : 1
+  const pos = base.pos.map((p, j) => base.target[j] + (p - base.target[j]) * k) as Vec3
+  const v = { pos, target: base.target }
   useWorld.setState((s) => ({ focus: { id: 'custom', nonce: (s.focus?.nonce ?? 0) + 1, view: v } }))
 }
 
@@ -73,6 +84,11 @@ export function TourHud() {
   const line = beat.lines[Math.min(li, beat.lines.length - 1)]
   const who = CAST[line.who]
 
+  // the tour frames people, not the belt's instruments: hide ruler, parcel, desk and puff tags while it runs
+  useEffect(() => {
+    document.body.classList.add('tour-on')
+    return () => document.body.classList.remove('tour-on')
+  }, [])
   // let the camera land before the first line types out
   useEffect(() => {
     setArrived(false)
@@ -80,6 +96,15 @@ export function TourHud() {
     return () => clearTimeout(t)
   }, [bi])
   useEffect(() => setTyped(false), [bi, li])
+  // a line's hold is a beat of silence after it finishes typing, before the next can come (the pause is the joke)
+  const holdT = useRef<number | undefined>(undefined)
+  useEffect(() => () => clearTimeout(holdT.current), [bi, li])
+  const finishTyping = () => {
+    const ms = beat.lines[Math.min(li, beat.lines.length - 1)]?.hold ?? 0
+    clearTimeout(holdT.current)
+    if (ms > 0) holdT.current = window.setTimeout(() => setTyped(true), ms)
+    else setTyped(true)
+  }
 
   const advance = () => {
     if (!arrived) return setArrived(true)
@@ -126,15 +151,17 @@ export function TourHud() {
     <div className="tour">
       <div className="tour-top">
         <div className="tour-caption">
-          <span className="eyebrow">Stop {bi + 1} of {TOUR.length}</span>
+          <span className="eyebrow">Stop {bi + 1} of {TOUR.length}{beat.side ? ' · side scene' : ''}</span>
           <b>{beat.caption}</b>
+          {beat.side && <span className="side-ribbon">Not on this errand’s route</span>}
         </div>
+        {beat.split && <div className="padclock" title="The pad's working clock, from a real traced memo"><span>⏱</span>{beat.split}</div>}
         <div className="tour-dots">{TOUR.map((b, i) => <i key={b.id} className={i < bi ? 'past' : i === bi ? 'now' : ''} />)}</div>
         <button className="tour-leave" onClick={() => tour.leave()}>Leave tour</button>
       </div>
 
       {learned.length > 0 && (
-        <details className="notebook" open={window.innerWidth > 720}>
+        <details className="notebook">
           <summary>Your notebook · {learned.length}</summary>
           <ol>{learned.map((t, i) => <li key={i}>{t}</li>)}</ol>
         </details>
@@ -147,7 +174,7 @@ export function TourHud() {
               {who?.name ?? line.who}
               {who && <span>{who.role}</span>}
             </div>
-            <p className="say">{typed ? line.text : <Typewriter key={`${bi}-${li}`} text={line.text} onDone={() => setTyped(true)} />}</p>
+            <p className="say">{typed ? line.text : <Typewriter key={`${bi}-${li}`} text={line.text} onDone={finishTyping} />}</p>
             <div className="dialogue-foot">
               {beat.bulb && li === beat.lines.length - 1 && typed && !bulb && (
                 <button className="bulbbtn" onClick={(e) => { e.stopPropagation(); ui.openBulb(beat.bulb!) }}>💡 {bulbById[beat.bulb].title}</button>
