@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { music } from './audio/music'
+import { voice } from './audio/voice'
 import { BULBS, STATIONS, bulbById, stationById, type StationId } from './content'
 import { domainById } from './domains'
 import { MapOverlay } from './map/MapOverlay'
@@ -69,6 +70,25 @@ function Quest() {
   )
 }
 
+function VoiceButton() {
+  const muted = useSyncExternalStore((f) => voice.onMuted(f), () => voice.muted)
+  return <button data-music className={muted ? '' : 'on'} onClick={() => voice.toggleMute()} aria-label={muted ? 'Read aloud: off' : 'Read aloud: on'} title="Read panels and tips out loud">{muted ? '🔇' : '🔊'}</button>
+}
+
+// Read out loud: a station panel in the narrator's voice, a lightbulb tip in the tips voice. Lines are numbered
+// st-<id>-0.. / bulb-<id>-0.. (tools/voice/lines.mjs); play them in order until one is missing or cut off.
+async function narrate(prefix: string) {
+  for (let n = 0; ; n++) if (!(await voice.say(`${prefix}-${n}`))) return
+}
+function Narration() {
+  const station = useWorld((s) => (s.inspect === null ? s.station : null))
+  const bulb = useWorld((s) => s.bulb)
+  useEffect(() => { if (station) void narrate(`st-${station}`); else voice.stop() }, [station])
+  useEffect(() => { if (bulb) void narrate(`bulb-${bulb}`); else voice.stop() }, [bulb])
+  useEffect(() => voice.onSpeaking((on) => music.duck(on)), [])
+  return null
+}
+
 function MusicButton() {
   const on = useSyncExternalStore(music.subscribe, () => music.on)
   return <button data-music className={on ? 'on' : ''} onClick={() => void music.toggle()} aria-label={on ? 'Music off' : 'Music on'} title="Background music">♪</button>
@@ -85,6 +105,7 @@ function Controls() {
       <SimClock />
       <button className={dockShut ? 'on warn' : ''} onClick={() => useWorld.setState({ dockShut: !dockShut })}>{dockShut ? 'Open hook-hub' : 'Shut hook-hub'}</button>
       <button className={sources ? 'on' : ''} onClick={() => useWorld.setState({ sources: !sources })}>{sources ? 'Hide the code' : 'Show the code'}</button>
+      <VoiceButton />
       <MusicButton />
       <button onClick={() => ui.top(true)} title="The map (Esc). Scroll up for the top view, scroll down to dive in.">Map <kbd>Esc</kbd></button>
       <select value="" onChange={(e) => (e.target.value === 'overview' ? ui.overview() : ui.openStation(e.target.value as StationId))}>
@@ -264,7 +285,7 @@ export function Hud() {
   const mode = useWorld((s) => s.mode)
   const top = useWorld((s) => s.cam === 'top')
   if (intro) return <Intro />
-  if (mode === 'tour') return (<><TourHud /><BulbModal /></>)
+  if (mode === 'tour') return (<><TourHud /><BulbModal /><Narration /></>)
   return (
     <div className={`${panelOpen ? 'has-panel' : ''} ${top ? 'cam-top' : ''}`}>
       <div className="title card"><b>The Factory</b> <span className="muted">33GOD Manual · v0.1</span></div>
@@ -274,6 +295,7 @@ export function Hud() {
       <Inspector />
       <MapOverlay />
       <BulbModal />
+      <Narration />
     </div>
   )
 }

@@ -1,0 +1,13 @@
+[
+  { "id": "narrator-steady", "role": "narrator-steady", "text": "This is Bloodbank. Every time something happens, somebody writes it on a sticky note and puts it on the board. Anyone who cares can read it." },
+  { "id": "narrator-wry", "role": "narrator-wry", "text": "This is Bloodbank. Every time something happens, somebody writes it on a sticky note and puts it on the board. Anyone who cares can read it." },
+  { "id": "narrator-alto", "role": "narrator-alto", "text": "This is Bloodbank. Every time something happens, somebody writes it on a sticky note and puts it on the board. Anyone who cares can read it." },
+
+  { "id": "tips-giddy", "role": "tips-giddy", "text": "What is fan-out? One note, lots of readers! Everybody gets their own copy, and the note stays right where it is!" },
+  { "id": "tips-squeak", "role": "tips-squeak", "text": "What is fan-out? One note, lots of readers! Everybody gets their own copy, and the note stays right where it is!" },
+  { "id": "tips-bubbly", "role": "tips-bubbly", "text": "What is fan-out? One note, lots of readers! Everybody gets their own copy, and the note stays right where it is!" },
+
+  { "id": "floor-drone", "role": "floor-drone", "text": "Signed off. That one's done. I think. Yeah. Next envelope." },
+  { "id": "floor-mumble", "role": "floor-mumble", "text": "Signed off. That one's done. I think. Yeah. Next envelope." },
+  { "id": "floor-dazed", "role": "floor-dazed", "text": "Signed off. That one's done. I think. Yeah. Next envelope." }
+]
