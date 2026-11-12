@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { music } from './audio/music'
 import { BULBS, STATIONS, bulbById, stationById, type StationId } from './content'
 import { domainById } from './domains'
 import { MapOverlay } from './map/MapOverlay'
@@ -68,6 +69,11 @@ function Quest() {
   )
 }
 
+function MusicButton() {
+  const on = useSyncExternalStore(music.subscribe, () => music.on)
+  return <button data-music className={on ? 'on' : ''} onClick={() => void music.toggle()} aria-label={on ? 'Music off' : 'Music on'} title="Background music">♪</button>
+}
+
 function Controls() {
   const { paused, speed, dockShut, sources } = useWorld()
   return (
@@ -79,6 +85,7 @@ function Controls() {
       <SimClock />
       <button className={dockShut ? 'on warn' : ''} onClick={() => useWorld.setState({ dockShut: !dockShut })}>{dockShut ? 'Open hook-hub' : 'Shut hook-hub'}</button>
       <button className={sources ? 'on' : ''} onClick={() => useWorld.setState({ sources: !sources })}>{sources ? 'Hide the code' : 'Show the code'}</button>
+      <MusicButton />
       <button onClick={() => ui.top(true)} title="The map (Esc). Scroll up for the top view, scroll down to dive in.">Map <kbd>Esc</kbd></button>
       <select value="" onChange={(e) => (e.target.value === 'overview' ? ui.overview() : ui.openStation(e.target.value as StationId))}>
         <option value="" disabled>Go to…</option>
@@ -248,7 +255,10 @@ export function Hud() {
       else ui.top(true)
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    // browsers only allow sound after a click: resume the music on the first one if it was left on
+    const first = (e: PointerEvent) => { if (music.wanted() && !music.on && !(e.target as Element | null)?.closest?.('[data-music]')) void music.start() }
+    window.addEventListener('pointerdown', first, { once: true })
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointerdown', first) }
   }, [])
   const panelOpen = useWorld((s) => s.station !== null || s.inspect !== null)
   const mode = useWorld((s) => s.mode)
