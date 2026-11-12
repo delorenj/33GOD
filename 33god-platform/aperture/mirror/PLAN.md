@@ -36,7 +36,7 @@ Corollaries:
 | Component | big-chungus mode | Mac mode | Notes |
 |---|---|---|---|
 | NATS JetStream (BLOODBANK_EVENTS 7d / BLOODBANK_COMMANDS 1d workqueue) | compose | **compose (Colima)** | Fresh bloodbank-owned bus, `127.0.0.1:4222`. G1's bus is retired with G1 (decision 4) — the candybar survey's "reuse G1 NATS" suggestion is superseded. |
-| Dapr placement + sidecars | compose | **compose** | Need `daprio/daprd` > 1.13.0 (G1's enricher-daprd crash-loop lesson). |
+| Dapr placement + sidecars | compose | **compose** | Candystore's sidecar runs `daprio/daprd` 1.13.0 (ratified in W3-1; the zombie-consumer reaper in `init.sh` removed the crash trigger). The "> 1.13.0" lesson belongs to the embeddings `enricher-daprd`, not to W8-3's turn-enricher, which has no Dapr (W8-3: no placement or sidecar bump was needed or made). |
 | Candystore (pgvector PG + app + daprd) | compose | **compose** | Fresh empty DB on loopback `8683`, **only after G1 frees the port**. Jarad's 26 GB / 4.76 M events are **not** migrated. G1's event history is not preserved as a live service (recorded consequence of decision 4). |
 | hook-hub | systemd user | **native launchd** | Needs Python ≥ 3.11 (`tomllib`); Homebrew 3.14 present. Socket at `~/.local/state/33god/hook-hub.sock`. Port `8685`. |
 | bb-hook + `~/.agents/hooks` | native | **native** | Repair broken links (W1), then re-enable `BB_HOOK_HUB`. |
@@ -50,7 +50,7 @@ Corollaries:
 | MinIO | server on Jarad infra (`s3.delo.sh`) | **consumer only** (`mc` client) | No MinIO server on the Mac. |
 | Jev / LiteLLM gateway | compose (jev.delo.sh) | **NOT deployed** (decision 2) | Remote consumer only; `damian-studio` key in the interim store. Drop tuxedo-morpho exposure. `/v1/models` empty by design — health is an authorized `/typesafe/v1/...` round trip. |
 | jev-clairic / jev-rollup | native CLI | **native CLI** after genericization (paths, key handling) | Install task: W9-5 (the draft had genericization but no install task). |
-| turn-enricher | compose | **compose, optional consumer** (W8-3) | Points at remote `jev.delo.sh`, joins the new bloodbank bus. |
+| turn-enricher | compose | **compose, optional consumer** (W8-3) | Points at remote `jev.delo.sh`, joins the new bloodbank bus. Landed in W8-3 as project `33god-enricher` (`mac/compose.enricher.yaml`), Jev-only (`CLAIRIC_ENABLED=false`: no Cloudflare account on the Mac). |
 | delonet-daily-report / activity-report | native + Candybar | **native + Candybar** | Skill source must be recovered (dangling symlink on Mac). Email → `dami.miller@gmail.com` via Resend. |
 | Wax / Vinyl (HeyMa audio) | native | **native** | Needs Damian's macOS Mic/Accessibility grants, granted interactively to the actual installed processes (W8-2). |
 | Obsidian | app | **app (existing)** | Vault mapping decision; `~/code/HSub` exists. |
