@@ -7,10 +7,10 @@ import { TourHud, tour } from './tour/TourHud'
 
 const BB_PARTS: StationId[] = ['courier', 'dock', 'labeldesk', 'belt']
 const HINTS: Record<string, string> = {
-  courier: 'Who carries the parcels?',
-  dock: 'Where do parcels go in?',
-  labeldesk: 'Who checks the words on a label?',
-  belt: 'Where does every note end up?',
+  courier: 'What small program sends each tool’s news?',
+  dock: 'What turns raw hooks into one event?',
+  labeldesk: 'What sets the rules for naming notes?',
+  belt: 'Where is every note posted?',
 }
 const pl = (k: number, one: string, many = one + 's') => `${k} ${k === 1 ? one : many}`
 const goTo = (name: string) => `Go to ${/^(the|a) /i.test(name) ? name.toLowerCase() : 'the ' + name.toLowerCase()}`
@@ -32,9 +32,9 @@ function Intro() {
       <div className="intro-card">
         <div className="eyebrow">The 33GOD Manual · experiment v0.1</div>
         <h1>The Factory</h1>
-        <p>You are on the floor of the warehouse where news from your AI tools gets sorted, kept and acted on. Every part is a real piece of 33GOD.</p>
-        <p><b>Your first job: find Bloodbank.</b> On this floor it is a department called Material Handling, painted blue. Look for the blue Bloodbank badge, then click each part.</p>
-        <p className="muted">Bobbing lightbulbs explain the idea behind a station. Click any note on the belt to read it. This is a picture, so it breaks in places; each card says where.</p>
+        <p>This warehouse is a picture of 33GOD. Your AI tools send news, and 33GOD sorts it, keeps it and acts on it. Every label shows a real 33GOD name.</p>
+        <p>The floor is split into 7 colored zones: Agents, Bloodbank, Holocene, Triggers, Workers, Memory and Voice. <b>Your first job: find Bloodbank.</b> It is the part that carries all the news. Click each of its parts to learn them.</p>
+        <p className="muted">Scroll up to see the whole floor from above. Press Esc for the map. Bobbing lightbulbs explain an idea. Click any note on the belt to read it. This is only a picture, so it is wrong in a few places. Each card says where.</p>
         <div className="intro-actions">
           <button className="primary" onClick={() => tour.start()}>Take the new-hire tour</button>
           <button className="ghost" onClick={() => useWorld.setState({ intro: false })}>Explore freely</button>
@@ -61,8 +61,8 @@ function Quest() {
           </li>
         ))}
       </ul>
-      {done && <p className="done">Found it. The courier, the dock, the label desk and the belt are Bloodbank. Everything else on the floor sticks notes on, tears copies off, or takes envelopes, and a few do more than one.</p>}
-      {!done && <p className="muted small">Some parts are round the back of the belt. Orbit round, or use Go to…</p>}
+      {done && <p className="done">Found it. bb-hook, hook-hub, the naming contract and the bus are Bloodbank. Everything else posts events, reads copies, or takes commands, and a few do more than one.</p>}
+      {!done && <p className="muted small">Some parts are round the back of the belt. Turn the view, or use Go to…</p>}
       <div className="bulbcount">💡 {bulbs.length} of {BULBS.length} lightbulbs</div>
     </div>
   )
@@ -77,7 +77,7 @@ function Controls() {
         <button key={x} className={speed === x ? 'on' : ''} onClick={() => useWorld.setState({ speed: x })}>{x}×</button>
       ))}
       <SimClock />
-      <button className={dockShut ? 'on warn' : ''} onClick={() => useWorld.setState({ dockShut: !dockShut })}>{dockShut ? 'Open the dock' : 'Shut the dock'}</button>
+      <button className={dockShut ? 'on warn' : ''} onClick={() => useWorld.setState({ dockShut: !dockShut })}>{dockShut ? 'Open hook-hub' : 'Shut hook-hub'}</button>
       <button className={sources ? 'on' : ''} onClick={() => useWorld.setState({ sources: !sources })}>{sources ? 'Hide the code' : 'Show the code'}</button>
       <button onClick={() => ui.top(true)} title="The map (Esc). Scroll up for the top view, scroll down to dive in.">Map <kbd>Esc</kbd></button>
       <select value="" onChange={(e) => (e.target.value === 'overview' ? ui.overview() : ui.openStation(e.target.value as StationId))}>
@@ -226,7 +226,7 @@ function BulbModal() {
         <div className="modal-foot">
           {b.status === 'proposal' && <span className="chip">draft copy · proposal</span>}
           {id === 'failopen' && useWorld.getState().mode !== 'tour' && (
-            <button className="primary" onClick={() => { useWorld.setState({ dockShut: true, bulb: null }); ui.openStation('courier') }}>Shut the dock and watch</button>
+            <button className="primary" onClick={() => { useWorld.setState({ dockShut: true, bulb: null }); ui.openStation('courier') }}>Shut hook-hub and watch</button>
           )}
           <button onClick={() => { close(); ui.openStation(b.station) }}>{goTo(stationById[b.station].name)}</button>
         </div>

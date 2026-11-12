@@ -141,7 +141,7 @@ export const STATIONS: Station[] = [
     id: 'crew', name: 'hermes-gateway', place: 'Crew hall', real: 'takes jobs off the bus and hands them to Hermes agents', domain: 'workers',
     does: [
       'hermes-gateway takes job commands off the back of the bus. Each command names the one Hermes agent it is for. On the floor, it is the crew hall, with a hatch, 4 desks and a tray of 4.',
-      'A command it has taken stays on the bus until a worker signs it off, or until its 1 day runs out. Every sign-off posts an “invocation completed” event on the front. A job that fails five times is signed off as failed, and an “invocation failed” event goes up too.',
+      'A command it has taken stays on the bus until a worker signs it off, or until its 1 day runs out. A job that works posts an “invocation completed” event on the front. A job that fails five times is signed off as failed and posts an “invocation failed” event instead.',
     ],
     breaks: 'A sign-off means the gateway is done with the command, not that the job worked. Here it is drawn with 4 desks and a tray of 4. The real gateway works on 4 jobs at once, with room for 64 more waiting. It also has an express hatch for jobs a person is waiting on, and that one gives each job 8 tries, not 5.',
     evidence: ['bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/contract.py:40-49: durable bloodbank-hermes-gateway pulls bloodbank.cmd.agent.invocation.start (batch); bloodbank-hermes-gateway-interactive pulls ...invocation.invoke', 'live: max_ack_pending 68, max_deliver 5'],
