@@ -1,0 +1,183 @@
+<title>Damian's 33GOD</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: one narrow column, like a level-select screen. Summary meter first, then the two big news cards, then the 11 steps. */
+:root {
+  --bg: #eef1f8;
+  --card: #ffffff;
+  --ink: #1b2340;
+  --soft: #5a6488;
+  --line: #d9deec;
+  --blue: #2f5bff;
+  --blue-wash: #e3e9ff;
+  --done: #1e9e61;
+  --done-wash: #dcf3e7;
+  --cook: #c97a00;
+  --cook-wash: #fff0d1;
+  --next: #8a92ad;
+  --next-wash: #eceef5;
+  --you: #d6336c;
+  --you-wash: #ffe3ec;
+  --display: Fredoka, "Baloo 2", "Trebuchet MS", sans-serif;
+  --body: Nunito, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11152a; --card: #1a2040; --ink: #eef1ff; --soft: #a7afd0; --line: #2c3460;
+    --blue: #7d9aff; --blue-wash: #23306a; --done: #4fd391; --done-wash: #173d2c;
+    --cook: #ffc24d; --cook-wash: #3d2f12; --next: #8890b3; --next-wash: #232a4d;
+    --you: #ff7aa6; --you-wash: #45192c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11152a; --card: #1a2040; --ink: #eef1ff; --soft: #a7afd0; --line: #2c3460;
+  --blue: #7d9aff; --blue-wash: #23306a; --done: #4fd391; --done-wash: #173d2c;
+  --cook: #ffc24d; --cook-wash: #3d2f12; --next: #8890b3; --next-wash: #232a4d;
+  --you: #ff7aa6; --you-wash: #45192c; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font: 500 17px/1.5 var(--body); }
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 32px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.12; }
+h1 { font-size: clamp(32px, 7vw, 48px); font-weight: 700; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 19px; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font: 700 13px var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+.lede { color: var(--soft); font-size: 19px; max-width: 34ch; }
+header { display: grid; gap: 10px; }
+
+/* meter */
+.meter { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 14px; }
+.bar { display: grid; grid-template-columns: repeat(11, 1fr); gap: 5px; }
+.bar i { height: 22px; border-radius: 6px; background: var(--next-wash); border: 2px solid var(--line); }
+.bar i.d { background: var(--done); border-color: var(--done); }
+.bar i.c { background: repeating-linear-gradient(-45deg, var(--cook) 0 6px, var(--cook-wash) 6px 12px); border-color: var(--cook); }
+.tally { display: flex; flex-wrap: wrap; gap: 8px 22px; font-weight: 800; }
+.tally span { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 12px; height: 12px; border-radius: 99px; flex: none; }
+
+/* news cards */
+.news { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.big { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.big.manual { background: var(--blue-wash); border-color: transparent; }
+.big a.go { justify-self: start; margin-top: 4px; background: var(--blue); color: var(--bg); text-decoration: none; font: 600 16px var(--display); padding: 9px 16px; border-radius: 12px; }
+.big a.go:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.big ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+
+/* chips */
+.chip { justify-self: start; font: 700 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+.chip.d { background: var(--done-wash); color: var(--done); }
+.chip.c { background: var(--cook-wash); color: var(--cook); }
+.chip.n { background: var(--next-wash); color: var(--next); }
+.chip.y { background: var(--you-wash); color: var(--you); }
+
+/* steps */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+.steps li > div { min-width: 0; display: grid; gap: 2px; }
+.num { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font: 700 20px var(--display); font-variant-numeric: tabular-nums; }
+.steps .d .num { background: var(--done); color: var(--card); }
+.steps .c .num { background: var(--cook-wash); color: var(--cook); border: 2px solid var(--cook); }
+.steps .n .num { background: var(--next-wash); color: var(--next); }
+.steps .n h3 { color: var(--soft); }
+.steps p { color: var(--soft); font-size: 15.5px; }
+
+/* wins + yours */
+.list { display: grid; gap: 10px; }
+.win { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; }
+.win .was { color: var(--soft); text-decoration: line-through; text-decoration-color: var(--you); }
+.win .arrow { font: 700 20px var(--display); color: var(--done); }
+.win .now { font-weight: 800; }
+.yours { background: var(--you-wash); border-radius: 20px; padding: 20px; display: grid; gap: 12px; }
+.yours ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-weight: 700; }
+.yours code { font: 600 14px ui-monospace, Menlo, monospace; background: var(--card); padding: 1px 6px; border-radius: 6px; }
+footer { color: var(--soft); font-size: 14px; }
+
+@media (max-width: 600px) {
+  .news { grid-template-columns: 1fr; }
+  .steps li { grid-template-columns: 40px 1fr; }
+  .steps li .chip { grid-column: 2; }
+  .num { width: 40px; height: 40px; }
+  .win { grid-template-columns: 1fr; gap: 2px; }
+  .win .arrow { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar i.c { animation: slide 1.2s linear infinite; background-size: 200% 100%; }
+  @keyframes slide { to { background-position: -34px 0; } }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Damian's Mac Studio</span>
+    <h1>Your Mac is turning into an AI studio.</h1>
+    <p class="lede">Here is what's done, what's cooking, and the 4 things only you can do.</p>
+  </header>
+
+  <section class="meter" aria-label="Progress">
+    <div class="bar" aria-hidden="true"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i><i class="c"></i><i class="c"></i><i></i><i></i><i></i></div>
+    <div class="tally">
+      <span><i class="dot" style="background:var(--done)"></i>5 done</span>
+      <span><i class="dot" style="background:var(--cook)"></i>3 cooking</span>
+      <span><i class="dot" style="background:var(--next)"></i>3 next</span>
+    </div>
+  </section>
+
+  <section class="news">
+    <article class="big manual">
+      <span class="chip c">Being made for you</span>
+      <h2>The Manual</h2>
+      <p>A little game that teaches you 33GOD. Walk a toy warehouse. Watch notes ride the belt. Tap anything to see what it does.</p>
+      <p>Coming soon: a blueprint map, voices, and music.</p>
+      <a class="go" href="https://manual.delo.sh/sandbox/" target="_blank" rel="noopener">Play it now</a>
+    </article>
+    <article class="big">
+      <span class="chip c">Building now</span>
+      <h2>Your own AI lane</h2>
+      <ul>
+        <li>Your Claude and Codex work for you only.</li>
+        <li>When they run out, you share our backup lane.</li>
+        <li>Your own OpenRouter key, $5 a day max.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="list" aria-labelledby="steps-h">
+    <h2 id="steps-h">The 11 steps</h2>
+    <ol class="steps">
+      <li class="d"><span class="num">0</span><div><h3>Safe move-in</h3><p>We backed up everything first. Then we gave your apps a faster engine.</p></div><span class="chip d">Done</span></li>
+      <li class="d"><span class="num">1</span><div><h3>Tools unpacked</h3><p>All the code and tools are on your Mac.</p></div><span class="chip d">Done</span></li>
+      <li class="d"><span class="num">2</span><div><h3>Message system</h3><p>Your AI helpers can pass notes to each other, fast.</p></div><span class="chip d">Done</span></li>
+      <li class="d"><span class="num">3</span><div><h3>Memory box</h3><p>Everything your helpers do gets saved in one place.</p></div><span class="chip d">Done</span></li>
+      <li class="d"><span class="num">4</span><div><h3>Task board</h3><p>Your projects and your task board are hooked up.</p></div><span class="chip d">Done</span></li>
+      <li class="c"><span class="num">5</span><div><h3>One clock</h3><p>One clock now runs every repeat job. Its first test worked. The last piece waits on you.</p></div><span class="chip c">Almost</span></li>
+      <li class="c"><span class="num">6</span><div><h3>Your AI team</h3><p>Your AI lane is tested. We hit one snag on the helper upgrade. Fixing it.</p></div><span class="chip c">Cooking</span></li>
+      <li class="c"><span class="num">7</span><div><h3>Long-term memory</h3><p>Your memory server is backed up and safe. Next we wire it in.</p></div><span class="chip c">Cooking</span></li>
+      <li class="n"><span class="num">8</span><div><h3>Talk to tasks</h3><p>Say it out loud. It turns into tasks.</p></div><span class="chip n">Next</span></li>
+      <li class="n"><span class="num">9</span><div><h3>Morning report</h3><p>A short report waits for you every day at 6 AM.</p></div><span class="chip n">Next</span></li>
+      <li class="n"><span class="num">10</span><div><h3>Final check</h3><p>We test it all and hand you the keys.</p></div><span class="chip n">Next</span></li>
+    </ol>
+  </section>
+
+  <section class="list" aria-labelledby="wins-h">
+    <h2 id="wins-h">3 things we rescued</h2>
+    <div class="win"><span class="was">Your Mac froze solid</span><span class="arrow">→</span><span class="now">Back up. Nothing lost.</span></div>
+    <div class="win"><span class="was">Memory server kept crashing</span><span class="arrow">→</span><span class="now">Fixed. All 9 chats safe.</span></div>
+    <div class="win"><span class="was">Daily task backup broke</span><span class="arrow">→</span><span class="now">Fixed. Fresh backup made.</span></div>
+  </section>
+
+  <section class="yours" aria-labelledby="you-h">
+    <span class="chip y">Only you can do these</span>
+    <h2 id="you-h">Your 4 jobs</h2>
+    <ol>
+      <li>Run <code>~/damian-setup.sh</code> on your Mac. It asks before each change.</li>
+      <li>Pick which skills to keep.</li>
+      <li>Sign in to Codex, so it joins your AI lane.</li>
+      <li>Pick a time to restart your Mac, so we can watch it come back on its own.</li>
+    </ol>
+  </section>
+
+  <footer>Updated November 12, 2026. We'll keep this page fresh as steps finish.</footer>
+</div>
