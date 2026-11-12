@@ -77,18 +77,33 @@ const LOOK: Record<Flyer['look'], { color: string; size: [number, number, number
 function FlyerMesh({ f }: { f: Flyer }) {
   const m = useRef<THREE.Mesh>(null)
   const look = LOOK[f.look]
+  const phase = (f.id * 2.399) % (Math.PI * 2) // each scrap flutters its own way
   useFrame(() => {
     if (!m.current) return
-    const u = Math.min(1, Math.max(0, (clock.t - f.t0) / f.dur))
-    const e = f.look.startsWith('scrap') ? u * u : 1 - Math.pow(1 - u, 2)
+    const k = clock.t - f.t0
+    const u = Math.min(1, Math.max(0, k / f.dur))
+    const mat = m.current.material as THREE.MeshStandardMaterial
+    if (f.look.startsWith('scrap')) {
+      // a falling leaf: eases off the belt, sways side to side, tips over, and settles flat on the floor
+      const e = u * u * (3 - 2 * u)
+      const calm = Math.pow(1 - u, 1.5)
+      m.current.position.set(
+        f.from[0] + (f.to[0] - f.from[0]) * e + Math.sin(u * Math.PI * 3 + phase) * 0.45 * calm,
+        f.from[1] + (f.to[1] - f.from[1]) * e,
+        f.from[2] + (f.to[2] - f.from[2]) * e + Math.cos(u * Math.PI * 2.5 + phase) * 0.3 * calm,
+      )
+      m.current.rotation.set(-Math.PI / 2 * e + Math.sin(u * Math.PI * 6 + phase) * 0.6 * calm, phase + e * 1.8, Math.cos(u * Math.PI * 5 + phase) * 0.5 * calm)
+      const rest = f.hold ? Math.max(0, (k - f.dur) / f.hold) : 0
+      mat.opacity = look.opacity * (1 - Math.max(0, rest - 0.5) * 2)
+      return
+    }
+    const e = 1 - Math.pow(1 - u, 2)
     m.current.position.set(
       f.from[0] + (f.to[0] - f.from[0]) * e,
       f.from[1] + (f.to[1] - f.from[1]) * e + Math.sin(Math.PI * u) * f.arc,
       f.from[2] + (f.to[2] - f.from[2]) * e,
     )
-    if (f.look.startsWith('scrap')) m.current.rotation.set(u * 4, u * 2, u * 3)
-    else if (f.look === 'copy') m.current.rotation.set(0, u * Math.PI * 2, Math.sin(u * 8) * 0.3)
-    const mat = m.current.material as THREE.MeshStandardMaterial
+    if (f.look === 'copy') m.current.rotation.set(0, u * Math.PI * 2, Math.sin(u * 8) * 0.3)
     mat.opacity = look.opacity * (f.look === 'copy' ? 1 - Math.max(0, u - 0.8) * 5 : 1)
   })
   return (

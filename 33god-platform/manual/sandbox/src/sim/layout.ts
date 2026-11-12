@@ -21,13 +21,13 @@ export const LABEL_DESK: Vec3 = [-9.5, 0, 3]
 
 export const READERS = {
   archive: [8, 1.4, 5] as Vec3,
-  control: [9.5, 4.6, 0.5] as Vec3,
-  rules: [5.5, 1.3, 8.5] as Vec3,
+  control: [-5, 4.6, 11.5] as Vec3, // Holocene, up front, its window facing the belt
+  rules: [-14, 1.3, -7] as Vec3, // n8n, in the Triggers zone
 }
 export const CATALOGUER: Vec3 = [4.6, 0, 2]
 export const CLOCK: Vec3 = [-6, 0, -6]
 // the clock's planner reads tick post-its; its hands (the executor) take the clock's own envelopes
-export const PLANNER: Vec3 = [-3.6, 0, -3.4]
+export const PLANNER: Vec3 = [-4.4, 0, -4.6]
 export const HANDS: Vec3 = [-8.8, 0, -5.6]
 // the crew hall: drawn with 4 desks and a tray of 4; the real batch hatch runs 4 and holds 64 more
 export const CREW = {

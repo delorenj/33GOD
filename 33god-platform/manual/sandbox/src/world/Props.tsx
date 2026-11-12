@@ -2,10 +2,11 @@ import { Line, RoundedBox } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { VENDORS, type Vec3 } from '../content'
-import { BAY_X, BAY_Z, CATALOGUER, CLOCK, CREW, DOCK, HANDS, LABEL_DESK, PLANNER, READERS, TRAY, courierPath } from '../sim/layout'
+import { STATIONS, VENDORS, type StationId, type Vec3 } from '../content'
+import { DOMAINS, domainById, type Domain } from '../domains'
+import { BAY_X, BAY_Z, BELT_TOP, CATALOGUER, CLOCK, CREW, DOCK, HANDS, LABEL_DESK, PLANNER, READERS, TRAY, courierPath } from '../sim/layout'
 import { TRAY_SLOT, clock, hoursNow, useWorld } from '../sim/store'
-import { clockFace, floorSign } from './textures'
+import { clockFace, floorSign, placeSign } from './textures'
 
 export const C = {
   floor: '#D9D1C1',
@@ -41,26 +42,83 @@ export function Person({ position, color = C.uniform, rotation = 0, scale = 1 }:
 }
 
 function Floor() {
-  const sign = useMemo(() => floorSign('MATERIAL HANDLING', 'its real name is Bloodbank'), [])
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[90, 70]} />
         <meshStandardMaterial color={C.floor} roughness={0.95} />
       </mesh>
-      {/* Bloodbank's department, painted on the floor: courier lanes, dock, label desk, belt */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-6.4, 0.01, 0.9]} receiveShadow>
-        <planeGeometry args={[19.6, 11]} />
-        <meshStandardMaterial color="#3B82F6" transparent opacity={0.13} roughness={1} />
+      {DOMAINS.map((d) => <DomainZone key={d.id} d={d} />)}
+    </group>
+  )
+}
+
+/** A domain, painted on the floor: a tinted zone, a dashed safety line, and its name in stencil letters. */
+function DomainZone({ d }: { d: Domain }) {
+  const [x0, z0, x1, z1] = d.rect
+  const w = x1 - x0
+  const depth = z1 - z0
+  const sign = useMemo(() => floorSign(d.name, d.says, d.color), [d])
+  const inset = 0.18
+  const signW = Math.min(w - 1.2, 8.5)
+  const pts: Vec3[] = [[x0 + inset, 0.02, z0 + inset], [x1 - inset, 0.02, z0 + inset], [x1 - inset, 0.02, z1 - inset], [x0 + inset, 0.02, z1 - inset], [x0 + inset, 0.02, z0 + inset]]
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(x0 + x1) / 2, 0.006, (z0 + z1) / 2]} receiveShadow>
+        <planeGeometry args={[w - inset * 2, depth - inset * 2]} />
+        <meshStandardMaterial color={d.color} transparent opacity={0.1} roughness={1} depthWrite={false} />
       </mesh>
-      <Line
-        points={[[-16.2, 0.02, -4.6], [3.4, 0.02, -4.6], [3.4, 0.02, 6.4], [-16.2, 0.02, 6.4], [-16.2, 0.02, -4.6]]}
-        color="#2563EB" lineWidth={2.5} dashed dashSize={0.6} gapSize={0.35}
-      />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-10.2, 0.02, 5.6]}>
-        <planeGeometry args={[9, 1.4]} />
+      <Line points={pts} color={d.color} lineWidth={2.5} dashed dashSize={0.6} gapSize={0.35} />
+      {/* the name sits in the zone's front-left corner, where the default view looks first */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x0 + 0.5 + signW / 2, 0.015, z1 - 0.5 - (signW * 200) / 1024 / 2]}>
+        <planeGeometry args={[signW, (signW * 200) / 1024]} />
         <meshBasicMaterial map={sign} transparent depthWrite={false} />
       </mesh>
+    </group>
+  )
+}
+
+// Where each station's warehouse sign hangs, and which way it faces (radians about y).
+const SIGNS: Record<StationId, { at: Vec3; rotY?: number; w?: number }> = {
+  bays: { at: [-25.88, 4.4, 0], rotY: Math.PI / 2, w: 3 },
+  courier: { at: [-17.6, 2.3, 5.2] },
+  dock: { at: [-9.5, 2.2, 2.13], w: 2.4 },
+  labeldesk: { at: [-9.5, 0.55, 3.57], w: 1.5 },
+  belt: { at: [0, BELT_TOP + 0.55, 0.75], w: 2.6 },
+  archive: { at: [8, 3.1, 5.6], w: 2.2 },
+  rules: { at: [-14, 2.5, -6.54], w: 1.4 },
+  control: { at: [-5, 3.05, 14.75], w: 2.4 },
+  cataloguer: { at: [4.6, 0.55, 2.47], w: 1.4 },
+  clock: { at: [-6 + 0.82 * Math.SQRT1_2, 1.4, -6 + 0.82 * Math.SQRT1_2], rotY: Math.PI / 4, w: 1.5 },
+  crew: { at: [7, 3.5, -9.05], w: 2.4 },
+}
+
+function PlaceSigns() {
+  return (
+    <group>
+      {STATIONS.map((st) => {
+        const sg = SIGNS[st.id]
+        const w = sg.w ?? 2
+        const tex = placeSign(st.place, domainById[st.domain].color)
+        return (
+          <group key={st.id} position={sg.at} rotation={[0, sg.rotY ?? 0, 0]}>
+            <mesh>
+              <boxGeometry args={[w + 0.06, w / 4 + 0.06, 0.04]} />
+              <meshStandardMaterial color="#2A2418" />
+            </mesh>
+            <mesh position={[0, 0, 0.025]}>
+              <planeGeometry args={[w, w / 4]} />
+              <meshStandardMaterial map={tex} roughness={0.6} />
+            </mesh>
+            {st.id === 'courier' && (
+              <mesh position={[0, -1.2, -0.04]}>
+                <cylinderGeometry args={[0.05, 0.05, 2.3, 8]} />
+                <meshStandardMaterial color={C.steel} />
+              </mesh>
+            )}
+          </group>
+        )
+      })}
     </group>
   )
 }
@@ -223,7 +281,7 @@ function RulesCabinet() {
 function ControlRoom() {
   const [x, , z] = READERS.control
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, 0, z]} rotation={[0, -Math.PI / 2, 0]}>
       <mesh position={[0.5, 3.4, 0]} castShadow receiveShadow>
         <boxGeometry args={[4, 0.2, 3.2]} />
         <meshStandardMaterial color={C.control} />
@@ -401,7 +459,7 @@ function ClipWires() {
   return (
     <group>
       <Line points={[[READERS.archive[0] - 1.6, 2.6, READERS.archive[2]], [4, 4, 3], [-2.35, 2.2, 0.9]]} color={C.archive} lineWidth={1.2} transparent opacity={0.35} />
-      <Line points={[[READERS.rules[0], 2.2, READERS.rules[2]], [2, 3.5, 5], [-2.35, 2.2, 0.9]]} color={C.rules} lineWidth={1.2} transparent opacity={0.35} />
+      <Line points={[[READERS.rules[0], 2.2, READERS.rules[2]], [-7.5, 4.6, -2.2], [-2.35, 2.2, 0.9]]} color={C.rules} lineWidth={1.2} transparent opacity={0.35} />
     </group>
   )
 }
@@ -421,6 +479,7 @@ export function Props() {
       <CrewHall />
       <ClockCrew />
       <ClipWires />
+      <PlaceSigns />
     </group>
   )
 }

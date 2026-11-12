@@ -88,16 +88,36 @@ export function envelopeFace(headline: string, orphan: boolean) {
   })
 }
 
-export function floorSign(text: string, sub: string) {
-  return make(`floor:${text}:${sub}`, 1024, 160, (c) => {
-    c.clearRect(0, 0, 1024, 160)
-    c.fillStyle = 'rgba(37, 99, 235, 0.85)'
-    c.font = `700 72px ${HAND}`
+/** Big stencil letters painted on the floor of a domain: its real name, and what it is for. */
+export function floorSign(text: string, sub: string, color = '#2563EB') {
+  return make(`floor:${text}:${sub}:${color}`, 1024, 200, (c) => {
+    c.clearRect(0, 0, 1024, 200)
+    c.globalAlpha = 0.8
+    c.fillStyle = color
+    c.font = `700 96px ${HAND}`
     c.textBaseline = 'middle'
-    c.fillText(text, 20, 62)
-    c.font = `600 44px ${HAND}`
-    c.fillStyle = 'rgba(37, 99, 235, 0.65)'
-    c.fillText(sub, 24, 128)
+    c.fillText(text.toUpperCase(), 16, 70)
+    c.globalAlpha = 0.6
+    c.font = `600 50px ${HAND}`
+    c.fillText(sub, 20, 160)
+  })
+}
+
+/** An enamel sign with the warehouse word for a station: part of the world, never part of the UX. */
+export function placeSign(text: string, color: string) {
+  return make(`place:${text}:${color}`, 512, 128, (c) => {
+    c.fillStyle = '#FBF5E6'
+    c.fillRect(0, 0, 512, 128)
+    c.fillStyle = color
+    c.fillRect(0, 0, 512, 16)
+    c.strokeStyle = '#2A2418'
+    c.lineWidth = 6
+    c.strokeRect(3, 3, 506, 122)
+    c.fillStyle = '#2A2418'
+    c.font = `700 56px ${HAND}`
+    c.textAlign = 'center'
+    c.textBaseline = 'middle'
+    c.fillText(text.toUpperCase(), 256, 72, 480)
   })
 }
 

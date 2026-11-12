@@ -48,6 +48,7 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .panel, .inspector { top: 16px; right: 16px; width: 340px; max-height: calc(100vh - 110px); overflow: auto; padding: 18px 18px 14px; }
 .panel h2 { margin: 6px 0 0; font-size: 26px; line-height: 1.1; }
 .panel .real { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.panel .place { display: inline-block; font: 600 12px Fredoka, sans-serif; color: #6b5d45; background: #f4ead6; border: 1px dashed #d9cbb0; border-radius: 6px; padding: 1px 8px; margin-bottom: 6px; }
 .panel p { margin: 8px 0; }
 .live { margin: 10px 0; padding: 8px 10px; background: #f4efe4; border-radius: 8px; font: 600 13px Fredoka, sans-serif; color: #5b5140; }
 .breaks { margin: 10px 0; padding: 9px 11px; border-left: 3px solid var(--bulb); background: #fff6dc; border-radius: 0 8px 8px 0; font-size: 14px; }
@@ -182,3 +183,17 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
   .say { font-size: 16.5px; }
   .dialogue { padding: 24px 16px 10px; }
 }
+
+/* ---------- overworld map (blueprint) ---------- */
+.map-overlay { position: fixed; inset: 0; z-index: 45; background: radial-gradient(ellipse at 50% 40%, rgba(20,70,160,0.94), rgba(10,42,110,0.97)); opacity: 0; transition: opacity 0.35s ease-out; }
+.map-overlay.in { opacity: 1; }
+.map-svg { position: absolute; inset: 0; width: 100%; height: 100%; font-family: 'Courier New', ui-monospace, monospace; }
+.map-domain { cursor: pointer; }
+.map-domain:hover rect { fill: rgba(255,255,255,0.1); }
+.map-dname { fill: #E6F0FF; font-size: 1.15px; font-weight: 700; letter-spacing: 0.06px; text-transform: uppercase; }
+.map-dsays { fill: rgba(230,240,255,0.7); font-size: 0.7px; font-style: italic; }
+.map-part { cursor: pointer; }
+.map-part:hover rect { fill: #1D5BC4; }
+.map-pname { fill: #fff; font-size: 0.62px; font-weight: 700; pointer-events: none; }
+.map-chrome { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 12px; align-items: center; background: rgba(230,240,255,0.95); color: #0B2A6E; border-radius: 12px; padding: 8px 12px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); max-width: calc(100vw - 32px); flex-wrap: wrap; }
+.map-chrome button { border: 1px solid #0B2A6E; background: transparent; color: #0B2A6E; border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; }

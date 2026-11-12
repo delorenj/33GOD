@@ -28,7 +28,7 @@ export interface Note {
 // a courier's trip: out with the parcel, back with a briefing card (reply) or the parcel still in hand
 export interface Parcel { id: number; vendor: number; t0: number; backT0: number | null; reply: boolean }
 export type FlyerLook = 'post' | 'summary' | 'copy' | 'env' | 'scrap' | 'scrapEnv'
-export interface Flyer { id: number; look: FlyerLook; from: Vec3; to: Vec3; t0: number; dur: number; arc: number }
+export interface Flyer { id: number; look: FlyerLook; from: Vec3; to: Vec3; t0: number; dur: number; arc: number; hold?: number }
 export interface Puff { id: number; at: Vec3; text: string; t0: number; life: number; tone: 'ok' | 'warn' | 'info' }
 export interface Desk { holding: number | null; startedAt: number; until: number }
 
@@ -51,7 +51,9 @@ interface State {
   dockShut: boolean
   sources: boolean
   intro: boolean
-  focus: { id: StationId | 'overview' | 'custom'; nonce: number; view?: { pos: Vec3; target: Vec3 } } | null
+  focus: { id: StationId | 'overview' | 'custom' | 'top'; nonce: number; view?: { pos: Vec3; target: Vec3 }; openMap?: boolean } | null
+  cam: 'free' | 'top' // 'top' = straight down, near-orthographic, the whole floor in view
+  mapOpen: boolean // the blueprint overworld map, drawn over the top-down view
   mode: 'sandbox' | 'tour'
   beat: number
   line: number
@@ -80,6 +82,8 @@ export const useWorld = create<State>(() => ({
   sources: false,
   intro: true,
   focus: null,
+  cam: 'free',
+  mapOpen: false,
   mode: 'sandbox',
   beat: 0,
   line: 0,
@@ -100,6 +104,7 @@ export const ui = {
   openStation(id: StationId) {
     useWorld.setState((s) => ({
       station: id,
+      mapOpen: false,
       bulb: null,
       inspect: null,
       focus: { id, nonce: (s.focus?.nonce ?? 0) + 1 },
@@ -113,6 +118,19 @@ export const ui = {
     }))
   },
   overview() {
-    useWorld.setState((s) => ({ station: null, inspect: null, focus: { id: 'overview', nonce: (s.focus?.nonce ?? 0) + 1 } }))
+    useWorld.setState((s) => ({ station: null, inspect: null, mapOpen: false, focus: { id: 'overview', nonce: (s.focus?.nonce ?? 0) + 1 } }))
+  },
+  /** Tween to the top-down view of the whole floor; with map=true, the blueprint map opens once it lands. */
+  top(map = false) {
+    const s = useWorld.getState()
+    if (s.cam === 'top') {
+      if (map) useWorld.setState({ mapOpen: true, station: null, inspect: null, bulb: null })
+      return
+    }
+    useWorld.setState((st) => ({ station: null, inspect: null, bulb: null, mapOpen: false, focus: { id: 'top', nonce: (st.focus?.nonce ?? 0) + 1, openMap: map } }))
+  },
+  /** Fly down to a view (from the map, a domain, or the point under the cursor). */
+  fly(view: { pos: Vec3; target: Vec3 }) {
+    useWorld.setState((s) => ({ mapOpen: false, focus: { id: 'custom', nonce: (s.focus?.nonce ?? 0) + 1, view } }))
   },
 }

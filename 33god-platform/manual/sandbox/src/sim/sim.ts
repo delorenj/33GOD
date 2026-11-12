@@ -60,10 +60,10 @@ const ENV_SUBJECT: Record<'crew' | 'clock' | 'none', string> = {
   none: 'bloodbank.cmd.audio.task.start',
 }
 
-function fly(look: FlyerLook, from: Vec3, to: Vec3, dur: number, arc: number) {
-  const f: Flyer = { id: nextId(), look, from, to, t0: clock.t, dur, arc }
+function fly(look: FlyerLook, from: Vec3, to: Vec3, dur: number, arc: number, hold = 0) {
+  const f: Flyer = { id: nextId(), look, from, to, t0: clock.t, dur, arc, hold }
   set((s) => ({ flyers: [...s.flyers, f] }))
-  later(dur + 0.05, () => set((s) => ({ flyers: s.flyers.filter((x) => x.id !== f.id) })))
+  later(dur + hold + 0.05, () => set((s) => ({ flyers: s.flyers.filter((x) => x.id !== f.id) })))
 }
 
 // Puffs live in sim time, so stretch them with the speed: at 16x they still read for ~2 real seconds.
@@ -320,7 +320,9 @@ export function step(realDt: number) {
   if (expired.length) {
     expired.forEach((n) => {
       const p = posOf(n)
-      fly(n.kind === 'post' ? 'scrap' : 'scrapEnv', p, [p[0] + rand(-0.6, 0.6), 0.03, p[2] + (n.kind === 'post' ? 1.6 : -1.6)], 1.3, 0.4)
+      // scraped paper flutters down like a leaf (about 2.4 m/s), lands flat on the floor, lies there a moment, fades
+      const fall = Math.max(1.8, p[1] / 2.4)
+      fly(n.kind === 'post' ? 'scrap' : 'scrapEnv', p, [p[0] + rand(-0.9, 0.9), 0.016, p[2] + (n.kind === 'post' ? 1 : -1) * rand(1.4, 2.6)], fall, 0, 3.5)
       if (n.heldBy !== null && n.heldBy >= 0) crewDone(n.heldBy)
       if (n.heldBy === HANDS_SLOT) set({ hands: { holding: null, startedAt: 0, until: 0 } })
     })

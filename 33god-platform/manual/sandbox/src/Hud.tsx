@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BULBS, STATIONS, bulbById, stationById, type StationId } from './content'
+import { domainById } from './domains'
+import { MapOverlay } from './map/MapOverlay'
 import { HANDS_SLOT, TRAY_SLOT, hoursNow, ui, useWorld } from './sim/store'
 import { TourHud, tour } from './tour/TourHud'
 
@@ -77,6 +79,7 @@ function Controls() {
       <SimClock />
       <button className={dockShut ? 'on warn' : ''} onClick={() => useWorld.setState({ dockShut: !dockShut })}>{dockShut ? 'Open the dock' : 'Shut the dock'}</button>
       <button className={sources ? 'on' : ''} onClick={() => useWorld.setState({ sources: !sources })}>{sources ? 'Hide the code' : 'Show the code'}</button>
+      <button onClick={() => ui.top(true)} title="The map (Esc). Scroll up for the top view, scroll down to dive in.">Map <kbd>Esc</kbd></button>
       <select value="" onChange={(e) => (e.target.value === 'overview' ? ui.overview() : ui.openStation(e.target.value as StationId))}>
         <option value="" disabled>Go to…</option>
         <option value="overview">Whole floor</option>
@@ -124,9 +127,10 @@ function StationPanel() {
   return (
     <aside className="panel card">
       <button className="x" onClick={() => ui.overview()} aria-label="Close">×</button>
-      {st.bloodbank && <div className="chip bb">Part of Bloodbank</div>}
+      <div className="chip" style={{ background: domainById[st.domain].color, color: '#fff' }}>{domainById[st.domain].name} · {domainById[st.domain].says.toLowerCase()}</div>
       <h2>{st.name}</h2>
       <div className="real">{st.real}</div>
+      <div className="place">On the floor: {st.place.replace(/^The /, 'the ')}</div>
       {st.does.map((d) => <p key={d}>{d}</p>)}
       <LiveStat id={id} />
       {st.breaks && (
@@ -237,10 +241,11 @@ export function Hud() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       const s = useWorld.getState()
-      if (s.mode === 'tour' && !s.bulb) return
+      if (s.intro || (s.mode === 'tour' && !s.bulb)) return
+      // Esc: close a pop-up first; otherwise rise to the top view and open the map (Esc again closes the map)
       if (s.bulb) useWorld.setState({ bulb: null })
-      else if (s.inspect !== null) useWorld.setState({ inspect: null })
-      else if (s.station) ui.overview()
+      else if (s.mapOpen) useWorld.setState({ mapOpen: false })
+      else ui.top(true)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -256,6 +261,7 @@ export function Hud() {
       <Controls />
       <StationPanel />
       <Inspector />
+      <MapOverlay />
       <BulbModal />
     </div>
   )

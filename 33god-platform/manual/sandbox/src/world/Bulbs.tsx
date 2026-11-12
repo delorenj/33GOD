@@ -1,8 +1,9 @@
 import { Tag } from "./Tag"
-import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { useEffect, useRef, useState } from 'react'
+import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { useRef, useState } from 'react'
 import * as THREE from 'three'
-import { BULBS, STATIONS, overview, stationById, type Bulb } from '../content'
+import { BULBS, STATIONS, type Bulb } from '../content'
+import { domainById } from '../domains'
 import { ui, useWorld } from '../sim/store'
 
 const ONE = new THREE.Vector3(1, 1, 1)
@@ -65,74 +66,29 @@ export function StationLabels() {
   const current = useWorld((s) => s.station)
   const mode = useWorld((s) => s.mode)
   const intro = useWorld((s) => s.intro)
-  if (mode === 'tour' || intro) return null
+  const mapOpen = useWorld((s) => s.mapOpen)
+  if (mode === 'tour' || intro || mapOpen) return null
+  // labels speak in real 33GOD names; the warehouse words are painted on signs in the world
   return (
     <group>
-      {STATIONS.map((s) => (
-        <Tag key={s.id} position={s.label} z={[15, 5]}>
-          <button
-            className={`station-label ${s.bloodbank ? 'bb' : ''} ${current === s.id ? 'active' : ''}`}
-            onClick={() => ui.openStation(s.id)}
-          >
-            <span className="sl-name">
-              {found.includes(s.id) && <span className="sl-check">✓ </span>}
-              {s.name}
-            </span>
-            <span className="sl-real">{s.real.split(':')[0]}</span>
-            {s.bloodbank && <span className="sl-chip">Bloodbank</span>}
-          </button>
-        </Tag>
-      ))}
+      {STATIONS.map((s) => {
+        const d = domainById[s.domain]
+        return (
+          <Tag key={s.id} position={s.label} z={[15, 5]}>
+            <button
+              className={`station-label ${current === s.id ? 'active' : ''}`}
+              style={{ borderColor: d.color }}
+              onClick={() => ui.openStation(s.id)}
+            >
+              <span className="sl-name">
+                {found.includes(s.id) && <span className="sl-check" style={{ color: d.color }}>✓ </span>}
+                {s.name}
+              </span>
+              <span className="sl-chip" style={{ background: d.color }}>{d.name}</span>
+            </button>
+          </Tag>
+        )
+      })}
     </group>
   )
-}
-
-const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
-
-export function CameraRig() {
-  const focus = useWorld((s) => s.focus)
-  const { camera, controls } = useThree() as unknown as { camera: THREE.PerspectiveCamera; controls: { target: THREE.Vector3; update: () => void; addEventListener: (e: string, f: () => void) => void; removeEventListener: (e: string, f: () => void) => void } | null }
-  const anim = useRef<{ t: number; fp: THREE.Vector3; ft: THREE.Vector3; tp: THREE.Vector3; tt: THREE.Vector3 } | null>(null)
-
-  useEffect(() => {
-    if (!focus || !controls) return
-    const v = focus.view ?? (focus.id === 'overview' || focus.id === 'custom' ? overview() : stationById[focus.id].view)
-    anim.current = {
-      t: 0,
-      fp: camera.position.clone(),
-      ft: controls.target.clone(),
-      tp: new THREE.Vector3(...v.pos),
-      tt: new THREE.Vector3(...v.target),
-    }
-  }, [focus, controls, camera])
-
-  // when a side panel is open, shift the frame so the station sits in the uncovered part of the screen
-  const size = useThree((s) => s.size)
-  const panelOpen = useWorld((s) => s.station !== null || s.inspect !== null)
-  useEffect(() => {
-    const { width: w, height: h } = size
-    if (!panelOpen) camera.clearViewOffset()
-    else if (w <= 720) camera.setViewOffset(w, h, 0, h * 0.2, w, h)
-    else camera.setViewOffset(w, h, 100, 0, w, h)
-    return () => camera.clearViewOffset()
-  }, [panelOpen, size, camera])
-
-  useEffect(() => {
-    if (!controls) return
-    const cancel = () => { anim.current = null }
-    controls.addEventListener('start', cancel)
-    return () => controls.removeEventListener('start', cancel)
-  }, [controls])
-
-  useFrame((_, dt) => {
-    const a = anim.current
-    if (!a || !controls) return
-    a.t = Math.min(1, a.t + dt / 1.6)
-    const e = ease(a.t)
-    camera.position.lerpVectors(a.fp, a.tp, e)
-    controls.target.lerpVectors(a.ft, a.tt, e)
-    controls.update()
-    if (a.t >= 1) anim.current = null
-  })
-  return null
 }

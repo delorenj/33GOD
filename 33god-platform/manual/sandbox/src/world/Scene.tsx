@@ -1,11 +1,13 @@
 import { Environment, Lightformer, OrbitControls } from '@react-three/drei'
+import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
 import { overview } from '../content'
 import { step } from '../sim/sim'
 import { useWorld } from '../sim/store'
 import { Belt } from './Belt'
-import { Bulbs, CameraRig, StationLabels } from './Bulbs'
+import { Bulbs, StationLabels } from './Bulbs'
+import { BASE_FOV, CameraRig, FogFollow, WheelNav } from './Camera'
 import { Moving } from './Moving'
 import { Props } from './Props'
 import { TourCast, TourSets } from '../tour/TourWorld'
@@ -17,11 +19,12 @@ function Sim() {
 
 export function Scene({ fx }: { fx: boolean }) {
   const ov = overview()
+  const top = useWorld((s) => s.cam === 'top')
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
-      camera={{ position: ov.pos, fov: 42, near: 0.1, far: 300 }}
+      camera={{ position: ov.pos, fov: BASE_FOV, near: 0.1, far: 2000 }}
       onPointerMissed={() => useWorld.setState({ inspect: null })}
     >
       <color attach="background" args={['#EDE4D3']} />
@@ -55,13 +58,17 @@ export function Scene({ fx }: { fx: boolean }) {
 
       <Sim />
       <CameraRig />
+      <WheelNav />
+      <FogFollow />
       <OrbitControls
         makeDefault
         target={ov.target}
         enableDamping
         dampingFactor={0.08}
-        minDistance={4}
-        maxDistance={70}
+        enableZoom={false}
+        enableRotate={!top}
+        mouseButtons={top ? { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN } : { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }}
+        touches={top ? { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN } : { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
         maxPolarAngle={Math.PI / 2.08}
       />
       {fx && (
