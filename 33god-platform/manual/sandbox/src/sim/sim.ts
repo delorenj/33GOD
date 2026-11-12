@@ -1,15 +1,24 @@
-// The warehouse's rules, in one place. Every behaviour here is meant to match Bloodbank:
-// - post-its (events) stay on the front face until the 7-day scraper; readers tear copies
-// - envelopes (commands) stay on the back face until signed off, torn up, or the 1-day scraper
-// - the hatch admits only as many envelopes as there are free desks
-// - a shut dock means the courier turns round; nothing queues at the door
+// The warehouse's rules, in one place. Every behaviour here is meant to match Bloodbank as it runs today
+// (checked against code and the live broker on 2026-11-12):
+// - post-its (events) stay on the front face until the 7-day scraper; readers come and tear off copies
+// - envelopes (commands) stay on the back face until signed off, or the 1-day scraper
+// - the crew hall's hatch keeps taking while its tray has room (drawn 4 desks + 4 tray; real 4 + 64)
+// - a hand-back is rare (the hall could not start the job); after 5 tries the hall signs it off as failed
+// - the clock posts tick post-its; its planner reads them and posts envelopes for the clock's own hands
+// - the sound wing posts envelopes nobody is meant to take (trace records); they ride to the scraper
+// - the archive turns away notes with label fields missing (today: every cataloguer summary)
+// - a redelivery is the belt's doing: no signature within ~30 s and the note is offered again
+// - the courier waits at the dock window for a briefing card and carries it back; a shut dock means it
+//   turns round with the parcel; nothing queues at the door
 import { VENDORS, type Vec3 } from '../content'
-import { BELT, CATALOGUER, CLOCK, COLS, CREW, DOCK, READERS, notePos } from './layout'
-import { clock, hoursNow, useWorld, type Flyer, type FlyerLook, type Note } from './store'
+import { BELT, CATALOGUER, CLOCK, COLS, CREW, DOCK, HANDS, PLANNER, READERS, SOUND_OUTBOX, TRAY, notePos } from './layout'
+import { HANDS_SLOT, TRAY_SLOT, clock, hoursNow, useWorld, type Flyer, type FlyerLook, type Hatch, type Note } from './store'
 
 const WALK = 2.6 // sim seconds from bay to dock door
-const OPEN = 0.7 // clerk opens the parcel
+const OPEN = 0.7 // the clerk answers at the window
 const STICK = 1.1 // post-it flight to the belt
+const RETRY = 5 // a handed-back envelope is offered again after a short wait
+const MAX_TRIES = 5 // the crew hall's batch hatch
 
 let uid = 1
 const nextId = () => uid++
@@ -28,6 +37,7 @@ const later = (delay: number, run: () => void) => {
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a)
+const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]
 const hex = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('')
 const newNoteId = () => `${hex(4)}-${hex(4)}`
 
@@ -36,119 +46,174 @@ const convs = VENDORS.map(() => ({ code: `conv-${hex(4).toUpperCase()}`, left: 3
 const set = useWorld.setState
 const get = useWorld.getState
 
+const SUBJECT: Record<string, string> = {
+  'turn started': 'bloodbank.evt.conversation.turn.started',
+  'session ended': 'bloodbank.evt.agent.session.ended',
+  'summary written': 'bloodbank.evt.report.session.completed',
+  'tick fired': 'bloodbank.evt.cron.tick.fired',
+  'invocation completed': 'bloodbank.evt.agent.invocation.completed',
+  'invocation failed': 'bloodbank.evt.agent.invocation.failed',
+}
+const ENV_SUBJECT: Record<'crew' | 'clock' | 'none', string> = {
+  crew: 'bloodbank.cmd.agent.invocation.start',
+  clock: 'bloodbank.cmd.cron.candybar.invoke',
+  none: 'bloodbank.cmd.audio.task.start',
+}
+
 function fly(look: FlyerLook, from: Vec3, to: Vec3, dur: number, arc: number) {
   const f: Flyer = { id: nextId(), look, from, to, t0: clock.t, dur, arc }
   set((s) => ({ flyers: [...s.flyers, f] }))
   later(dur + 0.05, () => set((s) => ({ flyers: s.flyers.filter((x) => x.id !== f.id) })))
 }
 
+// Puffs live in sim time, so stretch them with the speed: at 16x they still read for ~2 real seconds.
 function puff(at: Vec3, text: string, tone: 'ok' | 'warn' | 'info' = 'info') {
-  const p = { id: nextId(), at, text, t0: clock.t, tone }
+  const life = 2.2 * Math.max(1, get().speed)
+  const p = { id: nextId(), at, text, t0: clock.t, life, tone }
   set((s) => ({ puffs: [...s.puffs, p] }))
-  later(2.2, () => set((s) => ({ puffs: s.puffs.filter((x) => x.id !== p.id) })))
+  later(life, () => set((s) => ({ puffs: s.puffs.filter((x) => x.id !== p.id) })))
 }
 
 const ageDays = (n: Note) => (hoursNow() - n.bornH) / 24
 const posOf = (n: Note): Vec3 => notePos(n.kind, n.col, ageDays(n))
 const findNote = (id: number) => get().notes.find((n) => n.id === id)
+const bump = (k: keyof ReturnType<typeof get>['stats'], by = 1) => set((s) => ({ stats: { ...s.stats, [k]: s.stats[k] + by } }))
 
 function patchNote(id: number, patch: (n: Note) => Partial<Note>) {
   set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, ...patch(n) } : n)) }))
 }
 
-function stickPost(headline: string, from: string | null, barcode: string | null, viaDesk: boolean, start: Vec3, look: FlyerLook) {
+function stickPost(headline: string, from: string | null, barcode: string | null, viaDesk: boolean, start: Vec3, look: FlyerLook = 'post') {
   const c = col
   col = (col + 1) % COLS.length
-  const target = notePos('post', c, 0)
-  fly(look, start, target, STICK, 1.6)
+  fly(look, start, notePos('post', c, 0), STICK, 1.6)
   later(STICK, () => {
     frontSeq += 1
     const n: Note = {
-      id: nextId(), kind: 'post', headline, from, noteId: newNoteId(), barcode,
-      seq: frontSeq, bornH: hoursNow(), col: c, viaDesk, hatch: null, heldBy: null, readBy: [],
+      id: nextId(), kind: 'post', headline, from, noteId: newNoteId(), barcode, subject: SUBJECT[headline] ?? 'bloodbank.evt',
+      seq: frontSeq, bornH: hoursNow(), col: c, viaDesk, hatch: null, heldBy: null, tries: 0, retryAt: 0, readBy: [],
     }
     set((s) => ({ notes: [...s.notes, n] }))
     readersNotice(n)
   })
 }
 
-// Readers come to the belt; the belt never delivers.
-function readersNotice(n: Note) {
-  const tear = (reader: 'archive' | 'control' | 'rules', delay: number, dupe = false) =>
-    later(delay, () => {
-      const live = findNote(n.id)
-      if (!live) return
-      fly('copy', posOf(live), READERS[reader], 0.9, 1.2)
-      later(0.9, () => {
-        if (reader === 'archive') {
-          const already = get().notes.find((x) => x.id === n.id)?.readBy.includes('archive') || dupe
-          if (already) {
-            puff([READERS.archive[0], READERS.archive[1] + 1.6, READERS.archive[2]], `already filed ${n.noteId}`, 'warn')
-            set((s) => ({ stats: { ...s.stats, dupes: s.stats.dupes + 1 } }))
-            return
-          }
-          set((s) => ({ stats: { ...s.stats, filed: s.stats.filed + 1 }, lastRead: { ...s.lastRead, archive: n.id } }))
-        } else if (reader === 'control') {
-          set((s) => ({ stats: { ...s.stats, control: s.stats.control + 1 } }))
-        } else {
-          set((s) => ({ stats: { ...s.stats, rules: s.stats.rules + 1 }, lastRead: { ...s.lastRead, rules: n.id } }))
-        }
-        patchNote(n.id, (x) => ({ readBy: x.readBy.includes(reader) ? x.readBy : [...x.readBy, reader] }))
-      })
-    })
-
-  tear('archive', rand(0.4, 1.3))
-  if (Math.random() < 0.08) tear('archive', rand(3.5, 6), true) // a second copy turns up; the clerk files nothing
-  tear('control', rand(1.8, 3.2)) // the window shows the floor a moment late
-  if (n.headline === 'summary written') tear('rules', 1.0) // on the rules card's pick list
-}
-
-function stickEnvelope(headline: string, hatch: 'crew' | null) {
+function stickEnvelope(headline: string, hatch: Hatch, from: string, origin: Vec3) {
   const c = envCol
   envCol = (envCol + 1) % COLS.length
-  const target = notePos('env', c, 0)
-  fly('env', [CLOCK[0], 5.6, CLOCK[2] + 0.6], target, 1.3, 1.4)
+  fly('env', origin, notePos('env', c, 0), 1.3, 1.4)
   later(1.3, () => {
     backSeq += 1
     const n: Note = {
-      id: nextId(), kind: 'env', headline, from: 'clock', noteId: newNoteId(), barcode: null,
-      seq: backSeq, bornH: hoursNow(), col: c, viaDesk: true, hatch, heldBy: null, readBy: [],
+      id: nextId(), kind: 'env', headline, from, noteId: newNoteId(), barcode: null, subject: ENV_SUBJECT[hatch ?? 'none'],
+      seq: backSeq, bornH: hoursNow(), col: c, viaDesk: true, hatch, heldBy: null, tries: 0, retryAt: 0, readBy: [],
     }
     set((s) => ({ notes: [...s.notes, n] }))
   })
 }
 
+const markRead = (id: number, reader: string) => patchNote(id, (x) => ({ readBy: x.readBy.includes(reader) ? x.readBy : [...x.readBy, reader] }))
+
+// Readers come to the belt and tear off copies. The original stays.
+function readersNotice(n: Note) {
+  const tear = (to: Vec3, delay: number, then: (live: Note) => void) =>
+    later(delay, () => {
+      const live = findNote(n.id)
+      if (!live) return
+      fly('copy', posOf(live), to, 0.9, 1.2)
+      later(0.9, () => then(live))
+    })
+  const above = (p: Vec3, dy = 1.6): Vec3 => [p[0], p[1] + dy, p[2]]
+
+  // the archive files every note it can; a note with label fields missing goes in the rejects drawer
+  tear(READERS.archive, rand(0.4, 1.3), (live) => {
+    if (!live.viaDesk) {
+      puff(above(READERS.archive), 'rejects drawer: label fields missing', 'warn')
+      bump('rejected')
+      markRead(n.id, 'archive-rejected')
+      return
+    }
+    bump('filed')
+    set((s) => ({ lastRead: { ...s.lastRead, archive: n.id } }))
+    markRead(n.id, 'archive')
+  })
+  // now and then the archive's signature is late, so the belt offers the same note again (~30 s ackWait)
+  if (n.viaDesk && Math.random() < 0.08) {
+    tear(READERS.archive, rand(7, 9), () => {
+      puff(above(READERS.archive), `offered again: ${n.noteId} already filed`, 'info')
+      bump('dupes')
+    })
+  }
+  // the control room sees everything, a moment late
+  tear(READERS.control, rand(1.8, 3.2), () => { bump('control'); markRead(n.id, 'control') })
+  // the rule card's pick list: finished jobs only
+  if (n.headline === 'invocation completed') {
+    tear(READERS.rules, 1.0, () => {
+      bump('rules')
+      set((s) => ({ lastRead: { ...s.lastRead, rules: n.id } }))
+      markRead(n.id, 'rules')
+    })
+  }
+  // the cataloguer acts on "session ended": it asks the archive for the history, then its runner sticks a summary
+  if (n.headline === 'session ended') {
+    tear([CATALOGUER[0], 1.2, CATALOGUER[2]], 0.6, () => {
+      markRead(n.id, 'cataloguer')
+      later(2.6, () => stickPost('summary written', null, null, false, [CATALOGUER[0] - 1.1, 1.3, CATALOGUER[2] - 0.2], 'summary'))
+    })
+  }
+  // the clock's planner reads every tick and, when a chore is due, sticks an envelope for the clock's own hands
+  if (n.headline === 'tick fired') {
+    tear([PLANNER[0], 1.2, PLANNER[2]], 0.5, () => {
+      markRead(n.id, 'planner')
+      if (Math.random() < 0.55) {
+        bump('chores')
+        stickEnvelope(pick(CLOCK_CHORES), 'clock', 'clock', [PLANNER[0], 1.6, PLANNER[2]])
+      }
+    })
+  }
+}
+
 // ---------- schedules ----------
 let nextParcel = 0.3
-let nextSummary = 6
-let nextChore = 2
-let nextBell = 24
-let nextOrphan = 9
+let nextTick = 1.5
+let nextJob = 2
+let nextBatch = 22
+let nextAudio = 4
 
 function spawnParcel() {
   const vendor = Math.floor(Math.random() * VENDORS.length)
-  const p = { id: nextId(), vendor, t0: clock.t, backT0: null as number | null }
+  const p = { id: nextId(), vendor, t0: clock.t, backT0: null as number | null, reply: false }
   set((s) => ({ parcels: [...s.parcels, p] }))
+  const remove = (after: number) => later(after, () => set((s) => ({ parcels: s.parcels.filter((x) => x.id !== p.id) })))
   later(WALK, () => {
     if (get().dockShut) {
-      set((s) => ({
-        parcels: s.parcels.map((x) => (x.id === p.id ? { ...x, backT0: clock.t } : x)),
-        stats: { ...s.stats, turnedBack: s.stats.turnedBack + 1 },
-      }))
+      set((s) => ({ parcels: s.parcels.map((x) => (x.id === p.id ? { ...x, backT0: clock.t } : x)) }))
+      bump('turnedBack')
       puff([DOCK.door[0] - 1, 2.4, 0], 'door shut, turning round', 'warn')
-      later(WALK, () => set((s) => ({ parcels: s.parcels.filter((x) => x.id !== p.id) })))
+      remove(WALK)
       return
     }
-    set((s) => ({ parcels: s.parcels.filter((x) => x.id !== p.id), dockPulseAt: clock.t }))
+    // hand over the parcel, wait at the window for the clerk's answer, walk the briefing card back
+    set((s) => ({ parcels: s.parcels.map((x) => (x.id === p.id ? { ...x, backT0: clock.t + OPEN, reply: true } : x)), dockPulseAt: clock.t }))
+    remove(OPEN + WALK)
     const conv = convs[vendor]
-    conv.left -= 1
-    if (conv.left <= 0) { conv.code = `conv-${hex(4).toUpperCase()}`; conv.left = 3 + Math.floor(Math.random() * 5) }
     const barcode = conv.code
-    later(OPEN, () => stickPost('turn started', VENDORS[vendor].name, barcode, true, DOCK.out, 'post'))
+    // a separate clerk at the back writes the post-it; the courier does not wait for that
+    later(OPEN, () => stickPost('turn started', VENDORS[vendor].name, barcode, true, DOCK.out))
+    conv.left -= 1
+    if (conv.left <= 0) {
+      later(OPEN + 0.7, () => stickPost('session ended', VENDORS[vendor].name, barcode, true, DOCK.out))
+      conv.code = `conv-${hex(4).toUpperCase()}`
+      conv.left = 3 + Math.floor(Math.random() * 5)
+    }
   })
 }
 
-const CHORES = ['start: daily report', 'start: board triage', 'start: journal', 'start: inbox sweep']
+const CLOCK_CHORES = ['start: daily report', 'start: disk sweep', 'start: journal']
+const CREW_JOBS = ['start: board triage', 'start: inbox sweep', 'start: code review', 'start: release notes']
+const RULES_OUT: Vec3 = [READERS.rules[0], 3.2, READERS.rules[2]]
+
+const crewDone = (i: number) => set((st) => ({ desks: st.desks.map((x, j) => (j === i ? { holding: null, startedAt: 0, until: 0 } : x)) }))
 
 export function step(realDt: number) {
   const s = get()
@@ -160,65 +225,104 @@ export function step(realDt: number) {
   while (jobs.length && jobs[0].at <= t) jobs.shift()!.run()
 
   if (t >= nextParcel) { spawnParcel(); nextParcel = t + rand(1.1, 2.1) }
-  if (t >= nextSummary) {
-    stickPost('summary written', null, null, false, [CATALOGUER[0], 1.3, CATALOGUER[2]], 'summary')
-    nextSummary = t + rand(9, 13)
-  }
-  if (t >= nextChore) {
+  if (t >= nextTick) {
+    // drawn far less often than the real one-a-minute tick
     set({ clockRingAt: t })
-    stickEnvelope(CHORES[Math.floor(Math.random() * CHORES.length)], 'crew')
-    nextChore = t + rand(4.5, 7)
+    bump('ticks')
+    stickPost('tick fired', 'clock', null, true, [CLOCK[0], 5.6, CLOCK[2] + 0.6])
+    nextTick = t + rand(5, 7)
   }
-  if (t >= nextBell) {
-    // the hour bell: a burst of chores, more than the desks can take at once
-    set({ clockRingAt: t })
-    for (let i = 0; i < 4; i++) later(i * 0.35, () => stickEnvelope(CHORES[i % CHORES.length], 'crew'))
-    nextBell = t + rand(26, 34)
+  if (t >= nextJob) {
+    stickEnvelope(pick(CREW_JOBS), 'crew', 'rules cabinet', RULES_OUT)
+    nextJob = t + rand(4.5, 7)
   }
-  if (t >= nextOrphan) {
-    stickEnvelope('start: audio task', null) // no hatch takes this kind
-    nextOrphan = t + rand(12, 18)
+  if (t >= nextBatch) {
+    // a batch handed on all at once: more than the desks and the tray can hold
+    for (let i = 0; i < 10; i++) later(i * 0.25, () => stickEnvelope(CREW_JOBS[i % CREW_JOBS.length], 'crew', 'rules cabinet', RULES_OUT))
+    nextBatch = t + rand(28, 36)
+  }
+  if (t >= nextAudio) {
+    stickEnvelope('start: audio task', null, 'sound wing', SOUND_OUTBOX) // a trace record: nobody is meant to take it
+    nextAudio = t + rand(3, 5)
   }
 
-  // the hatch: one envelope per free desk, oldest first; it stays pinned on the belt
-  const desks = get().desks
-  desks.forEach((d, i) => {
+  // the crew hall's hatch: keeps taking, oldest first, while desks + tray have room; taken envelopes stay pinned
+  {
+    const notes = get().notes
+    let pinned = notes.filter((n) => n.hatch === 'crew' && n.heldBy !== null).length
+    const waiting = notes.filter((n) => n.hatch === 'crew' && n.heldBy === null && n.retryAt <= t).sort((a, b) => a.bornH - b.bornH)
+    for (const n of waiting) {
+      if (pinned >= CREW.desks.length + TRAY) break
+      pinned++
+      patchNote(n.id, (x) => ({ heldBy: TRAY_SLOT, tries: x.tries + 1 }))
+      fly('env', posOf(n), CREW.tray, 0.8, 0.8)
+    }
+  }
+  // a free desk takes the oldest envelope in the tray
+  get().desks.forEach((d, i) => {
     if (d.holding !== null) return
-    const candidates = get().notes.filter((n) => n.kind === 'env' && n.hatch === 'crew' && n.heldBy === null)
-    if (!candidates.length) return
-    const pick = candidates.reduce((a, b) => (a.bornH <= b.bornH ? a : b))
-    const work = rand(3.5, 6.5)
-    patchNote(pick.id, () => ({ heldBy: i }))
-    set((st) => ({ desks: st.desks.map((x, j) => (j === i ? { holding: pick.id, startedAt: t, until: t + work } : x)) }))
-    fly('env', posOf(pick), CREW.desks[i], 0.8, 0.8)
+    const inTray = get().notes.filter((n) => n.hatch === 'crew' && n.heldBy === TRAY_SLOT)
+    if (!inTray.length) return
+    const next = inTray.reduce((a, b) => (a.bornH <= b.bornH ? a : b))
+    patchNote(next.id, () => ({ heldBy: i }))
+    set((st) => ({ desks: st.desks.map((x, j) => (j === i ? { holding: next.id, startedAt: t, until: t + rand(3.5, 6.5) } : x)) }))
+    fly('env', CREW.tray, CREW.desks[i], 0.6, 0.5)
   })
   get().desks.forEach((d, i) => {
     if (d.holding === null || t < d.until) return
     const id = d.holding
     const at: Vec3 = [CREW.desks[i][0], 2.6, CREW.desks[i][2]]
-    set((st) => ({ desks: st.desks.map((x, j) => (j === i ? { holding: null, startedAt: 0, until: 0 } : x)) }))
-    if (!findNote(id)) return
-    if (Math.random() < 0.1) {
-      patchNote(id, () => ({ heldBy: null }))
-      set((st) => ({ stats: { ...st.stats, handedBack: st.stats.handedBack + 1 } }))
-      puff(at, 'handed back, try again', 'warn')
+    const hallFront: Vec3 = [CREW.center[0], 1.6, CREW.center[2] + 2]
+    crewDone(i)
+    const n = findNote(id)
+    if (!n) return
+    if (Math.random() < 0.03) {
+      // the hall could not start the job (closing mid-shift): hand it back, or give up after the last try
+      if (n.tries >= MAX_TRIES) {
+        set((st) => ({ notes: st.notes.filter((x) => x.id !== id) }))
+        bump('failed'); bump('signed')
+        puff(at, 'out of tries: signed off as failed', 'warn')
+        stickPost('invocation failed', 'crew hall', null, true, hallFront)
+      } else {
+        patchNote(id, () => ({ heldBy: null, retryAt: t + RETRY }))
+        bump('handedBack')
+        puff(at, 'handed back: “try again in a bit”', 'info')
+      }
     } else {
-      set((st) => ({ notes: st.notes.filter((n) => n.id !== id), stats: { ...st.stats, signed: st.stats.signed + 1 } }))
-      puff(at, 'signed off', 'ok')
+      set((st) => ({ notes: st.notes.filter((x) => x.id !== id) }))
+      bump('signed')
+      puff(at, 'signed off', 'info')
+      stickPost('invocation completed', 'crew hall', null, true, hallFront)
     }
   })
 
-  // the scrapers: whatever reaches the bar goes, read or not
+  // the clock's hands: one at a time, never gives up; signs off when finished (or when it skips a run)
+  {
+    const hands = get().hands
+    if (hands.holding === null) {
+      const due = get().notes.filter((n) => n.hatch === 'clock' && n.heldBy === null)
+      if (due.length) {
+        const next = due.reduce((a, b) => (a.bornH <= b.bornH ? a : b))
+        patchNote(next.id, (x) => ({ heldBy: HANDS_SLOT, tries: x.tries + 1 }))
+        set({ hands: { holding: next.id, startedAt: t, until: t + rand(2, 4) } })
+        fly('env', posOf(next), [HANDS[0], 1.1, HANDS[2]], 0.9, 0.9)
+      }
+    } else if (t >= hands.until) {
+      const id = hands.holding
+      set((st) => ({ hands: { holding: null, startedAt: 0, until: 0 }, notes: st.notes.filter((x) => x.id !== id) }))
+      puff([HANDS[0], 2.4, HANDS[2]], 'signed off', 'info')
+    }
+  }
+
+  // the scrapers: whatever reaches the bar is scraped, read or not
   const h = hoursNow()
   const expired = get().notes.filter((n) => (h - n.bornH) / 24 >= (n.kind === 'post' ? BELT.frontDays : BELT.backDays))
   if (expired.length) {
     expired.forEach((n) => {
       const p = posOf(n)
       fly(n.kind === 'post' ? 'scrap' : 'scrapEnv', p, [p[0] + rand(-0.6, 0.6), 0.03, p[2] + (n.kind === 'post' ? 1.6 : -1.6)], 1.3, 0.4)
-      if (n.heldBy !== null) {
-        const di = n.heldBy
-        set((st) => ({ desks: st.desks.map((x, j) => (j === di ? { holding: null, startedAt: 0, until: 0 } : x)) }))
-      }
+      if (n.heldBy !== null && n.heldBy >= 0) crewDone(n.heldBy)
+      if (n.heldBy === HANDS_SLOT) set({ hands: { holding: null, startedAt: 0, until: 0 } })
     })
     const gone = new Set(expired.map((n) => n.id))
     set((st) => ({
@@ -232,31 +336,39 @@ export function step(realDt: number) {
 // Warm the belt so the first look is not an empty wall: pre-age some notes.
 export function seed() {
   const h = hoursNow()
+  const front: Note[] = []
   for (let i = 0; i < 46; i++) {
     const age = (i / 46) * 6.8 + Math.random() * 0.1
-    const summary = i % 8 === 3
     const v = Math.floor(Math.random() * VENDORS.length)
+    const kind = i % 9 === 3 ? 'summary written' : i % 7 === 5 ? 'invocation completed' : i % 6 === 1 ? 'tick fired' : i % 11 === 8 ? 'session ended' : 'turn started'
+    const vendorish = kind === 'turn started' || kind === 'session ended'
+    const viaDesk = kind !== 'summary written'
     frontSeq += 1
-    useWorld.setState((s) => ({
-      notes: [...s.notes, {
-        id: nextId(), kind: 'post', headline: summary ? 'summary written' : 'turn started',
-        from: summary ? null : VENDORS[v].name, noteId: newNoteId(), barcode: summary ? null : convs[v].code,
-        seq: frontSeq, bornH: h - age * 24, col: i % COLS.length, viaDesk: !summary, hatch: null, heldBy: null,
-        readBy: ['archive', 'control', ...(summary ? ['rules'] : [])],
-      }],
-    }))
+    front.push({
+      id: nextId(), kind: 'post', headline: kind, subject: SUBJECT[kind],
+      from: vendorish ? VENDORS[v].name : kind === 'tick fired' ? 'clock' : kind === 'invocation completed' ? 'crew hall' : null,
+      noteId: newNoteId(), barcode: vendorish ? convs[v].code : null,
+      seq: frontSeq, bornH: h - age * 24, col: i % COLS.length, viaDesk, hatch: null, heldBy: null, tries: 0, retryAt: 0,
+      readBy: ['control', viaDesk ? 'archive' : 'archive-rejected', ...(kind === 'invocation completed' ? ['rules'] : []), ...(kind === 'tick fired' ? ['planner'] : []), ...(kind === 'session ended' ? ['cataloguer'] : [])],
+    })
   }
-  for (let i = 0; i < 5; i++) {
+  const back: Note[] = []
+  // on the real belt almost everything left standing at the back is grey: taken envelopes are gone in minutes
+  const ages = [20, 16, 12, 9, 6, 3]
+  ages.forEach((ageH, i) => {
     backSeq += 1
-    const orphan = i === 1 || i === 4
-    useWorld.setState((s) => ({
-      notes: [...s.notes, {
-        id: nextId(), kind: 'env', headline: orphan ? 'start: audio task' : CHORES[i % CHORES.length], from: 'clock',
-        noteId: newNoteId(), barcode: null, seq: backSeq, bornH: h - (orphan ? 14 + i * 2 : 2 + i) , col: i % COLS.length,
-        viaDesk: true, hatch: orphan ? null : 'crew', heldBy: null, readBy: [],
-      }],
-    }))
-  }
-  const fn = useWorld.getState().notes.filter((n) => n.kind === 'post')
-  useWorld.setState({ lastRead: { archive: fn[fn.length - 1]?.id ?? null, rules: fn.filter((n) => n.headline === 'summary written').pop()?.id ?? null } })
+    back.push({
+      id: nextId(), kind: 'env', headline: 'start: audio task', subject: ENV_SUBJECT.none, from: 'sound wing',
+      noteId: newNoteId(), barcode: null, seq: backSeq, bornH: h - ageH, col: i % COLS.length,
+      viaDesk: true, hatch: null, heldBy: null, tries: 0, retryAt: 0, readBy: [],
+    })
+  })
+  useWorld.setState((s) => ({ notes: [...s.notes, ...front, ...back] }))
+  envCol = ages.length % COLS.length
+  useWorld.setState({
+    lastRead: {
+      archive: front.filter((n) => n.viaDesk).pop()?.id ?? null,
+      rules: front.filter((n) => n.headline === 'invocation completed').pop()?.id ?? null,
+    },
+  })
 }

@@ -17,6 +17,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 h1, h2, .eyebrow, .station-label, .tag, .tick, .puff, .parcel-tag, .headline { font-family: Fredoka, Nunito, sans-serif; }
 code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(42, 36, 24, 0.07); padding: 1px 5px; border-radius: 4px; }
 .muted { color: var(--muted); }
+.small { font-size: 12.5px; margin: 6px 0 4px; }
+.hint-q { font-weight: 600; font-style: italic; }
 .loading { position: fixed; inset: 0; display: grid; place-items: center; font: 600 20px Fredoka, sans-serif; color: var(--muted); }
 
 .card { position: fixed; z-index: 40; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
@@ -68,6 +70,7 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .inspector dd { margin: 0; }
 .reader { display: inline-block; margin: 0 4px 4px 0; padding: 1px 8px; border-radius: 99px; background: #eee6d6; color: #a99c84; font-size: 12px; font-weight: 700; }
 .reader.yes { background: #dcf3e4; color: #1f7a45; }
+.reader.yes.rej { background: #ffe4cc; color: #9a3412; }
 .status { background: #f4efe4; border-radius: 8px; padding: 8px 10px; font-size: 14px; }
 .src { display: block; margin-top: 6px; }
 
@@ -81,6 +84,8 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .met { margin: 12px 0 8px; font-size: 15px; }
 .modal-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 10px; }
 .modal-foot button { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 6px 12px; font-weight: 600; margin-left: auto; }
+.modal-foot button.primary { margin-top: 0; background: var(--ink); color: #fff; border-color: var(--ink); font-size: 15px; padding: 7px 14px; }
+.modal-foot button.primary + button { margin-left: 0; }
 
 .intro { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; background: radial-gradient(ellipse at center, rgba(237,228,211,0.55), rgba(237,228,211,0.92)); z-index: 60; }
 .intro-card { max-width: 520px; background: var(--paper); border-radius: 20px; padding: 30px 32px; box-shadow: var(--shadow); border: 1px solid var(--line); }
@@ -102,7 +107,7 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .tag-teal { color: #fff; background: var(--teal); border-color: var(--teal); font-size: 11px; }
 .tag-bulb { background: #fff3c4; border-color: #f2d27a; }
 .tick { white-space: nowrap; font-size: 12px; background: rgba(255,250,240,0.85); padding: 0 6px; border-radius: 99px; font-weight: 600; color: #4b4236; pointer-events: none; }
-.parcel-tag { white-space: nowrap; font-size: 12px; font-weight: 600; background: #f7ecd9; border: 2px solid; border-radius: 4px; padding: 1px 6px; pointer-events: none; font-family: ui-monospace, Menlo, monospace; }
+.parcel-tag { white-space: nowrap; font-size: 13px; font-weight: 600; background: #f7ecd9; border: 2px solid; border-radius: 4px; padding: 2px 6px; pointer-events: none; font-family: ui-monospace, Menlo, monospace; }
 .parcel-tag b { font-family: Fredoka, sans-serif; }
 .parcel-tag .back { color: var(--red); }
 .puff { white-space: nowrap; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 99px; pointer-events: none; }
@@ -119,7 +124,14 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
   .has-panel .quest { display: none; }
   .simclock { min-width: 0; padding: 0 2px; }
   .panel, .inspector { top: auto; bottom: 112px; right: 12px; left: 12px; width: auto; max-height: 48vh; }
-  .controls { bottom: 12px; gap: 4px; }
+  .controls { bottom: 12px; gap: 4px; left: 12px; right: 12px; transform: none; max-width: none; }
+  .station-label .sl-real { display: none; }
+  .station-label { padding: 3px 8px 4px; }
+  .paper { width: 120px; height: 120px; margin: 4px auto 6px; padding: 12px 10px; }
+  .paper.envelope { width: 170px; height: 116px; }
+  .headline { font-size: 20px; }
+  .modal { max-height: calc(100dvh - 32px); }
+  .modal-foot { position: sticky; bottom: -14px; background: var(--paper); padding-bottom: 6px; }
   .controls button, .controls select { padding: 5px 8px; font-size: 13px; }
   .modal { padding: 22px 18px 14px; }
 }
@@ -136,7 +148,7 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .tour-dots i.past { background: var(--bb); }
 .tour-dots i.now { background: var(--bulb); box-shadow: 0 0 0 3px rgba(245,184,28,0.3); }
 .tour-leave { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; font-weight: 600; box-shadow: var(--shadow); }
-.notebook { position: fixed; top: 84px; right: 16px; width: 280px; max-height: 40vh; overflow: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; box-shadow: var(--shadow); z-index: 39; font-size: 13.5px; }
+.notebook { position: fixed; top: 84px; left: 16px; width: 280px; max-height: 40vh; overflow: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; box-shadow: var(--shadow); z-index: 39; font-size: 13.5px; }
 .notebook summary { font: 600 14px Fredoka, sans-serif; cursor: pointer; }
 .notebook ol { margin: 6px 0 2px; padding-left: 20px; }
 .notebook li { margin: 4px 0; }

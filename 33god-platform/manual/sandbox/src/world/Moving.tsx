@@ -26,20 +26,42 @@ function Courier({ p }: { p: Parcel }) {
   return (
     <group ref={g}>
       <Person position={[0, 0, 0]} color={C.uniform} scale={0.8} />
-      <RoundedBox args={[0.46, 0.36, 0.42]} radius={0.04} position={[0, 0.82, 0.32]} castShadow>
-        <meshStandardMaterial color={C.parcel} roughness={0.9} />
-      </RoundedBox>
-      <mesh position={[0, 1.005, 0.32]}>
-        <boxGeometry args={[0.47, 0.02, 0.1]} />
-        <meshStandardMaterial color={v.color} />
-      </mesh>
-      <Tag position={[0, 1.55, 0.3]} distanceFactor={11}>
+      <CarriedItem p={p} color={v.color} />
+      <Tag position={[0, 1.55, 0.3]} distanceFactor={16}>
         <div className="parcel-tag" style={{ borderColor: v.color }}>
           <b style={{ color: v.color }}>{v.name}</b> {v.word}
-          {p.backT0 !== null && <span className="back"> ↩</span>}
+          {p.backT0 !== null && <span className="back">{p.reply ? ' ↩ briefing card' : ' ↩ door shut'}</span>}
         </div>
       </Tag>
     </group>
+  )
+}
+
+/** Out: the parcel. Back from the window: a briefing card. Back from a shut door: the parcel, still in hand. */
+function CarriedItem({ p, color }: { p: Parcel; color: string }) {
+  const g = useRef<THREE.Group>(null)
+  const card = useRef<THREE.Mesh>(null)
+  useFrame(() => {
+    const showCard = p.reply && p.backT0 !== null && clock.t >= p.backT0
+    if (g.current) g.current.visible = !showCard
+    if (card.current) card.current.visible = showCard
+  })
+  return (
+    <>
+      <group ref={g}>
+        <RoundedBox args={[0.46, 0.36, 0.42]} radius={0.04} position={[0, 0.82, 0.32]} castShadow>
+          <meshStandardMaterial color={C.parcel} roughness={0.9} />
+        </RoundedBox>
+        <mesh position={[0, 1.005, 0.32]}>
+          <boxGeometry args={[0.47, 0.02, 0.1]} />
+          <meshStandardMaterial color={color} />
+        </mesh>
+      </group>
+      <mesh ref={card} position={[0.18, 0.9, 0.3]} rotation={[0, 0, -0.2]} visible={false}>
+        <boxGeometry args={[0.32, 0.22, 0.015]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={0.25} />
+      </mesh>
+    </>
   )
 }
 
@@ -81,7 +103,7 @@ function PuffTag({ p }: { p: Puff }) {
   const g = useRef<THREE.Group>(null)
   const el = useRef<HTMLDivElement>(null)
   useFrame(() => {
-    const u = (clock.t - p.t0) / 2.2
+    const u = (clock.t - p.t0) / p.life
     if (g.current) g.current.position.set(p.at[0], p.at[1] + u * 1.2, p.at[2])
     if (el.current) el.current.style.opacity = String(Math.max(0, 1 - Math.max(0, u - 0.6) * 2.5))
   })

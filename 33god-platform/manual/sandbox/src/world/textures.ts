@@ -58,7 +58,7 @@ export function postItFace(headline: string, from: string | null) {
     } else {
       c.font = `500 22px ${HAND}`
       c.fillStyle = 'rgba(42,36,24,0.55)'
-      c.fillText('no barcode', 22, 214)
+      c.fillText('no “from” corner', 22, 214)
     }
   })
 }
@@ -81,7 +81,7 @@ export function envelopeFace(headline: string, orphan: boolean) {
     c.font = `600 26px ${HAND}`
     c.textAlign = 'center'
     c.textBaseline = 'middle'
-    wrap(c, headline.replace('start: ', ''), 160, 150, 170, 28)
+    wrap(c, headline, 160, 148, 170, 28)
     c.strokeStyle = 'rgba(42,36,24,0.5)'
     c.lineWidth = 2
     c.strokeRect(268, 160, 40, 40) // signature box

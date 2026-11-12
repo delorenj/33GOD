@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react'
 import { BULBS, STATIONS, bulbById, stationById, type StationId } from './content'
-import { hoursNow, ui, useWorld } from './sim/store'
+import { HANDS_SLOT, TRAY_SLOT, hoursNow, ui, useWorld } from './sim/store'
 import { TourHud, tour } from './tour/TourHud'
 
 const BB_PARTS: StationId[] = ['courier', 'dock', 'labeldesk', 'belt']
+const HINTS: Record<string, string> = {
+  courier: 'Who carries the parcels?',
+  dock: 'Where do parcels go in?',
+  labeldesk: 'Who checks the words on a label?',
+  belt: 'Where does every note end up?',
+}
+const pl = (k: number, one: string, many = one + 's') => `${k} ${k === 1 ? one : many}`
+const goTo = (name: string) => `Go to ${/^(the|a) /i.test(name) ? name.toLowerCase() : 'the ' + name.toLowerCase()}`
 
 function SimClock() {
   const [h, setH] = useState(hoursNow())
@@ -13,7 +21,7 @@ function SimClock() {
   }, [])
   const day = Math.floor(h / 24) + 1
   const hh = String(Math.floor(h % 24)).padStart(2, '0')
-  return <span className="simclock">Day {day} · {hh}:00</span>
+  return <span className="simclock" title="Time runs fast here: one second is two hours on the belt">Day {day} · {hh}:00</span>
 }
 
 function Intro() {
@@ -22,9 +30,9 @@ function Intro() {
       <div className="intro-card">
         <div className="eyebrow">The 33GOD Manual · experiment v0.1</div>
         <h1>The Factory</h1>
-        <p>You are standing on the floor of the warehouse that runs your AI tools. Everything here is a real part of 33GOD, drawn as something you could walk up to.</p>
-        <p><b>Your first job: find Bloodbank.</b> On this floor it is a department called Material Handling, painted blue. Click its parts to see what each one does.</p>
-        <p className="muted">Bobbing lightbulbs explain the idea a station is built on. Click any note on the belt to read it.</p>
+        <p>You are on the floor of the warehouse where news from your AI tools gets sorted, kept and acted on. Every part is a real piece of 33GOD.</p>
+        <p><b>Your first job: find Bloodbank.</b> On this floor it is a department called Material Handling, painted blue. Look for the blue Bloodbank badge, then click each part.</p>
+        <p className="muted">Bobbing lightbulbs explain the idea behind a station. Click any note on the belt to read it. This is a picture, so it breaks in places; each card says where.</p>
         <div className="intro-actions">
           <button className="primary" onClick={() => tour.start()}>Take the new-hire tour</button>
           <button className="ghost" onClick={() => useWorld.setState({ intro: false })}>Explore freely</button>
@@ -46,12 +54,13 @@ function Quest() {
           <li key={p} className={found.includes(p) ? 'got' : ''}>
             <button onClick={() => ui.openStation(p)}>
               <span className="box">{found.includes(p) ? '✓' : ''}</span>
-              {found.includes(p) ? stationById[p].name : '???'}
+              {found.includes(p) ? stationById[p].name : <span className="hint-q">{HINTS[p]}</span>}
             </button>
           </li>
         ))}
       </ul>
-      {done && <p className="done">Found it. Bloodbank owns the courier, the dock, the label desk and the belt. Everything else on the floor either sticks notes on or tears copies off.</p>}
+      {done && <p className="done">Found it. The courier, the dock, the label desk and the belt are Bloodbank. Everything else on the floor sticks notes on, tears copies off, or takes envelopes, and a few do more than one.</p>}
+      {!done && <p className="muted small">Some parts are round the back of the belt. Orbit round, or use Go to…</p>}
       <div className="bulbcount">💡 {bulbs.length} of {BULBS.length} lightbulbs</div>
     </div>
   )
@@ -67,7 +76,7 @@ function Controls() {
       ))}
       <SimClock />
       <button className={dockShut ? 'on warn' : ''} onClick={() => useWorld.setState({ dockShut: !dockShut })}>{dockShut ? 'Open the dock' : 'Shut the dock'}</button>
-      <button className={sources ? 'on' : ''} onClick={() => useWorld.setState({ sources: !sources })}>Sources</button>
+      <button className={sources ? 'on' : ''} onClick={() => useWorld.setState({ sources: !sources })}>{sources ? 'Hide the code' : 'Show the code'}</button>
       <select value="" onChange={(e) => (e.target.value === 'overview' ? ui.overview() : ui.openStation(e.target.value as StationId))}>
         <option value="" disabled>Go to…</option>
         <option value="overview">Whole floor</option>
@@ -82,15 +91,25 @@ function LiveStat({ id }: { id: StationId }) {
   const notes = useWorld((st) => st.notes)
   const desks = useWorld((st) => st.desks)
   const lines: string[] = []
-  if (id === 'archive') lines.push(`${s.filed} filed this visit`, `${s.dupes} second copies, filed nothing`)
-  if (id === 'control') lines.push(`${s.control} notes seen through the window`)
-  if (id === 'rules') lines.push(`${s.rules} summaries matched the pick list`)
-  if (id === 'courier') lines.push(`${s.turnedBack} parcels turned round at a shut door`)
-  if (id === 'crew') lines.push(`${s.signed} signed off · ${s.handedBack} handed back`, desks.map((d, i) => `desk ${i + 1}: ${d.holding === null ? 'free' : 'working'}`).join(' · '))
+  if (id === 'archive') lines.push(`${pl(s.filed, 'note')} filed this visit`, `${pl(s.rejected, 'note')} turned away to the rejects drawer`, `${pl(s.dupes, 'second copy', 'second copies')}, nothing filed`)
+  if (id === 'control') lines.push(`${pl(s.control, 'note')} seen through the window`)
+  if (id === 'rules') lines.push(`${pl(s.rules, 'finished job')} matched the pick list`)
+  if (id === 'courier') lines.push(`${pl(s.turnedBack, 'parcel')} turned round at a shut door`)
+  if (id === 'clock') lines.push(`${pl(s.ticks, 'tick')} stuck on the front`, `${pl(s.chores, 'chore')} handed to the clock’s hands`)
+  if (id === 'crew') {
+    const tray = notes.filter((n) => n.hatch === 'crew' && n.heldBy === TRAY_SLOT).length
+    const waiting = notes.filter((n) => n.hatch === 'crew' && n.heldBy === null).length
+    lines.push(
+      `${s.signed} signed off · ${s.handedBack} handed back · ${s.failed} failed`,
+      desks.map((d, i) => `desk ${i + 1}: ${d.holding === null ? 'free' : 'working'}`).join(' · '),
+      `${tray} in the tray · ${pl(waiting, 'envelope')} waiting on the belt`,
+    )
+  }
   if (id === 'belt') {
     const front = notes.filter((n) => n.kind === 'post').length
     const back = notes.filter((n) => n.kind === 'env')
-    lines.push(`${front} post-its on the front`, `${back.length} envelopes on the back, ${back.filter((n) => n.hatch === null).length} with no hatch`, `${s.scraped} scraped so far`)
+    const grey = back.filter((n) => n.hatch === null).length
+    lines.push(`${pl(front, 'post-it')} on the front`, `${pl(back.length, 'envelope')} on the back, ${grey} grey (no hatch takes them)`, `${s.scraped} scraped so far`)
   }
   if (!lines.length) return null
   return <div className="live">{lines.map((l) => <div key={l}>{l}</div>)}</div>
@@ -99,7 +118,8 @@ function LiveStat({ id }: { id: StationId }) {
 function StationPanel() {
   const id = useWorld((s) => s.station)
   const sources = useWorld((s) => s.sources)
-  if (!id) return null
+  const inspecting = useWorld((s) => s.inspect !== null)
+  if (!id || inspecting) return null // the note inspector takes this spot; closing it brings the panel back
   const st = stationById[id]
   return (
     <aside className="panel card">
@@ -121,7 +141,7 @@ function StationPanel() {
       )}
       {sources && (
         <div className="evidence">
-          <div className="eyebrow">Sources</div>
+          <div className="eyebrow">In the code</div>
           {st.evidence.map((e) => <code key={e}>{e}</code>)}
         </div>
       )}
@@ -132,7 +152,6 @@ function StationPanel() {
 function Inspector() {
   const id = useWorld((s) => s.inspect)
   const note = useWorld((s) => s.notes.find((n) => n.id === s.inspect))
-  const desks = useWorld((s) => s.desks)
   const sources = useWorld((s) => s.sources)
   const [, tick] = useState(0)
   useEffect(() => {
@@ -144,27 +163,36 @@ function Inspector() {
   const age = ageH >= 24 ? `${Math.floor(ageH / 24)} d ${Math.floor(ageH % 24)} h` : `${Math.floor(ageH)} h`
   const post = note.kind === 'post'
   let status = ''
-  if (post) status = 'Still on the belt. Anyone can tear off a copy until the 7-day scraper takes it.'
-  else if (note.hatch === null) status = 'No hatch takes this kind of envelope. It will ride up untouched until the 1-day scraper.'
-  else if (note.heldBy !== null) status = `Pinned to desk ${note.heldBy + 1}. Taken, but not gone: it leaves the belt only when the worker signs it off.`
-  else status = desks.every((d) => d.holding !== null) ? 'Waiting. Both desks are busy, so the hatch stays shut.' : 'Waiting for the hatch.'
+  if (post) status = 'Still on the belt. A reader who comes by before the 7-day scraper reaches it can tear off a copy.'
+  else if (note.hatch === null) status = 'No hatch takes this kind of envelope. The sound wing wrote it only so the job can be traced. It will ride up untouched until the 1-day scraper scrapes it.'
+  else if (note.heldBy === TRAY_SLOT) status = 'In the crew hall’s tray, waiting for a desk. Taken, but not gone: it stays on the belt, pinned, until a worker signs it off.'
+  else if (note.heldBy === HANDS_SLOT) status = 'With the clock’s hands. Taken, but not gone: it stays pinned until they sign it off.'
+  else if (note.heldBy !== null) status = `Pinned to desk ${note.heldBy + 1}. Taken, but not gone: the worker signs it off, or the 1-day scraper scrapes it.`
+  else if (note.hatch === 'crew') status = note.tries > 0 ? `Handed back after try ${note.tries}. It is offered again after a short wait.` : 'Waiting. The desks are busy and the tray is full, so the hatch stays shut for now.'
+  else status = 'Waiting for the clock’s hands to finish the chore before this one.'
+  const archiveChip = note.readBy.includes('archive-rejected') ? 'archive: turned away' : 'archive'
   return (
     <aside className="inspector card">
       <button className="x" onClick={() => useWorld.setState({ inspect: null })} aria-label="Close">×</button>
       <div className="eyebrow">{post ? 'A post-it (an event)' : 'An envelope (a command)'}</div>
       <div className={post ? 'paper postit' : `paper envelope ${note.hatch === null ? 'orphan' : ''}`}>
         <div className="headline">{note.headline}</div>
-        {post && (note.from ? <div className="fromcorner">{note.from}</div> : <div className="nofrom">no "from" corner</div>)}
+        {post && (note.from ? <div className="fromcorner">{note.from}</div> : <div className="nofrom">no “from” corner</div>)}
       </div>
       <dl>
         <dt>Note ID</dt><dd><code>{note.noteId}</code> never changes, even on a second copy</dd>
-        <dt>Barcode</dt><dd>{note.barcode ? <><code>{note.barcode}</code> one per conversation</> : <span className="muted">none{post ? ': stuck by the cataloguer’s runner, past the label desk' : ''}</span>}</dd>
+        <dt>Barcode</dt><dd>{note.barcode ? <><code>{note.barcode}</code> one per conversation</> : <span className="muted">none{post && !note.viaDesk ? ': stuck by the cataloguer’s runner, past the label desk' : ''}</span>}</dd>
         <dt>Belt number</dt><dd><code>#{note.seq}</code> stamped by the belt, {post ? 'front' : 'back'} face</dd>
         <dt>Age</dt><dd>{age}</dd>
-        {post && <><dt>Copies torn off</dt><dd>{['archive', 'control', 'rules'].map((r) => <span key={r} className={`reader ${note.readBy.includes(r) ? 'yes' : ''}`}>{r === 'control' ? 'control room' : r === 'rules' ? 'rules card' : 'archive'}</span>)}</dd></>}
+        {post && <><dt>Copies torn off</dt><dd>{['archive', 'control', 'rules'].map((r) => {
+          const got = r === 'archive' ? note.readBy.some((x) => x.startsWith('archive')) : note.readBy.includes(r)
+          const rej = r === 'archive' && note.readBy.includes('archive-rejected')
+          return <span key={r} className={`reader ${got ? 'yes' : ''} ${rej ? 'rej' : ''}`}>{r === 'control' ? 'control room' : r === 'rules' ? 'rule card' : archiveChip}</span>
+        })}</dd></>}
+        {!post && <><dt>From</dt><dd>{note.from}</dd></>}
       </dl>
       <p className="status">{status}</p>
-      {sources && <code className="src">{post ? `bloodbank.evt.${note.headline === 'turn started' ? 'conversation.turn.started' : 'report.session.completed'}` : `bloodbank.cmd.${note.hatch ? 'v1.agent.invocation.start' : 'audio.task.start'}`}</code>}
+      {sources && <code className="src">{note.subject}</code>}
     </aside>
   )
 }
@@ -188,12 +216,15 @@ function BulbModal() {
             <p key={i}>{para}</p>
           ),
         )}
-        <div className="met"><b>You have met this before:</b> {b.metBefore}</div>
+        <div className="met"><b>You’ve already met this:</b> {b.metBefore}</div>
         {b.breaks && <div className="breaks"><b>Where the picture breaks.</b> {b.breaks}</div>}
-        {sources && <div className="evidence"><div className="eyebrow">Sources</div><code>{b.evidence}</code></div>}
+        {sources && <div className="evidence"><div className="eyebrow">In the code</div><code>{b.evidence}</code></div>}
         <div className="modal-foot">
           {b.status === 'proposal' && <span className="chip">draft copy · proposal</span>}
-          <button onClick={() => { close(); ui.openStation(b.station) }}>Go to {stationById[b.station].name.toLowerCase()}</button>
+          {id === 'failopen' && useWorld.getState().mode !== 'tour' && (
+            <button className="primary" onClick={() => { useWorld.setState({ dockShut: true, bulb: null }); ui.openStation('courier') }}>Shut the dock and watch</button>
+          )}
+          <button onClick={() => { close(); ui.openStation(b.station) }}>{goTo(stationById[b.station].name)}</button>
         </div>
       </div>
     </div>

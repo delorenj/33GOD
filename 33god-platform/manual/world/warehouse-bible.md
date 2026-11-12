@@ -83,7 +83,7 @@ Live values read from the big-chungus server (`:8222/jsz`) on 2026-11-11.
 | B2 | **The belt creeps upward at the speed of the clock, always.** Height is age. It never speeds up and waits for nobody. It does not deliver anything: it is a noticeboard that slowly scrolls up, and everyone comes to it. | Retention is by age; a stream holds messages whether or not anyone reads them. | `streams.json` |
 | B3 | **The scrapers.** A bar at the 7-day mark on the front belt takes whatever reaches it, read or not. The back belt's scraper sits at the 1-day mark. | `max_age` 7d / 1d with `discard: old`; no count or size limit, so **only age** scrapes a post-it. | `streams.json`, live |
 | B4 | **The sorter at the loading point** reads one word on the outside label: `evt` goes to the front, `cmd` and `rpy` to the back. It never opens the note. (Warehouses call this sortation.) | Subject-based stream binding; the kind marker exists "so NATS can route without deserializing". Readers still trust the note's own `kind` field. | `docs/event-naming.md` §3 |
-| B5 | **The belt does not proofread.** It takes any note whose label fits a loop. Checks happen at the desks where notes are written, when they happen at all. Live exhibit: the cataloguer's runner sticks session-summary notes that never pass the label desk, so they wear no barcode, no form and no "from" corner (B18). | NATS does no schema validation. `assert_contract` runs only in some publishers. | `validate.py:1026`; live `bloodbank.evt.report.session.completed`, `type com.dapr.event.sent` |
+| B5 | **The belt does not proofread.** It takes any note whose label fits a loop. Checks happen at the desks where notes are written, when they happen at all. Live exhibit: the cataloguer's runner sticks session-summary notes that never pass the label desk, so they wear no barcode, no form and no "from" corner (B18). **And the archive turns every one of them away**: missing producer, service, domain and kind, each lands in the rejects drawer (3,542 `dead_letter` rows, 0 filed; checked live 2026-11-12, `candystore/db.py` `REQUIRED_ENVELOPE_FIELDS`). | NATS does no schema validation. `assert_contract` runs only in some publishers. | `validate.py:1026`; live `bloodbank.evt.report.session.completed`, `type com.dapr.event.sent` |
 | B6 | **Clips live on the belt.** A reader the belt remembers keeps its clip there while it is away. A reader that keeps its own place uses a notebook and a visitor's pass instead (the control room). | Durable consumer state is in the server. Holocene uses an ephemeral ordered consumer with `ack none` and its own checkpoint. | live jsz; `holocene/packages/bloodbank-client/src/index.ts` |
 | B7 | **Pick lists.** A clip can stop only at certain notes, such as "ticket created". One clip per pick list; one reader may own several clips. | Consumer filter subjects (Ticket Grooming filters `bloodbank.evt.repo.task.created`; one n8n workflow owns two durables). | live jsz |
 | B8 | **A new reader's first day.** Its clip starts at the top (the oldest note still there), at the bottom (only what arrives from now), or at a marked time or number. Never "from the beginning of time". Back-belt hatches always start at the top: they see every envelope still unsigned. | `deliverPolicy` all (archive), new (cataloguer), by start time or sequence (artifact clerk, control room). Work-queue streams reject `DeliverPolicy.NEW`. | `pubsub.yaml`, `enricher-pubsub.yaml`, `candybar/executor/role.py` |
@@ -245,7 +245,7 @@ Each card: the story, why the fit is tight (the real behaviour and its file), wh
 - **Why tight:** `ON CONFLICT (id) DO NOTHING` on the CloudEvents id (`candystore/db.py`), so a note that arrives twice is filed once. A `dead_letter` table takes what cannot be stored. The counter is `GET /sessions/<id>` and `/events/<id>/raw`. PostgreSQL 17 with pgvector.
 - **Breaks:** the archive makes no retention promise, and "keeps everything forever" stays forbidden. The rejects drawer is a drop path: it logs the note and acks with 200, so nothing retries it. The racks also hold the cataloguer's tags. The dock's own notes rely on this clerk alone for dedupe (B15).
 - **Ladder:** L1 racks, one clerk, one counter. L2 the clerk with two slots, new and taken. L3 spec plate: the clip it holds on the belt (starts at the top, 30 s patience).
-- **Bulbs:** **What does idempotent mean?** (the racks). You've already met it as upsert.
+- **Bulbs:** **What does idempotent mean?** (the racks). You've already met it as a signup form that ignores an email it already has (not an upsert: the racks insert-if-absent, `ON CONFLICT DO NOTHING`, and never update).
 
 #### 15. Candybar: the clock
 
@@ -323,7 +323,7 @@ Jarad's idea [J]: a small bulb bobs beside a station. Click it and a themed moda
 2. **The picture comes first.** The title may name the term ("What is Normalization?"); the body pictures the warehouse first, then names the real term once.
 3. **A modal has five beats.** The picture; the one real term; why bother; "you've probably done this"; "you'll spot it again". An optional cousin line ends it. About 180 words, trimmed to fit. The code evidence for a bulb sits in the catalog row ([`lightbulbs/README.md`](../lightbulbs/README.md)), never in the modal.
 4. **At most one new bulb per page.** A concept met again gets a "spot it again" line at its next station, not a second bulb.
-5. **"You've probably done this" names something the reader has built**: a Stripe plus PayPal checkout, an `await`, an upsert, a Slack "new messages" line. This is the buffer that serves both readers: the veteran thinks "yes, that's exactly it", and the vibe coder thinks "oh, I did that".
+5. **"You've probably done this" names something the reader has built**: a Stripe plus PayPal checkout, an `await`, a form that ignores a duplicate, a Slack "new messages" line. This is the buffer that serves both readers: the veteran thinks "yes, that's exactly it", and the vibe coder thinks "oh, I did that".
 6. **Status is shown.** Each bulb is *modal drafted*, *proposal* or *reserve* in the catalog. Only Normalization [J] is drafted.
 
 ### 5.2 The set: 22 bulbs, proposed [P]
@@ -344,7 +344,7 @@ Jarad's idea [J]: a small bulb bobs beside a station. Click it and a themed moda
 | 10 | Retention | "keep my messages for 30 days" | the scraper |
 | 11 | Work queue | the ticket machine at a deli counter | the back belt |
 | 12 | Acknowledgement, and why things arrive twice | a courier who needs a signature | the crew hall hatch |
-| 13 | What does idempotent mean? | an upsert; pressing the lift button twice | the clock's ledger |
+| 13 | What does idempotent mean? | pressing the lift button twice; a signup form that ignores an email it already has | the clock's ledger |
 | 14 | Sidecar | a log shipper running beside your app | the runner at the archive |
 | 15 | Schema | a form's required fields; TypeScript types | the form pads |
 | 16 | Single source of truth | one cron instead of ten | the bell |

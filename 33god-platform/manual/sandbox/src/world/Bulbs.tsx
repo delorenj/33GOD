@@ -2,8 +2,11 @@ import { Tag } from "./Tag"
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { BULBS, OVERVIEW, STATIONS, stationById, type Bulb } from '../content'
+import { BULBS, STATIONS, overview, stationById, type Bulb } from '../content'
 import { ui, useWorld } from '../sim/store'
+
+const ONE = new THREE.Vector3(1, 1, 1)
+const BIG = new THREE.Vector3(1.25, 1.25, 1.25)
 
 function LightBulb({ b, index }: { b: Bulb; index: number }) {
   const g = useRef<THREE.Group>(null)
@@ -15,8 +18,7 @@ function LightBulb({ b, index }: { b: Bulb; index: number }) {
     if (g.current) {
       g.current.position.y = b.at[1] + Math.sin(t * 2) * 0.12
       g.current.rotation.y = t * 0.6
-      const s = hover ? 1.25 : 1
-      g.current.scale.lerp(new THREE.Vector3(s, s, s), 0.15)
+      g.current.scale.lerp(hover ? BIG : ONE, 0.15)
     }
     if (glass.current) glass.current.emissiveIntensity = (found ? 1.2 : 2.4) + Math.sin(t * 3) * (found ? 0.2 : 0.8) + (hover ? 1.5 : 0)
   })
@@ -62,7 +64,8 @@ export function StationLabels() {
   const found = useWorld((s) => s.foundStations)
   const current = useWorld((s) => s.station)
   const mode = useWorld((s) => s.mode)
-  if (mode === 'tour') return null
+  const intro = useWorld((s) => s.intro)
+  if (mode === 'tour' || intro) return null
   return (
     <group>
       {STATIONS.map((s) => (
@@ -93,7 +96,7 @@ export function CameraRig() {
 
   useEffect(() => {
     if (!focus || !controls) return
-    const v = focus.view ?? (focus.id === 'overview' || focus.id === 'custom' ? OVERVIEW : stationById[focus.id].view)
+    const v = focus.view ?? (focus.id === 'overview' || focus.id === 'custom' ? overview() : stationById[focus.id].view)
     anim.current = {
       t: 0,
       fp: camera.position.clone(),
@@ -102,6 +105,17 @@ export function CameraRig() {
       tt: new THREE.Vector3(...v.target),
     }
   }, [focus, controls, camera])
+
+  // when a side panel is open, shift the frame so the station sits in the uncovered part of the screen
+  const size = useThree((s) => s.size)
+  const panelOpen = useWorld((s) => s.station !== null || s.inspect !== null)
+  useEffect(() => {
+    const { width: w, height: h } = size
+    if (!panelOpen) camera.clearViewOffset()
+    else if (w <= 720) camera.setViewOffset(w, h, 0, h * 0.2, w, h)
+    else camera.setViewOffset(w, h, 100, 0, w, h)
+    return () => camera.clearViewOffset()
+  }, [panelOpen, size, camera])
 
   useEffect(() => {
     if (!controls) return

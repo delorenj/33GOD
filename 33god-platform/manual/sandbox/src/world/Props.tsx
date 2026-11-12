@@ -3,8 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { VENDORS, type Vec3 } from '../content'
-import { BAY_X, BAY_Z, CATALOGUER, CLOCK, CREW, DOCK, LABEL_DESK, READERS, courierPath } from '../sim/layout'
-import { clock, hoursNow, useWorld } from '../sim/store'
+import { BAY_X, BAY_Z, CATALOGUER, CLOCK, CREW, DOCK, HANDS, LABEL_DESK, PLANNER, READERS, TRAY, courierPath } from '../sim/layout'
+import { TRAY_SLOT, clock, hoursNow, useWorld } from '../sim/store'
 import { clockFace, floorSign } from './textures'
 
 export const C = {
@@ -322,15 +322,16 @@ function Clock() {
 
 function CrewHall() {
   const desks = useWorld((s) => s.desks)
+  const inTray = useWorld((s) => s.notes.filter((n) => n.hatch === 'crew' && n.heldBy === TRAY_SLOT).length)
   const [x, , z] = CREW.center
   return (
     <group>
       <group position={[x, 0, z]}>
         <mesh position={[0, 1.6, -1.6]} castShadow receiveShadow>
-          <boxGeometry args={[5.2, 3.2, 0.25]} />
+          <boxGeometry args={[6.8, 3.2, 0.25]} />
           <meshStandardMaterial color={C.crew} />
         </mesh>
-        {[-2.6, 2.6].map((sx) => (
+        {[-3.4, 3.4].map((sx) => (
           <mesh key={sx} position={[sx, 1.6, 0]} castShadow receiveShadow>
             <boxGeometry args={[0.25, 3.2, 3.4]} />
             <meshStandardMaterial color={C.crew} />
@@ -339,11 +340,11 @@ function CrewHall() {
       </group>
       {CREW.desks.map((d, i) => (
         <group key={i} position={[d[0], 0, d[2]]}>
-          <RoundedBox args={[1.5, 0.9, 0.9]} radius={0.05} position={[0, 0.45, 0]} castShadow receiveShadow>
+          <RoundedBox args={[1.15, 0.9, 0.9]} radius={0.05} position={[0, 0.45, 0]} castShadow receiveShadow>
             <meshStandardMaterial color={C.wood} />
           </RoundedBox>
           <Person position={[0, 0, -0.8]} color={C.crew} />
-          {desks[i].holding !== null && (
+          {desks[i]?.holding != null && (
             <mesh position={[0, 0.93, 0.05]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[0.55, 0.38]} />
               <meshStandardMaterial color="#D8B07A" />
@@ -351,6 +352,46 @@ function CrewHall() {
           )}
         </group>
       ))}
+      {/* the tray by the hatch: envelopes taken, waiting for a desk (drawn 4 slots; the real tray holds 64) */}
+      <group position={[CREW.tray[0], 0, CREW.tray[2]]}>
+        <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+          <boxGeometry args={[1.2, 1, 0.8]} />
+          <meshStandardMaterial color={C.steel} />
+        </mesh>
+        {Array.from({ length: TRAY }, (_, i) => (
+          <mesh key={i} position={[0, 1.02 + i * 0.06, 0]} visible={i < inTray}>
+            <boxGeometry args={[0.6, 0.04, 0.42]} />
+            <meshStandardMaterial color="#D8B07A" />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  )
+}
+
+/** The clock's planner reads tick post-its; its hands take the clock's own envelopes. */
+function ClockCrew() {
+  const busy = useWorld((s) => s.hands.holding !== null)
+  return (
+    <group>
+      <group position={PLANNER}>
+        <RoundedBox args={[1.1, 0.8, 0.7]} radius={0.04} position={[0, 0.4, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color={C.clock} />
+        </RoundedBox>
+        <Person position={[0, 0, -0.65]} color={C.clock} scale={0.9} />
+      </group>
+      <group position={HANDS}>
+        <RoundedBox args={[1.2, 0.85, 0.8]} radius={0.04} position={[0, 0.43, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color={C.wood} />
+        </RoundedBox>
+        <Person position={[0, 0, -0.7]} color={C.clock} />
+        {busy && (
+          <mesh position={[0, 0.88, 0.05]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[0.55, 0.38]} />
+            <meshStandardMaterial color="#D8B07A" />
+          </mesh>
+        )}
+      </group>
     </group>
   )
 }
@@ -378,6 +419,7 @@ export function Props() {
       <Cataloguer />
       <Clock />
       <CrewHall />
+      <ClockCrew />
       <ClipWires />
     </group>
   )

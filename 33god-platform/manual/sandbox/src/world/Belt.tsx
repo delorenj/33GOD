@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { BELT, BELT_TOP } from '../sim/layout'
 import { notePos } from '../sim/layout'
-import { hoursNow, useWorld, type Note } from '../sim/store'
+import { HANDS_SLOT, TRAY_SLOT, hoursNow, useWorld, type Note } from '../sim/store'
 import { C } from './Props'
 import { envelopeFace, postItFace } from './textures'
 
@@ -66,7 +66,7 @@ function Ruler() {
             <meshStandardMaterial color="#1F2937" />
           </mesh>
           {d > 0 && d < BELT.frontDays && (
-            <Tag position={[0.9, 0, 0]} distanceFactor={14}>
+            <Tag position={[0.9, 0, 0]} distanceFactor={20}>
               <div className="tick">{d === 1 ? '1 day' : `${d} days`}</div>
             </Tag>
           )}
@@ -79,7 +79,7 @@ function Ruler() {
             <meshStandardMaterial color="#1F2937" />
           </mesh>
           {hr > 0 && (
-            <Tag position={[-0.9, 0, 0]} distanceFactor={14}>
+            <Tag position={[-0.9, 0, 0]} distanceFactor={20}>
               <div className="tick">12 h</div>
             </Tag>
           )}
@@ -137,7 +137,7 @@ function NoteMesh({ note }: { note: Note }) {
             <meshStandardMaterial color={C.crew} />
           </mesh>
           <Tag position={[0.05, 0.16, 0]} distanceFactor={10}>
-            <div className="tag tag-teal">desk {note.heldBy + 1}</div>
+            <div className="tag tag-teal">{note.heldBy === TRAY_SLOT ? 'in the tray' : note.heldBy === HANDS_SLOT ? "clock's hands" : `desk ${note.heldBy + 1}`}</div>
           </Tag>
         </group>
       )}
@@ -164,7 +164,7 @@ function Clip({ which, color, label }: { which: 'archive' | 'rules'; color: stri
         <boxGeometry args={[0.22, 0.12, 0.08]} />
         <meshStandardMaterial color={color} metalness={0.3} roughness={0.4} />
       </mesh>
-      <Tag position={[-0.55, which === 'archive' ? 0.05 : -0.18, 0]} distanceFactor={10}>
+      <Tag position={[-0.55, which === 'archive' ? 0.05 : -0.18, 0]} distanceFactor={24}>
         <div className="tick">{label}</div>
       </Tag>
     </group>
@@ -209,7 +209,7 @@ export function Belt() {
       <Scraper y={BELT.baseY + BELT.backDays * BELT.mPerDay} z={BELT.backZ} label="1-day scraper" />
       <Ruler />
       <Clip which="archive" color={C.archive} label="archive's clip" />
-      <Clip which="rules" color={C.rules} label="rules card's clip" />
+      <Clip which="rules" color={C.rules} label="rule card's clip" />
       {notes.map((n) => (
         <NoteMesh key={n.id} note={n} />
       ))}

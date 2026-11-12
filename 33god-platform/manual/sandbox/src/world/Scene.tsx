@@ -1,7 +1,7 @@
 import { Environment, Lightformer, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
-import { OVERVIEW } from '../content'
+import { overview } from '../content'
 import { step } from '../sim/sim'
 import { useWorld } from '../sim/store'
 import { Belt } from './Belt'
@@ -16,11 +16,12 @@ function Sim() {
 }
 
 export function Scene({ fx }: { fx: boolean }) {
+  const ov = overview()
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
-      camera={{ position: OVERVIEW.pos, fov: 42, near: 0.1, far: 300 }}
+      camera={{ position: ov.pos, fov: 42, near: 0.1, far: 300 }}
       onPointerMissed={() => useWorld.setState({ inspect: null })}
     >
       <color attach="background" args={['#EDE4D3']} />
@@ -56,7 +57,7 @@ export function Scene({ fx }: { fx: boolean }) {
       <CameraRig />
       <OrbitControls
         makeDefault
-        target={OVERVIEW.target}
+        target={ov.target}
         enableDamping
         dampingFactor={0.08}
         minDistance={4}

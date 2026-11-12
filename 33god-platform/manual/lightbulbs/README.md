@@ -52,7 +52,7 @@ Each modal's third beat names something the reader has probably built. Proposed:
 | Retention | "keep my messages for 30 days" |
 | Work queue | the ticket machine at a deli counter |
 | Acknowledgement | a courier who needs a signature |
-| Idempotent | an upsert; pressing the lift button twice |
+| Idempotent | pressing the lift button twice; a signup form that ignores an email it already has |
 | Sidecar | a log shipper running beside your app |
 | Schema | a form's required fields; TypeScript types |
 | Single source of truth | one cron instead of ten |

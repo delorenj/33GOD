@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import type { BulbId, StationId, Vec3 } from '../content'
 
 export type Kind = 'post' | 'env'
+export type Hatch = 'crew' | 'clock' | null
+export const TRAY_SLOT = -1
+export const HANDS_SLOT = -2
 
 export interface Note {
   id: number
@@ -14,18 +17,22 @@ export interface Note {
   bornH: number // sim hour it was stuck on
   col: number
   viaDesk: boolean
-  hatch: 'crew' | null // envelopes only; null = no hatch takes this kind
-  heldBy: number | null // desk index holding a pinned envelope
-  readBy: string[]
+  subject: string // the real label, shown under "Show the code"
+  hatch: Hatch // envelopes only; null = no hatch takes this kind
+  heldBy: number | null // pinned: desk index, TRAY_SLOT in the crew tray, HANDS_SLOT at the clock's hands
+  tries: number // times a hatch has taken it
+  retryAt: number // sim time before which a handed-back envelope is not offered again
+  readBy: string[] // readers that tore off a copy; 'archive-rejected' = turned away to the rejects drawer
 }
 
-export interface Parcel { id: number; vendor: number; t0: number; backT0: number | null }
+// a courier's trip: out with the parcel, back with a briefing card (reply) or the parcel still in hand
+export interface Parcel { id: number; vendor: number; t0: number; backT0: number | null; reply: boolean }
 export type FlyerLook = 'post' | 'summary' | 'copy' | 'env' | 'scrap' | 'scrapEnv'
 export interface Flyer { id: number; look: FlyerLook; from: Vec3; to: Vec3; t0: number; dur: number; arc: number }
-export interface Puff { id: number; at: Vec3; text: string; t0: number; tone: 'ok' | 'warn' | 'info' }
+export interface Puff { id: number; at: Vec3; text: string; t0: number; life: number; tone: 'ok' | 'warn' | 'info' }
 export interface Desk { holding: number | null; startedAt: number; until: number }
 
-export interface Stats { filed: number; dupes: number; control: number; rules: number; turnedBack: number; signed: number; handedBack: number; scraped: number }
+export interface Stats { filed: number; dupes: number; rejected: number; control: number; rules: number; turnedBack: number; signed: number; handedBack: number; failed: number; scraped: number; ticks: number; chores: number }
 
 interface State {
   notes: Note[]
@@ -33,6 +40,7 @@ interface State {
   flyers: Flyer[]
   puffs: Puff[]
   desks: Desk[]
+  hands: Desk
   stats: Stats
   lastRead: { archive: number | null; rules: number | null }
   clockRingAt: number
@@ -59,8 +67,9 @@ export const useWorld = create<State>(() => ({
   parcels: [],
   flyers: [],
   puffs: [],
-  desks: [{ holding: null, startedAt: 0, until: 0 }, { holding: null, startedAt: 0, until: 0 }],
-  stats: { filed: 0, dupes: 0, control: 0, rules: 0, turnedBack: 0, signed: 0, handedBack: 0, scraped: 0 },
+  desks: Array.from({ length: 4 }, () => ({ holding: null, startedAt: 0, until: 0 })),
+  hands: { holding: null, startedAt: 0, until: 0 },
+  stats: { filed: 0, dupes: 0, rejected: 0, control: 0, rules: 0, turnedBack: 0, signed: 0, handedBack: 0, failed: 0, scraped: 0, ticks: 0, chores: 0 },
   lastRead: { archive: null, rules: null },
   clockRingAt: -99,
   dockPulseAt: -99,

@@ -26,7 +26,18 @@ export const READERS = {
 }
 export const CATALOGUER: Vec3 = [4.6, 0, 2]
 export const CLOCK: Vec3 = [-6, 0, -6]
-export const CREW = { center: [7, 0, -7.5] as Vec3, desks: [[5.9, 1.05, -7.2], [8.1, 1.05, -7.2]] as Vec3[] }
+// the clock's planner reads tick post-its; its hands (the executor) take the clock's own envelopes
+export const PLANNER: Vec3 = [-3.6, 0, -3.4]
+export const HANDS: Vec3 = [-8.8, 0, -5.6]
+// the crew hall: drawn with 4 desks and a tray of 4; the real batch hatch runs 4 and holds 64 more
+export const CREW = {
+  center: [7, 0, -7.5] as Vec3,
+  desks: [[4.9, 1.05, -7.2], [6.3, 1.05, -7.2], [7.7, 1.05, -7.2], [9.1, 1.05, -7.2]] as Vec3[],
+  tray: [4.2, 1.1, -4.9] as Vec3,
+}
+export const TRAY = 4
+// where the sound wing's outbox sticks its no-hatch envelopes from
+export const SOUND_OUTBOX: Vec3 = [15.5, 3, -3.2]
 
 export function courierPath(vendor: number): Vec3[] {
   const z = BAY_Z[vendor]
