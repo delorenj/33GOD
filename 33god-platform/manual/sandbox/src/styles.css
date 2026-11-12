@@ -197,3 +197,8 @@ code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background
 .map-pname { fill: #fff; font-size: 0.62px; font-weight: 700; pointer-events: none; }
 .map-chrome { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 12px; align-items: center; background: rgba(230,240,255,0.95); color: #0B2A6E; border-radius: 12px; padding: 8px 12px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); max-width: calc(100vw - 32px); flex-wrap: wrap; }
 .map-chrome button { border: 1px solid #0B2A6E; background: transparent; color: #0B2A6E; border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; }
+@media (max-width: 720px) {
+  .cam-top .quest { display: none; }
+  .map-chrome span { display: none; }
+  .map-chrome { padding: 6px 10px; }
+}

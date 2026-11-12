@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { overview, stationById, type Vec3 } from '../content'
 import { MAP_BOUNDS } from '../domains'
+import { MAP_MARGIN, mapPortrait } from '../map/frame'
 import { useWorld } from '../sim/store'
 
 // One camera, two ways of looking:
@@ -13,7 +14,6 @@ import { useWorld } from '../sim/store'
 
 export const BASE_FOV = 42
 const TOP_FOV = 5
-const MAP_MARGIN = 1.6
 
 interface Pose { target: THREE.Vector3; dir: THREE.Vector3; h: number; fov: number }
 type Controls = {
@@ -33,21 +33,18 @@ function poseFromView(v: { pos: Vec3; target: Vec3 }, fov = BASE_FOV): Pose {
   return { target, dir: d.clone().normalize(), h: frameH(d.length(), fov), fov }
 }
 
-/** The whole zoned floor, fitted to the screen. MapOverlay draws with the same margin, so they line up. */
+/** The whole zoned floor, fitted to the screen. MapOverlay draws in the same frame (map/frame.ts), so they line up. */
 export function topPose(w: number, h: number): Pose {
+  const portrait = mapPortrait(w, h)
   const W = MAP_BOUNDS.x1 - MAP_BOUNDS.x0 + 2 * MAP_MARGIN
   const D = MAP_BOUNDS.z1 - MAP_BOUNDS.z0 + 2 * MAP_MARGIN
   return {
     target: new THREE.Vector3((MAP_BOUNDS.x0 + MAP_BOUNDS.x1) / 2, 0, (MAP_BOUNDS.z0 + MAP_BOUNDS.z1) / 2),
-    dir: new THREE.Vector3(0, 1, 1e-4).normalize(), // a hair off vertical keeps "north" (-z) at the top of the screen
-    h: Math.max(D, W / (w / h)),
+    // a hair off vertical sets which way is up on screen: north (-z) in landscape, east (+x) in portrait
+    dir: (portrait ? new THREE.Vector3(-1e-4, 1, 0) : new THREE.Vector3(0, 1, 1e-4)).normalize(),
+    h: portrait ? Math.max(W, D / (w / h)) : Math.max(D, W / (w / h)),
     fov: TOP_FOV,
   }
-}
-export const MAP_VIEWBOX = () => {
-  const x = MAP_BOUNDS.x0 - MAP_MARGIN
-  const z = MAP_BOUNDS.z0 - MAP_MARGIN
-  return `${x} ${z} ${MAP_BOUNDS.x1 - MAP_BOUNDS.x0 + 2 * MAP_MARGIN} ${MAP_BOUNDS.z1 - MAP_BOUNDS.z0 + 2 * MAP_MARGIN}`
 }
 
 /** A perspective view that looks at a ground point from the front, close enough to read the props. */

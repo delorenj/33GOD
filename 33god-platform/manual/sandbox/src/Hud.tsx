@@ -252,10 +252,11 @@ export function Hud() {
   }, [])
   const panelOpen = useWorld((s) => s.station !== null || s.inspect !== null)
   const mode = useWorld((s) => s.mode)
+  const top = useWorld((s) => s.cam === 'top')
   if (intro) return <Intro />
   if (mode === 'tour') return (<><TourHud /><BulbModal /></>)
   return (
-    <div className={panelOpen ? 'has-panel' : ''}>
+    <div className={`${panelOpen ? 'has-panel' : ''} ${top ? 'cam-top' : ''}`}>
       <div className="title card"><b>The Factory</b> <span className="muted">33GOD Manual · v0.1</span></div>
       <Quest />
       <Controls />

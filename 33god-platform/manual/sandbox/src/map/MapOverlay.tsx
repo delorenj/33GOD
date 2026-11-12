@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { stationById, type StationId } from '../content'
 import { DOMAINS, PARTS, type Domain } from '../domains'
 import { ui, useWorld } from '../sim/store'
-import { MAP_VIEWBOX, viewAt } from '../world/Camera'
+import { viewAt } from '../world/Camera'
+import { mapPortrait, mapRect, mapViewBox, toMap } from './frame'
 
 // The overworld map: drawn on blueprint paper over the top-down view, in the same world units,
 // so every mark sits on the thing it names. v0: geography and mechanics; the visual grammar comes next.
@@ -24,21 +25,28 @@ export function MapOverlay() {
     const t = requestAnimationFrame(() => setShown(true))
     return () => cancelAnimationFrame(t)
   }, [open])
+  const [portrait, setPortrait] = useState(mapPortrait)
+  useEffect(() => {
+    const f = () => setPortrait(mapPortrait())
+    addEventListener('resize', f)
+    return () => removeEventListener('resize', f)
+  }, [])
   if (!open) return null
   return (
     <div className={`map-overlay ${shown ? 'in' : ''}`}>
-      <svg className="map-svg" viewBox={MAP_VIEWBOX()} preserveAspectRatio="xMidYMid meet">
+      <svg className="map-svg" viewBox={mapViewBox(portrait)} preserveAspectRatio="xMidYMid meet">
         <defs>
           <pattern id="bp-grid" width="1" height="1" patternUnits="userSpaceOnUse">
             <path d="M 1 0 L 0 0 0 1" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.03" />
           </pattern>
         </defs>
-        <rect x="-40" y="-30" width="80" height="60" fill="url(#bp-grid)" />
+        <rect x="-60" y="-60" width="120" height="120" fill="url(#bp-grid)" />
         {DOMAINS.map((d) => {
-          const [x0, z0, x1, z1] = d.rect
+          const r = mapRect(d.rect, portrait)
+          const [x0, z1] = [r.x, r.y + r.h]
           return (
             <g key={d.id} className="map-domain" onClick={() => drillTo(d)}>
-              <rect x={x0 + 0.25} y={z0 + 0.25} width={x1 - x0 - 0.5} height={z1 - z0 - 0.5} rx="0.6" fill="rgba(255,255,255,0.04)" stroke="#E6F0FF" strokeWidth="0.09" strokeDasharray="0.5 0.3" />
+              <rect x={r.x + 0.25} y={r.y + 0.25} width={r.w - 0.5} height={r.h - 0.5} rx="0.6" fill="rgba(255,255,255,0.04)" stroke="#E6F0FF" strokeWidth="0.09" strokeDasharray="0.5 0.3" />
               {/* titled at the front-left corner, like the stencils painted on the floor */}
               <text x={x0 + 0.8} y={z1 - 1.5} className="map-dname">{d.name}</text>
               <text x={x0 + 0.85} y={z1 - 0.75} className="map-dsays">{d.says}</text>
@@ -46,7 +54,7 @@ export function MapOverlay() {
           )
         })}
         {PARTS.map((p) => (
-          <g key={p.id} className="map-part" transform={`translate(${p.at[0]} ${p.at[1]})`}
+          <g key={p.id} className="map-part" transform={`translate(${toMap(p.at[0], p.at[1], portrait).join(' ')})`}
             onClick={(e) => { e.stopPropagation(); if (p.station && p.station in stationById) ui.openStation(p.station as StationId); else ui.fly(viewAt([p.at[0], 0, p.at[1]], 12)) }}>
             <rect x={-partW(p.name) / 2} y="-0.55" width={partW(p.name)} height="1.1" rx="0.25" fill="#0B3B8C" stroke="#E6F0FF" strokeWidth="0.07" />
             <text y="0.2" textAnchor="middle" className="map-pname">{p.name}</text>
