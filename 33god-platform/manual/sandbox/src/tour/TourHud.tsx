@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { bulbById } from '../content'
 import { ui, useWorld } from '../sim/store'
-import { CAST, TOUR } from './script'
+import { CAST, END_CARD, OFF_ROUTE, TOUR } from './script'
 import { setFor } from './sets'
 
 const CPS = 55 // typewriter characters per second
@@ -105,8 +105,16 @@ export function TourHud() {
       <div className="tour-end">
         <div className="intro-card">
           <div className="eyebrow">Tour complete</div>
-          <h1>You carried it all the way.</h1>
-          <ol className="learned-list">{TOUR.map((b) => <li key={b.id}>{b.teaches}</li>)}</ol>
+          <h1>{END_CARD.headline}</h1>
+          <p>{END_CARD.ask}</p>
+          <details className="notebook">
+            <summary>Your notebook · {TOUR.length}</summary>
+            <ol className="learned-list">{TOUR.map((b) => <li key={b.id}>{b.teaches}</li>)}</ol>
+          </details>
+          <details className="notebook">
+            <summary>{END_CARD.offRouteTitle} · {OFF_ROUTE.length}</summary>
+            <ul className="learned-list">{OFF_ROUTE.map((r) => <li key={r.name}><b>{r.name}</b> ({r.real}). {r.why}</li>)}</ul>
+          </details>
           <button className="primary" onClick={() => tour.leave()}>Explore the floor freely</button>
           <button className="ghost" onClick={() => tour.start()}>Take the tour again</button>
         </div>

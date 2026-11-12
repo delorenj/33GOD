@@ -19,11 +19,11 @@ function Figure({ color, accent, height, speaking, isNew }: { color: string; acc
     g.current.position.y = speaking ? Math.abs(Math.sin(t * 7)) * 0.05 : 0
     g.current.rotation.z = speaking ? Math.sin(t * 3.5) * 0.04 : 0
   })
-  const head = isNew ? 0.3 : 0.22
+  const head = 0.22 // same proportions as everyone: the vest carries "new", not the body
   return (
     <group ref={g} scale={[1, height, 1]}>
       <mesh position={[0, 0.55, 0]} castShadow>
-        <capsuleGeometry args={[isNew ? 0.24 : 0.22, 0.55, 6, 14]} />
+        <capsuleGeometry args={[0.22, 0.55, 6, 14]} />
         <meshStandardMaterial color={color} roughness={0.7} />
       </mesh>
       <group position={[0, 1.18 + head - 0.19, 0]} scale={[1, 1 / height, 1]}>
@@ -180,7 +180,7 @@ export function TourCast() {
   const bi = useWorld((s) => s.beat)
   const li = useWorld((s) => s.line)
   const beat = TOUR[Math.min(bi, TOUR.length - 1)]
-  const others = useMemo(() => Array.from(new Set(beat.lines.map((l) => l.who))).filter((w) => w !== 'damian' && CAST[w]), [beat])
+  const others = useMemo(() => Array.from(new Set([...beat.lines.map((l) => l.who), ...(beat.present ?? [])])).filter((w) => w !== 'damian' && CAST[w]), [beat])
   if (mode !== 'tour' || !beat) return null
   const anchor = setFor(beat.set).anchor
   const speakingWho = beat.lines[Math.min(li, beat.lines.length - 1)]?.who
