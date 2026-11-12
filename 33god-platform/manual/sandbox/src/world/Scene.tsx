@@ -8,6 +8,7 @@ import { Belt } from './Belt'
 import { Bulbs, CameraRig, StationLabels } from './Bulbs'
 import { Moving } from './Moving'
 import { Props } from './Props'
+import { TourCast, TourSets } from '../tour/TourWorld'
 
 function Sim() {
   useFrame((_, dt) => step(dt))
@@ -48,6 +49,8 @@ export function Scene({ fx }: { fx: boolean }) {
       <Moving />
       <Bulbs />
       <StationLabels />
+      <TourSets />
+      <TourCast />
 
       <Sim />
       <CameraRig />

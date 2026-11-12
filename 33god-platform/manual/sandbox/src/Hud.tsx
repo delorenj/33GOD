@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BULBS, STATIONS, bulbById, stationById, type StationId } from './content'
 import { hoursNow, ui, useWorld } from './sim/store'
+import { TourHud, tour } from './tour/TourHud'
 
 const BB_PARTS: StationId[] = ['courier', 'dock', 'labeldesk', 'belt']
 
@@ -24,7 +25,10 @@ function Intro() {
         <p>You are standing on the floor of the warehouse that runs your AI tools. Everything here is a real part of 33GOD, drawn as something you could walk up to.</p>
         <p><b>Your first job: find Bloodbank.</b> On this floor it is a department called Material Handling, painted blue. Click its parts to see what each one does.</p>
         <p className="muted">Bobbing lightbulbs explain the idea a station is built on. Click any note on the belt to read it.</p>
-        <button className="primary" onClick={() => useWorld.setState({ intro: false })}>Walk in</button>
+        <div className="intro-actions">
+          <button className="primary" onClick={() => tour.start()}>Take the new-hire tour</button>
+          <button className="ghost" onClick={() => useWorld.setState({ intro: false })}>Explore freely</button>
+        </div>
       </div>
     </div>
   )
@@ -202,6 +206,7 @@ export function Hud() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       const s = useWorld.getState()
+      if (s.mode === 'tour' && !s.bulb) return
       if (s.bulb) useWorld.setState({ bulb: null })
       else if (s.inspect !== null) useWorld.setState({ inspect: null })
       else if (s.station) ui.overview()
@@ -210,7 +215,9 @@ export function Hud() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
   const panelOpen = useWorld((s) => s.station !== null || s.inspect !== null)
+  const mode = useWorld((s) => s.mode)
   if (intro) return <Intro />
+  if (mode === 'tour') return (<><TourHud /><BulbModal /></>)
   return (
     <div className={panelOpen ? 'has-panel' : ''}>
       <div className="title card"><b>The Factory</b> <span className="muted">33GOD Manual · v0.1</span></div>

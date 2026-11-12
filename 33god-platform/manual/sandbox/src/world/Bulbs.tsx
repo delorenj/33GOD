@@ -61,6 +61,8 @@ export function Bulbs() {
 export function StationLabels() {
   const found = useWorld((s) => s.foundStations)
   const current = useWorld((s) => s.station)
+  const mode = useWorld((s) => s.mode)
+  if (mode === 'tour') return null
   return (
     <group>
       {STATIONS.map((s) => (
@@ -91,7 +93,7 @@ export function CameraRig() {
 
   useEffect(() => {
     if (!focus || !controls) return
-    const v = focus.id === 'overview' ? OVERVIEW : stationById[focus.id].view
+    const v = focus.view ?? (focus.id === 'overview' || focus.id === 'custom' ? OVERVIEW : stationById[focus.id].view)
     anim.current = {
       t: 0,
       fp: camera.position.clone(),

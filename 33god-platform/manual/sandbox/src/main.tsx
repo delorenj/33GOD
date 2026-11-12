@@ -4,6 +4,7 @@ import { Hud } from './Hud'
 import { bulbById, stationById, type BulbId, type StationId } from './content'
 import { seed } from './sim/sim'
 import { ui, useWorld } from './sim/store'
+import { tour } from './tour/TourHud'
 import { Scene } from './world/Scene'
 import './styles.css'
 
@@ -35,6 +36,7 @@ seed()
   const at = q.get('at')
   const bulb = q.get('bulb')
   if (q.has('walk') || at || bulb) useWorld.setState({ intro: false })
+  if (q.has('tour')) setTimeout(() => tour.start(), 300)
   if (at && at in stationById) setTimeout(() => ui.openStation(at as StationId), 400)
   if (bulb && bulb in bulbById) setTimeout(() => ui.openBulb(bulb as BulbId), 600)
 }

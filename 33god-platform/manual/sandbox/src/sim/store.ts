@@ -43,7 +43,10 @@ interface State {
   dockShut: boolean
   sources: boolean
   intro: boolean
-  focus: { id: StationId | 'overview'; nonce: number } | null
+  focus: { id: StationId | 'overview' | 'custom'; nonce: number; view?: { pos: Vec3; target: Vec3 } } | null
+  mode: 'sandbox' | 'tour'
+  beat: number
+  line: number
   station: StationId | null
   bulb: BulbId | null
   inspect: number | null
@@ -68,6 +71,9 @@ export const useWorld = create<State>(() => ({
   sources: false,
   intro: true,
   focus: null,
+  mode: 'sandbox',
+  beat: 0,
+  line: 0,
   station: null,
   bulb: null,
   inspect: null,
