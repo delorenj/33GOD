@@ -633,3 +633,83 @@ related_initiatives: [I-6.1]
   pretty when it is wrong.
 - Damian's tell-back of each published page is recorded in the feedback log, and
   each change to the grammar cites the feedback that drove it.
+
+## I-11 Agent ownership and impact awareness
+
+**Outcome.** A new request produces an accountable-owner brief separately from
+interested projects; a meaningful contract change reaches its actual affected
+owners as a concise handoff or FYI, with delivery/handling evidence and no chatter
+loop. Voxxy-to-Phonograph is the first product-backed seam, not a fleet rollout.
+
+**Owner:** `33god` (Grolf) for integrated acceptance. The
+[seam spec](../specs/spec-agent-impact-awareness/SPEC.md) and its companions hold
+the policy, current evidence and acceptance cases. Child PMs own all implementation
+epics/stories. This request authorizes planning and intake, not deployment,
+workforce provisioning or native input. No new feature repo is presumed.
+
+```yaml
+owner_project: 33god
+ticket_ref: 33GOD-89
+delegations:
+  - owner_project: bb
+    owner_component: bloodbank
+    target_agent_id: bloodbank-pm
+    request: refine canonical request/change checkpoints, consumed native context and targeted notification/receipt contracts
+    ticket_ref: BB-36
+  - owner_project: transcription-queue
+    owner_component: heyma
+    target_agent_id: heyma-pm
+    request: refine a reusable independent-project classifier seam without copying Wax logic or adding notification effects to enrichment
+    ticket_ref: HEYMA-13
+  - owner_project: pjangler
+    target_agent_id: pjangler-pm
+    request: refine canonical aliases and evidence-backed contract dependency metadata for owner/relevance consumers
+    ticket_ref: PJAN-205
+  - owner_project: flume
+    target_agent_id: flume-pm
+    request: refine workforce responsibility/recipient declarations, reconcile FLUME-6/7, and identify the actual Phonograph receiver or enrollment gap
+    ticket_ref: FLUME-84
+  - owner_project: voxxy
+    target_agent_id: voxxy-pm
+    request: confirm the voice-catalog/synthesis consumer seam and bounded no-deploy awareness pilot
+    ticket_ref: VOXXY-2
+related_initiatives: [I-1, I-4, I-9]
+depends_on: []
+```
+
+### I-11.1 Request ownership and relevance seam
+
+**Seam acceptance:** one true new external request yields separately evidenced
+owner and independent relevance judgments; declared scope outranks probabilities;
+ambiguous ownership abstains; actual native context is consumed before skill
+selection on each claimed harness. Repeated pre-LLM/tool calls do not re-admit the
+request. Unknown classifier/registry results remain unknown, never empty success.
+
+### I-11.2 Meaningful-change and targeted notice seam
+
+**Seam acceptance:** evidence of a changed consumer-used contract includes that
+consumer regardless of low semantic score; internal/no-op edits do not wake it.
+Batch boundaries and a cheap scope-change check replace per-tool inference.
+Outbox/inbox dedupe, exact target revalidation, stored/accepted/handled receipts,
+expiry and causal hop limits prevent duplicate work and acknowledgement loops.
+FYI does not authorize implementation or transfer ticket ownership.
+
+### I-11.3 Voxxy-to-Phonograph pilot
+
+**Seam acceptance:** canonical `voxxy` and `phonograph` identities resolve despite
+Vox/Dubplate aliases, and owner-confirmed `/voices` and `/synthesize` dependencies
+yield one actionable notice to a real eligible receiver. Phonograph currently
+has no declared PM; that is an activation gap, not permission to invent or hire
+one. Planned, committed and deployed claims require distinct evidence. Replays,
+negative edits and receipt messages neither duplicate work nor cause fanout.
+
+**Seam evidence.** The spec's acceptance matrix requires labelled shadow cases,
+actual Jev results/cost/latency, native context-consumption proof and independently
+observed destination handling. These are future gates, not evidence produced by
+this planning pass. Child intake readback, PM acceptance, implementation and live
+activation remain separate claims. No parent sprint board or child code loop.
+
+**Decision basis.** Canonical `momo/PILLARS.md` #1 limits the first slice to a
+revenue-facing consumer; #2 reuses Wax/Jev and hook/bus infrastructure; #3 keeps
+one owner per identity/classifier atom; #4 uses Adapter/Strategy/Observer seams.
+No event type is registered by this initiative.
