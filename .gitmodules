@@ -28,3 +28,6 @@
 [submodule "monitoring"]
 	path = monitoring
 	url = git@github.com:delorenj/monitoring.git
+[submodule "candybar"]
+	path = candybar
+	url = git@github.com:delorenj/candybar.git
