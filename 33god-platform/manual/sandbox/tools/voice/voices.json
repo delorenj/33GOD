@@ -1,13 +1,6 @@
 {
   "_readme": [
-    "Voice roles for the Manual sandbox narration. Rendered by render.mjs through Voxxy (https://vox.delo.sh).",
-    "Every voice is ORIGINAL: VoxCPM2 'voice design' invents a speaker from a text description (no real person, no reference recording).",
-    "Two stages per voice. (1) design: '(description)text' + seed -> a ~10-15 s reference clip, cached in tools/voice/.cache/refs (gitignored).",
-    "(2) per line: that clip is sent as a per-request reference with its transcript (mode 'clone'), which keeps one speaker across hundreds of lines.",
-    "Direct design on every line does NOT work: the same seed drifts to a different speaker per line (ECAPA similarity 0.3-0.5 vs 0.8-0.9 with the reference).",
-    "In 'clone' mode the STYLE lives in the reference clip, so change description/text/seed here and the refs and every dependent line re-render (hash covers this config).",
-    "mode 'style' skips the transcript and prefixes each line with '(style)', trading some speaker consistency (~0.75) for a steerable delivery.",
-    "design.text must be one in-register passage that speaks for 10-14 s (the service caps a per-request reference at 15 s / 2 MiB)."
+    "Voice roles for the Manual sandbox narration. Rendered by render.mjs through Voxxy (https://vox.delo.sh)."
   ],
   "service": {
     "url": "https://vox.delo.sh",

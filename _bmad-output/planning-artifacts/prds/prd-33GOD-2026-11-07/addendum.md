@@ -22,6 +22,10 @@ completed architecture or newly elicited PRD requirements.
   a guide for expanding the pipeline. Per-install disables are local overrides.
 - **Source policy:** features track main. Pins are temporary bandages carrying
   a reason and exit ticket, not permanent deployment architecture.
+- **Identifier portability:** carry forward I-9's approved constraint against
+  hardcoded Hermes job IDs, Candybar IDs, session names and home paths in feature
+  logic. Resolve them through owner configuration/receipts. This does not add a
+  generic linting framework to the first increment.
 - **Continuity constraints:** Candybar remains the only recurring clock. The
   crank economics cap remains until I-8's completion conditions are met.
 

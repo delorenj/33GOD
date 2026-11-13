@@ -1,0 +1,28 @@
+{
+  "file": "/home/delorenj/code/33GOD/docs/inbox-3-routing-rules-review-20261024T194751Z.md",
+  "sha256": "ea61412751bac494d872ee279d19f90b2906a9747e26e606e04d46c8e54577b8",
+  "mode": "0600",
+  "owner_uid": "hellosubconscious",
+  "timestamp": "20261024T194751Z",
+  "source_grounding": {
+    "ticket": "INBOX-3",
+    "ticket_uuid": "f84ea341-26a7-46c6-8539-940b5ae3c362",
+    "board": "damians-desk",
+    "labels": [
+      "Hello Subconscious",
+      "LAMP",
+      "personalwork",
+      "parking"
+    ],
+    "context_source": "Studio (100.117.109.60) AGENTS.md + damian-33god-deploy docs"
+  },
+  "verified_bindings": {
+    "LAMP": "Damian product/program context",
+    "Project": "damian-33god-deploy"
+  },
+  "advisory_rules": [
+    "LAMP Program: Route to Damian's LAMP program context.",
+    "Hello Subconscious: Route to personalwork context.",
+    "parking: Default advisory routing; no auto-activation."
+  ]
+}

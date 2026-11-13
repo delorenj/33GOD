@@ -128,3 +128,6 @@ runtime/
 # Rewritten by the BMB setup merge-help-csv.py from tracked skill assets, like
 # the per-module _bmad/*/module-help.csv the global ignore already covers.
 /_bmad/module-help.csv
+
+# Aperture charter hook session marker (runtime state, rewritten per session)
+/.aperture/

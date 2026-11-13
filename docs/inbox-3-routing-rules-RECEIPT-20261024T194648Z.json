@@ -1,0 +1,28 @@
+{
+  "draft_file": "/home/delorenj/code/33GOD/docs/inbox-3-routing-rules-DRAFT-20261024T194648Z.md",
+  "owner": "root:root",
+  "permissions": "0600",
+  "source_type": "non-sensitive existing taxonomy",
+  "validation_hash": "81b02d5ac7dee51fc11a5d4252fa9faa521f86a73bf4dda2e0152a63cc583417",
+  "timestamp_utc": "20261024T194648Z",
+  "categories_defined": [
+    "HelloSubconscious",
+    "LAMP",
+    "personal",
+    "parking"
+  ],
+  "decision_types": {
+    "HelloSubconscious": "established",
+    "LAMP": "established",
+    "personal": "established",
+    "parking": "proposal"
+  },
+  "acceptance_coverage": "four routing categories with criteria, cross-project tie-breaking, parking fallback with review gate, sensitivity exclusions, no auto-dispatch",
+  "activation_status": "not activated",
+  "private_content_excluded": true,
+  "auto_dispatch_disabled": true,
+  "approval_required": {
+    "parking_classification": true,
+    "routing_activation": true
+  }
+}
