@@ -1,0 +1,117 @@
+# Krebs lifecycle v2: the one ticket lifecycle for every 33GOD board.
+#
+# Owner decisions (Jarad, 2026-11-14):
+#   1. Every board uses Plane's standard five lanes. The nine-lane layout is retired;
+#      what the extra lanes meant now lives in labels.
+#   2. Todo entry dispatches triage. Triage done = +lifecycle:triaged, -agent:working.
+#      On each beat the PM keeps two implementation slots per project filled from
+#      triaged Todo tickets, until nothing is left or the rest wait on a person.
+#   3. Krebs is the name of this spec and of the state manager that enforces it.
+#      It retires Momo (a skill that drove the lifecycle by prompt).
+#
+# Human-readable companion: ../docs/lifecycle.md. Supersedes lifecycle.v1.yaml.
+spec_version: 2.0.0
+
+lanes:                       # exact Plane state names; order is the board order
+  - {name: Backlog,     group: backlog,   default: true}
+  - {name: Todo,        group: unstarted}
+  - {name: In Progress, group: started}
+  - {name: Done,        group: completed}
+  - {name: Cancelled,   group: cancelled}
+# Plane's hidden intake state (group: triage) is left alone; it is not a lane.
+
+labels:                      # lifecycle labels; every board carries all six
+  agent:working:
+    meaning: an agent turn is running on this ticket right now
+    set_by: [pickup-chip, krebs-dispatch, px claim]
+    cleared_by: [pickup-chip at turn end, chip-sweep, px release/close/cancel]
+    agents_touch: never      # agents never add or remove it themselves
+  lifecycle:triaged:
+    meaning: triage finished; the ticket is ready for an implementation slot
+    set_by: [the triage turn, as its last action, only when it finished]
+    cleared_by: [owner or PM, when the ticket must be re-triaged]
+  lifecycle:review:
+    meaning: implementation handed back; waiting for a verdict
+    only_in: In Progress
+    set_by: [implementation turn, on handback, when the scope requires review]
+    cleared_by: [krebs (outside In Progress), PM on SENT BACK]
+  lifecycle:needs-input:
+    meaning: waiting on a person (human in the loop); the question is in a comment
+    set_by: [any turn that needs an answer]
+    cleared_by: [the person who answers, or the PM relaying the answer]
+  lifecycle:blocked:
+    meaning: waiting on another ticket or an external thing (record the blocker as a Plane relation)
+    set_by: [any turn]
+    cleared_by: [whoever clears the blocker]
+  agent:failed:
+    meaning: an agent turn on this ticket failed and nobody has looked yet
+    set_by: [lane errors]
+    cleared_by: [the person or PM who looked]
+
+# Labels that take a ticket out of the flow: never dispatched, never hold a slot.
+hold_labels: [lifecycle:needs-input, lifecycle:blocked, agent:failed]
+# Labels that make a ticket non-dispatchable work containers.
+container_labels: [epic, "epic:*"]
+
+slots:
+  unit: scope                # one owner per scope: a registry row (board, or board + scope_label)
+  default: 2                 # override per row: agents-registry.yaml plane.wip
+  occupied_by: In Progress AND NOT lifecycle:review AND NOT any hold_label
+  over_limit: drain          # Krebs never evicts; it dispatches nothing until a slot frees
+
+transitions:
+  - id: intake
+    to: Backlog
+    by: anyone (px task create; default lane)
+  - id: accept
+    from: Backlog
+    to: Todo
+    by: [PM pass, director, owner]
+  - id: triage
+    trigger: Todo entry, or created in Todo
+    unless: [lifecycle:triaged, any hold_label]   # SENT BACK / release re-entries skip triage
+    does: n8n Ticket Triage lane sends a triage turn to the scope owner; chip sets agent:working
+    ends_with:                                    # exactly one of
+      - +lifecycle:triaged when finished           # chip clears agent:working at turn end
+      - +lifecycle:needs-input with the question as a comment
+    never: change state, split, or start the work
+  - id: dispatch
+    from: Todo
+    to: In Progress
+    by: krebs tick (the only dispatcher)
+    guard: free slot in scope AND lifecycle:triaged AND NOT agent:working AND NOT hold_label AND NOT container_label AND no open blocking relation
+    order: [Plane sort_order (the PM's Todo order), priority, sequence_id]
+    does: one write sets In Progress + agent:working + start_date, then publishes bloodbank.agent.invocation.start (reason ticket-delegation) to the scope owner
+  - id: handback
+    in: In Progress
+    by: implementation turn
+    review_required: +lifecycle:review and an evidence comment   # scope has a verdict giver (registry plane.review true)
+    no_review: close (Done) with evidence comment
+  - id: hold
+    in: [Todo, In Progress]
+    by: any turn
+    does: +lifecycle:needs-input or +lifecycle:blocked and a comment saying what it waits on; the lane does not change
+  - id: verdict
+    in: In Progress + lifecycle:review
+    by: verdict giver (Launch Director, or the PM where there is none)
+    accepted: PM closes it (Done)
+    sent_back: 'PM moves it to Todo with "returned: <criterion>"; it keeps lifecycle:triaged and waits for a slot'
+  - id: park
+    from: [Todo, In Progress]
+    to: Backlog
+    by: [PM pass, owner]
+  - id: cancel
+    to: Cancelled
+    by: [PM pass, owner]
+
+invariants:                  # Krebs repairs these on every tick
+  - lifecycle:review only on In Progress tickets (removed elsewhere)
+  - agent:working never on Done or Cancelled tickets
+
+catch_up:                    # covers webhooks lost while n8n restarts
+  triage: a Todo ticket with no lifecycle:triaged, no hold_label and no agent:working, unchanged for 30 minutes, gets a triage turn; the command id is derived from ticket + updated_at, so it fires once per ticket version
+  dispatch: a dispatch whose publish failed is republished with the same command id on the next tick
+
+clock: Candybar `krebs-tick` (exec runner). No private loop, no other dispatcher.
+writes: Pilot plane.js (delta label edits) for Krebs; px / px-apply for PM passes.
+fence: a project whose .project.json execution.mode is not legacy is skipped (the v2 engine is retired).

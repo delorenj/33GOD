@@ -2,6 +2,8 @@
 
 The ticket-lifecycle and task-platform engine for 33GOD.
 
+**Current lifecycle: [Krebs lifecycle v2](docs/lifecycle.md)** (`spec/lifecycle.v2.yaml`): every board on the stock five Plane lanes, lifecycle meaning in labels, two implementation slots per scope, dispatched only by `krebs tick` on Candybar. Krebs retires Momo. The managed v2 execution engine described below is dormant and slated for archive; `spec/lifecycle.v1.yaml` is superseded.
+
 Krebs owns the canonical state machine that drives work from intake to done and,
 in managed v2, the execution authority that turns agent command intents into
 provider mutations through Pilot. It does not ingest provider webhooks: the
