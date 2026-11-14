@@ -13,6 +13,7 @@ It replaces two things:
 2. **Todo means triage, then two slots.** A ticket entering Todo starts a triage turn. When triage finishes it adds `lifecycle:triaged`, and the pickup chip removes `agent:working`. Each project keeps two implementation slots busy with triaged Todo tickets. It stops only when no tickets are left, or when the rest are waiting on a person.
 3. **Krebs replaces Momo.** A deterministic state manager now does the work that a prompt-driven skill used to do.
 4. **Out of scope.** TIKT keeps its own lanes: it is a human content pipeline, not a ticket board. The client boards AAI and JIMB, in the `automaticai` workspace, are skipped entirely, and Krebs never writes there. Archived boards are left alone.
+5. **Epics take a slot.** An epic in In Progress counts against the project's two slots like any other ticket. Krebs never starts an epic itself, so whoever moves one to In Progress spends a slot on it.
 
 ## Lanes and labels
 
@@ -59,7 +60,7 @@ stateDiagram-v2
 
 - **Unit:** one registry row in `agents-registry.yaml`, meaning a board, or a board plus a scope label. TOLT, for example, has separate slots for `repo:game`, `repo:forge` and `repo:tolt`.
 - **Count:** 2 by default. A row can override it with `plane.wip`.
-- **What counts as occupied:** an In Progress ticket that has neither `lifecycle:review` nor a hold label. Waiting on a verdict or on a person does not hold a slot.
+- **What counts as occupied:** an In Progress ticket that has neither `lifecycle:review` nor a hold label. Waiting on a verdict or on a person does not hold a slot. An epic in In Progress does hold one.
 - **Over the limit:** the queue drains. Krebs never evicts a ticket; it dispatches nothing until a slot frees up.
 
 ## Who does what

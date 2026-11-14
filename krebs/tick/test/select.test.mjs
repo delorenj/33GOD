@@ -25,6 +25,18 @@ test("slot math: only plain In Progress tickets occupy a slot", () => {
   assert.equal(slots.overLimit, 0);
 });
 
+test("slot math: an In Progress epic takes a slot (owner decision 5); a held or review epic does not", () => {
+  const tickets = [
+    t({ seq: 1, state: "ip", labels: ["epic"] }),
+    t({ seq: 2, state: "ip", labels: ["epic:big-thing"] }),
+    t({ seq: 3, state: "ip", labels: ["epic", "lifecycle:needs-input"] }),
+    t({ seq: 4, state: "ip", labels: ["epic", "lifecycle:review"] }),
+  ];
+  const slots = slotsOf(2, tickets);
+  assert.deepEqual(slots.occupied.map((x) => x.key), ["T-1", "T-2"]);
+  assert.equal(slots.free, 0);
+});
+
 test("slot math: over the limit drains (free 0, never negative, nothing evicted)", () => {
   const tickets = [1, 2, 3, 4].map((seq) => t({ seq, state: "ip", labels: ["lifecycle:triaged"] }));
   assert.deepEqual(slotsOf(2, tickets), { wip: 2, occupied: tickets, free: 0, overLimit: 2 });

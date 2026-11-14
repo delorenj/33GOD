@@ -8,6 +8,8 @@
 #      triaged Todo tickets, until nothing is left or the rest wait on a person.
 #   3. Krebs is the name of this spec and of the state manager that enforces it.
 #      It retires Momo (a skill that drove the lifecycle by prompt).
+#   5. An epic in In Progress takes a slot like any other ticket (Krebs never
+#      dispatches an epic; whoever starts one spends a slot on it).
 #
 # Human-readable companion: ../docs/lifecycle.md. Supersedes lifecycle.v1.yaml.
 spec_version: 2.0.0
@@ -56,7 +58,7 @@ container_labels: [epic, "epic:*"]
 slots:
   unit: scope                # one owner per scope: a registry row (board, or board + scope_label)
   default: 2                 # override per row: agents-registry.yaml plane.wip
-  occupied_by: In Progress AND NOT lifecycle:review AND NOT any hold_label
+  occupied_by: In Progress AND NOT lifecycle:review AND NOT any hold_label   # epics included (owner decision 5)
   over_limit: drain          # Krebs never evicts; it dispatches nothing until a slot frees
 
 transitions:
