@@ -757,7 +757,7 @@ Flume hires; requesting them is a delegation to `flume-pm`.
 owner_project: 33god
 project_home: 33god-platform/atlas
 registry: 33god-platform/components
-delegations: [FLUME-85]  # art director (filed 2026-11-14); designers, marketing director not yet requested
+delegations: [FLUME-85, FLUME-86, FLUME-87]  # art director, graphic designers (blocked by 85), director of marketing; filed 2026-11-14
 depends_on: []
 related_initiatives: [I-6, I-10]
 ```
