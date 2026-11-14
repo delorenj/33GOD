@@ -1,0 +1,3025 @@
+{
+  "schema": 1,
+  "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
+  "registry_digest": "0597505166305261e0ccd20e4f0ff00f5c66a2cdfa3319a4c5ab12d560e5b859",
+  "system": {
+    "id": "33god",
+    "name": "33GOD",
+    "summary": "Event-driven agentic development platform composed from independently versioned repos and coordinated by this control plane."
+  },
+  "domains": [
+    {
+      "id": "G1",
+      "name": "Bloodbank Core Bus"
+    },
+    {
+      "id": "G2",
+      "name": "Integration Plane"
+    },
+    {
+      "id": "G3",
+      "name": "Agent Fleet Runtime"
+    },
+    {
+      "id": "G4",
+      "name": "Observability"
+    },
+    {
+      "id": "G5",
+      "name": "Project Tooling"
+    },
+    {
+      "id": "G6",
+      "name": "Voice Pipeline"
+    },
+    {
+      "id": "G7",
+      "name": "Enrichment and Memory"
+    },
+    {
+      "id": "G8",
+      "name": "Orchestration and Apps"
+    },
+    {
+      "id": "G9",
+      "name": "Scheduling"
+    },
+    {
+      "id": "G10",
+      "name": "Operator Desktop"
+    },
+    {
+      "id": "G11",
+      "name": "Client Surface"
+    },
+    {
+      "id": "G12",
+      "name": "Shared Infra"
+    }
+  ],
+  "people": [
+    {
+      "id": "operator",
+      "name": "Operator",
+      "summary": "The solo owner who runs the platform, steers agents and reviews results.",
+      "uses": [
+        "bb-cli",
+        "client-portal",
+        "daily-report",
+        "deckard",
+        "genesis",
+        "heyma",
+        "holocene",
+        "pilot",
+        "wingman"
+      ]
+    },
+    {
+      "id": "client",
+      "name": "Client",
+      "summary": "Someone who leases a 33GOD agent and talks to it through their Genesis desk.",
+      "uses": [
+        "genesis",
+        "genesis-desk-worker"
+      ]
+    },
+    {
+      "id": "mirror-operator",
+      "name": "Mirror-site operator",
+      "summary": "A collaborator who runs a mirrored copy of the platform on their own machine.",
+      "uses": [
+        "bloodbank",
+        "hook-hub",
+        "candystore"
+      ]
+    },
+    {
+      "id": "voice-user",
+      "name": "Voice user",
+      "summary": "Someone dictating or sending voice memos into the platform.",
+      "uses": [
+        "vinyl",
+        "inbox-watcher",
+        "vox"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "aai-gateway",
+      "name": "AutomaticAI LLM gateway",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "One front door that routes every model request to the right provider.",
+      "tech": [
+        "newapi"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "aai-llm-observability",
+      "name": "AAI LLM observability",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Collects and reshapes gateway usage logs into metrics.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "agent-hooks",
+      "name": "agent-hooks publisher",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hook-hub",
+      "status": "live",
+      "summary": "Turns raw agent hooks into contract-valid events and publishes them.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "agent-pad",
+      "name": "Agent pad",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "A Holocene screen for talking to and watching individual agents.",
+      "tech": [
+        "typescript"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "agents-registry",
+      "name": "Agents registry",
+      "kind": "datastore",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "A file listing every agent, its role and where it works.",
+      "tech": [
+        "yaml"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "artifact-sidecar",
+      "name": "artifact-sidecar",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Captures files agents produce and links them to the events that made them.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "artifact-vault-projector",
+      "name": "artifact-vault-projector",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Writes captured agent artifacts into the operator's notes vault, organized by project and date.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "asm",
+      "name": "Agent State Machine",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hook-hub",
+      "status": "live",
+      "summary": "Keeps a live picture of what each agent process is doing right now.",
+      "tech": [
+        "python",
+        "redis"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "bb-apicurio",
+      "name": "Apicurio schema registry",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "built-not-running",
+      "summary": "A schema registry meant for looking up event schemas at runtime.",
+      "tech": [
+        "apicurio"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "bb-catalog",
+      "name": "EventCatalog",
+      "kind": "ui",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "built-not-running",
+      "summary": "A browsable website listing every event type for humans.",
+      "tech": [
+        "eventcatalog"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "bb-cli",
+      "name": "bb operator CLI",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "live",
+      "summary": "Command-line tool to check the contract, emit, trace and replay bus events.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "bb-dapr",
+      "name": "Dapr sidecars",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "partial",
+      "summary": "Dapr sidecars that deliver bus events to Candystore and the enricher.",
+      "tech": [
+        "dapr:1.13"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "bb-hook",
+      "name": "bb-hook",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hook-hub",
+      "status": "live",
+      "summary": "A tiny command each coding agent runs on every hook to hand the event to hook-hub.",
+      "tech": [
+        "shell"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "bb-nats",
+      "name": "Bloodbank NATS broker",
+      "kind": "bus",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "live",
+      "summary": "The NATS JetStream server that stores and delivers bus messages.",
+      "tech": [
+        "nats:2.10",
+        "jetstream"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "bloodbank",
+      "name": "Bloodbank",
+      "kind": "bus",
+      "first_party": true,
+      "domain": "G1",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The event backbone: every service publishes and listens for CloudEvents on it.",
+      "tech": [
+        "nats-jetstream",
+        "cloudevents",
+        "dapr",
+        "python"
+      ],
+      "public_card": {
+        "title": "Event Backbone",
+        "promise": "CloudEvents over NATS/Dapr with canonical schemas and provider-neutral agent hooks."
+      }
+    },
+    {
+      "id": "candybar",
+      "name": "Candybar",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G9",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The single clock that starts every recurring job on time.",
+      "tech": [
+        "python",
+        "postgres"
+      ],
+      "public_card": {
+        "title": "Cron Framework",
+        "promise": "Schedule and meter jobs through Bloodbank with a reversible migration ledger."
+      }
+    },
+    {
+      "id": "candybar-executor",
+      "name": "Candybar host executor",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G9",
+      "level": "component",
+      "parent": "candybar",
+      "status": "live",
+      "summary": "Runs scheduled commands on the host when the clock fires.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "candybar-steward",
+      "name": "Candybar steward",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G9",
+      "level": "component",
+      "parent": "candybar",
+      "status": "live",
+      "summary": "Host-side role that keeps Candybar's registrations and units in order.",
+      "tech": [
+        "python",
+        "systemd"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "candybar-watchdog",
+      "name": "Candybar watchdog timer",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G9",
+      "level": "component",
+      "parent": "candybar",
+      "status": "live",
+      "summary": "A tiny timer that pages if Candybar itself stops.",
+      "tech": [
+        "systemd"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "candystore",
+      "name": "Candystore",
+      "kind": "datastore",
+      "first_party": true,
+      "domain": "G1",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Saves a permanent copy of every bus event so history can be searched later.",
+      "tech": [
+        "python",
+        "postgres",
+        "pgvector"
+      ],
+      "public_card": {
+        "title": "Event History",
+        "promise": "Queryable event/session memory for the whole pipeline."
+      }
+    },
+    {
+      "id": "client-portal",
+      "name": "Client portal",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The automaticai.io website and the internal operator portal for services, accounts, statements and invoices.",
+      "tech": [
+        "typescript"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Hosts tunnels, Workers and Workers AI models.",
+      "tech": [
+        "cloudflare"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "cloudflare-tunnel",
+      "name": "Cloudflare tunnels",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Outbound tunnels that publish selected homelab services at public URLs.",
+      "tech": [
+        "cloudflared"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "commonproject",
+      "name": "CommonProject",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Shared scaffolding every project starts from.",
+      "tech": [],
+      "public_card": {}
+    },
+    {
+      "id": "cost-bridge",
+      "name": "cost-bridge",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Takes in billing cost records over HTTPS, puts them on the bus and replays them into the AutomaticAI portal until each one is confirmed saved.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "crank",
+      "name": "Crank",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Nudges idle agent panes to keep work moving when the operator is away.",
+      "tech": [
+        "zellij"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "curator",
+      "name": "Curator",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G2",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Sorts and files incoming documents and folders automatically.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "daily-report",
+      "name": "DeLoNET daily report",
+      "kind": "feature",
+      "first_party": true,
+      "domain": "G4",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A once-a-day summary of what happened across the platform.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "deckard",
+      "name": "Deckard",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A Stream Deck control surface for the operator's terminal workspace.",
+      "tech": [],
+      "public_card": {}
+    },
+    {
+      "id": "delonet-director",
+      "name": "DeLoNET Director read model",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A read-only API over company capacity and contract data.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "enricher",
+      "name": "Candystore enricher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Adds search embeddings to stored events so they can be found by meaning.",
+      "tech": [
+        "python",
+        "bge-small"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "event-contract",
+      "name": "Bloodbank event contract and schemas",
+      "kind": "contract",
+      "first_party": true,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "live",
+      "summary": "The rulebook and 214 JSON schemas that say how every event is named and shaped.",
+      "tech": [
+        "json-schema-2020-12",
+        "cloudevents"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "farm-command-bridge",
+      "name": "farm-command-bridge",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A signed web entry point that turns invoice requests from the portal and bank webhooks into billing commands on the bus.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "flume",
+      "name": "Flume",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Hires, onboards and reviews agents and keeps the roster.",
+      "tech": [
+        "typescript"
+      ],
+      "public_card": {
+        "title": "The Workforce",
+        "promise": "One place that hires an agent, seats it, and tells you honestly how it is doing."
+      }
+    },
+    {
+      "id": "flume-access",
+      "name": "Flume access facade",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "flume",
+      "status": "live",
+      "summary": "The front door that lets Cloudflare Access-authenticated employees reach agent identity data.",
+      "tech": [
+        "node",
+        "typescript",
+        "cloudflare-access"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "genesis",
+      "name": "Genesis client liaison",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The agent clients talk to about their projects.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "genesis-desk-worker",
+      "name": "Genesis desk Worker",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G11",
+      "level": "component",
+      "parent": "genesis",
+      "status": "live",
+      "summary": "Public web desk on Cloudflare where clients reach Genesis.",
+      "tech": [
+        "cloudflare-workers"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "heartbeat-tick",
+      "name": "heartbeat-tick and recorder",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G1",
+      "level": "container",
+      "parent": "",
+      "status": "built-not-running",
+      "summary": "A sample producer/consumer pair that emits and records system heartbeat events.",
+      "tech": [
+        "python",
+        "dapr"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "hermes-bloodbank-plugin",
+      "name": "Hermes Bloodbank platform plugin",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "Lets the gateway receive work orders from the bus and start agent turns.",
+      "tech": [
+        "python",
+        "nats"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "hermes-dashboard",
+      "name": "Hermes Dashboard",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "A web dashboard for the whole Hermes agent runtime.",
+      "tech": [
+        "python",
+        "hermes-agent"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "hermes-fleet",
+      "name": "Hermes Fleet",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The set of AI agents (project managers, directors, specialists) that do the platform's work.",
+      "tech": [
+        "python",
+        "hermes-agent"
+      ],
+      "public_card": {
+        "title": "Managed AI Worker Fleet",
+        "promise": "Long-running agents with shared provider config and profile-local state."
+      }
+    },
+    {
+      "id": "hermes-gateway-watchdog",
+      "name": "hermes-gateway-watchdog",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "Restarts the Hermes gateway if it is down or wedged and sends a phone alert.",
+      "tech": [
+        "systemd",
+        "shell"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "hermes-gw",
+      "name": "Hermes gateway",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "The one long-running process that hosts every agent profile and their chat bots.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "heyma",
+      "name": "HeyMa",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The voice system: dictate, transcribe and hear replies.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {
+        "title": "Voice Interface",
+        "promise": "Talk to the pipeline and capture meetings/transcripts as events."
+      }
+    },
+    {
+      "id": "hindsight",
+      "name": "Hindsight",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Long-term memory where agents store and recall project facts.",
+      "tech": [
+        "hindsight",
+        "litellm",
+        "postgres"
+      ],
+      "public_card": {
+        "title": "Persistent Memory",
+        "promise": "Recall, retain, and journal agent work across sessions."
+      }
+    },
+    {
+      "id": "holocene",
+      "name": "Holocene",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The operator's web app showing agents, schedules and events in one place.",
+      "tech": [
+        "typescript",
+        "react"
+      ],
+      "public_card": {
+        "title": "Mission Control",
+        "promise": "Live operational view of agents, events, and platform health."
+      }
+    },
+    {
+      "id": "holocene-api",
+      "name": "Holocene API",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "The backend that gathers fleet, schedule and event data for the web app.",
+      "tech": [
+        "typescript"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "holocene-web",
+      "name": "Holocene web",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "The browser front end of Holocene.",
+      "tech": [
+        "react"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "hook-hub",
+      "name": "hook-hub",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Receives every agent hook and fans it out to handlers that publish, remember and alert.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "inbox-watcher",
+      "name": "Voice memo inbox watcher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "Watches for new voice memos and sends them to transcription.",
+      "tech": [
+        "typescript",
+        "whisper"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "infra-doctor",
+      "name": "infra-doctor",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Runs synthetic probes against the homelab and platform and flags what is broken.",
+      "tech": [
+        "systemd",
+        "shell"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "intake",
+      "name": "Intake",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Takes transcribed voice notes and files them as tasks or notes.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "jev-clairic-exporter",
+      "name": "Jev/Clairic usage exporter",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Publishes Jev and Clairic usage as Prometheus metrics.",
+      "tech": [
+        "python",
+        "prometheus"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "jev-litellm",
+      "name": "Jev LiteLLM",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "A typed-question model service used for yes/no style judgments.",
+      "tech": [
+        "litellm"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "krebs",
+      "name": "Krebs",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Decides which ticket goes to which agent and sends the work order.",
+      "tech": [
+        "node"
+      ],
+      "public_card": {
+        "title": "Ticket Lifecycle Engine",
+        "promise": "One lifecycle state machine and normalized event stream across Plane, Linear, Trello, and future trackers."
+      }
+    },
+    {
+      "id": "lifecycle-controller",
+      "name": "lifecycle-controller",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "built-not-running",
+      "summary": "Reconciles ticket lifecycle state from sentinel observations and publishes the results.",
+      "tech": [
+        "python",
+        "asyncpg"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "milkshake",
+      "name": "Milkshake billing",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Turns usage and cost events into client billing.",
+      "tech": [],
+      "public_card": {}
+    },
+    {
+      "id": "minio",
+      "name": "MinIO",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Object storage for files.",
+      "tech": [
+        "minio"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "momo",
+      "name": "Momo",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "retired",
+      "summary": "The old board-driving loop that moved tickets to agents.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {
+        "title": "Project Manager Agent",
+        "promise": "One orchestrator that holds the plan, picks the next move, and delegates the work."
+      }
+    },
+    {
+      "id": "mon-alerts",
+      "name": "Monitoring alerts",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Rules that fire when something looks unhealthy.",
+      "tech": [
+        "alertmanager"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "mon-core",
+      "name": "Monitoring core",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Dashboards and metric storage for the platform.",
+      "tech": [
+        "prometheus",
+        "grafana"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "mon-exporters",
+      "name": "Monitoring exporters",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Small collectors that expose host and service metrics.",
+      "tech": [
+        "prometheus-exporters"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "n8n",
+      "name": "n8n workflow engine",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G2",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Runs webhook workflows that convert ticket and journal events into bus events.",
+      "tech": [
+        "n8n"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "n8n-devjournal",
+      "name": "Dev journal workflow",
+      "kind": "feature",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "An n8n workflow that writes development journal entries from events.",
+      "tech": [
+        "n8n"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "n8n-nodes-bb",
+      "name": "n8n-nodes-bloodbank",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "A custom n8n node that publishes contract-valid events onto Bloodbank.",
+      "tech": [
+        "typescript",
+        "n8n"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "ntfy",
+      "name": "ntfy",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "A push-notification server that delivers alerts to phones.",
+      "tech": [
+        "ntfy"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "ntfy-router",
+      "name": "ntfy-router",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Sends phone notifications for important bus events.",
+      "tech": [
+        "python",
+        "nats"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "onepassword",
+      "name": "1Password",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Vault holding every credential; services carry references to it, never plaintext.",
+      "tech": [
+        "1password"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "op-token-guard",
+      "name": "op-token-guard",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G12",
+      "level": "component",
+      "parent": "onepassword",
+      "status": "live",
+      "summary": "Self-heals drift in the 1Password service-account token that every service reads.",
+      "tech": [
+        "systemd",
+        "shell"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "open-notebook",
+      "name": "Open Notebook",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "The notebook site where the owner wants generated docs placed.",
+      "tech": [
+        "open-notebook",
+        "surrealdb"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "A paid model marketplace used as a fallback provider.",
+      "tech": [
+        "openrouter"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "pdf2md",
+      "name": "pdf2md",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "Converts PDFs to Markdown for n8n workflows.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "pilot",
+      "name": "Pilot",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The ticket command-line tool; the only thing allowed to change Plane.",
+      "tech": [
+        "node"
+      ],
+      "public_card": {
+        "title": "Plane Board CLI",
+        "promise": "One command line for every board in the fleet — read, write, and replay a ticket board without knowing the API."
+      }
+    },
+    {
+      "id": "pipeline-mcp-hub",
+      "name": "Pipeline MCP Hub",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "built-not-running",
+      "summary": "One place that exposes platform tools to agents over MCP.",
+      "tech": [
+        "mcp"
+      ],
+      "public_card": {
+        "title": "Tool Gateway",
+        "promise": "Compact MCP access to Plane, Bloodbank, lifecycle, and future domains."
+      }
+    },
+    {
+      "id": "pjangler",
+      "name": "PJangler",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Keeps the list of projects and their metadata consistent.",
+      "tech": [
+        "typescript"
+      ],
+      "public_card": {
+        "title": "Project Factory",
+        "promise": "Reproducible project provisioning from one registry."
+      }
+    },
+    {
+      "id": "plane",
+      "name": "Plane",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "The ticket board where work is tracked in lanes.",
+      "tech": [
+        "plane"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "plane-hook",
+      "name": "Plane to Bloodbank workflows",
+      "kind": "feature",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react to ticket changes.",
+      "tech": [
+        "n8n"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Database engine behind Candystore, Candybar, pjangler, n8n and Plane.",
+      "tech": [
+        "postgres",
+        "pgvector"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "pr-crusher",
+      "name": "PR Crusher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Works through open pull requests automatically and reports progress.",
+      "tech": [
+        "typescript"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "redis",
+      "name": "Redis",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "In-memory store for live agent state and the 1Password read cache.",
+      "tech": [
+        "redis"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "shortwave",
+      "name": "Shortwave relay",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Mirrors phone dictation into the focused terminal pane.",
+      "tech": [
+        "python",
+        "zellij"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "skillex",
+      "name": "Skillex",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The shared catalog of agent skills and the tool that installs them on each agent's desk.",
+      "tech": [
+        "markdown",
+        "shell"
+      ],
+      "public_card": {
+        "title": "Unified Agent Skills",
+        "promise": "One capability catalog fanned out to every agent CLI."
+      }
+    },
+    {
+      "id": "target-watch",
+      "name": "target-watch",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Alerts the operator whenever a watched person messages on any channel and files a ticket for it.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "traefik",
+      "name": "Traefik",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Reverse proxy that routes each hostname on the home network to its service.",
+      "tech": [
+        "traefik"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "transcribe",
+      "name": "Transcription",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Turns recorded audio into text, using local Whisper models on a GPU.",
+      "tech": [
+        "whisper"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "turn-enricher",
+      "name": "turn-enricher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Reads each finished agent turn and tags it with its main action, artifacts and blocker.",
+      "tech": [
+        "python",
+        "nats",
+        "httpx"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "vinyl",
+      "name": "Vinyl",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Dictation server that turns speech into text in real time.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "vox",
+      "name": "Vox",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Text-to-speech that reads replies aloud in chosen voices.",
+      "tech": [
+        "tts"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "wax",
+      "name": "Wax (waxd)",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Processes voice recordings through cleanup and titling passes.",
+      "tech": [
+        "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "wingman",
+      "name": "Wingman",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Voice relay that types the operator's dictated words into agent sessions.",
+      "tech": [],
+      "public_card": {}
+    }
+  ],
+  "edges": [
+    {
+      "from": "aai-gateway",
+      "to": "openrouter",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "aai-gateway",
+      "to": "jev-litellm",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "aai-gateway",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "aai-gateway",
+      "to": "redis",
+      "kind": "stores-in"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "aai-gateway",
+      "kind": "reads"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "aai-gateway",
+      "kind": "reads"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "event-contract",
+      "kind": "reads"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "asm",
+      "kind": "calls"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "redis",
+      "kind": "writes"
+    },
+    {
+      "from": "agent-pad",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "agent-pad",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "agent-pad",
+      "to": "minio",
+      "kind": "writes"
+    },
+    {
+      "from": "agent-pad",
+      "to": "minio",
+      "kind": "reads"
+    },
+    {
+      "from": "agent-pad",
+      "to": "inbox-watcher",
+      "kind": "calls"
+    },
+    {
+      "from": "agent-pad",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "agent-pad",
+      "to": "holocene-api",
+      "kind": "reads"
+    },
+    {
+      "from": "artifact-sidecar",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "artifact-sidecar",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "artifact-sidecar",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "artifact-vault-projector",
+      "to": "artifact-sidecar",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "artifact-vault-projector",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "artifact-vault-projector",
+      "to": "artifact-sidecar",
+      "kind": "reads"
+    },
+    {
+      "from": "asm",
+      "to": "redis",
+      "kind": "stores-in"
+    },
+    {
+      "from": "asm",
+      "to": "hook-hub",
+      "kind": "calls"
+    },
+    {
+      "from": "asm",
+      "to": "pilot",
+      "kind": "calls"
+    },
+    {
+      "from": "asm",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "bb-cli",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "bb-cli",
+      "to": "event-contract",
+      "kind": "reads"
+    },
+    {
+      "from": "bb-cli",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "bb-cli",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "bb-dapr",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "bb-hook",
+      "to": "hook-hub",
+      "kind": "calls"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-nats",
+      "kind": "hosts"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-nats",
+      "kind": "deploys"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-dapr",
+      "kind": "hosts"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-apicurio",
+      "kind": "hosts"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-catalog",
+      "kind": "hosts"
+    },
+    {
+      "from": "bloodbank",
+      "to": "candystore",
+      "kind": "hosts"
+    },
+    {
+      "from": "candybar",
+      "to": "krebs",
+      "kind": "schedules"
+    },
+    {
+      "from": "candybar",
+      "to": "n8n",
+      "kind": "schedules"
+    },
+    {
+      "from": "candybar",
+      "to": "hermes-gw",
+      "kind": "schedules"
+    },
+    {
+      "from": "candybar",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "candybar",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "candybar",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "candybar",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "candybar",
+      "to": "candybar-executor",
+      "kind": "schedules"
+    },
+    {
+      "from": "candybar",
+      "to": "candybar-steward",
+      "kind": "calls"
+    },
+    {
+      "from": "candybar",
+      "to": "n8n-devjournal",
+      "kind": "schedules"
+    },
+    {
+      "from": "candybar",
+      "to": "plane-hook",
+      "kind": "schedules"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "n8n",
+      "kind": "calls"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "hermes-fleet",
+      "kind": "calls"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "jev-litellm",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "candybar-watchdog",
+      "to": "candybar",
+      "kind": "calls"
+    },
+    {
+      "from": "candybar-watchdog",
+      "to": "candybar-executor",
+      "kind": "calls"
+    },
+    {
+      "from": "candybar-watchdog",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "candystore",
+      "to": "bb-dapr",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "candystore",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "candystore",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "client-portal",
+      "to": "farm-command-bridge",
+      "kind": "calls"
+    },
+    {
+      "from": "client-portal",
+      "to": "farm-command-bridge",
+      "kind": "calls"
+    },
+    {
+      "from": "client-portal",
+      "to": "cloudflare",
+      "kind": "stores-in"
+    },
+    {
+      "from": "client-portal",
+      "to": "cloudflare",
+      "kind": "calls"
+    },
+    {
+      "from": "commonproject",
+      "to": "plane",
+      "kind": "calls"
+    },
+    {
+      "from": "commonproject",
+      "to": "hook-hub",
+      "kind": "reads"
+    },
+    {
+      "from": "cost-bridge",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "cost-bridge",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "cost-bridge",
+      "to": "client-portal",
+      "kind": "calls"
+    },
+    {
+      "from": "crank",
+      "to": "jev-litellm",
+      "kind": "calls"
+    },
+    {
+      "from": "crank",
+      "to": "cloudflare",
+      "kind": "calls"
+    },
+    {
+      "from": "crank",
+      "to": "redis",
+      "kind": "reads"
+    },
+    {
+      "from": "crank",
+      "to": "redis",
+      "kind": "writes"
+    },
+    {
+      "from": "curator",
+      "to": "hermes-fleet",
+      "kind": "calls"
+    },
+    {
+      "from": "curator",
+      "to": "hindsight",
+      "kind": "calls"
+    },
+    {
+      "from": "daily-report",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "daily-report",
+      "to": "candybar",
+      "kind": "reads"
+    },
+    {
+      "from": "daily-report",
+      "to": "open-notebook",
+      "kind": "writes"
+    },
+    {
+      "from": "daily-report",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "deckard",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "deckard",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "deckard",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "delonet-director",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "delonet-director",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "delonet-director",
+      "to": "event-contract",
+      "kind": "reads"
+    },
+    {
+      "from": "enricher",
+      "to": "bb-dapr",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "enricher",
+      "to": "candystore",
+      "kind": "writes"
+    },
+    {
+      "from": "enricher",
+      "to": "bb-dapr",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "enricher",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "enricher",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "farm-command-bridge",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "flume",
+      "to": "agents-registry",
+      "kind": "writes"
+    },
+    {
+      "from": "flume",
+      "to": "pilot",
+      "kind": "calls"
+    },
+    {
+      "from": "flume",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "flume",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "flume",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "flume",
+      "to": "hermes-gw",
+      "kind": "calls"
+    },
+    {
+      "from": "flume",
+      "to": "candybar",
+      "kind": "calls"
+    },
+    {
+      "from": "flume",
+      "to": "cloudflare",
+      "kind": "calls"
+    },
+    {
+      "from": "flume-access",
+      "to": "cloudflare",
+      "kind": "calls"
+    },
+    {
+      "from": "flume-access",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "flume-access",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "genesis",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "genesis",
+      "to": "genesis-desk-worker",
+      "kind": "calls"
+    },
+    {
+      "from": "genesis",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "genesis",
+      "to": "agent-hooks",
+      "kind": "calls"
+    },
+    {
+      "from": "genesis-desk-worker",
+      "to": "genesis",
+      "kind": "calls"
+    },
+    {
+      "from": "genesis-desk-worker",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "heartbeat-tick",
+      "to": "bb-dapr",
+      "kind": "calls"
+    },
+    {
+      "from": "heartbeat-tick",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "hermes-bloodbank-plugin",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "hermes-bloodbank-plugin",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "hermes-bloodbank-plugin",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "hermes-dashboard",
+      "to": "hermes-gw",
+      "kind": "reads"
+    },
+    {
+      "from": "hermes-fleet",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "hermes-fleet",
+      "to": "agents-registry",
+      "kind": "writes"
+    },
+    {
+      "from": "hermes-fleet",
+      "to": "plane",
+      "kind": "calls"
+    },
+    {
+      "from": "hermes-gateway-watchdog",
+      "to": "hermes-gw",
+      "kind": "reads"
+    },
+    {
+      "from": "hermes-gateway-watchdog",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "hermes-bloodbank-plugin",
+      "kind": "hosts"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "hermes-fleet",
+      "kind": "hosts"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "hindsight",
+      "kind": "calls"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "vox",
+      "kind": "calls"
+    },
+    {
+      "from": "heyma",
+      "to": "wax",
+      "kind": "calls"
+    },
+    {
+      "from": "heyma",
+      "to": "transcribe",
+      "kind": "wraps"
+    },
+    {
+      "from": "hindsight",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "holocene-api",
+      "to": "candybar",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-api",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "holocene-api",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "holocene-api",
+      "to": "redis",
+      "kind": "reads"
+    },
+    {
+      "from": "holocene-api",
+      "to": "redis",
+      "kind": "reads"
+    },
+    {
+      "from": "holocene-api",
+      "to": "redis",
+      "kind": "writes"
+    },
+    {
+      "from": "holocene-api",
+      "to": "delonet-director",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-api",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-api",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "holocene-api",
+      "to": "wax",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-api",
+      "to": "n8n",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-api",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-api",
+      "to": "mon-core",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-web",
+      "to": "holocene-api",
+      "kind": "calls"
+    },
+    {
+      "from": "holocene-web",
+      "to": "candybar",
+      "kind": "renders"
+    },
+    {
+      "from": "holocene-web",
+      "to": "delonet-director",
+      "kind": "renders"
+    },
+    {
+      "from": "holocene-web",
+      "to": "hermes-fleet",
+      "kind": "renders"
+    },
+    {
+      "from": "hook-hub",
+      "to": "agent-hooks",
+      "kind": "calls"
+    },
+    {
+      "from": "hook-hub",
+      "to": "hindsight",
+      "kind": "calls"
+    },
+    {
+      "from": "hook-hub",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "hook-hub",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "hook-hub",
+      "to": "candybar",
+      "kind": "reads"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "minio",
+      "kind": "reads"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "minio",
+      "kind": "writes"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "transcribe",
+      "kind": "calls"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "vox",
+      "kind": "calls"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "bb-nats",
+      "kind": "calls"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "n8n",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "hindsight",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "aai-gateway",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "vox",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "traefik",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "hermes-gw",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "candybar-watchdog",
+      "kind": "reads"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "hermes-gateway-watchdog",
+      "kind": "reads"
+    },
+    {
+      "from": "intake",
+      "to": "minio",
+      "kind": "reads"
+    },
+    {
+      "from": "intake",
+      "to": "wax",
+      "kind": "writes"
+    },
+    {
+      "from": "jev-clairic-exporter",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "jev-clairic-exporter",
+      "to": "openrouter",
+      "kind": "calls"
+    },
+    {
+      "from": "jev-clairic-exporter",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "krebs",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "krebs",
+      "to": "plane",
+      "kind": "reads"
+    },
+    {
+      "from": "krebs",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "krebs",
+      "to": "pilot",
+      "kind": "calls"
+    },
+    {
+      "from": "krebs",
+      "to": "n8n-nodes-bb",
+      "kind": "calls"
+    },
+    {
+      "from": "krebs",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "krebs",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "krebs",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "krebs",
+      "to": "pilot",
+      "kind": "calls"
+    },
+    {
+      "from": "lifecycle-controller",
+      "to": "krebs",
+      "kind": "wraps"
+    },
+    {
+      "from": "lifecycle-controller",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "milkshake",
+      "to": "client-portal",
+      "kind": "calls"
+    },
+    {
+      "from": "milkshake",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "milkshake",
+      "to": "jev-litellm",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "milkshake",
+      "to": "openrouter",
+      "kind": "calls"
+    },
+    {
+      "from": "milkshake",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "milkshake",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "momo",
+      "to": "pilot",
+      "kind": "calls"
+    },
+    {
+      "from": "mon-alerts",
+      "to": "aai-llm-observability",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-alerts",
+      "to": "jev-clairic-exporter",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-alerts",
+      "to": "mon-exporters",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-core",
+      "to": "mon-alerts",
+      "kind": "calls"
+    },
+    {
+      "from": "mon-core",
+      "to": "aai-llm-observability",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-core",
+      "to": "jev-clairic-exporter",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-core",
+      "to": "candybar",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-core",
+      "to": "candybar-executor",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-core",
+      "to": "mon-exporters",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-core",
+      "to": "mon-exporters",
+      "kind": "reads"
+    },
+    {
+      "from": "mon-exporters",
+      "to": "bb-nats",
+      "kind": "reads"
+    },
+    {
+      "from": "n8n",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "n8n-nodes-bb",
+      "kind": "calls"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "pjangler",
+      "kind": "reads"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "agents-registry",
+      "kind": "reads"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "plane",
+      "kind": "calls"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "event-contract",
+      "kind": "reads"
+    },
+    {
+      "from": "ntfy-router",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "ntfy-router",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "ntfy-router",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "op-token-guard",
+      "to": "onepassword",
+      "kind": "reads"
+    },
+    {
+      "from": "op-token-guard",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "pdf2md",
+      "to": "n8n",
+      "kind": "hosts"
+    },
+    {
+      "from": "pilot",
+      "to": "plane",
+      "kind": "calls"
+    },
+    {
+      "from": "pilot",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "pilot",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "pilot",
+      "to": "krebs",
+      "kind": "calls"
+    },
+    {
+      "from": "pilot",
+      "to": "krebs",
+      "kind": "reads"
+    },
+    {
+      "from": "pilot",
+      "to": "bb-cli",
+      "kind": "calls"
+    },
+    {
+      "from": "pilot",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "pipeline-mcp-hub",
+      "to": "plane",
+      "kind": "wraps"
+    },
+    {
+      "from": "pjangler",
+      "to": "plane",
+      "kind": "calls"
+    },
+    {
+      "from": "pjangler",
+      "to": "open-notebook",
+      "kind": "calls"
+    },
+    {
+      "from": "pjangler",
+      "to": "redis",
+      "kind": "writes"
+    },
+    {
+      "from": "pjangler",
+      "to": "skillex",
+      "kind": "wraps"
+    },
+    {
+      "from": "plane-hook",
+      "to": "plane",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "plane-hook",
+      "to": "plane",
+      "kind": "writes"
+    },
+    {
+      "from": "plane-hook",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "plane-hook",
+      "to": "plane",
+      "kind": "reads"
+    },
+    {
+      "from": "plane-hook",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "plane-hook",
+      "to": "n8n",
+      "kind": "calls"
+    },
+    {
+      "from": "plane-hook",
+      "to": "n8n-nodes-bb",
+      "kind": "calls"
+    },
+    {
+      "from": "pr-crusher",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "pr-crusher",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "pr-crusher",
+      "to": "onepassword",
+      "kind": "reads"
+    },
+    {
+      "from": "shortwave",
+      "to": "vinyl",
+      "kind": "calls"
+    },
+    {
+      "from": "skillex",
+      "to": "hermes-fleet",
+      "kind": "writes"
+    },
+    {
+      "from": "target-watch",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "target-watch",
+      "to": "pilot",
+      "kind": "calls"
+    },
+    {
+      "from": "target-watch",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "target-watch",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "target-watch",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "target-watch",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "target-watch",
+      "to": "onepassword",
+      "kind": "calls"
+    },
+    {
+      "from": "traefik",
+      "to": "holocene-web",
+      "kind": "calls"
+    },
+    {
+      "from": "traefik",
+      "to": "agent-pad",
+      "kind": "calls"
+    },
+    {
+      "from": "traefik",
+      "to": "flume-access",
+      "kind": "calls"
+    },
+    {
+      "from": "traefik",
+      "to": "genesis",
+      "kind": "calls"
+    },
+    {
+      "from": "traefik",
+      "to": "farm-command-bridge",
+      "kind": "calls"
+    },
+    {
+      "from": "transcribe",
+      "to": "minio",
+      "kind": "writes"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "jev-litellm",
+      "kind": "calls"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "cloudflare",
+      "kind": "calls"
+    },
+    {
+      "from": "vinyl",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "vinyl",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "vinyl",
+      "to": "jev-litellm",
+      "kind": "calls"
+    },
+    {
+      "from": "vinyl",
+      "to": "wax",
+      "kind": "calls"
+    },
+    {
+      "from": "vox",
+      "to": "postgres",
+      "kind": "stores-in"
+    },
+    {
+      "from": "wax",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "wax",
+      "to": "pjangler",
+      "kind": "calls"
+    },
+    {
+      "from": "wax",
+      "to": "transcribe",
+      "kind": "calls"
+    },
+    {
+      "from": "wax",
+      "to": "jev-litellm",
+      "kind": "calls"
+    },
+    {
+      "from": "wax",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    },
+    {
+      "from": "wax",
+      "to": "pilot",
+      "kind": "calls"
+    },
+    {
+      "from": "wingman",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "wingman",
+      "to": "bb-nats",
+      "kind": "consumes-from"
+    },
+    {
+      "from": "wingman",
+      "to": "asm",
+      "kind": "reads"
+    },
+    {
+      "from": "wingman",
+      "to": "crank",
+      "kind": "reads"
+    },
+    {
+      "from": "wingman",
+      "to": "pjangler",
+      "kind": "reads"
+    },
+    {
+      "from": "wingman",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
+      "from": "wingman",
+      "to": "vox",
+      "kind": "calls"
+    },
+    {
+      "from": "wingman",
+      "to": "transcribe",
+      "kind": "calls"
+    },
+    {
+      "from": "wingman",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via"
+    }
+  ]
+}

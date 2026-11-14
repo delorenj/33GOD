@@ -15,7 +15,7 @@ c4:
   level: software-system
   parent: ''
 status: live
-summary: Reverse proxy that routes *.delo.sh hostnames to services.
+summary: Reverse proxy that routes each hostname on the home network to its service.
 role_in_system: Without it hostnames stop resolving to services.
 tech:
 - traefik

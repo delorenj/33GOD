@@ -6,13 +6,18 @@ sections of components.yaml. Everything under 33god-platform/atlas/ that this
 script writes is generated: edit the registry, then `atlas.py render`.
 
     atlas.py check    validate records and fail if rendered views are stale
-    atlas.py render   write atlas.json, c4.dsl, c4-containers.mmd, index.html
+    atlas.py render   write atlas.json, c4.dsl, c4-containers.mmd, index.html, public.json
+
+public.json is the ONLY input a public showcase page may read: it drops runtime,
+role_in_system, evidence, notes and every wire's mechanism (via) and evidence,
+and the scrub lint fails the build if anything internal is left in it.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -34,6 +39,7 @@ OUT_JSON = ATLAS / "atlas.json"
 OUT_DSL = ATLAS / "c4.dsl"
 OUT_MMD = ATLAS / "c4-containers.mmd"
 OUT_HTML = ATLAS / "index.html"
+OUT_PUBLIC = ATLAS / "public.json"
 
 KINDS = {"service", "cli", "library", "agent", "datastore", "ui", "bus", "scheduler",
          "gateway", "contract", "feature", "external"}
@@ -41,6 +47,14 @@ LEVELS = {"software-system", "container", "component"}
 STATUSES = {"live", "built-not-running", "partial", "planned", "retired"}
 RELATION_KINDS = {"publishes-to", "consumes-from", "calls", "stores-in", "schedules", "hosts",
                   "reads", "writes", "renders", "routes-llm-via", "deploys", "wraps"}
+# Fields a public showcase page may carry. Wires keep only from/to/kind.
+SHOWCASE_FIELDS = ("id", "name", "kind", "first_party", "domain", "level", "parent", "status",
+                   "summary", "tech", "public_card")
+# Anything internal: hostnames, IPs, ports, home paths, file names, secret refs, the box, the owner.
+SCRUB = re.compile(r"(?i)([a-z0-9-]+\.(?:delo\.sh|ts\.net|automaticai\.io|internal|lan)\b|"
+                   r"\b\d{1,3}(?:\.\d{1,3}){3}\b|(?<![\w-]):\d{4,5}\b|localhost|/home/|~/|op://|"
+                   r"\bbig-chungus\b|\bdelorenj\b|\bjarad\b|\b[\w-]+\.(?:py|ya?ml|json|toml|env|sh|mjs|ts)\b|"
+                   r"\b(?:bloodbank|candybar)\.(?:evt|cmd|rpy)\.)")
 PUBLIC_FIELDS = ("id", "name", "kind", "first_party", "domain", "level", "parent", "status",
                  "summary", "role_in_system", "tech", "runtime", "public_card")
 
@@ -147,6 +161,40 @@ def atlas_document(cfg: dict[str, Any], records: list[dict[str, Any]]) -> dict[s
     }
 
 
+def showcase_document(doc: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": 1,
+        "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
+        "registry_digest": doc["registry_digest"],
+        "system": doc["system"],
+        "domains": [{k: d[k] for k in ("id", "name") if k in d} for d in doc["domains"]],
+        "people": [{k: p[k] for k in ("id", "name", "summary", "uses") if k in p} for p in doc["people"]],
+        "components": [{k: c[k] for k in SHOWCASE_FIELDS} for c in doc["components"]],
+        "edges": [{"from": e["from"], "to": e["to"], "kind": e["kind"]} for e in doc["edges"]],
+    }
+
+
+def scrub_findings(public: dict[str, Any]) -> list[str]:
+    findings = []
+
+    def walk(value: Any, where: str) -> None:
+        if isinstance(value, dict):
+            for k, v in value.items():
+                walk(v, f"{where}.{k}")
+        elif isinstance(value, list):
+            for i, v in enumerate(value):
+                walk(v, f"{where}[{i}]")
+        elif isinstance(value, str):
+            for m in SCRUB.finditer(value):
+                findings.append(f"public.json{where}: internal detail {m.group(0)!r}; reword it in the registry")
+
+    for c in public["components"]:
+        walk({k: c[k] for k in ("name", "summary", "tech", "public_card")}, f"[{c['id']}]")
+    walk(public["people"], ".people")
+    walk(public["system"], ".system")
+    return findings
+
+
 def q(text: str) -> str:
     return '"' + str(text).replace("\\", "\\\\").replace('"', "'") + '"'
 
@@ -246,12 +294,20 @@ def outputs(cfg: dict[str, Any], records: list[dict[str, Any]]) -> dict[Path, st
         OUT_DSL: render_dsl(doc, records),
         OUT_MMD: render_mermaid(doc, records),
         OUT_HTML: render_html(doc),
+        OUT_PUBLIC: json.dumps(showcase_document(doc), indent=2, ensure_ascii=False) + "\n",
     }
+
+
+def all_errors(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[str]:
+    errors = validate(cfg, records)
+    if not errors:
+        errors = scrub_findings(showcase_document(atlas_document(cfg, records)))
+    return errors
 
 
 def cmd_render(_: argparse.Namespace) -> int:
     cfg, records = load_atlas()
-    errors = validate(cfg, records)
+    errors = all_errors(cfg, records)
     if errors:
         print("\n".join(errors), file=sys.stderr)
         print(f"atlas: {len(errors)} registry error(s); nothing rendered", file=sys.stderr)
@@ -264,7 +320,7 @@ def cmd_render(_: argparse.Namespace) -> int:
 
 def cmd_check(_: argparse.Namespace) -> int:
     cfg, records = load_atlas()
-    errors = validate(cfg, records)
+    errors = all_errors(cfg, records)
     if not errors:
         for path, text in outputs(cfg, records).items():
             if not path.exists() or path.read_text() != text:

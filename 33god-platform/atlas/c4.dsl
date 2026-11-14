@@ -12,13 +12,13 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_minio = softwareSystem "MinIO" "Object storage for files." { tags "External" }
     c_n8n = softwareSystem "n8n workflow engine" "Runs webhook workflows that convert ticket and journal events into bus events." { tags "External" }
     c_ntfy = softwareSystem "ntfy" "A push-notification server that delivers alerts to phones." { tags "External" }
-    c_onepassword = softwareSystem "1Password" "Vault holding every credential as op:// references." { tags "External" }
+    c_onepassword = softwareSystem "1Password" "Vault holding every credential; services carry references to it, never plaintext." { tags "External" }
     c_open_notebook = softwareSystem "Open Notebook" "The notebook site where the owner wants generated docs placed." { tags "External" }
     c_openrouter = softwareSystem "OpenRouter" "A paid model marketplace used as a fallback provider." { tags "External" }
     c_plane = softwareSystem "Plane" "The ticket board where work is tracked in lanes." { tags "External" }
     c_postgres = softwareSystem "PostgreSQL" "Database engine behind Candystore, Candybar, pjangler, n8n and Plane." { tags "External" }
     c_redis = softwareSystem "Redis" "In-memory store for live agent state and the 1Password read cache." { tags "External" }
-    c_traefik = softwareSystem "Traefik" "Reverse proxy that routes *.delo.sh hostnames to services." { tags "External" }
+    c_traefik = softwareSystem "Traefik" "Reverse proxy that routes each hostname on the home network to its service." { tags "External" }
     god = softwareSystem "33GOD" "Event-driven agentic development platform composed from independently versioned repos and coordinated by this control plane." {
       group "Bloodbank Core Bus" {
         c_bloodbank = container "Bloodbank" "The event backbone: every service publishes and listens for CloudEvents on it." "nats-jetstream, cloudevents, dapr" {

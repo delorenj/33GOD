@@ -774,3 +774,12 @@ related_initiatives: [I-6, I-10]
   claim the record does not back.
 - Public pages carry no source, internal paths, hostnames, credentials or
   personal names.
+- **Scrub rule (2026-11-14):** a public page reads only `atlas/public.json`,
+  never `atlas.json` or a component record. The export keeps name, kind, domain,
+  status, summary, tech and `public_card`, and draws each wire as from, to and
+  kind only: no mechanism (`via`), evidence, runtime or role notes. The scrub lint
+  in `atlas.py check` fails on any hostname, IP, port, home path, file name,
+  secret reference, event subject, machine name or owner handle left in the
+  export. Fix a hit by rewording the registry, never by editing the export.
+  The art director's sign-off includes checking each page against this rule,
+  personal names included, which the lint cannot catch.
