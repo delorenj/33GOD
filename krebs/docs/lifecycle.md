@@ -67,7 +67,7 @@ stateDiagram-v2
 | Step | Owner |
 |---|---|
 | Triage on Todo entry | The n8n Ticket Triage lane, which sends a triage turn to the scope's owner agent. |
-| Triage catch-up | `krebs tick`. A Todo ticket with no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, and unchanged for 30 minutes gets the same triage turn the lane would have sent (a lost webhook, an n8n restart). At most 2 per scope and 6 per tick, oldest first. The command id comes from board, ticket and `updated_at`, so one ticket version is triaged once; a turn that changes nothing does not loop. Krebs writes nothing to Plane for it. |
+| Triage catch-up | `krebs tick`. A Todo ticket with no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, and unchanged for 30 minutes gets the same triage turn the lane would have sent (a lost webhook, an n8n restart). At most 1 per scope and 6 per tick, oldest first: a desk takes its board-driver lease for each turn, so two triage turns sent to one desk at the same moment collide and the second gives up without finishing. The command id comes from board, ticket and `updated_at`, so one ticket version is triaged once; a turn that changes nothing does not loop. Krebs writes nothing to Plane for it. |
 | Dispatch Todo → In Progress | `krebs tick`, on the Candybar `krebs-tick` schedule. Nothing else dispatches. |
 | Handback | The implementation turn. It adds `lifecycle:review` and an evidence comment, or closes the ticket if the scope has no review step. |
 | Verdict | The Launch Director, or the PM where there is none. Accepted means Done. Sent back means Todo, with the comment `returned: <criterion>`. |

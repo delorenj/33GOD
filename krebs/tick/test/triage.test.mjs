@@ -140,7 +140,7 @@ test("a failed triage publish is journaled not-ok and retried next tick with the
   assert.equal(triagedCommandIds(journal.read()).size, 1);
 });
 
-test("caps: 2 per scope, oldest first; 6 per tick overall, oldest first; capped tickets are reported", async () => {
+test("caps (scope cap 2): 2 per scope, oldest first; 6 per tick overall, oldest first; capped tickets are reported", async () => {
   // forge, director and tolt-pm on TOLT (agent id order: forge, tolt-director, tolt-pm), plus OTHER's solo board.
   const at = (h, m = 0) => `2026-11-14T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00Z`;
   const boards = {
@@ -163,7 +163,7 @@ test("caps: 2 per scope, oldest first; 6 per tick overall, oldest first; capped 
     },
   };
   const { plane, publish, run } = setup({ boards, board: "TOLT" });
-  const report = await run();
+  const report = await run({ triageScopeCap: 2 });
   assert.deepEqual(plane.writes(), []);
   const sent = triages(publish).map((c) => c.data.context.ticket_key);
   // per scope: pm {1,2}, forge {5,6}, director {8,9} = 6 = exactly the tick cap, oldest first overall
@@ -174,7 +174,7 @@ test("caps: 2 per scope, oldest first; 6 per tick overall, oldest first; capped 
 
   // Now the tick cap: lower it to 3; the three oldest of the six go, the others report a tick cap.
   const again = setup({ boards, board: "TOLT" });
-  const r2 = await again.run({ triageTickCap: 3 });
+  const r2 = await again.run({ triageScopeCap: 2, triageTickCap: 3 });
   assert.deepEqual(triages(again.publish).map((c) => c.data.context.ticket_key), ["TOLT-1", "TOLT-2", "TOLT-5"]);
   const tickCapped = r2.scopes.flatMap((s) => s.triageCapped).filter((c) => /tick cap/.test(c.why)).map((c) => c.key).sort();
   assert.deepEqual(tickCapped, ["TOLT-6", "TOLT-8", "TOLT-9"]);
@@ -229,16 +229,17 @@ test("dry run: plans the triage (report only); no publish, no Plane write, no jo
   assert.equal(existsSync(journal.path), false);
   assert.equal(calls(), 0, "dry run does no live re-reads");
   const solo = scopeOf(report, "solo-pm");
-  assert.deepEqual(solo.triage.map((x) => [x.key, x.result]), [["SOLO-1", "planned"], ["SOLO-2", "planned"]]);
+  // default scope cap is 1: one triage turn per desk per tick, so two never race the desk's lease
+  assert.deepEqual(solo.triage.map((x) => [x.key, x.result]), [["SOLO-1", "planned"]]);
   assert.ok(solo.triage.every((x) => x.commandId));
-  assert.deepEqual(solo.triageCapped.map((c) => c.key), ["SOLO-3"]);
+  assert.deepEqual(solo.triageCapped.map((c) => c.key), ["SOLO-2", "SOLO-3"]);
 });
 
 test("human summary: a triage catch-up line per scope, with planned ids, caps and already-triaged versions", async () => {
   const boards = { [SOLO]: { issues: [issue({ seq: 1, updated: OLD }), issue({ seq: 2, updated: OLD }), issue({ seq: 3, updated: OLD })] } };
   const { run } = setup({ boards, board: "SOLO" });
   const text = formatReport(await run({ dryRun: true }));
-  assert.match(text, /triage catch-up: SOLO-1 planned cmd [0-9a-f-]{36}; SOLO-2 planned cmd [0-9a-f-]{36}; capped 1: SOLO-3 \(scope cap/);
+  assert.match(text, /triage catch-up: SOLO-1 planned cmd [0-9a-f-]{36}; capped 2: SOLO-2 \(scope cap/);
   const none = formatReport(await setup({ boards: { [SOLO]: { issues: [] } }, board: "SOLO" }).run());
   assert.match(none, /triage catch-up: none/);
 });

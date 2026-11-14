@@ -32,7 +32,7 @@ triaged Todo tickets into free slots (plane.wip, default 2): one Plane write
 bloodbank.agent.invocation.start (reason ticket-delegation) to the scope owner.
 A publish that failed on an earlier tick is republished with the same command id.
 Then catch-up triage: a Todo ticket with no lifecycle:triaged, hold label, agent:working or
-epic label, unchanged for 30 minutes, gets a triage start command (max 2 per scope, 6 per
+epic label, unchanged for 30 minutes, gets a triage start command (max 1 per scope, 6 per
 tick, oldest first; once per ticket version; no Plane write).
 
   --board KEY     only the board with this identifier (e.g. TOLT) or board id

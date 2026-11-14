@@ -135,7 +135,10 @@ export async function pickDispatches(candidates, free, blockerOf) {
 /** spec catch_up.triage: a Todo ticket unchanged this long gets a triage turn. */
 export const TRIAGE_MIN_AGE_MS = 30 * 60 * 1000;
 /** At most this many catch-up triages per scope per tick, and per tick overall. */
-export const TRIAGE_SCOPE_CAP = 2;
+// One per scope: a desk serializes its board turns on the board-driver lease, so two triage
+// turns sent to one desk in the same instant collide and the second backs off unstamped
+// (seen on navi-pm and pjangler-pm, 2026-11-14). One per scope per tick never races itself.
+export const TRIAGE_SCOPE_CAP = 1;
 export const TRIAGE_TICK_CAP = 6;
 
 /**
