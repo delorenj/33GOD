@@ -68,6 +68,7 @@ header { display: grid; gap: 10px; }
 .news { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .big { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .big.manual { background: var(--blue-wash); border-color: transparent; }
+.big.wide { grid-column: 1 / -1; }
 .big a.go { justify-self: start; margin-top: 4px; background: var(--blue); color: var(--bg); text-decoration: none; font: 600 16px var(--display); padding: 9px 16px; border-radius: 12px; }
 .big a.go:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 .big ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
@@ -99,6 +100,9 @@ header { display: grid; gap: 10px; }
 .yours { background: var(--you-wash); border-radius: 20px; padding: 20px; display: grid; gap: 12px; }
 .yours ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-weight: 700; }
 .yours code { font: 600 14px ui-monospace, Menlo, monospace; background: var(--card); padding: 1px 6px; border-radius: 6px; }
+.yours .tip { font-weight: 500; color: var(--soft); }
+.yours .did { margin: 0; padding: 10px 14px; background: var(--card); border-radius: 12px; display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.yours .did s { color: var(--soft); text-decoration-color: var(--done); }
 footer { color: var(--soft); font-size: 14px; }
 
 @media (max-width: 600px) {
@@ -122,7 +126,7 @@ footer { color: var(--soft); font-size: 14px; }
   <header>
     <span class="eyebrow">Damian's Mac Studio</span>
     <h1>Your Mac is turning into an AI studio.</h1>
-    <p class="lede">Here is what's done, what's cooking, and the 5 things only you can do.</p>
+    <p class="lede">Here is what's done, what's cooking, and the 6 things only you can do.</p>
   </header>
 
   <section class="meter" aria-label="Progress">
@@ -136,20 +140,28 @@ footer { color: var(--soft); font-size: 14px; }
 
   <section class="news">
     <article class="big manual">
-      <span class="chip c">Being made for you</span>
+      <span class="chip d">New inside</span>
       <h2>The Manual</h2>
       <p>A little game that teaches you 33GOD. Walk a toy warehouse. Watch notes ride the belt. Tap anything to see what it does.</p>
-      <p>Coming soon: a blueprint map, voices, and music.</p>
+      <p>New: a blueprint map, read-aloud voices, and music. Press Map to see the whole warehouse.</p>
+      <p>Play it, then tell Jarad what you liked and what confused you.</p>
       <a class="go" href="https://manual.delo.sh/sandbox/" target="_blank" rel="noopener">Play it now</a>
     </article>
     <article class="big">
-      <span class="chip c">Building now</span>
+      <span class="chip c">Almost</span>
       <h2>Your own AI lane</h2>
       <ul>
-        <li>Your Claude and Codex work for you only.</li>
-        <li>When they run out, you share our backup lane.</li>
-        <li>Your own OpenRouter key, $5 a day max.</li>
+        <li>Your Claude has its own lane now.</li>
+        <li>Your own OpenRouter key works. $5 a day max.</li>
+        <li>Codex joins once you sign in.</li>
+        <li>The backup lane is thin for now. We're filling it up.</li>
       </ul>
+    </article>
+    <article class="big wide">
+      <span class="chip c">Cooking</span>
+      <h2>Your own assistant</h2>
+      <p>A helper you chat with on the web. If you want, it can live in your own Telegram bot too, with the same memory.</p>
+      <p>It's built. Next we set up your account and send you a way in.</p>
     </article>
   </section>
 
@@ -158,15 +170,15 @@ footer { color: var(--soft); font-size: 14px; }
     <ol class="steps">
       <li class="d"><span class="num">0</span><div><h3>Safe move-in</h3><p>We backed up everything first. Then we gave your apps a faster engine.</p></div><span class="chip d">Done</span></li>
       <li class="d"><span class="num">1</span><div><h3>Tools unpacked</h3><p>All the code and tools are on your Mac.</p></div><span class="chip d">Done</span></li>
-      <li class="d"><span class="num">2</span><div><h3>Message system</h3><p>Your AI helpers can pass notes to each other, fast.</p></div><span class="chip d">Done</span></li>
-      <li class="d"><span class="num">3</span><div><h3>Memory box</h3><p>Everything your helpers do gets saved in one place.</p></div><span class="chip d">Done</span></li>
-      <li class="d"><span class="num">4</span><div><h3>Task board</h3><p>Your projects and your task board are hooked up.</p></div><span class="chip d">Done</span></li>
-      <li class="c"><span class="num">5</span><div><h3>One clock</h3><p>One clock now runs every repeat job. Its first test worked. The last piece waits on you.</p></div><span class="chip c">Almost</span></li>
-      <li class="c"><span class="num">6</span><div><h3>Your AI team</h3><p>The helper upgrade is in. One question for you about your Music Lab bot, then we flip it on.</p></div><span class="chip c">Almost</span></li>
-      <li class="d"><span class="num">7</span><div><h3>Long-term memory</h3><p>New memory server is live. Your helpers now remember what they did.</p></div><span class="chip d">Done</span></li>
-      <li class="c"><span class="num">8</span><div><h3>Talk to tasks</h3><p>Your helpers now tag each chat with what got done. Voice comes next.</p></div><span class="chip c">Cooking</span></li>
-      <li class="c"><span class="num">9</span><div><h3>Morning report</h3><p>The report now works on any Mac. Next we point it at yours.</p></div><span class="chip c">Cooking</span></li>
-      <li class="n"><span class="num">10</span><div><h3>Final check</h3><p>We test it all and hand you the keys.</p></div><span class="chip n">Next</span></li>
+      <li class="d"><span class="num">2</span><div><h3>Message system</h3><p>Your AI helpers pass notes to each other, fast. We watched it work again today.</p></div><span class="chip d">Done</span></li>
+      <li class="d"><span class="num">3</span><div><h3>Memory box</h3><p>Everything your helpers do gets saved in one place. It keeps filling up.</p></div><span class="chip d">Done</span></li>
+      <li class="d"><span class="num">4</span><div><h3>Task board</h3><p>Your projects and your task board are hooked up and answering.</p></div><span class="chip d">Done</span></li>
+      <li class="c"><span class="num">5</span><div><h3>One clock</h3><p>The new clock has run every hour for two days without a miss. One old timer waits on your skills pick.</p></div><span class="chip y">Your turn</span></li>
+      <li class="c"><span class="num">6</span><div><h3>Your AI team</h3><p>The helper upgrade is on your Mac, but not switched on yet. It waits on your Music Lab answer.</p></div><span class="chip y">Your turn</span></li>
+      <li class="d"><span class="num">7</span><div><h3>Long-term memory</h3><p>New memory server is live. Your old memories moved over safely.</p></div><span class="chip d">Done</span></li>
+      <li class="c"><span class="num">8</span><div><h3>Talk to tasks</h3><p>Your helpers tag each chat with what got done. Voice typing waits on one network invite.</p></div><span class="chip c">Cooking</span></li>
+      <li class="c"><span class="num">9</span><div><h3>Morning report</h3><p>The report works on any Mac. Next we set it up on yours.</p></div><span class="chip c">Cooking</span></li>
+      <li class="n"><span class="num">10</span><div><h3>Final check</h3><p>We test it all, restart once, and hand you the keys.</p></div><span class="chip n">Next</span></li>
     </ol>
   </section>
 
@@ -179,17 +191,19 @@ footer { color: var(--soft); font-size: 14px; }
 
   <section class="yours" aria-labelledby="you-h">
     <span class="chip y">Only you can do these</span>
-    <h2 id="you-h">Your 5 jobs</h2>
+    <h2 id="you-h">Your 6 jobs</h2>
     <ol>
-      <li>Run <code>~/damian-setup.sh</code> on your Mac. It asks before each change.</li>
-      <li>Pick which skills to keep.</li>
-      <li>Sign in to Codex, so it joins your AI lane.</li>
-      <li>Pick a time to restart your Mac, so we can watch it come back on its own.</li>
-      <li>Tell us how your Music Lab bot should act: keep its old personality, or start fresh?</li>
+      <li>Your Music Lab bot: keep its old personality, or start fresh? <span class="tip">Its old personality is saved, so either way works.</span></li>
+      <li>Pick which skills to keep. <span class="tip">Our tip: use the same set Jarad uses.</span></li>
+      <li>After the Music Lab answer, pick a time to restart your Mac. <span class="tip">Be at your Mac to type your password.</span></li>
+      <li>Tell us which ChatGPT plan you have. Then approve one sign-in code, so Codex joins your lane.</li>
+      <li>When Jarad's network invite shows up, accept it. <span class="tip">That turns on voice typing.</span></li>
+      <li>Say it's fine to keep the automation app you already run. <span class="tip">That's our pick.</span></li>
     </ol>
+    <p class="did"><span class="chip d">Done</span><s>Run the setup script</s></p>
   </section>
 
-  <footer>Updated November 12, 2026. We'll keep this page fresh as steps finish.</footer>
+  <footer>Updated November 14, 2026. We'll keep this page fresh as steps finish.</footer>
 </div>
 </body>
 </html>
