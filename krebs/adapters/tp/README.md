@@ -5,15 +5,24 @@ each provider's native labels, columns, and APIs.
 
 ## Normalized bands
 
-Krebs reasons in five coarse bands. A provider adapter must implement them:
+A provider adapter must implement these targets:
 
-| Band | Meaning |
-|---|---|
-| `backlog` | Not yet ready to pull |
-| `unstarted` | Ready / triage / refining lanes |
-| `started` | Actively in progress |
-| `in_review` | Review / QA lanes |
-| `completed` | Done |
+| Target | Meaning | Plane (lifecycle v2) |
+|---|---|---|
+| `backlog` | Not yet ready to pull | Backlog |
+| `unstarted` | Accepted; triage, then waiting for a slot | Todo |
+| `started` | Actively in progress | In Progress |
+| `in_review` | Handed back, waiting for a verdict | In Progress + `lifecycle:review` |
+| `completed` | Done | Done |
+| `cancelled` | Abandoned | Cancelled |
+| `awaiting_decision` | Held on a person (aliases `needs_attention`, `waiting_reply`) | + `lifecycle:needs-input`, lane unchanged (Todo or In Progress only) |
+
+Plane boards follow [lifecycle v2](../../docs/lifecycle.md): the five stock lanes, with
+review and holds carried by labels. The adapter never creates a lifecycle label and
+writes labels as a delta on a fresh read, since Plane's PATCH replaces the whole list.
+Linear and Trello have no lifecycle labels here, so their `in_review` and
+`awaiting_decision` are lanes the role names. The nine-lane extended targets
+(`e2e_testing`, `ready_for_documentation`, `needs_re_evaluation`) are retired.
 
 ## Adapter interface
 
