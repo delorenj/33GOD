@@ -1,0 +1,2058 @@
+{
+  "schema": 1,
+  "registry_digest": "f43a171f75c7557032a76eed24c3512b13e6859ec17553f2b824343a7b1eebec",
+  "system": {
+    "id": "33god",
+    "name": "33GOD",
+    "summary": "Event-driven agentic development platform composed from independently versioned repos and coordinated by this control plane."
+  },
+  "domains": [
+    {
+      "id": "G1",
+      "name": "Bloodbank Core Bus",
+      "summary": "The NATS JetStream event bus, its CloudEvents contract, schemas and the Candystore audit store."
+    },
+    {
+      "id": "G2",
+      "name": "Integration Plane",
+      "summary": "n8n workflows and webhooks that turn outside events (Plane tickets, journals) into bus events."
+    },
+    {
+      "id": "G3",
+      "name": "Agent Fleet Runtime",
+      "summary": "The Hermes gateway and agent profiles, plus the hook pipeline that reports what agents are doing."
+    },
+    {
+      "id": "G4",
+      "name": "Observability",
+      "summary": "Metrics, alerts, exporters and daily reports that show platform health."
+    },
+    {
+      "id": "G5",
+      "name": "Project Tooling",
+      "summary": "Project registry, skill catalog, shared project scaffolding and MCP hub used by every repo."
+    },
+    {
+      "id": "G6",
+      "name": "Voice Pipeline",
+      "summary": "HeyMa: dictation, transcription, intake and text-to-speech."
+    },
+    {
+      "id": "G7",
+      "name": "Enrichment and Memory",
+      "summary": "LLM-touching services: embeddings, turn annotation, cost tracking, agent memory and LLM routing."
+    },
+    {
+      "id": "G8",
+      "name": "Orchestration and Apps",
+      "summary": "Ticket dispatch (Krebs), workforce (Flume), ticket CLI (Pilot) and the Holocene operator app."
+    },
+    {
+      "id": "G9",
+      "name": "Scheduling",
+      "summary": "Candybar, the single clock that fires every recurring job."
+    },
+    {
+      "id": "G10",
+      "name": "Operator Desktop",
+      "summary": "Tools that live only on the operator's workstation: workspace, attention, voice relay, crank."
+    },
+    {
+      "id": "G11",
+      "name": "Client Surface",
+      "summary": "What external clients touch: the Genesis liaison, client portal and billing."
+    },
+    {
+      "id": "G12",
+      "name": "Shared Infra",
+      "summary": "Third-party infrastructure the platform runs on: databases, proxy, tunnels, secrets, object store."
+    }
+  ],
+  "people": [
+    {
+      "id": "operator",
+      "name": "Operator",
+      "summary": "The solo owner who runs the platform, steers agents and reviews results.",
+      "uses": [
+        "bb-cli",
+        "client-portal",
+        "daily-report",
+        "deckard",
+        "genesis",
+        "heyma",
+        "holocene",
+        "pilot",
+        "wingman"
+      ]
+    },
+    {
+      "id": "client",
+      "name": "Client",
+      "summary": "Someone who leases a 33GOD agent and talks to it through their Genesis desk.",
+      "uses": [
+        "genesis",
+        "genesis-desk-worker"
+      ]
+    },
+    {
+      "id": "mirror-operator",
+      "name": "Mirror-site operator",
+      "summary": "A collaborator who runs a mirrored copy of the platform on their own machine.",
+      "uses": [
+        "bloodbank",
+        "hook-hub",
+        "candystore"
+      ]
+    },
+    {
+      "id": "voice-user",
+      "name": "Voice user",
+      "summary": "Someone dictating or sending voice memos into the platform.",
+      "uses": [
+        "vinyl",
+        "inbox-watcher",
+        "vox"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "aai-gateway",
+      "name": "AutomaticAI LLM gateway",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "One front door that routes every model request to the right provider.",
+      "role_in_system": "Without it agents and memory have no model to call.",
+      "tech": [
+        "newapi"
+      ],
+      "runtime": "Not on big-chungus docker (only exited newapi-postgres/redis from 4 weeks ago). It is a customized NewAPI fork running on a cloud VM (compose.cloud.yml: new-api, postgres, redis, caddy, cloudflared; api-direct.automaticai.io resolves to 44.196.227.90, /v1/models returns 401 as expected, api.automaticai.io via Cloudflare). Source repo is /home/delorenj/code/client-portal/gateway (ops/routes.json owns route catalog; ops/cloud/vm-health.py). Host-side newapi-* systemd units/timers are operational jobs driven by Candybar. Hermes config points at https://api-direct.automaticai.io/v1",
+      "public_card": {}
+    },
+    {
+      "id": "aai-llm-observability",
+      "name": "AAI LLM observability",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Collects and reshapes gateway usage logs into metrics.",
+      "role_in_system": "Without it model spend and errors are not charted.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "docker compose",
+      "public_card": {}
+    },
+    {
+      "id": "agent-hooks",
+      "name": "agent-hooks publisher",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hook-hub",
+      "status": "live",
+      "summary": "Turns raw agent hooks into contract-valid events and publishes them.",
+      "role_in_system": "Owns the envelope builder and validator every producer reuses.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "called by hook-hub",
+      "public_card": {}
+    },
+    {
+      "id": "agent-pad",
+      "name": "Agent pad",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "A Holocene screen for talking to and watching individual agents.",
+      "role_in_system": "Per-agent operator view.",
+      "tech": [
+        "typescript"
+      ],
+      "runtime": "Two docker containers agent-pad-web (nginx) and agent-pad-upload (python, 127.0.0.1:8698) from /home/delorenj/docker/stacks/websites/agent-pad, plus holocene-pad-roster.service which is inactive between runs because the Candybar job holocene-pad-roster (*/2) fires it",
+      "public_card": {}
+    },
+    {
+      "id": "agents-registry",
+      "name": "Agents registry",
+      "kind": "datastore",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "A file listing every agent, its role and where it works.",
+      "role_in_system": "The roster the gateway and tools read; Flume is its only writer.",
+      "tech": [
+        "yaml"
+      ],
+      "runtime": "file ~/.hermes/agents-registry.yaml",
+      "public_card": {}
+    },
+    {
+      "id": "artifact-sidecar",
+      "name": "artifact-sidecar",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Captures files agents produce and links them to the events that made them.",
+      "role_in_system": "Without it artifacts are not attached to event history.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "systemd user unit bloodbank-artifact-sidecar.service (python3.14 bloodbank/services/artifact-sidecar/main.py), active. Consumes bloodbank.evt.agent.tool.completed and bloodbank.evt.conversation.turn.completed, publishes bloodbank.evt.project.artifact.created; sha256 content-addressed store + sqlite ledger. Paired with artifact-vault-projector which writes into the vault",
+      "public_card": {}
+    },
+    {
+      "id": "artifact-vault-projector",
+      "name": "artifact-vault-projector",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Writes captured agent artifacts into the operator's notes vault, organized by project and date.",
+      "role_in_system": "Second half of the artifact pipeline; without it artifacts exist on the bus but never show up in the vault.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "systemd user unit bloodbank-artifact-vault-projector.service",
+      "public_card": {}
+    },
+    {
+      "id": "asm",
+      "name": "Agent State Machine",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hook-hub",
+      "status": "live",
+      "summary": "Keeps a live picture of what each agent process is doing right now.",
+      "role_in_system": "Holocene and desktop painters read agent state from it.",
+      "tech": [
+        "python",
+        "redis"
+      ],
+      "runtime": "Also two always-on painters: asm-orcapaint.service and asm-tabpaint.service (paint ASM state onto Orca worktree cards and zellij tab bar). asm-sweep.timer fires every ~15s (asmctl sweep). Host redis-server 127.0.0.1:6379 exists (pid 3803)",
+      "public_card": {}
+    },
+    {
+      "id": "bb-apicurio",
+      "name": "Apicurio schema registry",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "built-not-running",
+      "summary": "A schema registry meant for looking up event schemas at runtime.",
+      "role_in_system": "Planned read side for schemas; nothing depends on it today.",
+      "tech": [
+        "apicurio"
+      ],
+      "runtime": "compose definition only",
+      "public_card": {}
+    },
+    {
+      "id": "bb-catalog",
+      "name": "EventCatalog",
+      "kind": "ui",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "built-not-running",
+      "summary": "A browsable website listing every event type for humans.",
+      "role_in_system": "Discovery aid only; loss affects no runtime flow.",
+      "tech": [
+        "eventcatalog"
+      ],
+      "runtime": "compose definition only",
+      "public_card": {}
+    },
+    {
+      "id": "bb-cli",
+      "name": "bb operator CLI",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "live",
+      "summary": "Command-line tool to check the contract, emit, trace and replay bus events.",
+      "role_in_system": "Operators and agents use it to learn legal event names and debug flows.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "CLI only",
+      "public_card": {}
+    },
+    {
+      "id": "bb-dapr",
+      "name": "Dapr sidecars",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "partial",
+      "summary": "Dapr sidecars that deliver bus events to Candystore and the enricher.",
+      "role_in_system": "Subscribe-side delivery for Candystore and enricher; placement service is idle.",
+      "tech": [
+        "dapr:1.13"
+      ],
+      "runtime": "Correct container set, but names/projects are candystore-daprd, enricher-daprd and bloodbank-dapr-placement, all in compose project 33god-platform (33god-platform/compose.yaml:61,134,319). Repo should be 33god-platform (and candystore/dapr-components, 33god-platform/enricher/dapr-components), not bloodbank/compose/components. Enricher durable consumer enricher-events: ackWait 300s, maxAckPending 32, deliverPolicy new",
+      "public_card": {}
+    },
+    {
+      "id": "bb-hook",
+      "name": "bb-hook",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hook-hub",
+      "status": "live",
+      "summary": "A tiny command each coding agent runs on every hook to hand the event to hook-hub.",
+      "role_in_system": "Entry point of all agent activity reporting.",
+      "tech": [
+        "shell"
+      ],
+      "runtime": "invoked by agent CLIs",
+      "public_card": {}
+    },
+    {
+      "id": "bb-nats",
+      "name": "Bloodbank NATS broker",
+      "kind": "bus",
+      "first_party": false,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "live",
+      "summary": "The NATS JetStream server that stores and delivers bus messages.",
+      "role_in_system": "The physical broker; if it is down every publish fails.",
+      "tech": [
+        "nats:2.10",
+        "jetstream"
+      ],
+      "runtime": "docker container bloodbank-nats (nats:2.10-alpine, -js) in compose project 33god-platform (33god-platform/compose.yaml:14); ports 4222 and 8222 on 0.0.0.0. Streams live: BLOODBANK_EVENTS (1,166,299 msgs), BLOODBANK_COMMANDS (210), plus GIB_EVENTS (excluded game)",
+      "public_card": {}
+    },
+    {
+      "id": "bloodbank",
+      "name": "Bloodbank",
+      "kind": "bus",
+      "first_party": true,
+      "domain": "G1",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The event backbone: every service publishes and listens for CloudEvents on it.",
+      "role_in_system": "Without it no service can tell another that anything happened; dispatch, audit and alerts all stop.",
+      "tech": [
+        "nats-jetstream",
+        "cloudevents",
+        "dapr",
+        "python"
+      ],
+      "runtime": "No live container belongs to compose project 'bloodbank'. bloodbank/compose/docker-compose.yml is a self-hosted sandbox (bloodbank-postgres, daprd-subscribe, heartbeat-*, apicurio, eventcatalog) that is not running. The live bus (NATS, dapr placement, candystore, enricher) comes from 33god-platform/compose.yaml; bloodbank-owned live pieces are host systemd units (hook-hub, artifact-sidecar, artifact-vault-projector, target-watch) and separate per-service compose projects (ntfy-router, turn-enricher, cost-bridge, farm-command-bridge)",
+      "public_card": {
+        "title": "Event Backbone",
+        "promise": "CloudEvents over NATS/Dapr with canonical schemas and provider-neutral agent hooks."
+      }
+    },
+    {
+      "id": "candybar",
+      "name": "Candybar",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G9",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The single clock that starts every recurring job on time.",
+      "role_in_system": "Without it no recurring work runs, including Krebs dispatch and the daily report.",
+      "tech": [
+        "python",
+        "postgres"
+      ],
+      "runtime": "control-plane container (heartbeat, dispatcher, api 127.0.0.1:8700)",
+      "public_card": {
+        "title": "Cron Framework",
+        "promise": "Schedule and meter jobs through Bloodbank with a reversible migration ledger."
+      }
+    },
+    {
+      "id": "candybar-executor",
+      "name": "Candybar host executor",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G9",
+      "level": "component",
+      "parent": "candybar",
+      "status": "live",
+      "summary": "Runs scheduled commands on the host when the clock fires.",
+      "role_in_system": "Without it exec and systemd jobs never execute.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "host service :8701",
+      "public_card": {}
+    },
+    {
+      "id": "candybar-steward",
+      "name": "Candybar steward",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G9",
+      "level": "component",
+      "parent": "candybar",
+      "status": "live",
+      "summary": "Host-side role that keeps Candybar's registrations and units in order.",
+      "role_in_system": "Steward contract role; with candybar-unit-holder it keeps started units loaded for accounting (AD-18).",
+      "tech": [
+        "python",
+        "systemd"
+      ],
+      "runtime": "systemd user units candybar-steward.service and candybar-unit-holder.service",
+      "public_card": {}
+    },
+    {
+      "id": "candybar-watchdog",
+      "name": "Candybar watchdog timer",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G9",
+      "level": "component",
+      "parent": "candybar",
+      "status": "live",
+      "summary": "A tiny timer that pages if Candybar itself stops.",
+      "role_in_system": "The only allowed timer outside Candybar (AD-22).",
+      "tech": [
+        "systemd"
+      ],
+      "runtime": "candybar-watchdog.timer",
+      "public_card": {}
+    },
+    {
+      "id": "candystore",
+      "name": "Candystore",
+      "kind": "datastore",
+      "first_party": true,
+      "domain": "G1",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Saves a permanent copy of every bus event so history can be searched later.",
+      "role_in_system": "The audit trail; reports, Holocene and the enricher read it.",
+      "tech": [
+        "python",
+        "postgres",
+        "pgvector"
+      ],
+      "runtime": "docker container (API :8683) with Postgres :5434",
+      "public_card": {
+        "title": "Event History",
+        "promise": "Queryable event/session memory for the whole pipeline."
+      }
+    },
+    {
+      "id": "client-portal",
+      "name": "Client portal",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The automaticai.io website and the internal operator portal for services, accounts, statements and invoices.",
+      "role_in_system": "Client visibility.",
+      "tech": [
+        "typescript"
+      ],
+      "runtime": "unknown",
+      "public_card": {}
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Hosts tunnels, Workers and Workers AI models.",
+      "role_in_system": "Edge for public URLs, the Genesis desk Worker and Clairic extraction.",
+      "tech": [
+        "cloudflare"
+      ],
+      "runtime": "SaaS",
+      "public_card": {}
+    },
+    {
+      "id": "cloudflare-tunnel",
+      "name": "Cloudflare tunnels",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Outbound tunnels that publish selected homelab services at public URLs.",
+      "role_in_system": "How clients and Workers reach Genesis and other services without opening ports.",
+      "tech": [
+        "cloudflared"
+      ],
+      "runtime": "docker containers cloudflare-tunnel, cloudflare-tunnel-automaticai, cloudflared-aai-cal",
+      "public_card": {}
+    },
+    {
+      "id": "commonproject",
+      "name": "CommonProject",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Shared scaffolding every project starts from.",
+      "role_in_system": "Keeps new repos consistent.",
+      "tech": [],
+      "runtime": "template",
+      "public_card": {}
+    },
+    {
+      "id": "cost-bridge",
+      "name": "cost-bridge",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Takes in billing cost records over HTTPS, puts them on the bus and replays them into the AutomaticAI portal until each one is confirmed saved.",
+      "role_in_system": "Without it spend is invisible to billing and reports.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "docker container",
+      "public_card": {}
+    },
+    {
+      "id": "crank",
+      "name": "Crank",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Nudges idle agent panes to keep work moving when the operator is away.",
+      "role_in_system": "Momentum while unattended.",
+      "tech": [
+        "zellij"
+      ],
+      "runtime": "Driven by Candybar jobs crank-beat (*/5, 1986 runs/7d, hermes-agent runner) and crank-watchdog (*/15), typing into panes via ~/.local/bin/zcrank-send; hook-hub also has crank-tag and crank_keys_guard handlers. Not desktop-only",
+      "public_card": {}
+    },
+    {
+      "id": "curator",
+      "name": "Curator",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G2",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Sorts and files incoming documents and folders automatically.",
+      "role_in_system": "Keeps intake folders organized; loss leaves files unsorted.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "source repo; folder-curator skill",
+      "public_card": {}
+    },
+    {
+      "id": "daily-report",
+      "name": "DeLoNET daily report",
+      "kind": "feature",
+      "first_party": true,
+      "domain": "G4",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A once-a-day summary of what happened across the platform.",
+      "role_in_system": "The operator's single daily digest.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "Confirmed: Candybar dev-journal-nightly 0 6 * * * (reportctl run+verify then distribute to vault/S3/Slack) and dev-journal-ensure-nightly 15 6 * * * enabled; reads Candystore at http://127.0.0.1:8683 (collectors/turn_facts.py, dev_activity.py). dev-journal-reconcile.service (hourly replay) is currently failed",
+      "public_card": {}
+    },
+    {
+      "id": "deckard",
+      "name": "Deckard",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A Stream Deck control surface for the operator's terminal workspace.",
+      "role_in_system": "Operator awareness; reads attention events.",
+      "tech": [],
+      "runtime": "operator desktop",
+      "public_card": {}
+    },
+    {
+      "id": "delonet-director",
+      "name": "DeLoNET Director read model",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A read-only API over company capacity and contract data.",
+      "role_in_system": "Read model for director/company views; loopback only.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "systemd user unit delonet-director-api.service, 127.0.0.1:8790",
+      "public_card": {}
+    },
+    {
+      "id": "enricher",
+      "name": "Candystore enricher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Adds search embeddings to stored events so they can be found by meaning.",
+      "role_in_system": "Without it semantic search over history stops.",
+      "tech": [
+        "python",
+        "bge-small"
+      ],
+      "runtime": "docker container with enricher-daprd",
+      "public_card": {}
+    },
+    {
+      "id": "event-contract",
+      "name": "Bloodbank event contract and schemas",
+      "kind": "contract",
+      "first_party": true,
+      "domain": "G1",
+      "level": "component",
+      "parent": "bloodbank",
+      "status": "live",
+      "summary": "The rulebook and 214 JSON schemas that say how every event is named and shaped.",
+      "role_in_system": "Without it producers invent names nobody consumes; validate.py enforces it.",
+      "tech": [
+        "json-schema-2020-12",
+        "cloudevents"
+      ],
+      "runtime": "files in repo; enforced at publish by agent-hooks validate.py and bb emit",
+      "public_card": {}
+    },
+    {
+      "id": "farm-command-bridge",
+      "name": "farm-command-bridge",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "A signed web entry point that turns invoice requests from the portal and bank webhooks into billing commands on the bus.",
+      "role_in_system": "Feeds Milkshake billing with work done.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "docker container",
+      "public_card": {}
+    },
+    {
+      "id": "flume",
+      "name": "Flume",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Hires, onboards and reviews agents and keeps the roster.",
+      "role_in_system": "The only writer of the agents registry.",
+      "tech": [
+        "typescript"
+      ],
+      "runtime": "CLI flume",
+      "public_card": {
+        "title": "The Workforce",
+        "promise": "One place that hires an agent, seats it, and tells you honestly how it is doing."
+      }
+    },
+    {
+      "id": "flume-access",
+      "name": "Flume access facade",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "flume",
+      "status": "live",
+      "summary": "The front door that lets Cloudflare Access-authenticated employees reach agent identity data.",
+      "role_in_system": "Origin behind identity.delo.sh; verifies the Cloudflare Access JWT and refuses anything else.",
+      "tech": [
+        "node",
+        "typescript",
+        "cloudflare-access"
+      ],
+      "runtime": "systemd user unit flume-access.service (flume access serve), 0.0.0.0:18791; Traefik host identity-origin.delo.sh",
+      "public_card": {}
+    },
+    {
+      "id": "genesis",
+      "name": "Genesis client liaison",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The agent clients talk to about their projects.",
+      "role_in_system": "Client-facing front door.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "docker container :8741",
+      "public_card": {}
+    },
+    {
+      "id": "genesis-desk-worker",
+      "name": "Genesis desk Worker",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G11",
+      "level": "component",
+      "parent": "genesis",
+      "status": "live",
+      "summary": "Public web desk on Cloudflare where clients reach Genesis.",
+      "role_in_system": "Client entry point.",
+      "tech": [
+        "cloudflare-workers"
+      ],
+      "runtime": "Cloudflare Worker",
+      "public_card": {}
+    },
+    {
+      "id": "heartbeat-tick",
+      "name": "heartbeat-tick and recorder",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G1",
+      "level": "container",
+      "parent": "",
+      "status": "built-not-running",
+      "summary": "A sample producer/consumer pair that emits and records system heartbeat events.",
+      "role_in_system": "Smoke-test domain event for the Dapr path; not required at runtime.",
+      "tech": [
+        "python",
+        "dapr"
+      ],
+      "runtime": "compose sandbox only (bloodbank-heartbeat-tick, bloodbank-heartbeat-recorder); no container running",
+      "public_card": {}
+    },
+    {
+      "id": "hermes-bloodbank-plugin",
+      "name": "Hermes Bloodbank platform plugin",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "Lets the gateway receive work orders from the bus and start agent turns.",
+      "role_in_system": "Without it Krebs dispatch commands are never picked up.",
+      "tech": [
+        "python",
+        "nats"
+      ],
+      "runtime": "inside hermes-gateway.service",
+      "public_card": {}
+    },
+    {
+      "id": "hermes-dashboard",
+      "name": "Hermes Dashboard",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "A web dashboard for the whole Hermes agent runtime.",
+      "role_in_system": "Operator window onto the single Hermes install; separate from Holocene.",
+      "tech": [
+        "python",
+        "hermes-agent"
+      ],
+      "runtime": "systemd user unit hermes-dashboard.service, 0.0.0.0:9119",
+      "public_card": {}
+    },
+    {
+      "id": "hermes-fleet",
+      "name": "Hermes Fleet",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The set of AI agents (project managers, directors, specialists) that do the platform's work.",
+      "role_in_system": "Without it tickets are dispatched to nobody.",
+      "tech": [
+        "python",
+        "hermes-agent"
+      ],
+      "runtime": "one install ~/.hermes/hermes-agent, 49 profile dirs",
+      "public_card": {
+        "title": "Managed AI Worker Fleet",
+        "promise": "Long-running agents with shared provider config and profile-local state."
+      }
+    },
+    {
+      "id": "hermes-gateway-watchdog",
+      "name": "hermes-gateway-watchdog",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "Restarts the Hermes gateway if it is down or wedged and sends a phone alert.",
+      "role_in_system": "Keeps the single fleet runtime alive; also respects 'pause' during deliberate stops.",
+      "tech": [
+        "systemd",
+        "shell"
+      ],
+      "runtime": "native hermes-gateway-watchdog.timer (about every minute), outside Candybar",
+      "public_card": {}
+    },
+    {
+      "id": "hermes-gw",
+      "name": "Hermes gateway",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "hermes-fleet",
+      "status": "live",
+      "summary": "The one long-running process that hosts every agent profile and their chat bots.",
+      "role_in_system": "A restart pauses every agent; it is the fleet's only runtime.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "systemd user unit hermes-gateway.service",
+      "public_card": {}
+    },
+    {
+      "id": "heyma",
+      "name": "HeyMa",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The voice system: dictate, transcribe and hear replies.",
+      "role_in_system": "Without it voice input and spoken output stop.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "services on big-chungus",
+      "public_card": {
+        "title": "Voice Interface",
+        "promise": "Talk to the pipeline and capture meetings/transcripts as events."
+      }
+    },
+    {
+      "id": "hindsight",
+      "name": "Hindsight",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Long-term memory where agents store and recall project facts.",
+      "role_in_system": "Without it agents forget past decisions between sessions.",
+      "tech": [
+        "hindsight",
+        "litellm",
+        "postgres"
+      ],
+      "runtime": "docker stack, API https://api.hs.delo.sh",
+      "public_card": {
+        "title": "Persistent Memory",
+        "promise": "Recall, retain, and journal agent work across sessions."
+      }
+    },
+    {
+      "id": "holocene",
+      "name": "Holocene",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The operator's web app showing agents, schedules and events in one place.",
+      "role_in_system": "The main human window into the platform.",
+      "tech": [
+        "typescript",
+        "react"
+      ],
+      "runtime": "systemd/user services, api :4000",
+      "public_card": {
+        "title": "Mission Control",
+        "promise": "Live operational view of agents, events, and platform health."
+      }
+    },
+    {
+      "id": "holocene-api",
+      "name": "Holocene API",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "The backend that gathers fleet, schedule and event data for the web app.",
+      "role_in_system": "Without it the web app shows nothing.",
+      "tech": [
+        "typescript"
+      ],
+      "runtime": ":4000",
+      "public_card": {}
+    },
+    {
+      "id": "holocene-web",
+      "name": "Holocene web",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "The browser front end of Holocene.",
+      "role_in_system": "Operator UI.",
+      "tech": [
+        "react"
+      ],
+      "runtime": "web app",
+      "public_card": {}
+    },
+    {
+      "id": "hook-hub",
+      "name": "hook-hub",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Receives every agent hook and fans it out to handlers that publish, remember and alert.",
+      "role_in_system": "Without it agent activity never reaches the bus, memory or state machine.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "systemd user unit hook-hub.service, HTTP :8685",
+      "public_card": {}
+    },
+    {
+      "id": "inbox-watcher",
+      "name": "Voice memo inbox watcher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "component",
+      "parent": "holocene",
+      "status": "live",
+      "summary": "Watches for new voice memos and sends them to transcription.",
+      "role_in_system": "Start of the Holocene memo pipeline.",
+      "tech": [
+        "typescript",
+        "whisper"
+      ],
+      "runtime": "service",
+      "public_card": {}
+    },
+    {
+      "id": "infra-doctor",
+      "name": "infra-doctor",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Runs synthetic probes against the homelab and platform and flags what is broken.",
+      "role_in_system": "Early warning for infrastructure drift; has a dead-man timer that alerts if the doctor itself stops.",
+      "tech": [
+        "systemd",
+        "shell"
+      ],
+      "runtime": "native infra-doctor.timer (about every minute) and infra-doctor-deadman.timer (5 min)",
+      "public_card": {}
+    },
+    {
+      "id": "intake",
+      "name": "Intake",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Takes transcribed voice notes and files them as tasks or notes.",
+      "role_in_system": "Without it dictated requests are never acted on.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "service",
+      "public_card": {}
+    },
+    {
+      "id": "jev-clairic-exporter",
+      "name": "Jev/Clairic usage exporter",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Publishes Jev and Clairic usage as Prometheus metrics.",
+      "role_in_system": "Makes turn-enricher's two extractor calls visible in Grafana.",
+      "tech": [
+        "python",
+        "prometheus"
+      ],
+      "runtime": "systemd user unit jev-clairic-exporter.service, port 9491, secrets via op run",
+      "public_card": {}
+    },
+    {
+      "id": "jev-litellm",
+      "name": "Jev LiteLLM",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "A typed-question model service used for yes/no style judgments.",
+      "role_in_system": "Gate for turn-enricher; not a general gateway.",
+      "tech": [
+        "litellm"
+      ],
+      "runtime": "https://jev.delo.sh",
+      "public_card": {}
+    },
+    {
+      "id": "krebs",
+      "name": "Krebs",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Decides which ticket goes to which agent and sends the work order.",
+      "role_in_system": "Without it tickets sit untouched.",
+      "tech": [
+        "node"
+      ],
+      "runtime": "Candybar job krebs-tick every 10 minutes",
+      "public_card": {
+        "title": "Ticket Lifecycle Engine",
+        "promise": "One lifecycle state machine and normalized event stream across Plane, Linear, Trello, and future trackers."
+      }
+    },
+    {
+      "id": "lifecycle-controller",
+      "name": "lifecycle-controller",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "built-not-running",
+      "summary": "Reconciles ticket lifecycle state from sentinel observations and publishes the results.",
+      "role_in_system": "Earlier lifecycle reconciler; depends on krebs-execution and its own Postgres outbox.",
+      "tech": [
+        "python",
+        "asyncpg"
+      ],
+      "runtime": "no systemd unit or container found",
+      "public_card": {}
+    },
+    {
+      "id": "milkshake",
+      "name": "Milkshake billing",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Turns usage and cost events into client billing.",
+      "role_in_system": "Without it clients cannot be billed.",
+      "tech": [],
+      "runtime": "bus consumers",
+      "public_card": {}
+    },
+    {
+      "id": "minio",
+      "name": "MinIO",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Object storage for files.",
+      "role_in_system": "Artifact and file storage.",
+      "tech": [
+        "minio"
+      ],
+      "runtime": "docker container",
+      "public_card": {}
+    },
+    {
+      "id": "momo",
+      "name": "Momo",
+      "kind": "agent",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "retired",
+      "summary": "The old board-driving loop that moved tickets to agents.",
+      "role_in_system": "Replaced by Krebs on 2026-11-14; nothing should depend on it.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "not running",
+      "public_card": {
+        "title": "Project Manager Agent",
+        "promise": "One orchestrator that holds the plan, picks the next move, and delegates the work."
+      }
+    },
+    {
+      "id": "mon-alerts",
+      "name": "Monitoring alerts",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Rules that fire when something looks unhealthy.",
+      "role_in_system": "Without it failures go unnoticed.",
+      "tech": [
+        "alertmanager"
+      ],
+      "runtime": "docker compose",
+      "public_card": {}
+    },
+    {
+      "id": "mon-core",
+      "name": "Monitoring core",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Dashboards and metric storage for the platform.",
+      "role_in_system": "Without it health is invisible.",
+      "tech": [
+        "prometheus",
+        "grafana"
+      ],
+      "runtime": "docker compose monitoring/compose.yml",
+      "public_card": {}
+    },
+    {
+      "id": "mon-exporters",
+      "name": "Monitoring exporters",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G4",
+      "level": "component",
+      "parent": "mon-core",
+      "status": "live",
+      "summary": "Small collectors that expose host and service metrics.",
+      "role_in_system": "Feed metrics into monitoring core.",
+      "tech": [
+        "prometheus-exporters"
+      ],
+      "runtime": "docker compose",
+      "public_card": {}
+    },
+    {
+      "id": "n8n",
+      "name": "n8n workflow engine",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G2",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Runs webhook workflows that convert ticket and journal events into bus events.",
+      "role_in_system": "Without it Plane ticket changes never reach the bus, so nothing gets dispatched.",
+      "tech": [
+        "n8n"
+      ],
+      "runtime": "Host process, not docker: `n8n start` (node 24.6.0) launched via ~/.n8n/n8n-launch under pm2-delorenj.service, listening 0.0.0.0:5678; Traefik routes https://n8n.delo.sh to http://192.168.1.12:5678 (healthz 200). Workflows exported to git by delonet-n8n-workflows (repo /home/delorenj/code/delonet-n8n-workflows). Custom nodes in ~/.n8n/nodes/node_modules (n8n-nodes-bloodbank, n8n-nodes-folder-curator symlink)",
+      "public_card": {}
+    },
+    {
+      "id": "n8n-devjournal",
+      "name": "Dev journal workflow",
+      "kind": "feature",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "An n8n workflow that writes development journal entries from events.",
+      "role_in_system": "Feeds the operator's journal; nothing else depends on it.",
+      "tech": [
+        "n8n"
+      ],
+      "runtime": "n8n workflow",
+      "public_card": {}
+    },
+    {
+      "id": "n8n-nodes-bb",
+      "name": "n8n-nodes-bloodbank",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "A custom n8n node that publishes contract-valid events onto Bloodbank.",
+      "role_in_system": "How n8n workflows talk to the bus.",
+      "tech": [
+        "typescript",
+        "n8n"
+      ],
+      "runtime": "loaded inside n8n",
+      "public_card": {}
+    },
+    {
+      "id": "ntfy",
+      "name": "ntfy",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "A push-notification server that delivers alerts to phones.",
+      "role_in_system": "Delivery channel for alerts.",
+      "tech": [
+        "ntfy"
+      ],
+      "runtime": "self-hosted container",
+      "public_card": {}
+    },
+    {
+      "id": "ntfy-router",
+      "name": "ntfy-router",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Sends phone notifications for important bus events.",
+      "role_in_system": "Without it the operator gets no push alerts.",
+      "tech": [
+        "python",
+        "nats"
+      ],
+      "runtime": "docker container",
+      "public_card": {}
+    },
+    {
+      "id": "onepassword",
+      "name": "1Password",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Vault holding every credential as op:// references.",
+      "role_in_system": "Services cannot start without their secrets.",
+      "tech": [
+        "1password"
+      ],
+      "runtime": "Also a local 1Password Connect pair (1pass-op-connect-api-1, 1pass-op-connect-sync-1, v1.8.2) in docker compose project 1pass, plus op-token-guard timer and a Redis read cache (op-cache)",
+      "public_card": {}
+    },
+    {
+      "id": "op-token-guard",
+      "name": "op-token-guard",
+      "kind": "scheduler",
+      "first_party": true,
+      "domain": "G12",
+      "level": "component",
+      "parent": "onepassword",
+      "status": "live",
+      "summary": "Self-heals drift in the 1Password service-account token that every service reads.",
+      "role_in_system": "Prevents a stale token from silently breaking op:// secret reads fleet-wide.",
+      "tech": [
+        "systemd",
+        "shell"
+      ],
+      "runtime": "native op-token-guard.timer daily 00:01",
+      "public_card": {}
+    },
+    {
+      "id": "open-notebook",
+      "name": "Open Notebook",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "The notebook site where the owner wants generated docs placed.",
+      "role_in_system": "Docs destination named in the 33GOD CLAUDE.md (notebooklm.delo.sh); pjangler-journal-notebook feeds it.",
+      "tech": [
+        "open-notebook",
+        "surrealdb"
+      ],
+      "runtime": "docker containers open_notebook_core and open_notebook_surrealdb",
+      "public_card": {}
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "A paid model marketplace used as a fallback provider.",
+      "role_in_system": "Fallback when subscription models fail.",
+      "tech": [
+        "openrouter"
+      ],
+      "runtime": "SaaS",
+      "public_card": {}
+    },
+    {
+      "id": "pdf2md",
+      "name": "pdf2md",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "Converts PDFs to Markdown for n8n workflows.",
+      "role_in_system": "Backs the n8n-nodes-pdf-markdown node.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "systemd user unit pdf2md-serve.service, 127.0.0.1:8788",
+      "public_card": {}
+    },
+    {
+      "id": "pilot",
+      "name": "Pilot",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G8",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The ticket command-line tool; the only thing allowed to change Plane.",
+      "role_in_system": "Without it agents cannot move or create tickets.",
+      "tech": [
+        "node"
+      ],
+      "runtime": "CLI px",
+      "public_card": {
+        "title": "Plane Board CLI",
+        "promise": "One command line for every board in the fleet — read, write, and replay a ticket board without knowing the API."
+      }
+    },
+    {
+      "id": "pipeline-mcp-hub",
+      "name": "Pipeline MCP Hub",
+      "kind": "gateway",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "built-not-running",
+      "summary": "One place that exposes platform tools to agents over MCP.",
+      "role_in_system": "Agents reach shared tools through it.",
+      "tech": [
+        "mcp"
+      ],
+      "runtime": "unknown",
+      "public_card": {
+        "title": "Tool Gateway",
+        "promise": "Compact MCP access to Plane, Bloodbank, lifecycle, and future domains."
+      }
+    },
+    {
+      "id": "pjangler",
+      "name": "PJangler",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Keeps the list of projects and their metadata consistent.",
+      "role_in_system": "Without it repos drift from the registry and tooling can't find them.",
+      "tech": [
+        "typescript"
+      ],
+      "runtime": "CLI pj plus registry",
+      "public_card": {
+        "title": "Project Factory",
+        "promise": "Reproducible project provisioning from one registry."
+      }
+    },
+    {
+      "id": "plane",
+      "name": "Plane",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "The ticket board where work is tracked in lanes.",
+      "role_in_system": "The source of work; tickets start every dispatch.",
+      "tech": [
+        "plane"
+      ],
+      "runtime": "self-hosted at https://plane.delo.sh",
+      "public_card": {}
+    },
+    {
+      "id": "plane-hook",
+      "name": "Plane to Bloodbank workflows",
+      "kind": "feature",
+      "first_party": true,
+      "domain": "G2",
+      "level": "component",
+      "parent": "n8n",
+      "status": "live",
+      "summary": "n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react to ticket changes.",
+      "role_in_system": "Turns a ticket move into a repo.task event that Krebs and agents act on.",
+      "tech": [
+        "n8n"
+      ],
+      "runtime": "n8n workflows",
+      "public_card": {}
+    },
+    {
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Database engine behind Candystore, Candybar, pjangler, n8n and Plane.",
+      "role_in_system": "Persistent storage for most services.",
+      "tech": [
+        "postgres",
+        "pgvector"
+      ],
+      "runtime": "docker containers",
+      "public_card": {}
+    },
+    {
+      "id": "pr-crusher",
+      "name": "PR Crusher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Works through open pull requests automatically and reports progress.",
+      "role_in_system": "Clears PR backlogs; reports on the bus when configured.",
+      "tech": [
+        "typescript"
+      ],
+      "runtime": "CLI/service",
+      "public_card": {}
+    },
+    {
+      "id": "redis",
+      "name": "Redis",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "In-memory store for live agent state and the 1Password read cache.",
+      "role_in_system": "ASM state lives here.",
+      "tech": [
+        "redis"
+      ],
+      "runtime": "host redis-server (not docker)",
+      "public_card": {}
+    },
+    {
+      "id": "shortwave",
+      "name": "Shortwave relay",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Mirrors phone dictation into the focused terminal pane.",
+      "role_in_system": "Hands-free input path from the operator's phone to an agent pane.",
+      "tech": [
+        "python",
+        "zellij"
+      ],
+      "runtime": "systemd user unit shortwave-relay.service (sw serve)",
+      "public_card": {}
+    },
+    {
+      "id": "skillex",
+      "name": "Skillex",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "The shared catalog of agent skills and the tool that installs them on each agent's desk.",
+      "role_in_system": "Without it agents lose their instructions for platform tasks.",
+      "tech": [
+        "markdown",
+        "shell"
+      ],
+      "runtime": "CLI skillex plus auto-resync units",
+      "public_card": {
+        "title": "Unified Agent Skills",
+        "promise": "One capability catalog fanned out to every agent CLI."
+      }
+    },
+    {
+      "id": "target-watch",
+      "name": "target-watch",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Alerts the operator whenever a watched person messages on any channel and files a ticket for it.",
+      "role_in_system": "Provider-agnostic inbound-message watch; the bus carries every provider so one watch covers email, SMS, chat and calls.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "systemd user units target-watch-match.service and target-watch-sink.service; Candybar job target-watch-gmail-poll */5",
+      "public_card": {}
+    },
+    {
+      "id": "traefik",
+      "name": "Traefik",
+      "kind": "external",
+      "first_party": false,
+      "domain": "G12",
+      "level": "software-system",
+      "parent": "",
+      "status": "live",
+      "summary": "Reverse proxy that routes *.delo.sh hostnames to services.",
+      "role_in_system": "Without it hostnames stop resolving to services.",
+      "tech": [
+        "traefik"
+      ],
+      "runtime": "docker container",
+      "public_card": {}
+    },
+    {
+      "id": "transcribe",
+      "name": "Transcription",
+      "kind": "cli",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Turns recorded audio into text, using local Whisper models on a GPU.",
+      "role_in_system": "Feeds memos into intake.",
+      "tech": [
+        "whisper"
+      ],
+      "runtime": "service",
+      "public_card": {}
+    },
+    {
+      "id": "turn-enricher",
+      "name": "turn-enricher",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G7",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Reads each finished agent turn and tags it with its main action, artifacts and blocker.",
+      "role_in_system": "Downstream reports read typed facts from it instead of re-reading raw replies.",
+      "tech": [
+        "python",
+        "nats",
+        "httpx"
+      ],
+      "runtime": "docker container",
+      "public_card": {}
+    },
+    {
+      "id": "vinyl",
+      "name": "Vinyl",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Dictation server that turns speech into text in real time.",
+      "role_in_system": "Without it live dictation stops.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "big-chungus :7733",
+      "public_card": {}
+    },
+    {
+      "id": "vox",
+      "name": "Vox",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Text-to-speech that reads replies aloud in chosen voices.",
+      "role_in_system": "Spoken output for agents and the operator.",
+      "tech": [
+        "tts"
+      ],
+      "runtime": "service",
+      "public_card": {}
+    },
+    {
+      "id": "wax",
+      "name": "Wax (waxd)",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "component",
+      "parent": "heyma",
+      "status": "live",
+      "summary": "Processes voice recordings through cleanup and titling passes.",
+      "role_in_system": "Core of the voice pipeline.",
+      "tech": [
+        "python"
+      ],
+      "runtime": "daemon waxd",
+      "public_card": {}
+    },
+    {
+      "id": "wingman",
+      "name": "Wingman",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Voice relay that types the operator's dictated words into agent sessions.",
+      "role_in_system": "Hands-free control of agents.",
+      "tech": [],
+      "runtime": "operator desktop",
+      "public_card": {}
+    }
+  ],
+  "edges": [
+    {
+      "from": "aai-gateway",
+      "to": "openrouter",
+      "kind": "routes-llm-via",
+      "via": "OpenRouter passthrough channel"
+    },
+    {
+      "from": "aai-gateway",
+      "to": "jev-litellm",
+      "kind": "routes-llm-via",
+      "via": "Jev typesafe channel"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "aai-gateway",
+      "kind": "reads",
+      "via": "gateway usage logs"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.* per hooks.master.json"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "event-contract",
+      "kind": "reads",
+      "via": "core/validate.py allowlists"
+    },
+    {
+      "from": "artifact-sidecar",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "NATS subscription"
+    },
+    {
+      "from": "artifact-vault-projector",
+      "to": "artifact-sidecar",
+      "kind": "consumes-from",
+      "via": "bloodbank.evt.project.artifact.created"
+    },
+    {
+      "from": "asm",
+      "to": "redis",
+      "kind": "stores-in",
+      "via": "asm:live, asm:lane:*, channel asm:transitions"
+    },
+    {
+      "from": "bb-cli",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bb emit"
+    },
+    {
+      "from": "bb-dapr",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "Dapr NATS JetStream pubsub component"
+    },
+    {
+      "from": "bb-hook",
+      "to": "hook-hub",
+      "kind": "calls",
+      "via": "Unix socket $XDG_RUNTIME_DIR/33god/hook-hub.sock"
+    },
+    {
+      "from": "candybar",
+      "to": "krebs",
+      "kind": "schedules",
+      "via": "krebs-tick.candybar.toml */10"
+    },
+    {
+      "from": "candybar",
+      "to": "n8n",
+      "kind": "schedules",
+      "via": "n8n runner webhook"
+    },
+    {
+      "from": "candybar",
+      "to": "hermes-gw",
+      "kind": "schedules",
+      "via": "hermes runner"
+    },
+    {
+      "from": "candystore",
+      "to": "bb-dapr",
+      "kind": "consumes-from",
+      "via": "candystore-daprd subscription bloodbank.evt.>"
+    },
+    {
+      "from": "candystore",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "Postgres :5434"
+    },
+    {
+      "from": "cost-bridge",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "NATS publish"
+    },
+    {
+      "from": "daily-report",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "Candystore API :8683"
+    },
+    {
+      "from": "enricher",
+      "to": "bb-dapr",
+      "kind": "consumes-from",
+      "via": "enricher-daprd subscription"
+    },
+    {
+      "from": "enricher",
+      "to": "candystore",
+      "kind": "writes",
+      "via": "Postgres pgvector"
+    },
+    {
+      "from": "farm-command-bridge",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.cmd.billing.* on BLOODBANK_COMMANDS"
+    },
+    {
+      "from": "flume",
+      "to": "agents-registry",
+      "kind": "writes",
+      "via": "~/.hermes/agents-registry.yaml"
+    },
+    {
+      "from": "flume-access",
+      "to": "cloudflare",
+      "kind": "calls",
+      "via": "Cloudflare Access JWT verification (pinned iss/aud); the agents-facade Worker at identity.delo.sh proxies to this origin"
+    },
+    {
+      "from": "genesis",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "gateway keys in container env"
+    },
+    {
+      "from": "genesis-desk-worker",
+      "to": "genesis",
+      "kind": "calls",
+      "via": "HTTPS to :8741 via tunnel"
+    },
+    {
+      "from": "hermes-bloodbank-plugin",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "bloodbank.cmd.agent.invocation.start / .invoke"
+    },
+    {
+      "from": "hermes-fleet",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "~/.hermes/agents-registry.yaml"
+    },
+    {
+      "from": "hermes-gateway-watchdog",
+      "to": "hermes-gw",
+      "kind": "reads",
+      "via": "health probe then systemctl --user restart"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "OpenAI-compatible provider in config.yaml"
+    },
+    {
+      "from": "hindsight",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "litellm router primary"
+    },
+    {
+      "from": "holocene-api",
+      "to": "candybar",
+      "kind": "calls",
+      "via": "CANDYBAR_API_URL https://candybar.delo.sh"
+    },
+    {
+      "from": "holocene-api",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "Candystore HTTP"
+    },
+    {
+      "from": "holocene-web",
+      "to": "holocene-api",
+      "kind": "calls",
+      "via": "HTTP :4000"
+    },
+    {
+      "from": "hook-hub",
+      "to": "agent-hooks",
+      "kind": "calls",
+      "via": "handlers.toml publisher handler"
+    },
+    {
+      "from": "hook-hub",
+      "to": "hindsight",
+      "kind": "calls",
+      "via": "~/.agents/hooks/hub/concerns.py handlers"
+    },
+    {
+      "from": "krebs",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.cmd.agent.invocation.start"
+    },
+    {
+      "from": "krebs",
+      "to": "plane",
+      "kind": "reads",
+      "via": "Plane REST"
+    },
+    {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "farm-command-bridge and cost-bridge events"
+    },
+    {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "bloodbank.cmd.billing.invoice.generate (milkshake-farm-consumer)"
+    },
+    {
+      "from": "n8n",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "n8n-nodes-bloodbank node, repo.task.* events"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "NATS publish"
+    },
+    {
+      "from": "ntfy-router",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "NATS subscription"
+    },
+    {
+      "from": "ntfy-router",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "ntfy HTTP publish"
+    },
+    {
+      "from": "op-token-guard",
+      "to": "onepassword",
+      "kind": "reads",
+      "via": "op-token-sync"
+    },
+    {
+      "from": "pdf2md",
+      "to": "n8n",
+      "kind": "hosts",
+      "via": "HTTP 127.0.0.1:8788 called by n8n-nodes-pdf-markdown"
+    },
+    {
+      "from": "pilot",
+      "to": "plane",
+      "kind": "calls",
+      "via": "REST https://plane.delo.sh"
+    },
+    {
+      "from": "plane-hook",
+      "to": "plane",
+      "kind": "consumes-from",
+      "via": "Plane webhook"
+    },
+    {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.repo.task.*"
+    },
+    {
+      "from": "pr-crusher",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "PRC_BLOODBANK_PUBLISH_COMMAND"
+    },
+    {
+      "from": "target-watch",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.watch.target.detected (matcher) and bloodbank.watch.target.routed (sink)"
+    },
+    {
+      "from": "target-watch",
+      "to": "pilot",
+      "kind": "calls",
+      "via": "sink files or updates a ticket on the target's board"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "bloodbank.evt.conversation.turn.completed"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.conversation.turn.annotated"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "jev-litellm",
+      "kind": "calls",
+      "via": "POST https://jev.delo.sh/typesafe/v1/systemone"
+    },
+    {
+      "from": "turn-enricher",
+      "to": "cloudflare",
+      "kind": "calls",
+      "via": "Workers AI @cf/cloudflare/clairic"
+    }
+  ],
+  "counts": {
+    "components": 90,
+    "first_party": 72,
+    "external": 18,
+    "live": 80,
+    "edges": 55
+  }
+}

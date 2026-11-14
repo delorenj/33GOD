@@ -33,3 +33,25 @@ contracts:
     not be trusted is reported as "unable to assess" and never collapsed into a
     pass or a failure.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: cli
+first_party: true
+domain: G8
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Hires, onboards and reviews agents and keeps the roster.
+role_in_system: The only writer of the agents registry.
+tech:
+- typescript
+runtime: CLI flume
+relations:
+- to: agents-registry
+  kind: writes
+  via: ~/.hermes/agents-registry.yaml
+  evidence: flume-core (only writer)
+evidence:
+- 33god-platform/components/flume.yaml
+confidence: high

@@ -1,0 +1,29 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: infra-doctor
+name: infra-doctor
+role: service
+repo: ../../../.local/bin/infra-doctor
+description: Runs synthetic probes against the homelab and platform and flags what is broken.
+changelog:
+  topics:
+  - g4
+  - service
+kind: service
+first_party: true
+domain: G4
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Runs synthetic probes against the homelab and platform and flags what is broken.
+role_in_system: Early warning for infrastructure drift; has a dead-man timer that alerts if the doctor itself stops.
+tech:
+- systemd
+- shell
+runtime: native infra-doctor.timer (about every minute) and infra-doctor-deadman.timer (5 min)
+relations: []
+evidence:
+- systemctl --user list-timers
+- systemctl --user show infra-doctor Description
+confidence: medium
+notes: Native timers outside Candybar.

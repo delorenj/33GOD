@@ -25,3 +25,36 @@ public_card:
   title: Event History
   promise: Queryable event/session memory for the whole pipeline.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: datastore
+first_party: true
+domain: G1
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Saves a permanent copy of every bus event so history can be searched later.
+role_in_system: The audit trail; reports, Holocene and the enricher read it.
+tech:
+- python
+- postgres
+- pgvector
+runtime: docker container (API :8683) with Postgres :5434
+relations:
+- to: bb-dapr
+  kind: consumes-from
+  via: candystore-daprd subscription bloodbank.evt.>
+  evidence: bloodbank/compose/docker-compose.yml
+- to: postgres
+  kind: stores-in
+  via: Postgres :5434
+  evidence: bloodbank/compose/docker-compose.yml
+evidence:
+- bloodbank/CLAUDE.md:187
+- docker ps
+- 'critic (relations.evidence): 33god-platform/compose.yaml:99-132 (SUBSCRIBE_TOPIC=bloodbank.evt.>, SUBSCRIBE_ROUTE=/events/all,
+  DATABASE_URL candystore-postgres:5432 published 127.0.0.1:5434, API published 127.0.0.1:8683, also fronted at
+  https://candystore.delo.sh behind google-auth Traefik middleware, traefik dynamic/candystore.yml)'
+confidence: high
+notes: Rejects envelopes missing producer/service/domain/kind.

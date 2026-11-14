@@ -1,0 +1,31 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: bb-nats
+name: Bloodbank NATS broker
+role: bus
+repo: ../bloodbank
+description: The NATS JetStream server that stores and delivers bus messages.
+changelog:
+  topics:
+  - g1
+  - bus
+kind: bus
+first_party: false
+domain: G1
+c4:
+  level: component
+  parent: bloodbank
+status: live
+summary: The NATS JetStream server that stores and delivers bus messages.
+role_in_system: The physical broker; if it is down every publish fails.
+tech:
+- nats:2.10
+- jetstream
+runtime: 'docker container bloodbank-nats (nats:2.10-alpine, -js) in compose project 33god-platform (33god-platform/compose.yaml:14);
+  ports 4222 and 8222 on 0.0.0.0. Streams live: BLOODBANK_EVENTS (1,166,299 msgs), BLOODBANK_COMMANDS (210), plus
+  GIB_EVENTS (excluded game)'
+relations: []
+evidence:
+- bloodbank/compose/docker-compose.yml
+- curl :8222/jsz (streams BLOODBANK_EVENTS 7d, BLOODBANK_COMMANDS workqueue 1d)
+confidence: high
+notes: GIB_EVENTS stream belongs to an excluded game.

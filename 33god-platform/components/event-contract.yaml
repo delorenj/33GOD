@@ -1,0 +1,30 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: event-contract
+name: Bloodbank event contract and schemas
+role: contract
+repo: ../bloodbank
+description: The rulebook and 214 JSON schemas that say how every event is named and shaped.
+changelog:
+  topics:
+  - g1
+  - contract
+kind: contract
+first_party: true
+domain: G1
+c4:
+  level: component
+  parent: bloodbank
+status: live
+summary: The rulebook and 214 JSON schemas that say how every event is named and shaped.
+role_in_system: Without it producers invent names nobody consumes; validate.py enforces it.
+tech:
+- json-schema-2020-12
+- cloudevents
+runtime: files in repo; enforced at publish by agent-hooks validate.py and bb emit
+relations: []
+evidence:
+- bloodbank/docs/event-naming.md
+- bloodbank/schemas/
+- bloodbank/services/agent-hooks/core/validate.py
+confidence: high
+notes: Subject bloodbank.<evt|cmd|rpy>.<domain>.<entity>.<action>; no version token.

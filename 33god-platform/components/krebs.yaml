@@ -24,3 +24,35 @@ public_card:
   title: Ticket Lifecycle Engine
   promise: One lifecycle state machine and normalized event stream across Plane, Linear, Trello, and future trackers.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: service
+first_party: true
+domain: G8
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Decides which ticket goes to which agent and sends the work order.
+role_in_system: Without it tickets sit untouched.
+tech:
+- node
+runtime: Candybar job krebs-tick every 10 minutes
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.cmd.agent.invocation.start
+  evidence: krebs/tick/run.mjs
+- to: plane
+  kind: reads
+  via: Plane REST
+  evidence: krebs/tick/deps.mjs
+evidence:
+- krebs/tick/run.mjs
+- krebs/.candybars/krebs-tick.candybar.toml
+- 'critic (relations.evidence): Claim holds (Candybar API: krebs-tick enabled=true, */10, created 2026-11-14T11:43Z,
+  16 runs/0 failed). Note the repo manifest krebs/.candybars/krebs-tick.candybar.toml still says enabled = false
+  and comments ''Registered DISABLED'', so the file is stale vs live. Dispatch publishes type bloodbank.agent.invocation.start
+  which subjectFor maps to subject bloodbank.cmd.agent.invocation.start. krebs-execution.service exists but is disabled'
+confidence: high
+notes: Enabled live.

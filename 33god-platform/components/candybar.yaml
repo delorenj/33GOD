@@ -20,3 +20,34 @@ public_card:
   title: Cron Framework
   promise: Schedule and meter jobs through Bloodbank with a reversible migration ledger.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: scheduler
+first_party: true
+domain: G9
+c4:
+  level: container
+  parent: ''
+status: live
+summary: The single clock that starts every recurring job on time.
+role_in_system: Without it no recurring work runs, including Krebs dispatch and the daily report.
+tech:
+- python
+- postgres
+runtime: control-plane container (heartbeat, dispatcher, api 127.0.0.1:8700)
+relations:
+- to: krebs
+  kind: schedules
+  via: krebs-tick.candybar.toml */10
+  evidence: krebs/.candybars/krebs-tick.candybar.toml
+- to: n8n
+  kind: schedules
+  via: n8n runner webhook
+  evidence: candybar/README.md
+- to: hermes-gw
+  kind: schedules
+  via: hermes runner
+  evidence: candybar/README.md
+evidence:
+- curl 127.0.0.1:8700/candybars (139 jobs)
+confidence: high

@@ -1,0 +1,35 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: bb-dapr
+name: Dapr sidecars
+role: service
+repo: ../bloodbank
+description: Dapr sidecars that deliver bus events to Candystore and the enricher.
+changelog:
+  topics:
+  - g1
+  - service
+kind: service
+first_party: false
+domain: G1
+c4:
+  level: component
+  parent: bloodbank
+status: partial
+summary: Dapr sidecars that deliver bus events to Candystore and the enricher.
+role_in_system: Subscribe-side delivery for Candystore and enricher; placement service is idle.
+tech:
+- dapr:1.13
+runtime: 'Correct container set, but names/projects are candystore-daprd, enricher-daprd and bloodbank-dapr-placement,
+  all in compose project 33god-platform (33god-platform/compose.yaml:61,134,319). Repo should be 33god-platform
+  (and candystore/dapr-components, 33god-platform/enricher/dapr-components), not bloodbank/compose/components. Enricher
+  durable consumer enricher-events: ackWait 300s, maxAckPending 32, deliverPolicy new'
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: Dapr NATS JetStream pubsub component
+  evidence: bloodbank/compose/components/
+evidence:
+- bloodbank/compose/docker-compose.yml
+- docker ps
+confidence: high
+notes: Docs call Dapr the production runtime; live, producers bypass it.

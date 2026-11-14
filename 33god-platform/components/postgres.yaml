@@ -1,0 +1,27 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: postgres
+name: PostgreSQL
+role: external
+repo: ''
+description: Database engine behind Candystore, Candybar, pjangler, n8n and Plane.
+changelog:
+  topics:
+  - g12
+  - external
+kind: external
+first_party: false
+domain: G12
+c4:
+  level: software-system
+  parent: ''
+status: live
+summary: Database engine behind Candystore, Candybar, pjangler, n8n and Plane.
+role_in_system: Persistent storage for most services.
+tech:
+- postgres
+- pgvector
+runtime: docker containers
+relations: []
+evidence:
+- docker ps
+confidence: high

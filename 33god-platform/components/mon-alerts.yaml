@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: mon-alerts
+name: Monitoring alerts
+role: service
+repo: ../monitoring
+description: Rules that fire when something looks unhealthy.
+changelog:
+  topics:
+  - g4
+  - service
+kind: service
+first_party: true
+domain: G4
+c4:
+  level: component
+  parent: mon-core
+status: live
+summary: Rules that fire when something looks unhealthy.
+role_in_system: Without it failures go unnoticed.
+tech:
+- alertmanager
+runtime: docker compose
+relations: []
+evidence:
+- monitoring/compose.yml
+confidence: medium

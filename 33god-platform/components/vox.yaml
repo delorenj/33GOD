@@ -1,0 +1,28 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: vox
+name: Vox
+role: service
+repo: ../../voxxy
+description: Text-to-speech that reads replies aloud in chosen voices.
+changelog:
+  topics:
+  - g6
+  - service
+kind: service
+first_party: true
+domain: G6
+c4:
+  level: component
+  parent: heyma
+status: live
+summary: Text-to-speech that reads replies aloud in chosen voices.
+role_in_system: Spoken output for agents and the operator.
+tech:
+- tts
+runtime: service
+relations: []
+evidence:
+- /home/delorenj/HeyMa
+- 'critic (repo): /home/delorenj/code/voxxy. Live containers vox (voxxy-vox, healthy) and voxxy-engine-voxcpm from
+  voxxy/compose.yml + compose.engines.yml; Hermes plugin entries ''vox'' and ''tts/vox'' enabled'
+confidence: medium

@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: candybar-watchdog
+name: Candybar watchdog timer
+role: scheduler
+repo: ../candybar
+description: A tiny timer that pages if Candybar itself stops.
+changelog:
+  topics:
+  - g9
+  - scheduler
+kind: scheduler
+first_party: true
+domain: G9
+c4:
+  level: component
+  parent: candybar
+status: live
+summary: A tiny timer that pages if Candybar itself stops.
+role_in_system: The only allowed timer outside Candybar (AD-22).
+tech:
+- systemd
+runtime: candybar-watchdog.timer
+relations: []
+evidence:
+- candybar/deploy/watchdog/README.md
+confidence: high

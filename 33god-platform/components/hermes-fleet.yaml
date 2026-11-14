@@ -22,3 +22,26 @@ public_card:
   promise: Long-running agents with shared provider config and profile-local state.
 backfills:
   - hermes-inherited-profile-config-v1
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: agent
+first_party: true
+domain: G3
+c4:
+  level: container
+  parent: ''
+status: live
+summary: The set of AI agents (project managers, directors, specialists) that do the platform's work.
+role_in_system: Without it tickets are dispatched to nobody.
+tech:
+- python
+- hermes-agent
+runtime: one install ~/.hermes/hermes-agent, 49 profile dirs
+relations:
+- to: agents-registry
+  kind: reads
+  via: ~/.hermes/agents-registry.yaml
+  evidence: /home/delorenj/.hermes/agents-registry.yaml
+evidence:
+- /home/delorenj/.hermes/agents-registry.yaml (46 rows, 28 pm)
+confidence: high

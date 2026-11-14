@@ -1,0 +1,33 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: artifact-vault-projector
+name: artifact-vault-projector
+role: service
+repo: ../bloodbank
+description: Writes captured agent artifacts into the operator's notes vault, organized by project and date.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Writes captured agent artifacts into the operator's notes vault, organized by project and date.
+role_in_system: Second half of the artifact pipeline; without it artifacts exist on the bus but never show up in
+  the vault.
+tech:
+- python
+runtime: systemd user unit bloodbank-artifact-vault-projector.service
+relations:
+- to: artifact-sidecar
+  kind: consumes-from
+  via: bloodbank.evt.project.artifact.created
+  evidence: bloodbank/services/artifact-sidecar/README.md:5-7
+evidence:
+- systemctl --user show bloodbank-artifact-vault-projector (active running)
+- bloodbank/services/artifact-sidecar/README.md:1-12
+confidence: medium
+notes: Output path Projects/<dir>/<YYYY-MM-DD>/<title>.

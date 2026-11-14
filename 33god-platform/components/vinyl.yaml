@@ -1,0 +1,29 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: vinyl
+name: Vinyl
+role: service
+repo: ../../vinyl
+description: Dictation server that turns speech into text in real time.
+changelog:
+  topics:
+  - g6
+  - service
+kind: service
+first_party: true
+domain: G6
+c4:
+  level: component
+  parent: heyma
+status: live
+summary: Dictation server that turns speech into text in real time.
+role_in_system: Without it live dictation stops.
+tech:
+- python
+runtime: big-chungus :7733
+relations: []
+evidence:
+- /home/delorenj/HeyMa
+- 'critic (repo): /home/delorenj/code/vinyl (also a HeyMa submodule at HeyMa/components/vinyl). Live units: vinyld.service
+  (dictation daemon, sherpa-onnx parakeet-tdt-0.6b-v3), vinyld-serve.service (vinyl serve 0.0.0.0:7733, verified
+  listening), vinyl-live.service (meeting captions + en/es translation, :7734), vinyl-tray.service'
+confidence: medium

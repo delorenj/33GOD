@@ -24,3 +24,23 @@ contracts:
 backfills:
   - skillex-33god-hub-v1
   - skillex-stitch-ux-handoff-v1
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: library
+first_party: true
+domain: G5
+c4:
+  level: container
+  parent: ''
+status: live
+summary: The shared catalog of agent skills and the tool that installs them on each agent's desk.
+role_in_system: Without it agents lose their instructions for platform tasks.
+tech:
+- markdown
+- shell
+runtime: CLI skillex plus auto-resync units
+relations: []
+evidence:
+- /home/delorenj/code/skillex/all-skills
+confidence: high
+notes: PM desks are Skillex-only.

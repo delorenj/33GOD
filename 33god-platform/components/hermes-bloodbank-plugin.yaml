@@ -1,0 +1,34 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: hermes-bloodbank-plugin
+name: Hermes Bloodbank platform plugin
+role: service
+repo: ../bloodbank/services/hermes-gateway
+description: Lets the gateway receive work orders from the bus and start agent turns.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hermes-fleet
+status: live
+summary: Lets the gateway receive work orders from the bus and start agent turns.
+role_in_system: Without it Krebs dispatch commands are never picked up.
+tech:
+- python
+- nats
+runtime: inside hermes-gateway.service
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: bloodbank.cmd.agent.invocation.start / .invoke
+  evidence: /home/delorenj/.hermes/plugins
+evidence:
+- /home/delorenj/.hermes/plugins
+- 'critic (repo): Source is /home/delorenj/code/33GOD/bloodbank/services/hermes-gateway (bloodbank_hermes_gateway
+  package, hermes-plugin/, plugin.yaml). ~/.hermes/plugins/bloodbank-platform is the deployed copy; config.yaml
+  plugins.enabled lists bloodbank-platform. Subject patterns in the relation are unverified'
+confidence: high

@@ -1,0 +1,27 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: bb-apicurio
+name: Apicurio schema registry
+role: external
+repo: ../bloodbank
+description: A schema registry meant for looking up event schemas at runtime.
+changelog:
+  topics:
+  - g1
+  - external
+kind: external
+first_party: false
+domain: G1
+c4:
+  level: component
+  parent: bloodbank
+status: built-not-running
+summary: A schema registry meant for looking up event schemas at runtime.
+role_in_system: Planned read side for schemas; nothing depends on it today.
+tech:
+- apicurio
+runtime: compose definition only
+relations: []
+evidence:
+- bloodbank/compose/apicurio/README.md
+confidence: medium
+notes: Not seen in docker ps.

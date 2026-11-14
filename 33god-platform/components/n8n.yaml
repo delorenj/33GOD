@@ -1,0 +1,34 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: n8n
+name: n8n workflow engine
+role: service
+repo: ../../delonet-n8n-workflows
+description: Runs webhook workflows that convert ticket and journal events into bus events.
+changelog:
+  topics:
+  - g2
+  - service
+kind: service
+first_party: false
+domain: G2
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Runs webhook workflows that convert ticket and journal events into bus events.
+role_in_system: Without it Plane ticket changes never reach the bus, so nothing gets dispatched.
+tech:
+- n8n
+runtime: 'Host process, not docker: `n8n start` (node 24.6.0) launched via ~/.n8n/n8n-launch under pm2-delorenj.service,
+  listening 0.0.0.0:5678; Traefik routes https://n8n.delo.sh to http://192.168.1.12:5678 (healthz 200). Workflows
+  exported to git by delonet-n8n-workflows (repo /home/delorenj/code/delonet-n8n-workflows). Custom nodes in ~/.n8n/nodes/node_modules
+  (n8n-nodes-bloodbank, n8n-nodes-folder-curator symlink)'
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: n8n-nodes-bloodbank node, repo.task.* events
+  evidence: /home/delorenj/code/delonet-n8n-workflows/INDEX.md
+evidence:
+- /home/delorenj/code/delonet-n8n-workflows/INDEX.md
+confidence: high
+notes: No schedule triggers allowed; Candybar fires recurring ones by webhook.

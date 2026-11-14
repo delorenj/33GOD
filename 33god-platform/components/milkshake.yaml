@@ -1,0 +1,38 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: milkshake
+name: Milkshake billing
+role: service
+repo: ../../Milkshake
+description: Turns usage and cost events into client billing.
+changelog:
+  topics:
+  - g11
+  - service
+kind: service
+first_party: true
+domain: G11
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Turns usage and cost events into client billing.
+role_in_system: Without it clients cannot be billed.
+tech: []
+runtime: bus consumers
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: farm-command-bridge and cost-bridge events
+  evidence: bloodbank/services/farm-command-bridge/main.py
+- to: bb-nats
+  kind: consumes-from
+  via: bloodbank.cmd.billing.invoice.generate (milkshake-farm-consumer)
+  evidence: systemd milkshake-farm-consumer.service
+evidence:
+- bloodbank/services/farm-command-bridge/main.py
+- 'critic (repo): /home/delorenj/code/Milkshake. Live: systemd user units milkshake-farm-consumer.service (op run
+  ... milkshake-farm-consumer listen: Create Invoice command consumer) and milkshake-outbox.service (ledger changes
+  -> Bloodbank), plus containers milkshake-postgres (127.0.0.1:5441) and milkshake-redis; Candybar jobs milkshake-ledger-backup,
+  milkshake-mercury-backstop. Status live (not partial), confidence high. Closes open question 1'
+confidence: low
+notes: Repo path not confirmed.

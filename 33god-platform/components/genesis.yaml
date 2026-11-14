@@ -1,0 +1,32 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: genesis
+name: Genesis client liaison
+role: agent
+repo: ../../genesis
+description: The agent clients talk to about their projects.
+changelog:
+  topics:
+  - g11
+  - agent
+kind: agent
+first_party: true
+domain: G11
+c4:
+  level: container
+  parent: ''
+status: live
+summary: The agent clients talk to about their projects.
+role_in_system: Client-facing front door.
+tech:
+- python
+runtime: docker container :8741
+relations:
+- to: aai-gateway
+  kind: routes-llm-via
+  via: gateway keys in container env
+  evidence: docker inspect (values not repeated)
+evidence:
+- /home/delorenj/code/genesis
+- docker ps
+confidence: high
+notes: Container env holds plaintext gateway keys; should move to op:// refs.

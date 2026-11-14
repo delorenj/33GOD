@@ -1,0 +1,36 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: enricher
+name: Candystore enricher
+role: service
+repo: .
+description: Adds search embeddings to stored events so they can be found by meaning.
+changelog:
+  topics:
+  - g7
+  - service
+kind: service
+first_party: true
+domain: G7
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Adds search embeddings to stored events so they can be found by meaning.
+role_in_system: Without it semantic search over history stops.
+tech:
+- python
+- bge-small
+runtime: docker container with enricher-daprd
+relations:
+- to: bb-dapr
+  kind: consumes-from
+  via: enricher-daprd subscription
+  evidence: bloodbank/compose/docker-compose.yml
+- to: candystore
+  kind: writes
+  via: Postgres pgvector
+  evidence: 33god-platform/enricher/main.py
+evidence:
+- 33god-platform/enricher/main.py
+confidence: high
+notes: Backlog 0 pending at check.

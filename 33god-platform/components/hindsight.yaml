@@ -21,3 +21,28 @@ public_card:
   promise: Recall, retain, and journal agent work across sessions.
 backfills:
   - hindsight-canonical-hooks-v1
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: service
+first_party: false
+domain: G7
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Long-term memory where agents store and recall project facts.
+role_in_system: Without it agents forget past decisions between sessions.
+tech:
+- hindsight
+- litellm
+- postgres
+runtime: docker stack, API https://api.hs.delo.sh
+relations:
+- to: aai-gateway
+  kind: routes-llm-via
+  via: litellm router primary
+  evidence: /home/delorenj/docker/stacks/ai/hindsight/compose.yml
+evidence:
+- /home/delorenj/docker/stacks/ai/hindsight/compose.yml
+confidence: high
+notes: Third-party engine with first-party config; banks per repo.

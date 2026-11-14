@@ -25,3 +25,22 @@ public_card:
   title: Mission Control
   promise: Live operational view of agents, events, and platform health.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: ui
+first_party: true
+domain: G8
+c4:
+  level: container
+  parent: ''
+status: live
+summary: The operator's web app showing agents, schedules and events in one place.
+role_in_system: The main human window into the platform.
+tech:
+- typescript
+- react
+runtime: systemd/user services, api :4000
+relations: []
+evidence:
+- 33god-platform/components/holocene.yaml
+confidence: high

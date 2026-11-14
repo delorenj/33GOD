@@ -1,0 +1,27 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: cloudflare-tunnel
+name: Cloudflare tunnels
+role: external
+repo: ''
+description: Outbound tunnels that publish selected homelab services at public URLs.
+changelog:
+  topics:
+  - g12
+  - external
+kind: external
+first_party: false
+domain: G12
+c4:
+  level: software-system
+  parent: ''
+status: live
+summary: Outbound tunnels that publish selected homelab services at public URLs.
+role_in_system: How clients and Workers reach Genesis and other services without opening ports.
+tech:
+- cloudflared
+runtime: docker containers cloudflare-tunnel, cloudflare-tunnel-automaticai, cloudflared-aai-cal
+relations: []
+evidence:
+- docker ps (three cloudflared containers Up 45h)
+confidence: medium
+notes: Genesis desk Worker -> tunnel route is unverified.

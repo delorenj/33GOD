@@ -29,3 +29,26 @@ contracts:
   index_reconciliation: PJangler never bulk-untracks files; use gitignore-maintenance after effective-rule review.
 backfills:
   - gitignore-global-policy-v1
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: cli
+first_party: true
+domain: G5
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Keeps the list of projects and their metadata consistent.
+role_in_system: Without it repos drift from the registry and tooling can't find them.
+tech:
+- typescript
+runtime: CLI pj plus registry
+relations: []
+evidence:
+- ~/.config/pjangler/projects.yaml
+- 'critic (repo): Repo is /home/delorenj/code/33GOD/pjangler (submodule; ~/code/pjangler does not exist). Runtime
+  is two systemd user services, pjangler-project-registry.service (dist/project-registry-service.js) and pjangler-journal-notebook.service;
+  registry is the manifest file ~/.config/pjangler/projects.yaml, NOT Postgres. The stores-in postgres relation
+  is unsupported and should be dropped; the real edge is candystore-project-sync (python -m candystore.projects,
+  Candybar job candystore-project-sync, currently failed) copying the registry into Candystore tables'
+confidence: medium

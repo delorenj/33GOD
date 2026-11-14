@@ -1,0 +1,33 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: daily-report
+name: DeLoNET daily report
+role: feature
+repo: ../../skillex/all-skills/delonet-daily-report
+description: A once-a-day summary of what happened across the platform.
+changelog:
+  topics:
+  - g4
+  - feature
+kind: feature
+first_party: true
+domain: G4
+c4:
+  level: container
+  parent: ''
+status: live
+summary: A once-a-day summary of what happened across the platform.
+role_in_system: The operator's single daily digest.
+tech:
+- python
+runtime: 'Confirmed: Candybar dev-journal-nightly 0 6 * * * (reportctl run+verify then distribute to vault/S3/Slack)
+  and dev-journal-ensure-nightly 15 6 * * * enabled; reads Candystore at http://127.0.0.1:8683 (collectors/turn_facts.py,
+  dev_activity.py). dev-journal-reconcile.service (hourly replay) is currently failed'
+relations:
+- to: candystore
+  kind: reads
+  via: Candystore API :8683
+  evidence: skillex/all-skills/delonet-daily-report
+evidence:
+- /home/delorenj/code/skillex/all-skills/delonet-daily-report
+confidence: medium
+notes: Replaced candystore-daily-journal.

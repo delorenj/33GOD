@@ -32,3 +32,22 @@ public_card:
   promise: One orchestrator that holds the plan, picks the next move, and delegates the work.
 backfills:
   - momo-lifecycle-duplicate-v1
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: agent
+first_party: true
+domain: G8
+c4:
+  level: container
+  parent: ''
+status: retired
+summary: The old board-driving loop that moved tickets to agents.
+role_in_system: Replaced by Krebs on 2026-11-14; nothing should depend on it.
+tech:
+- python
+runtime: not running
+relations: []
+evidence:
+- krebs/docs/lifecycle.md
+- 33god-platform/components/momo.yaml
+confidence: high

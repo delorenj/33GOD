@@ -20,3 +20,22 @@ public_card:
   title: Voice Interface
   promise: Talk to the pipeline and capture meetings/transcripts as events.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: service
+first_party: true
+domain: G6
+c4:
+  level: container
+  parent: ''
+status: live
+summary: 'The voice system: dictate, transcribe and hear replies.'
+role_in_system: Without it voice input and spoken output stop.
+tech:
+- python
+runtime: services on big-chungus
+relations: []
+evidence:
+- /home/delorenj/HeyMa
+- 33god-platform/components/heyma.yaml
+confidence: high

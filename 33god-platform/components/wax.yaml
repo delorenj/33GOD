@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: wax
+name: Wax (waxd)
+role: service
+repo: ../../../HeyMa
+description: Processes voice recordings through cleanup and titling passes.
+changelog:
+  topics:
+  - g6
+  - service
+kind: service
+first_party: true
+domain: G6
+c4:
+  level: component
+  parent: heyma
+status: live
+summary: Processes voice recordings through cleanup and titling passes.
+role_in_system: Core of the voice pipeline.
+tech:
+- python
+runtime: daemon waxd
+relations: []
+evidence:
+- /home/delorenj/HeyMa
+confidence: medium

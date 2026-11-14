@@ -1,0 +1,31 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: pr-crusher
+name: PR Crusher
+role: service
+repo: ../../pr-crusher
+description: Works through open pull requests automatically and reports progress.
+changelog:
+  topics:
+  - g5
+  - service
+kind: service
+first_party: true
+domain: G5
+c4:
+  level: container
+  parent: ''
+status: partial
+summary: Works through open pull requests automatically and reports progress.
+role_in_system: Clears PR backlogs; reports on the bus when configured.
+tech:
+- typescript
+runtime: CLI/service
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: PRC_BLOODBANK_PUBLISH_COMMAND
+  evidence: /home/delorenj/code/pr-crusher
+evidence:
+- /home/delorenj/code/pr-crusher
+confidence: medium
+notes: Publisher off unless env set.

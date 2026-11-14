@@ -1,0 +1,30 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: transcribe
+name: Transcription
+role: cli
+repo: ../../../HeyMa
+description: Turns recorded audio into text, using local Whisper models on a GPU.
+changelog:
+  topics:
+  - g6
+  - cli
+kind: cli
+first_party: true
+domain: G6
+c4:
+  level: component
+  parent: heyma
+status: live
+summary: Turns recorded audio into text, using local Whisper models on a GPU.
+role_in_system: Feeds memos into intake.
+tech:
+- whisper
+runtime: service
+relations: []
+evidence:
+- 33god-platform/aperture/research/ship-board/data.json (g6)
+- 'critic (summary): No transcription-service compose or container exists. Transcription is the CLI HeyMa/bin/transcribe
+  (local faster-whisper on the transcribe host or scp to it, prints transcript path on stdout, optional S3 backup-first
+  archive) plus warm GPU faster-whisper servers: holocene-whisper.service (127.0.0.1:8766) and vocalinux-faster-whisper.service.
+  Kind should be cli, status live, confidence high'
+confidence: low

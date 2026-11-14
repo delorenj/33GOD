@@ -25,6 +25,14 @@ run = "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet"
 description = "Validate the 33GOD product control-plane manifests and changelog"
 run = "python3 33god-platform/scripts/platform.py validate"
 
+[tasks."platform:atlas"]
+description = "Render the Atlas (C4 DSL, Mermaid, JSON, index.html) from the component registry (I-12)"
+run = "python3 33god-platform/scripts/atlas.py render"
+
+[tasks."platform:atlas:check"]
+description = "Fail if a component record is incomplete or the rendered Atlas is stale (I-12)"
+run = "python3 33god-platform/scripts/atlas.py check"
+
 [tasks."platform:components"]
 description = "List productized 33GOD platform components"
 run = "python3 33god-platform/scripts/platform.py components list"

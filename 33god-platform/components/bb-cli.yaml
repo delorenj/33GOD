@@ -1,0 +1,31 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: bb-cli
+name: bb operator CLI
+role: cli
+repo: ../bloodbank
+description: Command-line tool to check the contract, emit, trace and replay bus events.
+changelog:
+  topics:
+  - g1
+  - cli
+kind: cli
+first_party: true
+domain: G1
+c4:
+  level: component
+  parent: bloodbank
+status: live
+summary: Command-line tool to check the contract, emit, trace and replay bus events.
+role_in_system: Operators and agents use it to learn legal event names and debug flows.
+tech:
+- python
+runtime: CLI only
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bb emit
+  evidence: bloodbank/cli/bb.py
+evidence:
+- bloodbank/cli/bb.py
+- bloodbank/CLAUDE.md:36
+confidence: high

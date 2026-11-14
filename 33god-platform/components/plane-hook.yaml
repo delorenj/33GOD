@@ -1,0 +1,36 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: plane-hook
+name: Plane to Bloodbank workflows
+role: feature
+repo: ../../delonet-n8n-workflows
+description: n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react
+  to ticket changes.
+changelog:
+  topics:
+  - g2
+  - feature
+kind: feature
+first_party: true
+domain: G2
+c4:
+  level: component
+  parent: n8n
+status: live
+summary: n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react
+  to ticket changes.
+role_in_system: Turns a ticket move into a repo.task event that Krebs and agents act on.
+tech:
+- n8n
+runtime: n8n workflows
+relations:
+- to: plane
+  kind: consumes-from
+  via: Plane webhook
+  evidence: /home/delorenj/code/delonet-n8n-workflows/INDEX.md
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.repo.task.*
+  evidence: /home/delorenj/code/delonet-n8n-workflows/INDEX.md
+evidence:
+- /home/delorenj/code/delonet-n8n-workflows/INDEX.md
+confidence: medium

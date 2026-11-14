@@ -1,0 +1,39 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: aai-gateway
+name: AutomaticAI LLM gateway
+role: gateway
+repo: ''
+description: One front door that routes every model request to the right provider.
+changelog:
+  topics:
+  - g7
+  - gateway
+kind: gateway
+first_party: true
+domain: G7
+c4:
+  level: container
+  parent: ''
+status: live
+summary: One front door that routes every model request to the right provider.
+role_in_system: Without it agents and memory have no model to call.
+tech:
+- newapi
+runtime: 'Not on big-chungus docker (only exited newapi-postgres/redis from 4 weeks ago). It is a customized NewAPI
+  fork running on a cloud VM (compose.cloud.yml: new-api, postgres, redis, caddy, cloudflared; api-direct.automaticai.io
+  resolves to 44.196.227.90, /v1/models returns 401 as expected, api.automaticai.io via Cloudflare). Source repo
+  is /home/delorenj/code/client-portal/gateway (ops/routes.json owns route catalog; ops/cloud/vm-health.py). Host-side
+  newapi-* systemd units/timers are operational jobs driven by Candybar. Hermes config points at https://api-direct.automaticai.io/v1'
+relations:
+- to: openrouter
+  kind: routes-llm-via
+  via: OpenRouter passthrough channel
+  evidence: automaticai-gateway-ops skill / gateway channels
+- to: jev-litellm
+  kind: routes-llm-via
+  via: Jev typesafe channel
+  evidence: automaticai-gateway-ops skill / gateway channels
+evidence:
+- docker ps
+confidence: medium
+notes: NewAPI deployment; routes must exist in ops/routes.json.

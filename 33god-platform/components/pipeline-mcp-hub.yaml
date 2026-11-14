@@ -18,3 +18,25 @@ public_card:
   title: Tool Gateway
   promise: Compact MCP access to Plane, Bloodbank, lifecycle, and future domains.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: gateway
+first_party: true
+domain: G5
+c4:
+  level: container
+  parent: ''
+status: built-not-running
+summary: One place that exposes platform tools to agents over MCP.
+role_in_system: Agents reach shared tools through it.
+tech:
+- mcp
+runtime: unknown
+relations: []
+evidence:
+- 33god-platform/components/pipeline-mcp-hub.yaml
+- 'critic (repo): /home/delorenj/code/33GOD/mcp-hub (submodule: Dockerfile, mcp_hub package, mise.toml). No mcp-hub
+  container or systemd unit is running; status built-not-running, confidence medium. Closes open question 2 (ownership),
+  not deployment'
+confidence: low
+notes: Ship-board calls it mcp-hub.

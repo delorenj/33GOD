@@ -1,0 +1,30 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: holocene-web
+name: Holocene web
+role: ui
+repo: ../holocene
+description: The browser front end of Holocene.
+changelog:
+  topics:
+  - g8
+  - ui
+kind: ui
+first_party: true
+domain: G8
+c4:
+  level: component
+  parent: holocene
+status: live
+summary: The browser front end of Holocene.
+role_in_system: Operator UI.
+tech:
+- react
+runtime: web app
+relations:
+- to: holocene-api
+  kind: calls
+  via: HTTP :4000
+  evidence: holocene/apps/web
+evidence:
+- holocene/apps/web
+confidence: medium

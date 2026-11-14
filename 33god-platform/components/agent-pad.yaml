@@ -1,0 +1,28 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: agent-pad
+name: Agent pad
+role: ui
+repo: ../holocene
+description: A Holocene screen for talking to and watching individual agents.
+changelog:
+  topics:
+  - g8
+  - ui
+kind: ui
+first_party: true
+domain: G8
+c4:
+  level: component
+  parent: holocene
+status: live
+summary: A Holocene screen for talking to and watching individual agents.
+role_in_system: Per-agent operator view.
+tech:
+- typescript
+runtime: Two docker containers agent-pad-web (nginx) and agent-pad-upload (python, 127.0.0.1:8698) from /home/delorenj/docker/stacks/websites/agent-pad,
+  plus holocene-pad-roster.service which is inactive between runs because the Candybar job holocene-pad-roster (*/2)
+  fires it
+relations: []
+evidence:
+- holocene/services/pad-roster
+confidence: medium

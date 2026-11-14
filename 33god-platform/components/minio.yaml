@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: minio
+name: MinIO
+role: external
+repo: ''
+description: Object storage for files.
+changelog:
+  topics:
+  - g12
+  - external
+kind: external
+first_party: false
+domain: G12
+c4:
+  level: software-system
+  parent: ''
+status: live
+summary: Object storage for files.
+role_in_system: Artifact and file storage.
+tech:
+- minio
+runtime: docker container
+relations: []
+evidence:
+- docker ps
+confidence: medium

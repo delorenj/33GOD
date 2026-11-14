@@ -1,0 +1,37 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: farm-command-bridge
+name: farm-command-bridge
+role: service
+repo: ../bloodbank
+description: A signed web entry point that turns invoice requests from the portal and bank webhooks into billing
+  commands on the bus.
+changelog:
+  topics:
+  - g11
+  - service
+kind: service
+first_party: true
+domain: G11
+c4:
+  level: container
+  parent: ''
+status: live
+summary: A signed web entry point that turns invoice requests from the portal and bank webhooks into billing commands
+  on the bus.
+role_in_system: Feeds Milkshake billing with work done.
+tech:
+- python
+runtime: docker container
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.cmd.billing.* on BLOODBANK_COMMANDS
+  evidence: critic spot-check of bloodbank/services/farm-command-bridge
+evidence:
+- bloodbank/services/farm-command-bridge/main.py
+- 'critic (summary): A signed HTTPS ingress: the portal Worker POSTs HMAC-signed Create Invoice and command-palette
+  requests (/v1/invoice-commands, /v1/commands) and Mercury posts transaction webhooks (/v1/mercury-webhooks); the
+  bridge verifies, archives and publishes bloodbank.cmd.billing.invoice.generate / bloodbank.billing.transaction.receive
+  commands onto BLOODBANK_COMMANDS. milkshake-farm-consumer is the consumer. Relation should be publishes-to bb-nats
+  on bloodbank.cmd.billing.*, and milkshake consumes-from it'
+confidence: medium

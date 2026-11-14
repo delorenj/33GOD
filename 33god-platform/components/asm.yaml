@@ -1,0 +1,34 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: asm
+name: Agent State Machine
+role: service
+repo: ../bloodbank
+description: Keeps a live picture of what each agent process is doing right now.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hook-hub
+status: live
+summary: Keeps a live picture of what each agent process is doing right now.
+role_in_system: Holocene and desktop painters read agent state from it.
+tech:
+- python
+- redis
+runtime: 'Also two always-on painters: asm-orcapaint.service and asm-tabpaint.service (paint ASM state onto Orca
+  worktree cards and zellij tab bar). asm-sweep.timer fires every ~15s (asmctl sweep). Host redis-server 127.0.0.1:6379
+  exists (pid 3803)'
+relations:
+- to: redis
+  kind: stores-in
+  via: asm:live, asm:lane:*, channel asm:transitions
+  evidence: redis-cli keys asm:*
+evidence:
+- bloodbank/services/hook-hub/handlers.toml
+confidence: medium
+notes: asm-sweep timer runs outside Candybar.

@@ -1,0 +1,32 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: op-token-guard
+name: op-token-guard
+role: scheduler
+repo: ../../../.config/zshyzsh/bin/op-token-sync
+description: Self-heals drift in the 1Password service-account token that every service reads.
+changelog:
+  topics:
+  - g12
+  - scheduler
+kind: scheduler
+first_party: true
+domain: G12
+c4:
+  level: component
+  parent: onepassword
+status: live
+summary: Self-heals drift in the 1Password service-account token that every service reads.
+role_in_system: Prevents a stale token from silently breaking op:// secret reads fleet-wide.
+tech:
+- systemd
+- shell
+runtime: native op-token-guard.timer daily 00:01
+relations:
+- to: onepassword
+  kind: reads
+  via: op-token-sync
+  evidence: systemctl --user show op-token-guard ExecStart
+evidence:
+- systemctl --user list-timers (op-token-guard.timer next Sun 00:01)
+confidence: medium
+notes: Native timer outside Candybar.

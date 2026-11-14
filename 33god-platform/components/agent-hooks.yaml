@@ -1,0 +1,34 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: agent-hooks
+name: agent-hooks publisher
+role: library
+repo: ../bloodbank
+description: Turns raw agent hooks into contract-valid events and publishes them.
+changelog:
+  topics:
+  - g3
+  - library
+kind: library
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hook-hub
+status: live
+summary: Turns raw agent hooks into contract-valid events and publishes them.
+role_in_system: Owns the envelope builder and validator every producer reuses.
+tech:
+- python
+runtime: called by hook-hub
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.* per hooks.master.json
+  evidence: bloodbank/services/agent-hooks/hooks.master.json
+- to: event-contract
+  kind: reads
+  via: core/validate.py allowlists
+  evidence: bloodbank/services/agent-hooks/core/validate.py
+evidence:
+- bloodbank/CLAUDE.md:190-195
+confidence: high

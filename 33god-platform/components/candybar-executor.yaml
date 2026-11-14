@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: candybar-executor
+name: Candybar host executor
+role: service
+repo: ../candybar
+description: Runs scheduled commands on the host when the clock fires.
+changelog:
+  topics:
+  - g9
+  - service
+kind: service
+first_party: true
+domain: G9
+c4:
+  level: component
+  parent: candybar
+status: live
+summary: Runs scheduled commands on the host when the clock fires.
+role_in_system: Without it exec and systemd jobs never execute.
+tech:
+- python
+runtime: host service :8701
+relations: []
+evidence:
+- candybar/README.md
+confidence: medium

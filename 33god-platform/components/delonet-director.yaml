@@ -1,0 +1,27 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: delonet-director
+name: DeLoNET Director read model
+role: service
+repo: ../../delonet-company
+description: A read-only API over company capacity and contract data.
+changelog:
+  topics:
+  - g8
+  - service
+kind: service
+first_party: true
+domain: G8
+c4:
+  level: container
+  parent: ''
+status: live
+summary: A read-only API over company capacity and contract data.
+role_in_system: Read model for director/company views; loopback only.
+tech:
+- python
+runtime: systemd user unit delonet-director-api.service, 127.0.0.1:8790
+relations: []
+evidence:
+- systemctl --user show delonet-director-api (sqlite capacity.sqlite3 + contracts.sqlite3)
+confidence: medium
+notes: Medium confidence it belongs inside the platform scope; confirm with owner.

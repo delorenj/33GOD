@@ -1,0 +1,28 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: candybar-steward
+name: Candybar steward
+role: service
+repo: ../candybar
+description: Host-side role that keeps Candybar's registrations and units in order.
+changelog:
+  topics:
+  - g9
+  - service
+kind: service
+first_party: true
+domain: G9
+c4:
+  level: component
+  parent: candybar
+status: live
+summary: Host-side role that keeps Candybar's registrations and units in order.
+role_in_system: Steward contract role; with candybar-unit-holder it keeps started units loaded for accounting (AD-18).
+tech:
+- python
+- systemd
+runtime: systemd user units candybar-steward.service and candybar-unit-holder.service
+relations: []
+evidence:
+- systemctl --user show candybar-steward candybar-unit-holder Descriptions
+confidence: medium
+notes: Executor listens on 0.0.0.0:8701 (candybar daemon --roles executor, pid 5234).

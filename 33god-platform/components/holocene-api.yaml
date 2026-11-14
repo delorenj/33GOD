@@ -1,0 +1,34 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: holocene-api
+name: Holocene API
+role: service
+repo: ../holocene
+description: The backend that gathers fleet, schedule and event data for the web app.
+changelog:
+  topics:
+  - g8
+  - service
+kind: service
+first_party: true
+domain: G8
+c4:
+  level: component
+  parent: holocene
+status: live
+summary: The backend that gathers fleet, schedule and event data for the web app.
+role_in_system: Without it the web app shows nothing.
+tech:
+- typescript
+runtime: :4000
+relations:
+- to: candybar
+  kind: calls
+  via: CANDYBAR_API_URL https://candybar.delo.sh
+  evidence: holocene/apps/api/src/candybar.ts:11
+- to: candystore
+  kind: reads
+  via: Candystore HTTP
+  evidence: holocene/apps/api/src/candystore-url.ts
+evidence:
+- holocene/apps/api/src
+confidence: high

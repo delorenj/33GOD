@@ -27,3 +27,30 @@ public_card:
   promise: CloudEvents over NATS/Dapr with canonical schemas and provider-neutral agent hooks.
 backfills:
   - bloodbank-canonical-agent-publisher-v1
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: bus
+first_party: true
+domain: G1
+c4:
+  level: container
+  parent: ''
+status: live
+summary: 'The event backbone: every service publishes and listens for CloudEvents on it.'
+role_in_system: Without it no service can tell another that anything happened; dispatch, audit and alerts all stop.
+tech:
+- nats-jetstream
+- cloudevents
+- dapr
+- python
+runtime: No live container belongs to compose project 'bloodbank'. bloodbank/compose/docker-compose.yml is a self-hosted
+  sandbox (bloodbank-postgres, daprd-subscribe, heartbeat-*, apicurio, eventcatalog) that is not running. The live
+  bus (NATS, dapr placement, candystore, enricher) comes from 33god-platform/compose.yaml; bloodbank-owned live
+  pieces are host systemd units (hook-hub, artifact-sidecar, artifact-vault-projector, target-watch) and separate
+  per-service compose projects (ntfy-router, turn-enricher, cost-bridge, farm-command-bridge)
+relations: []
+evidence:
+- bloodbank/compose/docker-compose.yml
+- bloodbank/CLAUDE.md:1-25
+confidence: high
+notes: Producers publish raw NATS; Dapr is subscribe-side only. No RabbitMQ, no FastAPI publisher.

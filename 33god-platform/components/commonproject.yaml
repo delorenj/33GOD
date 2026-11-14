@@ -1,0 +1,28 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: commonproject
+name: CommonProject
+role: library
+repo: ../../CommonProject
+description: Shared scaffolding every project starts from.
+changelog:
+  topics:
+  - g5
+  - library
+kind: library
+first_party: true
+domain: G5
+c4:
+  level: container
+  parent: ''
+status: partial
+summary: Shared scaffolding every project starts from.
+role_in_system: Keeps new repos consistent.
+tech: []
+runtime: template
+relations: []
+evidence:
+- 33god-platform/aperture/research/ship-board/data.json (g5)
+- 'critic (repo): /home/delorenj/code/CommonProject exists (copier project template per ship-board). Closes open
+  question 4'
+confidence: low
+notes: Repo path not confirmed.

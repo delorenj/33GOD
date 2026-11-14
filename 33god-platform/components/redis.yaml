@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: redis
+name: Redis
+role: external
+repo: ''
+description: In-memory store for live agent state and the 1Password read cache.
+changelog:
+  topics:
+  - g12
+  - external
+kind: external
+first_party: false
+domain: G12
+c4:
+  level: software-system
+  parent: ''
+status: live
+summary: In-memory store for live agent state and the 1Password read cache.
+role_in_system: ASM state lives here.
+tech:
+- redis
+runtime: host redis-server (not docker)
+relations: []
+evidence:
+- systemctl/pgrep redis-server
+confidence: high

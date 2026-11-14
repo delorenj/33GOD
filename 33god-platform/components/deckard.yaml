@@ -1,0 +1,28 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: deckard
+name: Deckard
+role: ui
+repo: ../../deckard
+description: A Stream Deck control surface for the operator's terminal workspace.
+changelog:
+  topics:
+  - g10
+  - ui
+kind: ui
+first_party: true
+domain: G10
+c4:
+  level: container
+  parent: ''
+status: live
+summary: A Stream Deck control surface for the operator's terminal workspace.
+role_in_system: Operator awareness; reads attention events.
+tech: []
+runtime: operator desktop
+relations: []
+evidence:
+- /home/delorenj/code/deckard
+- 'critic (summary): Stream Deck control surface for Zellij (systemd deckard.service, ~/.local/bin/deckard run).
+  The deckard.evt.attention consumes-from relation is unverified and should be dropped or re-proved'
+confidence: medium
+notes: Desktop-only per ship-board.

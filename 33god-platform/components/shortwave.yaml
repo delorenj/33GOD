@@ -1,0 +1,28 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: shortwave
+name: Shortwave relay
+role: service
+repo: ../../shortwave
+description: Mirrors phone dictation into the focused terminal pane.
+changelog:
+  topics:
+  - g10
+  - service
+kind: service
+first_party: true
+domain: G10
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Mirrors phone dictation into the focused terminal pane.
+role_in_system: Hands-free input path from the operator's phone to an agent pane.
+tech:
+- python
+- zellij
+runtime: systemd user unit shortwave-relay.service (sw serve)
+relations: []
+evidence:
+- systemctl --user show shortwave-relay Description
+confidence: medium
+notes: Operator-desktop sibling of wingman; platform relation not traced.

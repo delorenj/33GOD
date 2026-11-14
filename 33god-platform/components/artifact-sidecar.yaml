@@ -1,0 +1,32 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: artifact-sidecar
+name: artifact-sidecar
+role: service
+repo: ../bloodbank
+description: Captures files agents produce and links them to the events that made them.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Captures files agents produce and links them to the events that made them.
+role_in_system: Without it artifacts are not attached to event history.
+tech:
+- python
+runtime: systemd user unit bloodbank-artifact-sidecar.service (python3.14 bloodbank/services/artifact-sidecar/main.py),
+  active. Consumes bloodbank.evt.agent.tool.completed and bloodbank.evt.conversation.turn.completed, publishes bloodbank.evt.project.artifact.created;
+  sha256 content-addressed store + sqlite ledger. Paired with artifact-vault-projector which writes into the vault
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: NATS subscription
+  evidence: bloodbank/services/artifact-sidecar/main.py
+evidence:
+- bloodbank/services/artifact-sidecar/main.py
+confidence: medium

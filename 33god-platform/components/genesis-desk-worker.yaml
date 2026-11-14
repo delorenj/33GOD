@@ -1,0 +1,30 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: genesis-desk-worker
+name: Genesis desk Worker
+role: service
+repo: ../../genesis
+description: Public web desk on Cloudflare where clients reach Genesis.
+changelog:
+  topics:
+  - g11
+  - service
+kind: service
+first_party: true
+domain: G11
+c4:
+  level: component
+  parent: genesis
+status: live
+summary: Public web desk on Cloudflare where clients reach Genesis.
+role_in_system: Client entry point.
+tech:
+- cloudflare-workers
+runtime: Cloudflare Worker
+relations:
+- to: genesis
+  kind: calls
+  via: HTTPS to :8741 via tunnel
+  evidence: /home/delorenj/code/genesis
+evidence:
+- /home/delorenj/code/genesis
+confidence: medium

@@ -1,0 +1,27 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: bb-catalog
+name: EventCatalog
+role: ui
+repo: ../bloodbank
+description: A browsable website listing every event type for humans.
+changelog:
+  topics:
+  - g1
+  - ui
+kind: ui
+first_party: false
+domain: G1
+c4:
+  level: component
+  parent: bloodbank
+status: built-not-running
+summary: A browsable website listing every event type for humans.
+role_in_system: Discovery aid only; loss affects no runtime flow.
+tech:
+- eventcatalog
+runtime: compose definition only
+relations: []
+evidence:
+- bloodbank/compose/eventcatalog/README.md
+confidence: medium
+notes: Not seen in docker ps.

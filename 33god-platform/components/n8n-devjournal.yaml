@@ -1,0 +1,32 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: n8n-devjournal
+name: Dev journal workflow
+role: feature
+repo: ../../delonet-n8n-workflows
+description: An n8n workflow that writes development journal entries from events.
+changelog:
+  topics:
+  - g2
+  - feature
+kind: feature
+first_party: true
+domain: G2
+c4:
+  level: component
+  parent: n8n
+status: live
+summary: An n8n workflow that writes development journal entries from events.
+role_in_system: Feeds the operator's journal; nothing else depends on it.
+tech:
+- n8n
+runtime: n8n workflow
+relations: []
+evidence:
+- 33god-platform/aperture/research/ship-board/data.json (g2)
+- 'critic (evidence): Live and verifiable: repo bloodbank/integrations/n8n-workflows/dev-journal (ingress/processor/incidents/rollups/deadline
+  workflow.json + CUTOVER-2026-11-03.md); n8n workflows ''Dev Journal - Bloodbank Ingress / Process Reports / Incident
+  Outbox / Calendar Rollups / 07:00 Partial Mail'' active in delonet-n8n-workflows/INDEX.md; Candybar jobs dev-journal-processor
+  (*/5), dev-journal-incidents (*/5), dev-journal-rollups, dev-journal-deadline, dev-journal-nightly (0 6 * * *)
+  all enabled. Confidence should be high, status live. Failed unit: dev-journal-reconcile.service (failed)'
+confidence: low
+notes: Ship-board id kept; not re-verified live.

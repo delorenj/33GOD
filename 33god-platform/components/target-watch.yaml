@@ -1,0 +1,39 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: target-watch
+name: target-watch
+role: service
+repo: ../bloodbank/services/target-watch
+description: Alerts the operator whenever a watched person messages on any channel and files a ticket for it.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Alerts the operator whenever a watched person messages on any channel and files a ticket for it.
+role_in_system: Provider-agnostic inbound-message watch; the bus carries every provider so one watch covers email,
+  SMS, chat and calls.
+tech:
+- python
+runtime: systemd user units target-watch-match.service and target-watch-sink.service; Candybar job target-watch-gmail-poll
+  */5
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.watch.target.detected (matcher) and bloodbank.watch.target.routed (sink)
+  evidence: systemctl --user show target-watch-match/target-watch-sink Descriptions
+- to: pilot
+  kind: calls
+  via: sink files or updates a ticket on the target's board
+  evidence: bloodbank/services/target-watch/README.md:1-8
+evidence:
+- bloodbank/services/target-watch/README.md
+- systemctl --user list-units (both active running)
+- curl 127.0.0.1:8700/candybars target-watch-gmail-poll enabled
+confidence: medium
+notes: New providers become watchable by adding an x-sender block to their inbound schema; no code change.

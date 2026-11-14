@@ -1,0 +1,38 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: cost-bridge
+name: cost-bridge
+role: service
+repo: ../bloodbank
+description: Takes in billing cost records over HTTPS, puts them on the bus and replays them into the AutomaticAI
+  portal until each one is confirmed saved.
+changelog:
+  topics:
+  - g7
+  - service
+kind: service
+first_party: true
+domain: G7
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Takes in billing cost records over HTTPS, puts them on the bus and replays them into the AutomaticAI portal
+  until each one is confirmed saved.
+role_in_system: Without it spend is invisible to billing and reports.
+tech:
+- python
+runtime: docker container
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: NATS publish
+  evidence: bloodbank/services/cost-bridge/main.py
+evidence:
+- bloodbank/services/cost-bridge/main.py
+- 'critic (summary): A narrow HTTPS ingress plus permanent archive that accepts billing cost observations onto the
+  bus (bloodbank.evt.billing.cost.observed on BLOODBANK_EVENTS) and replays them durably (pull consumer portal-cost-observations-v1)
+  into the AutomaticAI portal''s D1 until a persistence receipt is confirmed. It does not itself compute LLM cost.
+  WARNING: the live container''s compose working_dir is a Claude scratchpad checkout (/home/delorenj/.claude/tmp/claude-1000/-home-delorenj-code-client-portal/.../bb-19bfe3c/services/cost-bridge),
+  not the repo; rebuild from bloodbank/services/cost-bridge'
+confidence: medium
+notes: The live container was built from a Claude scratchpad checkout, not the repo; rebuild from bloodbank/services/cost-bridge.

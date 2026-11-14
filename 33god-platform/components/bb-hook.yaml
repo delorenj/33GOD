@@ -1,0 +1,30 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: bb-hook
+name: bb-hook
+role: cli
+repo: ../bloodbank
+description: A tiny command each coding agent runs on every hook to hand the event to hook-hub.
+changelog:
+  topics:
+  - g3
+  - cli
+kind: cli
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hook-hub
+status: live
+summary: A tiny command each coding agent runs on every hook to hand the event to hook-hub.
+role_in_system: Entry point of all agent activity reporting.
+tech:
+- shell
+runtime: invoked by agent CLIs
+relations:
+- to: hook-hub
+  kind: calls
+  via: Unix socket $XDG_RUNTIME_DIR/33god/hook-hub.sock
+  evidence: bloodbank/services/hook-hub/main.py
+evidence:
+- bloodbank/services/hook-hub/main.py
+confidence: high

@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: agents-registry
+name: Agents registry
+role: datastore
+repo: ../../../.hermes
+description: A file listing every agent, its role and where it works.
+changelog:
+  topics:
+  - g3
+  - datastore
+kind: datastore
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hermes-fleet
+status: live
+summary: A file listing every agent, its role and where it works.
+role_in_system: The roster the gateway and tools read; Flume is its only writer.
+tech:
+- yaml
+runtime: file ~/.hermes/agents-registry.yaml
+relations: []
+evidence:
+- /home/delorenj/.hermes/agents-registry.yaml
+confidence: high

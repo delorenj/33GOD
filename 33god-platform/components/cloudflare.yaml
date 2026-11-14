@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: cloudflare
+name: Cloudflare
+role: external
+repo: ''
+description: Hosts tunnels, Workers and Workers AI models.
+changelog:
+  topics:
+  - g12
+  - external
+kind: external
+first_party: false
+domain: G12
+c4:
+  level: software-system
+  parent: ''
+status: live
+summary: Hosts tunnels, Workers and Workers AI models.
+role_in_system: Edge for public URLs, the Genesis desk Worker and Clairic extraction.
+tech:
+- cloudflare
+runtime: SaaS
+relations: []
+evidence:
+- bloodbank/services/turn-enricher/main.py:19
+confidence: high

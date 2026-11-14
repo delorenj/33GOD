@@ -1,0 +1,32 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: client-portal
+name: Client portal
+role: ui
+repo: ../../client-portal
+description: The automaticai.io website and the internal operator portal for services, accounts, statements and
+  invoices.
+changelog:
+  topics:
+  - g11
+  - ui
+kind: ui
+first_party: true
+domain: G11
+c4:
+  level: container
+  parent: ''
+status: live
+summary: The automaticai.io website and the internal operator portal for services, accounts, statements and invoices.
+role_in_system: Client visibility.
+tech:
+- typescript
+runtime: unknown
+relations: []
+evidence:
+- /home/delorenj/code/client-portal
+- 'critic (summary): The automaticai.io marketing site plus an INTERNAL operator portal (service inventory, billable
+  accounts, statements, invoices) on TanStack Start + Cloudflare Workers + D1 + Better Auth passkeys; wrangler name
+  automatic-ai, routes automaticai.io and www.automaticai.io (HTTP 200 live). Status live, runtime Cloudflare Worker,
+  not ''unknown''. Same repo holds the gateway/ package (aai-gateway). Also hosts the Milkshake portal Worker that
+  signs farm commands'
+confidence: low

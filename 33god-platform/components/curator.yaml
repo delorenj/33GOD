@@ -1,0 +1,31 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: curator
+name: Curator
+role: service
+repo: ../../curator
+description: Sorts and files incoming documents and folders automatically.
+changelog:
+  topics:
+  - g2
+  - service
+kind: service
+first_party: true
+domain: G2
+c4:
+  level: container
+  parent: ''
+status: partial
+summary: Sorts and files incoming documents and folders automatically.
+role_in_system: Keeps intake folders organized; loss leaves files unsorted.
+tech:
+- python
+runtime: source repo; folder-curator skill
+relations: []
+evidence:
+- /home/delorenj/code/curator
+- /home/delorenj/code/skillex/all-skills/folder-curator
+confidence: medium
+notes: 'Status note: Live but unhealthy: curator-drain.service (Bloodbank -> n8n folder-curator drain, one-in-flight
+  backpressure) active; curator-serve.service (folder-curator serve 127.0.0.1:8787 for the n8n-nodes-folder-curator
+  node) is in ''activating auto-restart'', i.e. crash-looping. n8n workflow ''Folder Curator Intake'' active. pdf2md-serve
+  (127.0.0.1:8788) is a separate sibling'

@@ -1,0 +1,29 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: lifecycle-controller
+name: lifecycle-controller
+role: service
+repo: ../bloodbank/services/lifecycle-controller
+description: Reconciles ticket lifecycle state from sentinel observations and publishes the results.
+changelog:
+  topics:
+  - g8
+  - service
+kind: service
+first_party: true
+domain: G8
+c4:
+  level: container
+  parent: ''
+status: built-not-running
+summary: Reconciles ticket lifecycle state from sentinel observations and publishes the results.
+role_in_system: Earlier lifecycle reconciler; depends on krebs-execution and its own Postgres outbox.
+tech:
+- python
+- asyncpg
+runtime: no systemd unit or container found
+relations: []
+evidence:
+- bloodbank/services/lifecycle-controller/pyproject.toml (reconciler, sweeper, outbox_publisher modules)
+- systemctl and docker ps show no match
+confidence: medium
+notes: Likely superseded by krebs tick (krebs/docs/lifecycle.md says Krebs replaces Momo); confirm before drawing.

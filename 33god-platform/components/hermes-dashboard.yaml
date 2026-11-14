@@ -1,0 +1,29 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: hermes-dashboard
+name: Hermes Dashboard
+role: ui
+repo: ../../../.hermes/hermes-agent
+description: A web dashboard for the whole Hermes agent runtime.
+changelog:
+  topics:
+  - g3
+  - ui
+kind: ui
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hermes-fleet
+status: live
+summary: A web dashboard for the whole Hermes agent runtime.
+role_in_system: Operator window onto the single Hermes install; separate from Holocene.
+tech:
+- python
+- hermes-agent
+runtime: systemd user unit hermes-dashboard.service, 0.0.0.0:9119
+relations: []
+evidence:
+- 'systemctl --user show hermes-dashboard: ExecStart=/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes dashboard
+  --host 0.0.0.0 --port 9119 --no-open, active running'
+confidence: medium
+notes: Ship-board lumps it into hermes-gw.

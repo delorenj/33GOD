@@ -22,3 +22,28 @@ public_card:
   title: Plane Board CLI
   promise: One command line for every board in the fleet — read, write, and replay a ticket board without knowing the API.
 backfills: []
+
+# --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
+kind: cli
+first_party: true
+domain: G8
+c4:
+  level: container
+  parent: ''
+status: live
+summary: The ticket command-line tool; the only thing allowed to change Plane.
+role_in_system: Without it agents cannot move or create tickets.
+tech:
+- node
+runtime: CLI px
+relations:
+- to: plane
+  kind: calls
+  via: REST https://plane.delo.sh
+  evidence: pilot default base
+evidence:
+- /home/delorenj/code/pilot/README.md
+- 'critic (repo): /home/delorenj/code/33GOD/pilot (submodule). /home/delorenj/code/pilot does not exist. The conflicts_resolved
+  entry claiming correction to ~/code/pilot is wrong'
+confidence: high
+notes: Lifecycle hooks HMAC-signed.

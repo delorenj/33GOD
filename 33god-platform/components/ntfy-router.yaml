@@ -1,0 +1,35 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: ntfy-router
+name: ntfy-router
+role: service
+repo: ../bloodbank
+description: Sends phone notifications for important bus events.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Sends phone notifications for important bus events.
+role_in_system: Without it the operator gets no push alerts.
+tech:
+- python
+- nats
+runtime: docker container
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: NATS subscription
+  evidence: bloodbank/services/ntfy-router/main.py
+- to: ntfy
+  kind: calls
+  via: ntfy HTTP publish
+  evidence: bloodbank/services/ntfy-router/main.py
+evidence:
+- bloodbank/services/ntfy-router/main.py
+confidence: high

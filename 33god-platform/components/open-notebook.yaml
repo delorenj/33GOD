@@ -1,0 +1,30 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: open-notebook
+name: Open Notebook
+role: external
+repo: ../../../docker/stacks/ai/open-notebook
+description: The notebook site where the owner wants generated docs placed.
+changelog:
+  topics:
+  - g12
+  - external
+kind: external
+first_party: false
+domain: G12
+c4:
+  level: software-system
+  parent: ''
+status: live
+summary: The notebook site where the owner wants generated docs placed.
+role_in_system: Docs destination named in the 33GOD CLAUDE.md (notebooklm.delo.sh); pjangler-journal-notebook feeds
+  it.
+tech:
+- open-notebook
+- surrealdb
+runtime: docker containers open_notebook_core and open_notebook_surrealdb
+relations: []
+evidence:
+- docker ps (delo/open-notebook:1.14.0-podcast-hardening.3, surrealdb v2, both healthy)
+- /home/delorenj/code/33GOD/CLAUDE.md
+confidence: medium
+notes: Hostname notebooklm.delo.sh not curl-verified.

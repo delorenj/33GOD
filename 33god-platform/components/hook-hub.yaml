@@ -1,0 +1,34 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: hook-hub
+name: hook-hub
+role: service
+repo: ../bloodbank
+description: Receives every agent hook and fans it out to handlers that publish, remember and alert.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Receives every agent hook and fans it out to handlers that publish, remember and alert.
+role_in_system: Without it agent activity never reaches the bus, memory or state machine.
+tech:
+- python
+runtime: systemd user unit hook-hub.service, HTTP :8685
+relations:
+- to: agent-hooks
+  kind: calls
+  via: handlers.toml publisher handler
+  evidence: bloodbank/services/hook-hub/handlers.toml
+- to: hindsight
+  kind: calls
+  via: ~/.agents/hooks/hub/concerns.py handlers
+  evidence: bloodbank/services/hook-hub/handlers.toml
+evidence:
+- bloodbank/services/hook-hub/handlers.toml (36 handlers)
+confidence: high

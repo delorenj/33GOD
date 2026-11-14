@@ -1,0 +1,33 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: hermes-gateway-watchdog
+name: hermes-gateway-watchdog
+role: scheduler
+repo: ../../../.local/bin/hermes-gateway-watchdog
+description: Restarts the Hermes gateway if it is down or wedged and sends a phone alert.
+changelog:
+  topics:
+  - g3
+  - scheduler
+kind: scheduler
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hermes-fleet
+status: live
+summary: Restarts the Hermes gateway if it is down or wedged and sends a phone alert.
+role_in_system: Keeps the single fleet runtime alive; also respects 'pause' during deliberate stops.
+tech:
+- systemd
+- shell
+runtime: native hermes-gateway-watchdog.timer (about every minute), outside Candybar
+relations:
+- to: hermes-gw
+  kind: reads
+  via: health probe then systemctl --user restart
+  evidence: systemctl --user show hermes-gateway-watchdog Description
+evidence:
+- systemctl --user list-timers (fires every minute)
+- systemctl --user show hermes-gateway-watchdog
+confidence: medium
+notes: Native clock outside Candybar with no recorded exception; same for asm-sweep, infra-doctor, op-token-guard.

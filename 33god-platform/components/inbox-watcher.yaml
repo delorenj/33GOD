@@ -1,0 +1,27 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: inbox-watcher
+name: Voice memo inbox watcher
+role: service
+repo: ../holocene
+description: Watches for new voice memos and sends them to transcription.
+changelog:
+  topics:
+  - g8
+  - service
+kind: service
+first_party: true
+domain: G8
+c4:
+  level: component
+  parent: holocene
+status: live
+summary: Watches for new voice memos and sends them to transcription.
+role_in_system: Start of the Holocene memo pipeline.
+tech:
+- typescript
+- whisper
+runtime: service
+relations: []
+evidence:
+- holocene/services/inbox-watcher
+confidence: medium

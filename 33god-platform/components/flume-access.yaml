@@ -1,0 +1,35 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: flume-access
+name: Flume access facade
+role: gateway
+repo: ../flume
+description: The front door that lets Cloudflare Access-authenticated employees reach agent identity data.
+changelog:
+  topics:
+  - g8
+  - gateway
+kind: gateway
+first_party: true
+domain: G8
+c4:
+  level: component
+  parent: flume
+status: live
+summary: The front door that lets Cloudflare Access-authenticated employees reach agent identity data.
+role_in_system: Origin behind identity.delo.sh; verifies the Cloudflare Access JWT and refuses anything else.
+tech:
+- node
+- typescript
+- cloudflare-access
+runtime: systemd user unit flume-access.service (flume access serve), 0.0.0.0:18791; Traefik host identity-origin.delo.sh
+relations:
+- to: cloudflare
+  kind: calls
+  via: Cloudflare Access JWT verification (pinned iss/aud); the agents-facade Worker at identity.delo.sh proxies
+    to this origin
+  evidence: traefik-data/dynamic/flume-access.yml:1-4
+evidence:
+- ss -ltnp :18791 (flume access serve pid 5293)
+- /home/delorenj/docker/core/traefik/traefik-data/dynamic/flume-access.yml
+confidence: medium
+notes: No google-auth middleware by design; trust comes from the Access JWT.

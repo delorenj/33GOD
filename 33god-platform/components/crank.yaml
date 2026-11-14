@@ -1,0 +1,28 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: crank
+name: Crank
+role: agent
+repo: ''
+description: Nudges idle agent panes to keep work moving when the operator is away.
+changelog:
+  topics:
+  - g10
+  - agent
+kind: agent
+first_party: true
+domain: G10
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Nudges idle agent panes to keep work moving when the operator is away.
+role_in_system: Momentum while unattended.
+tech:
+- zellij
+runtime: Driven by Candybar jobs crank-beat (*/5, 1986 runs/7d, hermes-agent runner) and crank-watchdog (*/15),
+  typing into panes via ~/.local/bin/zcrank-send; hook-hub also has crank-tag and crank_keys_guard handlers. Not
+  desktop-only
+relations: []
+evidence:
+- ~/.local/bin/zcrank-send
+confidence: medium

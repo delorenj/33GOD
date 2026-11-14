@@ -35,21 +35,7 @@ compose_projection:
     - never use docker compose down -v
     - never remove adopted or detached legacy volumes during migration
 
-component_files:
-  - components/bloodbank.yaml
-  - components/candystore.yaml
-  - components/holocene.yaml
-  - components/pjangler.yaml
-  - components/flume.yaml
-  - components/hermes-fleet.yaml
-  - components/skillex.yaml
-  - components/hindsight.yaml
-  - components/pipeline-mcp-hub.yaml
-  - components/krebs.yaml
-  - components/momo.yaml
-  - components/heyma.yaml
-  - components/pilot.yaml
-  - components/candybar.yaml
+# Component records: every components/*.yaml (one registry, I-12). No list to keep in sync.
 
 contract_paths:
   - ../bloodbank/docs/event-naming.md
@@ -74,3 +60,76 @@ change_policy:
     - Hermes fleet runtime/profile contract changes
     - skill hub routing changes
     - compose/network/port/secret boundary changes
+
+# --- Atlas (I-12): domain taxonomy and C4 people, rendered by scripts/atlas.py ---
+domains:
+- id: G1
+  name: Bloodbank Core Bus
+  summary: The NATS JetStream event bus, its CloudEvents contract, schemas and the Candystore audit store.
+- id: G2
+  name: Integration Plane
+  summary: n8n workflows and webhooks that turn outside events (Plane tickets, journals) into bus events.
+- id: G3
+  name: Agent Fleet Runtime
+  summary: The Hermes gateway and agent profiles, plus the hook pipeline that reports what agents are doing.
+- id: G4
+  name: Observability
+  summary: Metrics, alerts, exporters and daily reports that show platform health.
+- id: G5
+  name: Project Tooling
+  summary: Project registry, skill catalog, shared project scaffolding and MCP hub used by every repo.
+- id: G6
+  name: Voice Pipeline
+  summary: 'HeyMa: dictation, transcription, intake and text-to-speech.'
+- id: G7
+  name: Enrichment and Memory
+  summary: 'LLM-touching services: embeddings, turn annotation, cost tracking, agent memory and LLM routing.'
+- id: G8
+  name: Orchestration and Apps
+  summary: Ticket dispatch (Krebs), workforce (Flume), ticket CLI (Pilot) and the Holocene operator app.
+- id: G9
+  name: Scheduling
+  summary: Candybar, the single clock that fires every recurring job.
+- id: G10
+  name: Operator Desktop
+  summary: 'Tools that live only on the operator''s workstation: workspace, attention, voice relay, crank.'
+- id: G11
+  name: Client Surface
+  summary: 'What external clients touch: the Genesis liaison, client portal and billing.'
+- id: G12
+  name: Shared Infra
+  summary: 'Third-party infrastructure the platform runs on: databases, proxy, tunnels, secrets, object store.'
+people:
+- id: operator
+  name: Operator
+  summary: The solo owner who runs the platform, steers agents and reviews results.
+  uses:
+  - bb-cli
+  - client-portal
+  - daily-report
+  - deckard
+  - genesis
+  - heyma
+  - holocene
+  - pilot
+  - wingman
+- id: client
+  name: Client
+  summary: Someone who leases a 33GOD agent and talks to it through their Genesis desk.
+  uses:
+  - genesis
+  - genesis-desk-worker
+- id: mirror-operator
+  name: Mirror-site operator
+  summary: A collaborator who runs a mirrored copy of the platform on their own machine.
+  uses:
+  - bloodbank
+  - hook-hub
+  - candystore
+- id: voice-user
+  name: Voice user
+  summary: Someone dictating or sending voice memos into the platform.
+  uses:
+  - vinyl
+  - inbox-watcher
+  - vox

@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: intake
+name: Intake
+role: service
+repo: ../../../HeyMa
+description: Takes transcribed voice notes and files them as tasks or notes.
+changelog:
+  topics:
+  - g6
+  - service
+kind: service
+first_party: true
+domain: G6
+c4:
+  level: component
+  parent: heyma
+status: live
+summary: Takes transcribed voice notes and files them as tasks or notes.
+role_in_system: Without it dictated requests are never acted on.
+tech:
+- python
+runtime: service
+relations: []
+evidence:
+- /home/delorenj/HeyMa
+confidence: medium

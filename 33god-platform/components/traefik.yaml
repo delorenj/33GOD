@@ -1,0 +1,26 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: traefik
+name: Traefik
+role: external
+repo: ../../../docker/core/traefik
+description: Reverse proxy that routes *.delo.sh hostnames to services.
+changelog:
+  topics:
+  - g12
+  - external
+kind: external
+first_party: false
+domain: G12
+c4:
+  level: software-system
+  parent: ''
+status: live
+summary: Reverse proxy that routes *.delo.sh hostnames to services.
+role_in_system: Without it hostnames stop resolving to services.
+tech:
+- traefik
+runtime: docker container
+relations: []
+evidence:
+- /home/delorenj/docker/core/traefik/traefik.yml
+confidence: high

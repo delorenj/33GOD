@@ -1,0 +1,31 @@
+# Atlas record (I-12), imported 2026-11-14 from the four-lens sweep + critic. Edit freely; then `mise run platform:atlas`.
+id: hermes-gw
+name: Hermes gateway
+role: gateway
+repo: ../../../.hermes/hermes-agent
+description: The one long-running process that hosts every agent profile and their chat bots.
+changelog:
+  topics:
+  - g3
+  - gateway
+kind: gateway
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: hermes-fleet
+status: live
+summary: The one long-running process that hosts every agent profile and their chat bots.
+role_in_system: A restart pauses every agent; it is the fleet's only runtime.
+tech:
+- python
+runtime: systemd user unit hermes-gateway.service
+relations:
+- to: aai-gateway
+  kind: routes-llm-via
+  via: OpenAI-compatible provider in config.yaml
+  evidence: /home/delorenj/.hermes/config.yaml
+evidence:
+- systemctl --user status hermes-gateway
+confidence: high
+notes: Restart only via hermes-gateway-restart.
