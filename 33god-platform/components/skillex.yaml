@@ -39,7 +39,11 @@ tech:
 - markdown
 - shell
 runtime: CLI skillex plus auto-resync units
-relations: []
+relations:
+- to: hermes-fleet
+  kind: writes
+  via: resyncs strict desks under ~/.hermes/profiles/<name>
+  evidence: ~/code/skillex/scripts/hermes-skillex-resync.py:718
 evidence:
 - /home/delorenj/code/skillex/all-skills
 confidence: high

@@ -21,7 +21,47 @@ tech:
 - systemd
 - shell
 runtime: native infra-doctor.timer (about every minute) and infra-doctor-deadman.timer (5 min)
-relations: []
+relations:
+- to: n8n
+  kind: calls
+  via: HTTPS probe n8n.delo.sh/healthz
+  evidence: ~/.config/infra-doctor/probes.yaml:17
+- to: hindsight
+  kind: calls
+  via: HTTPS probe api.hs.delo.sh/health
+  evidence: ~/.config/infra-doctor/probes.yaml:27
+- to: aai-gateway
+  kind: calls
+  via: HTTPS probe api.automaticai.io/api/status
+  evidence: ~/.config/infra-doctor/probes.yaml:35
+- to: vox
+  kind: calls
+  via: HTTPS probe vox.delo.sh
+  evidence: ~/.config/infra-doctor/probes.yaml:42
+- to: ntfy
+  kind: calls
+  via: HTTPS probe ntfy.delo.sh/v1/health
+  evidence: ~/.config/infra-doctor/probes.yaml:49
+- to: traefik
+  kind: calls
+  via: HTTPS probe traefik.delo.sh
+  evidence: ~/.config/infra-doctor/probes.yaml:55
+- to: hermes-gw
+  kind: calls
+  via: hermes-gateway-check liveness|channels|restart
+  evidence: ~/.config/infra-doctor/probes.yaml:191
+- to: ntfy
+  kind: calls
+  via: ntfy-alert on probe state change
+  evidence: ~/.local/bin/infra-doctor:693
+- to: candybar-watchdog
+  kind: reads
+  via: file_age ~/.local/state/candybar-watchdog/ok
+  evidence: ~/.config/infra-doctor/probes.yaml:240
+- to: hermes-gateway-watchdog
+  kind: reads
+  via: file_age ~/.local/state/hermes-gateway-watchdog/last-run
+  evidence: ~/.config/infra-doctor/probes.yaml:230
 evidence:
 - systemctl --user list-timers
 - systemctl --user show infra-doctor Description

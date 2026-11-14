@@ -32,7 +32,11 @@ role_in_system: Agents reach shared tools through it.
 tech:
 - mcp
 runtime: unknown
-relations: []
+relations:
+- to: plane
+  kind: wraps
+  via: PlaneDomain registers plane_mcp.tools in-process
+  evidence: mcp-hub/mcp_hub/domains/plane.py:29
 evidence:
 - 33god-platform/components/pipeline-mcp-hub.yaml
 - 'critic (repo): /home/delorenj/code/33GOD/mcp-hub (submodule: Dockerfile, mcp_hub package, mise.toml). No mcp-hub

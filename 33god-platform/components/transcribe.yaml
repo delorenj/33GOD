@@ -20,7 +20,11 @@ role_in_system: Feeds memos into intake.
 tech:
 - whisper
 runtime: service
-relations: []
+relations:
+- to: minio
+  kind: writes
+  via: mc cp to delo/recordings with --archive-s3
+  evidence: ~/HeyMa/bin/transcribe:531
 evidence:
 - 33god-platform/aperture/research/ship-board/data.json (g6)
 - 'critic (summary): No transcription-service compose or container exists. Transcription is the CLI HeyMa/bin/transcribe

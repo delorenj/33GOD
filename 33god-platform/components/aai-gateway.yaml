@@ -33,6 +33,14 @@ relations:
   kind: routes-llm-via
   via: Jev typesafe channel
   evidence: automaticai-gateway-ops skill / gateway channels
+- to: postgres
+  kind: stores-in
+  via: SQL_DSN newapi-postgres (gateway's own instance)
+  evidence: ~/code/client-portal/gateway/compose.yml:33
+- to: redis
+  kind: stores-in
+  via: REDIS_CONN_STRING newapi-redis (gateway's own instance)
+  evidence: ~/code/client-portal/gateway/compose.yml:34
 evidence:
 - docker ps
 confidence: medium

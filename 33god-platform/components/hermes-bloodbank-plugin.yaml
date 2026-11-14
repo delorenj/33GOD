@@ -26,6 +26,14 @@ relations:
   kind: consumes-from
   via: bloodbank.cmd.agent.invocation.start / .invoke
   evidence: /home/delorenj/.hermes/plugins
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.agent.invocation.* / conversation.turn.* lifecycle
+  evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:1608
+- to: agents-registry
+  kind: reads
+  via: extra.fleet_registry ~/.hermes/agents-registry.yaml
+  evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:424
 evidence:
 - /home/delorenj/.hermes/plugins
 - 'critic (repo): Source is /home/delorenj/code/33GOD/bloodbank/services/hermes-gateway (bloodbank_hermes_gateway

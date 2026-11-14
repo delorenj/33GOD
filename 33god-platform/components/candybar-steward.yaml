@@ -21,7 +21,31 @@ tech:
 - python
 - systemd
 runtime: systemd user units candybar-steward.service and candybar-unit-holder.service
-relations: []
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: durable candybar-steward on bloodbank.cmd.cron.candybar.steward
+  evidence: candybar/src/candybar/steward/role.py:122
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.cron.steward_task.* facts
+  evidence: candybar/src/candybar/steward/worker.py:565
+- to: bb-nats
+  kind: consumes-from
+  via: durable candybar-steward-notify on steward_task.>
+  evidence: candybar/src/candybar/steward/notify.py:199
+- to: postgres
+  kind: stores-in
+  via: DATABASE_URL registry; steward task rows
+  evidence: candybar/deploy/host/steward.env.template:8
+- to: pjangler
+  kind: calls
+  via: GET 127.0.0.1:8764/v1/registry
+  evidence: candybar/src/candybar/steward/jev.py:39
+- to: jev-litellm
+  kind: routes-llm-via
+  via: POST jev.delo.sh/typesafe/v1/systemone (CANDYBAR_JEV_URL)
+  evidence: candybar/src/candybar/steward/jev.py:41
 evidence:
 - systemctl --user show candybar-steward candybar-unit-holder Descriptions
 confidence: medium

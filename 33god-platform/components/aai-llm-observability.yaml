@@ -25,6 +25,18 @@ relations:
   kind: reads
   via: gateway usage logs
   evidence: monitoring/aai-llm-observability/main.py
+- to: bb-nats
+  kind: consumes-from
+  via: JetStream BLOODBANK_EVENTS durable, bloodbank.evt.llm.>
+  evidence: monitoring/aai-llm-observability/main.py:1317
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.llm.usage.recorded / allowance.observed
+  evidence: monitoring/aai-llm-observability/main.py:1285
+- to: aai-gateway
+  kind: reads
+  via: route catalog file ops/routes.json (AAI_LLM_ROUTE_CATALOG)
+  evidence: monitoring/compose.yml:114
 evidence:
 - monitoring/aai-llm-observability/main.py
 - monitoring/aai-llm-observability/transform.py

@@ -21,7 +21,43 @@ tech:
 - typescript
 - whisper
 runtime: service
-relations: []
+relations:
+- to: minio
+  kind: reads
+  via: mc ls/cp delo/holocene-auto inbox/ prefix
+  evidence: holocene/services/inbox-watcher/memo_common.py:375
+- to: minio
+  kind: writes
+  via: mc pipe status/ and replies/ objects in holocene-auto
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:626
+- to: transcribe
+  kind: calls
+  via: TRANSCRIBE CLI --no-diarization --ephemeral
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:1636
+- to: vox
+  kind: calls
+  via: POST VOX_URL /synthesize-url
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:4772
+- to: bb-nats
+  kind: publishes-to
+  via: bb-emit command bloodbank.cmd.agent.invocation.invoke|start
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:2398
+- to: bb-nats
+  kind: publishes-to
+  via: bb-emit facts bloodbank.audio.memo.<stage>
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:938
+- to: candystore
+  kind: reads
+  via: GET CANDYSTORE_URL /events?correlationid=<memo_id>
+  evidence: holocene/services/inbox-watcher/memo_common.py:482
+- to: bb-nats
+  kind: calls
+  via: HTTP monitor :8222 /jsz?consumers=true
+  evidence: holocene/services/inbox-watcher/memo_common.py:804
+- to: agents-registry
+  kind: reads
+  via: MEMO_AGENT_REGISTRY registry_route() yaml
+  evidence: holocene/services/inbox-watcher/memo_common.py:178
 evidence:
 - holocene/services/inbox-watcher
 confidence: medium

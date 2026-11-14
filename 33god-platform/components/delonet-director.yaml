@@ -20,7 +20,19 @@ role_in_system: Read model for director/company views; loopback only.
 tech:
 - python
 runtime: systemd user unit delonet-director-api.service, 127.0.0.1:8790
-relations: []
+relations:
+- to: pjangler
+  kind: calls
+  via: GET :8764 /v1/registry (PJ_REGISTRY_URL default)
+  evidence: ~/code/delonet-company/src/delonet_director/registry.py:40
+- to: agents-registry
+  kind: reads
+  via: --fleet-metadata ~/.hermes/agents-registry.yaml
+  evidence: ~/.config/systemd/user/delonet-director-api.service:23
+- to: event-contract
+  kind: reads
+  via: --bloodbank-home contract validator and schemas
+  evidence: ~/.config/systemd/user/delonet-director-api.service:22
 evidence:
 - systemctl --user show delonet-director-api (sqlite capacity.sqlite3 + contracts.sqlite3)
 confidence: medium

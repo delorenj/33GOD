@@ -31,6 +31,26 @@ relations:
   kind: calls
   via: sink files or updates a ticket on the target's board
   evidence: bloodbank/services/target-watch/README.md:1-8
+- to: bb-nats
+  kind: consumes-from
+  via: durable target-watch-matcher, bloodbank.evt.messaging.> and telephony.>
+  evidence: bloodbank/services/target-watch/target_watch/match_service.py:12
+- to: bb-nats
+  kind: consumes-from
+  via: durable target-watch-sink, bloodbank.evt.watch.target.detected
+  evidence: bloodbank/services/target-watch/target_watch/cli.py:130
+- to: ntfy
+  kind: calls
+  via: POST https://ntfy.delo.sh (loud push, ticket button)
+  evidence: bloodbank/services/target-watch/target_watch/sink.py:679
+- to: candystore
+  kind: reads
+  via: GET :8683/events (replay command)
+  evidence: bloodbank/services/target-watch/target_watch/cli.py:169
+- to: onepassword
+  kind: calls
+  via: op read of ntfy token ref
+  evidence: bloodbank/services/target-watch/target_watch/sink.py:651
 evidence:
 - bloodbank/services/target-watch/README.md
 - systemctl --user list-units (both active running)

@@ -20,7 +20,19 @@ role_in_system: The only allowed timer outside Candybar (AD-22).
 tech:
 - systemd
 runtime: candybar-watchdog.timer
-relations: []
+relations:
+- to: candybar
+  kind: calls
+  via: GET candybar.delo.sh/healthz and /candybars
+  evidence: candybar/deploy/watchdog/candybar-watchdog.sh:57
+- to: candybar-executor
+  kind: calls
+  via: systemctl --user is-active candybar-executor.service
+  evidence: candybar/deploy/watchdog/candybar-watchdog.sh:92
+- to: ntfy
+  kind: calls
+  via: ntfy-alert CLI page on OK->FAIL
+  evidence: candybar/deploy/watchdog/candybar-watchdog.sh:101
 evidence:
 - candybar/deploy/watchdog/README.md
 confidence: high

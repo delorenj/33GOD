@@ -26,6 +26,10 @@ relations:
   kind: reads
   via: health probe then systemctl --user restart
   evidence: systemctl --user show hermes-gateway-watchdog Description
+- to: ntfy
+  kind: calls
+  via: ntfy-alert to ntfy.delo.sh/infra
+  evidence: ~/.local/bin/hermes-gateway-watchdog:776
 evidence:
 - systemctl --user list-timers (fires every minute)
 - systemctl --user show hermes-gateway-watchdog

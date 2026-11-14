@@ -20,7 +20,11 @@ role_in_system: Feed metrics into monitoring core.
 tech:
 - prometheus-exporters
 runtime: docker compose
-relations: []
+relations:
+- to: bb-nats
+  kind: reads
+  via: nats-exporter -varz -jsz=all http://bloodbank-nats:8222
+  evidence: monitoring/compose.yml:224
 evidence:
 - monitoring/compose.yml
 confidence: medium

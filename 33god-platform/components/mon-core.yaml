@@ -21,7 +21,35 @@ tech:
 - prometheus
 - grafana
 runtime: docker compose monitoring/compose.yml
-relations: []
+relations:
+- to: mon-alerts
+  kind: calls
+  via: prometheus alerting.alertmanagers alertmanager:9093
+  evidence: monitoring/prometheus/prometheus.yml:17
+- to: aai-llm-observability
+  kind: reads
+  via: prometheus scrape aai-llm-observability:9480
+  evidence: monitoring/prometheus/prometheus.yml:28
+- to: jev-clairic-exporter
+  kind: reads
+  via: prometheus scrape host.docker.internal:9491
+  evidence: monitoring/prometheus/prometheus.yml:32
+- to: candybar
+  kind: reads
+  via: prometheus scrape candybar:8700
+  evidence: monitoring/prometheus/prometheus.yml:73
+- to: candybar-executor
+  kind: reads
+  via: prometheus scrape host.docker.internal:8701
+  evidence: monitoring/prometheus/prometheus.yml:81
+- to: mon-exporters
+  kind: reads
+  via: prometheus scrape nats-exporter:7777
+  evidence: monitoring/prometheus/prometheus.yml:56
+- to: mon-exporters
+  kind: reads
+  via: prometheus scrape node-exporter:9100, cadvisor:8080
+  evidence: monitoring/prometheus/prometheus.yml:41
 evidence:
 - monitoring/compose.yml
 confidence: medium

@@ -19,7 +19,43 @@ summary: Voice relay that types the operator's dictated words into agent session
 role_in_system: Hands-free control of agents.
 tech: []
 runtime: operator desktop
-relations: []
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.crank.<action> raw NATS PUB
+  evidence: ~/code/Wingman/src/wingman/bus.py:91
+- to: bb-nats
+  kind: consumes-from
+  via: deckard.evt.attention subscription
+  evidence: ~/code/Wingman/src/wingman/sources/events.py:138
+- to: asm
+  kind: reads
+  via: redis pubsub asm:transitions and asm:live / asm:a:<scope> hashes
+  evidence: ~/code/Wingman/src/wingman/sources/events.py:104
+- to: crank
+  kind: reads
+  via: redis scan zcrank:tab:*
+  evidence: ~/code/Wingman/src/wingman/sources/fleet.py:47
+- to: pjangler
+  kind: reads
+  via: GET 127.0.0.1:8764/v1/registry
+  evidence: ~/code/Wingman/src/wingman/sources/fleet.py:99
+- to: candystore
+  kind: reads
+  via: GET 127.0.0.1:8683/events
+  evidence: ~/code/Wingman/src/wingman/evidence.py:55
+- to: vox
+  kind: calls
+  via: POST vox.delo.sh /synthesize and /sink/{key}/say
+  evidence: ~/code/Wingman/src/wingman/voice.py:42
+- to: transcribe
+  kind: calls
+  via: POST 127.0.0.1:8766/v1/audio/transcriptions
+  evidence: ~/code/Wingman/src/wingman/voice.py:94
+- to: aai-gateway
+  kind: routes-llm-via
+  via: llm_base_url api.automaticai.io/v1 (pydantic-ai)
+  evidence: ~/code/Wingman/src/wingman/brain.py:56
 evidence:
 - /home/delorenj/code/Wingman
 confidence: medium

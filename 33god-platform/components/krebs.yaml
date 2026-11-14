@@ -47,6 +47,34 @@ relations:
   kind: reads
   via: Plane REST
   evidence: krebs/tick/deps.mjs
+- to: agents-registry
+  kind: reads
+  via: loadHermesRegistry(~/.hermes/agents-registry.yaml)
+  evidence: krebs/bin/krebs.mjs:61
+- to: pilot
+  kind: calls
+  via: import pilot/src/plane.js Plane + config.js homeBinding
+  evidence: krebs/tick/deps.mjs:60
+- to: n8n-nodes-bb
+  kind: calls
+  via: require dist/nats.js publish, buildEnvelope; dist/registry.js
+  evidence: krebs/tick/deps.mjs:40
+- to: bb-nats
+  kind: consumes-from
+  via: durable krebs-execution-v2 on bloodbank.cmd.lifecycle.task.invoke
+  evidence: krebs/src/krebs/service.py:43
+- to: bb-nats
+  kind: publishes-to
+  via: outbox bloodbank.{evt,rpy,cmd}.lifecycle.<entity>.<action>
+  evidence: krebs/src/krebs/service.py:36
+- to: postgres
+  kind: stores-in
+  via: KREBS_DATABASE_URL schema krebs (store, outbox)
+  evidence: krebs/src/krebs/service.py:95
+- to: pilot
+  kind: calls
+  via: node provider-helper.js (KREBS_PILOT_HELPER) apply/read ops
+  evidence: krebs/src/krebs/adapters.py:70
 evidence:
 - krebs/tick/run.mjs
 - krebs/.candybars/krebs-tick.candybar.toml

@@ -19,7 +19,15 @@ summary: Shared scaffolding every project starts from.
 role_in_system: Keeps new repos consistent.
 tech: []
 runtime: template
-relations: []
+relations:
+- to: plane
+  kind: calls
+  via: POST /api/v1/workspaces/{ws}/projects/ (create-plane-project.sh)
+  evidence: ~/code/CommonProject/.mise/scripts/create-plane-project.sh:90
+- to: hook-hub
+  kind: reads
+  via: ~/.config/33god/hook-hub/ownership.json (BB_HOOK_OWNERSHIP)
+  evidence: ~/code/CommonProject/template/.agents/hooks/sync.py:74
 evidence:
 - 33god-platform/aperture/research/ship-board/data.json (g5)
 - 'critic (repo): /home/delorenj/code/CommonProject exists (copier project template per ship-board). Closes open

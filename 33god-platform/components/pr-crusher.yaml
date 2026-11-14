@@ -25,6 +25,14 @@ relations:
   kind: publishes-to
   via: PRC_BLOODBANK_PUBLISH_COMMAND
   evidence: /home/delorenj/code/pr-crusher
+- to: aai-gateway
+  kind: routes-llm-via
+  via: named pr-crusher consumer token on AutomaticAI gateway
+  evidence: ~/code/pr-crusher/src/pr_crusher/providers.py:28
+- to: onepassword
+  kind: reads
+  via: op read of the pr-crusher AutomaticAI token ref
+  evidence: ~/code/pr-crusher/src/pr_crusher/security.py:135
 evidence:
 - /home/delorenj/code/pr-crusher
 confidence: medium

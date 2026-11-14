@@ -52,6 +52,34 @@ relations:
   kind: writes
   via: ~/.hermes/agents-registry.yaml
   evidence: flume-core (only writer)
+- to: pilot
+  kind: calls
+  via: px CLI (FLUME_PX_BIN) runPx
+  evidence: flume/packages/flume-hr/src/workforce/plane.ts:132
+- to: pjangler
+  kind: calls
+  via: GET/POST PJ_REGISTRY_URL :8764 registry service
+  evidence: flume/packages/flume-hr/src/kernel/registryClient.ts:43
+- to: pjangler
+  kind: calls
+  via: pj CLI (PJANGLER_BIN) parity reconcile
+  evidence: flume/packages/flume-hr/src/parity/reconcile.ts:319
+- to: onepassword
+  kind: calls
+  via: op read of vault refs
+  evidence: flume/packages/flume-hr/src/workforce/vault.ts:8
+- to: hermes-gw
+  kind: calls
+  via: hermes-gateway-restart --reason
+  evidence: flume/packages/flume-hr/src/workforce/channel.ts:283
+- to: candybar
+  kind: calls
+  via: GET CANDYBAR_API_URL /candybars (parity check)
+  evidence: flume/packages/flume-hr/src/parity/rules.ts:3027
+- to: cloudflare
+  kind: calls
+  via: Cloudflare API v4 provisioning cfRequest
+  evidence: flume/packages/flume-hr/src/workforce/provision.ts:153
 evidence:
 - 33god-platform/components/flume.yaml
 confidence: high

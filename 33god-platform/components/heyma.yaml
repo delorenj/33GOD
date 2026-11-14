@@ -34,7 +34,15 @@ role_in_system: Without it voice input and spoken output stop.
 tech:
 - python
 runtime: services on big-chungus
-relations: []
+relations:
+- to: wax
+  kind: calls
+  via: bin/heyma and bin/wax launchers exec components/wax/bin/*
+  evidence: ~/HeyMa/bin/heyma:5
+- to: transcribe
+  kind: wraps
+  via: hermes-transcribe-adapter shells out to bin/transcribe
+  evidence: ~/HeyMa/bin/hermes-transcribe-adapter:15
 evidence:
 - /home/delorenj/HeyMa
 - 33god-platform/components/heyma.yaml

@@ -21,7 +21,23 @@ role_in_system: Client visibility.
 tech:
 - typescript
 runtime: unknown
-relations: []
+relations:
+- to: farm-command-bridge
+  kind: calls
+  via: HMAC POST farm-commands.delo.sh /v1/invoice-commands
+  evidence: ~/code/client-portal/wrangler.jsonc:69
+- to: farm-command-bridge
+  kind: calls
+  via: HMAC POST farm-commands.delo.sh /v1/commands (palette)
+  evidence: ~/code/client-portal/wrangler.jsonc:76
+- to: cloudflare
+  kind: stores-in
+  via: D1 binding DB automatic-ai-prod
+  evidence: ~/code/client-portal/wrangler.jsonc:14
+- to: cloudflare
+  kind: calls
+  via: send_email binding EMAIL (auth mail)
+  evidence: ~/code/client-portal/src/server/auth/mail.ts:269
 evidence:
 - /home/delorenj/code/client-portal
 - 'critic (summary): The automaticai.io marketing site plus an INTERNAL operator portal (service inventory, billable

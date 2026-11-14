@@ -22,7 +22,23 @@ tech:
 runtime: Driven by Candybar jobs crank-beat (*/5, 1986 runs/7d, hermes-agent runner) and crank-watchdog (*/15),
   typing into panes via ~/.local/bin/zcrank-send; hook-hub also has crank-tag and crank_keys_guard handlers. Not
   desktop-only
-relations: []
+relations:
+- to: jev-litellm
+  kind: calls
+  via: POST jev.delo.sh/typesafe/v1/systemone (zcrank-gate)
+  evidence: ~/.agents/tools/jev-clairic/bin/zcrank-gate.py:65
+- to: cloudflare
+  kind: calls
+  via: Workers AI @cf/cloudflare/clairic (zcrank-gate)
+  evidence: ~/.agents/tools/jev-clairic/bin/zcrank-gate.py:66
+- to: redis
+  kind: reads
+  via: redis-cli KEYS/HGET zcrank:tab:* and zcrank:config
+  evidence: ~/.agents/tools/jev-clairic/bin/zcrank.py:101
+- to: redis
+  kind: writes
+  via: redis-cli RPUSH zcrank:log:<tab> (zcrankctl)
+  evidence: ~/.agents/tools/jev-clairic/bin/zcrankctl:439
 evidence:
 - ~/.local/bin/zcrank-send
 confidence: medium

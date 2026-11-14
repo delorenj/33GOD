@@ -26,6 +26,10 @@ relations:
   kind: reads
   via: op-token-sync
   evidence: systemctl --user show op-token-guard ExecStart
+- to: ntfy
+  kind: calls
+  via: ntfy-alert on ExecStopPost when sync fails
+  evidence: ~/.config/systemd/user/op-token-guard.service:17
 evidence:
 - systemctl --user list-timers (op-token-guard.timer next Sun 00:01)
 confidence: medium

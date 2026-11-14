@@ -30,6 +30,10 @@ relations:
   kind: calls
   via: ntfy HTTP publish
   evidence: bloodbank/services/ntfy-router/main.py
+- to: onepassword
+  kind: calls
+  via: op run --env-file .env.op (render-env.sh)
+  evidence: bloodbank/services/ntfy-router/render-env.sh:12
 evidence:
 - bloodbank/services/ntfy-router/main.py
 confidence: high

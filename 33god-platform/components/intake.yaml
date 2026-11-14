@@ -20,7 +20,15 @@ role_in_system: Without it dictated requests are never acted on.
 tech:
 - python
 runtime: service
-relations: []
+relations:
+- to: minio
+  kind: reads
+  via: aws s3 s3.delo.sh bucket recordings (Telnyx native recordings)
+  evidence: ~/HeyMa/components/telnyx-s3-intake/intake.py:26
+- to: wax
+  kind: writes
+  via: delivers mp3 files into HeyMa inbox/ directory
+  evidence: ~/HeyMa/components/telnyx-s3-intake/intake.py:460
 evidence:
 - /home/delorenj/HeyMa
 confidence: medium

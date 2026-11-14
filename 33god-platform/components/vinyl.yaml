@@ -20,7 +20,23 @@ role_in_system: Without it live dictation stops.
 tech:
 - python
 runtime: big-chungus :7733
-relations: []
+relations:
+- to: aai-gateway
+  kind: routes-llm-via
+  via: VINYL_CLEANUP_URL api.automaticai.io/v1 chat/completions
+  evidence: ~/HeyMa/components/vinyl/vinyl/sentence_cleanup.py:95
+- to: aai-gateway
+  kind: routes-llm-via
+  via: VINYL_TRANSLATE_URL api.automaticai.io/v1 (live translation)
+  evidence: ~/HeyMa/components/vinyl/vinyl/live/translate.py:32
+- to: jev-litellm
+  kind: calls
+  via: POST jev.delo.sh/typesafe/v1/systemone (dictionary judge)
+  evidence: ~/HeyMa/components/vinyl/vinyl/dictionary.py:87
+- to: wax
+  kind: calls
+  via: imports wax.dictionary and wax.jev from components/wax/src
+  evidence: ~/HeyMa/components/vinyl/vinyl/dictionary.py:216
 evidence:
 - /home/delorenj/HeyMa
 - 'critic (repo): /home/delorenj/code/vinyl (also a HeyMa submodule at HeyMa/components/vinyl). Live units: vinyld.service

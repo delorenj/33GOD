@@ -21,7 +21,15 @@ tech:
 - python
 - asyncpg
 runtime: no systemd unit or container found
-relations: []
+relations:
+- to: krebs
+  kind: wraps
+  via: importlib krebs.project_health.main/reconciler/worker/sweeper
+  evidence: bloodbank/services/lifecycle-controller/src/main.py:7
+- to: postgres
+  kind: stores-in
+  via: DATABASE_URL tables lifecycle_event_outbox etc, shared with candystore pg
+  evidence: bloodbank/services/lifecycle-controller/src/db/001_lifecycle_controller.sql:2
 evidence:
 - bloodbank/services/lifecycle-controller/pyproject.toml (reconciler, sweeper, outbox_publisher modules)
 - systemctl and docker ps show no match

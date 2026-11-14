@@ -48,6 +48,38 @@ relations:
   kind: schedules
   via: hermes runner
   evidence: candybar/README.md
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.cron.tick.fired (heartbeat, JetStream)
+  evidence: candybar/src/candybar/heartbeat/publisher.py:53
+- to: bb-nats
+  kind: consumes-from
+  via: durable candybar-dispatcher-ticks on bloodbank.evt.cron.tick.>
+  evidence: candybar/src/candybar/dispatcher/role.py:77
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.cmd.cron.candybar.invoke (dispatcher)
+  evidence: candybar/src/candybar/dispatcher/worker.py:312
+- to: postgres
+  kind: stores-in
+  via: DATABASE_URL, candybar registry DB (sqlalchemy/psycopg)
+  evidence: candybar/src/candybar/registry/store.py:54
+- to: candybar-executor
+  kind: schedules
+  via: cmd bloodbank.cmd.cron.candybar.invoke on BLOODBANK_COMMANDS
+  evidence: candybar/src/candybar/executor/role.py:76
+- to: candybar-steward
+  kind: calls
+  via: API publishes bloodbank.cmd.cron.candybar.steward
+  evidence: candybar/src/candybar/api/app.py:1229
+- to: n8n-devjournal
+  kind: schedules
+  via: n8n runner webhook candybar/dev-journal-processor
+  evidence: bloodbank/integrations/n8n-workflows/dev-journal/candybar/processor/candybar.toml:10
+- to: plane-hook
+  kind: schedules
+  via: n8n runner webhook candybar/plane-ingress-reconcile
+  evidence: bloodbank/.candybars/plane-ingress-reconcile.candybar.toml:11
 evidence:
 - curl 127.0.0.1:8700/candybars (139 jobs)
 confidence: high

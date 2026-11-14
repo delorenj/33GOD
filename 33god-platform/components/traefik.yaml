@@ -20,7 +20,27 @@ role_in_system: Without it hostnames stop resolving to services.
 tech:
 - traefik
 runtime: docker container
-relations: []
+relations:
+- to: holocene-web
+  kind: calls
+  via: route Host(holocene.delo.sh) google-auth
+  evidence: holocene/compose.yml:29
+- to: agent-pad
+  kind: calls
+  via: route Host(agent-pad.delo.sh)||Host(agents.delo.sh); /upload/ to :8080
+  evidence: ~/docker/stacks/websites/agent-pad/compose.yml:19
+- to: flume-access
+  kind: calls
+  via: route Host(identity-origin.delo.sh) to host :18791
+  evidence: ~/docker/core/traefik/traefik-data/dynamic/flume-access.yml:8
+- to: genesis
+  kind: calls
+  via: route Host(genesis.delo.sh) to :8741
+  evidence: ~/code/genesis/compose.yml:39
+- to: farm-command-bridge
+  kind: calls
+  via: route Host(farm-commands.delo.sh), Host(mercury-hooks.delo.sh)
+  evidence: bloodbank/services/farm-command-bridge/compose.yml:27
 evidence:
 - /home/delorenj/docker/core/traefik/traefik.yml
 confidence: high

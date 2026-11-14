@@ -46,7 +46,11 @@ role_in_system: Replaced by Krebs on 2026-11-14; nothing should depend on it.
 tech:
 - python
 runtime: not running
-relations: []
+relations:
+- to: pilot
+  kind: calls
+  via: px move / px comment
+  evidence: momo/skill/scripts/momo-board.sh:89
 evidence:
 - krebs/docs/lifecycle.md
 - 33god-platform/components/momo.yaml

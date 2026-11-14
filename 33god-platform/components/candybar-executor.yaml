@@ -20,7 +20,27 @@ role_in_system: Without it exec and systemd jobs never execute.
 tech:
 - python
 runtime: host service :8701
-relations: []
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: workqueue durable on bloodbank.cmd.cron.candybar.invoke
+  evidence: candybar/src/candybar/executor/role.py:118
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.cron.candybar.invoked/completed/failed
+  evidence: candybar/src/candybar/executor/worker.py:499
+- to: postgres
+  kind: stores-in
+  via: DATABASE_URL registry; invocation rows
+  evidence: candybar/deploy/host/executor.env.template:8
+- to: n8n
+  kind: calls
+  via: POST {CANDYBAR_N8N_URL}/webhook/<path> (n8n runner)
+  evidence: candybar/src/candybar/executor/n8n_runner.py:38
+- to: hermes-fleet
+  kind: calls
+  via: hermes -p <profile> cron run <job> --wait
+  evidence: candybar/src/candybar/executor/hermes_runner.py:49
 evidence:
 - candybar/README.md
 confidence: medium

@@ -25,6 +25,18 @@ relations:
   kind: calls
   via: HTTP :4000
   evidence: holocene/apps/web
+- to: candybar
+  kind: renders
+  via: /api/modules/candybar/list and /schedule
+  evidence: holocene/apps/web/app/candybar/candybar-app.tsx:367
+- to: delonet-director
+  kind: renders
+  via: /api/modules/director/snapshot
+  evidence: holocene/apps/web/app/director.tsx:185
+- to: hermes-fleet
+  kind: renders
+  via: /api/modules/hermes-fleet/snapshot and /stream (SSE)
+  evidence: holocene/apps/web/app/legacy/page.tsx:460
 evidence:
 - holocene/apps/web
 confidence: medium

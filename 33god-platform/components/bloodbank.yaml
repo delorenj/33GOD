@@ -48,7 +48,31 @@ runtime: No live container belongs to compose project 'bloodbank'. bloodbank/com
   bus (NATS, dapr placement, candystore, enricher) comes from 33god-platform/compose.yaml; bloodbank-owned live
   pieces are host systemd units (hook-hub, artifact-sidecar, artifact-vault-projector, target-watch) and separate
   per-service compose projects (ntfy-router, turn-enricher, cost-bridge, farm-command-bridge)
-relations: []
+relations:
+- to: bb-nats
+  kind: hosts
+  via: compose service nats (nats:2.10 -js)
+  evidence: bloodbank/compose/docker-compose.yml:25
+- to: bb-nats
+  kind: deploys
+  via: nats-init applies compose/nats/streams.json (BLOODBANK_EVENTS/COMMANDS)
+  evidence: bloodbank/compose/docker-compose.yml:55
+- to: bb-dapr
+  kind: hosts
+  via: compose daprd sidecars on pubsub.jetstream bloodbank-pubsub
+  evidence: bloodbank/compose/docker-compose.yml:331
+- to: bb-apicurio
+  kind: hosts
+  via: compose service apicurio-registry :8080
+  evidence: bloodbank/compose/docker-compose.yml:410
+- to: bb-catalog
+  kind: hosts
+  via: compose service eventcatalog :3000
+  evidence: bloodbank/compose/docker-compose.yml:435
+- to: candystore
+  kind: hosts
+  via: compose profile candystore, SUBSCRIBE_TOPIC bloodbank.evt.>
+  evidence: bloodbank/compose/docker-compose.yml:300
 evidence:
 - bloodbank/compose/docker-compose.yml
 - bloodbank/CLAUDE.md:1-25

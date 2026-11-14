@@ -20,7 +20,11 @@ role_in_system: Spoken output for agents and the operator.
 tech:
 - tts
 runtime: service
-relations: []
+relations:
+- to: postgres
+  kind: stores-in
+  via: VOX_DATABASE_URL host postgres db vox
+  evidence: ~/code/voxxy/compose.yml:11
 evidence:
 - /home/delorenj/HeyMa
 - 'critic (repo): /home/delorenj/code/voxxy. Live containers vox (voxxy-vox, healthy) and voxxy-engine-voxcpm from

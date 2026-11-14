@@ -42,6 +42,14 @@ relations:
   kind: reads
   via: ~/.hermes/agents-registry.yaml
   evidence: /home/delorenj/.hermes/agents-registry.yaml
+- to: agents-registry
+  kind: writes
+  via: 80-registry.sh appends agent row to registry file
+  evidence: hermes-agent-template/template/.scripts/80-registry.sh:47
+- to: plane
+  kind: calls
+  via: Plane REST $PLANE_BASE/api/v1/workspaces (ticket provider)
+  evidence: hermes-agent-template/template/.scripts/providers/plane.sh:169
 evidence:
 - /home/delorenj/.hermes/agents-registry.yaml (46 rows, 28 pm)
 confidence: high

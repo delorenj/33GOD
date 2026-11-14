@@ -28,6 +28,18 @@ relations:
   kind: stores-in
   via: asm:live, asm:lane:*, channel asm:transitions
   evidence: redis-cli keys asm:*
+- to: hook-hub
+  kind: calls
+  via: Unix socket 33god/hook-hub.sock, transition op
+  evidence: bloodbank/services/agent-hooks/core/asm.py:331
+- to: pilot
+  kind: calls
+  via: px show <key> --json (asm-orcapaint)
+  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:166
+- to: candystore
+  kind: reads
+  via: GET :8683/events (asm-orcapaint)
+  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:128
 evidence:
 - bloodbank/services/hook-hub/handlers.toml
 confidence: medium

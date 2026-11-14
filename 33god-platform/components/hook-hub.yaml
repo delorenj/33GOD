@@ -29,6 +29,18 @@ relations:
   kind: calls
   via: ~/.agents/hooks/hub/concerns.py handlers
   evidence: bloodbank/services/hook-hub/handlers.toml
+- to: bb-nats
+  kind: publishes-to
+  via: HPUB hook facts to BLOODBANK_EVENTS (bloodbank.agent.hook.updated)
+  evidence: bloodbank/services/hook-hub/observations.py:41
+- to: candystore
+  kind: reads
+  via: GET :8683/events/<id>/raw; candystore context latest
+  evidence: bloodbank/services/hook-hub/concerns.py:293
+- to: candybar
+  kind: reads
+  via: candybar/deploy/scheduling-policy.json, migration/ledger.yaml
+  evidence: bloodbank/services/hook-hub/native_clock_guard.py:92
 evidence:
 - bloodbank/services/hook-hub/handlers.toml (36 handlers)
 confidence: high

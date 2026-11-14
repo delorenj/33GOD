@@ -21,7 +21,19 @@ tech:
 - python
 - prometheus
 runtime: systemd user unit jev-clairic-exporter.service, port 9491, secrets via op run
-relations: []
+relations:
+- to: candystore
+  kind: reads
+  via: GET :8683/events?type=bloodbank.conversation.turn.annotated
+  evidence: ~/.agents/tools/jev-clairic/bin/jev-clairic-exporter:108
+- to: openrouter
+  kind: calls
+  via: GET openrouter.ai/api/v1/keys/<id> (JEV_API_MGMT_KEY)
+  evidence: ~/.agents/tools/jev-clairic/bin/jev-clairic-exporter:86
+- to: onepassword
+  kind: calls
+  via: op run --env-file jev-clairic-exporter.env.op
+  evidence: ~/.agents/tools/jev-clairic/systemd/jev-clairic-exporter.service:9
 evidence:
 - systemctl --user show jev-clairic-exporter
 - Candybar job jev-rollup-cadence */10 enabled (roll-up sidecar for turn events)

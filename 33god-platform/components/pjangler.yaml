@@ -43,7 +43,23 @@ role_in_system: Without it repos drift from the registry and tooling can't find 
 tech:
 - typescript
 runtime: CLI pj plus registry
-relations: []
+relations:
+- to: plane
+  kind: calls
+  via: GET /api/v1/workspaces/{ws}/projects/{board}/ (X-API-Key)
+  evidence: pjangler/src/project/boardQuery.ts:327
+- to: open-notebook
+  kind: calls
+  via: HTTP /api/notebooks, /api/config, /api/auth/status
+  evidence: pjangler/src/notebook/open-notebook-client.ts:171
+- to: redis
+  kind: writes
+  via: redis-cli zcrank:tab:<tab> hashes (pj crank)
+  evidence: pjangler/src/crank/index.ts:303
+- to: skillex
+  kind: wraps
+  via: pj skills passes through to bundled @delorenj/skillex bin
+  evidence: pjangler/src/skills/cli.ts:124
 evidence:
 - ~/.config/pjangler/projects.yaml
 - 'critic (repo): Repo is /home/delorenj/code/33GOD/pjangler (submodule; ~/code/pjangler does not exist). Runtime

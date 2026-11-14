@@ -21,7 +21,15 @@ tech:
 - python
 - dapr
 runtime: compose sandbox only (bloodbank-heartbeat-tick, bloodbank-heartbeat-recorder); no container running
-relations: []
+relations:
+- to: bb-dapr
+  kind: calls
+  via: POST /v1.0/publish/bloodbank-pubsub/<topic>
+  evidence: bloodbank/services/heartbeat-tick/main.py:92
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.system.heartbeat.received via Dapr
+  evidence: bloodbank/services/heartbeat-tick/main.py:47
 evidence:
 - bloodbank/compose/docker-compose.yml:185-249
 - docker ps shows no heartbeat container

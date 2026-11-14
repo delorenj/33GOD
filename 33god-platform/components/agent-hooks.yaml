@@ -29,6 +29,18 @@ relations:
   kind: reads
   via: core/validate.py allowlists
   evidence: bloodbank/services/agent-hooks/core/validate.py
+- to: asm
+  kind: calls
+  via: core.asm.record() on every hook
+  evidence: bloodbank/services/agent-hooks/core/publisher.py:168
+- to: bb-nats
+  kind: publishes-to
+  via: deckard.evt.attention
+  evidence: bloodbank/services/agent-hooks/core/publisher.py:352
+- to: redis
+  kind: writes
+  via: SET holocene:tooling:stat:* hook health snapshot
+  evidence: bloodbank/services/agent-hooks/core/redis_publish.py:30
 evidence:
 - bloodbank/CLAUDE.md:190-195
 confidence: high

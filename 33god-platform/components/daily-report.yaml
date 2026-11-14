@@ -27,6 +27,18 @@ relations:
   kind: reads
   via: Candystore API :8683
   evidence: skillex/all-skills/delonet-daily-report
+- to: candybar
+  kind: reads
+  via: GET :8700/candybars (fleet_health collector)
+  evidence: ~/code/skillex/all-skills/delonet-daily-report/scripts/collectors/fleet_health.py:433
+- to: open-notebook
+  kind: writes
+  via: POST /api/notes in notebook 'Dev Journal'
+  evidence: ~/code/skillex/all-skills/delonet-daily-report/scripts/distribute.py:427
+- to: bb-nats
+  kind: publishes-to
+  via: Dapr :3504 bloodbank-pubsub, bloodbank.evt.reporting.report.*
+  evidence: ~/code/skillex/all-skills/delonet-daily-report/scripts/run.py:879
 evidence:
 - /home/delorenj/code/skillex/all-skills/delonet-daily-report
 confidence: medium

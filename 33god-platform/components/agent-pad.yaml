@@ -22,7 +22,35 @@ tech:
 runtime: Two docker containers agent-pad-web (nginx) and agent-pad-upload (python, 127.0.0.1:8698) from /home/delorenj/docker/stacks/websites/agent-pad,
   plus holocene-pad-roster.service which is inactive between runs because the Candybar job holocene-pad-roster (*/2)
   fires it
-relations: []
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: core NATS bloodbank.evt.audio.memo.{uploaded,played,notified,failed}, audio.earshot.*
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1033
+- to: bb-nats
+  kind: consumes-from
+  via: core SUB bloodbank.evt.audio.memo.> and agent.invocation.progressed
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1334
+- to: minio
+  kind: writes
+  via: mc cp delo/holocene-auto/inbox/<agent>/... (upload proxy)
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1444
+- to: minio
+  kind: reads
+  via: https://s3.delo.sh/holocene-auto replies/ status/ polled by the pad
+  evidence: holocene/apps/agent-pad/src/main.tsx:24
+- to: inbox-watcher
+  kind: calls
+  via: POST WATCHER_WAKE_URL :8697/wake
+  evidence: holocene/services/upload-proxy/upload_proxy.py:121
+- to: agents-registry
+  kind: reads
+  via: pad_roster.py yaml.safe_load of agents-registry.yaml
+  evidence: holocene/services/pad-roster/pad_roster.py:95
+- to: holocene-api
+  kind: reads
+  via: HOLOCENE_AVATAR_DIR ~/.local/share/holocene/avatars
+  evidence: holocene/services/pad-roster/pad_roster.py:44
 evidence:
 - holocene/services/pad-roster
 confidence: medium

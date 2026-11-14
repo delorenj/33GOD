@@ -19,7 +19,19 @@ summary: A Stream Deck control surface for the operator's terminal workspace.
 role_in_system: Operator awareness; reads attention events.
 tech: []
 runtime: operator desktop
-relations: []
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: bloodbank.evt.agent.{tool,session,invocation}.> and conversation.turn.>
+  evidence: ~/code/deckard/crates/deckard-approve/src/bus.rs:64
+- to: bb-nats
+  kind: consumes-from
+  via: deckard.evt.attention
+  evidence: ~/code/deckard/crates/deckard-approve/src/bus.rs:79
+- to: bb-nats
+  kind: publishes-to
+  via: deckard.evt.attention from installed attention hook
+  evidence: ~/code/deckard/crates/deckard-daemon/src/hooks.rs:169
 evidence:
 - /home/delorenj/code/deckard
 - 'critic (summary): Stream Deck control surface for Zellij (systemd deckard.service, ~/.local/bin/deckard run).

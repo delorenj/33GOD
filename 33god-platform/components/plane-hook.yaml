@@ -31,6 +31,42 @@ relations:
   kind: publishes-to
   via: bloodbank.evt.repo.task.*
   evidence: /home/delorenj/code/delonet-n8n-workflows/INDEX.md
+- to: bb-nats
+  kind: consumes-from
+  via: plane.ticket.created/transitioned (Ticket Triage trigger)
+  evidence: ~/code/delonet-n8n-workflows/workflows/ticket-triage--6wAGA5pdrmHLyhs2.json:63
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.cmd.agent.invocation.start (Triage Ticket node)
+  evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/nodes/Fleet/Fleet.node.ts:827
+- to: bb-nats
+  kind: consumes-from
+  via: bloodbank.agent.invocation.started/completed/failed (chip)
+  evidence: ~/code/delonet-n8n-workflows/workflows/ticket-pickup-chip--wWXgCZiiIBWaRRzE.json:176
+- to: plane
+  kind: writes
+  via: Plane REST labels/issues (agent:working chip)
+  evidence: ~/code/delonet-n8n-workflows/workflows/ticket-pickup-chip--wWXgCZiiIBWaRRzE.json:378
+- to: candystore
+  kind: reads
+  via: GET :8683/events (stale chip sweep)
+  evidence: ~/code/delonet-n8n-workflows/workflows/ticket-pickup-chip--wWXgCZiiIBWaRRzE.json:446
+- to: plane
+  kind: reads
+  via: Plane REST list issues (Ingress Reconcile)
+  evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/reconcile.ts:116
+- to: ntfy
+  kind: calls
+  via: n8n-nodes-ntfy-client ntfySend (triage, unrouted)
+  evidence: ~/code/delonet-n8n-workflows/workflows/ticket-triage--6wAGA5pdrmHLyhs2.json:122
+- to: n8n
+  kind: calls
+  via: GET 127.0.0.1:5678/api/v1/executions/<id>
+  evidence: ~/code/delonet-n8n-workflows/workflows/lifecycle-lane-errors--72y5JKBSJqYIjIEv.json:93
+- to: n8n-nodes-bb
+  kind: calls
+  via: node types planeBloodbank/bloodbankFleet/bloodbankTrigger
+  evidence: ~/code/delonet-n8n-workflows/workflows/plane-bloodbank--iMw484J1ZCqKME2C.json:104
 evidence:
 - /home/delorenj/code/delonet-n8n-workflows/INDEX.md
 confidence: medium

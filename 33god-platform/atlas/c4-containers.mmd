@@ -79,43 +79,201 @@ flowchart LR
   end
   c_aai_gateway -->|routes-llm-via| c_openrouter
   c_aai_gateway -->|routes-llm-via| c_jev_litellm
+  c_aai_gateway -->|stores-in| c_postgres
+  c_aai_gateway -->|stores-in| c_redis
   c_mon_core -->|reads| c_aai_gateway
+  c_mon_core -->|consumes-from| c_bloodbank
+  c_mon_core -->|publishes-to| c_bloodbank
   c_hook_hub -->|publishes-to| c_bloodbank
   c_hook_hub -->|reads| c_bloodbank
+  c_hook_hub -->|writes| c_redis
+  c_holocene -->|publishes-to| c_bloodbank
+  c_holocene -->|consumes-from| c_bloodbank
+  c_holocene -->|writes| c_minio
+  c_holocene -->|reads| c_minio
+  c_holocene -->|reads| c_hermes_fleet
   c_artifact_sidecar -->|consumes-from| c_bloodbank
+  c_artifact_sidecar -->|publishes-to| c_bloodbank
+  c_artifact_sidecar -->|calls| c_pjangler
   c_artifact_vault_projector -->|consumes-from| c_artifact_sidecar
+  c_artifact_vault_projector -->|consumes-from| c_bloodbank
+  c_artifact_vault_projector -->|reads| c_artifact_sidecar
   c_hook_hub -->|stores-in| c_redis
+  c_hook_hub -->|calls| c_pilot
+  c_hook_hub -->|reads| c_candystore
+  c_bloodbank -->|hosts| c_candystore
   c_candybar -->|schedules| c_krebs
   c_candybar -->|schedules| c_n8n
   c_candybar -->|schedules| c_hermes_fleet
+  c_candybar -->|publishes-to| c_bloodbank
+  c_candybar -->|consumes-from| c_bloodbank
+  c_candybar -->|stores-in| c_postgres
+  c_candybar -->|calls| c_n8n
+  c_candybar -->|calls| c_hermes_fleet
+  c_candybar -->|calls| c_pjangler
+  c_candybar -->|routes-llm-via| c_jev_litellm
+  c_candybar -->|calls| c_ntfy
   c_candystore -->|consumes-from| c_bloodbank
   c_candystore -->|stores-in| c_postgres
+  c_candystore -->|calls| c_pjangler
+  c_client_portal -->|calls| c_farm_command_bridge
+  c_client_portal -->|stores-in| c_cloudflare
+  c_client_portal -->|calls| c_cloudflare
+  c_commonproject -->|calls| c_plane
+  c_commonproject -->|reads| c_hook_hub
   c_cost_bridge -->|publishes-to| c_bloodbank
+  c_cost_bridge -->|consumes-from| c_bloodbank
+  c_cost_bridge -->|calls| c_client_portal
+  c_crank -->|calls| c_jev_litellm
+  c_crank -->|calls| c_cloudflare
+  c_crank -->|reads| c_redis
+  c_crank -->|writes| c_redis
+  c_curator -->|calls| c_hermes_fleet
+  c_curator -->|calls| c_hindsight
   c_daily_report -->|reads| c_candystore
+  c_daily_report -->|reads| c_candybar
+  c_daily_report -->|writes| c_open_notebook
+  c_daily_report -->|publishes-to| c_bloodbank
+  c_deckard -->|consumes-from| c_bloodbank
+  c_deckard -->|publishes-to| c_bloodbank
+  c_delonet_director -->|calls| c_pjangler
+  c_delonet_director -->|reads| c_hermes_fleet
+  c_delonet_director -->|reads| c_bloodbank
   c_enricher -->|consumes-from| c_bloodbank
   c_enricher -->|writes| c_candystore
+  c_enricher -->|publishes-to| c_bloodbank
+  c_enricher -->|reads| c_candystore
+  c_enricher -->|routes-llm-via| c_aai_gateway
   c_farm_command_bridge -->|publishes-to| c_bloodbank
   c_flume -->|writes| c_hermes_fleet
+  c_flume -->|calls| c_pilot
+  c_flume -->|calls| c_pjangler
+  c_flume -->|calls| c_onepassword
+  c_flume -->|calls| c_hermes_fleet
+  c_flume -->|calls| c_candybar
   c_flume -->|calls| c_cloudflare
+  c_flume -->|reads| c_hermes_fleet
   c_genesis -->|routes-llm-via| c_aai_gateway
+  c_genesis -->|publishes-to| c_bloodbank
+  c_genesis -->|calls| c_hook_hub
+  c_heartbeat_tick -->|calls| c_bloodbank
+  c_heartbeat_tick -->|publishes-to| c_bloodbank
   c_hermes_fleet -->|consumes-from| c_bloodbank
+  c_hermes_fleet -->|publishes-to| c_bloodbank
+  c_hermes_fleet -->|calls| c_plane
+  c_hermes_fleet -->|calls| c_ntfy
   c_hermes_fleet -->|routes-llm-via| c_aai_gateway
+  c_hermes_fleet -->|calls| c_hindsight
+  c_hermes_fleet -->|calls| c_heyma
   c_hindsight -->|routes-llm-via| c_aai_gateway
   c_holocene -->|calls| c_candybar
   c_holocene -->|reads| c_candystore
+  c_holocene -->|reads| c_redis
+  c_holocene -->|writes| c_redis
+  c_holocene -->|calls| c_delonet_director
+  c_holocene -->|calls| c_pjangler
+  c_holocene -->|calls| c_heyma
+  c_holocene -->|calls| c_n8n
+  c_holocene -->|calls| c_onepassword
+  c_holocene -->|calls| c_mon_core
+  c_holocene -->|renders| c_candybar
+  c_holocene -->|renders| c_delonet_director
+  c_holocene -->|renders| c_hermes_fleet
   c_hook_hub -->|calls| c_hindsight
+  c_hook_hub -->|reads| c_candybar
+  c_holocene -->|calls| c_bloodbank
+  c_infra_doctor -->|calls| c_n8n
+  c_infra_doctor -->|calls| c_hindsight
+  c_infra_doctor -->|calls| c_aai_gateway
+  c_infra_doctor -->|calls| c_heyma
+  c_infra_doctor -->|calls| c_ntfy
+  c_infra_doctor -->|calls| c_traefik
+  c_infra_doctor -->|calls| c_hermes_fleet
+  c_infra_doctor -->|reads| c_candybar
+  c_infra_doctor -->|reads| c_hermes_fleet
+  c_heyma -->|reads| c_minio
+  c_mon_core -->|reads| c_candystore
+  c_mon_core -->|calls| c_openrouter
+  c_mon_core -->|calls| c_onepassword
   c_krebs -->|publishes-to| c_bloodbank
   c_krebs -->|reads| c_plane
+  c_krebs -->|reads| c_hermes_fleet
+  c_krebs -->|calls| c_pilot
+  c_krebs -->|calls| c_n8n
+  c_krebs -->|consumes-from| c_bloodbank
+  c_krebs -->|stores-in| c_postgres
+  c_lifecycle_controller -->|wraps| c_krebs
+  c_lifecycle_controller -->|stores-in| c_postgres
   c_milkshake -->|consumes-from| c_bloodbank
+  c_milkshake -->|publishes-to| c_bloodbank
+  c_milkshake -->|calls| c_client_portal
+  c_milkshake -->|routes-llm-via| c_aai_gateway
+  c_milkshake -->|routes-llm-via| c_jev_litellm
+  c_milkshake -->|calls| c_openrouter
+  c_milkshake -->|stores-in| c_postgres
+  c_milkshake -->|calls| c_onepassword
+  c_momo -->|calls| c_pilot
+  c_mon_core -->|reads| c_candybar
+  c_mon_core -->|reads| c_bloodbank
   c_n8n -->|publishes-to| c_bloodbank
+  c_n8n -->|consumes-from| c_bloodbank
+  c_n8n -->|routes-llm-via| c_aai_gateway
+  c_n8n -->|reads| c_pjangler
+  c_n8n -->|reads| c_hermes_fleet
+  c_n8n -->|calls| c_plane
+  c_n8n -->|reads| c_bloodbank
   c_ntfy_router -->|consumes-from| c_bloodbank
   c_ntfy_router -->|calls| c_ntfy
+  c_ntfy_router -->|calls| c_onepassword
+  c_onepassword -->|calls| c_ntfy
   c_pilot -->|calls| c_plane
+  c_pilot -->|calls| c_onepassword
+  c_pilot -->|calls| c_pjangler
+  c_pilot -->|calls| c_krebs
+  c_pilot -->|reads| c_krebs
+  c_pilot -->|calls| c_bloodbank
+  c_pilot -->|publishes-to| c_bloodbank
+  c_pipeline_mcp_hub -->|wraps| c_plane
+  c_pjangler -->|calls| c_plane
+  c_pjangler -->|calls| c_open_notebook
+  c_pjangler -->|writes| c_redis
+  c_pjangler -->|wraps| c_skillex
   c_n8n -->|consumes-from| c_plane
+  c_n8n -->|writes| c_plane
+  c_n8n -->|reads| c_candystore
+  c_n8n -->|reads| c_plane
+  c_n8n -->|calls| c_ntfy
   c_pr_crusher -->|publishes-to| c_bloodbank
+  c_pr_crusher -->|routes-llm-via| c_aai_gateway
+  c_pr_crusher -->|reads| c_onepassword
+  c_shortwave -->|calls| c_heyma
+  c_skillex -->|writes| c_hermes_fleet
   c_target_watch -->|publishes-to| c_bloodbank
   c_target_watch -->|calls| c_pilot
+  c_target_watch -->|consumes-from| c_bloodbank
+  c_target_watch -->|calls| c_ntfy
+  c_target_watch -->|reads| c_candystore
+  c_target_watch -->|calls| c_onepassword
+  c_traefik -->|calls| c_holocene
+  c_traefik -->|calls| c_flume
+  c_traefik -->|calls| c_genesis
+  c_traefik -->|calls| c_farm_command_bridge
+  c_heyma -->|writes| c_minio
   c_turn_enricher -->|consumes-from| c_bloodbank
   c_turn_enricher -->|publishes-to| c_bloodbank
   c_turn_enricher -->|calls| c_jev_litellm
   c_turn_enricher -->|calls| c_cloudflare
+  c_heyma -->|routes-llm-via| c_aai_gateway
+  c_heyma -->|calls| c_jev_litellm
+  c_heyma -->|stores-in| c_postgres
+  c_heyma -->|publishes-to| c_bloodbank
+  c_heyma -->|calls| c_pjangler
+  c_heyma -->|calls| c_pilot
+  c_wingman -->|publishes-to| c_bloodbank
+  c_wingman -->|consumes-from| c_bloodbank
+  c_wingman -->|reads| c_hook_hub
+  c_wingman -->|reads| c_crank
+  c_wingman -->|reads| c_pjangler
+  c_wingman -->|reads| c_candystore
+  c_wingman -->|calls| c_heyma
+  c_wingman -->|routes-llm-via| c_aai_gateway

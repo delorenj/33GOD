@@ -20,7 +20,31 @@ role_in_system: Core of the voice pipeline.
 tech:
 - python
 runtime: daemon waxd
-relations: []
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.audio.* (task, session, transcription) via raw NATS TCP
+  evidence: ~/HeyMa/components/wax/src/wax/events.py:215
+- to: pjangler
+  kind: calls
+  via: GET project registry service 127.0.0.1:8764
+  evidence: ~/HeyMa/components/wax/src/wax/pjregistry.py:40
+- to: transcribe
+  kind: calls
+  via: WAX_TRANSCRIBE / transcribe CLI subprocess
+  evidence: ~/HeyMa/components/wax/src/wax/transcribe_adapter.py:173
+- to: jev-litellm
+  kind: calls
+  via: POST jev.delo.sh/typesafe/v1/systemone (classification passes)
+  evidence: ~/HeyMa/components/wax/src/wax/jev.py:35
+- to: aai-gateway
+  kind: routes-llm-via
+  via: api.automaticai.io/v1 chat/completions (title, summarize, tickets)
+  evidence: ~/HeyMa/components/wax/bin/wax:144
+- to: pilot
+  kind: calls
+  via: px CLI files failure tickets on HEYMA board (wax failures sweep)
+  evidence: ~/HeyMa/components/wax/src/wax/failures.py:63
 evidence:
 - /home/delorenj/HeyMa
 confidence: medium

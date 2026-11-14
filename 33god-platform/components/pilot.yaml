@@ -41,6 +41,30 @@ relations:
   kind: calls
   via: REST https://plane.delo.sh
   evidence: pilot default base
+- to: onepassword
+  kind: calls
+  via: op read of op:// key refs
+  evidence: pilot/src/secrets.js:26
+- to: pjangler
+  kind: calls
+  via: pj list --json (PILOT_PJ)
+  evidence: pilot/src/providers/registry.js:61
+- to: krebs
+  kind: calls
+  via: python -m krebs.capability (KREBS_CAPABILITY_PYTHON)
+  evidence: pilot/src/provider-helper.js:49
+- to: krebs
+  kind: reads
+  via: KREBS_MANIFESTS / ~/.config/krebs/manifests.json ownership registry
+  evidence: pilot/src/config.js:138
+- to: bb-cli
+  kind: calls
+  via: spawnSync bb call (stdin envelope)
+  evidence: pilot/src/lifecycle.js:73
+- to: bb-nats
+  kind: publishes-to
+  via: command bloodbank.cmd.lifecycle.task.invoke (request/reply)
+  evidence: pilot/src/lifecycle.js:67
 evidence:
 - /home/delorenj/code/pilot/README.md
 - 'critic (repo): /home/delorenj/code/33GOD/pilot (submodule). /home/delorenj/code/pilot does not exist. The conflicts_resolved

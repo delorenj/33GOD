@@ -27,6 +27,14 @@ relations:
   kind: publishes-to
   via: NATS publish
   evidence: bloodbank/services/cost-bridge/main.py
+- to: bb-nats
+  kind: consumes-from
+  via: pull consumer portal-cost-observations-v1 on BLOODBANK_EVENTS
+  evidence: bloodbank/services/cost-bridge/main.py:351
+- to: client-portal
+  kind: calls
+  via: POST COST_PORTAL_URL (automaticai.io/api/cost-observations)
+  evidence: bloodbank/services/cost-bridge/main.py:221
 evidence:
 - bloodbank/services/cost-bridge/main.py
 - 'critic (summary): A narrow HTTPS ingress plus permanent archive that accepts billing cost observations onto the

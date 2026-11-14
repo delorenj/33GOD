@@ -27,6 +27,14 @@ relations:
   kind: consumes-from
   via: NATS subscription
   evidence: bloodbank/services/artifact-sidecar/main.py
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.project.artifact.created
+  evidence: bloodbank/services/artifact-sidecar/main.py:318
+- to: pjangler
+  kind: calls
+  via: GET :8764/v1/registry (project slug lookup)
+  evidence: bloodbank/services/artifact-sidecar/main.py:194
 evidence:
 - bloodbank/services/artifact-sidecar/main.py
 confidence: medium

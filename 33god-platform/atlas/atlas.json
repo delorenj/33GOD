@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "f43a171f75c7557032a76eed24c3512b13e6859ec17553f2b824343a7b1eebec",
+  "registry_digest": "cb78f7ac81f0b5d3688e65cd8f25a5eed9e4d1a9ceff2c3424c51877c2f58e40",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -1730,10 +1730,40 @@
       "via": "Jev typesafe channel"
     },
     {
+      "from": "aai-gateway",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "SQL_DSN newapi-postgres (gateway's own instance)"
+    },
+    {
+      "from": "aai-gateway",
+      "to": "redis",
+      "kind": "stores-in",
+      "via": "REDIS_CONN_STRING newapi-redis (gateway's own instance)"
+    },
+    {
       "from": "aai-llm-observability",
       "to": "aai-gateway",
       "kind": "reads",
       "via": "gateway usage logs"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "JetStream BLOODBANK_EVENTS durable, bloodbank.evt.llm.>"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.llm.usage.recorded / allowance.observed"
+    },
+    {
+      "from": "aai-llm-observability",
+      "to": "aai-gateway",
+      "kind": "reads",
+      "via": "route catalog file ops/routes.json (AAI_LLM_ROUTE_CATALOG)"
     },
     {
       "from": "agent-hooks",
@@ -1748,10 +1778,82 @@
       "via": "core/validate.py allowlists"
     },
     {
+      "from": "agent-hooks",
+      "to": "asm",
+      "kind": "calls",
+      "via": "core.asm.record() on every hook"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "deckard.evt.attention"
+    },
+    {
+      "from": "agent-hooks",
+      "to": "redis",
+      "kind": "writes",
+      "via": "SET holocene:tooling:stat:* hook health snapshot"
+    },
+    {
+      "from": "agent-pad",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "core NATS bloodbank.evt.audio.memo.{uploaded,played,notified,failed}, audio.earshot.*"
+    },
+    {
+      "from": "agent-pad",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "core SUB bloodbank.evt.audio.memo.> and agent.invocation.progressed"
+    },
+    {
+      "from": "agent-pad",
+      "to": "minio",
+      "kind": "writes",
+      "via": "mc cp delo/holocene-auto/inbox/<agent>/... (upload proxy)"
+    },
+    {
+      "from": "agent-pad",
+      "to": "minio",
+      "kind": "reads",
+      "via": "https://s3.delo.sh/holocene-auto replies/ status/ polled by the pad"
+    },
+    {
+      "from": "agent-pad",
+      "to": "inbox-watcher",
+      "kind": "calls",
+      "via": "POST WATCHER_WAKE_URL :8697/wake"
+    },
+    {
+      "from": "agent-pad",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "pad_roster.py yaml.safe_load of agents-registry.yaml"
+    },
+    {
+      "from": "agent-pad",
+      "to": "holocene-api",
+      "kind": "reads",
+      "via": "HOLOCENE_AVATAR_DIR ~/.local/share/holocene/avatars"
+    },
+    {
       "from": "artifact-sidecar",
       "to": "bb-nats",
       "kind": "consumes-from",
       "via": "NATS subscription"
+    },
+    {
+      "from": "artifact-sidecar",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.project.artifact.created"
+    },
+    {
+      "from": "artifact-sidecar",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "GET :8764/v1/registry (project slug lookup)"
     },
     {
       "from": "artifact-vault-projector",
@@ -1760,16 +1862,64 @@
       "via": "bloodbank.evt.project.artifact.created"
     },
     {
+      "from": "artifact-vault-projector",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable on bloodbank.evt.project.artifact.created"
+    },
+    {
+      "from": "artifact-vault-projector",
+      "to": "artifact-sidecar",
+      "kind": "reads",
+      "via": "content store dir ARTIFACT_VAULT_STORE (read-only)"
+    },
+    {
       "from": "asm",
       "to": "redis",
       "kind": "stores-in",
       "via": "asm:live, asm:lane:*, channel asm:transitions"
     },
     {
+      "from": "asm",
+      "to": "hook-hub",
+      "kind": "calls",
+      "via": "Unix socket 33god/hook-hub.sock, transition op"
+    },
+    {
+      "from": "asm",
+      "to": "pilot",
+      "kind": "calls",
+      "via": "px show <key> --json (asm-orcapaint)"
+    },
+    {
+      "from": "asm",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET :8683/events (asm-orcapaint)"
+    },
+    {
       "from": "bb-cli",
       "to": "bb-nats",
       "kind": "publishes-to",
       "via": "bb emit"
+    },
+    {
+      "from": "bb-cli",
+      "to": "event-contract",
+      "kind": "reads",
+      "via": "bb contract / verify-envelope import core.validate"
+    },
+    {
+      "from": "bb-cli",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bb call: PUB command subject on core NATS"
+    },
+    {
+      "from": "bb-cli",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "bb call: SUB bloodbank.rpy.lifecycle.task.invoke reply"
     },
     {
       "from": "bb-dapr",
@@ -1782,6 +1932,42 @@
       "to": "hook-hub",
       "kind": "calls",
       "via": "Unix socket $XDG_RUNTIME_DIR/33god/hook-hub.sock"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-nats",
+      "kind": "hosts",
+      "via": "compose service nats (nats:2.10 -js)"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-nats",
+      "kind": "deploys",
+      "via": "nats-init applies compose/nats/streams.json (BLOODBANK_EVENTS/COMMANDS)"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-dapr",
+      "kind": "hosts",
+      "via": "compose daprd sidecars on pubsub.jetstream bloodbank-pubsub"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-apicurio",
+      "kind": "hosts",
+      "via": "compose service apicurio-registry :8080"
+    },
+    {
+      "from": "bloodbank",
+      "to": "bb-catalog",
+      "kind": "hosts",
+      "via": "compose service eventcatalog :3000"
+    },
+    {
+      "from": "bloodbank",
+      "to": "candystore",
+      "kind": "hosts",
+      "via": "compose profile candystore, SUBSCRIBE_TOPIC bloodbank.evt.>"
     },
     {
       "from": "candybar",
@@ -1802,6 +1988,138 @@
       "via": "hermes runner"
     },
     {
+      "from": "candybar",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.cron.tick.fired (heartbeat, JetStream)"
+    },
+    {
+      "from": "candybar",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable candybar-dispatcher-ticks on bloodbank.evt.cron.tick.>"
+    },
+    {
+      "from": "candybar",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.cmd.cron.candybar.invoke (dispatcher)"
+    },
+    {
+      "from": "candybar",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "DATABASE_URL, candybar registry DB (sqlalchemy/psycopg)"
+    },
+    {
+      "from": "candybar",
+      "to": "candybar-executor",
+      "kind": "schedules",
+      "via": "cmd bloodbank.cmd.cron.candybar.invoke on BLOODBANK_COMMANDS"
+    },
+    {
+      "from": "candybar",
+      "to": "candybar-steward",
+      "kind": "calls",
+      "via": "API publishes bloodbank.cmd.cron.candybar.steward"
+    },
+    {
+      "from": "candybar",
+      "to": "n8n-devjournal",
+      "kind": "schedules",
+      "via": "n8n runner webhook candybar/dev-journal-processor"
+    },
+    {
+      "from": "candybar",
+      "to": "plane-hook",
+      "kind": "schedules",
+      "via": "n8n runner webhook candybar/plane-ingress-reconcile"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "workqueue durable on bloodbank.cmd.cron.candybar.invoke"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.cron.candybar.invoked/completed/failed"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "DATABASE_URL registry; invocation rows"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "n8n",
+      "kind": "calls",
+      "via": "POST {CANDYBAR_N8N_URL}/webhook/<path> (n8n runner)"
+    },
+    {
+      "from": "candybar-executor",
+      "to": "hermes-fleet",
+      "kind": "calls",
+      "via": "hermes -p <profile> cron run <job> --wait"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable candybar-steward on bloodbank.cmd.cron.candybar.steward"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.cron.steward_task.* facts"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable candybar-steward-notify on steward_task.>"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "DATABASE_URL registry; steward task rows"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "GET 127.0.0.1:8764/v1/registry"
+    },
+    {
+      "from": "candybar-steward",
+      "to": "jev-litellm",
+      "kind": "routes-llm-via",
+      "via": "POST jev.delo.sh/typesafe/v1/systemone (CANDYBAR_JEV_URL)"
+    },
+    {
+      "from": "candybar-watchdog",
+      "to": "candybar",
+      "kind": "calls",
+      "via": "GET candybar.delo.sh/healthz and /candybars"
+    },
+    {
+      "from": "candybar-watchdog",
+      "to": "candybar-executor",
+      "kind": "calls",
+      "via": "systemctl --user is-active candybar-executor.service"
+    },
+    {
+      "from": "candybar-watchdog",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "ntfy-alert CLI page on OK->FAIL"
+    },
+    {
       "from": "candystore",
       "to": "bb-dapr",
       "kind": "consumes-from",
@@ -1814,16 +2132,160 @@
       "via": "Postgres :5434"
     },
     {
+      "from": "candystore",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "pjangler list --json (project sync)"
+    },
+    {
+      "from": "client-portal",
+      "to": "farm-command-bridge",
+      "kind": "calls",
+      "via": "HMAC POST farm-commands.delo.sh /v1/invoice-commands"
+    },
+    {
+      "from": "client-portal",
+      "to": "farm-command-bridge",
+      "kind": "calls",
+      "via": "HMAC POST farm-commands.delo.sh /v1/commands (palette)"
+    },
+    {
+      "from": "client-portal",
+      "to": "cloudflare",
+      "kind": "stores-in",
+      "via": "D1 binding DB automatic-ai-prod"
+    },
+    {
+      "from": "client-portal",
+      "to": "cloudflare",
+      "kind": "calls",
+      "via": "send_email binding EMAIL (auth mail)"
+    },
+    {
+      "from": "commonproject",
+      "to": "plane",
+      "kind": "calls",
+      "via": "POST /api/v1/workspaces/{ws}/projects/ (create-plane-project.sh)"
+    },
+    {
+      "from": "commonproject",
+      "to": "hook-hub",
+      "kind": "reads",
+      "via": "~/.config/33god/hook-hub/ownership.json (BB_HOOK_OWNERSHIP)"
+    },
+    {
       "from": "cost-bridge",
       "to": "bb-nats",
       "kind": "publishes-to",
       "via": "NATS publish"
     },
     {
+      "from": "cost-bridge",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "pull consumer portal-cost-observations-v1 on BLOODBANK_EVENTS"
+    },
+    {
+      "from": "cost-bridge",
+      "to": "client-portal",
+      "kind": "calls",
+      "via": "POST COST_PORTAL_URL (automaticai.io/api/cost-observations)"
+    },
+    {
+      "from": "crank",
+      "to": "jev-litellm",
+      "kind": "calls",
+      "via": "POST jev.delo.sh/typesafe/v1/systemone (zcrank-gate)"
+    },
+    {
+      "from": "crank",
+      "to": "cloudflare",
+      "kind": "calls",
+      "via": "Workers AI @cf/cloudflare/clairic (zcrank-gate)"
+    },
+    {
+      "from": "crank",
+      "to": "redis",
+      "kind": "reads",
+      "via": "redis-cli KEYS/HGET zcrank:tab:* and zcrank:config"
+    },
+    {
+      "from": "crank",
+      "to": "redis",
+      "kind": "writes",
+      "via": "redis-cli RPUSH zcrank:log:<tab> (zcrankctl)"
+    },
+    {
+      "from": "curator",
+      "to": "hermes-fleet",
+      "kind": "calls",
+      "via": "hermes chat --query ... --skills curate (CLI, own profile)"
+    },
+    {
+      "from": "curator",
+      "to": "hindsight",
+      "kind": "calls",
+      "via": "hindsight memory recall <bank> (CLI)"
+    },
+    {
       "from": "daily-report",
       "to": "candystore",
       "kind": "reads",
       "via": "Candystore API :8683"
+    },
+    {
+      "from": "daily-report",
+      "to": "candybar",
+      "kind": "reads",
+      "via": "GET :8700/candybars (fleet_health collector)"
+    },
+    {
+      "from": "daily-report",
+      "to": "open-notebook",
+      "kind": "writes",
+      "via": "POST /api/notes in notebook 'Dev Journal'"
+    },
+    {
+      "from": "daily-report",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "Dapr :3504 bloodbank-pubsub, bloodbank.evt.reporting.report.*"
+    },
+    {
+      "from": "deckard",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "bloodbank.evt.agent.{tool,session,invocation}.> and conversation.turn.>"
+    },
+    {
+      "from": "deckard",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "deckard.evt.attention"
+    },
+    {
+      "from": "deckard",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "deckard.evt.attention from installed attention hook"
+    },
+    {
+      "from": "delonet-director",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "GET :8764 /v1/registry (PJ_REGISTRY_URL default)"
+    },
+    {
+      "from": "delonet-director",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "--fleet-metadata ~/.hermes/agents-registry.yaml"
+    },
+    {
+      "from": "delonet-director",
+      "to": "event-contract",
+      "kind": "reads",
+      "via": "--bloodbank-home contract validator and schemas"
     },
     {
       "from": "enricher",
@@ -1838,6 +2300,24 @@
       "via": "Postgres pgvector"
     },
     {
+      "from": "enricher",
+      "to": "bb-dapr",
+      "kind": "publishes-to",
+      "via": "POST enricher-daprd:3501 publish bloodbank-pubsub (report.session.completed)"
+    },
+    {
+      "from": "enricher",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET candystore:3001/sessions/{session_id}"
+    },
+    {
+      "from": "enricher",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "POST api.automaticai.io/v1/chat/completions (session summary)"
+    },
+    {
       "from": "farm-command-bridge",
       "to": "bb-nats",
       "kind": "publishes-to",
@@ -1850,10 +2330,64 @@
       "via": "~/.hermes/agents-registry.yaml"
     },
     {
+      "from": "flume",
+      "to": "pilot",
+      "kind": "calls",
+      "via": "px CLI (FLUME_PX_BIN) runPx"
+    },
+    {
+      "from": "flume",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "GET/POST PJ_REGISTRY_URL :8764 registry service"
+    },
+    {
+      "from": "flume",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "pj CLI (PJANGLER_BIN) parity reconcile"
+    },
+    {
+      "from": "flume",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op read of vault refs"
+    },
+    {
+      "from": "flume",
+      "to": "hermes-gw",
+      "kind": "calls",
+      "via": "hermes-gateway-restart --reason"
+    },
+    {
+      "from": "flume",
+      "to": "candybar",
+      "kind": "calls",
+      "via": "GET CANDYBAR_API_URL /candybars (parity check)"
+    },
+    {
+      "from": "flume",
+      "to": "cloudflare",
+      "kind": "calls",
+      "via": "Cloudflare API v4 provisioning cfRequest"
+    },
+    {
       "from": "flume-access",
       "to": "cloudflare",
       "kind": "calls",
       "via": "Cloudflare Access JWT verification (pinned iss/aud); the agents-facade Worker at identity.delo.sh proxies to this origin"
+    },
+    {
+      "from": "flume-access",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "identityCensus() registryRows"
+    },
+    {
+      "from": "flume-access",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op read of GitHub App private key"
     },
     {
       "from": "genesis",
@@ -1862,10 +2396,46 @@
       "via": "gateway keys in container env"
     },
     {
+      "from": "genesis",
+      "to": "genesis-desk-worker",
+      "kind": "calls",
+      "via": "A2A v1 SendMessage POST GENESIS_DESK_URL/agents/a2a"
+    },
+    {
+      "from": "genesis",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "JetStream bloodbank.cmd.agent.invocation.start (fleet gate)"
+    },
+    {
+      "from": "genesis",
+      "to": "agent-hooks",
+      "kind": "calls",
+      "via": "import services/agent-hooks core.envelope.build_envelope"
+    },
+    {
       "from": "genesis-desk-worker",
       "to": "genesis",
       "kind": "calls",
       "via": "HTTPS to :8741 via tunnel"
+    },
+    {
+      "from": "genesis-desk-worker",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "GATEWAY_BASE_URL https://api.automaticai.io/v1"
+    },
+    {
+      "from": "heartbeat-tick",
+      "to": "bb-dapr",
+      "kind": "calls",
+      "via": "POST /v1.0/publish/bloodbank-pubsub/<topic>"
+    },
+    {
+      "from": "heartbeat-tick",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.system.heartbeat.received via Dapr"
     },
     {
       "from": "hermes-bloodbank-plugin",
@@ -1874,10 +2444,40 @@
       "via": "bloodbank.cmd.agent.invocation.start / .invoke"
     },
     {
+      "from": "hermes-bloodbank-plugin",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.agent.invocation.* / conversation.turn.* lifecycle"
+    },
+    {
+      "from": "hermes-bloodbank-plugin",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "extra.fleet_registry ~/.hermes/agents-registry.yaml"
+    },
+    {
+      "from": "hermes-dashboard",
+      "to": "hermes-gw",
+      "kind": "reads",
+      "via": "per-profile gateway_state.json runtime status"
+    },
+    {
       "from": "hermes-fleet",
       "to": "agents-registry",
       "kind": "reads",
       "via": "~/.hermes/agents-registry.yaml"
+    },
+    {
+      "from": "hermes-fleet",
+      "to": "agents-registry",
+      "kind": "writes",
+      "via": "80-registry.sh appends agent row to registry file"
+    },
+    {
+      "from": "hermes-fleet",
+      "to": "plane",
+      "kind": "calls",
+      "via": "Plane REST $PLANE_BASE/api/v1/workspaces (ticket provider)"
     },
     {
       "from": "hermes-gateway-watchdog",
@@ -1886,10 +2486,52 @@
       "via": "health probe then systemctl --user restart"
     },
     {
+      "from": "hermes-gateway-watchdog",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "ntfy-alert to ntfy.delo.sh/infra"
+    },
+    {
       "from": "hermes-gw",
       "to": "aai-gateway",
       "kind": "routes-llm-via",
       "via": "OpenAI-compatible provider in config.yaml"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "hermes-bloodbank-plugin",
+      "kind": "hosts",
+      "via": "plugins.enabled bloodbank-platform in config.yaml"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "hermes-fleet",
+      "kind": "hosts",
+      "via": "agents-registry gateways.bloodbank scope fleet, hermes-gateway.service"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "hindsight",
+      "kind": "calls",
+      "via": "memory.provider hindsight, GET /version and bank API"
+    },
+    {
+      "from": "hermes-gw",
+      "to": "vox",
+      "kind": "calls",
+      "via": "tts.vox.base_url https://vox.delo.sh"
+    },
+    {
+      "from": "heyma",
+      "to": "wax",
+      "kind": "calls",
+      "via": "bin/heyma and bin/wax launchers exec components/wax/bin/*"
+    },
+    {
+      "from": "heyma",
+      "to": "transcribe",
+      "kind": "wraps",
+      "via": "hermes-transcribe-adapter shells out to bin/transcribe"
     },
     {
       "from": "hindsight",
@@ -1910,10 +2552,94 @@
       "via": "Candystore HTTP"
     },
     {
+      "from": "holocene-api",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "JetStream BLOODBANK_EVENTS, filter bloodbank.evt.>"
+    },
+    {
+      "from": "holocene-api",
+      "to": "redis",
+      "kind": "reads",
+      "via": "asm:live zset and asm:a:<scope> hashes"
+    },
+    {
+      "from": "holocene-api",
+      "to": "redis",
+      "kind": "reads",
+      "via": "key holocene:tooling:stat:* (hook health/tests/telemetry)"
+    },
+    {
+      "from": "holocene-api",
+      "to": "redis",
+      "kind": "writes",
+      "via": "key holocene:tooling:stat:* with TTL"
+    },
+    {
+      "from": "holocene-api",
+      "to": "delonet-director",
+      "kind": "calls",
+      "via": "GET :8790 /v1/capacity,/v1/receipts,/v1/readiness,/v1/contracts/*"
+    },
+    {
+      "from": "holocene-api",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "GET PJ_REGISTRY_URL :8764 /v1/registry"
+    },
+    {
+      "from": "holocene-api",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "HERMES_REGISTRY_PATH ~/.hermes/agents-registry.yaml"
+    },
+    {
+      "from": "holocene-api",
+      "to": "wax",
+      "kind": "calls",
+      "via": "execFile wax --json catalog (WAX_EXECUTABLE)"
+    },
+    {
+      "from": "holocene-api",
+      "to": "n8n",
+      "kind": "calls",
+      "via": "POST N8N_WEBHOOK_BASE_URL /webhook/clock{in,out}, GET /webhook/clockstate"
+    },
+    {
+      "from": "holocene-api",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op read of Telegram bot token refs (avatar sync)"
+    },
+    {
+      "from": "holocene-api",
+      "to": "mon-core",
+      "kind": "calls",
+      "via": "Prometheus GET /api/v1/query_range (PROMETHEUS_URL :9472)"
+    },
+    {
       "from": "holocene-web",
       "to": "holocene-api",
       "kind": "calls",
       "via": "HTTP :4000"
+    },
+    {
+      "from": "holocene-web",
+      "to": "candybar",
+      "kind": "renders",
+      "via": "/api/modules/candybar/list and /schedule"
+    },
+    {
+      "from": "holocene-web",
+      "to": "delonet-director",
+      "kind": "renders",
+      "via": "/api/modules/director/snapshot"
+    },
+    {
+      "from": "holocene-web",
+      "to": "hermes-fleet",
+      "kind": "renders",
+      "via": "/api/modules/hermes-fleet/snapshot and /stream (SSE)"
     },
     {
       "from": "hook-hub",
@@ -1928,6 +2654,168 @@
       "via": "~/.agents/hooks/hub/concerns.py handlers"
     },
     {
+      "from": "hook-hub",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "HPUB hook facts to BLOODBANK_EVENTS (bloodbank.agent.hook.updated)"
+    },
+    {
+      "from": "hook-hub",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET :8683/events/<id>/raw; candystore context latest"
+    },
+    {
+      "from": "hook-hub",
+      "to": "candybar",
+      "kind": "reads",
+      "via": "candybar/deploy/scheduling-policy.json, migration/ledger.yaml"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "minio",
+      "kind": "reads",
+      "via": "mc ls/cp delo/holocene-auto inbox/ prefix"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "minio",
+      "kind": "writes",
+      "via": "mc pipe status/ and replies/ objects in holocene-auto"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "transcribe",
+      "kind": "calls",
+      "via": "TRANSCRIBE CLI --no-diarization --ephemeral"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "vox",
+      "kind": "calls",
+      "via": "POST VOX_URL /synthesize-url"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bb-emit command bloodbank.cmd.agent.invocation.invoke|start"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bb-emit facts bloodbank.audio.memo.<stage>"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET CANDYSTORE_URL /events?correlationid=<memo_id>"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "bb-nats",
+      "kind": "calls",
+      "via": "HTTP monitor :8222 /jsz?consumers=true"
+    },
+    {
+      "from": "inbox-watcher",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "MEMO_AGENT_REGISTRY registry_route() yaml"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "n8n",
+      "kind": "calls",
+      "via": "HTTPS probe n8n.delo.sh/healthz"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "hindsight",
+      "kind": "calls",
+      "via": "HTTPS probe api.hs.delo.sh/health"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "aai-gateway",
+      "kind": "calls",
+      "via": "HTTPS probe api.automaticai.io/api/status"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "vox",
+      "kind": "calls",
+      "via": "HTTPS probe vox.delo.sh"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "HTTPS probe ntfy.delo.sh/v1/health"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "traefik",
+      "kind": "calls",
+      "via": "HTTPS probe traefik.delo.sh"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "hermes-gw",
+      "kind": "calls",
+      "via": "hermes-gateway-check liveness|channels|restart"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "ntfy-alert on probe state change"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "candybar-watchdog",
+      "kind": "reads",
+      "via": "file_age ~/.local/state/candybar-watchdog/ok"
+    },
+    {
+      "from": "infra-doctor",
+      "to": "hermes-gateway-watchdog",
+      "kind": "reads",
+      "via": "file_age ~/.local/state/hermes-gateway-watchdog/last-run"
+    },
+    {
+      "from": "intake",
+      "to": "minio",
+      "kind": "reads",
+      "via": "aws s3 s3.delo.sh bucket recordings (Telnyx native recordings)"
+    },
+    {
+      "from": "intake",
+      "to": "wax",
+      "kind": "writes",
+      "via": "delivers mp3 files into HeyMa inbox/ directory"
+    },
+    {
+      "from": "jev-clairic-exporter",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET :8683/events?type=bloodbank.conversation.turn.annotated"
+    },
+    {
+      "from": "jev-clairic-exporter",
+      "to": "openrouter",
+      "kind": "calls",
+      "via": "GET openrouter.ai/api/v1/keys/<id> (JEV_API_MGMT_KEY)"
+    },
+    {
+      "from": "jev-clairic-exporter",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op run --env-file jev-clairic-exporter.env.op"
+    },
+    {
       "from": "krebs",
       "to": "bb-nats",
       "kind": "publishes-to",
@@ -1938,6 +2826,60 @@
       "to": "plane",
       "kind": "reads",
       "via": "Plane REST"
+    },
+    {
+      "from": "krebs",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "loadHermesRegistry(~/.hermes/agents-registry.yaml)"
+    },
+    {
+      "from": "krebs",
+      "to": "pilot",
+      "kind": "calls",
+      "via": "import pilot/src/plane.js Plane + config.js homeBinding"
+    },
+    {
+      "from": "krebs",
+      "to": "n8n-nodes-bb",
+      "kind": "calls",
+      "via": "require dist/nats.js publish, buildEnvelope; dist/registry.js"
+    },
+    {
+      "from": "krebs",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable krebs-execution-v2 on bloodbank.cmd.lifecycle.task.invoke"
+    },
+    {
+      "from": "krebs",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "outbox bloodbank.{evt,rpy,cmd}.lifecycle.<entity>.<action>"
+    },
+    {
+      "from": "krebs",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "KREBS_DATABASE_URL schema krebs (store, outbox)"
+    },
+    {
+      "from": "krebs",
+      "to": "pilot",
+      "kind": "calls",
+      "via": "node provider-helper.js (KREBS_PILOT_HELPER) apply/read ops"
+    },
+    {
+      "from": "lifecycle-controller",
+      "to": "krebs",
+      "kind": "wraps",
+      "via": "importlib krebs.project_health.main/reconciler/worker/sweeper"
+    },
+    {
+      "from": "lifecycle-controller",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "DATABASE_URL tables lifecycle_event_outbox etc, shared with candystore pg"
     },
     {
       "from": "milkshake",
@@ -1952,16 +2894,196 @@
       "via": "bloodbank.cmd.billing.invoice.generate (milkshake-farm-consumer)"
     },
     {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.billing.* (ledger outbox, command results)"
+    },
+    {
+      "from": "milkshake",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable milkshake-mercury-hook on bloodbank.cmd.billing.transaction.receive"
+    },
+    {
+      "from": "milkshake",
+      "to": "client-portal",
+      "kind": "calls",
+      "via": "POST MILKSHAKE_FARM_URL /api/milkshake-snapshot (ms farm push)"
+    },
+    {
+      "from": "milkshake",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "POST api.automaticai.io chat completions (category namer)"
+    },
+    {
+      "from": "milkshake",
+      "to": "jev-litellm",
+      "kind": "routes-llm-via",
+      "via": "POST jev.delo.sh/typesafe/v1/systemone"
+    },
+    {
+      "from": "milkshake",
+      "to": "openrouter",
+      "kind": "calls",
+      "via": "GET openrouter.ai/api/v1/key (usage squeeze)"
+    },
+    {
+      "from": "milkshake",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "milkshake-postgres 127.0.0.1:5441 ledger"
+    },
+    {
+      "from": "milkshake",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op run --env-file .env.vendors.op/.env.consumer.op"
+    },
+    {
+      "from": "momo",
+      "to": "pilot",
+      "kind": "calls",
+      "via": "px move / px comment"
+    },
+    {
+      "from": "mon-alerts",
+      "to": "aai-llm-observability",
+      "kind": "reads",
+      "via": "rule expr automaticai_llm_allowance_collection_*"
+    },
+    {
+      "from": "mon-alerts",
+      "to": "jev-clairic-exporter",
+      "kind": "reads",
+      "via": "rule expr jev_key_up, clairic_errors_1h"
+    },
+    {
+      "from": "mon-alerts",
+      "to": "mon-exporters",
+      "kind": "reads",
+      "via": "rule expr jetstream_consumer_* from nats-exporter"
+    },
+    {
+      "from": "mon-core",
+      "to": "mon-alerts",
+      "kind": "calls",
+      "via": "prometheus alerting.alertmanagers alertmanager:9093"
+    },
+    {
+      "from": "mon-core",
+      "to": "aai-llm-observability",
+      "kind": "reads",
+      "via": "prometheus scrape aai-llm-observability:9480"
+    },
+    {
+      "from": "mon-core",
+      "to": "jev-clairic-exporter",
+      "kind": "reads",
+      "via": "prometheus scrape host.docker.internal:9491"
+    },
+    {
+      "from": "mon-core",
+      "to": "candybar",
+      "kind": "reads",
+      "via": "prometheus scrape candybar:8700"
+    },
+    {
+      "from": "mon-core",
+      "to": "candybar-executor",
+      "kind": "reads",
+      "via": "prometheus scrape host.docker.internal:8701"
+    },
+    {
+      "from": "mon-core",
+      "to": "mon-exporters",
+      "kind": "reads",
+      "via": "prometheus scrape nats-exporter:7777"
+    },
+    {
+      "from": "mon-core",
+      "to": "mon-exporters",
+      "kind": "reads",
+      "via": "prometheus scrape node-exporter:9100, cadvisor:8080"
+    },
+    {
+      "from": "mon-exporters",
+      "to": "bb-nats",
+      "kind": "reads",
+      "via": "nats-exporter -varz -jsz=all http://bloodbank-nats:8222"
+    },
+    {
       "from": "n8n",
       "to": "bb-nats",
       "kind": "publishes-to",
       "via": "n8n-nodes-bloodbank node, repo.task.* events"
     },
     {
+      "from": "n8n-devjournal",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "bloodbank.reporting.report.completed (durable trigger)"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.reporting.journal.received"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.reporting.incident.observed"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "POST api.automaticai.io/v1/chat/completions"
+    },
+    {
+      "from": "n8n-devjournal",
+      "to": "n8n-nodes-bb",
+      "kind": "calls",
+      "via": "node types bloodbankTrigger/devJournal/bloodbank"
+    },
+    {
       "from": "n8n-nodes-bb",
       "to": "bb-nats",
       "kind": "publishes-to",
       "via": "NATS publish"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "BloodbankTrigger durable consumer on BLOODBANK_EVENTS"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "pjangler",
+      "kind": "reads",
+      "via": "GET :8764/v1/registry (Plane board routes)"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "agents-registry",
+      "kind": "reads",
+      "via": "~/.hermes/agents-registry.yaml (Fleet node)"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "plane",
+      "kind": "calls",
+      "via": "Plane REST via planeReader (reconcile)"
+    },
+    {
+      "from": "n8n-nodes-bb",
+      "to": "event-contract",
+      "kind": "reads",
+      "via": "codegen reads bloodbank/schemas/** for node events"
     },
     {
       "from": "ntfy-router",
@@ -1976,10 +3098,22 @@
       "via": "ntfy HTTP publish"
     },
     {
+      "from": "ntfy-router",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op run --env-file .env.op (render-env.sh)"
+    },
+    {
       "from": "op-token-guard",
       "to": "onepassword",
       "kind": "reads",
       "via": "op-token-sync"
+    },
+    {
+      "from": "op-token-guard",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "ntfy-alert on ExecStopPost when sync fails"
     },
     {
       "from": "pdf2md",
@@ -1994,6 +3128,72 @@
       "via": "REST https://plane.delo.sh"
     },
     {
+      "from": "pilot",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op read of op:// key refs"
+    },
+    {
+      "from": "pilot",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "pj list --json (PILOT_PJ)"
+    },
+    {
+      "from": "pilot",
+      "to": "krebs",
+      "kind": "calls",
+      "via": "python -m krebs.capability (KREBS_CAPABILITY_PYTHON)"
+    },
+    {
+      "from": "pilot",
+      "to": "krebs",
+      "kind": "reads",
+      "via": "KREBS_MANIFESTS / ~/.config/krebs/manifests.json ownership registry"
+    },
+    {
+      "from": "pilot",
+      "to": "bb-cli",
+      "kind": "calls",
+      "via": "spawnSync bb call (stdin envelope)"
+    },
+    {
+      "from": "pilot",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "command bloodbank.cmd.lifecycle.task.invoke (request/reply)"
+    },
+    {
+      "from": "pipeline-mcp-hub",
+      "to": "plane",
+      "kind": "wraps",
+      "via": "PlaneDomain registers plane_mcp.tools in-process"
+    },
+    {
+      "from": "pjangler",
+      "to": "plane",
+      "kind": "calls",
+      "via": "GET /api/v1/workspaces/{ws}/projects/{board}/ (X-API-Key)"
+    },
+    {
+      "from": "pjangler",
+      "to": "open-notebook",
+      "kind": "calls",
+      "via": "HTTP /api/notebooks, /api/config, /api/auth/status"
+    },
+    {
+      "from": "pjangler",
+      "to": "redis",
+      "kind": "writes",
+      "via": "redis-cli zcrank:tab:<tab> hashes (pj crank)"
+    },
+    {
+      "from": "pjangler",
+      "to": "skillex",
+      "kind": "wraps",
+      "via": "pj skills passes through to bundled @delorenj/skillex bin"
+    },
+    {
       "from": "plane-hook",
       "to": "plane",
       "kind": "consumes-from",
@@ -2006,10 +3206,88 @@
       "via": "bloodbank.evt.repo.task.*"
     },
     {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "plane.ticket.created/transitioned (Ticket Triage trigger)"
+    },
+    {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.cmd.agent.invocation.start (Triage Ticket node)"
+    },
+    {
+      "from": "plane-hook",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "bloodbank.agent.invocation.started/completed/failed (chip)"
+    },
+    {
+      "from": "plane-hook",
+      "to": "plane",
+      "kind": "writes",
+      "via": "Plane REST labels/issues (agent:working chip)"
+    },
+    {
+      "from": "plane-hook",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET :8683/events (stale chip sweep)"
+    },
+    {
+      "from": "plane-hook",
+      "to": "plane",
+      "kind": "reads",
+      "via": "Plane REST list issues (Ingress Reconcile)"
+    },
+    {
+      "from": "plane-hook",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "n8n-nodes-ntfy-client ntfySend (triage, unrouted)"
+    },
+    {
+      "from": "plane-hook",
+      "to": "n8n",
+      "kind": "calls",
+      "via": "GET 127.0.0.1:5678/api/v1/executions/<id>"
+    },
+    {
+      "from": "plane-hook",
+      "to": "n8n-nodes-bb",
+      "kind": "calls",
+      "via": "node types planeBloodbank/bloodbankFleet/bloodbankTrigger"
+    },
+    {
       "from": "pr-crusher",
       "to": "bb-nats",
       "kind": "publishes-to",
       "via": "PRC_BLOODBANK_PUBLISH_COMMAND"
+    },
+    {
+      "from": "pr-crusher",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "named pr-crusher consumer token on AutomaticAI gateway"
+    },
+    {
+      "from": "pr-crusher",
+      "to": "onepassword",
+      "kind": "reads",
+      "via": "op read of the pr-crusher AutomaticAI token ref"
+    },
+    {
+      "from": "shortwave",
+      "to": "vinyl",
+      "kind": "calls",
+      "via": "VinylSession to vinyl serve :7733 (mic stream)"
+    },
+    {
+      "from": "skillex",
+      "to": "hermes-fleet",
+      "kind": "writes",
+      "via": "resyncs strict desks under ~/.hermes/profiles/<name>"
     },
     {
       "from": "target-watch",
@@ -2022,6 +3300,72 @@
       "to": "pilot",
       "kind": "calls",
       "via": "sink files or updates a ticket on the target's board"
+    },
+    {
+      "from": "target-watch",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable target-watch-matcher, bloodbank.evt.messaging.> and telephony.>"
+    },
+    {
+      "from": "target-watch",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable target-watch-sink, bloodbank.evt.watch.target.detected"
+    },
+    {
+      "from": "target-watch",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "POST https://ntfy.delo.sh (loud push, ticket button)"
+    },
+    {
+      "from": "target-watch",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET :8683/events (replay command)"
+    },
+    {
+      "from": "target-watch",
+      "to": "onepassword",
+      "kind": "calls",
+      "via": "op read of ntfy token ref"
+    },
+    {
+      "from": "traefik",
+      "to": "holocene-web",
+      "kind": "calls",
+      "via": "route Host(holocene.delo.sh) google-auth"
+    },
+    {
+      "from": "traefik",
+      "to": "agent-pad",
+      "kind": "calls",
+      "via": "route Host(agent-pad.delo.sh)||Host(agents.delo.sh); /upload/ to :8080"
+    },
+    {
+      "from": "traefik",
+      "to": "flume-access",
+      "kind": "calls",
+      "via": "route Host(identity-origin.delo.sh) to host :18791"
+    },
+    {
+      "from": "traefik",
+      "to": "genesis",
+      "kind": "calls",
+      "via": "route Host(genesis.delo.sh) to :8741"
+    },
+    {
+      "from": "traefik",
+      "to": "farm-command-bridge",
+      "kind": "calls",
+      "via": "route Host(farm-commands.delo.sh), Host(mercury-hooks.delo.sh)"
+    },
+    {
+      "from": "transcribe",
+      "to": "minio",
+      "kind": "writes",
+      "via": "mc cp to delo/recordings with --archive-s3"
     },
     {
       "from": "turn-enricher",
@@ -2046,6 +3390,126 @@
       "to": "cloudflare",
       "kind": "calls",
       "via": "Workers AI @cf/cloudflare/clairic"
+    },
+    {
+      "from": "vinyl",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "VINYL_CLEANUP_URL api.automaticai.io/v1 chat/completions"
+    },
+    {
+      "from": "vinyl",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "VINYL_TRANSLATE_URL api.automaticai.io/v1 (live translation)"
+    },
+    {
+      "from": "vinyl",
+      "to": "jev-litellm",
+      "kind": "calls",
+      "via": "POST jev.delo.sh/typesafe/v1/systemone (dictionary judge)"
+    },
+    {
+      "from": "vinyl",
+      "to": "wax",
+      "kind": "calls",
+      "via": "imports wax.dictionary and wax.jev from components/wax/src"
+    },
+    {
+      "from": "vox",
+      "to": "postgres",
+      "kind": "stores-in",
+      "via": "VOX_DATABASE_URL host postgres db vox"
+    },
+    {
+      "from": "wax",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.audio.* (task, session, transcription) via raw NATS TCP"
+    },
+    {
+      "from": "wax",
+      "to": "pjangler",
+      "kind": "calls",
+      "via": "GET project registry service 127.0.0.1:8764"
+    },
+    {
+      "from": "wax",
+      "to": "transcribe",
+      "kind": "calls",
+      "via": "WAX_TRANSCRIBE / transcribe CLI subprocess"
+    },
+    {
+      "from": "wax",
+      "to": "jev-litellm",
+      "kind": "calls",
+      "via": "POST jev.delo.sh/typesafe/v1/systemone (classification passes)"
+    },
+    {
+      "from": "wax",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "api.automaticai.io/v1 chat/completions (title, summarize, tickets)"
+    },
+    {
+      "from": "wax",
+      "to": "pilot",
+      "kind": "calls",
+      "via": "px CLI files failure tickets on HEYMA board (wax failures sweep)"
+    },
+    {
+      "from": "wingman",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bloodbank.evt.crank.<action> raw NATS PUB"
+    },
+    {
+      "from": "wingman",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "deckard.evt.attention subscription"
+    },
+    {
+      "from": "wingman",
+      "to": "asm",
+      "kind": "reads",
+      "via": "redis pubsub asm:transitions and asm:live / asm:a:<scope> hashes"
+    },
+    {
+      "from": "wingman",
+      "to": "crank",
+      "kind": "reads",
+      "via": "redis scan zcrank:tab:*"
+    },
+    {
+      "from": "wingman",
+      "to": "pjangler",
+      "kind": "reads",
+      "via": "GET 127.0.0.1:8764/v1/registry"
+    },
+    {
+      "from": "wingman",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET 127.0.0.1:8683/events"
+    },
+    {
+      "from": "wingman",
+      "to": "vox",
+      "kind": "calls",
+      "via": "POST vox.delo.sh /synthesize and /sink/{key}/say"
+    },
+    {
+      "from": "wingman",
+      "to": "transcribe",
+      "kind": "calls",
+      "via": "POST 127.0.0.1:8766/v1/audio/transcriptions"
+    },
+    {
+      "from": "wingman",
+      "to": "aai-gateway",
+      "kind": "routes-llm-via",
+      "via": "llm_base_url api.automaticai.io/v1 (pydantic-ai)"
     }
   ],
   "counts": {
@@ -2053,6 +3517,6 @@
     "first_party": 72,
     "external": 18,
     "live": 80,
-    "edges": 55
+    "edges": 299
   }
 }

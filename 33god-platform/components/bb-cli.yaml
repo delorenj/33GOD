@@ -25,6 +25,18 @@ relations:
   kind: publishes-to
   via: bb emit
   evidence: bloodbank/cli/bb.py
+- to: event-contract
+  kind: reads
+  via: bb contract / verify-envelope import core.validate
+  evidence: bloodbank/cli/bb.py:209
+- to: bb-nats
+  kind: publishes-to
+  via: 'bb call: PUB command subject on core NATS'
+  evidence: bloodbank/cli/call.py:38
+- to: bb-nats
+  kind: consumes-from
+  via: 'bb call: SUB bloodbank.rpy.lifecycle.task.invoke reply'
+  evidence: bloodbank/cli/call.py:33
 evidence:
 - bloodbank/cli/bb.py
 - bloodbank/CLAUDE.md:36

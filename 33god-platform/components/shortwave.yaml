@@ -21,7 +21,11 @@ tech:
 - python
 - zellij
 runtime: systemd user unit shortwave-relay.service (sw serve)
-relations: []
+relations:
+- to: vinyl
+  kind: calls
+  via: VinylSession to vinyl serve :7733 (mic stream)
+  evidence: ~/code/shortwave/app/src/main/java/sh/delo/shortwave/MainActivity.kt:185
 evidence:
 - systemctl --user show shortwave-relay Description
 confidence: medium

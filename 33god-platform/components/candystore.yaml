@@ -50,6 +50,10 @@ relations:
   kind: stores-in
   via: Postgres :5434
   evidence: bloodbank/compose/docker-compose.yml
+- to: pjangler
+  kind: calls
+  via: pjangler list --json (project sync)
+  evidence: candystore/candystore/projects.py:74
 evidence:
 - bloodbank/CLAUDE.md:187
 - docker ps

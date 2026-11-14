@@ -28,6 +28,38 @@ relations:
   kind: consumes-from
   via: bloodbank.cmd.billing.invoice.generate (milkshake-farm-consumer)
   evidence: systemd milkshake-farm-consumer.service
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.evt.billing.* (ledger outbox, command results)
+  evidence: ~/code/Milkshake/src/milkshake/commands/outbox.py:372
+- to: bb-nats
+  kind: consumes-from
+  via: durable milkshake-mercury-hook on bloodbank.cmd.billing.transaction.receive
+  evidence: ~/code/Milkshake/src/milkshake/consumer/nats_bus.py:30
+- to: client-portal
+  kind: calls
+  via: POST MILKSHAKE_FARM_URL /api/milkshake-snapshot (ms farm push)
+  evidence: ~/code/Milkshake/src/milkshake/farm/transport.py:110
+- to: aai-gateway
+  kind: routes-llm-via
+  via: POST api.automaticai.io chat completions (category namer)
+  evidence: ~/code/Milkshake/src/milkshake/gateway/__init__.py:127
+- to: jev-litellm
+  kind: routes-llm-via
+  via: POST jev.delo.sh/typesafe/v1/systemone
+  evidence: ~/code/Milkshake/src/milkshake/jev/__init__.py:84
+- to: openrouter
+  kind: calls
+  via: GET openrouter.ai/api/v1/key (usage squeeze)
+  evidence: ~/code/Milkshake/src/milkshake/oldmacs/openrouter.py:40
+- to: postgres
+  kind: stores-in
+  via: milkshake-postgres 127.0.0.1:5441 ledger
+  evidence: ~/code/Milkshake/ops/stack/compose.yml:27
+- to: onepassword
+  kind: calls
+  via: op run --env-file .env.vendors.op/.env.consumer.op
+  evidence: ~/code/Milkshake/ops/systemd/milkshake-farm-consumer.service:26
 evidence:
 - bloodbank/services/farm-command-bridge/main.py
 - 'critic (repo): /home/delorenj/code/Milkshake. Live: systemd user units milkshake-farm-consumer.service (op run

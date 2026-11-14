@@ -20,7 +20,15 @@ role_in_system: Keeps intake folders organized; loss leaves files unsorted.
 tech:
 - python
 runtime: source repo; folder-curator skill
-relations: []
+relations:
+- to: hermes-fleet
+  kind: calls
+  via: hermes chat --query ... --skills curate (CLI, own profile)
+  evidence: ~/code/curator/src/curator/backend.py:208
+- to: hindsight
+  kind: calls
+  via: hindsight memory recall <bank> (CLI)
+  evidence: ~/code/curator/src/curator/memory.py:93
 evidence:
 - /home/delorenj/code/curator
 - /home/delorenj/code/skillex/all-skills/folder-curator

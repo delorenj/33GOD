@@ -20,7 +20,27 @@ role_in_system: Feeds the operator's journal; nothing else depends on it.
 tech:
 - n8n
 runtime: n8n workflow
-relations: []
+relations:
+- to: bb-nats
+  kind: consumes-from
+  via: bloodbank.reporting.report.completed (durable trigger)
+  evidence: bloodbank/integrations/n8n-workflows/dev-journal/ingress.workflow.json:16
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.reporting.journal.received
+  evidence: bloodbank/integrations/n8n-workflows/dev-journal/ingress.workflow.json:56
+- to: bb-nats
+  kind: publishes-to
+  via: bloodbank.reporting.incident.observed
+  evidence: bloodbank/integrations/n8n-workflows/dev-journal/incidents.workflow.json:104
+- to: aai-gateway
+  kind: routes-llm-via
+  via: POST api.automaticai.io/v1/chat/completions
+  evidence: bloodbank/integrations/n8n-workflows/dev-journal/processor.workflow.json:104
+- to: n8n-nodes-bb
+  kind: calls
+  via: node types bloodbankTrigger/devJournal/bloodbank
+  evidence: bloodbank/integrations/n8n-workflows/dev-journal/ingress.workflow.json:8
 evidence:
 - 33god-platform/aperture/research/ship-board/data.json (g2)
 - 'critic (evidence): Live and verifiable: repo bloodbank/integrations/n8n-workflows/dev-journal (ingress/processor/incidents/rollups/deadline
