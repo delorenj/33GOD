@@ -1,0 +1,19 @@
+{
+  "name": "@33god/krebs",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Krebs lifecycle v2 state manager: `krebs tick`, the one Todo -> In Progress dispatcher",
+  "type": "module",
+  "bin": {
+    "krebs": "bin/krebs.mjs"
+  },
+  "scripts": {
+    "test": "node --test tick/test/*.test.mjs",
+    "tick": "node bin/krebs.mjs tick",
+    "tick:dry": "node bin/krebs.mjs tick --dry-run"
+  },
+  "engines": {
+    "node": ">=24.6.0"
+  },
+  "license": "MIT"
+}

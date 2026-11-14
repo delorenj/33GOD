@@ -1,0 +1,45 @@
+# krebs-tick: the Krebs lifecycle v2 dispatcher (krebs/spec/lifecycle.v2.yaml, `clock:`).
+#
+# `krebs tick` is the ONLY Todo -> In Progress dispatcher. Per agents-registry scope
+# (a row with a plane board, or board + scope_label) it repairs the two label
+# invariants, fills free slots (plane.wip, default 2) with triaged Todo tickets
+# (one Plane write each: In Progress + agent:working + start_date) and publishes
+# bloodbank.agent.invocation.start (reason ticket-delegation) to the scope owner.
+# A publish that failed on an earlier tick is republished with the same command
+# id from the journal (~/.local/state/krebs/tick-journal.jsonl). Candybar is the
+# only clock: no timer, no cron, no private loop (spec: "no other dispatcher").
+#
+# Registered DISABLED: it writes Plane and publishes to the bus, so never
+# `candybar run` it to test; the first scheduled fire after `resume` is the proof.
+# Preview what the first fire would do (read-only, safe any time):
+#   node /home/delorenj/code/33GOD/krebs/bin/krebs.mjs tick --dry-run [--board KEY]
+#
+# This file lives in krebs/.candybars inside the 33GOD repo. Candybar's project is
+# the git toplevel (33GOD), which has no .candybars/ of its own, so this is read
+# as a plain AD-8 manifest: register it by path (create-only).
+#   cd ~/code/33GOD/candybar
+#   uv run candybar register --dry-run ../krebs/.candybars/krebs-tick.candybar.toml
+#   uv run candybar register ../krebs/.candybars/krebs-tick.candybar.toml
+#   uv run candybar resume krebs-tick
+#
+# Environment: the Plane credential is Pilot's op:// reference, read with `op`
+# inside the job (OP_SERVICE_ACCOUNT_TOKEN comes from the user manager's
+# environment, never this file); node and op come from the executor's PATH
+# (mise shims, ~/.local/bin). Exit 0 = ok or nothing to do; 1 = a scope or
+# action failed (the JSON report on stdout says which).
+[candybar]
+name = "krebs-tick"
+description = "Krebs lifecycle v2 dispatcher: repair lifecycle labels, fill each scope's free slots (plane.wip, default 2) from triaged Todo, publish agent.invocation.start (ticket-delegation); republish owed publishes"
+tags = ["krebs", "33god", "lifecycle", "dispatch"]
+schedule = "*/10 * * * *"
+timezone = "America/New_York"
+noise = true
+enabled = false
+
+[candybar.runner]
+kind = "exec"
+argv = ["node", "/home/delorenj/code/33GOD/krebs/bin/krebs.mjs", "tick", "--json"]
+workdir = "/home/delorenj/code/33GOD/krebs"
+env = { NATS_URL = "nats://127.0.0.1:4222", KREBS_TZ = "America/New_York" }
+timeout_s = 300
+on_failure = ["/bin/sh", "-c", "\"$HOME/.local/bin/ntfy-alert\" --title \"[candybar] krebs-tick failed\" -- \"$CANDYBAR_FAILURE_MESSAGE\" || true"]
