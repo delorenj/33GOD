@@ -234,7 +234,8 @@ test("an open blocking relation skips the ticket; a closed one does not; cross-b
   assert.match(solo.blocked[0].why, /blocked by SOLO-9 \(Todo\)/);
   assert.match(solo.blocked[1].why, /blocked by #101 \(In Progress\)/);
   assert.deepEqual(solo.dispatches.map((d) => [d.key, d.result]), [["SOLO-3", "dispatched"]]);
-  assert.equal(publish.sent.length, 1);
+  // SOLO-9 is untriaged and stale, so it also gets a catch-up triage (see triage.test.mjs).
+  assert.deepEqual(publish.sent.filter((c) => c.data.context.reason === "ticket-delegation").length, 1);
 });
 
 test("invariant repair: one delta write per ticket, journaled", async () => {

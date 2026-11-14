@@ -131,3 +131,47 @@ export async function pickDispatches(candidates, free, blockerOf) {
   }
   return { picked, blocked, waiting: candidates.slice(i) };
 }
+
+/** spec catch_up.triage: a Todo ticket unchanged this long gets a triage turn. */
+export const TRIAGE_MIN_AGE_MS = 30 * 60 * 1000;
+/** At most this many catch-up triages per scope per tick, and per tick overall. */
+export const TRIAGE_SCOPE_CAP = 2;
+export const TRIAGE_TICK_CAP = 6;
+
+/**
+ * Why a ticket is not a catch-up triage candidate, or null when it is. Labels
+ * and lane only (the live re-read applies it again): Todo, not archived or a
+ * draft, no lifecycle:triaged, no hold label, no agent:working, not an epic
+ * container, and updated_at older than `minAgeMs` (a ticket with no usable
+ * updated_at has no version to key a command on, so it is not eligible).
+ */
+export function triageGuard(ticket, nowMs, minAgeMs = TRIAGE_MIN_AGE_MS) {
+  if (ticket.archived) return "archived";
+  if (ticket.draft) return "draft";
+  if (ticket.lane !== "todo") return `not in Todo (${ticket.stateName ?? ticket.lane})`;
+  if (ticket.labels.includes(LABEL.triaged)) return "already triaged (lifecycle:triaged)";
+  const holds = heldBy(ticket.labels);
+  if (holds.length) return `held (${holds.join(", ")})`;
+  if (ticket.labels.includes(LABEL.working)) return "agent:working (a turn is running on it)";
+  if (isContainer(ticket.labels)) return "epic container";
+  const updated = Date.parse(ticket.updatedAt ?? "");
+  if (!Number.isFinite(updated)) return "no updated_at";
+  if (nowMs - updated <= minAgeMs) return "updated within the last 30 minutes";
+  return null;
+}
+
+/** Oldest updated_at first, then sequence id, then id. */
+export function compareTriage(a, b) {
+  const ua = Date.parse(a.updatedAt ?? "");
+  const ub = Date.parse(b.updatedAt ?? "");
+  if (ua !== ub) return ua < ub ? -1 : 1;
+  const sa = a.seq ?? Number.POSITIVE_INFINITY;
+  const sb = b.seq ?? Number.POSITIVE_INFINITY;
+  if (sa !== sb) return sa < sb ? -1 : 1;
+  return String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0;
+}
+
+/** The scope's tickets that pass triageGuard, oldest first. */
+export function triageCandidatesOf(tickets, nowMs, minAgeMs = TRIAGE_MIN_AGE_MS) {
+  return tickets.filter((t) => triageGuard(t, nowMs, minAgeMs) === null).sort(compareTriage);
+}

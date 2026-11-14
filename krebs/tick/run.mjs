@@ -1,12 +1,27 @@
 // One Krebs tick: for every scope, republish owed dispatches, repair the two
-// invariants, do the slot math and dispatch into free slots.
+// invariants, do the slot math and dispatch into free slots; then publish the
+// catch-up triages (spec catch_up.triage) for Todo tickets the n8n triage lane
+// never got to.
 //
 // Everything with a side effect is injected (plane, publish, journal, now), so
 // the tests drive it with fakes and --dry-run drives it with no writer at all.
 
 import { LABEL, SPEC_VERSION, heldBy, laneModel } from "./lifecycle.mjs";
-import { candidatesOf, dispatchGuard, normalizeTicket, pickDispatches, repairsFor, slotsOf } from "./select.mjs";
-import { PENDING_MAX_AGE_MS, pendingPublishes } from "./journal.mjs";
+import {
+  TRIAGE_MIN_AGE_MS,
+  TRIAGE_SCOPE_CAP,
+  TRIAGE_TICK_CAP,
+  candidatesOf,
+  compareTriage,
+  dispatchGuard,
+  normalizeTicket,
+  pickDispatches,
+  repairsFor,
+  slotsOf,
+  triageCandidatesOf,
+  triageGuard,
+} from "./select.mjs";
+import { PENDING_MAX_AGE_MS, pendingPublishes, triagedCommandIds } from "./journal.mjs";
 import { dispatchPrompt } from "./prompt.mjs";
 
 export const COMMAND_TYPE = "bloodbank.agent.invocation.start";
@@ -16,6 +31,12 @@ export const DISPATCH_OPERATION = "delegateTicket";
 export const KREBS_SOURCE = "urn:33god:service:krebs-tick";
 export const KREBS_ACTOR = Object.freeze({ type: "service", agent_id: "krebs.tick" });
 export const PROVIDER_EVENT_TYPE = "krebs.dispatch";
+/** The n8n Fleet node's groomTicket operation (reason ticket-grooming), which the "Ticket Triage" lane sends. */
+export const TRIAGE_OPERATION = "groomTicket";
+export const TRIAGE_REASON = "ticket-grooming";
+export const TRIAGE_PROVIDER_EVENT_TYPE = "krebs.catch_up.triage";
+/** The completion marker the triage prompt asks for; the Fleet node's GROOMED_LABEL. */
+export const TRIAGED_LABEL = LABEL.triaged;
 
 /** YYYY-MM-DD in `timeZone` (default: the host's zone): Plane's start_date. */
 export function localDate(date, timeZone) {
@@ -90,6 +111,67 @@ export function dispatchCommand({ fleet }, { scope, ticket, route, inProgressNam
   };
 }
 
+/**
+ * The deterministic ids of one catch-up triage: board + ticket id + updated_at +
+ * "triage". One id is one ticket version, so it is triaged at most once ever.
+ */
+export function triageIds({ fleet, nats }, { boardId, ticketId, updatedAt, agentId }) {
+  const triageId = nats.deterministicUuid(`krebs:triage:${boardId}:${ticketId}:${updatedAt ?? ""}:triage`);
+  const commandId = fleet.fleetCommandId(triageId, TRIAGE_OPERATION, agentId);
+  return { triageId, commandId };
+}
+
+/**
+ * The publish options of a catch-up triage: the command the n8n "Ticket Triage"
+ * lane (Fleet node, groomTicket) sends for a ticket that just entered Todo.
+ * Same keys, same prompt (groomingPrompt), reason ticket-grooming. observedAt is
+ * the ticket's updated_at, so a retry rebuilds a byte-identical command.
+ */
+export function triageCommand({ fleet }, { scope, ticket, route, todoName, commandId, observedAt }) {
+  const facts = fleet.ticketFactsFromEnvelope({
+    data: {
+      repo: scope.repo ?? "",
+      board_id: scope.boardId,
+      ticket_key: ticket.key,
+      ticket_id: ticket.id,
+      title: ticket.title,
+      workspace: scope.workspace,
+      phase: todoName,
+      provider_event_type: TRIAGE_PROVIDER_EVENT_TYPE,
+      labels: ticket.labels,
+    },
+  });
+  return {
+    type: COMMAND_TYPE,
+    kind: "command",
+    data: {
+      target_agent_id: route.agentId,
+      prompt: fleet.groomingPrompt(facts, route.projectPath, TRIAGED_LABEL),
+      context: {
+        reason: TRIAGE_REASON,
+        repo: facts.repo,
+        ticket_key: facts.ticketKey,
+        ticket_id: facts.ticketId,
+        board_id: facts.boardId,
+        workspace: facts.workspace,
+        title: facts.title,
+        phase: facts.phase,
+        previous_phase: facts.previousPhase,
+        provider_event_type: facts.providerEventType,
+      },
+    },
+    commandId,
+    eventId: commandId,
+    correlationId: fleet.ticketCorrelationId(scope.boardId, ticket.id),
+    causationId: null,
+    observedAt,
+    source: KREBS_SOURCE,
+    producer: "krebs",
+    service: "krebs-tick",
+    actor: { ...KREBS_ACTOR },
+  };
+}
+
 function message(err) {
   return String(err?.message ?? err).split("\n")[0];
 }
@@ -116,6 +198,9 @@ export async function runTick({
   now = () => new Date(),
   timeZone,
   pendingMaxAgeMs = PENDING_MAX_AGE_MS,
+  triageMinAgeMs = TRIAGE_MIN_AGE_MS,
+  triageScopeCap = TRIAGE_SCOPE_CAP,
+  triageTickCap = TRIAGE_TICK_CAP,
 }) {
   const started = now();
   const tickId = `tick:${started.toISOString()}`;
@@ -123,7 +208,10 @@ export async function runTick({
   const record = (entry) => {
     if (!dryRun) journal.append({ ts: ts(), tick: tickId, ...entry });
   };
-  const pending = pendingPublishes(journal.read());
+  const journalEntries = journal.read();
+  const pending = pendingPublishes(journalEntries);
+  const triaged = triagedCommandIds(journalEntries);
+  const triagePlans = []; // {scope, snap, out, entry, ticket}: picked per scope, capped tick-wide after the loop
   const boards = new Map(); // `${ws}:${board}` -> snapshot | {error}
   const statesCache = new Map();
 
@@ -208,6 +296,9 @@ export async function runTick({
       repairs: [],
       dispatches: [],
       blocked: [],
+      triage: [],
+      triageCapped: [],
+      triageSeen: [],
       waiting: [],
       excluded: [],
       warnings: [...(scope.warnings ?? [])],
@@ -288,6 +379,27 @@ export async function runTick({
     out.occupied = slots.occupied.map((t) => t.key);
     out.free = slots.free;
     out.overLimit = slots.overLimit;
+
+    // 3b. Catch-up triage candidates (published after every scope has ticked).
+    {
+      const nowMs = started.getTime();
+      const candidates = triageCandidatesOf(mine, nowMs, triageMinAgeMs);
+      const fresh = [];
+      for (const t of candidates) {
+        const ids = triageIds({ fleet, nats }, { boardId: board, ticketId: t.id, updatedAt: t.updatedAt, agentId: scope.agentId });
+        if (triaged.has(ids.commandId)) out.triageSeen.push(t.key);
+        else fresh.push({ t, ...ids });
+      }
+      for (const [i, { t, commandId }] of fresh.entries()) {
+        const entry = { ...ticketRef(t), updatedAt: t.updatedAt, agentId: scope.agentId, commandId };
+        if (i >= triageScopeCap) {
+          out.triageCapped.push({ ...ticketRef(t), updatedAt: t.updatedAt, why: `scope cap (${triageScopeCap} per scope per tick)` });
+        } else {
+          out.triage.push(entry);
+          triagePlans.push({ scope, snap, out, entry, ticket: t });
+        }
+      }
+    }
 
     // 4. Candidates.
     const { candidates, excluded } = candidatesOf(mine);
@@ -391,6 +503,68 @@ export async function runTick({
     }
   }
 
+  // Catch-up triage: tick-wide cap (oldest first across scopes), then one publish each.
+  triagePlans.sort((a, b) => compareTriage(a.ticket, b.ticket) || (a.scope.agentId < b.scope.agentId ? -1 : 1));
+  for (const [i, plan] of triagePlans.entries()) {
+    const { scope, snap, out, entry } = plan;
+    if (i >= triageTickCap) {
+      out.triage.splice(out.triage.indexOf(entry), 1);
+      out.triageCapped.push({ key: entry.key, ticketId: entry.ticketId, title: entry.title, updatedAt: entry.updatedAt, why: `tick cap (${triageTickCap} per tick)` });
+      continue;
+    }
+    const ws = scope.workspace;
+    const board = scope.boardId;
+    let ticket = plan.ticket;
+    if (!dryRun) {
+      try {
+        ticket = normalizeTicket(await plane.issue(ticket.id, ws, board), snap.ctx);
+      } catch (err) {
+        entry.result = "skipped";
+        entry.why = `live re-read failed: ${message(err)}`;
+        out.errors.push(`${entry.key}: triage ${entry.why}`);
+        continue;
+      }
+      const owner = fleet.resolveFleetAgentForBoard(registry, board, "", ticket.labels);
+      const why = triageGuard(ticket, started.getTime(), triageMinAgeMs) ?? (owner.matchedBy === "board" && owner.agentId === scope.agentId ? null : "moved to another scope");
+      if (why) {
+        entry.result = "skipped";
+        entry.why = `changed since the listing: ${why}`;
+        continue;
+      }
+    }
+    const route = fleet.resolveFleetAgentForBoard(registry, board, scope.repo ?? "", ticket.labels);
+    if (!route.eligible || route.agentId !== scope.agentId) {
+      entry.result = "skipped";
+      entry.why = `route refused: ${route.agentId || "(none)"} ${route.why}`;
+      out.errors.push(`${ticket.key}: triage ${entry.why}`);
+      continue;
+    }
+    const { triageId, commandId } = triageIds({ fleet, nats }, { boardId: board, ticketId: ticket.id, updatedAt: ticket.updatedAt, agentId: route.agentId });
+    Object.assign(entry, { updatedAt: ticket.updatedAt, triageId, commandId });
+    if (triaged.has(commandId)) {
+      entry.result = "skipped";
+      entry.why = "this ticket version was already triaged";
+      continue;
+    }
+    if (dryRun) {
+      entry.result = "planned";
+      continue;
+    }
+    const command = triageCommand({ fleet }, { scope, ticket, route, todoName: ticket.stateName ?? "Todo", commandId, observedAt: new Date(ticket.updatedAt).toISOString() });
+    try {
+      const res = await publish(command);
+      entry.result = "published";
+      entry.subject = res?.subject ?? null;
+      triaged.add(commandId);
+      record({ action: "triage.publish", command_id: commandId, triage_id: triageId, agent_id: route.agentId, board_id: board, workspace: ws, ticket_id: ticket.id, key: ticket.key, ticket_updated_at: ticket.updatedAt, ok: true, subject: res?.subject ?? null });
+    } catch (err) {
+      entry.result = "publish failed";
+      entry.error = message(err);
+      out.errors.push(`${ticket.key}: triage publish failed (retried next tick, same command id): ${entry.error}`);
+      record({ action: "triage.publish", command_id: commandId, triage_id: triageId, agent_id: route.agentId, board_id: board, workspace: ws, ticket_id: ticket.id, key: ticket.key, ticket_updated_at: ticket.updatedAt, ok: false, error: entry.error });
+    }
+  }
+
   report.ok = report.errors.length === 0 && report.scopes.every((s) => s.errors.length === 0);
   record({
     action: "tick",
@@ -399,6 +573,7 @@ export async function runTick({
     dispatched: report.scopes.reduce((n, s) => n + s.dispatches.filter((d) => d.result === "dispatched").length, 0),
     repaired: report.scopes.reduce((n, s) => n + s.repairs.filter((r) => r.result === "repaired").length, 0),
     republished: report.scopes.reduce((n, s) => n + s.republishes.filter((r) => r.result === "republished").length, 0),
+    triaged: report.scopes.reduce((n, s) => n + s.triage.filter((t) => t.result === "published").length, 0),
     errors: report.scopes.reduce((n, s) => n + s.errors.length, 0),
   });
   return report;

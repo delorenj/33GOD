@@ -22,6 +22,10 @@ For each scope, in agent-id order:
 
 The command id is `fleetCommandId(dispatchId, "delegateTicket", agent)`, where `dispatchId = uuid5("krebs:dispatch:<board>:<ticket>:<updated_at before the write>")`. A retry of the same dispatch reuses the id. A later re-dispatch of the same ticket, for example after a SENT BACK, gets a new one.
 
+6. **Triage catch-up** (spec `catch_up.triage`), after every scope has been repaired and dispatched. This covers webhooks the n8n Ticket Triage lane never saw (an n8n restart). A candidate is a Todo ticket in scope with no `lifecycle:triaged`, no hold label, no `agent:working`, no `epic`/`epic:*` label, and `updated_at` more than 30 minutes ago. Per scope the 2 oldest are kept; across the tick the 6 oldest of those are published; the rest are listed as `capped`. Each is re-read live (and re-checked) and then gets one `bloodbank.agent.invocation.start` with reason `ticket-grooming`: the Fleet node's `groomTicket` command, with `groomingPrompt` and the same context keys, routed by `resolveFleetAgentForBoard`. **Krebs writes nothing to Plane for triage**; the pickup chip sets `agent:working` when the invocation starts.
+
+The triage command id is `fleetCommandId(uuid5("krebs:triage:<board>:<ticket>:<updated_at>:triage"), "groomTicket", agent)` and `observedAt` is the ticket's `updated_at`, so a retry is byte-identical. A published command is journaled as `triage.publish`; a ticket version with an `ok` entry is never triaged again, and a failed publish is retried on the next tick. If the triage turn leaves the ticket unchanged, `updated_at` does not move, so it is not re-triaged; any edit makes a new version (after another 30 quiet minutes). `--dry-run` lists the planned triages (`triage catch-up:` per scope in the summary, `triage`, `triageCapped` and `triageSeen` in `--json`) and publishes and journals nothing.
+
 ## Scopes
 
 Scopes come from `~/.hermes/agents-registry.yaml`, one per row that has a `plane:` block, with these exceptions:
@@ -38,4 +42,4 @@ Row knobs: `plane.wip` (non-negative integer, default 2) and `plane.review` (whe
 
 ## Journal
 
-`~/.local/state/krebs/tick-journal.jsonl`, relocated by `KREBS_STATE_DIR`, or `--journal`. Each action writes one line: `repair`, `dispatch.intent` (which carries the full command), `dispatch.write`, `dispatch.publish`, `dispatch.dropped`, plus one `tick` summary line. A failed write whose outcome is unknown (a timeout, a 5xx) is left pending without verification. The next tick publishes only if the write is actually on the ticket. `tick.lock` in the same directory keeps a hand-run tick from overlapping a scheduled one. A dry run never writes the journal.
+`~/.local/state/krebs/tick-journal.jsonl`, relocated by `KREBS_STATE_DIR`, or `--journal`. Each action writes one line: `repair`, `triage.publish`, `dispatch.intent` (which carries the full command), `dispatch.write`, `dispatch.publish`, `dispatch.dropped`, plus one `tick` summary line. A failed write whose outcome is unknown (a timeout, a 5xx) is left pending without verification. The next tick publishes only if the write is actually on the ticket. `tick.lock` in the same directory keeps a hand-run tick from overlapping a scheduled one. A dry run never writes the journal.

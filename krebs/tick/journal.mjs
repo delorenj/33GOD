@@ -122,3 +122,16 @@ export function pendingPublishes(entries) {
   out.sort((a, b) => String(a.since).localeCompare(String(b.since)));
   return out;
 }
+
+/**
+ * Command ids of catch-up triages already published (action triage.publish,
+ * ok true). A triage command id is derived from board + ticket + updated_at, so
+ * one id is one ticket version: a version in this set is never triaged again.
+ */
+export function triagedCommandIds(entries) {
+  const ids = new Set();
+  for (const e of entries) {
+    if (e?.action === "triage.publish" && e.ok === true && e.command_id) ids.add(e.command_id);
+  }
+  return ids;
+}

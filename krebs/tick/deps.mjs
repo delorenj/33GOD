@@ -43,7 +43,7 @@ export function loadBloodbank(env = process.env) {
     throw new Error(`cannot load the bloodbank n8n package dist at ${dist} (build it: npm run build there): ${err.message}`);
   }
   for (const [mod, names] of [
-    [fleet, ["resolveFleetAgentForBoard", "ticketCorrelationId", "fleetCommandId", "ticketFactsFromEnvelope", "delegationPrompt"]],
+    [fleet, ["resolveFleetAgentForBoard", "ticketCorrelationId", "fleetCommandId", "ticketFactsFromEnvelope", "delegationPrompt", "groomingPrompt"]],
     [nats, ["buildEnvelope", "deterministicUuid", "publish", "validateEnvelope"]],
     [registry, ["hermesRegistryPath", "loadHermesRegistry", "bloodbankActivation"]],
   ]) {

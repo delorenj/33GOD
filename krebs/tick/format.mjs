@@ -36,6 +36,16 @@ export function formatReport(report, { verbose = false } = {}) {
       const why = s.free <= 0 ? "no free slot" : "no eligible Todo ticket";
       lines.push(`  dispatch: none (${why})`);
     }
+    {
+      const parts = s.triage.map((t) => `${t.key} ${t.result ?? "?"}${t.commandId ? ` cmd ${t.commandId}` : ""}${t.why ? ` (${t.why})` : ""}${t.error ? ` (${t.error})` : ""}`);
+      if (s.triageCapped.length) {
+        const shown = s.triageCapped.slice(0, 4);
+        const more = s.triageCapped.length - shown.length;
+        parts.push(`capped ${s.triageCapped.length}: ${list(shown, (c) => `${c.key} (${c.why})`)}${more ? `, +${more} more (see --json)` : ""}`);
+      }
+      if (s.triageSeen.length) parts.push(`already triaged at this version: ${s.triageSeen.join(", ")}`);
+      lines.push(`  triage catch-up: ${parts.length ? parts.join("; ") : "none"}`);
+    }
     if (s.waiting.length) lines.push(`  queued: ${s.waiting.join(", ")}`);
     if (s.blocked.length) lines.push(`  blocked: ${list(s.blocked, (b) => `${b.key} (${b.why})`)}`);
     if (s.excluded.length) lines.push(`  todo not dispatchable: ${list(s.excluded, (e) => `${e.key} (${e.why})`)}`);
