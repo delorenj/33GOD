@@ -71,8 +71,10 @@ scope's registry row (`plane.review`):
 | yes | add `+lifecycle:review` and post an evidence comment. Leave it In Progress. Do not close it. |
 | no | close it Done (`px close <ref> -m "<evidence>"`) with the evidence comment. |
 
-Evidence comment: what changed (commit/PR/paths), the command or check that proves it, the result
-pasted verbatim, what you did not do. A handback with no evidence is a failed handback.
+Evidence comment: a few plain sentences for Jarad: what changed, how you know it works (the check
+you ran and its result, in words), and anything you did not do. Link the commit or PR rather than
+pasting SHAs, hashes, ids, test counts or command output; those belong in the commit message. A
+handback with no evidence is a failed handback, and so is one nobody can read in ten seconds.
 
 Stuck mid-work: `+lifecycle:needs-input` (question as a comment) or `+lifecycle:blocked` (comment what
 it waits on; record the blocker as a Plane relation, `px link add A B --blocks`). The lane stays In
