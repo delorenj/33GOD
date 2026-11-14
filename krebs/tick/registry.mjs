@@ -110,8 +110,12 @@ export function boardMatches(key, { identifier, boardId }) {
  * opts.executionMode   (projectPath) => mode; default reads .project.json
  * opts.board           --board KEY filter (rows on other boards are left out entirely)
  * opts.defaultWorkspace  used when a plane block names no workspace
+ * opts.excludeWorkspaces  workspaces Krebs never writes (client boards are owner-reserved:
+ *                         any write there is client-visible). Default CLIENT_WORKSPACES.
  */
-export function scopesFromRegistry(registry, { activation, executionMode = executionModeAt, board, defaultWorkspace } = {}) {
+export const CLIENT_WORKSPACES = ["automaticai"];
+
+export function scopesFromRegistry(registry, { activation, executionMode = executionModeAt, board, defaultWorkspace, excludeWorkspaces = CLIENT_WORKSPACES } = {}) {
   if (typeof activation !== "function") throw new Error("scopesFromRegistry needs the bloodbankActivation function");
   const agents = mapping(mapping(registry)?.agents);
   if (!agents) throw new Error("agents registry has no agents mapping");
@@ -143,6 +147,10 @@ export function scopesFromRegistry(registry, { activation, executionMode = execu
     }
     const workspace = text(plane.workspace) || defaultWorkspace || null;
     if (!workspace) { skip("plane block names no workspace"); continue; }
+    if (excludeWorkspaces.map((w) => w.toLowerCase()).includes(workspace.toLowerCase())) {
+      skip(`client workspace ${workspace}: owner-reserved, Krebs never writes there`); continue;
+    }
+    if (plane.krebs === false) { skip("plane.krebs is false (opted out of Krebs dispatch)"); continue; }
 
     const { wip, warning } = wipOf(plane);
     scopes.push({

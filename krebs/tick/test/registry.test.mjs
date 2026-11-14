@@ -80,3 +80,14 @@ test("executionModeAt: .project.json execution.mode, legacy when absent or unrea
   assert.equal(executionModeAt(plain), "legacy");
   assert.equal(executionModeAt(join(dir, "missing")), "legacy");
 });
+
+test("scopes: client workspaces and plane.krebs false are never scopes", () => {
+  const reg = registryFixture();
+  reg.agents["other-pm"].plane.workspace = "AutomaticAI";
+  reg.agents["solo-pm"].plane.krebs = false;
+  const { scopes, skipped } = scopesFromRegistry(reg, { activation, executionMode: legacy });
+  assert.deepEqual(scopes.map((s) => s.agentId), ["lost-things-forge-pm", "tolt-director", "tolt-pm"]);
+  const why = Object.fromEntries(skipped.map((s) => [s.agentId, s.why]));
+  assert.match(why["other-pm"], /client workspace AutomaticAI: owner-reserved/);
+  assert.match(why["solo-pm"], /plane.krebs is false/);
+});
