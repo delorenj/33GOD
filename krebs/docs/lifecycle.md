@@ -12,6 +12,7 @@ It replaces two things:
 1. **Stock lanes everywhere.** Every board uses Plane's five lanes: Backlog, Todo, In Progress, Done, Cancelled. The nine-lane layout is retired, and labels now carry what the extra lanes used to mean. The verdict rules changed to fit.
 2. **Todo means triage, then two slots.** A ticket entering Todo starts a triage turn. When triage finishes it adds `lifecycle:triaged`, and the pickup chip removes `agent:working`. Each project keeps two implementation slots busy with triaged Todo tickets. It stops only when no tickets are left, or when the rest are waiting on a person.
 3. **Krebs replaces Momo.** A deterministic state manager now does the work that a prompt-driven skill used to do.
+4. **Out of scope.** TIKT keeps its own lanes: it is a human content pipeline, not a ticket board. The client boards AAI and JIMB, in the `automaticai` workspace, are skipped entirely, and Krebs never writes there. Archived boards are left alone.
 
 ## Lanes and labels
 

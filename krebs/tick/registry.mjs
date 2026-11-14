@@ -114,6 +114,8 @@ export function boardMatches(key, { identifier, boardId }) {
  *                         any write there is client-visible). Default CLIENT_WORKSPACES.
  */
 export const CLIENT_WORKSPACES = ["automaticai"];
+// Boards the owner keeps off the lifecycle (spec out_of_scope.boards): TIKT is a human content pipeline.
+export const EXEMPT_BOARDS = ["TIKT"];
 
 export function scopesFromRegistry(registry, { activation, executionMode = executionModeAt, board, defaultWorkspace, excludeWorkspaces = CLIENT_WORKSPACES } = {}) {
   if (typeof activation !== "function") throw new Error("scopesFromRegistry needs the bloodbankActivation function");
@@ -150,6 +152,7 @@ export function scopesFromRegistry(registry, { activation, executionMode = execu
     if (excludeWorkspaces.map((w) => w.toLowerCase()).includes(workspace.toLowerCase())) {
       skip(`client workspace ${workspace}: owner-reserved, Krebs never writes there`); continue;
     }
+    if (identifier && EXEMPT_BOARDS.includes(identifier.toUpperCase())) { skip(`board ${identifier} is out of scope (owner keeps its own lanes)`); continue; }
     if (plane.krebs === false) { skip("plane.krebs is false (opted out of Krebs dispatch)"); continue; }
 
     const { wip, warning } = wipOf(plane);

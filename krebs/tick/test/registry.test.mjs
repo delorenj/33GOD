@@ -91,3 +91,11 @@ test("scopes: client workspaces and plane.krebs false are never scopes", () => {
   assert.match(why["other-pm"], /client workspace AutomaticAI: owner-reserved/);
   assert.match(why["solo-pm"], /plane.krebs is false/);
 });
+
+test("scopes: TIKT is out of scope", () => {
+  const reg = registryFixture();
+  reg.agents["solo-pm"].plane.identifier = "TIKT";
+  const { scopes, skipped } = scopesFromRegistry(reg, { activation, executionMode: legacy });
+  assert.ok(!scopes.some((s) => s.agentId === "solo-pm"));
+  assert.match(skipped.find((s) => s.agentId === "solo-pm").why, /TIKT is out of scope/);
+});

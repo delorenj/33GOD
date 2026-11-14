@@ -114,4 +114,8 @@ catch_up:                    # covers webhooks lost while n8n restarts
 
 clock: Candybar `krebs-tick` (exec runner). No private loop, no other dispatcher.
 writes: Pilot plane.js (delta label edits) for Krebs; px / px-apply for PM passes.
+out_of_scope:                # owner, 2026-11-14
+  boards: [TIKT]             # human content pipeline; keeps its own lanes
+  workspaces: [automaticai]  # client boards AAI and JIMB; Krebs never writes there
+  archived: skipped
 fence: a project whose .project.json execution.mode is not legacy is skipped (the v2 engine is retired).
