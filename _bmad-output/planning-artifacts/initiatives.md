@@ -713,3 +713,64 @@ activation remain separate claims. No parent sprint board or child code loop.
 revenue-facing consumer; #2 reuses Wax/Jev and hook/bus infrastructure; #3 keeps
 one owner per identity/classifier atom; #4 uses Adapter/Strategy/Observer seams.
 No event type is registered by this initiative.
+
+## I-12 The Atlas — one map of every component, one showcase page each
+
+**Outcome.** There is exactly one map of 33GOD, and everything else is drawn
+from it. Every component (50+ across source, runtime, contracts and products)
+has one evidence-backed record in the component registry
+(`33god-platform/components/*.yaml`); the C4 views (system context, containers,
+components) and the Atlas page are generated from those records, and a gate
+fails when they drift. The same records are the source for the marketing layer:
+one stylized, one-screen teaser page per component that people *want* to flip
+through (eye candy first, a story that builds page to page), an index, and later
+campaigns. The pages tease what each part does and how the parts fit; they never
+publish source, internal paths, hostnames or secrets, because the combination is
+the moat (`visibility: private-source`).
+
+**Why now.** Genesis (genesis.delo.sh) leases 33GOD agents to clients; trust is
+the unknown. The showcase is how a prospect gets curious before they use a desk.
+
+**Owner:** `33god`. Project home: `33god-platform/atlas/` (generated views,
+page sources, design system). Registry: `33god-platform/components/`.
+
+**Phases**
+
+1. **Inventory + C4** — sweep source, runtime, event contracts and every existing
+   list (components.yaml 14, ship board 38, features.toml, `pj list`, agents
+   registry), merge into the registry, render C4 + Atlas, add the drift gate.
+2. **Design system** — a real 33GOD showcase design system (art direction, type,
+   motion, illustration grammar), superseding the minimal Holocene tokens and the
+   Field Guide for marketing surfaces. Coordinates with I-10's visual grammar
+   rather than replacing it.
+3. **Component pages** — one page per component, one screen, generated from the
+   registry record plus an authored story beat; ordered so the sequence tells the
+   story of the platform.
+4. **Index + campaign** — the landing index and the first outreach campaign,
+   tied to Genesis desks as the call to action.
+
+**Roles (delegation, not built here):** an art director and graphic designers
+(design system, pages) and a director of marketing (content, campaigns) are
+Flume hires; requesting them is a delegation to `flume-pm`.
+
+```yaml
+owner_project: 33god
+project_home: 33god-platform/atlas
+registry: 33god-platform/components
+delegations: [FLUME-85]  # art director (filed 2026-11-14); designers, marketing director not yet requested
+depends_on: []
+related_initiatives: [I-6, I-10]
+```
+
+**Seam acceptance criteria**
+
+- One registry. No second component list is created; the ship board, the
+  Manual and any page read the registry or are marked as historical snapshots.
+- Every record carries evidence (file, unit or command); every relation names a
+  mechanism (subject, route, CLI, MCP, table) and targets a known id. The gate
+  (`mise run platform:atlas:check`) fails otherwise, and fails when the rendered
+  views are older than the registry.
+- A component page fits one screen, is generated from its record, and makes no
+  claim the record does not back.
+- Public pages carry no source, internal paths, hostnames, credentials or
+  personal names.

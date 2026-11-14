@@ -47,8 +47,8 @@ def platform_config() -> dict[str, Any]:
 
 
 def component_paths() -> list[Path]:
-    cfg = platform_config()
-    return [resolve_path(item) for item in cfg.get("component_files", [])]
+    # One registry (I-12): every components/*.yaml is a component record.
+    return sorted((ROOT / "components").glob("*.yaml"))
 
 
 def load_components() -> list[dict[str, Any]]:
