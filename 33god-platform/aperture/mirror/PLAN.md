@@ -285,6 +285,12 @@ All items are `aai`-executor changes committed + pushed to the owning repo's mai
 5. **Decisions**: candystore event federation between peers (currently: none — independent stores); whether Damian gets a `plane.delo.sh` seat anyway for cross-peer initiatives (Director Rule delegation targets child boards — and note it would shrink the Mac's container requirement); the AD-22-style Mac watchdog exception record (exact schedule/owner/scope/reason, or an explicit no-watchdog note).
 6. **Handle the survey-reported exposure of his own Obsidian REST / Intelliforia vault credentials** under his own incident process (flagged by dom-storage; not this plan's scope).
 
+**Jarad decisions, 2026-11-15:**
+- **Music Lab bot: dropped from scope.** Nothing critical in it. It has been offline since the 2026-11-14 20:22 restart switched the W6-1 Hermes upgrade on (gateway log: "session authority database does not belong to the reserved profile"; its SOUL and runtime links dangle). Not repaired; Damian is no longer asked about its personality.
+- **Leaked documents in Damian's `general` Hindsight bank: keep** (10 as of 2026-11-15). No deletion.
+- **Skills (W1-3):** Jarad picks Damian's skills for him; Damian is no longer asked.
+- **Morning report (W9-2/W9-4):** go; Jarad handed the Mac session over for it.
+
 ## 6. Disposition of existing installs
 
 ### Aperture god-g1..g4 (per decision 4: RETIRED)
