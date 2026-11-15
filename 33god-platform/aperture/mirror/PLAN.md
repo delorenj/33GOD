@@ -163,6 +163,7 @@ Decision 5 is binding: same stack, CLI, hooks and bank rules as big-chungus, wit
 > - Step 1 is owned by the HeyMa packaging lane (heyma-b6) and was requested on 2026-11-10. The work: named per-client tokens on `vinyl serve` (one file per client, revocable without a restart; `server.token` keeps working), mint/list/revoke commands, tests, a bumped deb on big-chungus, and a `damian-studio` token scp'd straight to the Mac as `~/.config/vinyl/token` (0600). The token never goes in chat or git.
 > - W8-2 then does the brew install, `vinyl setup --server <big-chungus MagicDNS>:7733` and `brew services start`, with Damian at the GUI for TCC.
 > - Step 2, the macOS port of vinyld/waxd, is a HeyMa epic. Damian's audio stays on big-chungus's server until it lands.
+>   - **2026-11-15: Step 2 is now I-6.2.** Jarad chose transcribe-cpp on both hosts (Metal on the Mac). Epics written: Vinyl `epics.md` Epics 1-3 (Mac server = `brew install delorenj/tap/vinyl-server`, paired to 127.0.0.1:7733; acceptance on this Mac is Vinyl story 2.5) and HeyMa Epic 2 (Wax on macOS). Once 2.5 lands, the tailnet-share blocker below no longer gates voice typing.
 > - Interim limit: `session_lock` serves one dictation session at a time, so if Jarad and Damian dictate together, one of them gets `busy`.
 > - **Step 1 DONE 2026-11-10 (heyma-b6).**
 >   - Commits: vinyl main 6ea1490, 6ea3faa, 19e31fa.

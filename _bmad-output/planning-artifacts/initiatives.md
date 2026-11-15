@@ -412,6 +412,25 @@ LiteLLM pass-through with Damian's `damian-studio` key, all other inference via
 the AutomaticAI gateway. Plan and evidence: `33god-platform/aperture/mirror/PLAN.md`
 (+ `survey-2026-11-10.json`).
 
+### I-6.2 HeyMa backend on the Mac, one transcribe-cpp engine
+
+**Outcome.** A Mac runs its own HeyMa backend from Homebrew
+(`delorenj/tap/vinyl-server`, later `delorenj/tap/wax`), so Damian's dictation
+and meetings never leave his network, and Vinyl runs one engine on every host:
+transcribe-cpp (Metal on Apple silicon, Vulkan/CPU on big-chungus), taking
+upstream Orca's November 2026 speech rebuild. Owner decision 2026-11-15: straight
+to transcribe-cpp on both hosts. Replaces PLAN.md W8 "Step 2".
+**Owner:** HeyMa (`heyma-pm`). Stories: Vinyl
+`components/vinyl/_bmad-output/planning-artifacts/epics.md` (Epics 1-3) and HeyMa
+`_bmad-output/planning-artifacts/epics.md` (Epic 2, Wax on macOS).
+
+```yaml
+owner_project: heyma
+child_backlogs: [vinyl, heyma]
+parent: I-6.1
+done_when: "Vinyl story 2.5 accepted on Damian's Mac (dictation via 127.0.0.1:7733); Wax Epic 2 accepted later"
+```
+
 ## I-7 Candybar schedule view in Holocene
 
 **Outcome.** The Candybar cron framework, which now runs the homelab's scheduled
