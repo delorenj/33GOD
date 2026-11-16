@@ -344,6 +344,38 @@ def registry_has(cid: str) -> bool:
     return cid in _REGISTRY
 
 
+def match_subject(filt: str | None, subject: str | None) -> bool:
+    """NATS subject matching: '*' = one token, '>' = one or more trailing tokens."""
+    if not filt or not subject:
+        return False
+    f, s = filt.split("."), subject.split(".")
+    for i, tok in enumerate(f):
+        if tok == ">":
+            return len(s) > i
+        if i >= len(s):
+            return False
+        if tok != "*" and tok != s[i]:
+            return False
+    return len(f) == len(s)
+
+
+# ---------- assembler join hints (SPEC section 3a) ----------
+# A collector that observed something about an event but does not know the event id puts a hint in
+# span.attrs["_join"]; the assembler resolves it and deletes the key:
+#   {"event_type": "bloodbank.conversation.turn.started",   # required
+#    "near": <abs epoch ms>,                                  # required: when the collector saw it
+#    "window_ms": 3000,                                       # optional search radius (default 3000)
+#    "consumer": "ntfy-router", "consumer_kind": "core",      # optional: also add a Consumer to the event
+#    "outcome": "routed",                                     # optional Consumer.outcome
+#    "link": "delivers"}                                      # optional link kind evt -> span (default delivers)
+# Gateway usage rows use span.attrs["_match_llm"] = {"input_tokens", "output_tokens", "near"} and are merged
+# into the transcript's llm:<n> span whose usage matches (or kept as their own llm span when none does).
+# Facts the assembler reads from Fragment.facts:
+#   "consumers": [{"name","stream","filter_subjects":[...],"kind":"durable|ephemeral","component","push_bound",...}]
+#   "core_subs": [{"client","subject","component"}]
+#   "turn_id", "turn_index", "model_requested", "model_served", "surface", "project"
+
+
 def to_jsonable(obj: Any) -> Any:
     if dataclasses.is_dataclass(obj):
         d = {}

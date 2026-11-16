@@ -219,6 +219,20 @@ Collectors run independently and link to each other's spans by computing the sam
 | notify | `notify:<channel>:<event id or at_ms>` |
 | file written | `file:<sha1(path)[:12]>:<at_ms>` |
 
+### 3a. Joins the assembler performs
+
+Some collectors observe a thing but not its key. They leave a hint, and `assemble.py` resolves it.
+See `model.py` "assembler join hints".
+- `attrs._join` attaches a span (an ntfy log line, an enricher log line) to the nearest bus event of a type.
+- `attrs._match_llm` merges a gateway usage row into the transcript's `llm:<n>` with equal tokens.
+- `facts.consumers` and `facts.core_subs` from the NATS inventory become **inferred** `Consumer`s on every
+  event whose subject they match (`model.match_subject`). A consumer that a collector actually observed
+  (Candystore `received_at`, Holocene `collected_at`, a log line) is upgraded to `evidence: 'observed'`.
+- A tool hook (`PreToolUse`/`PostToolUse`) gets `parent = tool:<tool_call_id>`. The link goes through its
+  publisher's event (`agent.tool.requested|completed` `data.tool_call_id`).
+- A `handler` with `refs.event_id` is linked `handler -> publish:<id> -> evt:<id>`.
+- The first `llm` span after a `context:*` span is linked `context -> llm` (`feeds`).
+
 Component of a `handler` span is always `hook-hub`; attrs.handler_id and attrs.mode carry the rest.
 The effect a handler causes (recall, publish, ASM) is its own span at the effect's component, linked
 `handler -> effect` with `calls`/`writes`/`publishes`.
