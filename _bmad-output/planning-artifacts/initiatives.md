@@ -653,6 +653,60 @@ related_initiatives: [I-6.1]
 - Damian's tell-back of each published page is recorded in the feedback log, and
   each change to the grammar cites the feedback that drove it.
 
+### I-10.1 Waybill — the prompt's own tour of the Factory
+
+**Outcome.** Jarad types one prompt in Claude Code, Codex CLI or Codex Desktop
+and can follow it through every component in causal order, with every side effect
+recorded. It works like DevTools tracking one network request. The recording is
+a `33god.waybill` v1 JSON dump, and the Factory (`manual/sandbox`) plays it back
+as a guided, data-true tour. This replaces the scripted tour, which did not work
+as a teaching device; `?tour` stays as it is. Damian gets the visual version, and
+Jarad gets the proof that the system works together, including what broke or
+never happened.
+
+**Owner:** `33god` (it spans hook-hub, Bloodbank, Candystore, Holocene, Hindsight,
+ASM and the gateway, so it lives here under the Director Rule). The recorder
+lives in `33god-platform/waybill/` (`SPEC.md`, `waybill capture|record|show|publish|list`).
+The player lives in `manual/sandbox/src/waybill/`. Deep link:
+`https://manual.delo.sh/sandbox/?waybill=<url>`.
+
+```yaml
+owner_project: 33god
+project_home: 33god-platform/waybill
+spec: 33god-platform/waybill/SPEC.md
+dogfood_target: [Jarad, Damian]
+delegations: []            # candidates below, not yet ticketed
+depends_on: [I-10]
+related_initiatives: [I-12]
+```
+
+**Seam acceptance criteria**
+
+- Every span, event and consumer in a waybill comes from a named source with
+  evidence. Inferred consumers are marked as inferred, and anything that cannot
+  be observed is recorded as a Gap, never invented.
+- The recorder only reads from live systems. It creates no JetStream consumers
+  and does no publishing.
+- The `public` profile scrubs credentials and truncates memory, context and tool
+  text before anything leaves the box.
+- The Factory renders a waybill as a pure function of the playhead, unmapped
+  components get auto-placed kiosks, and the end card lists findings and gaps.
+
+**Candidate delegations surfaced by the first recordings (2026-11-16)**
+
+- bloodbank/hook-hub: the hub's PATH lacks mise shims and `~/.local/bin`, so
+  codegraph-prompt, code-review-graph-* and codex-turn-notify never run.
+  candystore-context fails on every SessionStart. Optionally, a per-handler
+  stdout tee so waybills can show what each handler injected.
+- enricher: `report.session.completed` is dead-lettered by Candystore on every
+  session (a Dapr envelope without the CloudEvents fields).
+- agent-hooks: `publish_status=sent` is only a core-NATS PONG. In every capture
+  all `llm.usage.recorded` events were published, but none were stored by a
+  JetStream ack.
+- ASM: session-keyed scopes never reach `gone`, and the hash carries no
+  session_id or correlationid.
+- Bloodbank: traceparent is all zeros on every event.
+
 ## I-11 Agent ownership and impact awareness
 
 **Outcome.** A new request produces an accountable-owner brief separately from
