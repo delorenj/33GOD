@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
 # waybill launcher: a flight recorder for one prompt across 33GOD (see ../SPEC.md).
-# Stdlib-only Python; `record` also needs nats-py, which may live in a different interpreter
-# than /usr/bin/python3, so for `record` pick the first python3 that can import it.
+# ONE interpreter for every subcommand (capture/show/list/publish/record), so a capture and a record never
+# differ because they ran under different Pythons. Order:
+#   1. $WAYBILL_PYTHON, if set (taken as-is);
+#   2. the first of: mise python 3.14, `command -v python3`, /usr/bin/python3 that can `import nats`;
+#   3. /usr/bin/python3 with a warning (capture/show/list/publish are stdlib-only; `record` needs nats-py).
 set -euo pipefail
 ROOT="/home/delorenj/code/33GOD/33god-platform/waybill"
-PY="${WAYBILL_PYTHON:-/usr/bin/python3}"
-if [ -z "${WAYBILL_PYTHON:-}" ] && [ "${1:-}" = "record" ] && ! "$PY" -c 'import nats' 2>/dev/null; then
-  for c in "$(command -v python3 2>/dev/null || true)" "$HOME"/.local/share/mise/installs/python/3.1*/bin/python3; do
+PY="${WAYBILL_PYTHON:-}"
+if [ -z "$PY" ]; then
+  for c in "$HOME/.local/share/mise/installs/python/3.14/bin/python3" \
+           "$(command -v python3 2>/dev/null || true)" \
+           /usr/bin/python3; do
     if [ -n "$c" ] && [ -x "$c" ] && "$c" -c 'import nats' 2>/dev/null; then PY="$c"; break; fi
   done
+  if [ -z "$PY" ]; then
+    PY=/usr/bin/python3
+    echo "waybill: no python3 with nats-py found (tried mise 3.14, PATH python3, /usr/bin/python3); using $PY. 'record' will fail; set WAYBILL_PYTHON." >&2
+  fi
 fi
 export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
 # -P: never put the cwd on sys.path (a stray inspect.py / json.py in the cwd would shadow the stdlib)

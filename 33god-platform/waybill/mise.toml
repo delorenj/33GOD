@@ -1,7 +1,7 @@
 # Waybill: a flight recorder for one prompt across 33GOD.
 [tasks.test]
 description = "Run the waybill unit tests (no live systems)"
-run = "/usr/bin/python3 -m unittest discover -s tests -v"
+run = "PY=\"${WAYBILL_PYTHON:-python3}\"; \"$PY\" -m unittest discover -s tests -v"
 dir = "{{config_root}}"
 
 [tasks.install]

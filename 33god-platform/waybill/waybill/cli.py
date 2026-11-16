@@ -94,6 +94,7 @@ def fallback_window(session_id: str, cli: str | None = None, turn: int | None = 
     w = M.TurnWindow(cli=cli_, surface="claude-code" if cli_ == "claude" else ("codex-cli" if cli_ == "codex" else cli_),
                      session_id=session_id, t0=t0, t_end=t_end, turn_end=turn_end, turn_index=idx + 1,
                      prompt_invocation_id=inv, stop_invocation_id=stop_inv, settle_ms=settle_ms)
+    w.turn_source = "receipts"
     eid = _publisher_event(inv)
     env = candystore_envelope(eid) if eid else None
     data = (env or {}).get("data") if isinstance((env or {}).get("data"), dict) else {}
@@ -145,6 +146,29 @@ def _error_fragment(name: str, err: str, t_ms: float, status: str = "error") -> 
     return frag
 
 
+def _timeout_fragment(name: str, partial: M.Fragment | None, limit: float) -> M.Fragment:
+    """A collector hit the runner's deadline. Keep whatever it had parked in ctx.partials (a snapshot: the thread
+    may still be appending) and say the data is partial; only a collector with nothing parked is an empty error."""
+    msg = f"timed out after {limit:.0f} s"
+    if partial is None:
+        return _error_fragment(name, msg, limit * 1000.0)
+    import copy
+    src = copy.copy(partial.source)
+    frag = M.Fragment(source=src)
+    for attr in ("spans", "events", "links", "gaps", "findings"):
+        setattr(frag, attr, list(getattr(partial, attr)))
+    frag.components = dict(partial.components) if isinstance(partial.components, dict) else partial.components
+    frag.facts = dict(partial.facts)
+    frag.artifacts = dict(partial.artifacts)
+    src.status = "ok" if (frag.spans or frag.events) else "error"   # the schema has no 'partial'; the gap says so
+    src.error = f"{msg}; kept {len(frag.spans)} span(s) read before the deadline"
+    src.ms = round(limit * 1000.0, 1)
+    src.items = len(frag.spans)
+    frag.gaps.append(M.Gap(component=name, what=f"collector {name} timed out",
+                           why=f"{src.error}: later evidence from this source is missing", severity="warn"))
+    return frag
+
+
 def run_collectors(ctx: M.Ctx, names: list[str], progress: Callable[[str], None] | None = None,
                    timeout_s: float | None = None) -> list[M.Fragment]:
     """Run each collector in its own daemon thread with a deadline. Never raises."""
@@ -184,7 +208,7 @@ def run_collectors(ctx: M.Ctx, names: list[str], progress: Callable[[str], None]
     for name, th in threads.items():
         th.join(max(0.0, deadline - time.monotonic()))
         if th.is_alive():
-            results[name] = _error_fragment(name, f"timed out after {limit:.0f} s", limit * 1000.0)
+            results[name] = _timeout_fragment(name, ctx.partials.get(name), limit)
         if progress:
             f = results.get(name)
             if f is not None:
@@ -251,8 +275,13 @@ def cmd_capture(a: argparse.Namespace, argv: list[str]) -> int:
     except Exception as exc:
         _err(f"waybill: cannot resolve the turn: {type(exc).__name__}: {exc}")
         return 2
-    print(f"capturing {window.cli} session {window.session_id} turn {window.turn_index or '?'} "
-          f"({M.iso(window.t0)} .. {M.iso(window.t_end)})", file=sys.stderr)
+    src = getattr(window, "turn_source", None)
+    if a.turn is not None and src == "receipts" and not note:
+        note = (f"--turn {a.turn} was counted from hook-hub UserPromptSubmit receipts because the transcript could not "
+                "place it; it can differ from the transcript's own turn index")
+    print(f"capturing {window.cli} session {window.session_id} turn {window.turn_index or '?'}"
+          + (f" [{'transcript turn index' if src == 'transcript' else 'counted from receipts'}]" if src else "")
+          + f" ({M.iso(window.t0)} .. {M.iso(window.t_end)})", file=sys.stderr)
     wb = run_pipeline(window, profile=a.profile, deep=a.deep, only=_csv(a.only), skip=_csv(a.skip),
                       mode="capture", argv=argv, timeout_s=a.timeout, note=note,
                       progress=lambda s: print(s, file=sys.stderr))
@@ -269,7 +298,8 @@ def cmd_capture(a: argparse.Namespace, argv: list[str]) -> int:
 def cmd_record(a: argparse.Namespace, argv: list[str]) -> int:
     from . import live
     path = live.record(cli=a.cli, settle_s=a.settle, timeout_s=a.timeout, out=a.output, profile=a.profile,
-                       deep=a.deep, only=_csv(a.only), skip=_csv(a.skip), argv=argv)
+                       deep=a.deep, only=_csv(a.only), skip=_csv(a.skip), argv=argv,
+                       session=a.session, cwd=a.cwd, any_cwd=a.any)
     return 0 if path else 1
 
 
@@ -314,18 +344,37 @@ def recent_prompts(cli: str | None = None, limit: int = 20) -> list[dict]:
         "from invocations i where i.native='UserPromptSubmit'" + (" and i.cli=?" if cli else "")
         + " order by i.received_at desc limit ?", ((cli, limit) if cli else (limit,)))
     out = [{"invocation_id": r[0], "cli": r[1], "session_id": r[2], "received_at": r[3], "status": r[4],
-            "event_id": r[5], "prompt": None, "turn_id": None} for r in rows]
+            "event_id": r[5], "prompt": None, "turn_id": None, "turn": None, "turn_source": None} for r in rows]
 
     def fill(item: dict) -> None:
         env = candystore_envelope(item["event_id"]) if item["event_id"] else None
         data = (env or {}).get("data") if isinstance((env or {}).get("data"), dict) else {}
         item["prompt"] = data.get("prompt_text")
         item["turn_id"] = data.get("turn_id")
+        try:     # the transcript's own turn index wins over the event's turn_id, then a receipts count
+            from . import window as W
+            ti = W.transcript_turn_index(item["session_id"], item["cli"], M.ms(item["received_at"]) or 0.0) \
+                if item.get("session_id") else None
+        except Exception:
+            ti = None
+        if ti:
+            item["turn"], item["turn_source"] = ti, "transcript"
+        elif ":turn:" in (item["turn_id"] or ""):
+            item["turn"], item["turn_source"] = int(str(item["turn_id"]).rsplit(":", 1)[-1] or 0) or None, "event"
     ths = [threading.Thread(target=fill, args=(it,), daemon=True) for it in out]
     for t in ths:
         t.start()
     for t in ths:
         t.join(3.0)
+    for it in out:      # last resort: count this session's prompt receipts up to this one
+        if it.get("turn") is None and it.get("session_id"):
+            try:
+                n = receipts_query("select count(*) from invocations where session_id=? and native='UserPromptSubmit' "
+                                   "and received_at<=?", (it["session_id"], it["received_at"]))
+                if n and n[0][0]:
+                    it["turn"], it["turn_source"] = int(n[0][0]), "receipts"
+            except Exception:
+                pass
     return out
 
 
@@ -345,9 +394,10 @@ def cmd_list(a: argparse.Namespace, argv: list[str]) -> int:
     for it in items:
         words = " ".join((it.get("prompt") or "").split())
         words = (words[:58] + "…") if len(words) > 59 else (words or "(prompt text not in Candystore)")
-        tid = it.get("turn_id") or ""
-        turn = tid.rsplit(":", 1)[-1] if ":turn:" in tid else ""
+        turn = "" if it.get("turn") is None else f"{it['turn']}{'*' if it.get('turn_source') == 'receipts' else ''}"
         print(f"{it['received_at']:<24} {it['cli']:<7} {it['session_id'] or '-':<38} {turn:<6} {words}")
+    if any(it.get("turn_source") == "receipts" for it in items):
+        print("\n* turn counted from hook-hub receipts (the transcript could not place it)")
     print("\ncapture one:  waybill capture --session <session> --at <received>")
     return 0
 
@@ -361,7 +411,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     def common(sp: argparse.ArgumentParser) -> None:
         sp.add_argument("--settle", type=float, default=15.0, help="seconds to keep collecting after Stop (default 15)")
-        sp.add_argument("--profile", choices=("full", "public"), default="full")
+        sp.add_argument("--profile", choices=("full", "public"), default="full",
+                        help="full keeps everything the sources hold (local use); public redacts prompts, paths, "
+                             "hostnames and user names and cuts long text, so the file is safe to commit or publish "
+                             "(default full)")
         sp.add_argument("--deep", action="store_true", help="allow credentialed lookups (gateway traces)")
         sp.add_argument("-o", "--output", help="output file or directory (default ./<id>.waybill.json)")
         sp.add_argument("--only", help="comma-separated collectors to run")
@@ -382,19 +435,23 @@ def build_parser() -> argparse.ArgumentParser:
 
     r = sub.add_parser("record", help="arm live taps, wait for the next prompt, follow it to Stop")
     r.add_argument("--cli", choices=("claude", "codex"), help="only follow prompts from this CLI")
+    r.add_argument("--session", help="follow this native session id only")
+    r.add_argument("--cwd", help="only follow sessions working in or around this directory (default: the current directory)")
+    r.add_argument("--any", action="store_true", help="follow a prompt from any working directory "
+                   "(cron, Crank and child sessions are still ignored)")
     common(r)
     r.add_argument("--timeout", type=float, default=900.0, help="give up after this many seconds (default 900)")
     r.set_defaults(func=cmd_record)
 
     s = sub.add_parser("show", help="DevTools-style waterfall in the terminal")
-    s.add_argument("file")
+    s.add_argument("file", help="a .waybill.json file written by capture or record")
     s.add_argument("--width", type=int, help="terminal width (default: detected)")
-    s.add_argument("--all", action="store_true", help="do not collapse tool loops or repeated events")
+    s.add_argument("--all", action="store_true", help="do not collapse tool loops, repeated events or the llm.usage / allowance fan-out")
     s.add_argument("--no-color", action="store_true")
     s.set_defaults(func=cmd_show)
 
     pb = sub.add_parser("publish", help="publish to MinIO (public profile) and print the Factory link")
-    pb.add_argument("file")
+    pb.add_argument("file", help="the .waybill.json file to publish (the public profile is cut from it)")
     pb.add_argument("--full", action="store_true", help="publish the full profile as is (no public cut)")
     pb.add_argument("--name", help="artifact name (default: waybill-<id>)")
     pb.add_argument("--project", help="artifact project slug (default: the publish script's own resolution)")
@@ -402,9 +459,9 @@ def build_parser() -> argparse.ArgumentParser:
     pb.set_defaults(func=cmd_publish)
 
     ls = sub.add_parser("list", help="recent prompt invocations to pick one to capture")
-    ls.add_argument("--cli", choices=("claude", "codex"))
-    ls.add_argument("--limit", type=int, default=20)
-    ls.add_argument("--json", action="store_true")
+    ls.add_argument("--cli", choices=("claude", "codex"), help="only list prompts from this CLI")
+    ls.add_argument("--limit", type=int, default=20, help="how many recent prompts to list (default 20)")
+    ls.add_argument("--json", action="store_true", help="print the rows as JSON instead of a table")
     ls.set_defaults(func=cmd_list)
     return p
 

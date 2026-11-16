@@ -18,7 +18,7 @@
 // Captions lead with plain words (what happened, where, how long the prompt waited); `detail` carries the
 // recorder's own summary sentence with real ids and numbers, shown smaller.
 import { place, type Placement } from './stations'
-import { spanDur, fmtMs, fmtInt, type BusEvent, type Consumer, type Span, type Waybill } from './types'
+import { spanDur, fmtMs, fmtInt, fmtT, type BusEvent, type Consumer, type Span, type Waybill } from './types'
 
 export type HeroForm = 'parcel' | 'postit' | 'envelope' | 'card' | 'phone' | 'slip' | 'toolbox' | 'lamp' | 'none'
 export type StopKind = 'prompt' | 'courier' | 'dock' | 'briefing' | 'publish' | 'belt' | 'llm' | 'memory' | 'loop' | 'crew' | 'kiosk' | 'reader' | 'end'
@@ -63,6 +63,20 @@ export interface Stop {
   tools?: ToolCount[]
   /** span / event ids in this stop that failed or are named by a finding */
   problems: string[]
+  /** the one line printed under the hero in 3D: what the thing is, and its size or time ('briefing card' · '6.9k characters') */
+  heroLabel?: { real: string; sub?: string }
+  /** the hero travels the whole stop between two stations (the briefing card goes dock to bay) and the camera frames both */
+  travel?: { from: string; to: string }
+  /** subagents sent out (a crew stop) */
+  helpers?: number
+  /** each tool call in order, so the 3D can name the one running now ('Bash · 12 of 34') */
+  toolRuns?: { name: string; t0: number; t1: number }[]
+  /** one round of a long tool loop: 'round 3 of 9' */
+  part?: { n: number; of: number }
+  /** a tool or model-call burst: how many model calls it holds */
+  modelCalls?: number
+  /** the model route a model-call stop is waiting on, for the thinking indicator */
+  model?: string
 }
 
 export interface Direction { stops: Stop[]; placement: Placement; stopOfSpan: Record<string, number>; stopOfEvent: Record<string, number> }
@@ -231,6 +245,17 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       case 'tool': g = 'loop'; break
       case 'handler': g = up() ?? `fx:${s.id}`; break
       case 'hook': {
+        if (s.attrs?.client_side || s.id.startsWith('clienthook:')) {
+          // client-side hook (bb-hook / Orca shim): ride along with the hub hook it fed, never a dock of its own
+          if (parent) { g = up(); break }
+          if (inLoop(s.t0)) { g = 'loop'; break }
+          const nat = s.name.split(' ')[0]
+          const hubs = wb.spans.filter((x) => x.kind === 'hook' && x.id.startsWith('hook:'))
+          const near = (xs: Span[]) => xs.sort((a, b) => Math.abs(a.t0 - s.t0) - Math.abs(b.t0 - s.t0))[0]
+          const hub = near(hubs.filter((x) => native(x) === nat)) ?? near(hubs)
+          g = hub ? groupOf(hub, depth + 1) : 'prompt'
+          break
+        }
         if (isToolHook(s) && parent?.kind === 'tool') g = up()
         else if (parent?.kind === 'handler') g = handlerEffectGroup(parent, depth)
         else if (parent && (parent.kind === 'state' || parent.kind === 'notify' || parent.kind === 'consume')) g = up()
@@ -322,6 +347,37 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
   for (const s of wb.spans) add(groupOf(s), s)
   for (const e of wb.events) add(eventGroup(e), undefined, e)
 
+  // ---- a long tool loop is several stops: rounds of a few tool calls, so a 5 minute turn is watchable ----
+  // (a new round starts after CHUNK_TOOLS calls, or after a long silence). Everything under a tool (its hooks, handlers,
+  // posts) stays with it; model calls and events go to the round whose time window holds them.
+  const CHUNK_TOOLS = 5, CHUNK_GAP = 45000
+  const loopGroup = groups.get('loop')
+  if (loopGroup) {
+    const lt = loopGroup.spans.filter((s) => s.kind === 'tool').sort((a, b) => a.t0 - b.t0)
+    if (lt.length > CHUNK_TOOLS + 1) {
+      const starts: number[] = []
+      let n = 0, prevEnd = -Infinity
+      for (const t of lt) {
+        if (n >= CHUNK_TOOLS || (n >= 2 && t.t0 - prevEnd > CHUNK_GAP)) { starts.push(t.t0); n = 0 }
+        n++
+        prevEnd = Math.max(prevEnd, t.t1 ?? t.t0)
+      }
+      const roundAt = (t: number) => { let k = 0; while (k < starts.length && starts[k] <= t) k++; return k }
+      const toolAbove = (sp: Span): Span | undefined => { let c: Span | undefined = sp; for (let i = 0; c && i < 8; i++) { if (c.kind === 'tool') return c; c = c.parent ? byId.get(c.parent) : undefined } return undefined }
+      const spanRound = new Map<string, number>()
+      const parts: Group[] = Array.from({ length: starts.length + 1 }, (_, k) => ({ key: `loop#${k}`, spans: [], events: [] }))
+      for (const sp of loopGroup.spans) { const k = roundAt((toolAbove(sp) ?? sp).t0); spanRound.set(sp.id, k); parts[k].spans.push(sp) }
+      for (const e of loopGroup.events) { const k = (e.publisher_span ? spanRound.get(e.publisher_span) : undefined) ?? roundAt(e.t); parts[k].events.push(e) }
+      groups.delete('loop')
+      for (const part of parts) {
+        if (!part.spans.length && !part.events.length) continue
+        groups.set(part.key, part)
+        part.spans.forEach((sp) => gm.set(sp.id, part.key))
+        part.events.forEach((e) => gm.set(`evt:${e.id}`, part.key))
+      }
+    }
+  }
+
   // the moment the answer was finished: Stop, else the turn umbrella's end, else the clock
   const stopHook = wb.spans.find((s) => s.kind === 'hook' && native(s) === 'Stop' && !crewOf(s))
   const answerAt = stopHook?.t0 ?? byId.get('turn')?.t1 ?? wb.clock.duration_ms
@@ -347,7 +403,8 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
     // a belt stop is about the event itself (posted -> last reader); every other stop is about its spans
     const beltEv = g.key.startsWith('belt:') ? g.events : []
     const lo = [...spans.map((s) => s.t0), ...beltEv.map((e) => e.t)]
-    const hi = [...spans.map((s) => s.t1 ?? s.t0), ...beltEv.map((e) => Math.max(e.t, e.archived ?? e.t, maxOf(e.consumers.map((c) => c.t ?? e.t))))]
+    // a file span is a line appended at t0; its t1 is only when the recorder last looked, so it never stretches a stop
+    const hi = [...spans.map((s) => (s.kind === 'file' ? s.t0 : s.t1 ?? s.t0)), ...beltEv.map((e) => Math.max(e.t, e.archived ?? e.t, maxOf(e.consumers.map((c) => c.t ?? e.t))))]
     if (!lo.length) { lo.push(...g.events.map((e) => e.t)); hi.push(...g.events.map((e) => e.t)) }
     // a dock stop starts when hook-hub got the parcel: effects with approximate times must not pull it earlier
     const t0 = g.key.startsWith('hook:') && head ? head.t0 : minOf(lo)
@@ -365,7 +422,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
     const usageNotes = () => g.events.filter(isUsage).forEach((e) => {
       const pub = e.publisher_span ? byId.get(e.publisher_span) : undefined
       const rec = pub?.parent ? byId.get(pub.parent) : undefined
-      notes.push(`${cname(e.producer ?? 'aai-llm-observability')} posted ${shortType(e.type)}${e.seq !== null ? ` (belt #${e.seq})` : ''}${rec?.kind === 'llm' ? `, ${fmtMs(e.t - (rec.t1 ?? rec.t0))} after the call ended` : ''}.`)
+      notes.push(`${cname(e.producer ?? 'aai-llm-observability')} posted ${shortType(e.type)}${e.seq !== null ? ` (belt #${e.seq})` : ''}${rec?.kind === 'llm' ? `, ${fmtMs(Math.abs(e.t - (rec.t1 ?? rec.t0)))} ${e.t - (rec.t1 ?? rec.t0) < 0 ? 'before' : 'after'} the call ended` : ''}.`)
     })
     const fanoutOf = (es: BusEvent[]) => es.filter((e) => !isMirror(e) && !isUsage(e)).map((e) => ({ eventId: e.id, type: e.type, seq: e.seq, consumers: e.consumers }))
     const fan = (es: BusEvent[]) => es.forEach((e) => e.consumers.forEach((c) => comps.add(c.component)))
@@ -380,7 +437,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       const caption = headless
         ? `A script started ${cliName} with this prompt. The prompt leaves the vendor bay as a parcel, and everything after this happened because of it.`
         : `You typed a prompt into ${cliName} and pressed Enter. It leaves the vendor bay as a parcel, and everything after this happened because of it.`
-      stops.push({ ...base, kind: 'prompt', set: 'bays', components: [...comps], title: headless ? `${cliName} gets a prompt` : `You press Enter in ${cliName}`, caption, detail: head.summary, tag: `${wb.origin.surface} · session ${wb.origin.session_id.slice(0, 8)}${wb.origin.turn_index != null ? ` · turn ${wb.origin.turn_index}` : ''}`, notes, hero: 'parcel', side: false, afterReply: false, waited: false, waitedMs: 0 })
+      stops.push({ ...base, kind: 'prompt', set: 'bays', components: [...comps], title: headless ? `${cliName} gets a prompt` : `You press Enter in ${cliName}`, caption, detail: head.summary, tag: `${wb.origin.surface} · session ${wb.origin.session_id.slice(0, 8)}${wb.origin.turn_index != null ? ` · turn ${wb.origin.turn_index}` : ''}`, notes, hero: 'parcel', heroLabel: { real: 'your prompt', sub: p.text ? chars(p.text.length) : cliName }, side: false, afterReply: false, waited: false, waitedMs: 0 })
       continue
     }
     if (g.key.startsWith('hook:') && head) {
@@ -407,7 +464,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       spans.filter((s) => s.kind !== 'handler' && s.kind !== 'hook').forEach((s) => notes.push(s.summary))
       g.events.filter(isMirror).slice(0, 1).forEach((e) => notes.push(`hook-hub also posted its own receipt as a hook.updated post-it${e.seq !== null ? ` (belt #${e.seq})` : ''}, so other rooms can see the dock's work.`))
       fan(g.events)
-      stops.push({ ...base, kind: 'dock', set: 'dock', components: [...comps], title: HOOK_WORDS[nat] ?? `${nat} at the dock`, caption, detail: head.summary, tag: `${nat} · hook-hub · invocation ${String(head.refs?.invocation_id ?? keyId).slice(0, 8)}`, notes, hero: 'parcel', cards, side: !head.sync, waited: !!head.sync && held > 0, waitedMs: held })
+      stops.push({ ...base, kind: 'dock', set: 'dock', components: [...comps], title: HOOK_WORDS[nat] ?? `${nat} at the dock`, caption, detail: head.summary, tag: `${nat} · hook-hub · invocation ${String(head.refs?.invocation_id ?? keyId).slice(0, 8)}`, notes, hero: 'parcel', heroLabel: { real: `${nat} parcel`, sub: held > 0 ? `held ${fmtMs(held)}` : 'no wait' }, cards, side: !head.sync, waited: !!head.sync && held > 0, waitedMs: held })
       continue
     }
     if (g.key.startsWith('context:') && head) {
@@ -417,11 +474,12 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       const size = chars(a.chars ?? a.model_saw_chars)
       const caption = `hook-hub hands a briefing card back to ${cliName}${size ? `: ${size}` : ''}${who.length ? ` from ${listAnd(who)}` : ''}. The model reads it together with ${ev === 'SessionStart' ? 'everything that follows' : 'your prompt'}. It never goes on the belt.`
       spans.filter((s) => s !== head).forEach((s) => notes.push(s.summary))
-      stops.push({ ...base, kind: 'briefing', set: 'bays', components: [...comps], title: `A briefing card goes back to ${cliName}`, caption, detail: head.summary, tag: `${ev || 'hook'} additionalContext · ${who.join(' · ')}`, notes, hero: 'card', waited: false, waitedMs: 0, side: false })
+      stops.push({ ...base, kind: 'briefing', set: 'bays', components: [...comps], title: `A briefing card goes back to ${cliName}`, caption, detail: head.summary, tag: `${ev || 'hook'} additionalContext · ${who.join(' · ')}`, notes, hero: 'card', travel: { from: 'dock', to: 'bays' }, heroLabel: { real: 'briefing card', sub: size || 'added to the prompt' }, waited: false, waitedMs: 0, side: false })
       continue
     }
-    if (g.key === 'loop' || g.key.startsWith('crew:')) {
+    if (g.key === 'loop' || g.key.startsWith('loop#') || g.key.startsWith('crew:')) {
       const crew = g.key.startsWith('crew:')
+      const part = g.key.startsWith('loop#') ? { n: Number(g.key.slice(5)) + 1, of: [...groups.keys()].filter((k) => k.startsWith('loop#')).length } : undefined
       const tools = spans.filter((s) => s.kind === 'tool')
       const counts = new Map<string, ToolCount>()
       for (const t of tools) { const c = counts.get(t.name) ?? { name: t.name, count: 0, ms: 0 }; c.count++; c.ms += spanDur(t); counts.set(t.name, c) }
@@ -431,6 +489,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       const evts = g.events.filter((e) => !isMirror(e) && !isUsage(e))
       const list = tc.slice(0, 4).map((t) => `${t.name} ×${t.count}`).join(', ') + (tc.length > 4 ? `, ${tc.length - 4} more` : '')
       const readers = readersOf(g.events)
+      const toolRuns = tools.map((t) => ({ name: t.name, t0: t.t0, t1: t.t1 ?? t.t0 }))
       fan(g.events)
       if (crew) {
         const starts = spans.filter((s) => s.kind === 'hook' && native(s) === 'SubagentStart')
@@ -438,17 +497,18 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
         const caption = `${launcher ? `The ${launcher.name} tool` : cliName} sends out ${pl1(starts.length || 1, 'helper')} (subagents) that work side by side. Between them they run ${pl1(tools.length, 'tool call')}${tools.length ? ` (${list})` : ''} and ${pl1(llms.length, 'model call')}. The main conversation does not wait for them.`
         starts.forEach((h) => notes.push(`${String(h.attrs?.agent_type ?? 'helper')}: ${String(h.attrs?.description ?? h.summary)}`))
         if (wb.gaps.some((x) => /sidechain|subagent/i.test(x.what))) notes.push(wb.gaps.find((x) => /sidechain|subagent/i.test(x.what))!.why)
-        stops.push({ ...base, kind: 'crew', set: setOfComp(launcher?.component ?? promptSpan?.component ?? 'ext:claude-code'), components: [...comps], title: `${pl1(starts.length || 1, 'helper')} work in parallel`, caption, detail: launcher?.summary ?? '', tag: `${starts.length} × SubagentStart · ${pl1(tools.length, 'tool')} · ${pl1(llms.length, 'model call')}`, notes, hero: 'toolbox', tools: tc, fanout: fanoutOf(g.events), readers, waited: false, waitedMs: 0, side: true })
+        stops.push({ ...base, kind: 'crew', set: setOfComp(launcher?.component ?? promptSpan?.component ?? 'ext:claude-code'), components: [...comps], title: `${pl1(starts.length || 1, 'helper')} work in parallel`, caption, detail: launcher?.summary ?? '', tag: `${starts.length} × SubagentStart · ${pl1(tools.length, 'tool')} · ${pl1(llms.length, 'model call')}`, notes, hero: 'toolbox', tools: tc, fanout: fanoutOf(g.events), readers, waited: false, waitedMs: 0, side: true, helpers: starts.length || 1, toolRuns, modelCalls: llms.length, heroLabel: { real: `×${starts.length || 1} ${starts.length === 1 || !starts.length ? 'helper' : 'helpers'}`, sub: `${pl1(tools.length, 'tool')} · ${pl1(llms.length, 'model call')}` } })
         continue
       }
       const many = tools.length > 1
-      const caption = `The model asks for ${many ? 'tools' : 'a tool'}, ${cliName} runs ${many ? 'them' : 'it'}, and the answer goes back to the model: ${pl1(tools.length, 'tool call')} (${list})${llms.length ? ` with ${pl1(llms.length, 'model call')} in between` : ''}, over ${fmtMs(t1 - t0)}. Each call is checked at the dock before and after${evts.length ? ` and puts ${pl1(evts.length, 'post-it')} on the belt` : ''}. ${waitLine(waitedMs)}`
+      const caption = `${part ? `Round ${part.n} of ${part.of} of the tool loop. ` : ''}The model asks for ${many ? 'tools' : 'a tool'}, ${cliName} runs ${many ? 'them' : 'it'}, and the answer goes back to the model: ${pl1(tools.length, 'tool call')} (${list})${llms.length ? ` with ${pl1(llms.length, 'model call')} in between` : ''}, over ${fmtMs(t1 - t0)}. Each call is checked at the dock before and after${evts.length ? ` and puts ${pl1(evts.length, 'post-it')} on the belt` : ''}. ${waitLine(waitedMs)}`
       tools.slice(0, 12).forEach((t) => notes.push(t.summary))
       if (tools.length > 12) notes.push(`… and ${tools.length - 12} more tool calls (the waterfall has every one).`)
       if (llms.length) notes.push(`${pl1(llms.length, 'model call')} between the tools: ${tokens(llms.reduce((n, l) => n + Number(l.attrs?.tokens_in ?? 0), 0))} tokens in, ${tokens(llms.reduce((n, l) => n + Number(l.attrs?.tokens_out ?? 0), 0))} out.`)
       if (readers.length) notes.push(`Readers of the loop's post-its: ${readers.map((r) => `${r.name} ${r.observed ? `×${r.observed}` : '(inferred)'}`).join(', ')}.`)
       const set = setOfComp(tools[0]?.component ?? promptSpan?.component ?? 'ext:claude-code')
-      stops.push({ ...base, kind: 'loop', set, components: [...comps], title: `${cliName} uses its tools: ${tc.slice(0, 3).map((t) => `${t.name} ×${t.count}`).join(' · ')}${tc.length > 3 ? ' …' : ''}`, caption, detail: tools.length === 1 ? tools[0].summary : `${pl1(tools.length, 'tool span')}, ${pl1(hooks.length, 'tool hook')}, ${pl1(llms.length, 'llm span')}, ${pl1(evts.length, 'event')}`, tag: `${pl1(hooks.length, 'tool hook')} · ${pl1(evts.length, 'event')}`, notes, hero: 'toolbox', tools: tc, fanout: fanoutOf(g.events), readers })
+      const roundWords = part ? ` (round ${part.n} of ${part.of})` : ''
+      stops.push({ ...base, kind: 'loop', set, components: [...comps], part, toolRuns, modelCalls: llms.length, heroLabel: { real: tc.slice(0, 3).map((t) => `${t.name} ×${t.count}`).join(' · ') + (tc.length > 3 ? ' …' : ''), sub: `${pl1(tools.length, 'tool call')} · ${fmtMs(t1 - t0)}` }, title: `${cliName} uses its tools${roundWords}: ${tc.slice(0, 3).map((t) => `${t.name} ×${t.count}`).join(' · ')}${tc.length > 3 ? ' …' : ''}`, caption, detail: tools.length === 1 ? tools[0].summary : `${pl1(tools.length, 'tool span')}, ${pl1(hooks.length, 'tool hook')}, ${pl1(llms.length, 'llm span')}, ${pl1(evts.length, 'event')}`, tag: `${pl1(hooks.length, 'tool hook')} · ${pl1(evts.length, 'event')}`, notes, hero: 'toolbox', tools: tc, fanout: fanoutOf(g.events), readers })
       continue
     }
     if (g.key.startsWith('llm:') && head) {
@@ -463,7 +523,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       const caption = bg
         ? `${cliName} makes a background model call on the side (things like a session title or a summary). The gateway sends it to ${model}. Nobody waits for it.`
         : `${cliName} phones the staffing desk, the AutomaticAI gateway, which puts the call through to ${model}. The model reads ${tokens(tin)} tokens and answers with ${tokens(tout)}. ${head.sync ? waitLine(spanDur(head)) : 'Nobody waited for it.'}`
-      stops.push({ ...base, kind: 'llm', set: setOfComp(head.component), components: [...comps], title: bg ? 'A background model call' : mainLlms > 1 ? `The model thinks (call ${n} of ${mainLlms})` : 'The model thinks', caption, detail: head.summary, tag: `${head.id} · ${cname(head.component)}${head.refs?.request_id ? ` · request ${String(head.refs.request_id).slice(-8)}` : ''}`, notes, hero: 'phone', waited: !!head.sync, waitedMs: head.sync ? spanDur(head) : 0, side: !head.sync })
+      stops.push({ ...base, kind: 'llm', set: setOfComp(head.component), components: [...comps], title: bg ? 'A background model call' : mainLlms > 1 ? `The model thinks (call ${n} of ${mainLlms})` : 'The model thinks', caption, detail: head.summary, tag: `${head.id} · ${cname(head.component)}${head.refs?.request_id ? ` · request ${String(head.refs.request_id).slice(-8)}` : ''}`, notes, hero: 'phone', model, heroLabel: { real: model, sub: head.sync || spanDur(head) > 0 ? fmtMs(spanDur(head)) : undefined }, waited: !!head.sync, waitedMs: head.sync ? spanDur(head) : 0, side: !head.sync })
       continue
     }
     if (g.key.startsWith('memory:') && head) {
@@ -476,11 +536,11 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
           ? `hook-hub asks the lessons library (Hindsight) for this project's standing notes, to open the session with. The answer goes onto the briefing card. ${wait}`
           : `The lessons library (${cname(head.component)}) files a slip: ${head.name}. ${wait}`
       const mtitle = kind === 'recall' ? 'The lessons library looks things up' : kind === 'briefing' ? 'The lessons library prepares a briefing' : `The lessons library: ${head.name}`
-      stops.push({ ...base, kind: 'memory', set: setOfComp(head.component), components: [...comps], title: mtitle, caption: caption.trim(), detail: head.summary, tag: `${head.id.split(':').slice(0, 2).join(':')} · ${cname(head.component)}`, notes, hero: 'slip' })
+      stops.push({ ...base, kind: 'memory', set: setOfComp(head.component), components: [...comps], title: mtitle, caption: caption.trim(), detail: head.summary, tag: `${head.id.split(':').slice(0, 2).join(':')} · ${cname(head.component)}`, notes, hero: 'slip', heroLabel: { real: kind === 'recall' ? 'recall' : kind === 'briefing' ? 'standing notes' : head.name, sub: head.sync ? fmtMs(spanDur(head)) : 'alongside' } })
       continue
     }
     if (g.key.startsWith('publish:') && head) {
-      stops.push({ ...base, kind: 'publish', set: setOfComp(head.component), components: [...comps], title: `${cname(head.component)} posts ${head.name}`, caption: `${cname(head.component)} tries to stick a note on the belt. The recorder saw the attempt but not the note itself.`, detail: head.summary, tag: head.id, notes, hero: 'postit' })
+      stops.push({ ...base, kind: 'publish', set: setOfComp(head.component), components: [...comps], title: `${cname(head.component)} posts ${head.name}`, caption: `${cname(head.component)} tries to stick a note on the belt. The recorder saw the attempt but not the note itself.`, detail: head.summary, tag: head.id, notes, hero: 'postit', heroLabel: { real: head.name, sub: 'attempted post' } })
       continue
     }
     if (g.key.startsWith('reader:') && head) {
@@ -488,7 +548,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       const e = evById.get(eventIdOfConsume(head))
       const out = (linksFrom.get(head.id) ?? []).filter((l) => l.kind === 'publishes').map((l) => evById.get(l.to.slice(4))).filter(Boolean) as BusEvent[]
       fan(g.events)
-      stops.push({ ...base, kind: 'reader', set: setOfComp(head.component), components: [...comps], title: `${cname(head.component)} reads a post-it and writes a new one`, caption: `${cname(head.component)} tears off a copy of ${e ? `“${headline(e.type)}”` : 'a post-it'} and writes a new post-it of its own${out.length ? `: “${headline(out[0].type)}”` : ''}. Nobody waited for it.`, detail: head.summary, tag: `${head.id.split(':').slice(0, 2).join(':')}`, notes, hero: 'postit', fanout: fanoutOf(g.events), readers: readersOf(g.events) })
+      stops.push({ ...base, kind: 'reader', set: setOfComp(head.component), components: [...comps], title: `${cname(head.component)} reads a post-it and writes a new one`, caption: `${cname(head.component)} tears off a copy of ${e ? `“${headline(e.type)}”` : 'a post-it'} and writes a new post-it of its own${out.length ? `: “${headline(out[0].type)}”` : ''}. Nobody waited for it.`, detail: head.summary, tag: `${head.id.split(':').slice(0, 2).join(':')}`, notes, hero: 'postit', heroLabel: { real: out.length ? headline(out[0].type) : 'new post-it', sub: 'written by a reader' }, fanout: fanoutOf(g.events), readers: readersOf(g.events) })
       continue
     }
     if (g.key.startsWith('belt:')) {
@@ -514,14 +574,14 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       spans.filter((s) => s.kind !== 'handler' && s.kind !== 'hook').forEach((s) => notes.push(s.summary))
       const reentry = spans.filter((s) => s.kind === 'hook')
       if (reentry.length) notes.push(`hook-hub reacted to the state change with ${pl1(reentry.length, 'small job run')} of its own (${spans.filter((s) => s.kind === 'handler').map((s) => s.name).filter((x, i, a) => a.indexOf(x) === i).join(', ')}).`)
-      stops.push({ ...base, kind: 'belt', set: 'belt', components: [...comps], title: `“${hl}” goes on the belt`, caption: parts.join(' '), detail: pub?.summary ?? spans.find((s) => s.kind === 'consume' && BAD.has(s.status))?.summary ?? '', tag: facts, notes, hero: isCommand(e) ? 'envelope' : 'postit', side: true, waited: false, waitedMs: 0, fanout: fanoutOf(g.events), readers })
+      stops.push({ ...base, kind: 'belt', set: 'belt', components: [...comps], title: `“${hl}” goes on the belt`, caption: parts.join(' '), detail: pub?.summary ?? spans.find((s) => s.kind === 'consume' && BAD.has(s.status))?.summary ?? '', tag: facts, notes, hero: isCommand(e) ? 'envelope' : 'postit', heroLabel: { real: hl, sub: e.seq !== null ? `belt #${e.seq}` : 'core NATS only' }, side: true, waited: false, waitedMs: 0, fanout: fanoutOf(g.events), readers })
       continue
     }
     // kiosk moments: state, notify, file and unknown kinds
     if (head) {
       spans.filter((s) => s !== head).forEach((s) => notes.push(s.summary))
       const what = head.kind === 'state' ? 'records a state change' : head.kind === 'notify' ? 'lights up' : head.kind === 'file' ? 'writes a file' : 'does something this player has no picture for'
-      stops.push({ ...base, kind: 'kiosk', set: setOfComp(head.component), components: [...comps], title: `${cname(head.component)}: ${head.name}`, caption: `${cname(head.component)} ${what}. ${head.sync ? waitLine(spanDur(head)) : 'Nobody waited for it.'}`, detail: head.summary, tag: `${head.kind} · ${head.component}`, notes, hero: head.kind === 'file' ? 'slip' : 'lamp' })
+      stops.push({ ...base, kind: 'kiosk', set: setOfComp(head.component), components: [...comps], title: `${cname(head.component)}: ${head.name}`, caption: `${cname(head.component)} ${what}. ${head.sync ? waitLine(spanDur(head)) : 'Nobody waited for it.'}`, detail: head.summary, tag: `${head.kind} · ${head.component}`, notes, hero: head.kind === 'file' ? 'slip' : 'lamp', heroLabel: { real: head.name, sub: head.kind } })
     }
   }
 
@@ -589,7 +649,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
       detail: gap ? `${gap.what}: ${gap.why}` : 'bb-hook records nothing on the client side, so this trip is drawn from the receipt, not seen.',
       tag: 'bb-hook → hook-hub socket',
       notes: [],
-      hero: 'parcel', waited: at - freeFrom > 0, waitedMs: Math.max(0, at - freeFrom), side: false, afterReply: false, inferred: true, problems: [],
+      hero: 'parcel', heroLabel: { real: 'bb-hook', sub: 'carrying your prompt' }, waited: at - freeFrom > 0, waitedMs: Math.max(0, at - freeFrom), side: false, afterReply: false, inferred: true, problems: [],
     })
   }
 
@@ -614,8 +674,4 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
   // spans no stop claimed (the turn umbrella) point at the prompt
   for (const s of wb.spans) if (!(s.id in stopOfSpan)) stopOfSpan[s.id] = Math.max(0, promptStop)
   return { stops, placement, stopOfSpan, stopOfEvent }
-}
-
-function fmtT(ms: number | null | undefined) {
-  return ms === null || ms === undefined ? '—' : `+${fmtMs(ms)}`
 }

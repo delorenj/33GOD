@@ -148,6 +148,7 @@
         "causationid": {"type": ["string", "null"]},
         "producer": {"type": ["string", "null"]},
         "publisher_span": {"type": ["string", "null"]},
+        "stored_type": {"type": ["string", "null"]},
         "consumers": {"type": "array", "items": {"$ref": "#/$defs/Consumer"}},
         "payload": {"type": "string"},
         "schema": {

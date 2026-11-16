@@ -199,7 +199,8 @@ def _consume_span(frag: Fragment, eid: str, et: str, t_env: float | None, t_arch
     lag = (t_arch - t_env) if (t_arch is not None and t_env is not None) else None
     if summary is None:
         if lag is not None:
-            summary = f"Candystore archived {short_type(et)} {int(round(lag))} ms after it was published"
+            summary = (f"Candystore received {short_type(et)} {int(round(lag))} ms after its envelope time "
+                       "(includes the publisher's own lag; the assembler re-bases this on the JetStream store time)")
         else:
             summary = f"Candystore archived {short_type(et)} (archive time not read)"
     frag.spans.append(Span(
@@ -230,7 +231,8 @@ def _event(frag: Fragment, ctx: Ctx, env: dict, archived: float | None, publishe
         causationid=env.get("causationid") or fallback.get("causationid"),
         producer=env.get("producer") or fallback.get("producer") or env.get("source"),
         publisher_span=Ids.publish(eid) if eid in published else None,
-        consumers=[consumer], payload=envelope_artifact(frag, env, ctx.profile))
+        consumers=[consumer], payload=envelope_artifact(frag, env, ctx.profile),
+        stored_type=env.get("type") if env.get("type") and env.get("type") != et else None)
 
 
 def build(frag: Fragment, ctx: Ctx, session_events: list[dict], pg: dict | None, published: set[str],
@@ -314,6 +316,7 @@ def build(frag: Fragment, ctx: Ctx, session_events: list[dict], pg: dict | None,
             frag.events.append(BusEvent(
                 id=eid, type=et, t=ms(env.get("time")) or arch or ctx.window.t0, subject=subject, archived=None,
                 correlationid=env.get("correlationid"), causationid=env.get("causationid"), producer=src,
+                stored_type=env.get("type") if env.get("type") and env.get("type") != et else None,
                 consumers=[Consumer(name=CONSUMER, component="candystore", kind="durable", outcome="dropped",
                                     filter="bloodbank.evt.>", t=arch, evidence="observed",
                                     span=Ids.consume(CONSUMER, eid))],

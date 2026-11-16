@@ -92,6 +92,8 @@ class Ids:
     @staticmethod
     def llm(n: int) -> str: return f"llm:{n}"
     @staticmethod
+    def jev_llm(event_id: str) -> str: return f"llm:jev:{event_id}"
+    @staticmethod
     def tool(tool_use_id: str) -> str: return f"tool:{tool_use_id}"
     @staticmethod
     def recall(invocation_id: str, bank: str) -> str: return f"memory:recall:{invocation_id}:{bank}"
@@ -103,6 +105,9 @@ class Ids:
     def asm(key: str) -> str: return f"state:asm:{key}"
     @staticmethod
     def notify(channel: str, key: str) -> str: return f"notify:{channel}:{key}"
+    @staticmethod
+    def client_hook(event: str, at_ms: float, n: int = 0) -> str:
+        return f"clienthook:{event}:{int(at_ms)}" + (f".{n}" if n else "")
     @staticmethod
     def file(path: str, at_ms: float) -> str: return f"file:{short_hash(path)}:{int(at_ms)}"
 
@@ -203,6 +208,7 @@ class BusEvent:
     consumers: list[Consumer] = field(default_factory=list)
     payload: str | None = None
     schema: dict[str, Any] | None = None
+    stored_type: str | None = None  # the envelope type as stored, when it differs (Dapr: com.dapr.event.sent)
 
 
 @dataclass
@@ -314,6 +320,8 @@ class TurnWindow:
     prompt_invocation_id: str | None = None   # hook-hub UserPromptSubmit invocation
     stop_invocation_id: str | None = None
     settle_ms: float = 15000.0
+    settle_applied: bool = False      # True when t_end was extended by settle_ms past an unknown turn end
+    turn_source: str | None = None    # 'transcript' (turn index from the transcript) | 'receipts' (counted from receipts)
 
 
 @dataclass
@@ -323,6 +331,9 @@ class Ctx:
     deep: bool = False             # allow credentialed lookups (gateway traces)
     live: dict[str, Any] = field(default_factory=dict)   # live-mode captures handed to collectors
     timeout_s: float = 20.0
+    # collectors may park their in-progress Fragment here (ctx.partials[NAME] = frag) so a collector that hits the
+    # runner's deadline still contributes what it had read, instead of losing everything (finding 23)
+    partials: dict[str, Any] = field(default_factory=dict)
 
     def margin(self, before_ms: float = 2000.0, after_ms: float = 0.0) -> tuple[float, float]:
         return self.window.t0 - before_ms, self.window.t_end + after_ms

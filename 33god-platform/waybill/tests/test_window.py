@@ -400,10 +400,17 @@ class ReadOnly(unittest.TestCase):
     def test_ro_connect_refuses_writes(self):
         with Env() as env:
             standard_receipts(env.receipts)
-            con = W.ro_connect(str(env.receipts))
-            with self.assertRaises(sqlite3.OperationalError):
-                con.execute("delete from invocations")
-            con.close()
+            with W.ro_connect(str(env.receipts)) as con:
+                with self.assertRaises(sqlite3.OperationalError):
+                    con.execute("delete from invocations")
+
+    def test_ro_connect_closes_on_exit(self):
+        with Env() as env:
+            standard_receipts(env.receipts)
+            with W.ro_connect(str(env.receipts)) as con:
+                con.execute("select 1").fetchone()
+            with self.assertRaises(sqlite3.ProgrammingError):
+                con.execute("select 1")
 
 
 if __name__ == "__main__":

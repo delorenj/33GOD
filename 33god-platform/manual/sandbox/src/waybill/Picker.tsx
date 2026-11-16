@@ -73,11 +73,11 @@ function Picker() {
           ))}
         </ul>
         <div className="wb-drop" onClick={() => file.current?.click()} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') file.current?.click() }}>
-          Drop a <code>.waybill.json</code> anywhere, or choose a file
-          <input ref={file} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void loadFile(f); e.target.value = '' }} />
+          Drop a <code>.waybill.json</code> (or <code>.json.gz</code>) anywhere, or choose a file
+          <input ref={file} type="file" accept=".json,.gz,application/json,application/gzip" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void loadFile(f); e.target.value = '' }} />
         </div>
         <form className="wb-url" onSubmit={(e) => { e.preventDefault(); if (url.trim()) void loadFromUrl(url.trim()) }}>
-          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="or paste a link to a waybill .json" aria-label="Waybill URL" />
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="or paste a link to a waybill .json or .json.gz" aria-label="Waybill URL" />
           <button disabled={busy || !url.trim()}>Load</button>
         </form>
       </div>

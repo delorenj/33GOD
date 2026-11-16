@@ -7,6 +7,8 @@ Reads, read-only:
     received (the audit row has no id: matched to the journal row by bank + time + query length)
   * capture buffer   ~/.local/state/33god/hook-hub/capture/<cli>-<sid>.json  (or ctx.live['capture'])
   * `hindsight operation get <bank> <operation_id>` for flush spans (GET only)
+  * `hindsight audit list <bank>` without an action filter -> retain / batch_retain / consolidation rows that
+    the Stop flush caused (spans linked from the flush)
 
 Span ids: Ids.recall / Ids.buffer / Ids.flush; the briefing uses 'memory:briefing:<invocation_id>'.
 Handler parents are Ids.handler(invocation_id, 'hindsight-recall' | 'hindsight-turn' | 'hindsight-briefing' ...).
@@ -183,6 +185,13 @@ def audit_list(bank: str, start_ms: float, end_ms: float, timeout: float) -> lis
     return d.get("items", []) if isinstance(d, dict) else (d or [])
 
 
+def audit_ops(bank: str, start_ms: float, end_ms: float, timeout: float) -> list[dict[str, Any]]:
+    """Every audit row of any action (retain, batch_retain, consolidation, recall ...) in a time range."""
+    d = _run_hindsight(["audit", "list", bank, "--start-date", iso(start_ms) or "",
+                        "--end-date", iso(end_ms) or "", "-o", "json", "-l", "100"], timeout)
+    return d.get("items", []) if isinstance(d, dict) else (d or [])
+
+
 def operation_get(bank: str, op_id: str, timeout: float) -> dict[str, Any]:
     return _run_hindsight(["operation", "get", bank, op_id, "-o", "json"], timeout)
 
@@ -244,8 +253,12 @@ def _collect(ctx: Ctx, frag: Fragment, jpath: Path) -> None:
         elif ev == "briefing":
             _briefing(frag, r)
 
-    _capture_spans(ctx, frag, in_win, prompt_inv)
-    _flush_spans(ctx, frag, rows, in_win)
+    _first_turn_briefing(frag, rows, lo)
+    emitted = _capture_spans(ctx, frag, in_win, prompt_inv)
+    flushed = _flush_spans(ctx, frag, rows, in_win)
+    if emitted and not flushed:
+        frag.gaps.append(Gap("hindsight", "Hindsight retain",
+                             "Hindsight retain is deferred; this waybill ends before the document is written", "info"))
 
 
 # ----- recall -----
@@ -308,6 +321,13 @@ def _attach_audit(ctx: Ctx, frag: Fragment, span: Span, bank: str, t0: float, t1
         return
     art = audit_artifact(row, bank, ctx.profile)
     span.payload = frag.artifact(art, note=f"Hindsight audit row {row.get('id')}: exact query and ranked memories the prompt received")
+    a0, a1 = ms(row.get("started_at")), ms(row.get("ended_at"))
+    if a0 is not None:
+        # the audit row is the server's own clock: use it for t0 (journal ts minus handler elapsed is a derivation)
+        span.attrs["client_t"] = {"t0": span.t0, "t1": span.t1}
+        span.t0 = a0
+        span.t1 = a1 if a1 is not None and a1 >= a0 else max(span.t1 or a0, a0)
+        span.attrs["timing"] = "audit started_at..ended_at (server clock)"
     span.attrs["audit_id"] = row.get("id")
     span.attrs["server_started_at"] = row.get("started_at")
     span.attrs["server_duration_ms"] = row.get("duration_ms")
@@ -353,7 +373,17 @@ def _briefing(frag: Fragment, r: dict[str, Any]) -> None:
 
 # ----- capture buffer -----
 
-def _capture_spans(ctx: Ctx, frag: Fragment, in_win: list[dict[str, Any]], prompt_inv: str | None) -> None:
+def _first_turn_briefing(frag: Fragment, rows: list[dict[str, Any]], lo: float) -> None:
+    """The SessionStart briefing row precedes the first prompt, so the turn window misses it. Show it when this
+    window is the session's first turn (no recall or captured turn earlier in the journal)."""
+    earlier = [r for r in rows if r["_t"] is not None and r["_t"] < lo]
+    if any(r.get("event") in ("recall", "recall_skipped", "turn_captured", "turn_skipped") for r in earlier):
+        return
+    briefs = [r for r in earlier if r.get("event") == "briefing"]
+    if briefs:
+        _briefing(frag, briefs[-1])
+
+def _capture_spans(ctx: Ctx, frag: Fragment, in_win: list[dict[str, Any]], prompt_inv: str | None) -> bool:
     w = ctx.window
     cap, cap_src = _load_capture(ctx)
     public = ctx.profile == "public"
@@ -387,7 +417,8 @@ def _capture_spans(ctx: Ctx, frag: Fragment, in_win: list[dict[str, Any]], promp
             phase="prompt_submit", t0=w.t0, t1=None, status="pending", reason="retain_deferred", sync=False,
             parent=handler, refs={"invocation_id": prompt_inv},
             attrs={"buffer_event": "ask_buffered", "ask_chars": ask_chars, "flush_rule": FLUSH_RULE,
-                   "document_id": f"session-{w.cli}-{w.session_id}", "timing": "approximate: prompt submit"},
+                   "document_id": f"session-{w.cli}-{w.session_id}",
+                   "timing": "approximate: prompt submit"},
             payload=art, evidence=[SOURCE_ID]))
         frag.links.append(Link(handler, sid, "writes", "ask_buffered"))
         emitted = True
@@ -434,25 +465,135 @@ def _capture_spans(ctx: Ctx, frag: Fragment, in_win: list[dict[str, Any]], promp
         frag.links.append(Link(handler, sid, "writes", "turn_buffered"))
         emitted = True
 
-    if emitted:
-        frag.gaps.append(Gap("hindsight", "Hindsight retain",
-                             "Hindsight retain is deferred; this waybill ends before the document is written", "info"))
     if cap_src == "absent":
         frag.gaps.append(Gap("hindsight", "capture buffer contents",
                              "capture file absent (deleted at session end or never created): buffered text is not recoverable",
                              "info"))
+    return emitted
 
 
 # ----- flush -----
 
-def _flush_spans(ctx: Ctx, frag: Fragment, rows: list[dict[str, Any]], in_win: list[dict[str, Any]]) -> None:
-    flush_rows = [r for r in in_win if str(r.get("event", "")).startswith("session_flush") and r.get("operation_id")]
-    if not flush_rows:
-        return
+OP_SETTLE_MS = 30000.0        # the async retain worker + consolidation run for seconds after the flush row
+CONFIRM_CAP_MS = 120000.0     # a confirmation later than this is recorded in attrs, not stretched into the span
+MEMORY_ACTIONS = ("retain", "batch_retain", "consolidation")
+
+
+def audit_status(row: dict[str, Any]) -> tuple[str, str | None]:
+    resp = row.get("response") or {}
+    st = str(resp.get("status") or "").lower()
+    if st in ("completed", "complete", "done"):
+        return "ok", None
+    if st in ("failed", "error"):
+        return "failed", st
+    if st:
+        return "pending", st
+    if resp.get("success") is True:
+        return "ok", "accepted"
+    if resp.get("success") is False:
+        return "failed", "rejected"
+    return "unknown", None
+
+
+def _audit_doc(row: dict[str, Any]) -> str | None:
+    req = row.get("request") or {}
+    for key in ("items", "contents"):
+        for it in req.get(key) or []:
+            if isinstance(it, dict) and it.get("document_id"):
+                return it["document_id"]
+    return None
+
+
+def _audit_op(row: dict[str, Any]) -> str | None:
+    req = row.get("request") or {}
+    resp = row.get("response") or {}
+    return req.get("operation_id") or resp.get("operation_id") or req.get("_operation_id")
+
+
+def pick_memory_chain(items: list[dict[str, Any]], op_id: str, doc_id: str | None, t0: float) -> list[dict[str, Any]]:
+    """The retain -> batch_retain -> consolidation audit rows one flush caused. retain: the row carrying the
+    flush's operation id (else same document, started after the flush); batch_retain: same document, started at or
+    after the retain; consolidation: the first one that starts right after the batch finished."""
+    rows = [it for it in items if it.get("action") in MEMORY_ACTIONS and ms(it.get("started_at")) is not None]
+    rows.sort(key=lambda it: ms(it.get("started_at")))
+    retains = [it for it in rows if it["action"] == "retain"]
+    retain = next((it for it in retains if _audit_op(it) == op_id), None) or next(
+        (it for it in retains if doc_id and _audit_doc(it) == doc_id and ms(it["started_at"]) >= t0 - 2000.0), None)
+    chain: list[dict[str, Any]] = []
+    cursor = t0 - 2000.0
+    if retain:
+        chain.append(retain)
+        cursor = ms(retain["started_at"]) - 1000.0
+    batch = next((it for it in rows if it["action"] == "batch_retain" and doc_id and _audit_doc(it) == doc_id
+                  and ms(it["started_at"]) >= cursor), None)
+    if batch:
+        chain.append(batch)
+        bend = ms(batch.get("ended_at")) or ms(batch["started_at"])
+        cons = next((it for it in rows if it["action"] == "consolidation"
+                     and bend - 1000.0 <= ms(it["started_at"]) <= bend + 5000.0), None)
+        if cons:
+            chain.append(cons)
+    return chain
+
+
+def _memory_op_spans(ctx: Ctx, frag: Fragment, flush_id: str, bank: str, op: str, doc_id: str | None,
+                     t0: float, t_hi: float) -> str | None:
+    """Add the retain/batch_retain/consolidation spans for one flush. Returns the chain's overall status."""
+    try:
+        items = audit_ops(bank, t0 - 2000.0, t_hi + OP_SETTLE_MS, ctx.timeout_s)
+    except Exception as ex:
+        frag.gaps.append(Gap("hindsight", f"retain audit for bank {bank}",
+                             f"hindsight audit list failed: {str(ex)[:160]}", "info", flush_id))
+        return None
+    chain = pick_memory_chain(items, op, doc_id, t0)
+    if not chain:
+        frag.gaps.append(Gap("hindsight", f"retain audit for bank {bank}",
+                             "no retain / batch_retain / consolidation audit rows matched the flush (audit retention?)",
+                             "info", flush_id))
+        return None
+    prev = flush_id
+    worst = "ok"
+    labels = {"retain": "retain (accepted by the API)", "batch_retain": "batch retain (async extraction worker)",
+              "consolidation": "consolidation (observation building)"}
+    for row in chain:
+        action = row["action"]
+        status, reason = audit_status(row)
+        if status != "ok":
+            worst = status
+        st = ms(row.get("started_at"))
+        en = ms(row.get("ended_at"))
+        sid = f"memory:{action}:{row.get('id')}"
+        req = row.get("request") or {}
+        attrs = {"audit_id": row.get("id"), "bank": bank, "action": action, "transport": row.get("transport"),
+                 "operation_id": _audit_op(row), "document_id": _audit_doc(row),
+                 "duration_ms": row.get("duration_ms"), "status": (row.get("response") or {}).get("status"),
+                 "items": len(req.get("items") or req.get("contents") or []) or None,
+                 "timing": "audit started_at..ended_at"}
+        frag.spans.append(Span(
+            id=sid, kind="memory", component="hindsight", name=action.replace("_", " "),
+            summary=f"Hindsight {labels[action]}: {reason or (row.get('response') or {}).get('status') or 'done'}"
+                    + (f", {row.get('duration_ms')} ms" if row.get("duration_ms") is not None else ""),
+            phase="session_end", t0=st, t1=en, status=status, reason=reason, sync=False,
+            parent=flush_id if action == "retain" else None, refs={},
+            attrs={k: v for k, v in attrs.items() if v is not None}, evidence=[SOURCE_ID]))
+        frag.links.append(Link(prev, sid, "triggers", {"retain": "retain", "batch_retain": "async worker picks up the batch",
+                                                       "consolidation": "consolidation after the batch"}[action]))
+        prev = sid
+    return worst
+
+
+def _flush_spans(ctx: Ctx, frag: Fragment, rows: list[dict[str, Any]], in_win: list[dict[str, Any]]) -> bool:
+    """Returns True when at least one flush was found and its retain is known to have finished."""
+    flush_ops = {r["operation_id"] for r in in_win
+                 if str(r.get("event", "")).startswith("session_flush") and r.get("operation_id")}
+    if not flush_ops:
+        return False
     by_op: dict[str, list[dict[str, Any]]] = {}
-    for r in flush_rows:
-        by_op.setdefault(r["operation_id"], []).append(r)
-    all_rows = [r for r in rows if r.get("operation_id")]
+    for r in rows:     # whole journal: the confirmation usually lands after the turn window
+        if r.get("operation_id") in flush_ops and str(r.get("event", "")).startswith("session_flush") and r["_t"] is not None:
+            by_op.setdefault(r["operation_id"], []).append(r)
+    t_end = ctx.window.t_end
+    any_done = False
     for op, rs in by_op.items():
         rs.sort(key=lambda r: r["_t"])
         first = rs[0]
@@ -460,7 +601,7 @@ def _flush_spans(ctx: Ctx, frag: Fragment, rows: list[dict[str, Any]], in_win: l
         last = rs[-1]
         status, reason = flush_status(last["event"], last.get("status"))
         bank = main.get("bank") or next((r.get("bank") for r in rs if r.get("bank")), None)
-        later = [r for r in all_rows if r.get("operation_id") == op and r["_t"] > ctx.window.t_end]
+        later = [r for r in rs if r["_t"] > t_end]
         attrs: dict[str, Any] = {
             "operation_id": op, "bank": bank, "document_id": main.get("document_id"),
             "turns": main.get("turns"), "attempt": main.get("attempt"), "trigger": main.get("trigger"),
@@ -468,21 +609,40 @@ def _flush_spans(ctx: Ctx, frag: Fragment, rows: list[dict[str, Any]], in_win: l
         }
         if later:
             attrs["after_window"] = [{"event": r["event"], "at": r.get("ts")} for r in later]
+        if last["event"] == "session_flush_confirmed":
+            attrs["confirmed_at"] = last.get("ts")
         sid = Ids.flush(op)
         inv = main.get("invocation_id") or ""
         handler = Ids.handler(inv, H_TURN) if main.get("trigger") == "size" else Ids.handler(inv, H_SESSION_END)
         art = None
         if bank:
             try:
-                art = frag.artifact(operation_get(bank, op, ctx.timeout_s), note="GET operation status (read-only)")
+                got = operation_get(bank, op, ctx.timeout_s)
+                art = frag.artifact(got, note="GET operation status (read-only)")
+                op_status = str((got or {}).get("status") or "").lower()
+                attrs["operation_status"] = op_status or None
+                if status == "pending" and op_status == "completed":
+                    status, reason = "ok", "retain_completed"
+                elif status == "pending" and op_status in ("failed", "error"):
+                    status, reason = "failed", "retain_failed"
             except Exception as ex:
                 attrs["operation_lookup"] = f"failed: {str(ex)[:120]}"
+        t1 = last["_t"] if last is not first else None
+        if t1 is not None and t1 > t_end + CONFIRM_CAP_MS:
+            t1 = t_end + CONFIRM_CAP_MS
         frag.spans.append(Span(
             id=sid, kind="memory", component="hindsight", name="flush",
             summary=f"Hindsight flush of turns {main.get('turns')} ({main.get('trigger')}): {reason}",
             phase="turn_end" if main.get("trigger") == "size" else "session_end",
-            t0=first["_t"], t1=last["_t"] if last is not first else None, status=status, reason=reason,
+            t0=first["_t"], t1=t1, status=status, reason=reason,
             sync=False, parent=handler if inv else None, refs={"invocation_id": inv} if inv else {},
             attrs={k: v for k, v in attrs.items() if v is not None}, payload=art, evidence=[SOURCE_ID]))
         if inv:
             frag.links.append(Link(handler, sid, "writes", "flush"))
+        chain_status = None
+        if bank:
+            chain_status = _memory_op_spans(ctx, frag, sid, bank, op, main.get("document_id"),
+                                            first["_t"], max(t_end, last["_t"]))
+        if status in ("ok",) or chain_status == "ok":
+            any_done = True
+    return any_done

@@ -14,9 +14,12 @@ imported by the Codex and gateway collectors.
 from __future__ import annotations
 
 import glob
+import copy
 import json
 import os
 import re
+import sqlite3
+import threading
 import time
 from typing import Any
 
@@ -292,7 +295,40 @@ def _first_text(content: Any) -> str:
     return block_text(content)[:120]
 
 
+_PARSE_CACHE: dict[tuple, Any] = {}
+_PARSE_LOCK = threading.Lock()
+_PARSE_CACHE_MAX = 8
+
+
+def memoised_parse(path: str | None, window: TurnWindow, extra: tuple, fn):
+    """Parse a turn once per (file identity, turn selector): the transcript and gateway collectors both need the same
+    parse, and the transcript is the biggest file the recorder reads (finding 34). The key is the path with its mtime
+    and size, so a transcript that grew since the last parse is read again. Callers get a deep copy to mutate."""
+    try:
+        st = os.stat(path) if path else None
+    except OSError:
+        st = None
+    if st is None:
+        return fn()
+    key = (path, st.st_mtime_ns, st.st_size, window.session_id, window.t0, window.turn_index, window.turn_id,
+           window.t_end, *extra)
+    with _PARSE_LOCK:
+        hit = _PARSE_CACHE.get(key)
+    if hit is None:
+        hit = fn()
+        with _PARSE_LOCK:
+            if len(_PARSE_CACHE) >= _PARSE_CACHE_MAX:
+                _PARSE_CACHE.pop(next(iter(_PARSE_CACHE)))
+            _PARSE_CACHE[key] = hit
+    return copy.deepcopy(hit)
+
+
 def parse_turn(window: TurnWindow, profile: str = "full") -> dict[str, Any]:
+    path = window.transcript_path or W.claude_transcript_path(window.session_id)
+    return memoised_parse(path, window, ("claude", profile), lambda: _parse_turn(window, profile))
+
+
+def _parse_turn(window: TurnWindow, profile: str = "full") -> dict[str, Any]:
     path = window.transcript_path or W.claude_transcript_path(window.session_id)
     if not path or not os.path.exists(path):
         raise FileNotFoundError(f"no Claude transcript for session {window.session_id}")
@@ -306,6 +342,7 @@ def parse_turn(window: TurnWindow, profile: str = "full") -> dict[str, Any]:
     contexts: list[dict[str, Any]] = []
     hooks_by_tool: dict[str, list[dict[str, Any]]] = {}
     prompt_hooks: list[dict[str, Any]] = []
+    client_hooks: list[dict[str, Any]] = []
     metas: list[dict[str, Any]] = []
     result_calls: dict[str, int] = {}
     info: dict[str, Any] = {"turn_duration": None, "stop_hook_summary": None, "compactions": 0, "scheduled": 0,
@@ -366,6 +403,7 @@ def parse_turn(window: TurnWindow, profile: str = "full") -> dict[str, Any]:
             elif at == "hook_success":
                 rec = {"name": a.get("hookName"), "event": a.get("hookEvent"), "duration_ms": a.get("durationMs"),
                        "exit_code": a.get("exitCode"), "t": ts}
+                client_hooks.append(client_hook_record(a, ts))
                 tid = a.get("toolUseID")
                 if isinstance(tid, str) and tid.startswith("toolu_"):
                     hooks_by_tool.setdefault(tid, []).append(rec)
@@ -400,27 +438,56 @@ def parse_turn(window: TurnWindow, profile: str = "full") -> dict[str, Any]:
                 info["scheduled"] += 1
 
     # pre-turn SessionStart contexts (headless / exec: the briefing is written just before the user entry)
-    pre = _pre_turn_contexts(path, entry["offset"], entry["ts"])
+    pre, pre_hooks = _pre_turn_records(path, entry["offset"], entry["ts"])
+    client_hooks = pre_hooks + client_hooks
     for t in tools.values():
         t["hooks"] = hooks_by_tool.get(t["id"], [])
     return {"path": path, "entry": entry, "calls": calls.order, "tools": tools, "contexts": pre + contexts,
-            "prompt_hooks": prompt_hooks, "metas": metas, "result_calls": result_calls, "info": info, "last_ts": last_ts}
+            "prompt_hooks": prompt_hooks, "client_hooks": client_hooks, "metas": metas, "result_calls": result_calls, "info": info, "last_ts": last_ts}
 
 
-def _pre_turn_contexts(path: str, offset: int, t0: float | None, lookback_ms: float = 30000.0,
-                       max_bytes: int = 3_000_000) -> list[dict[str, Any]]:
+def client_hook_kind(command: str) -> str:
+    """Which hook command a transcript hook_success belongs to."""
+    c = command or ""
+    if "bb-hook" in c:
+        return "bb-hook"
+    if "ORCA_AGENT_HOOK" in c or ".orca/agent-hooks" in c:
+        return "orca"
+    if "codex-mcp-helper-reaper" in c:
+        return "codex-mcp-helper-reaper"
+    return "other"
+
+
+def client_hook_record(a: dict[str, Any], ts: float | None) -> dict[str, Any]:
+    """One CLI-side hook run from a transcript `hook_success` attachment (timestamp = when it finished)."""
+    cmd = str(a.get("command") or "")
+    kind = client_hook_kind(cmd)
+    dur = a.get("durationMs")
+    try:
+        dur_f = float(dur) if dur is not None else None
+    except (TypeError, ValueError):
+        dur_f = None
+    return {"event": a.get("hookEvent"), "name": a.get("hookName"), "tool_use_id": a.get("toolUseID"),
+            "duration_ms": dur_f, "exit_code": a.get("exitCode"), "t": ts, "kind": kind,
+            "command": scrub(cmd[:160]) if kind in ("bb-hook", "other") else None}
+
+
+def _pre_turn_records(path: str, offset: int, t0: float | None, lookback_ms: float = 30000.0,
+                      max_bytes: int = 3_000_000) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """SessionStart records written just before the user entry: (additionalContext contexts, hook_success runs)."""
     out: list[dict[str, Any]] = []
+    hooks: list[dict[str, Any]] = []
     if not offset or t0 is None:
-        return out
+        return out, hooks
     start = max(0, offset - max_bytes)
     try:
         with open(path, "rb") as fh:
             fh.seek(start)
             blob = fh.read(offset - start)
     except OSError:
-        return out
+        return out, hooks
     for raw in blob.split(b"\n"):
-        if b'"hook_additional_context"' not in raw or raw.startswith(SKIP_PREFIXES):
+        if (b'"hook_additional_context"' not in raw and b'"hook_success"' not in raw) or raw.startswith(SKIP_PREFIXES):
             continue
         try:
             d = json.loads(raw)
@@ -428,14 +495,23 @@ def _pre_turn_contexts(path: str, offset: int, t0: float | None, lookback_ms: fl
             continue
         a = d.get("attachment") if isinstance(d.get("attachment"), dict) else {}
         ts = ms(d.get("timestamp"))
-        if a.get("type") != "hook_additional_context" or a.get("hookEvent") != "SessionStart" or ts is None:
+        if a.get("hookEvent") != "SessionStart" or ts is None:
             continue
-        if t0 - lookback_ms <= ts <= t0 + 2000:
+        if not (t0 - lookback_ms <= ts <= t0 + 2000):
+            continue
+        if a.get("type") == "hook_additional_context":
             c = a.get("content")
             text = "\n\n".join(str(x) for x in c) if isinstance(c, list) else str(c or "")
             out.append({"t": ts, "hook_event": "SessionStart", "hook_name": a.get("hookName"),
                         "tool_use_id": a.get("toolUseID"), "text": text, "elements": len(c) if isinstance(c, list) else 1})
-    return out
+        elif a.get("type") == "hook_success":
+            hooks.append(client_hook_record(a, ts))
+    return out, hooks
+
+
+def _pre_turn_contexts(path: str, offset: int, t0: float | None, lookback_ms: float = 30000.0,
+                       max_bytes: int = 3_000_000) -> list[dict[str, Any]]:
+    return _pre_turn_records(path, offset, t0, lookback_ms, max_bytes)[0]
 
 
 # =====================================================================================================
@@ -591,6 +667,21 @@ def _context_phase(hook_event: str | None) -> str:
     return "session_start" if hook_event == "SessionStart" else "prompt_submit"
 
 
+def _hook_phase(hook_event: str | None) -> str:
+    ev = hook_event or ""
+    if ev == "SessionStart":
+        return "session_start"
+    if ev in ("PreToolUse", "PermissionRequest"):
+        return "pre_tool"
+    if ev.startswith("PostTool"):
+        return "post_tool"
+    if ev in ("Stop", "StopFailure"):
+        return "turn_end"
+    if ev == "SessionEnd":
+        return "session_end"
+    return "prompt_submit"
+
+
 def _add_link(frag: Fragment, seen: set[tuple[str, str, str]], a: str, b: str, kind: str) -> None:
     k = (a, b, kind)
     if k not in seen:
@@ -598,9 +689,54 @@ def _add_link(frag: Fragment, seen: set[tuple[str, str, str]], a: str, b: str, k
         frag.links.append(Link(from_=a, to=b, kind=kind))
 
 
+CLIENT_HOOK_COMPONENT = {"bb-hook": "bb-hook", "orca": "ext:orca", "codex-mcp-helper-reaper": "ext:codex-mcp-helper-reaper",
+                         "other": "ext:hook-command"}
+CLIENT_HOOK_LABEL = {"bb-hook": "bb-hook", "orca": "Orca shim", "codex-mcp-helper-reaper": "codex-mcp-helper-reaper",
+                     "other": "hook command"}
+
+
+def _build_client_hooks(ctx: Ctx, frag: Fragment, parsed: dict[str, Any]) -> None:
+    """CLI-side hook runs (transcript hook_success: durationMs, exit code). bb-hook ones are joined to the hub
+    invocation by the assembler (attrs._hub_match); the Orca shim and the codex MCP helper reaper stand alone."""
+    w = ctx.window
+    seen: dict[str, int] = {}
+    for h in parsed.get("client_hooks") or []:
+        t1, dur = h.get("t"), h.get("duration_ms")
+        if t1 is None or dur is None:
+            continue
+        if t1 < w.t0 - 35000.0 or (w.t_end and t1 > w.t_end + 60000.0):
+            continue
+        ev = h.get("event") or "hook"
+        kind = h.get("kind") or "other"
+        comp = CLIENT_HOOK_COMPONENT.get(kind, "ext:hook-command")
+        label = CLIENT_HOOK_LABEL.get(kind, kind)
+        if comp.startswith("ext:"):
+            frag.component(comp, label, "external")
+        else:
+            frag.component(comp, label, "cli")
+        base = Ids.client_hook(ev, t1 - dur)
+        n = seen.get(base, 0)
+        seen[base] = n + 1
+        failed = str(h.get("exit_code")) not in ("0", "None", "")
+        attrs: dict[str, Any] = {"hook_event": ev, "hook_name": h.get("name"), "duration_ms": dur,
+                                 "exit_code": h.get("exit_code"), "client": kind, "client_side": True,
+                                 "tool_use_id": h.get("tool_use_id") if str(h.get("tool_use_id") or "").startswith("toolu_") else None}
+        if h.get("command"):
+            attrs["command"] = h["command"]
+        if kind == "bb-hook":
+            attrs["_hub_match"] = {"native": ev, "tool_use_id": attrs["tool_use_id"]}
+        frag.spans.append(Span(
+            id=Ids.client_hook(ev, t1 - dur, n), kind="hook", component=comp, name=f"{ev} ({label})",
+            summary=f"{label} ran the {ev} hook for {fmt_dur(dur)} on the CLI side (transcript hook_success durationMs)",
+            phase=_hook_phase(ev), t0=t1 - dur, t1=t1, status="failed" if failed else "ok", sync=True,
+            refs={"tool_use_id": attrs["tool_use_id"]} if attrs["tool_use_id"] else {}, attrs=attrs,
+            evidence=[SOURCE_ID]))
+
+
 def _build_contexts(ctx: Ctx, frag: Fragment, parsed: dict[str, Any], seen: set[tuple[str, str, str]]) -> None:
     w = ctx.window
     lim = _limit(ctx)
+    inv_rows: list[dict[str, Any]] | None = None     # one receipts connection for every context
     for c in parsed["contexts"]:
         ev = c["hook_event"] or "UserPromptSubmit"
         ts = c["t"] or w.t0
@@ -608,7 +744,12 @@ def _build_contexts(ctx: Ctx, frag: Fragment, parsed: dict[str, Any], seen: set[
         if ev == "UserPromptSubmit" and w.prompt_invocation_id and ts >= w.t0 - 2000:
             inv = w.prompt_invocation_id
         else:
-            row = W.nearest_invocation(w.session_id, ev, ts + 100)
+            if inv_rows is None:
+                try:
+                    inv_rows = W.hook_invocations(w.session_id)
+                except (OSError, sqlite3.Error):
+                    inv_rows = []
+            row = W.nearest_invocation(w.session_id, ev, ts + 100, rows=inv_rows)
             inv = row["invocation_id"] if row else None
         if not inv:
             inv = f"{ev}:{c['tool_use_id'] or int(ts)}"
@@ -780,6 +921,7 @@ def _collect(ctx: Ctx, frag: Fragment, path: str | None) -> None:
 
     # --- context
     _build_contexts(ctx, frag, parsed, seen)
+    _build_client_hooks(ctx, frag, parsed)
 
     # --- llm
     for c in calls:

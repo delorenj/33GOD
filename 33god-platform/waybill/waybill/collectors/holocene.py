@@ -164,6 +164,7 @@ def build(frag: Fragment, ctx: Ctx, rows: list[dict], status: dict, pubs: list[d
             stored=stored, correlationid=env.get("correlationid"), causationid=env.get("causationid"),
             producer=env.get("producer") or r.get("source") or env.get("source"),
             publisher_span=Ids.publish(eid) if eid in published else None,
+            stored_type=env.get("type") if dapr else None,
             consumers=[Consumer(name=CONSUMER, component="holocene", kind="ephemeral", outcome="collected",
                                 filter="bloodbank.evt.>", t=stored, evidence="observed")],
             # same canonical shape as candystore.py, so the artifact id is shared when both saw the envelope

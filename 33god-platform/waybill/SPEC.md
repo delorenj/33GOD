@@ -215,7 +215,7 @@ Collectors run independently and link to each other's spans by computing the sam
 | tool call | `tool:<tool_use_id>` |
 | Hindsight recall per bank | `memory:recall:<invocation_id>:<bank>` |
 | Hindsight buffer / flush | `memory:buffer:<invocation_id>`, `memory:flush:<operation_id>` |
-| ASM transition | `state:asm:<stream entry id or at_ms>` |
+| ASM transition | `state:asm:<stream entry id>` (Redis stream) or `state:asm:log-<log_ts_ms>[.n]` (transitions.log fallback; `<log_ts_ms>` is the log's 1 s timestamp, `.n` disambiguates repeats) |
 | notify | `notify:<channel>:<event id or at_ms>` |
 | file written | `file:<sha1(path)[:12]>:<at_ms>` |
 
@@ -261,8 +261,10 @@ waybill/
   research/understand.json  the 2026-11-15 discovery dump that grounds this spec
 ```
 
-Stdlib only, plus `nats` (nats-py, already importable by `/usr/bin/python3` 3.14) for live mode and
-seq lookups, imported lazily. Postgres reads use `docker exec candystore-postgres psql` with the
+Stdlib only, plus `nats` (nats-py) for live mode and seq lookups, imported lazily. nats-py is NOT
+importable by `/usr/bin/python3`; it lives in the mise Python 3.14. `bin/waybill` therefore picks ONE interpreter
+for every subcommand: `$WAYBILL_PYTHON`, else the first of mise 3.14 / `command -v python3` / `/usr/bin/python3`
+that imports `nats`, else `/usr/bin/python3` with a warning. Postgres reads use `docker exec candystore-postgres psql` with the
 container's own env, so no credential lives in this repo. Every collector is **read-only**.
 It must never create a JetStream consumer, write to Redis, or POST anywhere, and it must fail soft: an
 error becomes `Source.status = 'error'` plus a `Gap`, never a crash.

@@ -19,7 +19,7 @@ from typing import Any
 from ..model import Ctx, Fragment, Gap, Ids, Link, Source, Span, TurnWindow, iso, ms, scrub, tilde
 from .. import window as W
 from .transcript_claude import (GATEWAY, HOOKHUB, FULL_LIMIT, _add_link, _build_contexts, _limit, _tool_brief,
-                                fmt_dur, fmt_tokens, prof_text, split_context)
+                                fmt_dur, fmt_tokens, memoised_parse, prof_text, split_context)
 
 SOURCE_ID = "transcript"
 SURFACE_COMPONENT = {"codex-cli": "ext:codex-cli", "codex-exec": "ext:codex-exec", "codex-desktop": "ext:codex-desktop"}
@@ -57,6 +57,15 @@ def _slice(window: TurnWindow) -> tuple[str, dict[str, Any], int | None]:
 
 
 def parse_turn(window: TurnWindow) -> dict[str, Any]:
+    """Memoised per (rollout path + mtime + size, turn): the transcript and gateway collectors share one parse."""
+    path = window.transcript_path
+    if not path:
+        th = W.codex_thread(window.session_id)
+        path = (th or {}).get("rollout_path")
+    return memoised_parse(path, window, ("codex",), lambda: _parse_turn(window))
+
+
+def _parse_turn(window: TurnWindow) -> dict[str, Any]:
     path, row, idx = _slice(window)
     start = int(row.get("rollout_byte_offset") or 0)
     end = row.get("rollout_end_byte_offset")
@@ -161,19 +170,53 @@ def parse_turn(window: TurnWindow) -> dict[str, Any]:
         if not rec:
             continue
         it = rec["item"]
-        if rec.get("started_ms"):
-            t["t0"] = float(rec["started_ms"])
-        if rec.get("completed_ms"):
-            t["t1"] = float(rec["completed_ms"])
-        elif t["t1"] is None:
-            t["t1"] = rec["t"]
+        # The OUTER span is function_call .. function_call_output (what the model waited for). The item's
+        # started/completed are the inner exec run: a 0 ms 'tool' came from using them as the span (finding 11).
+        ex0 = float(rec["started_ms"]) if rec.get("started_ms") else None
+        ex1 = float(rec["completed_ms"]) if rec.get("completed_ms") else None
+        if ex0 is not None or ex1 is not None:
+            t["exec"] = {"t0": ex0, "t1": ex1}
+        if t["t1"] is None:       # no function_call_output (still running / interrupted): fall back to the item
+            t["t1"] = ex1 if ex1 is not None else rec["t"]
+        else:                      # outer span always contains the inner run
+            if ex0 is not None and t["t0"] is not None:
+                t["t0"] = min(t["t0"], ex0)
+            if ex1 is not None:
+                t["t1"] = max(t["t1"], ex1)
         if t["exit_code"] is None and isinstance(it.get("exit_code"), int):
             t["exit_code"] = it["exit_code"]
         dur = it.get("duration")
         if isinstance(dur, dict):
             t["duration_ms"] = round((dur.get("secs") or 0) * 1000 + (dur.get("nanos") or 0) / 1e6, 1)
         t["item_type"] = it.get("type")
+        t["wall_time_ms"] = _wall_time_ms(t.get("result"))
     return out
+
+
+_WALL = re.compile(r"Wall time:\s*([\d.]+)\s*seconds?", re.I)
+
+
+def _wall_time_ms(result: str | None) -> float | None:
+    """exec_command output carries 'Wall time: 0.0 seconds': the inner run, not the outer tool call."""
+    m = _WALL.search((result or "")[:600])
+    return round(float(m.group(1)) * 1000.0, 1) if m else None
+
+
+_SKILL_BLOCK = re.compile(r"<skill>\s*<name>([^<]+)</name>(.*?)</skill>", re.S)
+_COMMAND_NAME = re.compile(r"<command-name>\s*([^<]+?)\s*</command-name>")
+PROMPT_INJECTION_MIN_CHARS = 500
+
+
+def prompt_injections(text: str) -> list[dict[str, Any]]:
+    """Large skill / slash-command expansions the CLI attached to the prompt text (finding 20): the model saw them as
+    part of the user message, so they are context, not what the user typed."""
+    out: list[dict[str, Any]] = []
+    for m in _SKILL_BLOCK.finditer(text or ""):
+        out.append({"kind": "skill", "name": m.group(1).strip(), "chars": len(m.group(0)), "text": m.group(0)})
+    cm = _COMMAND_NAME.search(text or "")
+    if cm:
+        out.append({"kind": "command", "name": cm.group(1).strip(), "chars": len(text), "text": text})
+    return [i for i in out if i["chars"] >= PROMPT_INJECTION_MIN_CHARS]
 
 
 def codex_llm_calls(window: TurnWindow) -> list[dict[str, Any]]:
@@ -231,11 +274,24 @@ def _collect(ctx: Ctx, frag: Fragment) -> None:
     text = parsed["prompt"] if parsed["prompt"] is not None else (w.prompt_text or "")
     pattrs = {"surface": surface, "turn_trigger": parsed.get("trigger"), "chars": len(text), "model": parsed["model"],
               "effort": parsed["effort"], "user_message_t": parsed["user_ts"], "turnIndex": parsed["index"]}
+    # the prompt starts when the user message was written (the UPS / prompt-text timestamp), not at the window start,
+    # which for codex exec is the session start (finding 20)
+    prompt_t0 = parsed["user_ts"] if parsed["user_ts"] is not None and parsed["user_ts"] >= t0 else t0
     frag.spans.append(Span(id=Ids.PROMPT, kind="prompt", component=cli, name="prompt",
                            summary=f"prompt ({len(text)} chars, {parsed.get('trigger') or surface})", phase="prompt_submit",
-                           t0=t0, t1=None, refs={"invocation_id": w.prompt_invocation_id} if w.prompt_invocation_id else {},
+                           t0=prompt_t0, t1=None, refs={"invocation_id": w.prompt_invocation_id} if w.prompt_invocation_id else {},
                            attrs={k: v for k, v in pattrs.items() if v is not None},
                            payload=frag.artifact(prof_text(ctx, text), limit=FULL_LIMIT), evidence=[SOURCE_ID]))
+
+    for inj in prompt_injections(text):
+        sid = f"context:prompt:{inj['kind']}:{inj['name']}"
+        frag.spans.append(Span(
+            id=sid, kind="context", component=cli, name=f"{inj['kind']} {inj['name']}",
+            summary=f"{inj['kind']} {inj['name']} attached to the prompt: {fmt_tokens(inj['chars'])} chars the user did not type",
+            phase="prompt_submit", t0=prompt_t0, t1=None, sync=True, parent=Ids.PROMPT,
+            attrs={"kind": inj["kind"], "name": inj["name"], "chars": inj["chars"], "source": "prompt text"},
+            payload=frag.artifact(prof_text(ctx, inj["text"]), limit=lim), evidence=[SOURCE_ID]))
+        _add_link(frag, seen, Ids.PROMPT, sid, "injects")
 
     # --- llm
     n_tools_by_call: dict[int, int] = {}
@@ -254,7 +310,8 @@ def _collect(ctx: Ctx, frag: Fragment) -> None:
             id=Ids.llm(r["n"]), kind="llm", component=GATEWAY, name=f"model call {r['n']}", summary=summary, phase="model_call",
             t0=a0 if a0 is not None else t0, t1=r["t"], sync=True, parent=Ids.TURN,
             refs={"client_request": r["response_id"]},
-            attrs={"requested_model": parsed["model"], "served_model": None, "usage": dict(u), "tokens_in": tin, "tokens_out": tout,
+            attrs={"requested_model": parsed["model"], "served_model": None,
+                   "usage": {**u, "uncached_input_tokens": max(0, tin - cached)}, "tokens_in": tin, "tokens_out": tout,
                    "input_tokens": tin, "output_tokens": tout, "client_request": r["response_id"], "effort": parsed["effort"],
                    "stop_reason": "tool_use" if n_tc else "end_turn", "tool_calls": n_tc, "query_source": "codex"},
             evidence=[SOURCE_ID]))
@@ -286,6 +343,12 @@ def _collect(ctx: Ctx, frag: Fragment) -> None:
             attrs["exit_code"] = t["exit_code"]
         if t.get("item_type"):
             attrs["item_type"] = t["item_type"]
+        ex = t.get("exec") or {}
+        if ex.get("t0") is not None and ex.get("t1") is not None:
+            attrs["exec_ms"] = round(ex["t1"] - ex["t0"], 1)     # the inner run, inside the outer span
+            attrs["exec_start_offset_ms"] = round(ex["t0"] - t["t0"], 1)
+        if t.get("wall_time_ms") is not None:
+            attrs["exec_wall_ms"] = t["wall_time_ms"]
         payload = None
         if t["result"] is not None:
             payload = frag.artifact(prof_text(ctx, t["result"]), limit=lim)

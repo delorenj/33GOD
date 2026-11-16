@@ -2,6 +2,7 @@
 //   node --import ./tools/waybill/register.mjs --experimental-strip-types tools/waybill/selfcheck.ts [file.waybill.json ...]
 // With no file it checks every sample listed in public/waybills/index.json. Add --captions to print copy.
 import { readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
 import { direct, readerGroups } from '../../src/waybill/director'
 import { place, stationOf } from '../../src/waybill/stations'
 import { normalize, parseWaybill } from '../../src/waybill/types'
@@ -35,7 +36,9 @@ ok(rg.length === 4 && rg[0].component === 'ntfy-router' && rg[0].observed === 1 
 
 for (const file of files) {
   console.log(`\n=== ${file}`)
-  const text = readFileSync(file, 'utf8')
+  // a .waybill.json.gz (or any file that starts with the gzip magic bytes) is inflated first, like the player's loader does
+  const raw = readFileSync(file)
+  const text = raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw).toString('utf8') : raw.toString('utf8')
   const t0 = performance.now()
   const r = parseWaybill(text)
   const tParse = performance.now() - t0
@@ -62,9 +65,13 @@ for (const file of files) {
   const docks = d.stops.filter((s) => s.kind === 'dock')
   ok(docks.length > 0 && docks.every((s) => s.cards !== undefined), 'hooks become dock stops with job cards')
   ok(docks.every((s) => s.spanIds.filter((id) => id.startsWith('hook:') && !/transition/.test(w.spans.find((x) => x.id === id)?.name ?? '')).length === 1), 'one native hook per dock stop')
-  ok(kinds.filter((k) => k === 'loop').length <= 1, 'the main tool loop is at most one stop')
-  const loop = d.stops.find((s) => s.kind === 'loop')
-  if (loop) ok(loop.tools!.reduce((n, t) => n + t.count, 0) === loop.spanIds.filter((id) => id.startsWith('tool:')).length, 'tool loop counts every tool in it')
+  const loops = d.stops.filter((s) => s.kind === 'loop')
+  ok(loops.every((l) => l.tools!.reduce((n, t) => n + t.count, 0) === l.spanIds.filter((id) => id.startsWith('tool:')).length), 'every tool-loop round counts the tools in it')
+  ok(loops.every((l) => l.tools!.reduce((n, t) => n + t.count, 0) <= 6 || !l.part), 'a split tool loop has at most 6 tool calls per round')
+  ok(loops.every((l, i) => !l.part || (l.part.of === loops.filter((x) => x.part).length && l.part.n >= 1)), 'round numbers agree with the number of rounds')
+  ok(d.stops.every((s) => s.kind === 'end' || s.hero === 'none' || !!s.heroLabel?.real), 'every stop with a hero has a hero label')
+  ok(d.stops.every((s) => s.kind !== 'briefing' || (s.travel && s.travel.from !== s.travel.to)), 'a briefing card travels between two stations')
+  ok(!d.stops.some((s) => /\+-/.test(s.caption + s.detail + s.tag + s.notes.join(' '))), 'no doubled signs (+-) in the copy')
   const tools = w.spans.filter((s) => s.kind === 'tool').length
   const inLoops = d.stops.filter((s) => s.kind === 'loop' || s.kind === 'crew').reduce((n, s) => n + (s.tools?.reduce((m, t) => m + t.count, 0) ?? 0), 0)
   ok(inLoops === tools, `every tool call sits in the loop or a crew stop (${inLoops}/${tools})`)

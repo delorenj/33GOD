@@ -39,6 +39,7 @@ class SearchTests(unittest.TestCase):
     def test_first_cursor_lower_bound(self):
         with tempfile.TemporaryDirectory() as d:
             con = make_db(os.path.join(d, "e.sqlite3"))
+            self.addCleanup(con.close)
             con.row_factory = sqlite3.Row
             base = ms("2026-11-16T03:00:00.000Z")
             self.assertEqual(ho.first_cursor_at_or_after(con, iso(base - 1000)), 5)

@@ -114,6 +114,17 @@ class PureHelpers(unittest.TestCase):
 
 
 class CollectTests(unittest.TestCase):
+    def setUp(self):
+        # no live journal / receipts in unit tests
+        for target, ret in (("deckard_lines", []),):
+            p = mock.patch.object(asm, target, return_value=ret)
+            p.start()
+            self.addCleanup(p.stop)
+        for target, ret in (("earliest_ms", None), ("transition_invocations", [])):
+            p = mock.patch.object(asm.hookhub, target, return_value=ret)
+            p.start()
+            self.addCleanup(p.stop)
+
     def _log_dir(self, d, text):
         cur = Path(d, "transitions.log")
         cur.write_text(text)

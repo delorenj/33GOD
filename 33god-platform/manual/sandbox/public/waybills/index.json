@@ -2,31 +2,31 @@
   "samples": [
     {
       "file": "claude-readme.waybill.json",
-      "title": "claude-code-headless · \"Use the Read tool to read README.md, then answer in one sent…\" · 11 s",
+      "title": "claude-code-headless \u00b7 \"Use the Read tool to read README.md, then answer in one sent\u2026\" \u00b7 11 s",
       "cli": "claude",
       "surface": "claude-code-headless",
       "duration_ms": 11464.0,
-      "recorded_at": "2026-11-16T05:21:39.208Z"
+      "recorded_at": "2026-11-16T06:18:43.271Z"
     },
     {
       "file": "codex-ls.waybill.json",
-      "title": "codex-exec · \"Run ls in this directory and tell me in one sentence how man…\" · 16 s",
+      "title": "codex-exec \u00b7 \"Run ls in this directory and tell me in one sentence how man\u2026\" \u00b7 16 s",
       "cli": "codex",
       "surface": "codex-exec",
       "duration_ms": 16184.0,
-      "recorded_at": "2026-11-16T05:22:28.280Z"
+      "recorded_at": "2026-11-16T06:18:44.965Z"
     },
     {
-      "file": "claude-big-turn.waybill.json",
-      "title": "claude-code · \"Damian is very visual. Also, there are SO many things that h…\" · 5 m 15 s",
+      "file": "claude-big-turn.waybill.json.gz",
+      "title": "claude-code \u00b7 \"Damian is very visual. Also, there are SO many things that h\u2026\" \u00b7 5 m 15 s",
       "cli": "claude",
       "surface": "claude-code",
       "duration_ms": 315406.0,
-      "recorded_at": "2026-11-16T05:22:37.393Z"
+      "recorded_at": "2026-11-16T06:21:00Z"
     },
     {
       "file": "fixture-claude-prompt.waybill.json",
-      "title": "Claude Code: \"Read the candystore README…\" · hand-made fixture",
+      "title": "Claude Code: \"Read the candystore README\u2026\" \u00b7 hand-made fixture",
       "fixture": true,
       "cli": "claude",
       "surface": "claude-code",

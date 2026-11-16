@@ -57,11 +57,25 @@ def valid_session_id(sid: str | None) -> bool:
     return bool(sid) and bool(_SID_RE.match(str(sid)))
 
 
+class _ClosingConnection(sqlite3.Connection):
+    """sqlite3's own `with` only ends a transaction; ours also closes (no leaked connections)."""
+
+    def __exit__(self, *exc: Any) -> bool:  # type: ignore[override]
+        try:
+            super().__exit__(*exc)
+        finally:
+            self.close()
+        return False
+
+
 def ro_connect(path: str, timeout: float = 5.0) -> sqlite3.Connection:
-    """Open a SQLite file strictly read-only (URI mode=ro). Raises when the file does not exist."""
+    """Open a SQLite file strictly read-only (URI mode=ro). Raises when the file does not exist.
+
+    Use as `with ro_connect(p) as con:`; leaving the block closes the connection.
+    """
     if not os.path.exists(path):
         raise FileNotFoundError(path)
-    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=timeout)
+    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=timeout, factory=_ClosingConnection)
     con.row_factory = sqlite3.Row
     return con
 
@@ -97,35 +111,122 @@ def hook_invocations(session_id: str, natives: tuple[str, ...] | None = None,
     return rows
 
 
-def nearest_invocation(session_id: str, native: str, at_ms: float, before_ms: float = 120000.0) -> dict[str, Any] | None:
-    """The latest invocation of `native` for the session received at or before `at_ms` (within before_ms)."""
+def nearest_invocation(session_id: str, native: str, at_ms: float, before_ms: float = 120000.0,
+                       rows: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
+    """The latest invocation of `native` for the session received at or before `at_ms` (within before_ms).
+
+    Pass `rows` (from one `hook_invocations(session_id)` call) to scan in memory instead of reopening the db.
+    """
+    if rows is None:
+        try:
+            rows = hook_invocations(session_id, (native,), at_ms - before_ms, at_ms + 50)
+        except (OSError, sqlite3.Error):
+            return None
+    hits = [r for r in rows if r.get("native") == native and r.get("received_ms") is not None
+            and at_ms - before_ms <= r["received_ms"] <= at_ms + 50]
+    return hits[-1] if hits else None
+
+
+AUTOMATION_MARKERS = ("scheduled cron job", "[crank]", "[crank relay]", "[crank ")
+
+
+class PromptFilter:
+    """Which session `record` may latch onto (findings 15 and 22). The next UserPromptSubmit on a busy box is usually
+    some cron/Crank/child agent, not the prompt the person is about to type, so by default only a session whose cwd
+    is (inside / around) the caller's cwd is accepted, and automation sessions are never accepted unless named."""
+
+    def __init__(self, session: str | None = None, cwd: str | None = None, any_cwd: bool = False) -> None:
+        self.session = session
+        self.cwd = os.path.realpath(cwd) if cwd else None
+        self.any_cwd = any_cwd
+        self.rejected: dict[str, str] = {}
+
+    def describe(self) -> str:
+        if self.session:
+            return f"session {self.session}"
+        return "any working directory" if self.any_cwd or not self.cwd else f"working directory {self.cwd}"
+
+    def accept(self, session_id: str, cli: str | None) -> bool:
+        if self.session:
+            return session_id == self.session
+        info = session_brief(session_id, cli)
+        why = info.get("automation")
+        if why:
+            self.rejected[session_id] = f"automation ({why})"
+            return False
+        if self.any_cwd or not self.cwd:
+            return True
+        scwd = info.get("cwd")
+        if scwd and not _cwd_related(self.cwd, scwd):
+            self.rejected[session_id] = f"cwd {scwd}"
+            return False
+        return True
+
+
+def _cwd_related(a: str, b: str) -> bool:
+    a, b = os.path.realpath(a), os.path.realpath(b)
+    return a == b or b.startswith(a.rstrip("/") + "/") or a.startswith(b.rstrip("/") + "/")
+
+
+def session_brief(session_id: str, cli: str | None = None) -> dict[str, Any]:
+    """{cwd, prompt, automation} for a session, from its transcript/thread (never raises)."""
+    out: dict[str, Any] = {"cwd": None, "prompt": None, "automation": None, "cli": cli}
     try:
-        rows = hook_invocations(session_id, (native,), at_ms - before_ms, at_ms + 50)
-    except (OSError, sqlite3.Error):
-        return None
-    return rows[-1] if rows else None
+        if cli in (None, "claude"):
+            path = claude_transcript_path(session_id)
+            if path:
+                ps = claude_prompts(path)
+                first = ps[0] if ps else {}
+                out.update(cwd=first.get("cwd"), prompt=(first.get("text") or "")[:300], cli="claude")
+                if (first.get("turnOrigin") or "") in ("cron", "crank", "child"):
+                    out["automation"] = f"turnOrigin {first['turnOrigin']}"
+        if out["cwd"] is None and cli in (None, "codex"):
+            th = codex_thread(session_id)
+            if th:
+                out["cwd"] = th.get("cwd")
+                out["cli"] = "codex"
+                src = str(th.get("thread_source") or "")
+                if src and src not in ("user", "cli", "exec"):
+                    out["automation"] = f"thread_source {src}"
+                if th.get("rollout_path") and os.path.exists(th["rollout_path"]):
+                    for _ln, _off, d in iter_jsonl(th["rollout_path"], 0, None):
+                        p = d.get("payload") if isinstance(d.get("payload"), dict) else {}
+                        if d.get("type") == "event_msg" and p.get("type") == "item_completed":
+                            it = p.get("item") if isinstance(p.get("item"), dict) else {}
+                            if it.get("type") == "UserMessage":
+                                out["prompt"] = "\n".join(str(c.get("text") or "") for c in it.get("content") or []
+                                                          if isinstance(c, dict))[:300]
+                                break
+    except Exception:
+        pass
+    head = (out.get("prompt") or "")[:400]
+    if not out["automation"] and any(m in head for m in AUTOMATION_MARKERS):
+        out["automation"] = "cron/Crank prompt"
+    return out
 
 
-def latest_prompt_after(epoch_ms: float, cli: str | None = None) -> tuple[str, str, float] | None:
-    """Live mode: the most recent UserPromptSubmit receipt received strictly after `epoch_ms`.
+def latest_prompt_after(epoch_ms: float, cli: str | None = None,
+                        flt: "PromptFilter | None" = None) -> tuple[str, str, float] | None:
+    """Live mode: the most recent UserPromptSubmit receipt received strictly after `epoch_ms`, that `flt` accepts.
 
     Returns (session_id, invocation_id, received_ms) or None. Rows without a session id are ignored.
     """
-    sql = ("select invocation_id, session_id, received_at from invocations where native in (%s) "
+    sql = ("select invocation_id, session_id, received_at, cli from invocations where native in (%s) "
            "and received_at > ? and session_id is not null and session_id != ''" % ",".join("?" * len(PROMPT_NATIVES)))
     args: list[Any] = list(PROMPT_NATIVES) + [iso_z(epoch_ms)]
     if cli:
         sql += " and cli = ?"
         args.append(cli)
-    sql += " order by received_at desc limit 1"
+    sql += " order by received_at desc" + (" limit 1" if flt is None else " limit 60")
     try:
         with ro_connect(receipts_path()) as con:
-            row = con.execute(sql, args).fetchone()
+            rows = con.execute(sql, args).fetchall()
     except (OSError, sqlite3.Error):
         return None
-    if not row:
-        return None
-    return row["session_id"], row["invocation_id"], ms(row["received_at"]) or 0.0
+    for row in rows:
+        if flt is None or flt.accept(row["session_id"], row["cli"]):
+            return row["session_id"], row["invocation_id"], ms(row["received_at"]) or 0.0
+    return None
 
 
 def _latest_prompt_any(cli: str | None, at_ms: float | None) -> dict[str, Any] | None:
@@ -446,6 +547,52 @@ def _pick(items: list[Any], turn: int | None, latest: bool, at_ms: float | None,
     return items[-1], len(items)
 
 
+def transcript_turn_ts(session_id: str, cli: str | None, turn: int) -> float | None:
+    """Epoch ms of the prompt that opened transcript turn N (1-based), or None when no transcript is readable."""
+    try:
+        if cli in (None, "claude"):
+            path = claude_transcript_path(session_id)
+            if path:
+                prompts = claude_prompts(path)
+                same = [p for p in prompts if p.get("turnIndex") == turn]
+                hit = same[-1] if same else (prompts[turn - 1] if 1 <= turn <= len(prompts) else None)
+                if hit and hit.get("ts") is not None:
+                    return hit["ts"]
+        if cli in (None, "codex"):
+            th = codex_thread(session_id)
+            path = (th or {}).get("rollout_path")
+            if path and os.path.exists(path):
+                turns = codex_turns(session_id) or codex_scan_turns(path)
+                if 1 <= turn <= len(turns):
+                    head = codex_turn_head(path, turns[turn - 1])
+                    t = head.get("user_ms") or head.get("task_started_ms") or (turns[turn - 1].get("started_at") or 0) * 1000.0
+                    return float(t) if t else None
+    except Exception:
+        return None
+    return None
+
+
+def transcript_turn_index(session_id: str, cli: str | None, at_ms: float) -> int | None:
+    """The transcript's own turn number for the prompt submitted at `at_ms` (receipt time), or None."""
+    try:
+        if cli in (None, "claude"):
+            path = claude_transcript_path(session_id)
+            if path:
+                hit = claude_find_prompt(path, near_ms=at_ms)
+                if hit and hit.get("ts") is not None and abs(hit["ts"] - at_ms) <= 30000:
+                    return hit.get("turnIndex")
+        if cli in (None, "codex"):
+            th = codex_thread(session_id)
+            path = (th or {}).get("rollout_path")
+            if path and os.path.exists(path):
+                row, idx = codex_turn(session_id, path, near_ms=at_ms)
+                if row:
+                    return idx
+    except Exception:
+        return None
+    return None
+
+
 def resolve(session_id: str | None = None, cli: str | None = None, turn: int | None = None, latest: bool = False,
             at: str | None = None, settle_ms: float = 15000) -> TurnWindow:
     """Resolve one prompt turn. Defaults to the latest turn of the session when no selector is given."""
@@ -483,8 +630,21 @@ def resolve(session_id: str | None = None, cli: str | None = None, turn: int | N
         notes.append(f"receipts unreadable: {e}")
     prompts = [r for r in receipts if r["native"] in PROMPT_NATIVES]
     ends = [r for r in receipts if r["native"] in END_NATIVES]
-    if prompts:
+    turn_source = None
+    turn_ts = transcript_turn_ts(session_id, cli, turn) if turn is not None and not latest and at_ms is None else None
+    if prompts and turn_ts is not None:
+        # --turn N means the transcript's turn N: take the receipt whose prompt was submitted just after the
+        # transcript entry (Claude writes the entry tens of ms before the UserPromptSubmit receipt)
+        near = [r for r in prompts if r["received_ms"] is not None and -2000.0 <= r["received_ms"] - turn_ts <= 60000.0]
+        if near:
+            prompt_inv = min(near, key=lambda r: abs(r["received_ms"] - turn_ts))
+            turn_index = turn
+            turn_source = "transcript"
+    if prompts and prompt_inv is None:
         prompt_inv, turn_index = _pick(prompts, turn, latest, at_ms, key=lambda r: r["received_ms"])
+        if turn is not None and prompt_inv is not None:
+            notes.append("turn counted from hook-hub receipts")
+            turn_source = "receipts"
     if prompt_inv:
         cli = cli or prompt_inv["cli"]
         prompt_ms = prompt_inv["received_ms"]
@@ -535,6 +695,7 @@ def resolve(session_id: str | None = None, cli: str | None = None, turn: int | N
 
     window = TurnWindow(cli=cli, surface=cli, session_id=session_id, t0=prompt_ms or 0.0, t_end=0.0,
                         settle_ms=float(settle_ms))
+    window.turn_source = turn_source
     window.prompt_invocation_id = prompt_inv["invocation_id"] if prompt_inv else None
     window.stop_invocation_id = stop_inv["invocation_id"] if stop_inv else None
 
@@ -546,6 +707,8 @@ def resolve(session_id: str | None = None, cli: str | None = None, turn: int | N
         window.surface = cli
         window.turn_index = turn_index
 
+    if window.turn_index is not None and window.turn_source is None:
+        window.turn_source = "transcript" if window.transcript_path else "receipts"
     if window.t0 == 0.0:
         raise WindowError(f"could not place the turn of session {session_id} in time ({'; '.join(notes)})")
 

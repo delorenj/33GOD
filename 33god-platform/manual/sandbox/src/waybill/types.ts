@@ -344,7 +344,10 @@ export function fmtMs(ms: number | null | undefined): string {
   return `${ms < 0 ? '-' : ''}${m} min ${Math.round((a % 60000) / 1000)} s`
 }
 
-export const fmtT = (ms: number | null | undefined) => (ms === null || ms === undefined ? '—' : `+${fmtMs(ms)}`)
+/** A time on the recording's axis, signed once: '+1.2 s' after Enter, '-2.43 s' before it (never '+-'). */
+export const fmtT = (ms: number | null | undefined) => (ms === null || ms === undefined || !Number.isFinite(ms) ? '—' : ms < 0 ? fmtMs(ms) : `+${fmtMs(ms)}`)
+/** Plain words for a time against Enter or against another moment: '2.43 s before', '120 ms after'. */
+export const fmtRel = (ms: number, ref = 'Enter') => (ms < 0 ? `${fmtMs(-ms)} before ${ref}` : `${fmtMs(ms)} after ${ref}`)
 export const fmtInt = (n: number | null | undefined) => (n === null || n === undefined ? '—' : Math.round(n).toLocaleString('en-US'))
 
 /** The recording's whole time range in ms, negatives included (a headless SessionStart lands before Enter). A loop, not Math.max(...spread), so a huge turn cannot blow the stack. */

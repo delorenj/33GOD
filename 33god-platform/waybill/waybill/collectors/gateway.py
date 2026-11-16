@@ -285,6 +285,7 @@ def _collect(ctx: Ctx, frag: Fragment, runner, trace_fetcher) -> None:
             "gateway_log_id": d.get("gateway_log_id"), "request_id": rid, "account_id": d.get("account_id"),
             "provider": d.get("provider"), "billing_class": d.get("billing_class"), "request_path": d.get("request_path"),
             "usage_id": d.get("usage_id"), "occurred_at": d.get("occurred_at"), "t1_estimated": True, "t1_source": t1_source,
+            "t0_source": "request_id" if rid_time_ms(rid) is not None else "occurred_at-latency",
             "counterpart": cls,
         }
         if row.get("transcript_n"):

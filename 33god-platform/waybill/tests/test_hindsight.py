@@ -108,7 +108,10 @@ class Collect(unittest.TestCase):
         self.assertEqual(rec.attrs["results"], 18)
         self.assertEqual(rec.attrs["injected_chars"], 5800)
         self.assertEqual(rec.attrs["query_chars"], 774)
-        self.assertAlmostEqual(rec.t1 - rec.t0, 385, places=3)
+        # t0 comes from the audit row's started_at, not journal ts - elapsed (finding 6)
+        self.assertEqual(rec.t0, ms("2026-11-16T03:53:25.715890+00:00"))
+        self.assertAlmostEqual(rec.t1 - rec.t0, 359.456, places=2)
+        self.assertIn("client_t", rec.attrs)
         self.assertIsNotNone(rec.payload)
         art = f.artifacts[rec.payload]["json"]
         self.assertEqual(art["result_count"], 2)
@@ -121,8 +124,15 @@ class Collect(unittest.TestCase):
             self.assertIn("9000", s.summary)
         self.assertIn("Hindsight retain is deferred; this waybill ends before the document is written", [g.why for g in f.gaps])
         self.assertEqual(f.facts["project"], "33GOD")
-        self.assertNotIn("memory:briefing:73f946bd", byid)    # session start is outside the window
-        self.assertEqual(f.source.items, 3)
+        # the SessionStart briefing precedes the first prompt: shown for a session's first turn (finding 6)
+        self.assertEqual(byid["memory:briefing:73f946bd"].phase, "session_start")
+        self.assertEqual(f.source.items, 4)
+
+    def test_briefing_hidden_on_later_turns(self):
+        earlier = {"ts": "2026-11-16T03:46:00+00:00", "invocation_id": "p0", "event": "turn_captured", "turn": 0,
+                   "ask_chars": 1, "outcome_chars": 1, "buffered_chars": 2}
+        f, _ = self.run_collect(rows=[JOURNAL[0], earlier] + JOURNAL[1:])
+        self.assertNotIn("memory:briefing:73f946bd", {s.id for s in f.spans})
 
     def test_public_profile_cuts_memory_and_turn_text(self):
         f, _ = self.run_collect(profile="public")
@@ -160,23 +170,86 @@ class Collect(unittest.TestCase):
         self.assertIsNone(rec.payload)
         self.assertTrue(any("audit list failed" in g.why for g in f.gaps))
 
-    def test_flush_spans(self):
-        op = "2b935394-1a96-545a-9636-9748892ec5cb"
+    FLUSH_OP = "2b935394-1a96-545a-9636-9748892ec5cb"
+
+    def _flush_rows(self, confirmed=True):
+        op = self.FLUSH_OP
         rows = JOURNAL + [
             {"ts": "2026-11-16T03:58:41+00:00", "invocation_id": STOP_INV, "event": "session_flush", "bank": "33GOD",
-             "document_id": "d", "operation_id": op, "turns": [1, 1], "attempt": 0, "trigger": "size", "status": "submitted"},
-            {"ts": "2026-11-16T04:30:00+00:00", "invocation_id": "", "event": "session_flush_confirmed", "operation_id": op, "turns": [1, 1]},
+             "document_id": "session-claude-" + SID, "operation_id": op, "turns": [1, 1], "attempt": 0, "trigger": "size",
+             "status": "submitted"},
         ]
+        if confirmed:
+            rows.append({"ts": "2026-11-16T03:59:20+00:00", "invocation_id": "", "event": "session_flush_confirmed",
+                         "operation_id": op, "turns": [1, 1]})
+        return rows
+
+    def _collect_flush(self, rows, ops, op_status="completed"):
         with tempfile.TemporaryDirectory() as d:
             jd = write_journal(d, rows)
             with mock.patch.object(hs, "JOURNAL_DIR", jd), mock.patch.object(hs, "audit_list", return_value=[AUDIT_ITEM]), \
+                 mock.patch.object(hs, "audit_ops", return_value=list(ops)), \
                  mock.patch.object(hs, "_load_capture", return_value=(CAPTURE, "file")), \
-                 mock.patch.object(hs, "operation_get", return_value={"status": "completed"}):
-                f = hs.collect(Ctx(window=window()))
-        fl = next(s for s in f.spans if s.id == f"memory:flush:{op}")
-        self.assertEqual((fl.status, fl.reason), ("pending", "retain_submitted"))   # confirmation lands after the window
+                 mock.patch.object(hs, "operation_get", return_value={"status": op_status}):
+                return hs.collect(Ctx(window=window()))
+
+    def test_flush_confirmed_after_window_is_ok(self):
+        f = self._collect_flush(self._flush_rows(), [])
+        fl = next(s for s in f.spans if s.id == f"memory:flush:{self.FLUSH_OP}")
+        # the window ends 15 s after Stop; the confirmation lands after it but still marks the flush done
+        self.assertEqual((fl.status, fl.reason), ("ok", "retain_confirmed"))
         self.assertEqual(fl.attrs["after_window"][0]["event"], "session_flush_confirmed")
         self.assertIsNotNone(fl.payload)
+        # the deferred-retain gap is only for a retain that is really unfinished
+        self.assertNotIn("Hindsight retain is deferred; this waybill ends before the document is written", [g.why for g in f.gaps])
+
+    def test_flush_unconfirmed_but_operation_completed(self):
+        f = self._collect_flush(self._flush_rows(confirmed=False), [])
+        fl = next(s for s in f.spans if s.name == "flush")
+        self.assertEqual((fl.status, fl.reason), ("ok", "retain_completed"))
+
+    def test_flush_unfinished_keeps_pending_and_gap(self):
+        f = self._collect_flush(self._flush_rows(confirmed=False), [], op_status="running")
+        fl = next(s for s in f.spans if s.name == "flush")
+        self.assertEqual(fl.status, "pending")
+        self.assertIn("Hindsight retain is deferred; this waybill ends before the document is written", [g.why for g in f.gaps])
+
+    def test_retain_batch_and_consolidation_spans_chain_off_the_flush(self):
+        doc = "session-claude-" + SID
+        base = ms("2026-11-16T03:58:41+00:00")
+        def at(off): return hs.iso(base + off)
+        ops = [
+            {"id": "r1", "action": "retain", "started_at": at(10), "ended_at": at(60), "duration_ms": 50, "transport": "http",
+             "request": {"operation_id": self.FLUSH_OP, "items": [{"document_id": doc}]},
+             "response": {"success": True, "operation_id": self.FLUSH_OP}},
+            {"id": "b1", "action": "batch_retain", "started_at": at(500), "ended_at": at(6600), "duration_ms": 6100, "transport": "system",
+             "request": {"_operation_id": "child", "contents": [{"document_id": doc}]}, "response": {"status": "completed"}},
+            {"id": "c1", "action": "consolidation", "started_at": at(6700), "ended_at": at(6710), "duration_ms": 10, "transport": "system",
+             "request": {"operation_id": "cons"}, "response": {"status": "completed"}},
+            {"id": "c0", "action": "consolidation", "started_at": at(-30000), "ended_at": at(-29990), "duration_ms": 10,
+             "request": {"operation_id": "old"}, "response": {"status": "completed"}},
+            {"id": "x1", "action": "retain", "started_at": at(20), "request": {"items": [{"document_id": "other-doc"}]},
+             "response": {"success": True}},
+        ]
+        f = self._collect_flush(self._flush_rows(), ops)
+        by = {s.id: s for s in f.spans}
+        self.assertEqual({"memory:retain:r1", "memory:batch_retain:b1", "memory:consolidation:c1"} - set(by), set())
+        self.assertNotIn("memory:consolidation:c0", by)     # an unrelated, earlier consolidation
+        self.assertNotIn("memory:retain:x1", by)            # another document's retain
+        self.assertEqual(by["memory:retain:r1"].parent, f"memory:flush:{self.FLUSH_OP}")
+        self.assertAlmostEqual(by["memory:batch_retain:b1"].t1 - by["memory:batch_retain:b1"].t0, 6100, places=0)
+        chain = [(l.from_, l.to, l.kind) for l in f.links if l.kind == "triggers"]
+        self.assertEqual(chain, [(f"memory:flush:{self.FLUSH_OP}", "memory:retain:r1", "triggers"),
+                                 ("memory:retain:r1", "memory:batch_retain:b1", "triggers"),
+                                 ("memory:batch_retain:b1", "memory:consolidation:c1", "triggers")])
+
+    def test_pick_memory_chain_prefers_operation_id(self):
+        items = [{"id": "a", "action": "retain", "started_at": "2026-11-16T03:58:42+00:00",
+                  "request": {"operation_id": "zzz", "items": [{"document_id": "d"}]}},
+                 {"id": "b", "action": "retain", "started_at": "2026-11-16T03:58:43+00:00",
+                  "request": {"operation_id": "op", "items": [{"document_id": "d"}]}}]
+        chain = hs.pick_memory_chain(items, "op", "d", ms("2026-11-16T03:58:41+00:00"))
+        self.assertEqual([c["id"] for c in chain], ["b"])
 
     def test_missing_journal_is_empty_not_error(self):
         with tempfile.TemporaryDirectory() as d:

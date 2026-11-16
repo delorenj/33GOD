@@ -144,7 +144,7 @@ class BuildTests(unittest.TestCase):
         f = frag()
         n, annotated = logs.build_turn_enricher(f, lines, pubs)
         self.assertEqual(n, 2)
-        self.assertEqual(annotated, [{"t": 1100.0, "source_id": E1}])
+        self.assertEqual(annotated, [{"t": 1100.0, "source_id": E1, "t_pub": 1000.0}])
         by = {s.id: s for s in f.spans}
         self.assertEqual(by[Ids.consume("turn-enricher", E1)].attrs["_join"]["outcome"], "enriched")
         noise = by[Ids.consume("turn-enricher", E2)]

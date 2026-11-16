@@ -7,12 +7,19 @@ import { useWb, wb, wbClock } from './state'
 import { fmtMs, timeRange, type Waybill } from './types'
 
 interface Row { id: string; sel: string; label: string; t0: number; t1: number; sync: boolean; status: string; kind: string; event?: boolean; ticks?: number[] }
-interface Group { id: string; name: string; rows: Row[]; t0: number }
+/** `folded` holds the routine rows (a model call's usage / allowance notes that were only filed and collected): one summary row, open on demand. */
+interface Group { id: string; name: string; rows: Row[]; folded: Row[]; t0: number }
+
+/** A usage / allowance note nobody did anything with except file it: 2 of them per model call is noise by default. */
+function routineUsage(e: Waybill['events'][number]): boolean {
+  if (!/\.llm\.(usage|allowance)\./.test(e.type)) return false
+  return e.consumers.every((c) => c.evidence !== 'observed' || (/^(candystore|holocene)/.test(c.component) && (c.outcome === 'archived' || c.outcome === 'collected')))
+}
 
 export function buildRows(w: Waybill): Group[] {
   const by = new Map<string, Group>()
-  const g = (id: string) => by.get(id) ?? by.set(id, { id, name: w.components[id]?.name ?? id, rows: [], t0: Infinity }).get(id)!
-  const put = (id: string, r: Row) => { const x = g(id); x.rows.push(r); x.t0 = Math.min(x.t0, r.t0) }
+  const g = (id: string) => by.get(id) ?? by.set(id, { id, name: w.components[id]?.name ?? id, rows: [], folded: [], t0: Infinity }).get(id)!
+  const put = (id: string, r: Row, fold = false) => { const x = g(id); (fold ? x.folded : x.rows).push(r); x.t0 = Math.min(x.t0, r.t0) }
   for (const s of w.spans) {
     if (s.kind === 'turn') continue
     put(s.component, { id: s.id, sel: s.id, label: s.name, t0: s.t0, t1: s.t1 ?? s.t0, sync: !!s.sync, status: s.status, kind: s.kind })
@@ -21,10 +28,10 @@ export function buildRows(w: Waybill): Group[] {
     let end = Math.max(e.t, e.archived ?? e.t)
     const ticks: number[] = []
     for (const c of e.consumers) { const t = c.t ?? e.t; ticks.push(t); if (t > end) end = t }
-    put('bb-nats', { id: `evt:${e.id}`, sel: `evt:${e.id}`, label: e.type.replace(/^bloodbank\./, ''), t0: e.t, t1: end, sync: false, status: 'ok', kind: 'event', event: true, ticks })
+    put('bb-nats', { id: `evt:${e.id}`, sel: `evt:${e.id}`, label: e.type.replace(/^bloodbank\./, ''), t0: e.t, t1: end, sync: false, status: 'ok', kind: 'event', event: true, ticks }, routineUsage(e))
   }
-  const out = [...by.values()].filter((x) => x.rows.length)
-  out.forEach((x) => x.rows.sort((a, b) => a.t0 - b.t0))
+  const out = [...by.values()].filter((x) => x.rows.length || x.folded.length)
+  out.forEach((x) => { x.rows.sort((a, b) => a.t0 - b.t0); x.folded.sort((a, b) => a.t0 - b.t0) })
   return out.sort((a, b) => a.t0 - b.t0)
 }
 
@@ -36,7 +43,16 @@ type Axis = { x: (t: number) => number; ticks: { at: number; label: string }[] }
 /** Symmetric log: a few ms and a few seconds both get room, and a negative time mirrors a positive one. */
 const slog = (t: number) => Math.sign(t) * Math.log1p(Math.abs(t) / LOG_TAU)
 
-export function axisFor(zoom: 'fit' | 'stop' | 'log', lo: number, hi: number, st: { t0: number; t1: number } | undefined): Axis {
+/** Drop tick labels that would overprint: keep one only if it clears the last kept one by `minPx`. */
+function thin(ticks: Axis['ticks'], widthPx: number, minPx = 64): Axis['ticks'] {
+  const gap = minPx / Math.max(200, widthPx)
+  const out: Axis['ticks'] = []
+  let last = -Infinity
+  for (const t of ticks) if (t.at - last >= gap) { out.push(t); last = t.at }
+  return out
+}
+
+export function axisFor(zoom: 'fit' | 'stop' | 'log', lo: number, hi: number, st: { t0: number; t1: number } | undefined, widthPx = 800): Axis {
   if (zoom === 'log') {
     const a = slog(lo), span = Math.max(1e-6, slog(hi) - a)
     const x = (t: number) => (slog(t) - a) / span
@@ -59,12 +75,12 @@ export function axisFor(zoom: 'fit' | 'stop' | 'log', lo: number, hi: number, st
   const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? raw
   const ticks: Axis['ticks'] = []
   for (let t = Math.ceil(a / step) * step; t <= b + 1e-6; t += step) ticks.push({ at: (t - a) / span, label: fmtMs(t) })
-  return { x: (t) => (t - a) / span, ticks }
+  return { x: (t) => (t - a) / span, ticks: thin(ticks, widthPx) }
 }
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
 
-type Item = { key: string; head: Group } | { key: string; row: Row }
+type Item = { key: string; head: Group } | { key: string; row: Row } | { key: string; fold: Group; open: boolean }
 
 export function Waterfall({ compact }: { compact: boolean }) {
   const w = useWb((s) => s.waybill)!
@@ -76,7 +92,10 @@ export function Waterfall({ compact }: { compact: boolean }) {
   const [shut, setShut] = useState<Set<string>>(new Set())
   const stop = dir.stops[si]
   const { min: lo, max: hi } = useMemo(() => timeRange(w), [w])
-  const axis = useMemo(() => axisFor(zoom, lo, hi, stop && stop.kind !== 'end' ? stop : undefined), [zoom, lo, hi, stop])
+  // the track's pixel width decides how many axis labels fit (rounded so a resize does not rebuild the axis every pixel)
+  const [trackW, setTrackW] = useState(800)
+  const axis = useMemo(() => axisFor(zoom, lo, hi, stop && stop.kind !== 'end' ? stop : undefined, trackW), [zoom, lo, hi, stop, trackW])
+  const [unfold, setUnfold] = useState<Set<string>>(new Set())
   const head = useRef<HTMLDivElement>(null)
   const inStop = useMemo(() => new Set(stop?.spanIds ?? []), [stop])
   const inStopEv = useMemo(() => new Set((stop?.eventIds ?? []).map((e) => `evt:${e}`)), [stop])
@@ -86,10 +105,16 @@ export function Waterfall({ compact }: { compact: boolean }) {
     const out: Item[] = []
     for (const gr of groups) {
       out.push({ key: `g:${gr.id}`, head: gr })
-      if (!shut.has(gr.id)) for (const r of gr.rows) out.push({ key: r.id, row: r })
+      if (shut.has(gr.id)) continue
+      for (const r of gr.rows) out.push({ key: r.id, row: r })
+      if (gr.folded.length) {
+        const open = unfold.has(gr.id)
+        out.push({ key: `f:${gr.id}`, fold: gr, open })
+        if (open) for (const r of gr.folded) out.push({ key: r.id, row: r })
+      }
     }
     return out
-  }, [groups, shut])
+  }, [groups, shut, unfold])
 
   // the viewport: scrollTop and height are state, so only the rows in view are rendered
   const scroller = useRef<HTMLDivElement>(null)
@@ -97,22 +122,44 @@ export function Waterfall({ compact }: { compact: boolean }) {
   useLayoutEffect(() => {
     const el = scroller.current
     if (!el) return
-    const read = () => setView((v) => (v.top === el.scrollTop && v.h === el.clientHeight ? v : { top: el.scrollTop, h: el.clientHeight }))
+    const read = () => {
+      setView((v) => (v.top === el.scrollTop && v.h === el.clientHeight ? v : { top: el.scrollTop, h: el.clientHeight }))
+      setTrackW(Math.round((el.clientWidth - (el.clientWidth < 520 ? 96 : 170)) / 40) * 40)
+    }
     read()
     const ro = new ResizeObserver(read)
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
-  // follow the story: bring the active stop's first row into view when the stop changes
-  useEffect(() => {
+  const scrollToRow = (i: number) => {
     const el = scroller.current
-    if (!el) return
-    const i = items.findIndex((it) => 'row' in it && (inStop.has(it.row.id) || inStopEv.has(it.row.id)))
-    if (i < 0) return
+    if (!el || i < 0) return
     const y = i * ROW_H
-    if (y < el.scrollTop || y + ROW_H > el.scrollTop + el.clientHeight) el.scrollTop = Math.max(0, y - ROW_H * 2)
+    if (y < el.scrollTop + ROW_H || y + ROW_H * 2 > el.scrollTop + el.clientHeight) el.scrollTop = Math.max(0, y - ROW_H * 2)
+  }
+  // follow the story: bring the stop's own span row into view when the stop changes. Spans first, in the stop's order
+  // (an llm stop must land on its model-call bar, not on an event row that happens to sort earlier); events only when the stop has no span rows.
+  useEffect(() => {
+    const at = new Map<string, number>()
+    items.forEach((it, i) => { if ('row' in it) at.set(it.row.id, i) })
+    let i = -1
+    for (const id of stop?.spanIds ?? []) { if (at.has(id)) { i = at.get(id)!; break } }
+    if (i < 0) for (const id of stop?.eventIds ?? []) { if (at.has(`evt:${id}`)) { i = at.get(`evt:${id}`)!; break } }
+    scrollToRow(i)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stop])
+  // a selection (a click on a bar, a link in the inspector, the Inspect button) is brought into view too, opening its group first
+  useEffect(() => {
+    if (!sel) return
+    const owner = groups.find((g) => g.rows.some((r) => r.sel === sel) || g.folded.some((r) => r.sel === sel))
+    if (owner) {
+      if (shut.has(owner.id)) setShut((p) => { const n = new Set(p); n.delete(owner.id); return n })
+      if (owner.folded.some((r) => r.sel === sel) && !unfold.has(owner.id)) setUnfold((p) => new Set(p).add(owner.id))
+    }
+    const i = items.findIndex((it) => 'row' in it && it.row.sel === sel)
+    scrollToRow(i)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sel, items.length])
 
   // the playhead moves by rAF, straight on the DOM: no React re-render per frame
   useEffect(() => {
@@ -157,6 +204,17 @@ export function Waterfall({ compact }: { compact: boolean }) {
                     <span className="wf-caret">{closed ? '▸' : '▾'}</span>
                     <b>{gr.name}</b>
                     <em>{gr.rows.length}</em>
+                  </button>
+                </div>
+              )
+            }
+            if ('fold' in it) {
+              const gr = it.fold
+              return (
+                <div key={it.key} className="wf-slot" style={{ top }}>
+                  <button className="wf-fold" onClick={() => setUnfold((p) => { const n = new Set(p); n.has(gr.id) ? n.delete(gr.id) : n.add(gr.id); return n })} aria-expanded={it.open}>
+                    <span className="wf-caret">{it.open ? '▾' : '▸'}</span>
+                    {gr.folded.length} routine usage notes (filed and collected only) {it.open ? '· hide' : '· show'}
                   </button>
                 </div>
               )

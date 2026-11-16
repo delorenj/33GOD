@@ -4,8 +4,8 @@ import { create } from 'zustand'
 import { isPortrait, type Vec3 } from '../content'
 import { ui, useWorld } from '../sim/store'
 import { direct, type Direction, type Stop } from './director'
-import { fanoutView, spotOf, viewFor } from './stations'
-import { isWide, type Waybill } from './types'
+import { fanoutView, pairView, spotOf, viewFor } from './stations'
+import type { Waybill } from './types'
 
 export type LoadState = { state: 'idle' } | { state: 'loading'; source: string } | { state: 'error'; message: string; source: string; retry?: string }
 
@@ -29,7 +29,7 @@ interface Wb {
 
 export const useWb = create<Wb>(() => ({
   waybill: null, dir: null, warnings: [], source: '', stop: 0, playing: true, rate: 1, sel: null, ended: false,
-  picker: false, load: { state: 'idle' }, prevPaused: false, zoom: 'fit',
+  picker: false, load: { state: 'idle' }, prevPaused: false, zoom: 'stop',
 }))
 
 /** Progress through the current stop, 0..1. Written by the driver, read every frame. */
@@ -59,8 +59,13 @@ export function cameraFor(stop: Stop, dir: Direction): { pos: Vec3; target: Vec3
     view = fan
     k = isPortrait() ? 1.25 : 1
   }
-  const pos = view.pos.map((p, j) => view.target[j] + (p - view.target[j]) * k) as Vec3
-  return { pos, target: view.target }
+  // a stop that travels (the briefing card) frames both ends of the trip, the dock and the bay
+  if (stop.travel) { view = pairView([spotOf(stop.travel.from, pl), spotOf(stop.travel.to, pl)]); k = isPortrait() ? 1.2 : 1 }
+  let pos = view.pos.map((p, j) => view.target[j] + (p - view.target[j]) * k) as Vec3
+  let target = view.target
+  // a phone's stop card covers the lower third: slide the whole view down so the hero sits in the upper part
+  if (isPortrait()) { pos = [pos[0], pos[1] - 1.4, pos[2]]; target = [target[0], target[1] - 1.4, target[2]] }
+  return { pos, target }
 }
 
 function fly(stop: Stop, dir: Direction) {
@@ -77,8 +82,8 @@ export const wb = {
     wbClock.u = 0
     wbClock.t = dir.stops[first]?.t0 ?? 0
     useWb.setState({
-      // a wide recording (a 40 s turn beside 2 ms handlers) opens on the log axis; the buttons still switch it
-      zoom: isWide(w) ? 'log' : 'fit',
+      // the axis follows the active stop (padded), so every stop's bars are readable; 'log' and 'linear' stay as overviews
+      zoom: 'stop',
       waybill: w, dir, warnings, source, stop: first, playing: true, sel: null, ended: false, picker: false, load: { state: 'idle' },
       prevPaused: was.mode === 'waybill' ? useWb.getState().prevPaused : was.paused,
     })

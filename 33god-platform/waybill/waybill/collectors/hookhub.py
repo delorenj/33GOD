@@ -128,6 +128,28 @@ def attribute_transitions(transitions: list[dict], publishers: list[dict]) -> tu
     return mapping, unattributed
 
 
+def run_window(e: dict) -> tuple[float | None, float | None, float | None]:
+    """(t0, t1, queued_ms) of the time a handler actually ran.
+
+    started_at..finished_at includes the hub's journal queue wait (measured: a 160 ms nanoleaf run spans 1.6 s),
+    so the run is [finished_at - duration_ms, finished_at]; the wait before it is selected_at -> that start.
+    Falls back to started_at..finished_at when there is no duration or finished_at.
+    """
+    sel, st, fin = ms(e.get("selected_at")), ms(e.get("started_at")), ms(e.get("finished_at"))
+    dur = e.get("duration_ms")
+    try:
+        dur_f = float(dur) if dur is not None else None
+    except (TypeError, ValueError):
+        dur_f = None
+    if fin is not None and dur_f is not None and dur_f >= 0:
+        t0 = fin - dur_f
+        base = sel if sel is not None else st
+        queued = max(0.0, t0 - base) if base is not None else None
+        return t0, fin, queued
+    t0 = st if st is not None else sel
+    return t0, fin, None
+
+
 def _fmt_ms(v: float | None) -> str:
     if v is None:
         return "?"
@@ -220,9 +242,17 @@ def read_rows(path: str, session_id: str, cli: str | None, lo_iso: str, hi_iso: 
                 (session_id, start_lo_iso, lo_iso))] + invs
         trans = []
         if cli:
+            # reach back to the earliest session invocation (the SessionStart pre-roll starts before lo_iso): its
+            # publisher run opens the ASM none->starting transition re-entry
+            tlo = lo_iso
+            if invs:
+                first = min(r["received_at"] for r in invs)
+                ms_first = ms(first)
+                if ms_first is not None:
+                    tlo = min(lo_iso, iso(ms_first - SLACK_BEFORE_MS - 500.0))
             trans = [dict(r) for r in con.execute(
                 "select * from invocations where native = 'transition' and session_id is null and cli = ? "
-                "and received_at >= ? and received_at <= ? order by received_at", (cli, lo_iso, hi_iso))]
+                "and received_at >= ? and received_at <= ? order by received_at", (cli, tlo, hi_iso))]
         ids = [r["invocation_id"] for r in invs] + [r["invocation_id"] for r in trans]
         execs: list[dict] = []
         events: list[dict] = []
@@ -294,6 +324,34 @@ def organize(rows: dict[str, list[dict]]) -> dict[str, Any]:
 
 # ---------- public helpers for other collectors ----------
 
+def earliest_ms(ctx: Ctx) -> float | None:
+    """Earliest received_at (epoch ms) among this turn's invocations, SessionStart pre-roll included. None on error."""
+    try:
+        ts = [ms(i.get("received_at")) for i in load(ctx)["invocations"]]
+    except Exception:
+        return None
+    ts = [t for t in ts if t is not None]
+    return min(ts) if ts else None
+
+
+def transition_invocations(ctx: Ctx) -> list[dict[str, Any]]:
+    """Attributed ASM transition re-entry invocations (native='transition') with received_ms. [] on error."""
+    try:
+        data = load(ctx)
+    except Exception:
+        return []
+    sess = {i["invocation_id"] for i in data["session_invocations"]}
+    out = []
+    for i in data["invocations"]:
+        if i["invocation_id"] in sess:
+            continue
+        r = dict(i)
+        r["received_ms"] = ms(i.get("received_at"))
+        r["trigger"] = data["triggers"].get(i["invocation_id"])
+        out.append(r)
+    return out
+
+
 def invocation_ids(ctx: Ctx) -> list[str]:
     """Hook invocation ids of this turn (session invocations + attributed ASM transitions). [] on error."""
     try:
@@ -359,8 +417,9 @@ def build(frag: Fragment, ctx: Ctx, data: dict[str, Any], now: float | None = No
         synthetic = native == "transition"
         phase = phase_for(inv.get("role"), native)
         received = ms(inv.get("received_at"))
-        sync_fin = [ms(e.get("finished_at")) for e in execs if e.get("mode") == "sync" and e.get("finished_at")]
-        async_fin = [ms(e.get("finished_at")) for e in execs if e.get("mode") != "sync" and e.get("finished_at")]
+        # run windows (not started_at..finished_at, which includes the journal queue wait)
+        sync_fin = [run_window(e)[1] for e in execs if e.get("mode") == "sync" and e.get("finished_at")]
+        async_fin = [run_window(e)[1] for e in execs if e.get("mode") != "sync" and e.get("finished_at")]
         all_fin = [x for x in sync_fin + async_fin if x is not None]
         t1 = max([x for x in sync_fin if x is not None], default=received)
         settled = max(all_fin, default=None)
@@ -409,8 +468,11 @@ def build(frag: Fragment, ctx: Ctx, data: dict[str, Any], now: float | None = No
             hid = e["handler_id"]
             sid = Ids.handler(iid, hid)
             st = e.get("status")
-            t0 = ms(e.get("started_at")) or ms(e.get("selected_at")) or received
-            fin = ms(e.get("finished_at"))
+            rt0, fin, queued = run_window(e)
+            t0 = rt0 if rt0 is not None else received
+            hattrs: dict[str, Any] = {}
+            if queued is not None:
+                hattrs["queued_ms"] = round(queued, 3)
             frag.spans.append(Span(
                 id=sid, kind="handler", component="hook-hub", name=hid, summary=handler_summary(e),
                 phase=phase, t0=t0, t1=fin, status=status_for(st), reason=e.get("reason"),
@@ -420,7 +482,7 @@ def build(frag: Fragment, ctx: Ctx, data: dict[str, Any], now: float | None = No
                        "duration_ms": e.get("duration_ms"), "selected_at": e.get("selected_at"),
                        "started_at": e.get("started_at"), "finished_at": e.get("finished_at"),
                        "publish_status": e.get("publish_status"), "event_type": e.get("event_type"),
-                       "order": order, "receipt_status": st},
+                       "order": order, "receipt_status": st, **hattrs},
                 evidence=[NAME]))
             frag.links.append(Link(hook_id, sid, "runs"))
             if e.get("event_id"):
@@ -438,10 +500,10 @@ def build(frag: Fragment, ctx: Ctx, data: dict[str, Any], now: float | None = No
     _findings(frag, binary_missing, failures, stuck_execs, stuck_invs)
     if data["invocations"]:
         frag.gaps.append(Gap(
-            "bb-hook", "bb-hook client timing and fail-open exits are not recorded",
-            "bb-hook prints nothing and exits 0 when the hub is down, stalled or out of budget, and the client-side "
-            "time before the hub claims the invocation (stdin read, ping, socket send) is never stored, so a "
-            "hook that never reached hook-hub leaves no trace here", "info"))
+            "bb-hook", "bb-hook fail-open exits are not recorded by hook-hub",
+            "bb-hook prints nothing and exits 0 when the hub is down, stalled or out of budget, so a hook that never "
+            "reached hook-hub leaves no receipt. Client-side timing comes from the CLI transcript (hook_success "
+            "durationMs) where the CLI logs it", "info"))
         frag.gaps.append(Gap(
             "hook-hub", "handler stdout/stderr not stored by hook-hub",
             "receipts keep status, reason, timings and the wrapper's exit code only; the injected text survives "

@@ -24,6 +24,7 @@ SEV_COLOR = {"broken": "31", "warn": "33", "info": "2"}
 TOOL_HOOKS = {"PreToolUse", "PostToolUse", "PostToolUseFailure", "PermissionRequest"}
 SYNC_CH, ASYNC_CH, OPEN_CH, INSTANT_CH, GROUP_CH = "█", "▒", "┄", "◆", "░"
 EVENT_GROUP_MIN = 3
+FANOUT_MIN = 2      # usage / allowance events collapse into one row from this many on
 
 
 class _Paint:
@@ -225,6 +226,20 @@ def _collect_desc(sid: str, kids: dict[str, list[dict]], out: list[dict], seen: 
         _collect_desc(c["id"], kids, out, seen)
 
 
+def _is_fanout_noise(e: dict) -> bool:
+    """llm.usage.recorded and the allowance events fan out once per model call: one row beats ten."""
+    t = str(e.get("type") or "")
+    return "llm.usage" in t or "allowance" in t
+
+
+def _type_label(e: dict) -> str:
+    """The bloodbank type, plus the type the bus stored it under when that differs (Dapr: com.dapr.event.sent)."""
+    t = (e.get("type") or "").replace("bloodbank.", "")
+    if e.get("stored_type") and e["stored_type"] != e.get("type"):
+        t += f" (stored as {e['stored_type']})"
+    return t
+
+
 def _fanout_text(e: dict, wb_comp: dict, limit_names: int = 6) -> tuple[str, list[tuple[str, str]]]:
     bits = []
     if e.get("observed_on_bus") is False:
@@ -249,7 +264,7 @@ def _fanout_text(e: dict, wb_comp: dict, limit_names: int = 6) -> tuple[str, lis
         parts.append(("inferred: " + ", ".join(f"○{c.get('name')}" for c in shown) + (f" (+{more})" if more else ""), "2"))
     if not cons:
         parts.append(("no consumer known", "2"))
-    head = f"↳ {(e.get('type') or '').replace('bloodbank.', '')}" + (" · " + " · ".join(bits) if bits else "")
+    head = f"↳ {_type_label(e)}" + (" · " + " · ".join(bits) if bits else "")
     return head, parts
 
 
@@ -317,13 +332,22 @@ def render(wb: dict, width: int | None = None, show_all: bool = False, color: bo
         kids[k].sort(key=lambda s: (s.get("t0") or 0.0, s["id"]))
     ev_by_pub: dict[str, list[dict]] = defaultdict(list)
     loose: list[dict] = []
+    # llm.usage.recorded / allowance fire once per model call: collapse each type into one 'N× type' row unless --all
+    noisy: dict[str, list[dict]] = defaultdict(list)
     for e in wb.get("events") or []:
+        if _is_fanout_noise(e):
+            noisy[e.get("type") or "?"].append(e)
+    collapsed: dict[str, list[dict]] = {} if show_all else {t: v for t, v in noisy.items() if len(v) >= FANOUT_MIN}
+    for e in wb.get("events") or []:
+        if (e.get("type") or "?") in collapsed:
+            continue
         if e.get("publisher_span") in byid:
             ev_by_pub[e["publisher_span"]].append(e)
         else:
             loose.append(e)
 
     items: list[tuple[float, str, Any]] = [(s.get("t0") or 0.0, "span", s) for s in roots]
+    items += [(min(e.get("t") or 0.0 for e in evs), "evgroup", evs) for evs in collapsed.values()]
     if show_all:
         items += [(e.get("t") or 0.0, "event", e) for e in loose]
     else:
@@ -398,7 +422,7 @@ def render(wb: dict, width: int | None = None, show_all: bool = False, color: bo
                 c = lay.col(e[k])
                 if cells[c] == " ":
                     cells[c] = mark
-        name = "◆ " + (e.get("type") or "?").replace("bloodbank.", "")
+        name = "◆ " + _type_label(e)
         lines = [row(e.get("t"), None, "ok", e.get("producer") or "bus", name, depth, cells, "event")]
         lines += fanout_rows(e, depth)
         return lines
@@ -408,12 +432,13 @@ def render(wb: dict, width: int | None = None, show_all: bool = False, color: bo
         cells = [" "] * lay.bar_w
         for t in ts:
             cells[lay.col(t)] = INSTANT_CH
-        et = (evs[0].get("type") or "?").replace("bloodbank.", "")
+        et = _type_label(evs[0])
         obs = sum(1 for e in evs for c in e.get("consumers") or [] if c.get("evidence") == "observed")
         seqs = [e["seq"] for e in evs if e.get("seq") is not None]
         note = f"seq {min(seqs)}…{max(seqs)}" if seqs else "no seq"
         return [row(min(ts), max(ts) - min(ts), "ok", evs[0].get("producer") or "bus",
-                    f"◆ {len(evs)}× {et}", depth, cells, "event", note=f"({note}, {obs} observed deliveries)")]
+                    f"◆ {len(evs)}× {et}", depth, cells, "event",
+                    note=f"({note}, {obs} observed deliveries" + (", --all expands)" if _is_fanout_noise(evs[0]) else ")"))]
 
     def run_row(run: list[dict], depth: int) -> str:
         members: list[dict] = []

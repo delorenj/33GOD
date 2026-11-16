@@ -22,6 +22,7 @@ import re
 import subprocess
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from ..model import Ctx, Finding, Fragment, Gap, Ids, Link, Source, Span, iso, ms, tilde
@@ -32,8 +33,12 @@ NTFY = os.environ.get("WAYBILL_NTFY_CONTAINER", "bloodbank-ntfy-router")
 ENRICHER = os.environ.get("WAYBILL_ENRICHER_CONTAINER", "enricher")
 TURN_ENRICHER = os.environ.get("WAYBILL_TURN_ENRICHER_CONTAINER", "bloodbank-turn-enricher")
 DAPRD = os.environ.get("WAYBILL_DAPRD_CONTAINER", "candystore-daprd")
+JEV = os.environ.get("WAYBILL_JEV_CONTAINER", "jev-litellm")
 HUB_LOG = os.path.expanduser(os.environ.get("WAYBILL_HUB_LOG", "~/.local/state/33god/hook-hub/hub.log"))
 TAIL_STEPS = (2000, 20000, 200000)
+TAIL_CALL_CAP_S = 8.0       # one `docker logs --tail N` call may not eat the whole collector budget (finding 23)
+NTFY_NOISE = ("bloodbank.cron.",)   # scheduler chatter: hundreds of lines a minute, never part of a turn
+JEV_PATH = "/typesafe/v1/systemone"
 MATCH_BEFORE_MS = 50.0      # a log line can precede the publisher run's recorded start by clock skew only
 MATCH_AFTER_MS = 3000.0     # how long after its publish a consumer line is still attributed to the event
 
@@ -46,6 +51,7 @@ _NOEVENTS = re.compile(r"No events found for session (\S+)")
 _ANNOT = re.compile(r"\[turn-enricher\]\s+\w+\s+annotated:\s+([0-9a-fA-F-]{36})\s+signal=([\d.]+)\s+action=(.*?)\s+"
                     r"artifacts=(\d+)\s+blocker=(.*)$")
 _NOISE = re.compile(r"\[turn-enricher\]\s+\w+\s+noise:\s+([0-9a-fA-F-]{36})\s+\(signal=([\d.]+)\)")
+_JEV = re.compile(r'"POST ' + re.escape("/typesafe/v1/systemone") + r' HTTP/[\d.]+"\s+(\d{3})')
 _DAPR = re.compile(r"(DROP|RETRY) status returned from app while processing pub/sub event ([0-9a-fA-F-]{36})")
 _HUB = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:?\d\d)?)\s+\[(\d+)\]\s+(.*)$")
 _HUB_INTEREST = re.compile(r"OperationalError|JSONDecodeError|TIMEOUT|TimeoutError|no budget left")
@@ -138,14 +144,26 @@ def parse_annotation(msg: str) -> dict | None:
     return None
 
 
+def parse_jev(lines: list[tuple[float, str]]) -> list[dict]:
+    """jev-litellm access-log lines for POST /typesafe/v1/systemone -> [{t, code}]; t is the RESPONSE time."""
+    out = []
+    for t, msg in lines:
+        m = _JEV.search(msg)
+        if m:
+            out.append({"t": t, "code": int(m.group(1))})
+    return out
+
+
 # ---------- I/O ----------
 
 def _run(argv: list[str], timeout: float) -> subprocess.CompletedProcess:
     return subprocess.run(argv, capture_output=True, text=True, errors="replace", timeout=timeout)
 
 
-def docker_lines(container: str, lo: float, hi: float, timeout: float) -> tuple[list[tuple[float, str]], str]:
-    """Lines of a container's log in [lo, hi] (epoch ms) and how they were read ('since' or 'tail:N')."""
+def docker_lines(container: str, lo: float, hi: float, timeout: float,
+                 deadline: float | None = None) -> tuple[list[tuple[float, str]], str]:
+    """Lines of a container's log in [lo, hi] (epoch ms) and how they were read ('since', 'tail:N', or either with a
+    ':partial' suffix when the budget ran out). A tail read that times out keeps what the earlier, smaller tail got."""
     p = _run(["docker", "logs", "-t", "--since", iso(lo), "--until", iso(hi), container], timeout)
     if p.returncode != 0:
         raise RuntimeError(f"docker logs {container}: {(p.stderr or '').strip()[:300]}")
@@ -154,7 +172,16 @@ def docker_lines(container: str, lo: float, hi: float, timeout: float) -> tuple[
         return sorted(lines, key=lambda x: x[0]), "since"
     mode = "since"
     for n in TAIL_STEPS:   # json-file logs whose --since read comes back empty (turn-enricher)
-        p = _run(["docker", "logs", "-t", "--tail", str(n), container], timeout)
+        left = None if deadline is None else deadline - time.monotonic()
+        if left is not None and left <= 0.5:
+            mode += ":partial"
+            break
+        budget = min(timeout, TAIL_CALL_CAP_S * (1 + TAIL_STEPS.index(n)), left if left is not None else timeout)
+        try:
+            p = _run(["docker", "logs", "-t", "--tail", str(n), container], budget)
+        except subprocess.TimeoutExpired:
+            mode += ":partial"
+            break
         if p.returncode != 0:
             break
         got = parse_docker_lines(p.stdout) + parse_docker_lines(p.stderr)
@@ -197,9 +224,20 @@ def _expected(pubs: list[dict], extra: list[dict]) -> list[dict]:
     return out + extra
 
 
+def _ntfy_summary(kind: str, st: str, when: str) -> str:
+    return {
+        "routed": f"ntfy-router routed {st} to ntfy (push sent){when}",
+        "digested": f"ntfy-router folded {st} into the 300 s digest{when}",
+        "rate-limited": f"ntfy-router rate-limited {st}: the notification was dropped by the token bucket",
+        "duplicate": f"ntfy-router ignored {st} as a duplicate",
+    }[kind]
+
+
 def build_ntfy(frag: Fragment, lines: list[dict], expected: list[dict]) -> int:
     n = 0
-    for m in match_by_time(lines, expected):
+    matched = match_by_time(lines, expected)
+    used = {id(m["line"]) for m in matched}
+    for m in matched:
         ln, ex = m["line"], m["expected"]
         status, reason = NTFY_STATUS[ln["kind"]]
         et = ln["type"]
@@ -208,24 +246,40 @@ def build_ntfy(frag: Fragment, lines: list[dict], expected: list[dict]) -> int:
         key = ex.get("event_id") or str(int(ln["t"]))
         lag = ln["t"] - ex["t_pub"] if ex.get("t_pub") else None
         when = f" {int(round(lag))} ms after publish" if lag is not None and lag >= 0 else ""
-        summary = {
-            "routed": f"ntfy-router routed {st} to ntfy (push sent){when}",
-            "digested": f"ntfy-router folded {st} into the 300 s digest{when}",
-            "rate-limited": f"ntfy-router rate-limited {st}: the notification was dropped by the token bucket",
-            "duplicate": f"ntfy-router ignored {st} as a duplicate",
-        }[ln["kind"]]
         join = {"event_type": et, "near": ex.get("t_pub") or ln["t"], "window_ms": MATCH_AFTER_MS,
                 "consumer": "ntfy-router", "consumer_kind": "core", "outcome": ln["kind"], "link": "delivers"}
         if exact:
             join["event_id"] = ex["event_id"]
         frag.spans.append(Span(
             id=Ids.notify("ntfy-router", key), kind="notify", component="ntfy-router", name=f"{ln['kind']} {st}",
-            summary=summary, phase="async_after", t0=ln["t"], t1=None, status=status, reason=reason, sync=False,
+            summary=_ntfy_summary(ln["kind"], st, when), phase="async_after", t0=ln["t"], t1=None, status=status,
+            reason=reason, sync=False,
             refs={"event_id": ex["event_id"]} if exact else {},
-            attrs={"_join": join, "match": "time", "candidates": m["candidates"], "ambiguous": m["candidates"] > 1,
+            attrs={"_join": join, "match": "type+time", "candidates": m["candidates"], "ambiguous": m["candidates"] > 1,
                    "guess_event_id": ex.get("event_id"), "at": iso(ln["t"]), "log": f"{ln['kind']}: {et}"},
             evidence=[NAME]))
         n += 1
+    # Every other line is offered to the assembler, which knows ALL of the turn's events (llm.usage.recorded,
+    # allowance, report.session.completed, Dapr-wrapped ones ...) and matches by type + stored time. Lines that match
+    # no event of this turn are shared-log noise and are dropped there (join.optional), never a gap (finding 7).
+    seq: dict[int, int] = defaultdict(int)
+    for ln in sorted(lines, key=lambda x: x["t"]):
+        if id(ln) in used or ln["type"].startswith(NTFY_NOISE):
+            continue
+        status, reason = NTFY_STATUS[ln["kind"]]
+        et = ln["type"]
+        st = hookhub.short_type(et)
+        ms_key = int(ln["t"])
+        seq[ms_key] += 1
+        key = f"{ms_key}.{seq[ms_key]}" if seq[ms_key] > 1 else str(ms_key)
+        join = {"event_type": et, "near": ln["t"], "window_ms": MATCH_AFTER_MS, "consumer": "ntfy-router",
+                "consumer_kind": "core", "outcome": ln["kind"], "link": "delivers", "optional": True,
+                "use_stored": True, "match": "type+time"}
+        frag.spans.append(Span(
+            id=Ids.notify("ntfy-router", key), kind="notify", component="ntfy-router", name=f"{ln['kind']} {st}",
+            summary=_ntfy_summary(ln["kind"], st, ""), phase="async_after", t0=ln["t"], t1=None, status=status,
+            reason=reason, sync=False, refs={},
+            attrs={"_join": join, "at": iso(ln["t"]), "log": f"{ln['kind']}: {et}"}, evidence=[NAME]))
     return n
 
 
@@ -303,7 +357,7 @@ def build_turn_enricher(frag: Fragment, lines: list[tuple[float, str]], pubs: di
             summary = (f"turn-enricher annotated the turn (signal {a['signal']:.2f}: '{a.get('action')}')"
                        + (f", blocker: {a['blocker']}" if a.get("blocker") else ""))
             status, reason, outcome = "ok", "annotated", "enriched"
-            annotated.append({"t": t, "source_id": a["id"]})
+            annotated.append({"t": t, "source_id": a["id"], "t_pub": t0})
         else:
             summary = f"turn-enricher classified the turn as noise (signal {a['signal']:.2f}); nothing was published"
             status, reason, outcome = "skipped", "noise", "ignored"
@@ -312,6 +366,43 @@ def build_turn_enricher(frag: Fragment, lines: list[tuple[float, str]], pubs: di
                  summary, "core", outcome, attrs)
         n += 1
     return n, annotated
+
+
+JEV_BEFORE_MS = 100.0   # a model call's access-log line may precede the enricher's own 'annotated' line by clock skew
+
+
+def build_jev(frag: Fragment, jev: list[dict], annotated: list[dict]) -> int:
+    """turn-enricher's Jev extractor call (finding 8). jev-litellm logs only the RESPONSE time, so the span is an
+    instant at that time; the line is chosen as the last completed POST /typesafe/v1/systemone between the
+    turn.completed publish and the 'annotated' line (the enricher publishes only after its extractors answered).
+    Other clients share that endpoint (Hindsight's extraction), so more than one candidate = ambiguous."""
+    n = 0
+    for a in annotated:
+        lo, hi = (a.get("t_pub") or a["t"]) - JEV_BEFORE_MS, a["t"] + JEV_BEFORE_MS
+        cands = [j for j in jev if lo <= j["t"] <= hi]
+        if not cands:
+            continue
+        pick = max(cands, key=lambda j: j["t"])
+        sid = Ids.jev_llm(a["source_id"])
+        ok = 200 <= pick["code"] < 300
+        frag.component("jev-litellm", "jev-litellm", "service")
+        parent = Ids.consume("turn-enricher", a["source_id"])
+        frag.spans.append(Span(
+            id=sid, kind="llm", component="jev-litellm", name="jev extractor",
+            summary=(f"turn-enricher's Jev extraction call answered HTTP {pick['code']} at {iso(pick['t'])} "
+                     f"(jev-litellm logs the response time only)"
+                     + (f"; {len(cands)} candidate calls, the last was taken" if len(cands) > 1 else "")),
+            phase="async_after", t0=pick["t"], t1=pick["t"], status="ok" if ok else "failed",
+            reason=None if ok else f"http_{pick['code']}", sync=False, parent=parent,
+            refs={"event_id": a["source_id"]},
+            attrs={"provider": "jev-litellm", "endpoint": JEV_PATH, "http_status": pick["code"], "background": True,
+                   "service_call": True, "purpose": "turn-enricher extractor", "match": "time-window",
+                   "candidates": len(cands), "ambiguous": len(cands) > 1, "duration_unknown": True,
+                   "at": iso(pick["t"])},
+            evidence=[NAME]))
+        frag.links.append(Link(parent, sid, "calls", "jev extractor"))
+        n += 1
+    return n
 
 
 def build_daprd(frag: Fragment, ctx: Ctx, lines: list[tuple[float, str]], pubs: dict[str, dict]) -> int:
@@ -408,12 +499,14 @@ def build_hub(frag: Fragment, ctx: Ctx, rows: list[dict], data: dict | None) -> 
 def collect(ctx: Ctx) -> Fragment:
     started = time.monotonic()
     src = Source(id=NAME, kind="docker-logs+file",
-                 locator=f"docker logs -t {NTFY} {ENRICHER} {TURN_ENRICHER} {DAPRD}; {tilde(HUB_LOG)}")
+                 locator=f"docker logs -t {NTFY} {ENRICHER} {TURN_ENRICHER} {DAPRD} {JEV}; {tilde(HUB_LOG)}")
     frag = Fragment(source=src)
+    ctx.partials[NAME] = frag
     lo, hi = ctx.margin(4000.0, 2000.0)
     errors: list[str] = []
     items = 0
     modes: dict[str, str] = {}
+    deadline = started + max(5.0, ctx.timeout_s * 0.85)
     try:
         pub_list = hookhub.published_events(ctx)
         pubs = _pub_index(pub_list)
@@ -422,20 +515,42 @@ def collect(ctx: Ctx) -> Fragment:
         except Exception:
             data = None
 
-        def read(container: str) -> list[tuple[float, str]]:
+        # Read every container at once with a per-call budget: one slow `docker logs --tail` must not starve the
+        # rest, and whatever a read did return is kept (finding 23).
+        raw: dict[str, tuple[list[tuple[float, str]], str] | Exception] = {}
+
+        def fetch(container: str) -> None:
             try:
-                lines, mode = docker_lines(container, lo, hi, ctx.timeout_s)
-                modes[container] = mode
-                return lines
+                raw[container] = docker_lines(container, lo, hi, ctx.timeout_s, deadline)
             except Exception as exc:
+                raw[container] = exc
+
+        containers = (TURN_ENRICHER, NTFY, ENRICHER, DAPRD, JEV)
+        with ThreadPoolExecutor(max_workers=len(containers)) as pool:
+            list(pool.map(fetch, containers))
+
+        def read(container: str) -> list[tuple[float, str]]:
+            got = raw.get(container)
+            if isinstance(got, Exception) or got is None:
+                exc = got if got is not None else RuntimeError("not read")
                 errors.append(f"{container}: {type(exc).__name__}: {exc}")
                 return []
+            lines, mode = got
+            modes[container] = mode
+            if mode.endswith(":partial"):
+                frag.gaps.append(Gap("logs", f"{container} log read was cut short",
+                                     f"docker logs {container} ran out of its time budget ({mode}); lines before the "
+                                     "cut are kept, later ones may be missing", "warn"))
+            return lines
 
         te_lines = read(TURN_ENRICHER)
         if te_lines or TURN_ENRICHER in modes:
             frag.component("turn-enricher", "turn-enricher", "service")
         n, annotated = build_turn_enricher(frag, te_lines, pubs)
         items += n
+
+        jev_lines = parse_jev(read(JEV))
+        items += build_jev(frag, jev_lines, annotated)
 
         ntfy_lines = parse_ntfy(read(NTFY))
         extra = [{"event_id": None, "type": "bloodbank.conversation.turn.annotated", "t_lo": a["t"] - 100.0,
@@ -469,8 +584,8 @@ def collect(ctx: Ctx) -> Fragment:
                                  "window; turn-enricher is a core subscriber, so a turn.completed it missed leaves no trace",
                                  "info"))
         frag.gaps.append(Gap("ntfy-router", "ntfy-router lines carry the event type only",
-                             "notify spans are matched to events by type and time (attrs.candidates > 1 = ambiguous); "
-                             "the ntfy message id and HTTP status are not logged", "info"))
+                             "notify spans are matched to events by type and time (attrs.match = type+time, "
+                             "attrs.candidates > 1 = ambiguous); the ntfy message id and HTTP status are not logged", "info"))
         src.items = items
         src.status = "ok" if items else "empty"
         if errors:

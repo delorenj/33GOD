@@ -10,7 +10,7 @@ unit is a prompt, not a request.
 
 Full contract: [SPEC.md](SPEC.md). JSON Schema: [schema/waybill.v1.schema.json](schema/waybill.v1.schema.json).
 
-Stdlib only. The launcher runs `/usr/bin/python3`; `record` picks a Python that can import `nats-py`.
+Stdlib only (plus `nats-py` for `record`). The launcher picks ONE interpreter for every subcommand: `$WAYBILL_PYTHON`, else the first of mise 3.14 / `command -v python3` / `/usr/bin/python3` that can import `nats`, else `/usr/bin/python3` with a warning.
 
 ## Install
 

@@ -277,14 +277,14 @@ def _receipts():
     return C.receipts_query
 
 
-def prompt_after(armed_at: float, cli: str | None) -> tuple[str, str, float] | None:
+def prompt_after(armed_at: float, cli: str | None, flt: Any = None) -> tuple[str, str, float] | None:
     try:
         from . import window as W
         fn = W.latest_prompt_after
     except Exception:
         fn = None
     if fn is not None:
-        return fn(armed_at, cli)
+        return fn(armed_at, cli, flt)
     q = _receipts()
     sql = ("select session_id, invocation_id, received_at from invocations where native='UserPromptSubmit' "
            "and received_at>? and session_id is not null and session_id!=''")
@@ -308,7 +308,8 @@ def stop_after(sid: str, after_ms: float) -> tuple[str, float] | None:
     return (rows[0][0], M.ms(rows[0][1]) or 0.0) if rows else None
 
 
-def next_prompt_after(armed_at: float, cli: str | None, exclude: set[str]) -> tuple[str, str, float] | None:
+def next_prompt_after(armed_at: float, cli: str | None, exclude: set[str],
+                      flt: Any = None) -> tuple[str, str, float] | None:
     """The first prompt of a session not in `exclude`: used to leave a helper session behind."""
     sql = ("select session_id, invocation_id, received_at from invocations where native='UserPromptSubmit' "
            "and received_at>? and session_id is not null and session_id!=''")
@@ -317,7 +318,7 @@ def next_prompt_after(armed_at: float, cli: str | None, exclude: set[str]) -> tu
         sql += " and cli=?"
         args += (cli,)
     for r in _receipts()(sql + " order by received_at", args):
-        if r[0] not in exclude:
+        if r[0] not in exclude and (flt is None or flt.accept(r[0], cli)):
             return (r[0], r[1], M.ms(r[2]) or 0.0)
     return None
 
@@ -468,10 +469,16 @@ def redis_fragment(tap: RedisTap | None, sid: str, cli: str, live: dict, t0: flo
 
 def record(cli: str | None = None, settle_s: float = 15.0, timeout_s: float = 900.0, out: str | None = None,
            profile: str = "full", deep: bool = False, only: list[str] | None = None, skip: list[str] | None = None,
-           argv: list[str] | None = None, say: Callable[[str], None] | None = None) -> str | None:
-    """Returns the written waybill path, or None when no prompt arrived."""
+           argv: list[str] | None = None, say: Callable[[str], None] | None = None,
+           session: str | None = None, cwd: str | None = None, any_cwd: bool = False) -> str | None:
+    """Returns the written waybill path, or None when no prompt arrived.
+
+    Latches onto the first prompt of `session`, or else of a non-automation session whose cwd matches `cwd`
+    (default: the caller's cwd; `any_cwd` lifts the cwd test). What it latched onto is printed."""
     from . import cli as C
+    from . import window as W
     say = say or (lambda s: print(s, file=sys.stderr, flush=True))
+    flt = W.PromptFilter(session=session, cwd=None if any_cwd else (cwd or os.getcwd()), any_cwd=any_cwd)
     armed_at = M.now_ms()
     live: dict[str, Any] = {"armed_at": armed_at, "prompt": None, "stop": None}
     nt, rt = NatsTap(), RedisTap()
@@ -479,7 +486,8 @@ def record(cli: str | None = None, settle_s: float = 15.0, timeout_s: float = 90
     redis_ok = rt.start()
     say(f"armed at {M.iso(armed_at)} · nats {'ok' if nats_ok else 'DOWN: ' + str(nt.error)} · "
         f"redis {'ok' if redis_ok else 'DOWN: ' + str(rt.error)}")
-    say(f"waiting for the next {cli or 'claude/codex'} prompt (timeout {int(timeout_s)} s) …")
+    say(f"waiting for the next {cli or 'claude/codex'} prompt in {flt.describe()} (timeout {int(timeout_s)} s; "
+        "cron/Crank/child sessions are ignored; --any lifts the cwd test, --session pins one) …")
     deadline = time.monotonic() + timeout_s
     sid = inv = None
     prompt_ms = None
@@ -489,7 +497,7 @@ def record(cli: str | None = None, settle_s: float = 15.0, timeout_s: float = 90
     stop: tuple[str, float] | None = None
     try:
         while time.monotonic() < deadline:
-            got = prompt_after(armed_at, cli)
+            got = prompt_after(armed_at, cli, flt)
             if got:
                 sid, inv, prompt_ms = got
                 break
@@ -499,7 +507,11 @@ def record(cli: str | None = None, settle_s: float = 15.0, timeout_s: float = 90
             return None
         use_cli = cli or invocation_cli(inv) or "claude"
         live["prompt"] = {"session_id": sid, "invocation_id": inv, "received_ms": prompt_ms, "cli": use_cli}
-        say(f"recording {use_cli} session {sid}… (prompt {inv} at {M.iso(prompt_ms)})")
+        brief = W.session_brief(sid, use_cli)
+        say(f"latched onto {use_cli} session {sid} (cwd {brief.get('cwd') or '?'}; prompt {inv} at {M.iso(prompt_ms)})"
+            + (f"; first prompt: {str(brief.get('prompt') or '')[:80]!r}" if brief.get("prompt") else ""))
+        if flt.rejected:
+            say("  ignored: " + "; ".join(f"{k[:8]} {v}" for k, v in list(flt.rejected.items())[:5]))
         last_snap = 0.0
         while time.monotonic() < deadline:
             if time.monotonic() - last_snap >= SNAP_S:
@@ -510,7 +522,7 @@ def record(cli: str | None = None, settle_s: float = 15.0, timeout_s: float = 90
                 break
             if ended_without_stop(sid, prompt_ms):
                 rejected.add(sid)
-                nxt = next_prompt_after(armed_at, cli, rejected)
+                nxt = next_prompt_after(armed_at, cli, rejected, flt)
                 if nxt is None:
                     time.sleep(POLL_S)
                     continue

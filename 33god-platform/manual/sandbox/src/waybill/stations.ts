@@ -159,10 +159,12 @@ export function viewFor(set: string, pl: Placement): TourSet {
   }
   if (set === 'bays') {
     const z = BAY_Z[pl.bay] ?? 0
-    return { name: 'Vendor bays', anchor: [BAY_X + 2.2, 0, z], portraitK: 1.5, view: { pos: [BAY_X + 10.5, 5.6, z + 8.2], target: [BAY_X + 1.2, 1.3, z] } }
+    return { name: 'Vendor bays', anchor: [BAY_X + 2.2, 0, z], portraitK: 1.5, view: { pos: [BAY_X + 13.2, 5.8, z + 11.6], target: [BAY_X + 3.9, 1.3, z + 3.4] } } // aimed a little nearer the camera: the bottom panel covers the lower screen
   }
   // the belt in waybill mode frames the fan-out: the loading point and the readers in front of it
   if (set === 'belt') return { name: 'The belt', anchor: [0, 0, 1], portraitK: 1.35, view: { pos: [6.5, 9.5, 23.5], target: [0.4, 2.6, 4.6] } }
+  // the staffing desk from the south: the tour's view looks west across the Crew Hall block; this one looks at the desk itself
+  if (set === 'staffing') return { name: 'The staffing desk', anchor: [11.4, 0, -4.6], portraitK: 1.35, view: { pos: [15.6, 3.7, 3.1], target: [12.6, 1.5, -5.4] } }
   if (set === 'overview') return { name: 'The floor', anchor: [0, 0, 0], portraitK: 1, view: { pos: [24, 21, 33], target: [-3, 2, 1] } }
   return setFor(set)
 }
@@ -176,4 +178,16 @@ export function fanoutView(targets: Vec3[]): { pos: Vec3; target: Vec3 } {
   const span = Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...zs) - Math.min(...zs)) * 1.3, 10)
   const d = span * 1.05 + 6
   return { pos: [cx + d * 0.3, d * 0.55 + 3, cz + d * 0.92], target: [cx, 1.6, cz] }
+}
+
+/** Frame two or more spots (the briefing card's dock and bay) from the south-east, close enough to read them both. */
+export function pairView(points: Vec3[]): { pos: Vec3; target: Vec3 } {
+  const xs = points.map((p) => p[0]), zs = points.map((p) => p[2])
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2
+  const cz = (Math.min(...zs) + Math.max(...zs)) / 2
+  const span = Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...zs) - Math.min(...zs)) * 1.3, 6)
+  const d = span * 1.2 + 7
+  // the bottom panel covers the lower part of the screen: aim a little nearer the camera so the action sits higher
+  const nudge = 3.2
+  return { pos: [cx + d * 0.15, d * 0.45 + 2.2, cz + d * 0.95 + nudge], target: [cx, 1.3, cz + nudge] }
 }

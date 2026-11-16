@@ -13,6 +13,7 @@ from __future__ import annotations
 import datetime as _dt
 import hashlib
 import json
+import os
 import re
 import socket
 from pathlib import Path
@@ -55,6 +56,8 @@ EXT_COMPONENTS: dict[str, tuple[str, str]] = {
     "ext:codex-desktop": ("Codex Desktop", "cli"),
     "ext:nanoleaf": ("Nanoleaf panels", "device"),
     "ext:orca": ("Orca", "external"),
+    "ext:codex-mcp-helper-reaper": ("codex-mcp-helper-reaper", "external"),
+    "ext:hook-command": ("Other hook command", "external"),
 }
 SURFACE_COMPONENT = {
     "claude-code": "ext:claude-code",
@@ -314,10 +317,24 @@ def llm_tokens(span: dict) -> tuple[int, int, int]:
         return None
 
     out = g("tokens_out", "output_tokens", "completion_tokens") or 0
+
+    def uncached(total_in: float, raw_in: float | None) -> float:
+        """Input tokens that were not served from cache. OpenAI-style usage (Codex) counts the cached tokens INSIDE
+        input_tokens, so subtract them; Anthropic-style input_tokens already excludes the cache."""
+        explicit = u.get("uncached_input_tokens") if isinstance(u.get("uncached_input_tokens"), (int, float)) else None
+        if explicit is None and isinstance(a.get("uncached_input_tokens"), (int, float)):
+            explicit = a["uncached_input_tokens"]
+        if explicit is not None:
+            return explicit
+        cached = u.get("cached_input_tokens") if isinstance(u.get("cached_input_tokens"), (int, float)) else None
+        if cached is not None and raw_in is not None and raw_in >= cached and not u.get("cache_creation_input_tokens"):
+            return raw_in - cached
+        return raw_in if raw_in is not None else total_in
+
     if isinstance(a.get("tokens_in"), (int, float)):
         total = a["tokens_in"]
         raw = g("input_tokens", "prompt_tokens")
-        return int(total), int(raw if raw is not None else total), int(out)
+        return int(total), int(uncached(total, raw)), int(out)
     raw = g("input_tokens", "prompt_tokens") or 0
     cr = g("cache_read_input_tokens", "cache_read_tokens", "cached_tokens") or 0
     cw = g("cache_creation_input_tokens", "cache_write_input_tokens", "cache_creation_tokens") or 0
@@ -382,6 +399,10 @@ class _Acc:
         if label:
             d["label"] = label
         self.links.append(d)
+
+    def has_link(self, frm: str, to: str) -> bool:
+        """True when any edge (of any kind) already joins frm -> to."""
+        return any(k[0] == frm and k[1] == to for k in self._link_keys)
 
     def gap(self, component: str, what: str, why: str, severity: str = "info", span: str | None = None) -> None:
         g = {"component": component, "what": what, "why": why, "severity": severity, "span": span}
@@ -519,7 +540,8 @@ def _resolve_match_llm(acc: _Acc) -> None:
     gws = [s for s in acc.spans.values() if isinstance(s.get("attrs"), dict) and "_match_llm" in s["attrs"]]
     if not gws:
         return
-    llms = [s for s in acc.spans.values() if s.get("kind") == "llm" and "_match_llm" not in (s.get("attrs") or {})]
+    llms = [s for s in acc.spans.values() if s.get("kind") == "llm" and "_match_llm" not in (s.get("attrs") or {})
+            and not (s.get("attrs") or {}).get("service_call")]
     used: set[str] = set()
     hints = []
     for g in gws:
@@ -549,9 +571,27 @@ def _resolve_match_llm(acc: _Acc) -> None:
             continue
         best = min(cands, key=lambda s: abs(near - (s.get("t1") or s.get("t0") or near)))
         used.add(best["id"])
+        client_t0, client_t1 = best.get("t0"), best.get("t1")
         merge_span(best, g)
+        _adopt_gateway_times(best, g, client_t0, client_t1)
         acc.spans.pop(g["id"], None)
         acc.alias[g["id"]] = best["id"]
+
+
+def _adopt_gateway_times(llm: dict, gw: dict, client_t0: Any, client_t1: Any) -> None:
+    """The gateway's request id carries the UTC receive instant to the millisecond: it is the model call's real start.
+    t1 = t0 + the gateway latency. The client's own (transcript) times stay in attrs.transcript_t."""
+    ga = gw.get("attrs") or {}
+    gt0, lat = _num(gw.get("t0")), _num(ga.get("latency_ms"))
+    if ga.get("t0_source") != "request_id" or gt0 is None or gt0 < 1e11:
+        return
+    a = llm.setdefault("attrs", {})
+    a["transcript_t"] = {"t0": client_t0, "t1": client_t1}
+    llm["t0"] = gt0
+    if lat is not None:
+        llm["t1"] = gt0 + lat
+    elif client_t1 is not None and client_t1 >= gt0:
+        llm["t1"] = client_t1
 
 
 def _event_type_matches(want: str, have: str | None) -> bool:
@@ -573,22 +613,42 @@ def _resolve_joins(acc: _Acc) -> None:
     by_type: dict[str, list[dict]] = {}
     claimed: set[tuple[str, str]] = set()
     renames: list[tuple[str, str]] = []
+    drop_spans: list[str] = []
     for near, s, h in jobs:
         et = h.get("event_type") or ""
         if et not in by_type:  # 'session.started' (ntfy log) matches 'bloodbank.agent.session.started'
-            by_type[et] = [ev for ev in acc.events.values() if _event_type_matches(et, ev.get("type"))]
+            by_type[et] = [ev for ev in acc.events.values()
+                           if _event_type_matches(et, ev.get("type")) or (et and ev.get("stored_type") == et)]
         w = float(h.get("window_ms") or 3000.0)
         consumer = h.get("consumer")
         key = consumer or s.get("component") or s["id"]
+
+        def ref_time(ev: dict) -> float | None:
+            # a router/consumer sees an event after JetStream stored it: prefer the stored time when asked
+            if h.get("use_stored") and isinstance(ev.get("stored"), (int, float)):
+                return ev["stored"]
+            return ev.get("t")
+
         cands = [ev for ev in by_type[et]
-                 if ev.get("t") is not None and abs(ev["t"] - near) <= w and (key, ev["id"]) not in claimed]
+                 if ref_time(ev) is not None and abs(ref_time(ev) - near) <= w and (key, ev["id"]) not in claimed]
         if not cands:
+            if h.get("optional"):
+                drop_spans.append(s["id"])   # an unrelated line from a shared log: not a gap
+                continue
             acc.gap(s.get("component") or "unknown", f"{s.get('name') or s['id']} could not be tied to a {_short_type(et)} event",
                     f"no {_short_type(et)} event within ±{int(w)} ms of the observation (the source carries no event id)",
                     "info", s["id"])
             continue
         # an observer sees an event after it was published: penalise candidates from the future
-        best = min(cands, key=lambda ev: (abs(near - ev["t"]) + (0.0 if ev["t"] <= near + 250 else w), ev["t"]))
+        best = min(cands, key=lambda ev: (abs(near - ref_time(ev)) + (0.0 if ref_time(ev) <= near + 250 else w), ref_time(ev)))
+        if h.get("match"):
+            a = s.setdefault("attrs", {})
+            a["match"] = h["match"]
+            a["candidates"] = len(cands)
+            a["ambiguous"] = len(cands) > 1
+            a["event_type"] = best.get("type")
+            if best.get("stored_type"):
+                a["stored_type"] = best["stored_type"]
         claimed.add((key, best["id"]))
         s.setdefault("refs", {}).setdefault("event_id", best["id"])
         target = s["id"]
@@ -603,6 +663,8 @@ def _resolve_joins(acc: _Acc) -> None:
                  "outcome": h.get("outcome") or "unknown", "t": s.get("t0"), "evidence": "observed",
                  "span": target}
             merge_event(best, {"consumers": [c]})
+    for sid in drop_spans:
+        acc.spans.pop(sid, None)
     for old, new in renames:
         acc.rename(old, new)
 
@@ -783,6 +845,22 @@ def _tool_hooks(acc: _Acc) -> int:
     return unparented
 
 
+def _event_publisher_parent(acc: _Acc, ev: dict) -> str | None:
+    """The span that published an event no publish span exists for (finding 36): a hook.updated mirror is published
+    by hook-hub on behalf of its hook invocation (correlationid); an event a service emitted while handling another
+    (turn.annotated, report.session.completed) hangs under that service's consume span of the causing event."""
+    corr = ev.get("correlationid")
+    if str(ev.get("type") or "").endswith("agent.hook.updated") and corr and M.Ids.hook(corr) in acc.spans:
+        return M.Ids.hook(corr)
+    cause, prod = ev.get("causationid"), str(ev.get("producer") or "")
+    if cause and prod:
+        for sp in acc.spans.values():
+            if sp.get("kind") == "consume" and sp["id"].endswith(":" + cause) and \
+                    (sp.get("component") == prod or sp["id"].startswith(f"consume:{prod}:")):
+                return sp["id"]
+    return None
+
+
 def _default_parents_and_links(acc: _Acc) -> None:
     spans = acc.spans
     for s in spans.values():
@@ -805,12 +883,17 @@ def _default_parents_and_links(acc: _Acc) -> None:
             if owner:
                 if not s.get("parent"):
                     s["parent"] = owner
-                acc.link(owner, sid, "calls")
+                if not acc.has_link(owner, sid):     # the hindsight collector already drew owner -> sid (writes/calls)
+                    acc.link(owner, sid, "calls")
         elif kind == "consume" and sid.startswith("consume:"):
             eid = sid.split(":", 2)[-1]
             pid = M.Ids.publish(eid)
             if not s.get("parent") and pid in spans:
                 s["parent"] = pid
+            if not s.get("parent") and eid in acc.events:
+                par = _event_publisher_parent(acc, acc.events[eid])
+                if par:
+                    s["parent"] = par
             if eid in acc.events:
                 acc.link(M.Ids.evt(eid), sid, "delivers")
 
@@ -1020,6 +1103,343 @@ def _session_edges(acc: _Acc, window: M.TurnWindow) -> None:
             ev["publisher_span"] = r["id"]
 
 
+# ---- time repair, edge hygiene, consumer names -------------------------------------------------
+
+SECOND_TRUNC_MAX_MS = 999.0
+
+
+def _cause_floor(acc: _Acc, ev: dict) -> tuple[float | None, str | None]:
+    """Earliest instant an event can have happened: the end of the span that caused it (llm / consume spans produce
+    their event when they finish), else its start; and the event it was caused by (causationid)."""
+    floor, why = None, None
+    ps = acc.spans.get(acc.resolve(ev.get("publisher_span")) or "") if ev.get("publisher_span") else None
+    cause = None
+    if ps is not None:
+        cause = acc.spans.get(acc.resolve(ps.get("parent")) or "") if ps.get("parent") else None
+    for sp in (cause, ps if ps is not None and ps.get("kind") != "publish" else None):
+        if sp is None:
+            continue
+        t = sp.get("t1") if sp.get("kind") in ("llm", "consume") and sp.get("t1") is not None else sp.get("t0")
+        if isinstance(t, (int, float)) and (floor is None or t > floor):
+            floor, why = float(t), f"the end of {sp['id']}" if sp.get("kind") in ("llm", "consume") else f"the start of {sp['id']}"
+    cid = ev.get("causationid")
+    if cid and cid in acc.events and cid != ev["id"]:
+        t = acc.events[cid].get("t")
+        if isinstance(t, (int, float)) and (floor is None or t > floor):
+            floor, why = float(t), f"its causing event {cid}"
+    return floor, why
+
+
+def _event_times(acc: _Acc) -> None:
+    """Envelope `time` is occurred_at truncated to the second, so an event can sort before the span that caused it.
+    1. when the envelope time sits on a whole second and a stored time is known, the event happened between them:
+       t = max(envelope, min(stored - 1 s, envelope + 999 ms));
+    2. invariant: an event never precedes its causing span or causing event: clamp to it and say so."""
+    for ev in acc.events.values():
+        t, st = ev.get("t"), ev.get("stored")
+        if isinstance(t, (int, float)) and isinstance(st, (int, float)) and t >= 1e11 and t % 1000 == 0:
+            est = max(t, min(st - 1000.0, t + SECOND_TRUNC_MAX_MS))
+            if est > t:
+                ev["t_envelope"] = t
+                ev["t"] = est
+                ps = acc.spans.get(acc.resolve(ev.get("publisher_span")) or "")
+                if ps is not None and ps.get("kind") == "publish" and ps.get("t0") == t:
+                    ps["t0"] = est
+    # causal order, earliest events first so a clamped cause moves its effects too
+    for ev in sorted(acc.events.values(), key=lambda e: (e.get("t") or 0.0, e["id"])):
+        floor, why = _cause_floor(acc, ev)
+        t = ev.get("t")
+        if floor is None or not isinstance(t, (int, float)) or t >= floor or floor < 1e11:
+            continue
+        ev.setdefault("t_envelope", t)
+        ev["t"] = floor
+        ev["t_adjusted"] = f"clamped to {why}: the envelope time is truncated to the second"
+        ps = acc.spans.get(acc.resolve(ev.get("publisher_span")) or "")
+        if ps is not None and ps.get("kind") == "publish" and isinstance(ps.get("t0"), (int, float)) and ps["t0"] < floor:
+            ps["t0"] = floor
+
+
+PUBLISHER_LAG_FINDING_MS = 500.0
+
+
+def _candystore_spans(acc: _Acc) -> None:
+    """A Candystore consume span runs from the moment JetStream STORED the event to the moment Candystore received it:
+    the wait before that is the publisher's (hook-hub coalesces its mirror publishes), not Candystore's. The publisher
+    lag (stored - the envelope/receipt time) is reported on the span and as one finding attributed to hook-hub."""
+    lagged: list[tuple[float, str, str]] = []
+    for ev in acc.events.values():
+        sid = M.Ids.consume("candystore-events", ev["id"])
+        sp = acc.spans.get(sid)
+        if sp is None or sp.get("component") != "candystore":
+            continue
+        stored, arch, t_env = ev.get("stored"), ev.get("archived"), ev.get("t")
+        a = sp.setdefault("attrs", {})
+        if not isinstance(arch, (int, float)):
+            arch = sp.get("t1")
+        if not isinstance(stored, (int, float)) or not isinstance(arch, (int, float)) or stored > arch + 1:
+            if isinstance(arch, (int, float)):
+                a.setdefault("lag_basis", "envelope time (stored time unknown)")
+            continue
+        sp["t0"] = stored
+        sp["t1"] = arch
+        a["lag_ms"] = round(arch - stored, 1)
+        a["lag_basis"] = "stored -> received_at"
+        a["stored_at"] = M.iso(stored)
+        short = _short_type(ev.get("type"))
+        if sp.get("status") == "ok":
+            sp["summary"] = f"Candystore archived {short} {int(round(arch - stored))} ms after JetStream stored it"
+        if isinstance(t_env, (int, float)) and t_env >= 1e11 and stored >= t_env:
+            plag = stored - t_env
+            a["publisher_lag_ms"] = round(plag, 1)
+            ev["publisher_lag_ms"] = round(plag, 1)
+            pub = acc.spans.get(acc.resolve(ev.get("publisher_span")) or "") if ev.get("publisher_span") else None
+            if plag >= PUBLISHER_LAG_FINDING_MS:
+                lagged.append((plag, ev["id"], (pub or {}).get("component") or ev.get("producer") or "?"))
+    hub = [x for x in lagged if x[2] in ("hook-hub", "agent-hooks") or str(x[2]).startswith("hook")]
+    if hub:
+        worst = max(hub)
+        acc.finding("warn", f"hook-hub events reached the bus up to {int(worst[0])} ms after their receipt",
+                    f"{len(hub)} hook-hub event(s) were stored by JetStream at least {int(PUBLISHER_LAG_FINDING_MS)} ms after "
+                    f"their envelope time (worst {int(worst[0])} ms on {worst[1]}). The wait is on the publisher side "
+                    "(hook-hub coalesces its hook.updated mirror publishes), not in Candystore, whose own span now starts "
+                    "at the JetStream store time.", "hook-hub", [M.Ids.evt(x[1]) for x in sorted(hub, reverse=True)[:5]])
+
+
+def _bb_hook_clients(acc: _Acc) -> None:
+    """Join each CLI-side bb-hook run (a transcript hook_success span) to the hub invocation it started.
+
+    The client span becomes the parent of the hub invocation, carrying the client-vs-hub delta: how long the CLI
+    waited for bb-hook compared with how long the hub held the invocation. Hub hooks with no client span (the
+    transcript logs none for UserPromptSubmit, and Codex logs no hook runs) are reported as one gap."""
+    clients = sorted([s for s in acc.spans.values() if isinstance((s.get("attrs") or {}).get("_hub_match"), dict)],
+                     key=lambda s: (s.get("t0") or 0.0, s["id"]))
+    hubs = [s for s in acc.spans.values() if s.get("kind") == "hook" and s.get("component") == "hook-hub"
+            and not (s.get("attrs") or {}).get("synthetic") and s.get("t0") is not None]
+    claimed: set[str] = set()
+    for c in clients:
+        h = c["attrs"].pop("_hub_match")
+        native, tid = h.get("native"), h.get("tool_use_id")
+        c0, c1 = c.get("t0"), c.get("t1")
+        if c0 is None:
+            continue
+        cands = [x for x in hubs if x["id"] not in claimed and _hook_native(x) == native
+                 and (not tid or (x.get("refs") or {}).get("tool_use_id") in (None, tid))
+                 and c0 - 60.0 <= x["t0"] <= (c1 if c1 is not None else c0) + 60.0]
+        if tid:
+            exact = [x for x in cands if (x.get("refs") or {}).get("tool_use_id") == tid]
+            cands = exact or cands
+        if not cands:
+            c["attrs"]["reached_hub"] = False
+            continue
+        hub = min(cands, key=lambda x: abs(x["t0"] - c0))
+        claimed.add(hub["id"])
+        hub_ms = (hub["t1"] - hub["t0"]) if hub.get("t1") is not None else None
+        client_ms = (c1 - c0) if c1 is not None else None
+        a = c["attrs"]
+        a["reached_hub"] = True
+        a["hub_invocation_id"] = (hub.get("refs") or {}).get("invocation_id") or _inv_of(hub)
+        a["client_to_hub_ms"] = round(hub["t0"] - c0, 1)
+        if hub_ms is not None:
+            a["hub_sync_ms"] = round(hub_ms, 1)
+        if client_ms is not None and hub_ms is not None:
+            a["client_minus_hub_ms"] = round(client_ms - hub_ms, 1)
+            c["summary"] = (f"bb-hook ran the {native} hook for {fmt_duration(client_ms)} on the CLI side; hook-hub held "
+                            f"the invocation for {fmt_duration(hub_ms)} ({round(client_ms - hub_ms)} ms outside the hub)")
+        hub.setdefault("attrs", {})["client_span"] = c["id"]
+        c["parent"] = hub.get("parent")
+        hub["parent"] = c["id"]
+        acc.link(c["id"], hub["id"], "calls", "bb-hook client")
+    missing = sorted({_hook_native(x) or "?" for x in hubs if x["id"] not in claimed})
+    if hubs and missing:
+        acc.gap("bb-hook", "bb-hook client timing is missing for " + ", ".join(missing),
+                "the CLI transcript logs a hook_success (durationMs) for session, tool and Stop hooks but none for "
+                "UserPromptSubmit, and Codex writes no hook runs at all; for those the client-side time before the hub "
+                "claims the invocation (stdin read, ping, socket send) is not recorded", "info")
+
+
+def event_order_violations(wb: dict) -> list[str]:
+    """Assembled-waybill check: ids of events that sort before the span (or event) that caused them."""
+    spans = {s["id"]: s for s in wb.get("spans", [])}
+    events = {e["id"]: e for e in wb.get("events", [])}
+    bad: list[str] = []
+    for e in events.values():
+        ps = spans.get(e.get("publisher_span") or "")
+        cause = spans.get(ps.get("parent") or "") if ps else None
+        floor = None
+        for sp in (cause,):
+            if sp is not None:
+                floor = sp.get("t1") if sp.get("kind") in ("llm", "consume") and sp.get("t1") is not None else sp.get("t0")
+        c = events.get(e.get("causationid") or "")
+        if c is not None and c["id"] != e["id"] and (floor is None or c["t"] > floor):
+            floor = c["t"]
+        if floor is not None and e["t"] < floor - 0.5:
+            bad.append(e["id"])
+    return bad
+
+
+HANDLER_BAR_TOL_MS = 25.0
+
+
+def handler_bar_violations(wb: dict) -> list[tuple[str, float, float]]:
+    """Assembled-waybill check (the recorder-side twin of the Factory self-check, finding 1): a handler bar must be the
+    time the handler RAN (attrs.duration_ms), not the time it spent queued. [(span id, bar ms, duration_ms)] for the
+    handlers whose bar differs from duration_ms by more than HANDLER_BAR_TOL_MS."""
+    bad: list[tuple[str, float, float]] = []
+    for s in wb.get("spans", []):
+        if s.get("kind") != "handler" or s.get("t1") is None or s.get("t0") is None:
+            continue
+        dur = (s.get("attrs") or {}).get("duration_ms")
+        if isinstance(dur, (int, float)) and not isinstance(dur, bool) and dur > 0:
+            bar = s["t1"] - s["t0"]
+            if abs(bar - dur) > HANDLER_BAR_TOL_MS:
+                bad.append((s["id"], round(bar, 1), float(dur)))
+    return bad
+
+
+def canonical_consumer_name(name: str | None) -> str:
+    """One name per consumer however the bus or the container spells it: bloodbank-ntfy-router -> ntfy-router,
+    holocene_<hash>_1 (an ephemeral push consumer) -> holocene."""
+    n = (name or "").strip()
+    if re.match(r"^holocene[_-]", n):
+        return "holocene"
+    if n.startswith("bloodbank-ntfy"):
+        return n[len("bloodbank-"):]
+    return n
+
+
+_EVIDENCE_RANK = {"observed": 2, "inferred": 1}
+
+
+def _canonicalize_consumers(acc: _Acc) -> None:
+    """Rename consumers to canonical names, keeping one row per (event, name): the strongest evidence wins and the
+    raw names survive in `aliases`. An inferred row is dropped when an observed row exists for the same component."""
+    for ev in acc.events.values():
+        rows = ev.get("consumers") or []
+        out: list[dict] = []
+        by_name: dict[str, dict] = {}
+        for c in rows:
+            raw = c.get("name")
+            canon = canonical_consumer_name(raw)
+            if canon != raw:
+                c["name"] = canon
+                if c.get("span") is None and c.get("component") in (None, "", "unknown"):
+                    c["component"] = consumer_component(canon)
+            aliases = [x for x in (c.get("aliases") or []) if x]
+            if raw and raw != canon and raw not in aliases:
+                aliases.append(raw)
+            c.pop("aliases", None)
+            prev = by_name.get(canon)
+            if prev is None:
+                if aliases:
+                    c["aliases"] = aliases
+                by_name[canon] = c
+                out.append(c)
+                continue
+            if _EVIDENCE_RANK.get(c.get("evidence"), 0) > _EVIDENCE_RANK.get(prev.get("evidence"), 0):
+                keep, other = c, prev
+                out[out.index(prev)] = c
+                by_name[canon] = c
+            else:
+                keep, other = prev, c
+            merge_consumer(keep, other)
+            al = _union(keep.get("aliases") or [], _union(other.get("aliases") or [], aliases))
+            if al:
+                keep["aliases"] = al
+        observed = {c.get("component"): c for c in out if c.get("evidence") == "observed"}
+        keep_rows = []
+        for c in out:
+            twin = observed.get(c.get("component")) if c.get("evidence") != "observed" else None
+            if twin is not None:
+                if not twin.get("filter") and c.get("filter"):
+                    twin["filter"] = c["filter"]
+                continue
+            keep_rows.append(c)
+        ev["consumers"] = keep_rows
+
+
+def _drop_redundant_edges(acc: _Acc) -> None:
+    """One edge per fact: llm -> tool 'calls' is redundant when the tool's pre-hook chain (llm triggers pre-hook
+    triggers tool) already carries it; a generic edge (calls/causes) is redundant beside a specific one on the same
+    pair of nodes."""
+    spans = acc.spans
+    pre_hooks: dict[str, set[str]] = {}
+    for s in spans.values():
+        if s.get("kind") == "hook" and str(s.get("parent") or "").startswith("tool:") and _hook_native(s) in PRE_TOOL_HOOKS:
+            pre_hooks.setdefault(s["parent"], set()).add(s["id"])
+    chained: set[tuple[str, str]] = set()
+    for tid, hs in pre_hooks.items():
+        for ln in acc.links:
+            if ln["kind"] == "triggers" and ln["to"] in hs and (spans.get(ln["from"]) or {}).get("kind") == "llm":
+                chained.add((ln["from"], tid))
+    generic = ("calls", "causes")
+    by_pair: dict[tuple[str, str], list[dict]] = {}
+    for ln in acc.links:
+        by_pair.setdefault((ln["from"], ln["to"]), []).append(ln)
+    drop: set[int] = set()
+    for (f, t), lns in by_pair.items():
+        if (f, t) in chained:
+            for ln in lns:
+                if ln["kind"] == "calls":
+                    drop.add(id(ln))
+        if len(lns) > 1 and any(x["kind"] not in generic for x in lns):
+            for ln in lns:
+                if ln["kind"] in generic:
+                    drop.add(id(ln))
+    if drop:
+        acc.links = [ln for ln in acc.links if id(ln) not in drop]
+        acc._link_keys = {(ln["from"], ln["to"], ln["kind"]) for ln in acc.links}
+
+
+def _turn_enricher_extractors(acc: _Acc) -> None:
+    """The turn.annotated payload names the extractors turn-enricher ran (data.extractors, e.g. {'jev': 'jev-latest',
+    'clairic': '@cf/cloudflare/clairic'}). Put them on the turn-enricher consume span, and the Jev model on the
+    jev-litellm call, so the model calls behind an annotation are visible (finding 8)."""
+    for ev in acc.events.values():
+        if not str(ev.get("type") or "").endswith("conversation.turn.annotated"):
+            continue
+        art = acc.artifacts.get(ev.get("payload") or "") or {}
+        data = (art.get("json") or {}).get("data") if isinstance(art.get("json"), dict) else None
+        if not isinstance(data, dict) or not isinstance(data.get("extractors"), dict):
+            continue
+        target = data.get("target_event_id") or ev.get("causationid")
+        if not target:
+            continue
+        sp = acc.spans.get(M.Ids.consume("turn-enricher", target))
+        if sp is not None:
+            sp.setdefault("attrs", {})["extractors"] = dict(data["extractors"])
+        jev = acc.spans.get(M.Ids.jev_llm(target))
+        if jev is not None:
+            a = jev.setdefault("attrs", {})
+            a["extractors"] = dict(data["extractors"])
+            if data["extractors"].get("jev"):
+                a["model"] = a["model_requested"] = data["extractors"]["jev"]
+                jev["name"] = f"jev extractor ({data['extractors']['jev']})"
+            others = [k for k in data["extractors"] if k != "jev"]
+            if others:
+                a["other_extractors"] = {k: data["extractors"][k] for k in others}
+
+
+def _align_buffer_ask(acc: _Acc) -> None:
+    """The capture buffer's ask is written by the hindsight-turn handler, so its span starts when that handler
+    does, not at the turn window start (finding 30). Collectors run in parallel, so this needs the merged spans."""
+    for s in acc.spans.values():
+        a = s.get("attrs") or {}
+        if s.get("kind") != "memory" or a.get("buffer_event") != "ask_buffered":
+            continue
+        par = acc.spans.get(s.get("parent") or "")
+        if par and par.get("t0") is not None and par.get("kind") in ("handler", "hook"):
+            s["t0"] = par["t0"]
+            a["timing"] = "starts with the hindsight-turn handler"
+
+
+def duplicate_edges(links: list[dict]) -> list[tuple[str, str, list[str]]]:
+    """Assembled-waybill check: node pairs joined by more than one edge kind, or the same kind twice."""
+    seen: dict[tuple[str, str], list[str]] = {}
+    for ln in links:
+        seen.setdefault((ln["from"], ln["to"]), []).append(ln["kind"])
+    return [(f, t, kinds) for (f, t), kinds in seen.items() if len(kinds) > 1]
+
+
 # ---- normalisation ------------------------------------------------------------------------
 
 def _infer_phase(s: dict, turn_end: float | None) -> str:
@@ -1054,11 +1474,16 @@ def _default_summary(s: dict) -> str:
     return f"{comp} {kind} {name}: {st}{reason}"
 
 
-def _rel(v: Any, t0: float) -> float | None:
+def _rel(v: Any, t0: float, bad: list | None = None) -> float | None:
+    """Rebase an absolute epoch-ms value to clock.t0. Fragments hold absolute times by contract, so a value below
+    1e11 (seconds-since-epoch, or already relative) is not guessed at: it is left as is and appended to `bad`
+    so the assembler can flag it."""
     x = _num(v)
     if x is None:
         return None
-    if abs(x) < 1e11:          # already relative (or garbage near the epoch): leave as is
+    if abs(x) < 1e11:
+        if bad is not None:
+            bad.append(x)
         return round(x, 3)
     return round(x - t0, 3)
 
@@ -1094,11 +1519,23 @@ def _cut_leaves(obj: Any, limit: int) -> tuple[Any, bool]:
 _HOME_ESC = M.HOME.replace("/", "\\/")
 
 
+_HOME_USER = os.path.basename(M.HOME.rstrip("/")) if M.HOME else ""
+# Claude's project dir slug is the cwd with '/' -> '-': '-home-<user>-code-x' -> '-~-code-x' (finding 32)
+_SLUG_RE = re.compile(r"-home-" + re.escape(_HOME_USER) + r"(?=-|$)") if _HOME_USER else None
+# a git remote names its owner: git@github.com:<user>/repo.git, https://github.com/<user>/repo
+_REMOTE_RE = (re.compile(r"((?:git@|ssh://git@|https?://(?:[^/@\s]+@)?)[\w.-]+[:/])" + re.escape(_HOME_USER) + r"(?=/)")
+              if _HOME_USER else None)
+
+
 def _tilde_str(s: str) -> str:
     if M.HOME and M.HOME in s:
         s = s.replace(M.HOME, "~")
     if _HOME_ESC and _HOME_ESC in s:
         s = s.replace(_HOME_ESC, "~")
+    if _SLUG_RE is not None and "-home-" in s:
+        s = _SLUG_RE.sub("-~", s)
+    if _REMOTE_RE is not None and _HOME_USER in s:
+        s = _REMOTE_RE.sub(r"\g<1>~", s)
     return s
 
 
@@ -1215,7 +1652,7 @@ def thin_to_budget(wb: dict, max_bytes: int) -> dict:
         for ev in wb.get("events", []):
             cs = ev.get("consumers")
             if isinstance(cs, list):
-                kept = [c for c in cs if c.get("kind") != "inferred" and c.get("outcome") != "unknown"]
+                kept = [c for c in cs if c.get("evidence") != "inferred"]
                 dropped += len(cs) - len(kept)
                 ev["consumers"] = kept
         if dropped:
@@ -1297,6 +1734,19 @@ def thin_to_budget(wb: dict, max_bytes: int) -> dict:
         _drop_spans(wb, nt)
         if nt:
             notes.append(f"{len(nt)} notify spans dropped")
+    # 10. per-row restatements: a consumer's alias list and a span's wall-clock copies of t0/t1
+    if _size(wb) > max_bytes:
+        for ev in wb.get("events", []):
+            for c in ev.get("consumers") or []:
+                c.pop("aliases", None)
+                if c.get("span") is None:
+                    c.pop("span", None)
+        for sp in wb.get("spans", []):
+            a = sp.get("attrs")
+            if isinstance(a, dict):
+                for k in ("at", "settled_at"):
+                    a.pop(k, None)
+        notes.append("consumer aliases and wall-clock copies of span times (attrs.at/settled_at) dropped")
     st = wb.get("stats")
     if isinstance(st, dict):          # the structural counts describe the file; turn totals (handlers, tokens) stay
         for k in [k for k in st if k.startswith("spans_")]:
@@ -1370,11 +1820,18 @@ def assemble(window: M.TurnWindow, fragments: list, profile: str = "full", mode:
     _resolve_joins(acc)
     _publish_chain(acc)
     _infer_consumers(acc)
+    _canonicalize_consumers(acc)
     _settle_consumers(acc)
     unparented_tool_hooks = _tool_hooks(acc)
     orphan_subagent = _subagents(acc)
     _session_edges(acc, window)
     _default_parents_and_links(acc)
+    _event_times(acc)
+    _candystore_spans(acc)
+    _drop_redundant_edges(acc)
+    _align_buffer_ask(acc)
+    _turn_enricher_extractors(acc)
+    _bb_hook_clients(acc)
 
     # apply id aliases everywhere
     if acc.alias:
@@ -1418,10 +1875,14 @@ def assemble(window: M.TurnWindow, fragments: list, profile: str = "full", mode:
         comp["registry"] = M.registry_has(cid)
 
     # ---- rebase to clock.t0 and normalise required fields
+    bad_times: list[float] = []
     spans_out: list[dict] = []
     for s in acc.spans.values():
-        s["t0"] = _rel(s.get("t0"), t0)
-        s["t1"] = _rel(s.get("t1"), t0)
+        s["t0"] = _rel(s.get("t0"), t0, bad_times)
+        s["t1"] = _rel(s.get("t1"), t0, bad_times)
+        tt = (s.get("attrs") or {}).get("transcript_t")
+        if isinstance(tt, dict):
+            tt["t0"], tt["t1"] = _rel(tt.get("t0"), t0), _rel(tt.get("t1"), t0)
         if s["t0"] is None:
             s["t0"] = s["t1"] if s["t1"] is not None else 0.0
             s.setdefault("attrs", {})["t0_unknown"] = True
@@ -1453,14 +1914,16 @@ def assemble(window: M.TurnWindow, fragments: list, profile: str = "full", mode:
             s["phase"] = _infer_phase(s, turn_end_rel)
     events_out: list[dict] = []
     for ev in acc.events.values():
-        ev["t"] = _rel(ev.get("t"), t0)
+        ev["t"] = _rel(ev.get("t"), t0, bad_times)
         if ev["t"] is None:
             ps = acc.spans.get(ev.get("publisher_span") or "")
             ev["t"] = (ps or {}).get("t1") if (ps or {}).get("t1") is not None else (ps or {}).get("t0", 0.0)
-        ev["stored"] = _rel(ev.get("stored"), t0)
-        ev["archived"] = _rel(ev.get("archived"), t0)
+        if ev.get("t_envelope") is not None:
+            ev["t_envelope"] = _rel(ev["t_envelope"], t0, bad_times)
+        ev["stored"] = _rel(ev.get("stored"), t0, bad_times)
+        ev["archived"] = _rel(ev.get("archived"), t0, bad_times)
         for c in ev.get("consumers") or []:
-            c["t"] = _rel(c.get("t"), t0)
+            c["t"] = _rel(c.get("t"), t0, bad_times)
         for k in ("subject", "stream", "seq", "correlationid", "causationid", "producer", "publisher_span"):
             ev.setdefault(k, None)
         ev["type"] = ev.get("type") or "unknown"
@@ -1475,6 +1938,11 @@ def assemble(window: M.TurnWindow, fragments: list, profile: str = "full", mode:
             if ev.get(opt) is None:
                 ev.pop(opt, None)
         events_out.append(ev)
+
+    if bad_times:
+        acc.gap("waybill", f"{len(bad_times)} timestamp(s) were not absolute epoch milliseconds",
+                f"values below 1e11 (e.g. {bad_times[0]:g}) are seconds-since-epoch or already relative; they were left "
+                "unrebased instead of guessed, so those spans or events sit at the wrong place on the timeline", "warn")
 
     # ---- drop dangling references
     known = {s["id"] for s in spans_out} | {M.Ids.evt(e["id"]) for e in events_out}
@@ -1508,6 +1976,26 @@ def assemble(window: M.TurnWindow, fragments: list, profile: str = "full", mode:
         for c in ev.get("consumers") or []:
             if c.get("span") and c["span"] not in span_ids:
                 c["span"] = None
+
+    # ---- invariants: one edge per node pair, no event before its cause
+    dup = duplicate_edges(links_out)
+    if dup:
+        acc.finding("info", f"{len(dup)} node pair(s) are joined by more than one edge",
+                    "; ".join(f"{f} -> {t}: {'+'.join(k)}" for f, t, k in dup[:6])
+                    + ". Each fact should be one edge; the extra kinds restate it.", "waybill",
+                    [f for f, _t, _k in dup[:5]])
+    barbad = handler_bar_violations({"spans": spans_out})
+    if barbad:
+        acc.finding("warn", f"{len(barbad)} handler bar(s) differ from their recorded duration by more than "
+                            f"{int(HANDLER_BAR_TOL_MS)} ms",
+                    "; ".join(f"{i}: bar {b} ms vs duration {d} ms" for i, b, d in barbad[:5])
+                    + ". A bar that includes the queue wait overstates what the handler cost.", "hook-hub",
+                    [i for i, _b, _d in barbad[:5]])
+    early_ids = event_order_violations({"spans": spans_out, "events": events_out})
+    if early_ids:
+        acc.finding("warn", f"{len(early_ids)} event(s) sort before the span that caused them",
+                    "the envelope time is truncated to the second and no stored time repaired it: "
+                    + ", ".join(early_ids[:5]), "waybill", [M.Ids.evt(i) for i in early_ids[:5]])
 
     # ---- derived gaps and findings
     bus_events = [e for e in events_out if (e.get("subject") or "").startswith("bloodbank.evt.")
@@ -1612,7 +2100,7 @@ def assemble(window: M.TurnWindow, fragments: list, profile: str = "full", mode:
                                "artifacts": len(acc.artifacts), "gaps": len(acc.gaps), "findings": len(acc.findings)}
     for s in spans_out:
         stats[f"spans_{s['kind']}"] = stats.get(f"spans_{s['kind']}", 0) + 1
-    llm_spans = [s for s in spans_out if s["kind"] == "llm"]
+    llm_spans = [s for s in spans_out if s["kind"] == "llm" and not (s.get("attrs") or {}).get("service_call")]
     stats["tools"] = sum(1 for s in spans_out if s["kind"] == "tool")
     stats["llm_calls"] = len(llm_spans)
     tin = tout = traw = 0
@@ -1656,7 +2144,13 @@ def assemble(window: M.TurnWindow, fragments: list, profile: str = "full", mode:
         ptxt, ptrunc = _cut(full_text, FULL_TEXT_LIMIT)
     prompt = {"text": ptxt, "chars": len(full_text or ""), "sha256": M.sha256(full_text or ""), "truncated": ptrunc}
     t_end = float(window.t_end) if window.t_end else (turn_end or t0)
-    dur = (turn_end - t0) if turn_end is not None else max(0.0, t_end - t0 - float(window.settle_ms or 0))
+    if turn_end is not None:
+        dur = turn_end - t0
+    else:
+        # an open turn: t_end is "now" (or the next prompt), never turn_end + settle, so subtract the settle window
+        # only when a caller says it extended t_end (TurnWindow.settle_applied)
+        settle = float(window.settle_ms or 0) if getattr(window, "settle_applied", False) else 0.0
+        dur = max(0.0, t_end - t0 - settle)
     clock = {"t0": M.iso(t0), "t_end": M.iso(t_end), "duration_ms": round(dur, 1),
              "settle_ms": float(window.settle_ms or 0), "turn_end_ms": turn_end_rel}
     turn_key = turn_id or (str(turn_index) if turn_index is not None else str(int(t0)))
