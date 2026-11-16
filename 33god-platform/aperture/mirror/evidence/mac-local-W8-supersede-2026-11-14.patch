@@ -1,0 +1,36 @@
+From c4ff8e89b47e3e463cf35c42d454405fe96e8af9 Mon Sep 17 00:00:00 2001
+From: Damian Miller <dami.miller@gmail.com>
+Date: Sat, 14 Nov 2026 16:55:46 -0500
+Subject: [PATCH 1/2] docs(aperture/mirror): W8 supersedes (c) with native
+ macOS Vinyl/Wax port; Parakeet v3 Mac benchmark; repo-access blocker
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ 33god-platform/aperture/mirror/PLAN.md | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/33god-platform/aperture/mirror/PLAN.md b/33god-platform/aperture/mirror/PLAN.md
+index 9ea1d5b..9115998 100644
+--- a/33god-platform/aperture/mirror/PLAN.md
++++ b/33god-platform/aperture/mirror/PLAN.md
+@@ -175,6 +175,17 @@ Decision 5 is binding: same stack, CLI, hooks and bank rules as big-chungus, wit
+ >   - Fix: Jarad shares the big-chungus machine with Damian in the Tailscale admin console, and Damian accepts.
+ >   - Check from the Mac: `nc -z -G 5 big-chungus.burro-salmon.ts.net 7733`.
+ >
++> **SUPERSEDED 2026-11-14 — owner chose a native macOS port over (c).** Pairing to big-chungus is dropped: latency kills live transcription and Damian's audio would leave his network. New target:
++> - **Mac Studio (headless):** native `vinyld serve` + `waxd` on Apple Silicon, launchd via `brew services`, CPU first.
++> - **MacBook Pro:** `vinyl-client` + HeyMa tray (cask), `vinyl setup --server damians-mac-studio:7733`, with a per-client token minted on the Studio.
++> - **Distribution:** everything ships through `delorenj/tap`. The new formula(e) for the server and Wax sit next to `vinyl-client` and the `heyma` cask.
++> - **Then:** absorb Orca's Parakeet v3 live-transcription work into Vinyl, and backfill the Linux build from the Mac work.
++> - **Feasibility proof (Studio, M3 Ultra, 96 GB, macOS 26.3):** sherpa-onnx (PyPI wheel, arm64) + `sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8`, `provider=cpu`, 4 threads.
++>   - Model load: 0.7 s. Real-time factor 0.025, about 40x realtime. English and German transcripts came out exact.
++>   - CoreML was slower (RTF 0.06–0.13, 4.7 s load), so CPU is the default.
++>   - Vinyl's upstream recognizer is already sherpa-onnx Parakeet, so the work is packaging and launchd, not new inference.
++> - **BLOCKER:** Damian's GitHub account (DamiMiller) cannot see `delorenj/vinyl` and has pull-only on `delorenj/HeyMa`, `delorenj/homebrew-tap` and `delorenj/33GOD`. The port can't land until write access is granted or the HeyMa lane does the work.
++>
+ > *Original question:* under the one-33GOD-per-network rule Damian's HeyMa should not depend on big-chungus, but Wax + the Vinyl server have no Mac port. Options: (a) Damian's client pairs to big-chungus's server — requires sharing its pairing token, which is that server's ONLY auth (lane flags this), and his audio leaves his network; (b) port vinyld/waxd to macOS (Apple Silicon transcription, launchd) as a HeyMa-lane epic, Damian's dictation waits; (c) (a) now with a per-client token added to the Vinyl server first, then (b). Recommended: (c).
+ 
+ | Task | Domain | Executor | Steps | Verification proof | Blocked on |
+-- 
+2.50.1 (Apple Git-155)
+
