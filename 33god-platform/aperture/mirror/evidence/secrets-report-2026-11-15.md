@@ -11,7 +11,7 @@ No secret value was printed, logged, committed or put in argv. Below: paths, key
 | 1 | Damian gets a sending-only Resend key, swapped in, proven | **DONE.** |
 | 2 | big-chungus Slack digest sent twice daily | **DONE** (`DDR_DELIVER_ONCE=1`), plus an **incident found and repaired** (section 2b). |
 | 3 | Mac `~/.zshrc` plaintext `CLAUDE_CODE_OAUTH_TOKEN` | **DONE.** Removed from zshrc, kept unexported in the 0600 store. `claude -p` works through the gateway, `clients-check.py` 14 PASS / 0 FAIL / 1 N/A. |
-| 4 | W9-5 jev-rollup on the Mac, scheduled on his Candybar | **DONE except one observation** (the first scheduled `roll`, section 4). Needs no Jev key. |
+| 4 | W9-5 jev-rollup on the Mac, scheduled on his Candybar | **DONE.** Terminal run, five scheduled fires and the hourly `roll` observed (section 5); only the 06:0x `day` compose awaits 2026-11-16. Needs no Jev key. |
 
 ## 1. Resend: Damian's own sending-only key
 
@@ -62,11 +62,13 @@ Repair: Jarad's config was reconstructed **verbatim** from the `cat -n` of the f
 - Terminal invocation: `candybar run mac-jev-rollup --wait` -> invocation `2dab776b-d8a4-493b-a633-ced7d1dd45b2`, `success`, exit 0, 345 ms. Effect: cursor written (`feed: annotated`, from the Mac Candystore's latest annotated event) and an inbox of 2 project files (`hellosubconscious.md`, `unattributed.md`, 309 B) from real Mac turns.
 - No rollup email exists (the sidecar writes files), so the "fold into the morning report / at most one send" branch did not apply. No email was sent.
 - Clocks: Mac crontab still 15 lines, 33 LaunchAgents; `doctor --live` does not mention jev-rollup. No cron, launchd or timer was added.
-- Scheduled observation: see section 5.
+- Scheduled observation: section 5.
 
 ## 5. First scheduled run
 
-SCHEDULED_RUN_PLACEHOLDER
+Observed on the Mac (`candybar history mac-jev-rollup -n 8`): five `trigger=scheduled`, `success` rows at 21:20, 21:30, 21:40, 21:50 and **22:00** (108 to 159 ms each), after the manual 21:15 run. The 22:00 fire is the first with minute < 10, so the cadence ran `roll` as well: the inbox went from 2 files to **0** and the rollup artifact exists, `~/.local/state/jev-rollup/rollups/2026-11-15/{hellosubconscious.md,unattributed.md}` (`jev-rollup-run status`: `rollup days: ['2026-11-15']`). Content is real Mac turns (a Hermes headline about the missing report-delivery history, and the Codex Desktop gateway probe). No plaintext key file exists or was created (the path reads none).
+
+Not yet observed: the 06:00-06:09 `day` step (composes `DAY.md` for 2026-11-15); first chance is 2026-11-16 06:00. `ls ~/.local/state/jev-rollup/rollups/2026-11-15/DAY.md` after it. Cost reads `unmeasured` until Candybar aggregates (144 runs/day at about 0.1 s each).
 
 ## Asks / not done
 
