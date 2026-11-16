@@ -20,11 +20,11 @@ Executor: Claude Code on big-chungus over `ssh -o BatchMode=yes hellosubconsciou
 | `vinyl doctor` (client) | all clear: server `127.0.0.1:7733`, pairing token, osascript + pbcopy |
 | `vinyl status` | answered over the client RPC, `idle` |
 | Metal | service log `ggml_metal_device_init: GPU name: MTL0 (Apple M3 Ultra)`; server trace `recognizer.config` `backend: metal`, `fallbacks: 0` |
-| Live wire, `tests/e2e/mac_server_acceptance.sh ... 10` | 10 of 10 sessions returned the spoken `say` sentence; stop to last final p50 91.6 / p95 97.7 / max 97.7 ms; stop to `stopped` p50 92.4 / p95 98.7 / max 98.7 ms |
+| Live wire, `tests/e2e/mac_server_acceptance.sh ... 10` | 10 of 10 sessions returned a non-empty final (the probe asserts only that; the printed finals matched the `say` sentences in this run); stop to last final p50 91.6 / p95 97.7 / max 97.7 ms; stop to `stopped` p50 92.4 / p95 98.7 / max 98.7 ms |
 | Corpus replay through the keg (59 traces, 8.44 h) | 1409 finals, 5 empty (0.35%), stop-to-text p50/p95/max 43/81/87 ms, all-finals 40/83/155 ms, RTF 0.0207, 0 decodes over 1 s, `fallbacks` 0; within 8% of the story 1.4 uv-venv Metal run (RTF 0.0192) |
 | Cleanup | no `/tmp/vinyl-accept.*` or `/tmp/vinyl-parity.*` left on the Mac |
 
-The live probe used macOS `say` speech only, so the server traces now on the Mac (10 sessions, pruned after 7 days) hold synthetic text. The replay copied Jarad's corpus audio only into a `/tmp` directory removed by a trap.
+The live probe used macOS `say` speech only, so the server traces now on the Mac (two driver runs of 10 sessions each, pruned after 7 days) hold synthetic text. The replay copied Jarad's corpus audio only into a `/tmp` directory removed by a trap.
 
 ## Owed (operator, at the Mac's GUI)
 
