@@ -44,6 +44,35 @@ mise run build    # typecheck, then build into ../books/sandbox (gitignored)
 
 A build is a deploy. The `manual-web` nginx container bind-mounts `../books` (see `~/docker/stacks/websites/manual/compose.yml`), so the new build is live on the next refresh.
 
+## Play a waybill
+
+A waybill is one recorded prompt: every hook, event, model call and side effect it caused, with real timings (format: [`../../waybill/SPEC.md`](../../waybill/SPEC.md)). The Factory can play one as a guided, data-true tour of the real components, seen from the prompt's point of view. It reuses the tour's camera flights and leaves the new-hire tour (`?tour`) and the sandbox untouched.
+
+Ways in:
+
+- **`?waybill=<url>`** plays a file straight away. The URL is absolute, or relative to the site base: `/sandbox/?waybill=waybills/fixture-claude-prompt.waybill.json`. Add `&stop=7` to start at a stop. The fetch sends no credentials, so a cross-origin file needs CORS.
+- **Play a waybill** (the button in the controls and on the intro) opens a picker: the samples listed in `public/waybills/index.json`, a file chooser, and a link box.
+- **Drag a `.json` anywhere** on the page.
+
+What you see: a bar of real numbers on top (duration, tokens, findings), a card per stop with the real component names, and a DevTools-style waterfall along the bottom. Rows are grouped by component, bars sit on the real millisecond axis (linear, fit-to-stop or log), solid bars are things the prompt waited on, hatched bars ran alongside, red is broken. Click any bar or row to jump to its stop and open the inspector: ids (Note ID, barcode, belt number), status and reason, timings, attrs, payload preview and the list of readers (clip, visitor's pass, or core subscriber; seen or inferred). The last stop is "What did not happen": findings and gaps.
+
+Keys: <kbd>Space</kbd> play or pause, <kbd>←</kbd> <kbd>→</kbd> previous and next stop, <kbd>Esc</kbd> closes the inspector, then leaves. On a phone the waterfall folds into a mini-strip; tap it to open the full one.
+
+How it maps (all in `src/waybill/`):
+
+| File | Job |
+|---|---|
+| `types.ts` | The v1 types and a tolerant reader: refuses an unknown major version, defaults missing arrays, draws unknown span kinds as a generic kiosk. |
+| `stations.ts` | Registry id to station table. Components with no station get a kiosk, placed deterministically beside the station they relate to, tagged with their real id. Adding a component needs no 3D work. |
+| `director.ts` | A pure function, waybill to stops. A hook and its handlers are one dock stop (sync cards in the window, async in the back room), the injected context is a separate briefing-card stop, the tool loop is one stop, each bus event is a belt stop with its fan-out, and the last stop is the findings and gaps. |
+| `WaybillWorld.tsx` | The 3D layer, a pure function of one playhead number. The ambient sim is paused and its flyers, bulbs and labels are hidden. |
+| `WaybillHud.tsx`, `Waterfall.tsx`, `Inspector.tsx`, `Picker.tsx` | The panels, the waterfall, the inspector and the loader UI. |
+| `state.ts`, `load.ts` | Player state (its own small store; the sandbox store only gained `mode: 'waybill'`) and the loaders. |
+
+Self-check for the pure parts, no framework: `node --import ./tools/waybill/register.mjs --experimental-strip-types tools/waybill/selfcheck.ts [file]`. It also prints the stop list.
+
+`public/waybills/fixture-claude-prompt.waybill.json` is hand-written, public-profile and has no personal text. Its ids and timings follow a real 2026-11-16 capture; the prompt, tools and model calls are illustrative.
+
 ## Stack, and where it deliberately departs from the "edge stack" brief
 
 - **React Three Fiber 9, drei 10, three r187, zustand 5, @react-three/postprocessing 3, Vite 8.**

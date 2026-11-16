@@ -1,0 +1,2815 @@
+{
+ "format": "33god.waybill",
+ "version": 1,
+ "id": "wb_01KJ3WT7Y0K5R2M9X4B8N6QD1F",
+ "title": "claude · \"Read the candystore README…\" · 37 s",
+ "recorded_at": "2026-11-16T04:02:11Z",
+ "recorder": {
+  "name": "waybill",
+  "version": "0.1.0",
+  "host": "big-chungus",
+  "mode": "capture",
+  "profile": "public",
+  "argv": [
+   "hand-written fixture: ids and timings from the 2026-11-16 03:53Z capture of invocation bdbdba89; prompt text, tools and model calls are illustrative"
+  ]
+ },
+ "origin": {
+  "cli": "claude",
+  "surface": "claude-code",
+  "session_id": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+  "turn_id": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599:turn:1",
+  "turn_index": 1,
+  "cwd": "~/code/33GOD",
+  "project": "33GOD",
+  "model": {
+   "requested": "automaticai/auto/orchestrator",
+   "served": null
+  }
+ },
+ "prompt": {
+  "text": "Read the candystore README and tell me how it dedupes events.",
+  "chars": 61,
+  "sha256": "ca8b3b2f9925eedfd86f98ba2f1dd16243ed60ecc25568863f1d450998daffd1",
+  "truncated": false
+ },
+ "clock": {
+  "t0": "2026-11-16T03:53:25.250Z",
+  "t_end": "2026-11-16T03:54:02.650Z",
+  "duration_ms": 37400,
+  "settle_ms": 4000
+ },
+ "components": {
+  "ext:claude-code": {
+   "id": "ext:claude-code",
+   "name": "Claude Code",
+   "kind": "cli",
+   "registry": false
+  },
+  "bb-hook": {
+   "id": "bb-hook",
+   "name": "bb-hook",
+   "kind": "service",
+   "registry": true
+  },
+  "hook-hub": {
+   "id": "hook-hub",
+   "name": "hook-hub",
+   "kind": "handler-host",
+   "registry": true
+  },
+  "agent-hooks": {
+   "id": "agent-hooks",
+   "name": "agent-hooks",
+   "kind": "service",
+   "registry": true
+  },
+  "asm": {
+   "id": "asm",
+   "name": "Agent state machine",
+   "kind": "service",
+   "registry": true
+  },
+  "redis": {
+   "id": "redis",
+   "name": "Redis",
+   "kind": "store",
+   "registry": false
+  },
+  "bb-nats": {
+   "id": "bb-nats",
+   "name": "Bloodbank (NATS)",
+   "kind": "bus",
+   "registry": true
+  },
+  "candystore": {
+   "id": "candystore",
+   "name": "Candystore",
+   "kind": "store",
+   "registry": true
+  },
+  "holocene": {
+   "id": "holocene",
+   "name": "Holocene",
+   "kind": "service",
+   "registry": true
+  },
+  "ntfy-router": {
+   "id": "ntfy-router",
+   "name": "ntfy-router",
+   "kind": "service",
+   "registry": true
+  },
+  "enricher": {
+   "id": "enricher",
+   "name": "enricher",
+   "kind": "service",
+   "registry": true
+  },
+  "deckard": {
+   "id": "deckard",
+   "name": "deckard",
+   "kind": "service",
+   "registry": true
+  },
+  "turn-enricher": {
+   "id": "turn-enricher",
+   "name": "turn-enricher",
+   "kind": "service",
+   "registry": true
+  },
+  "hindsight": {
+   "id": "hindsight",
+   "name": "Hindsight",
+   "kind": "memory",
+   "registry": true
+  },
+  "aai-gateway": {
+   "id": "aai-gateway",
+   "name": "AutomaticAI gateway",
+   "kind": "model",
+   "registry": true
+  },
+  "aai-llm-observability": {
+   "id": "aai-llm-observability",
+   "name": "AutomaticAI usage exporter",
+   "kind": "service",
+   "registry": true
+  },
+  "ext:nanoleaf": {
+   "id": "ext:nanoleaf",
+   "name": "Nanoleaf panels",
+   "kind": "device",
+   "registry": false
+  },
+  "ext:orca": {
+   "id": "ext:orca",
+   "name": "Orca",
+   "kind": "external",
+   "registry": false
+  }
+ },
+ "spans": [
+  {
+   "id": "prompt",
+   "kind": "prompt",
+   "component": "ext:claude-code",
+   "name": "prompt",
+   "summary": "You pressed Enter in Claude Code: 61 characters.",
+   "phase": "prompt_submit",
+   "t0": 0,
+   "t1": 34,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": null,
+   "refs": {},
+   "attrs": {
+    "chars": 61
+   },
+   "evidence": [
+    "transcript"
+   ]
+  },
+  {
+   "id": "turn",
+   "kind": "turn",
+   "component": "ext:claude-code",
+   "name": "turn",
+   "summary": "One whole turn: Enter to the last token.",
+   "phase": "turn_end",
+   "t0": 0,
+   "t1": 36560,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": null,
+   "refs": {},
+   "attrs": {},
+   "evidence": [
+    "transcript"
+   ]
+  },
+  {
+   "id": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "UserPromptSubmit",
+   "summary": "Claude Code ran its UserPromptSubmit hook: bb-hook handed it to hook-hub, which ran 9 handlers and answered in 836 ms.",
+   "phase": "prompt_submit",
+   "t0": 34,
+   "t1": 870,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "prompt",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4"
+   },
+   "attrs": {
+    "native": "UserPromptSubmit"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-turn",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hindsight-turn",
+   "summary": "Buffered this turn for Hindsight (60.7 ms). Nothing is retained until 9000 characters, SessionEnd or 2 h idle.",
+   "phase": "prompt_submit",
+   "t0": 158.0,
+   "t1": 218.7,
+   "status": "ok",
+   "reason": "ask_buffered",
+   "sync": false,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "hindsight-turn"
+   },
+   "attrs": {
+    "handler_id": "hindsight-turn",
+    "mode": "async",
+    "order": -2
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:nanoleaf",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "nanoleaf",
+   "summary": "Told the Nanoleaf panels the agent is working (158 ms).",
+   "phase": "prompt_submit",
+   "t0": 158.0,
+   "t1": 316.0,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "nanoleaf"
+   },
+   "attrs": {
+    "handler_id": "nanoleaf",
+    "mode": "async",
+    "order": -1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:orca-status",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "orca-status",
+   "summary": "Skipped: this pane is not an Orca pane.",
+   "phase": "prompt_submit",
+   "t0": 160.0,
+   "t1": 161.0,
+   "status": "skipped",
+   "reason": "not_an_orca_pane",
+   "sync": false,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "orca-status"
+   },
+   "attrs": {
+    "handler_id": "orca-status",
+    "mode": "async",
+    "order": 0
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "memory:buffer:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "kind": "memory",
+   "component": "hindsight",
+   "name": "turn buffered",
+   "summary": "Hindsight capture file for this session got this turn appended (buffer under 9000 chars, so no retain yet).",
+   "phase": "async_after",
+   "t0": 160,
+   "t1": 218,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-turn",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4"
+   },
+   "attrs": {},
+   "evidence": [
+    "hindsight",
+    "files"
+   ]
+  },
+  {
+   "id": "notify:nanoleaf:1794801205330",
+   "kind": "notify",
+   "component": "ext:nanoleaf",
+   "name": "working scene",
+   "summary": "Nanoleaf panels switched to the working animation (146 ms).",
+   "phase": "async_after",
+   "t0": 170,
+   "t1": 316,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:nanoleaf",
+   "refs": {},
+   "attrs": {
+    "scene": "working"
+   },
+   "evidence": [
+    "logs"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:bloodbank-publisher",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "bloodbank-publisher",
+   "summary": "Published conversation.turn.started to the bus (sent means the core-NATS PONG came back).",
+   "phase": "prompt_submit",
+   "t0": 219.25,
+   "t1": 265.0,
+   "status": "ok",
+   "reason": "sent",
+   "sync": false,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "bloodbank-publisher",
+    "event_id": "fe69f4eb-814a-43f9-aed0-d0bda2c21696"
+   },
+   "attrs": {
+    "handler_id": "bloodbank-publisher",
+    "mode": "async",
+    "order": -3
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "publish:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "kind": "publish",
+   "component": "agent-hooks",
+   "name": "turn.started",
+   "summary": "agent-hooks stamped the label and posted conversation.turn.started with a core-NATS PUB; a PONG came back, no PubAck (6 ms).",
+   "phase": "async_after",
+   "t0": 250,
+   "t1": 256,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:bloodbank-publisher",
+   "refs": {
+    "event_id": "fe69f4eb-814a-43f9-aed0-d0bda2c21696"
+   },
+   "attrs": {},
+   "evidence": [
+    "hookhub",
+    "nats"
+   ],
+   "payload": "art:env:fe69f4eb"
+  },
+  {
+   "id": "state:asm:1794801205501-0",
+   "kind": "state",
+   "component": "asm",
+   "name": "idle to working",
+   "summary": "The agent state machine moved this session from idle to working.",
+   "phase": "async_after",
+   "t0": 251,
+   "t1": 251.5,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:bloodbank-publisher",
+   "refs": {},
+   "attrs": {
+    "from": "idle",
+    "to": "working",
+    "ttl_s": 900
+   },
+   "evidence": [
+    "asm"
+   ]
+  },
+  {
+   "id": "state:redis:1794801205501-0",
+   "kind": "state",
+   "component": "redis",
+   "name": "HSET asm hash",
+   "summary": "ASM wrote the new state into the Redis hash for this session (expires after 900 s).",
+   "phase": "async_after",
+   "t0": 251.5,
+   "t1": 253,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "state:asm:1794801205501-0",
+   "refs": {},
+   "attrs": {},
+   "evidence": [
+    "asm"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:skill-reminder",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "skill-reminder",
+   "summary": "Added the skill reminder to the context (46 ms).",
+   "phase": "prompt_submit",
+   "t0": 253.0,
+   "t1": 299.0,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "skill-reminder"
+   },
+   "attrs": {
+    "handler_id": "skill-reminder",
+    "mode": "sync",
+    "order": 1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "hook:9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "transition",
+   "summary": "The agent state machine edge fired its own hook-hub invocation (native transition, no session).",
+   "phase": "async_after",
+   "t0": 262,
+   "t1": 290,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "state:asm:1794801205501-0",
+   "refs": {
+    "invocation_id": "9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25"
+   },
+   "attrs": {
+    "native": "transition"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25:asm-log",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "asm-log",
+   "summary": "Appended the edge to the ASM transitions log.",
+   "phase": "async_after",
+   "t0": 263.0,
+   "t1": 289.0,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "hook:9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25",
+   "refs": {
+    "invocation_id": "9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25",
+    "handler_id": "asm-log"
+   },
+   "attrs": {
+    "handler_id": "asm-log",
+    "mode": "async",
+    "order": 0
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:crank-tag",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "crank-tag",
+   "summary": "Skipped: the prompt is not a Crank prompt.",
+   "phase": "prompt_submit",
+   "t0": 299.0,
+   "t1": 366.0,
+   "status": "skipped",
+   "reason": "not_a_crank_prompt",
+   "sync": true,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "crank-tag"
+   },
+   "attrs": {
+    "handler_id": "crank-tag",
+    "mode": "sync",
+    "order": 2
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "consume:ntfy-router:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "kind": "consume",
+   "component": "ntfy-router",
+   "name": "routed",
+   "summary": "ntfy-router matched turn.started against its routing table and routed it (124 ms after it was posted).",
+   "phase": "async_after",
+   "t0": 380,
+   "t1": 381,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": null,
+   "refs": {
+    "event_id": "fe69f4eb-814a-43f9-aed0-d0bda2c21696"
+   },
+   "attrs": {},
+   "evidence": [
+    "logs"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-recall",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hindsight-recall",
+   "summary": "Recalled 12 memories from the 33GOD bank (442 ms) and added them to the context. This one made the prompt wait the longest.",
+   "phase": "prompt_submit",
+   "t0": 384.0,
+   "t1": 826.0,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "hindsight-recall"
+   },
+   "attrs": {
+    "handler_id": "hindsight-recall",
+    "mode": "sync",
+    "order": 3,
+    "bank": "33GOD",
+    "memories": 12
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "memory:recall:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:33GOD",
+   "kind": "memory",
+   "component": "hindsight",
+   "name": "recall 33GOD",
+   "summary": "Hindsight recall on bank 33GOD returned 12 memories in 420 ms (ranked; texts omitted in this public sample).",
+   "phase": "prompt_submit",
+   "t0": 400,
+   "t1": 820,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-recall",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4"
+   },
+   "attrs": {
+    "bank": "33GOD",
+    "memories": 12
+   },
+   "evidence": [
+    "hindsight"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:codegraph-prompt",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "codegraph-prompt",
+   "summary": "Could not run: the codegraph binary is not on hook-hub's PATH (2 ms).",
+   "phase": "prompt_submit",
+   "t0": 828.0,
+   "t1": 830.0,
+   "status": "skipped",
+   "reason": "handler_binary_missing",
+   "sync": true,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "codegraph-prompt"
+   },
+   "attrs": {
+    "handler_id": "codegraph-prompt",
+    "mode": "sync",
+    "order": 4
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hub-selftest",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hub-selftest",
+   "summary": "Self-test marker written (14 ms).",
+   "phase": "prompt_submit",
+   "t0": 832.0,
+   "t1": 846.0,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+    "handler_id": "hub-selftest"
+   },
+   "attrs": {
+    "handler_id": "hub-selftest",
+    "mode": "sync",
+    "order": 5
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "context:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "kind": "context",
+   "component": "hook-hub",
+   "name": "injected context",
+   "summary": "hook-hub sent a briefing card back to Claude Code: the skill reminder plus 12 recalled memories, appended to the prompt before the model saw it.",
+   "phase": "prompt_submit",
+   "t0": 846,
+   "t1": 870,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "refs": {
+    "invocation_id": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4"
+   },
+   "attrs": {
+    "handlers": [
+     "skill-reminder",
+     "hindsight-recall"
+    ]
+   },
+   "evidence": [
+    "transcript"
+   ],
+   "payload": "art:context:bdbdba89"
+  },
+  {
+   "id": "llm:1",
+   "kind": "llm",
+   "component": "aai-gateway",
+   "name": "model call 1",
+   "summary": "First model call through the AutomaticAI gateway: 48,210 tokens in, 412 out, first token after 2.31 s. It asked to run a tool.",
+   "phase": "model_call",
+   "t0": 905,
+   "t1": 6480,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": null,
+   "refs": {
+    "request_id": "req_01hz9c2k4n7p8q3v5w6x"
+   },
+   "attrs": {
+    "tokens_in": 48210,
+    "tokens_out": 412,
+    "ttft_ms": 2310,
+    "stop_reason": "tool_use",
+    "model_requested": "automaticai/auto/orchestrator"
+   },
+   "evidence": [
+    "transcript",
+    "gateway"
+   ]
+  },
+  {
+   "id": "hook:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "PreToolUse",
+   "summary": "PreToolUse for Bash: hook-hub ran 2 handlers in 58 ms.",
+   "phase": "pre_tool",
+   "t0": 6500,
+   "t1": 6558,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "tool:toolu_01NwKd4VcPqH7sXz3rYtL9Me",
+   "refs": {
+    "invocation_id": "8d692b2c-32f4-51f9-9c84-e7d2145a9e5c"
+   },
+   "attrs": {
+    "native": "PreToolUse"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c:bloodbank-publisher",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "bloodbank-publisher",
+   "summary": "Published agent.tool.requested.",
+   "phase": "async_after",
+   "t0": 6504,
+   "t1": 6540,
+   "status": "ok",
+   "reason": "sent",
+   "sync": false,
+   "parent": "hook:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+   "refs": {
+    "invocation_id": "8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+    "handler_id": "bloodbank-publisher",
+    "event_id": "451df808-c70e-5384-b212-a9a18a4ee2b0"
+   },
+   "attrs": {
+    "handler_id": "bloodbank-publisher",
+    "mode": "async",
+    "order": -3
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "publish:451df808-c70e-5384-b212-a9a18a4ee2b0",
+   "kind": "publish",
+   "component": "agent-hooks",
+   "name": "tool.requested",
+   "summary": "agent-hooks posted agent.tool.requested for Bash.",
+   "phase": "async_after",
+   "t0": 6530,
+   "t1": 6536,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c:bloodbank-publisher",
+   "refs": {
+    "event_id": "451df808-c70e-5384-b212-a9a18a4ee2b0",
+    "tool_use_id": "toolu_01NwKd4VcPqH7sXz3rYtL9Me"
+   },
+   "attrs": {},
+   "evidence": [
+    "hookhub",
+    "nats"
+   ]
+  },
+  {
+   "id": "handler:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c:hub-selftest",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hub-selftest",
+   "summary": "Self-test marker written (11 ms).",
+   "phase": "pre_tool",
+   "t0": 6541,
+   "t1": 6552,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+   "refs": {
+    "invocation_id": "8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+    "handler_id": "hub-selftest"
+   },
+   "attrs": {
+    "handler_id": "hub-selftest",
+    "mode": "sync",
+    "order": 1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "tool:toolu_01NwKd4VcPqH7sXz3rYtL9Me",
+   "kind": "tool",
+   "component": "ext:claude-code",
+   "name": "Bash",
+   "summary": "Ran `ls candystore` in the shell: exit 0 in 225 ms.",
+   "phase": "tool",
+   "t0": 6560,
+   "t1": 6785,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": null,
+   "refs": {
+    "tool_use_id": "toolu_01NwKd4VcPqH7sXz3rYtL9Me"
+   },
+   "attrs": {
+    "tool": "Bash"
+   },
+   "evidence": [
+    "transcript"
+   ],
+   "payload": "art:tool:1"
+  },
+  {
+   "id": "hook:a735a726-6905-57f4-85b8-aca96e70ce82",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "PostToolUse",
+   "summary": "PostToolUse for Bash: hook-hub ran 2 handlers in 60 ms.",
+   "phase": "post_tool",
+   "t0": 6790,
+   "t1": 6850,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "tool:toolu_01NwKd4VcPqH7sXz3rYtL9Me",
+   "refs": {
+    "invocation_id": "a735a726-6905-57f4-85b8-aca96e70ce82"
+   },
+   "attrs": {
+    "native": "PostToolUse"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:a735a726-6905-57f4-85b8-aca96e70ce82:bloodbank-publisher",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "bloodbank-publisher",
+   "summary": "Published agent.tool.completed.",
+   "phase": "async_after",
+   "t0": 6794,
+   "t1": 6830,
+   "status": "ok",
+   "reason": "sent",
+   "sync": false,
+   "parent": "hook:a735a726-6905-57f4-85b8-aca96e70ce82",
+   "refs": {
+    "invocation_id": "a735a726-6905-57f4-85b8-aca96e70ce82",
+    "handler_id": "bloodbank-publisher",
+    "event_id": "14623d52-06c5-5f0d-a087-ccce18189888"
+   },
+   "attrs": {
+    "handler_id": "bloodbank-publisher",
+    "mode": "async",
+    "order": -3
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "publish:14623d52-06c5-5f0d-a087-ccce18189888",
+   "kind": "publish",
+   "component": "agent-hooks",
+   "name": "tool.completed",
+   "summary": "agent-hooks posted agent.tool.completed for Bash.",
+   "phase": "async_after",
+   "t0": 6820,
+   "t1": 6826,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:a735a726-6905-57f4-85b8-aca96e70ce82:bloodbank-publisher",
+   "refs": {
+    "event_id": "14623d52-06c5-5f0d-a087-ccce18189888",
+    "tool_use_id": "toolu_01NwKd4VcPqH7sXz3rYtL9Me"
+   },
+   "attrs": {},
+   "evidence": [
+    "hookhub",
+    "nats"
+   ]
+  },
+  {
+   "id": "handler:a735a726-6905-57f4-85b8-aca96e70ce82:hub-selftest",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hub-selftest",
+   "summary": "Self-test marker written (11 ms).",
+   "phase": "post_tool",
+   "t0": 6831,
+   "t1": 6842,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:a735a726-6905-57f4-85b8-aca96e70ce82",
+   "refs": {
+    "invocation_id": "a735a726-6905-57f4-85b8-aca96e70ce82",
+    "handler_id": "hub-selftest"
+   },
+   "attrs": {
+    "handler_id": "hub-selftest",
+    "mode": "sync",
+    "order": 1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "llm:2",
+   "kind": "llm",
+   "component": "aai-gateway",
+   "name": "model call 2",
+   "summary": "Second model call: 49,105 tokens in, 168 out. It asked to read a file.",
+   "phase": "model_call",
+   "t0": 6900,
+   "t1": 9650,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": null,
+   "refs": {
+    "request_id": "req_01hz9c2n9d3m6r1t8y2z"
+   },
+   "attrs": {
+    "tokens_in": 49105,
+    "tokens_out": 168,
+    "ttft_ms": 1480,
+    "stop_reason": "tool_use"
+   },
+   "evidence": [
+    "transcript",
+    "gateway"
+   ]
+  },
+  {
+   "id": "hook:c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "PreToolUse",
+   "summary": "PreToolUse for Read: hook-hub ran 2 handlers in 58 ms.",
+   "phase": "pre_tool",
+   "t0": 9700,
+   "t1": 9758,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "tool:toolu_01Gq8bTfJ2uRaX5nV6cDwYpZ",
+   "refs": {
+    "invocation_id": "c3b44ee2-6317-5d45-a3cb-8e7928f46888"
+   },
+   "attrs": {
+    "native": "PreToolUse"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:c3b44ee2-6317-5d45-a3cb-8e7928f46888:bloodbank-publisher",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "bloodbank-publisher",
+   "summary": "Published agent.tool.requested.",
+   "phase": "async_after",
+   "t0": 9704,
+   "t1": 9740,
+   "status": "ok",
+   "reason": "sent",
+   "sync": false,
+   "parent": "hook:c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+   "refs": {
+    "invocation_id": "c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+    "handler_id": "bloodbank-publisher",
+    "event_id": "2c599f6a-5387-53b0-9d4e-8fa15289633c"
+   },
+   "attrs": {
+    "handler_id": "bloodbank-publisher",
+    "mode": "async",
+    "order": -3
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "publish:2c599f6a-5387-53b0-9d4e-8fa15289633c",
+   "kind": "publish",
+   "component": "agent-hooks",
+   "name": "tool.requested",
+   "summary": "agent-hooks posted agent.tool.requested for Read.",
+   "phase": "async_after",
+   "t0": 9730,
+   "t1": 9736,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:c3b44ee2-6317-5d45-a3cb-8e7928f46888:bloodbank-publisher",
+   "refs": {
+    "event_id": "2c599f6a-5387-53b0-9d4e-8fa15289633c",
+    "tool_use_id": "toolu_01Gq8bTfJ2uRaX5nV6cDwYpZ"
+   },
+   "attrs": {},
+   "evidence": [
+    "hookhub",
+    "nats"
+   ]
+  },
+  {
+   "id": "handler:c3b44ee2-6317-5d45-a3cb-8e7928f46888:hub-selftest",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hub-selftest",
+   "summary": "Self-test marker written (11 ms).",
+   "phase": "pre_tool",
+   "t0": 9741,
+   "t1": 9752,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+   "refs": {
+    "invocation_id": "c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+    "handler_id": "hub-selftest"
+   },
+   "attrs": {
+    "handler_id": "hub-selftest",
+    "mode": "sync",
+    "order": 1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "tool:toolu_01Gq8bTfJ2uRaX5nV6cDwYpZ",
+   "kind": "tool",
+   "component": "ext:claude-code",
+   "name": "Read",
+   "summary": "Read candystore/README.md: 312 lines in 80 ms.",
+   "phase": "tool",
+   "t0": 9760,
+   "t1": 9840,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": null,
+   "refs": {
+    "tool_use_id": "toolu_01Gq8bTfJ2uRaX5nV6cDwYpZ"
+   },
+   "attrs": {
+    "tool": "Read"
+   },
+   "evidence": [
+    "transcript"
+   ],
+   "payload": "art:tool:2"
+  },
+  {
+   "id": "hook:4890c3bd-c41b-59de-a731-cf4060f9718e",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "PostToolUse",
+   "summary": "PostToolUse for Read: hook-hub ran 2 handlers in 55 ms.",
+   "phase": "post_tool",
+   "t0": 9845,
+   "t1": 9900,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "tool:toolu_01Gq8bTfJ2uRaX5nV6cDwYpZ",
+   "refs": {
+    "invocation_id": "4890c3bd-c41b-59de-a731-cf4060f9718e"
+   },
+   "attrs": {
+    "native": "PostToolUse"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:4890c3bd-c41b-59de-a731-cf4060f9718e:bloodbank-publisher",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "bloodbank-publisher",
+   "summary": "Published agent.tool.completed.",
+   "phase": "async_after",
+   "t0": 9849,
+   "t1": 9885,
+   "status": "ok",
+   "reason": "sent",
+   "sync": false,
+   "parent": "hook:4890c3bd-c41b-59de-a731-cf4060f9718e",
+   "refs": {
+    "invocation_id": "4890c3bd-c41b-59de-a731-cf4060f9718e",
+    "handler_id": "bloodbank-publisher",
+    "event_id": "5ed2f56e-c5f2-5d7a-ba24-77818b91813c"
+   },
+   "attrs": {
+    "handler_id": "bloodbank-publisher",
+    "mode": "async",
+    "order": -3
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "publish:5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+   "kind": "publish",
+   "component": "agent-hooks",
+   "name": "tool.completed",
+   "summary": "agent-hooks posted agent.tool.completed for Read.",
+   "phase": "async_after",
+   "t0": 9875,
+   "t1": 9881,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:4890c3bd-c41b-59de-a731-cf4060f9718e:bloodbank-publisher",
+   "refs": {
+    "event_id": "5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+    "tool_use_id": "toolu_01Gq8bTfJ2uRaX5nV6cDwYpZ"
+   },
+   "attrs": {},
+   "evidence": [
+    "hookhub",
+    "nats"
+   ]
+  },
+  {
+   "id": "handler:4890c3bd-c41b-59de-a731-cf4060f9718e:hub-selftest",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hub-selftest",
+   "summary": "Self-test marker written (11 ms).",
+   "phase": "post_tool",
+   "t0": 9886,
+   "t1": 9897,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:4890c3bd-c41b-59de-a731-cf4060f9718e",
+   "refs": {
+    "invocation_id": "4890c3bd-c41b-59de-a731-cf4060f9718e",
+    "handler_id": "hub-selftest"
+   },
+   "attrs": {
+    "handler_id": "hub-selftest",
+    "mode": "sync",
+    "order": 1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "llm:3",
+   "kind": "llm",
+   "component": "aai-gateway",
+   "name": "model call 3",
+   "summary": "Final model call: 53,880 tokens in, 1,342 out, first token after 2.8 s. It answered and stopped.",
+   "phase": "model_call",
+   "t0": 10000,
+   "t1": 36300,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": null,
+   "refs": {
+    "request_id": "req_01hz9c2q1x5v7b4n9m3k"
+   },
+   "attrs": {
+    "tokens_in": 53880,
+    "tokens_out": 1342,
+    "ttft_ms": 2800,
+    "stop_reason": "end_turn"
+   },
+   "evidence": [
+    "transcript",
+    "gateway"
+   ]
+  },
+  {
+   "id": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "Stop",
+   "summary": "Claude Code ran its Stop hook: hook-hub ran 5 handlers in 140 ms.",
+   "phase": "turn_end",
+   "t0": 36420,
+   "t1": 36560,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "turn",
+   "refs": {
+    "invocation_id": "67cb24fc-4d46-557e-ba3e-5189e73c4262"
+   },
+   "attrs": {
+    "native": "Stop"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:bloodbank-publisher",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "bloodbank-publisher",
+   "summary": "Published conversation.turn.completed.",
+   "phase": "async_after",
+   "t0": 36424,
+   "t1": 36462,
+   "status": "ok",
+   "reason": "sent",
+   "sync": false,
+   "parent": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "refs": {
+    "invocation_id": "67cb24fc-4d46-557e-ba3e-5189e73c4262",
+    "handler_id": "bloodbank-publisher",
+    "event_id": "e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18"
+   },
+   "attrs": {
+    "handler_id": "bloodbank-publisher",
+    "mode": "async",
+    "order": -3
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:hindsight-turn",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hindsight-turn",
+   "summary": "Appended the turn to the capture buffer. Retain deferred: the buffer is under 9000 chars.",
+   "phase": "async_after",
+   "t0": 36425,
+   "t1": 36470,
+   "status": "ok",
+   "reason": "turn_buffered",
+   "sync": false,
+   "parent": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "refs": {
+    "invocation_id": "67cb24fc-4d46-557e-ba3e-5189e73c4262",
+    "handler_id": "hindsight-turn"
+   },
+   "attrs": {
+    "handler_id": "hindsight-turn",
+    "mode": "async",
+    "order": -2
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:nanoleaf",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "nanoleaf",
+   "summary": "Told the Nanoleaf panels the agent is idle.",
+   "phase": "async_after",
+   "t0": 36425,
+   "t1": 36540,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "refs": {
+    "invocation_id": "67cb24fc-4d46-557e-ba3e-5189e73c4262",
+    "handler_id": "nanoleaf"
+   },
+   "attrs": {
+    "handler_id": "nanoleaf",
+    "mode": "async",
+    "order": -1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:orca-status",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "orca-status",
+   "summary": "Skipped: this pane is not an Orca pane.",
+   "phase": "async_after",
+   "t0": 36426,
+   "t1": 36427,
+   "status": "skipped",
+   "reason": "not_an_orca_pane",
+   "sync": false,
+   "parent": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "refs": {
+    "invocation_id": "67cb24fc-4d46-557e-ba3e-5189e73c4262",
+    "handler_id": "orca-status"
+   },
+   "attrs": {
+    "handler_id": "orca-status",
+    "mode": "async",
+    "order": 0
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "publish:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "kind": "publish",
+   "component": "agent-hooks",
+   "name": "turn.completed",
+   "summary": "agent-hooks posted conversation.turn.completed (4 ms).",
+   "phase": "turn_end",
+   "t0": 36440,
+   "t1": 36444,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:bloodbank-publisher",
+   "refs": {
+    "event_id": "e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18"
+   },
+   "attrs": {},
+   "evidence": [
+    "hookhub",
+    "nats"
+   ]
+  },
+  {
+   "id": "state:asm:1794801242117-0",
+   "kind": "state",
+   "component": "asm",
+   "name": "working to idle",
+   "summary": "The agent state machine moved this session from working to idle.",
+   "phase": "turn_end",
+   "t0": 36445,
+   "t1": 36445.5,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:bloodbank-publisher",
+   "refs": {},
+   "attrs": {
+    "from": "working",
+    "to": "idle"
+   },
+   "evidence": [
+    "asm"
+   ]
+  },
+  {
+   "id": "state:redis:1794801242117-0",
+   "kind": "state",
+   "component": "redis",
+   "name": "HSET asm hash",
+   "summary": "ASM wrote the idle state into Redis.",
+   "phase": "turn_end",
+   "t0": 36445.5,
+   "t1": 36447,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "state:asm:1794801242117-0",
+   "refs": {},
+   "attrs": {},
+   "evidence": [
+    "asm"
+   ]
+  },
+  {
+   "id": "consume:turn-enricher:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "kind": "consume",
+   "component": "turn-enricher",
+   "name": "enrich",
+   "summary": "turn-enricher read the finished turn, asked the Jev gate (signal 0.92), and wrote a summary note (331 ms).",
+   "phase": "turn_end",
+   "t0": 36447,
+   "t1": 36775,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": null,
+   "refs": {
+    "event_id": "e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18"
+   },
+   "attrs": {
+    "jev_signal": 0.92
+   },
+   "evidence": [
+    "logs"
+   ]
+  },
+  {
+   "id": "hook:5248b08b-8ae1-5351-9d4c-c7ad2dd20a82",
+   "kind": "hook",
+   "component": "hook-hub",
+   "name": "transition",
+   "summary": "ASM edge hook (working to idle).",
+   "phase": "async_after",
+   "t0": 36452,
+   "t1": 36480,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "state:asm:1794801242117-0",
+   "refs": {
+    "invocation_id": "5248b08b-8ae1-5351-9d4c-c7ad2dd20a82"
+   },
+   "attrs": {
+    "native": "transition"
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:5248b08b-8ae1-5351-9d4c-c7ad2dd20a82:asm-log",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "asm-log",
+   "summary": "Appended the edge to the ASM transitions log.",
+   "phase": "async_after",
+   "t0": 36453,
+   "t1": 36479,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "hook:5248b08b-8ae1-5351-9d4c-c7ad2dd20a82",
+   "refs": {
+    "invocation_id": "5248b08b-8ae1-5351-9d4c-c7ad2dd20a82",
+    "handler_id": "asm-log"
+   },
+   "attrs": {
+    "handler_id": "asm-log",
+    "mode": "async",
+    "order": 0
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:hub-selftest",
+   "kind": "handler",
+   "component": "hook-hub",
+   "name": "hub-selftest",
+   "summary": "Self-test marker written (12 ms).",
+   "phase": "turn_end",
+   "t0": 36540,
+   "t1": 36552,
+   "status": "ok",
+   "reason": null,
+   "sync": true,
+   "parent": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "refs": {
+    "invocation_id": "67cb24fc-4d46-557e-ba3e-5189e73c4262",
+    "handler_id": "hub-selftest"
+   },
+   "attrs": {
+    "handler_id": "hub-selftest",
+    "mode": "sync",
+    "order": 1
+   },
+   "evidence": [
+    "hookhub"
+   ]
+  },
+  {
+   "id": "publish:19331ba7-9738-54ab-a65a-c10ec622bc62",
+   "kind": "publish",
+   "component": "turn-enricher",
+   "name": "turn.annotated",
+   "summary": "turn-enricher posted conversation.turn.annotated, caused by turn.completed (331 ms later).",
+   "phase": "async_after",
+   "t0": 36775,
+   "t1": 36778,
+   "status": "ok",
+   "reason": null,
+   "sync": false,
+   "parent": "consume:turn-enricher:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "refs": {
+    "event_id": "19331ba7-9738-54ab-a65a-c10ec622bc62"
+   },
+   "attrs": {},
+   "evidence": [
+    "logs",
+    "nats"
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "type": "bloodbank.conversation.turn.started",
+   "subject": "bloodbank.evt.conversation.turn.started",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10427983,
+   "t": 256.0,
+   "stored": 257.7,
+   "archived": 264.2,
+   "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "causationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "producer": "agent-hooks",
+   "publisher_span": "publish:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 264.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 258.3,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "ntfy-router",
+     "component": "ntfy-router",
+     "kind": "core",
+     "filter": "bloodbank.evt.>",
+     "outcome": "routed",
+     "t": 380.0,
+     "evidence": "observed",
+     "span": "consume:ntfy-router:fe69f4eb-814a-43f9-aed0-d0bda2c21696"
+    },
+    {
+     "name": "enricher-events",
+     "component": "enricher",
+     "kind": "durable",
+     "filter": "bloodbank.evt.conversation.turn.completed",
+     "outcome": "ignored",
+     "t": null,
+     "evidence": "inferred",
+     "span": null
+    },
+    {
+     "name": "deckard",
+     "component": "deckard",
+     "kind": "core",
+     "filter": "bloodbank.evt.conversation.turn.>",
+     "outcome": "delivered",
+     "t": null,
+     "evidence": "inferred",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   },
+   "payload": "art:env:fe69f4eb"
+  },
+  {
+   "id": "b97a0744-927c-575f-9ddc-c2d874d1d918",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10427989,
+   "t": 330.0,
+   "stored": 331.6,
+   "archived": 341.2,
+   "correlationid": "9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 341.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 332.20000000000005,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "5178c6dd-df4c-53a8-9e6b-c65a4cd467b4",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10427985,
+   "t": 922.0,
+   "stored": 923.6,
+   "archived": 930.2,
+   "correlationid": "bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 930.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 924.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "451df808-c70e-5384-b212-a9a18a4ee2b0",
+   "type": "bloodbank.agent.tool.requested",
+   "subject": "bloodbank.evt.agent.tool.requested",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10427993,
+   "t": 6536,
+   "stored": 6537.6,
+   "archived": 6547.2,
+   "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "causationid": "fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "producer": "agent-hooks",
+   "publisher_span": "publish:451df808-c70e-5384-b212-a9a18a4ee2b0",
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 6547.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 6538.200000000001,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "4a30a81c-180e-53f9-9743-468c2098c1c5",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10427998,
+   "t": 6606,
+   "stored": 6607.6,
+   "archived": 6614.2,
+   "correlationid": "8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 6614.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 6608.200000000001,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "14623d52-06c5-5f0d-a087-ccce18189888",
+   "type": "bloodbank.agent.tool.completed",
+   "subject": "bloodbank.evt.agent.tool.completed",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428001,
+   "t": 6826,
+   "stored": 6827.6,
+   "archived": 6838.2,
+   "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "causationid": "fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "producer": "agent-hooks",
+   "publisher_span": "publish:14623d52-06c5-5f0d-a087-ccce18189888",
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 6838.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 6828.200000000001,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "ef7f5f29-dacc-508c-9c0b-d1dd0a526e23",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428007,
+   "t": 6898,
+   "stored": 6899.6,
+   "archived": 6908.2,
+   "correlationid": "a735a726-6905-57f4-85b8-aca96e70ce82",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 6908.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 6900.200000000001,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "edef60ff-11a6-55b2-88a9-0a16ea9951ac",
+   "type": "bloodbank.llm.usage.recorded",
+   "subject": "bloodbank.evt.llm.usage.recorded",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428011,
+   "t": 8580,
+   "stored": 8581.6,
+   "archived": 8592.4,
+   "correlationid": "edef60ff-11a6-55b2-88a9-0a16ea9951ac",
+   "causationid": null,
+   "producer": "aai-llm-observability",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 8588.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 8582.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "2c599f6a-5387-53b0-9d4e-8fa15289633c",
+   "type": "bloodbank.agent.tool.requested",
+   "subject": "bloodbank.evt.agent.tool.requested",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428014,
+   "t": 9736,
+   "stored": 9737.6,
+   "archived": 9745.2,
+   "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "causationid": "fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "producer": "agent-hooks",
+   "publisher_span": "publish:2c599f6a-5387-53b0-9d4e-8fa15289633c",
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 9745.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 9738.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "4ba0869c-6bce-5575-abd2-d7a550b38970",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428020,
+   "t": 9806,
+   "stored": 9807.6,
+   "archived": 9816.2,
+   "correlationid": "c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 9816.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 9808.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+   "type": "bloodbank.agent.tool.completed",
+   "subject": "bloodbank.evt.agent.tool.completed",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428025,
+   "t": 9881,
+   "stored": 9882.6,
+   "archived": 9890.2,
+   "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "causationid": "fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "producer": "agent-hooks",
+   "publisher_span": "publish:5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 9890.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 9883.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "4e23b30b-69aa-5bd8-843e-01fbf74c2726",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428030,
+   "t": 9948,
+   "stored": 9949.6,
+   "archived": 9959.2,
+   "correlationid": "4890c3bd-c41b-59de-a731-cf4060f9718e",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 9959.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 9950.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "ec8dc3b3-efd2-53a7-a778-fedf7a4d3ac8",
+   "type": "bloodbank.llm.usage.recorded",
+   "subject": "bloodbank.evt.llm.usage.recorded",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428033,
+   "t": 12950,
+   "stored": 12951.6,
+   "archived": 12962.4,
+   "correlationid": "ec8dc3b3-efd2-53a7-a778-fedf7a4d3ac8",
+   "causationid": null,
+   "producer": "aai-llm-observability",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 12960.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 12952.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "type": "bloodbank.conversation.turn.completed",
+   "subject": "bloodbank.evt.conversation.turn.completed",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428038,
+   "t": 36444.0,
+   "stored": 36445.6,
+   "archived": 36456.2,
+   "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "causationid": "5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+   "producer": "agent-hooks",
+   "publisher_span": "publish:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 36456.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 36446.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "turn-enricher",
+     "component": "turn-enricher",
+     "kind": "core",
+     "filter": "bloodbank.evt.conversation.turn.completed",
+     "outcome": "enriched",
+     "t": 36447.0,
+     "evidence": "observed",
+     "span": "consume:turn-enricher:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18"
+    },
+    {
+     "name": "enricher-events",
+     "component": "enricher",
+     "kind": "durable",
+     "filter": "bloodbank.evt.conversation.turn.completed",
+     "outcome": "unknown",
+     "t": null,
+     "evidence": "inferred",
+     "span": null
+    },
+    {
+     "name": "deckard",
+     "component": "deckard",
+     "kind": "core",
+     "filter": "bloodbank.evt.conversation.turn.>",
+     "outcome": "delivered",
+     "t": null,
+     "evidence": "inferred",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "4497e0f6-6619-52ec-8616-987e1539652a",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428041,
+   "t": 36520.0,
+   "stored": 36521.6,
+   "archived": 36529.2,
+   "correlationid": "5248b08b-8ae1-5351-9d4c-c7ad2dd20a82",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 36529.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 36522.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "0202ce3e-f810-5ca0-940c-617b5305f54f",
+   "type": "bloodbank.agent.hook.updated",
+   "subject": "bloodbank.evt.agent.hook.updated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428046,
+   "t": 36610.0,
+   "stored": 36611.6,
+   "archived": 36622.2,
+   "correlationid": "67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "causationid": null,
+   "producer": "hook-hub",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 36622.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 36612.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": true
+   }
+  },
+  {
+   "id": "19331ba7-9738-54ab-a65a-c10ec622bc62",
+   "type": "bloodbank.conversation.turn.annotated",
+   "subject": "bloodbank.evt.conversation.turn.annotated",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428050,
+   "t": 36778.0,
+   "stored": 36779.6,
+   "archived": 36789.2,
+   "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+   "causationid": "e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "producer": "turn-enricher",
+   "publisher_span": "publish:19331ba7-9738-54ab-a65a-c10ec622bc62",
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 36789.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 36780.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "deckard",
+     "component": "deckard",
+     "kind": "core",
+     "filter": "bloodbank.evt.conversation.turn.>",
+     "outcome": "delivered",
+     "t": null,
+     "evidence": "inferred",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  },
+  {
+   "id": "b4cf38b3-401d-5532-aac3-f5e322f24219",
+   "type": "bloodbank.llm.usage.recorded",
+   "subject": "bloodbank.evt.llm.usage.recorded",
+   "stream": "BLOODBANK_EVENTS",
+   "seq": 10428053,
+   "t": 40500,
+   "stored": 40501.6,
+   "archived": 40512.4,
+   "correlationid": "b4cf38b3-401d-5532-aac3-f5e322f24219",
+   "causationid": null,
+   "producer": "aai-llm-observability",
+   "publisher_span": null,
+   "consumers": [
+    {
+     "name": "candystore-events",
+     "component": "candystore",
+     "kind": "durable",
+     "filter": "bloodbank.evt.>",
+     "outcome": "archived",
+     "t": 40508.2,
+     "evidence": "observed",
+     "span": null
+    },
+    {
+     "name": "holocene",
+     "component": "holocene",
+     "kind": "ephemeral",
+     "filter": "bloodbank.evt.>",
+     "outcome": "collected",
+     "t": 40502.2,
+     "evidence": "observed",
+     "span": null
+    }
+   ],
+   "schema": {
+    "file": null,
+    "valid": null
+   }
+  }
+ ],
+ "links": [
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:bloodbank-publisher",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-turn",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:nanoleaf",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:orca-status",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:skill-reminder",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:crank-tag",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-recall",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:codegraph-prompt",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hub-selftest",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "evt:5178c6dd-df4c-53a8-9e6b-c65a4cd467b4",
+   "kind": "mirrors"
+  },
+  {
+   "from": "prompt",
+   "to": "hook:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "kind": "calls",
+   "label": "bb-hook"
+  },
+  {
+   "from": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-turn",
+   "to": "memory:buffer:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "kind": "calls"
+  },
+  {
+   "from": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-recall",
+   "to": "memory:recall:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:33GOD",
+   "kind": "calls"
+  },
+  {
+   "from": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:nanoleaf",
+   "to": "notify:nanoleaf:1794801205330",
+   "kind": "calls"
+  },
+  {
+   "from": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:skill-reminder",
+   "to": "context:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "kind": "injects"
+  },
+  {
+   "from": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:hindsight-recall",
+   "to": "context:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "kind": "injects"
+  },
+  {
+   "from": "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:bloodbank-publisher",
+   "to": "publish:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "to": "evt:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "to": "state:asm:1794801205501-0",
+   "kind": "writes"
+  },
+  {
+   "from": "state:asm:1794801205501-0",
+   "to": "state:redis:1794801205501-0",
+   "kind": "writes"
+  },
+  {
+   "from": "hook:9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25",
+   "to": "handler:9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25:asm-log",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25",
+   "to": "evt:b97a0744-927c-575f-9ddc-c2d874d1d918",
+   "kind": "mirrors"
+  },
+  {
+   "from": "state:asm:1794801205501-0",
+   "to": "hook:9d6ad7ae-c7fd-50a0-9c96-030a1c1d0e25",
+   "kind": "triggers"
+  },
+  {
+   "from": "evt:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "to": "consume:ntfy-router:fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+   "kind": "delivers"
+  },
+  {
+   "from": "context:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4",
+   "to": "llm:1",
+   "kind": "feeds"
+  },
+  {
+   "from": "hook:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+   "to": "handler:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c:bloodbank-publisher",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+   "to": "handler:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c:hub-selftest",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c",
+   "to": "evt:4a30a81c-180e-53f9-9743-468c2098c1c5",
+   "kind": "mirrors"
+  },
+  {
+   "from": "handler:8d692b2c-32f4-51f9-9c84-e7d2145a9e5c:bloodbank-publisher",
+   "to": "publish:451df808-c70e-5384-b212-a9a18a4ee2b0",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:451df808-c70e-5384-b212-a9a18a4ee2b0",
+   "to": "evt:451df808-c70e-5384-b212-a9a18a4ee2b0",
+   "kind": "publishes"
+  },
+  {
+   "from": "hook:a735a726-6905-57f4-85b8-aca96e70ce82",
+   "to": "handler:a735a726-6905-57f4-85b8-aca96e70ce82:bloodbank-publisher",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:a735a726-6905-57f4-85b8-aca96e70ce82",
+   "to": "handler:a735a726-6905-57f4-85b8-aca96e70ce82:hub-selftest",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:a735a726-6905-57f4-85b8-aca96e70ce82",
+   "to": "evt:ef7f5f29-dacc-508c-9c0b-d1dd0a526e23",
+   "kind": "mirrors"
+  },
+  {
+   "from": "handler:a735a726-6905-57f4-85b8-aca96e70ce82:bloodbank-publisher",
+   "to": "publish:14623d52-06c5-5f0d-a087-ccce18189888",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:14623d52-06c5-5f0d-a087-ccce18189888",
+   "to": "evt:14623d52-06c5-5f0d-a087-ccce18189888",
+   "kind": "publishes"
+  },
+  {
+   "from": "hook:c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+   "to": "handler:c3b44ee2-6317-5d45-a3cb-8e7928f46888:bloodbank-publisher",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+   "to": "handler:c3b44ee2-6317-5d45-a3cb-8e7928f46888:hub-selftest",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:c3b44ee2-6317-5d45-a3cb-8e7928f46888",
+   "to": "evt:4ba0869c-6bce-5575-abd2-d7a550b38970",
+   "kind": "mirrors"
+  },
+  {
+   "from": "handler:c3b44ee2-6317-5d45-a3cb-8e7928f46888:bloodbank-publisher",
+   "to": "publish:2c599f6a-5387-53b0-9d4e-8fa15289633c",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:2c599f6a-5387-53b0-9d4e-8fa15289633c",
+   "to": "evt:2c599f6a-5387-53b0-9d4e-8fa15289633c",
+   "kind": "publishes"
+  },
+  {
+   "from": "hook:4890c3bd-c41b-59de-a731-cf4060f9718e",
+   "to": "handler:4890c3bd-c41b-59de-a731-cf4060f9718e:bloodbank-publisher",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:4890c3bd-c41b-59de-a731-cf4060f9718e",
+   "to": "handler:4890c3bd-c41b-59de-a731-cf4060f9718e:hub-selftest",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:4890c3bd-c41b-59de-a731-cf4060f9718e",
+   "to": "evt:4e23b30b-69aa-5bd8-843e-01fbf74c2726",
+   "kind": "mirrors"
+  },
+  {
+   "from": "handler:4890c3bd-c41b-59de-a731-cf4060f9718e:bloodbank-publisher",
+   "to": "publish:5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+   "to": "evt:5ed2f56e-c5f2-5d7a-ba24-77818b91813c",
+   "kind": "publishes"
+  },
+  {
+   "from": "llm:1",
+   "to": "evt:edef60ff-11a6-55b2-88a9-0a16ea9951ac",
+   "kind": "records"
+  },
+  {
+   "from": "llm:2",
+   "to": "evt:ec8dc3b3-efd2-53a7-a778-fedf7a4d3ac8",
+   "kind": "records"
+  },
+  {
+   "from": "llm:3",
+   "to": "evt:b4cf38b3-401d-5532-aac3-f5e322f24219",
+   "kind": "records"
+  },
+  {
+   "from": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "to": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:bloodbank-publisher",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "to": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:hindsight-turn",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "to": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:nanoleaf",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "to": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:orca-status",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "to": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:hub-selftest",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:67cb24fc-4d46-557e-ba3e-5189e73c4262",
+   "to": "evt:0202ce3e-f810-5ca0-940c-617b5305f54f",
+   "kind": "mirrors"
+  },
+  {
+   "from": "handler:67cb24fc-4d46-557e-ba3e-5189e73c4262:bloodbank-publisher",
+   "to": "publish:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "to": "evt:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "to": "state:asm:1794801242117-0",
+   "kind": "writes"
+  },
+  {
+   "from": "state:asm:1794801242117-0",
+   "to": "state:redis:1794801242117-0",
+   "kind": "writes"
+  },
+  {
+   "from": "hook:5248b08b-8ae1-5351-9d4c-c7ad2dd20a82",
+   "to": "handler:5248b08b-8ae1-5351-9d4c-c7ad2dd20a82:asm-log",
+   "kind": "runs"
+  },
+  {
+   "from": "hook:5248b08b-8ae1-5351-9d4c-c7ad2dd20a82",
+   "to": "evt:4497e0f6-6619-52ec-8616-987e1539652a",
+   "kind": "mirrors"
+  },
+  {
+   "from": "state:asm:1794801242117-0",
+   "to": "hook:5248b08b-8ae1-5351-9d4c-c7ad2dd20a82",
+   "kind": "triggers"
+  },
+  {
+   "from": "evt:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "to": "consume:turn-enricher:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "kind": "delivers"
+  },
+  {
+   "from": "consume:turn-enricher:e6d42c3d-a41f-5498-bd7c-ee5cc0cf2c18",
+   "to": "publish:19331ba7-9738-54ab-a65a-c10ec622bc62",
+   "kind": "publishes"
+  },
+  {
+   "from": "publish:19331ba7-9738-54ab-a65a-c10ec622bc62",
+   "to": "evt:19331ba7-9738-54ab-a65a-c10ec622bc62",
+   "kind": "publishes"
+  }
+ ],
+ "artifacts": {
+  "art:context:bdbdba89": {
+   "mime": "text/plain",
+   "bytes": 162,
+   "sha256": "0f0fe451f23f8b76675f5e381e443949441e6ca62968e6749eeaf0cabc9d7114",
+   "truncated": false,
+   "text": "Skill reminder: use candystore-context when asked how events are stored or archived. Recalled 12 memories from bank 33GOD (texts omitted from this public sample).",
+   "note": "public profile: injected context cut to 280 chars; memory texts removed"
+  },
+  "art:env:fe69f4eb": {
+   "mime": "application/json",
+   "bytes": 586,
+   "sha256": "6c7b85c6a0ead264cb969011139a1db1504630c4d2a450569c7d6b2058bd2281",
+   "truncated": false,
+   "json": {
+    "specversion": "1.0",
+    "id": "fe69f4eb-814a-43f9-aed0-d0bda2c21696",
+    "type": "bloodbank.conversation.turn.started",
+    "source": "app://agent-hooks",
+    "time": "2026-11-16T03:53:25.506Z",
+    "subject": "bloodbank.evt.conversation.turn.started",
+    "correlationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+    "causationid": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+    "traceparent": "00-00000000000000000000000000000000-0000000000000000-00",
+    "data": {
+     "session_id": "7dcf25a3-9dee-4fe2-8da2-7d569ad24599",
+     "cli": "claude",
+     "cwd": "~/code/33GOD",
+     "turn_number": 1
+    }
+   },
+   "note": "public profile: home paths shortened"
+  },
+  "art:tool:1": {
+   "mime": "text/plain",
+   "bytes": 57,
+   "sha256": "567ec977e477025deb58fbbba91d8ed98e4dd6a938c70c1e4f44bbcac663bdc3",
+   "truncated": false,
+   "text": "candystore/\n  README.md\n  src/\n  migrations/\n  Dockerfile",
+   "note": "illustrative output; public profile cuts tool output to 280 chars"
+  },
+  "art:tool:2": {
+   "mime": "text/plain",
+   "bytes": 157,
+   "sha256": "f0363a9dfdfeae19e30c21e1c75675bebe0c05c1e38486a4aef2dab1cf7e74cd",
+   "truncated": false,
+   "text": "# candystore\n\nAppend-only store for Bloodbank events. Every event is keyed by its event id (UNIQUE), so a second copy of the same event is ignored on insert.",
+   "note": "illustrative output; public profile cuts tool output to 280 chars"
+  }
+ },
+ "gaps": [
+  {
+   "component": "bb-hook",
+   "what": "bb-hook client-side timing",
+   "why": "bb-hook leaves no record when it runs, so the trip from the CLI to hook-hub is shown from the receipt, not seen.",
+   "severity": "info",
+   "span": null
+  },
+  {
+   "component": "hook-hub",
+   "what": "handler stdout and stderr",
+   "why": "hook-hub keeps handler status and timing but not their output, so what each handler printed is unknown.",
+   "severity": "warn",
+   "span": null
+  }
+ ],
+ "findings": [
+  {
+   "severity": "broken",
+   "title": "codegraph-prompt never runs: binary not on hook-hub PATH",
+   "detail": "The sync handler codegraph-prompt exits with handler_binary_missing in 2 ms on every prompt. hook-hub runs with a PATH that has no mise shims, so the code graph never reaches the context.",
+   "component": "hook-hub",
+   "evidence": [
+    "handler:bdbdba89-a2d7-4c49-b0ce-9ecfda3525f4:codegraph-prompt"
+   ]
+  },
+  {
+   "severity": "broken",
+   "title": "claude-notify is a broken symlink",
+   "detail": "The Notification handler target is a dangling symlink, so no notification can fire. No Notification hook ran in this turn, so it was found on disk, not in the run.",
+   "component": "ext:claude-code",
+   "evidence": [
+    "files"
+   ]
+  },
+  {
+   "severity": "info",
+   "title": "traceparent is all zeros",
+   "detail": "The envelope carries traceparent 00-000...-00, so no trace can be joined across services. This is true of every event, not just this one.",
+   "component": "bb-nats",
+   "evidence": [
+    "evt:fe69f4eb-814a-43f9-aed0-d0bda2c21696"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "id": "hookhub",
+   "kind": "sqlite",
+   "locator": "~/.local/state/33god/hook-hub/receipts.sqlite3",
+   "status": "ok",
+   "items": 22,
+   "ms": 18
+  },
+  {
+   "id": "candystore",
+   "kind": "postgres",
+   "locator": "candystore-postgres events",
+   "status": "ok",
+   "items": 18,
+   "ms": 64
+  },
+  {
+   "id": "holocene",
+   "kind": "sqlite",
+   "locator": "~/.local/state/holocene/events.sqlite3",
+   "status": "ok",
+   "items": 18,
+   "ms": 9
+  },
+  {
+   "id": "nats",
+   "kind": "http",
+   "locator": "NATS monitoring /jsz /connz",
+   "status": "ok",
+   "items": 6,
+   "ms": 31
+  },
+  {
+   "id": "transcript",
+   "kind": "file",
+   "locator": "~/.claude/projects/*/7dcf25a3-9dee-4fe2-8da2-7d569ad24599.jsonl",
+   "status": "ok",
+   "items": 14,
+   "ms": 7
+  },
+  {
+   "id": "hindsight",
+   "kind": "http",
+   "locator": "hindsight audit list 33GOD",
+   "status": "ok",
+   "items": 1,
+   "ms": 120
+  },
+  {
+   "id": "asm",
+   "kind": "redis",
+   "locator": "asm:a:claude:s:7dcf25a3",
+   "status": "ok",
+   "items": 2,
+   "ms": 4
+  },
+  {
+   "id": "files",
+   "kind": "file",
+   "locator": "~/.claude/hooks symlinks",
+   "status": "ok",
+   "items": 1,
+   "ms": 2
+  },
+  {
+   "id": "gateway",
+   "kind": "http",
+   "locator": "AutomaticAI traces (opt-in --deep)",
+   "status": "skipped",
+   "items": 0,
+   "ms": 0
+  }
+ ],
+ "stats": {
+  "spans": 56,
+  "events": 18,
+  "hooks": 8,
+  "tools": 2,
+  "llm_calls": 3,
+  "tokens_in": 151195,
+  "tokens_out": 1922,
+  "handlers_skipped": 4
+ }
+}

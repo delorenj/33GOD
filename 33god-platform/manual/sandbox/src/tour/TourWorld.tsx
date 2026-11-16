@@ -11,7 +11,7 @@ import { NEW_SETS, setFor } from './sets'
 
 // ---------- people (faces are allowed on people, never on data) ----------
 
-function Figure({ color, accent, height, speaking, isNew }: { color: string; accent: string; height: number; speaking: boolean; isNew?: boolean }) {
+export function Figure({ color, accent, height, speaking, isNew }: { color: string; accent: string; height: number; speaking: boolean; isNew?: boolean }) {
   const g = useRef<THREE.Group>(null)
   useFrame(({ clock }) => {
     if (!g.current) return

@@ -11,6 +11,7 @@ import { BASE_FOV, CameraRig, FogFollow, WheelNav } from './Camera'
 import { Moving } from './Moving'
 import { Props } from './Props'
 import { TourCast, TourSets } from '../tour/TourWorld'
+import { WaybillWorld } from '../waybill/WaybillWorld'
 
 function Sim() {
   useFrame((_, dt) => step(dt))
@@ -20,6 +21,7 @@ function Sim() {
 export function Scene({ fx }: { fx: boolean }) {
   const ov = overview()
   const top = useWorld((s) => s.cam === 'top')
+  const wbMode = useWorld((s) => s.mode === 'waybill') // the waybill player owns the floor: no ambient flyers, bulbs or labels
   return (
     <Canvas
       shadows
@@ -50,11 +52,12 @@ export function Scene({ fx }: { fx: boolean }) {
 
       <Props />
       <Belt />
-      <Moving />
-      <Bulbs />
-      <StationLabels />
+      {!wbMode && <Moving />}
+      {!wbMode && <Bulbs />}
+      {!wbMode && <StationLabels />}
       <TourSets />
       <TourCast />
+      {wbMode && <WaybillWorld />}
 
       <Sim />
       <CameraRig />

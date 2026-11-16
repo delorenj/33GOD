@@ -5,6 +5,7 @@ import { bulbById, stationById, type BulbId, type StationId } from './content'
 import { seed } from './sim/sim'
 import { ui, useWorld } from './sim/store'
 import { tour } from './tour/TourHud'
+import { loadFromUrl } from './waybill/load'
 import { Scene } from './world/Scene'
 import './styles.css'
 
@@ -39,6 +40,12 @@ seed()
   if (q.has('tour')) {
     const n = Number(q.get('tour'))
     setTimeout(() => (n >= 1 ? tour.go(n - 1) : tour.start()), 300)
+  }
+  // ?waybill=<url>[&stop=N] plays a recorded prompt (absolute URL, or relative to the site base)
+  const wbUrl = q.get('waybill')
+  if (wbUrl) {
+    useWorld.setState({ intro: false })
+    setTimeout(() => void loadFromUrl(wbUrl, Math.max(0, Number(q.get('stop') ?? 1) - 1) || 0), 300)
   }
   if (at && at in stationById) setTimeout(() => ui.openStation(at as StationId), 400)
   if (bulb && bulb in bulbById) setTimeout(() => ui.openBulb(bulb as BulbId), 600)

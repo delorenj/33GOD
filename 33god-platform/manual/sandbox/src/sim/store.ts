@@ -54,7 +54,7 @@ interface State {
   focus: { id: StationId | 'overview' | 'custom' | 'top'; nonce: number; view?: { pos: Vec3; target: Vec3 }; openMap?: boolean } | null
   cam: 'free' | 'top' // 'top' = straight down, near-orthographic, the whole floor in view
   mapOpen: boolean // the blueprint overworld map, drawn over the top-down view
-  mode: 'sandbox' | 'tour'
+  mode: 'sandbox' | 'tour' | 'waybill' // 'waybill' = the playback mode (src/waybill); its own state lives in waybill/state.ts
   beat: number
   line: number
   station: StationId | null

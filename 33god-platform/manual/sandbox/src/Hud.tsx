@@ -6,6 +6,8 @@ import { domainById } from './domains'
 import { MapOverlay, mapNav } from './map/MapOverlay'
 import { HANDS_SLOT, TRAY_SLOT, hoursNow, ui, useWorld } from './sim/store'
 import { TourHud, tour } from './tour/TourHud'
+import { PlayWaybillButton, WaybillGlobal } from './waybill/Picker'
+import { WaybillHud } from './waybill/WaybillHud'
 
 const BB_PARTS: StationId[] = ['courier', 'dock', 'labeldesk', 'belt']
 const HINTS: Record<string, string> = {
@@ -40,6 +42,7 @@ function Intro() {
         <div className="intro-actions">
           <button className="primary" onClick={() => tour.start()}>Take the new-hire tour</button>
           <button className="ghost" onClick={() => useWorld.setState({ intro: false })}>Explore freely</button>
+          <PlayWaybillButton className="ghost" />
         </div>
       </div>
     </div>
@@ -107,6 +110,7 @@ function Controls() {
       <button className={sources ? 'on' : ''} onClick={() => useWorld.setState({ sources: !sources })}>{sources ? 'Hide the code' : 'Show the code'}</button>
       <VoiceButton />
       <MusicButton />
+      <PlayWaybillButton />
       <button onClick={() => ui.top(true)} title="The map (Esc). Scroll up for the top view, scroll down to dive in.">Map <kbd>Esc</kbd></button>
       <select value="" onChange={(e) => (e.target.value === 'overview' ? ui.overview() : ui.openStation(e.target.value as StationId))}>
         <option value="" disabled>Go to…</option>
@@ -264,12 +268,21 @@ function BulbModal() {
 }
 
 export function Hud() {
+  return (
+    <>
+      <HudInner />
+      <WaybillGlobal />
+    </>
+  )
+}
+
+function HudInner() {
   const intro = useWorld((s) => s.intro)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       const s = useWorld.getState()
-      if (s.intro || (s.mode === 'tour' && !s.bulb)) return
+      if (s.intro || s.mode === 'waybill' || (s.mode === 'tour' && !s.bulb)) return
       // Esc: close a pop-up first; otherwise rise to the top view and open the map (Esc again closes the map)
       if (s.bulb) useWorld.setState({ bulb: null })
       else if (s.mapOpen) { if (!mapNav.back()) useWorld.setState({ mapOpen: false }) }
@@ -285,6 +298,7 @@ export function Hud() {
   const mode = useWorld((s) => s.mode)
   const top = useWorld((s) => s.cam === 'top')
   if (intro) return <Intro />
+  if (mode === 'waybill') return <WaybillHud />
   if (mode === 'tour') return (<><TourHud /><BulbModal /><Narration /></>)
   return (
     <div className={`${panelOpen ? 'has-panel' : ''} ${top ? 'cam-top' : ''}`}>
