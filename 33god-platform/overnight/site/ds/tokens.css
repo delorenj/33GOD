@@ -1,0 +1,96 @@
+/* 33GOD Overnight tokens, v1. Written out from the design system's tokens.json:
+   https://claude.ai/artifact/3fX6X9vkEHw6tTG9z3DTQN
+   Change a value there first, then here. Nothing on the page may use a raw colour. */
+
+:root {
+  /* The sky over one night */
+  --sky-1802: #141714;
+  --sky-2200: #101310;
+  --sky-0200: #0e110e;
+  --sky-0500: #2e342f;
+  --sky-0630: #b9c1bb;
+  --sky-0730: #ebefec;
+
+  /* The stage the words sit on (night theme) */
+  --stage-ground: #141714;
+  --stage-ink: #e3e8e3;
+  --stage-ink-2: #b6bcb7;
+  --stage-ink-3: #909590;
+  --stage-rule: #282d29;
+  --facade: #0e110e;
+  --facade-edge: #282d29;
+
+  /* The windows: one state each, each a 33GOD status colour */
+  --window-dark: #1b1e1b;
+  --window-lit: #e3e8e3;
+  --window-working: #89b5cd;
+  --window-shipped: #92b98d;
+  --window-overtime: #b3a2ca;
+  --window-broken: #de8c7a;
+  --window-you: #d8b36e;
+
+  /* Faces */
+  --font-display: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: "Atkinson Hyperlegible Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* The building's grid and the stage's rhythm */
+  --window-w: 14px;
+  --window-h: 10px;
+  --window-gap: 8px;
+  --floor-pad: 12px;
+  --stage-gutter: 64px;
+  --beat-gap: 160px;
+
+  --radius-window: 1px;
+  --radius-bezel: 6px;
+
+  /* Glow, not depth */
+  --glow-lit: 0 0 10px #e3e8e340;
+  --glow-working: 0 0 10px #89b5cd59;
+  --glow-you: 0 0 16px #d8b36e80;
+
+  --dur-window-on: 240ms;
+  --dur-flicker: 120ms;
+  --dur-orbit: 2400ms;
+  --ease-settle: cubic-bezier(0.2, 0, 0, 1);
+
+  /* The ceiling each act may spend */
+  --spectacle-arrival: 3;
+  --spectacle-charter: 4;
+  --spectacle-meeting: 7.5;
+  --spectacle-building: 9;
+  --spectacle-reveal: 10;
+
+  /* Carried over from the base 33GOD system (Overnight extends it, never replaces it).
+     Only the values this page uses. */
+  --g33-surface: #1b1e1b;
+  --g33-line-strong: #676e68;
+  --g33-lake-soft: #1c2b33;
+  --g33-moss-soft: #212c20;
+  --g33-ochre-soft: #382c15;
+  --g33-ochre-ink: #d8b36e;
+  --g33-focus-ring: 0 0 0 2px var(--stage-ground), 0 0 0 4px #d8b36e;
+  --g33-control-lg: 40px;
+  --g33-control-md: 30px;
+}
+
+/* Morning: after the one cut, from the building to the car. */
+[data-theme="morning"] {
+  --stage-ground: #ebefec;
+  --stage-ink: #1a201b;
+  --stage-ink-2: #454d46;
+  --stage-ink-3: #606761;
+  --stage-rule: #d1d7d2;
+  --facade: #1a201b;
+  --facade-edge: #454d46;
+
+  --g33-surface: #f6f8f6;
+  --g33-line-strong: #7b827c;
+  --g33-ochre-soft: #f1e5cc;
+  --g33-ochre-ink: #835d13;
+}
+
+@media (max-width: 760px) {
+  :root { --stage-gutter: 20px; }
+}

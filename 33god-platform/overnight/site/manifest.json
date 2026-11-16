@@ -1,0 +1,1007 @@
+{
+  "_readme": "The scene manifest. One record per beat. Design fields (id, time, act, spectacle, camera, setPiece, len) are read by the set pieces; content fields (kicker, title, body, tags, staged, log and the per-beat extras under 'copy') are read by the captions. Rewriting copy never moves a scene. Every time is staged.",
+  "countedOn": "15 Nov 2026",
+  "site": {
+    "name": "33GOD",
+    "status": "In stealth",
+    "stagedLabel": "A night, staged",
+    "nav": [
+      {
+        "label": "Bylaws",
+        "beat": "org-chart"
+      },
+      {
+        "label": "One meeting",
+        "beat": "transcript"
+      },
+      {
+        "label": "The staff",
+        "beat": "staff"
+      },
+      {
+        "label": "Flagships",
+        "beat": "pjangler"
+      }
+    ],
+    "cta": "Request a briefing",
+    "viewLog": "View as log",
+    "viewFilm": "Watch the night",
+    "scrollHint": "Scroll to run the clock",
+    "crank": "Still there? Crank keeps things moving.",
+    "logLead": "The same night, as the event stream. One line per beat, real event subjects, no camera.",
+    "footer": {
+      "byline": "Built by Jarad DeLorenzo",
+      "link": {
+        "label": "delorenj.com",
+        "href": "https://delorenj.com"
+      },
+      "colophon": "© 2026 · The oldest names come from songs."
+    }
+  },
+  "acts": {
+    "I": "Arrival",
+    "II": "The charter",
+    "III": "One meeting",
+    "IV": "The building",
+    "V": "The reveal"
+  },
+  "beats": [
+    {
+      "id": "premise",
+      "time": "18:02",
+      "act": "I",
+      "spectacle": 2,
+      "camera": "hold",
+      "setPiece": "building.wake",
+      "len": 250,
+      "kicker": "Codename 33GOD · Year four of stealth",
+      "title": "You go home.",
+      "titleTurn": "The company doesn't.",
+      "body": "For four years, one engineer has been quietly building an entire company out of agents. They are hired, seated and reviewed. They have directors and managers, a mailroom, a clock on the wall and a records room that forgets nothing. And the company has been at work the whole time.",
+      "tags": [],
+      "staged": true,
+      "copy": {
+        "secondary": "Watch one meeting go through it",
+        "youLeave": "18:02 · you leave"
+      },
+      "log": [
+        {
+          "subject": "bloodbank.cli.session.ended",
+          "note": "You go home. The company doesn't."
+        }
+      ]
+    },
+    {
+      "id": "numbers",
+      "time": "18:05",
+      "act": "I",
+      "spectacle": 3,
+      "camera": "hold",
+      "setPiece": "lobby.directory",
+      "len": 150,
+      "kicker": "The lobby directory",
+      "title": "Agents are employees. The pipeline is the company.",
+      "body": "",
+      "tags": [],
+      "staged": false,
+      "copy": {
+        "figures": [
+          {
+            "n": "72",
+            "label": "first-party components, built to one set of rules"
+          },
+          {
+            "n": "12",
+            "label": "departments on the org chart"
+          },
+          {
+            "n": "214",
+            "label": "event schemas in a single rulebook"
+          },
+          {
+            "n": "299",
+            "label": "wired connections between them"
+          },
+          {
+            "n": "1",
+            "label": "human"
+          }
+        ],
+        "stamp": "Counted from the 33GOD component registry, 15 Nov 2026."
+      },
+      "log": [
+        {
+          "subject": "bloodbank.system.heartbeat.received",
+          "note": "72 components, 12 departments, 214 event schemas, 299 connections, 1 human."
+        }
+      ]
+    },
+    {
+      "id": "org-chart",
+      "time": "18:10",
+      "act": "II",
+      "spectacle": 3,
+      "camera": "track",
+      "setPiece": "lobby.orgChart",
+      "len": 240,
+      "interlude": {
+        "kicker": "Articles of incorporation · § I–IV",
+        "line": "Four bylaws. Everything else follows from them."
+      },
+      "kicker": "Article one",
+      "title": "Every agent is an employee.",
+      "body": "Stop asking how to orchestrate a swarm. Ask how a company would handle it. Companies already solved delegation, escalation, onboarding, record-keeping and who to call when something breaks. Map every problem to the workplace and the ceiling goes away.",
+      "tags": [
+        "FLUME"
+      ],
+      "staged": false,
+      "copy": {
+        "quote": "“Anthropomorphism as protocol: employees, titles, desks, records. Never ‘fleet’.”",
+        "quoteSource": "From the charter of FLUME, the workforce",
+        "you": {
+          "label": "You",
+          "line": "The only human on the chart."
+        },
+        "departments": [
+          {
+            "dept": "Human resources",
+            "name": "FLUME",
+            "line": "The whole HR department. Hires directors, managers and PMs, then onboards and reviews them."
+          },
+          {
+            "dept": "Operations",
+            "name": "KREBS",
+            "line": "Runs every ticket's lifecycle, from filed to closed, on any board."
+          },
+          {
+            "dept": "Internal comms",
+            "name": "BLOODBANK",
+            "line": "Every memo in the building travels on one bus."
+          },
+          {
+            "dept": "Records",
+            "name": "CANDYSTORE",
+            "line": "Every event ever sent, kept and searchable."
+          },
+          {
+            "dept": "The clock on the wall",
+            "name": "CANDYBAR",
+            "line": "One clock fires every recurring job. There is no second clock."
+          },
+          {
+            "dept": "Training",
+            "name": "SKILLEX",
+            "line": "One catalog of skills, taught to every agent."
+          },
+          {
+            "dept": "Front desk",
+            "name": "GENESIS",
+            "line": "The agent clients talk to about their projects."
+          },
+          {
+            "dept": "Accounting",
+            "name": "MILKSHAKE",
+            "line": "Turns usage and cost into client billing."
+          },
+          {
+            "dept": "Mailroom",
+            "name": "CURATOR",
+            "line": "Sorts and files whatever arrives."
+          },
+          {
+            "dept": "Your assistant",
+            "name": "CRANK",
+            "line": "Keeps work moving while you are out of the office."
+          },
+          {
+            "dept": "Facilities",
+            "name": "INFRA-DOCTOR",
+            "line": "Walks the building and flags what is broken."
+          },
+          {
+            "dept": "Control room",
+            "name": "HOLOCENE",
+            "line": "Where you look. Who is working, what is stuck, what needs you."
+          }
+        ]
+      },
+      "log": [
+        {
+          "subject": "bloodbank.agent.session.started",
+          "note": "Every agent is an employee. Twelve departments, one human."
+        }
+      ]
+    },
+    {
+      "id": "bus",
+      "time": "18:20",
+      "act": "II",
+      "spectacle": 3.5,
+      "camera": "section",
+      "setPiece": "section.bus",
+      "len": 190,
+      "kicker": "Article two",
+      "title": "Nothing calls. Everything announces.",
+      "body": "No component knows who is listening. Every hook, decision, ticket and spoken sentence becomes an event on one bus, and whoever cares picks it up. Hire a new department and nobody else has to change their job.",
+      "tags": [
+        "BLOODBANK"
+      ],
+      "staged": false,
+      "copy": {
+        "event": "bloodbank.task.ticket.created",
+        "listeners": [
+          {
+            "name": "CANDYSTORE",
+            "does": "files it."
+          },
+          {
+            "name": "ENRICHER",
+            "does": "makes it findable by meaning."
+          },
+          {
+            "name": "HOLOCENE",
+            "does": "puts it in front of you."
+          },
+          {
+            "name": "THE BOARD'S PM",
+            "does": "takes the work."
+          }
+        ],
+        "punch": "One event. Nobody called anybody.",
+        "tapeA": [
+          "bloodbank.evt.conversation.turn.completed",
+          "bloodbank.cmd.agent.invocation.start",
+          "bloodbank.task.ticket.created",
+          "bloodbank.evt.audio.memo",
+          "bloodbank.task.ticket.assigned",
+          "bloodbank.evt.conversation.turn.annotated",
+          "bloodbank.code.commit.landed",
+          "bloodbank.task.cycle.reviewed",
+          "bloodbank.repo.decision.recorded"
+        ],
+        "tapeB": [
+          "bloodbank.cmd.cron.candybar.invoke",
+          "bloodbank.evt.project.artifact.created",
+          "bloodbank.agent.session.started",
+          "bloodbank.lifecycle.status.updated",
+          "bloodbank.studio.note.recorded",
+          "bloodbank.system.heartbeat.received",
+          "bloodbank.llm.usage.recorded",
+          "bloodbank.task.ticket.completed",
+          "bloodbank.agent.tool.completed"
+        ],
+        "tapeNote": "Real subjects from the 33GOD event contract."
+      },
+      "log": [
+        {
+          "subject": "bloodbank.evt.conversation.turn.completed",
+          "note": "Nothing calls. Everything announces. One event, four listeners."
+        }
+      ]
+    },
+    {
+      "id": "layers",
+      "time": "18:30",
+      "act": "II",
+      "spectacle": 3.5,
+      "camera": "section",
+      "setPiece": "section.layers",
+      "len": 180,
+      "kicker": "Article three",
+      "title": "Built from scratch, on purpose.",
+      "body": "Almost every part of 33GOD was written for it, to one strict set of rules: layered abstraction, one owner for every building block, extension over rewrites, reuse over copies. So each new component plugs in instead of rewiring the rest.",
+      "tags": [],
+      "staged": false,
+      "copy": {
+        "layers": [
+          {
+            "role": "Where you look",
+            "names": "HOLOCENE · DECKARD · GENESIS"
+          },
+          {
+            "role": "Who decides",
+            "names": "KREBS · FLUME"
+          },
+          {
+            "role": "Who works",
+            "names": "HERMES · HOOK-HUB · HINDSIGHT"
+          },
+          {
+            "role": "How word travels",
+            "names": "BLOODBANK · CANDYSTORE · CANDYBAR"
+          },
+          {
+            "role": "What it stands on",
+            "names": "NATS · POSTGRES · REDIS · TRAEFIK"
+          }
+        ],
+        "punch": "Calls only travel downhill.",
+        "note": "Lower layers never call higher ones. Every block has one owner."
+      },
+      "log": [
+        {
+          "subject": "bloodbank.agent.tool.completed",
+          "note": "Built from scratch, on purpose. Five layers; calls only travel downhill."
+        }
+      ]
+    },
+    {
+      "id": "runs-on-itself",
+      "time": "18:40",
+      "act": "II",
+      "spectacle": 4,
+      "camera": "section",
+      "setPiece": "section.loop",
+      "len": 180,
+      "kicker": "Article four",
+      "title": "The company runs on itself.",
+      "body": "For its whole life, 33GOD has run every project its builder touches, itself included. Every rough edge becomes a ticket. The ticket finds the manager who owns the fix. The fix ships back into the thing that found it. Four years of that, every day.",
+      "tags": [],
+      "staged": false,
+      "copy": {
+        "steps": [
+          "Work happens",
+          "A blocker gets tagged",
+          "A ticket appears",
+          "Its manager takes it",
+          "The fix lands",
+          "The cycle is reviewed"
+        ],
+        "count": "4",
+        "countLabel": "years around this loop"
+      },
+      "log": [
+        {
+          "subject": "bloodbank.task.cycle.reviewed",
+          "note": "The company runs on itself. The loop closes on its own board."
+        }
+      ]
+    },
+    {
+      "id": "transcript",
+      "time": "18:41",
+      "act": "III",
+      "spectacle": 2.5,
+      "camera": "push-in",
+      "setPiece": "transcript.form",
+      "len": 260,
+      "interlude": {
+        "kicker": "Show, don't tell",
+        "line": "Take one meeting.",
+        "sub": "Everybody has transcripts now. Here is what happens after."
+      },
+      "n": "01",
+      "kicker": "Everybody has this. It is where most people stop.",
+      "title": "Your transcript is waiting when you leave the room.",
+      "body": "Long recordings like this one go to Wax, HeyMa's long-form transcriber. It is done before you have found your next meeting.",
+      "tags": [
+        "HEYMA",
+        "WAX"
+      ],
+      "staged": true,
+      "log": [
+        {
+          "subject": "bloodbank.audio.file.received",
+          "note": "The recording lands."
+        },
+        {
+          "subject": "bloodbank.audio.transcription.completed",
+          "note": "Your transcript is waiting when you leave the room."
+        }
+      ]
+    },
+    {
+      "id": "jev",
+      "time": "19:03",
+      "act": "III",
+      "spectacle": 4,
+      "camera": "bullet-time",
+      "setPiece": "transcript.jev",
+      "len": 200,
+      "n": "02",
+      "kicker": "Fine. Keep going.",
+      "title": "Then it reads itself.",
+      "body": "Enrichment passes comb the transcript and find every project it touched. The calls are made by Jev, Typesafe's System One model, built for one job: quick, typed, yes-or-no judgments.",
+      "tags": [
+        "JEV"
+      ],
+      "staged": true,
+      "log": [
+        {
+          "subject": "bloodbank.evt.conversation.turn.annotated",
+          "note": "Then it reads itself. Jev finds every project the meeting touched."
+        }
+      ]
+    },
+    {
+      "id": "speakers",
+      "time": "19:20",
+      "act": "III",
+      "spectacle": 4.5,
+      "camera": "hold",
+      "setPiece": "transcript.speakers",
+      "len": 170,
+      "n": "03",
+      "kicker": "Four people, one desk, one microphone.",
+      "title": "No Zoom? No problem. Speakers still get labeled.",
+      "body": "All diarization is backed by a custom-built voice-fingerprint service, so people are told apart by their voices, not by which laptop they dialed in from. The room is the meeting.",
+      "tags": [
+        "HEYMA"
+      ],
+      "staged": true,
+      "log": [
+        {
+          "subject": "bloodbank.project.activity.recorded",
+          "note": "Speakers get labeled by voice, not by laptop."
+        }
+      ]
+    },
+    {
+      "id": "dictionary",
+      "time": "20:15",
+      "act": "III",
+      "spectacle": 5,
+      "camera": "hold",
+      "setPiece": "transcript.dictionary",
+      "len": 170,
+      "n": "04",
+      "kicker": "There is no “teach it a word” button. There does not need to be.",
+      "title": "It learns your vocabulary. Nobody asked it to.",
+      "body": "Project names, people and jargon join a self-evolving dictionary as they are spoken, and Jev decides what earns a place. Nothing is configured. It works because everything is connected.",
+      "tags": [
+        "HEYMA",
+        "JEV"
+      ],
+      "staged": true,
+      "log": [
+        {
+          "subject": "bloodbank.repo.decision.recorded",
+          "note": "New words join the dictionary. Nobody asked it to."
+        }
+      ]
+    },
+    {
+      "id": "harvest",
+      "time": "21:30",
+      "act": "III",
+      "spectacle": 6,
+      "camera": "hold",
+      "setPiece": "transcript.harvest",
+      "len": 190,
+      "n": "05",
+      "kicker": "Action items do not go into a doc to die.",
+      "title": "When the meeting ends, the harvest begins.",
+      "body": "Decisions and commitments become tickets through Pilot, a custom ticket-provider abstraction over Plane, Linear and Trello. Each ticket already knows which board it belongs to.",
+      "tags": [
+        "PILOT"
+      ],
+      "staged": true,
+      "log": [
+        {
+          "subject": "bloodbank.task.ticket.created",
+          "note": "When the meeting ends, the harvest begins. Four tickets."
+        }
+      ]
+    },
+    {
+      "id": "pm-krebs",
+      "time": "22:00",
+      "act": "III",
+      "spectacle": 6.5,
+      "camera": "pull-back",
+      "setPiece": "building.tickets",
+      "len": 200,
+      "n": "06",
+      "kicker": "Every project has one.",
+      "title": "Each ticket walks itself to its project manager.",
+      "body": "The PM owns the ticket's whole life. It plans the work, picks the next move, hands it to the right employee and closes the loop. Underneath, Krebs runs that lifecycle the same way on every board.",
+      "tags": [
+        "KREBS"
+      ],
+      "staged": true,
+      "log": [
+        {
+          "subject": "bloodbank.task.ticket.assigned",
+          "note": "Each ticket walks itself to its project manager."
+        }
+      ]
+    },
+    {
+      "id": "pms-talk",
+      "time": "02:14",
+      "act": "III",
+      "spectacle": 7,
+      "camera": "signal",
+      "setPiece": "building.signal",
+      "len": 170,
+      "n": "07",
+      "kicker": "This is the part that sounds made up.",
+      "title": "Then the managers talk to each other.",
+      "body": "When one PM finds a fix another project could use, it takes the liberty of telling that project's manager. Across projects, unprompted.",
+      "tags": [
+        "PM TO PM, OVER BLOODBANK"
+      ],
+      "staged": true,
+      "copy": {
+        "message": "PM → PM · a fix you can use"
+      },
+      "log": [
+        {
+          "subject": "bloodbank.cmd.agent.invocation.start",
+          "note": "Then the managers talk to each other. Across projects, unprompted."
+        }
+      ]
+    },
+    {
+      "id": "skillex",
+      "time": "02:30",
+      "act": "III",
+      "spectacle": 7.5,
+      "camera": "hold",
+      "setPiece": "building.skill",
+      "len": 180,
+      "n": "08",
+      "kicker": "Of course there is.",
+      "title": "No skill framework was strong enough. So there is a new one.",
+      "body": "Skills are declared in manifests and compose like parts. One catalog fans out to every agent CLI, so a new skill reaches every employee at once.",
+      "tags": [
+        "SKILLEX"
+      ],
+      "staged": true,
+      "log": [
+        {
+          "subject": "bloodbank.repo.skill.updated",
+          "note": "One window learns a skill."
+        },
+        {
+          "subject": "bloodbank.skill.activity",
+          "note": "Its whole floor has it."
+        }
+      ]
+    },
+    {
+      "id": "staff",
+      "time": "02:40",
+      "act": "IV",
+      "spectacle": 8,
+      "camera": "tilt-up",
+      "setPiece": "building.staff",
+      "len": 320,
+      "interlude": {
+        "kicker": "The rest of the staff",
+        "line": "That was one meeting."
+      },
+      "kicker": "The rest of the staff",
+      "title": "Here are a few more of the staff you would pass in the hall.",
+      "body": "",
+      "tags": [],
+      "staged": true,
+      "copy": {
+        "staff": [
+          {
+            "name": "HERMES",
+            "line": "One long-running gateway that hosts every agent and its chat bots."
+          },
+          {
+            "name": "HINDSIGHT",
+            "line": "Memory that follows an agent from one session to the next."
+          },
+          {
+            "name": "HOOK-HUB",
+            "line": "Takes every agent hook and fans it out to whoever needs it."
+          },
+          {
+            "name": "ASM",
+            "line": "A live picture of what every agent process is doing right now."
+          },
+          {
+            "name": "TURN-ENRICHER",
+            "line": "Reads every finished agent turn and tags its action, artifacts and blocker."
+          },
+          {
+            "name": "ARTIFACT-SIDECAR",
+            "line": "Links each file an agent makes to the event that made it."
+          },
+          {
+            "name": "VAULT-PROJECTOR",
+            "line": "Files those artifacts into your notes, by project and date."
+          },
+          {
+            "name": "WINGMAN",
+            "line": "Types your dictated words into agent sessions."
+          },
+          {
+            "name": "VOX",
+            "line": "Reads replies aloud, in voices you choose."
+          },
+          {
+            "name": "DECKARD",
+            "line": "A hardware control surface for the whole terminal workspace."
+          },
+          {
+            "name": "PR-CRUSHER",
+            "line": "Works through open pull requests and reports back."
+          },
+          {
+            "name": "TARGET-WATCH",
+            "line": "Someone you watch writes, on any channel, and a ticket appears."
+          },
+          {
+            "name": "OP-TOKEN-GUARD",
+            "line": "Notices when its own credentials drift, and heals them."
+          },
+          {
+            "name": "DAILY-REPORT",
+            "line": "One summary a day of everything that happened."
+          },
+          {
+            "name": "INBOX-WATCHER",
+            "line": "A voice memo lands and goes straight to transcription."
+          },
+          {
+            "name": "INTAKE",
+            "line": "Files transcribed voice notes as tasks or notes."
+          },
+          {
+            "name": "LIFECYCLE-CONTROLLER",
+            "line": "Reconciles every ticket's real state from what it observes."
+          },
+          {
+            "name": "COST-BRIDGE",
+            "line": "Puts every billing cost on the bus."
+          },
+          {
+            "name": "NTFY-ROUTER",
+            "line": "Sends the events that matter to your phone."
+          },
+          {
+            "name": "AGENT-PAD",
+            "line": "A screen for talking to, and watching, one agent at a time."
+          },
+          {
+            "name": "GATEWAY-WATCHDOG",
+            "line": "Restarts the agent gateway if it wedges, then pings your phone."
+          },
+          {
+            "name": "CANDYBAR-WATCHDOG",
+            "line": "The clock has a watchdog too."
+          }
+        ],
+        "more": "And more where those came from. Then there are the flagships.",
+        "hoverHint": "Hover a window to read its nameplate."
+      },
+      "log": [
+        {
+          "subject": "bloodbank.cron.tick.fired",
+          "note": "The small hours. The rest of the staff, at work."
+        },
+        {
+          "subject": "bloodbank.llm.usage.recorded",
+          "note": "Twenty-two more names, and more where those came from."
+        }
+      ]
+    },
+    {
+      "id": "pjangler",
+      "time": "04:12",
+      "act": "IV",
+      "spectacle": 8.5,
+      "camera": "build",
+      "setPiece": "building.grow",
+      "len": 260,
+      "interlude": {
+        "kicker": "Flagships · F-01–F-04",
+        "line": "And then it starts to read like fiction."
+      },
+      "kicker": "F-01 · Day one of every project",
+      "title": "PJangler. The project factory.",
+      "body": "A project registry and bootstrapper. Every project is built from a vetted pipeline template, so on day one it already has a ticket board, a git repo, its own project manager and its own Open Notebook. A mobile app gets one more hire: a Launch Director, who works with Google and Apple to see it through a smooth launch.",
+      "tags": [
+        "PJANGLER"
+      ],
+      "staged": true,
+      "copy": {
+        "cardTitle": "A new project, day one",
+        "cardNote": "from a vetted template",
+        "checklist": [
+          "Pipeline template vetted",
+          "Ticket board provisioned",
+          "Git repository created",
+          "Project manager assigned",
+          "Open Notebook opened",
+          "Launch Director assigned · mobile apps"
+        ]
+      },
+      "log": [
+        {
+          "subject": "bloodbank.evt.project.artifact.created",
+          "note": "A new project. The building grows a floor."
+        },
+        {
+          "subject": "bloodbank.project.app_launch.recorded",
+          "note": "A mobile app gets a Launch Director."
+        }
+      ]
+    },
+    {
+      "id": "heyma",
+      "time": "04:40",
+      "act": "IV",
+      "spectacle": 9,
+      "camera": "push-in",
+      "setPiece": "building.call",
+      "len": 230,
+      "kicker": "F-02 · The audio department",
+      "title": "HeyMa. Transcription, translation and telephony, on any stack.",
+      "body": "A full-featured audio pipeline that runs on any platform, next to whatever you already use. On its own, it is the most flexible, full-featured audio pipeline you can run today. Inside 33GOD it fits so well that you forget it is there. It just works.",
+      "tags": [
+        "HEYMA"
+      ],
+      "staged": true,
+      "copy": {
+        "parts": [
+          {
+            "name": "WAX",
+            "line": "Long-form transcription. Meetings, memos, hours of tape."
+          },
+          {
+            "name": "VINYL",
+            "line": "Live transcription, while you are still talking."
+          },
+          {
+            "name": "PHONOGRAPH",
+            "line": "Live translation."
+          },
+          {
+            "name": "SHORTWAVE",
+            "line": "Turns your phone into a walkie-talkie that drives every open terminal, from anywhere."
+          }
+        ],
+        "partsNote": "Each part is named for a way sound used to travel.",
+        "call": {
+          "label": "A call from another time zone",
+          "heard": "Bom dia. Podemos adiantar a entrega para sexta?",
+          "translated": "Good morning. Can we move the delivery up to Friday?",
+          "whisperLabel": "Your phone wakes. You whisper one line.",
+          "whisper": "Tell them Friday works."
+        }
+      },
+      "log": [
+        {
+          "subject": "bloodbank.telephony.call.started",
+          "note": "A call from another time zone, translated live."
+        },
+        {
+          "subject": "bloodbank.telephony.transcription.completed",
+          "note": "You whisper one line and a floor reacts."
+        }
+      ]
+    },
+    {
+      "id": "flume",
+      "time": "05:12",
+      "act": "IV",
+      "spectacle": 9,
+      "camera": "hold",
+      "setPiece": "building.hire",
+      "len": 200,
+      "kicker": "F-03 · Human resources",
+      "title": "Flume. A whole HR department, for agents.",
+      "body": "Open a role and Flume fills it: directors, managers, project managers. It onboards each hire, gives them a desk and a title, and tells you honestly how they are doing.",
+      "tags": [
+        "FLUME"
+      ],
+      "staged": true,
+      "copy": {
+        "rolesTitle": "Roles Flume hires for",
+        "roles": [
+          {
+            "name": "Director",
+            "line": "Runs a department. Sits in the morning standup."
+          },
+          {
+            "name": "Manager",
+            "line": "Runs a team inside it."
+          },
+          {
+            "name": "Project manager",
+            "line": "Runs one project, start to finish."
+          }
+        ],
+        "pipeline": [
+          "hired",
+          "onboarded",
+          "seated",
+          "reviewed"
+        ],
+        "hire": {
+          "name": "NEW HIRE",
+          "line": "Project manager. A window that has never been lit."
+        }
+      },
+      "log": [
+        {
+          "subject": "bloodbank.agent.session.started",
+          "note": "Flume fills a role. A window that has never been lit turns on."
+        }
+      ]
+    },
+    {
+      "id": "holocene-auto",
+      "time": "07:30",
+      "act": "V",
+      "spectacle": 10,
+      "camera": "cut",
+      "cut": true,
+      "setPiece": "car.standup",
+      "len": 240,
+      "kicker": "F-04 · On the road",
+      "title": "Holocene Auto. Your department heads, over the car speakers.",
+      "body": "An Android Auto app that keeps your finger on the pulse on the go: a direct, two-way, hands-free line between you and every department head.",
+      "tags": [
+        "HOLOCENE AUTO"
+      ],
+      "staged": true,
+      "copy": {
+        "standupTitle": "Every morning, the directors' standup",
+        "standup": [
+          "Goals get aligned.",
+          "Solutions get shared across departments.",
+          "Give a director a task outside their territory, and they hand it to the team that owns it."
+        ],
+        "screen": {
+          "product": "Holocene Auto",
+          "signal": "On the line",
+          "line": "Two things need you.",
+          "count": "2",
+          "sub": "Everything else is spoken."
+        },
+        "note": "While you drive, the screen says one sentence. Everything else is spoken."
+      },
+      "log": [
+        {
+          "subject": "bloodbank.cron.candybar.invoked",
+          "note": "The directors' standup, over the car speakers. Two things need you."
+        }
+      ]
+    },
+    {
+      "id": "hired-well",
+      "time": "07:38",
+      "act": "V",
+      "spectacle": 6,
+      "camera": "pull-back",
+      "setPiece": "building.morning",
+      "len": 200,
+      "kicker": "How did one person build all of this?",
+      "title": "He hired well.",
+      "body": "",
+      "tags": [],
+      "staged": false,
+      "log": [
+        {
+          "subject": "bloodbank.task.ticket.completed",
+          "note": "How did one person build all of this? He hired well."
+        }
+      ]
+    },
+    {
+      "id": "ask",
+      "time": "07:41",
+      "act": "V",
+      "spectacle": 2,
+      "camera": "hold",
+      "setPiece": "building.you",
+      "len": 170,
+      "kicker": "",
+      "title": "33GOD is still in stealth.",
+      "body": "Leave an address. When the doors open, you will hear first.",
+      "tags": [],
+      "staged": false,
+      "copy": {
+        "label": "Work email",
+        "placeholder": "you@company.com",
+        "button": "Request a briefing",
+        "done": "You are on the list. You will hear first.",
+        "previewNote": "Preview build: the form lights your window and stores nothing yet."
+      },
+      "log": [
+        {
+          "subject": "bloodbank.lifecycle.status.updated",
+          "note": "The ask. Your window lights, the last light of the night."
+        }
+      ]
+    }
+  ],
+  "transcript": {
+    "_readme": "Staged words for Act III. Marked spans: {p:…} a project Jev finds, {w:…} a word the dictionary learns. 'ticket' is the index of the ticket a line becomes.",
+    "room": "Conference room · one microphone",
+    "speakers": [
+      "Priya",
+      "Marcus",
+      "Elena",
+      "Tom"
+    ],
+    "lines": [
+      {
+        "s": 0,
+        "text": "Okay. {p:Holocene} first. The {w:stuck-work panel} still shows tickets that closed yesterday."
+      },
+      {
+        "s": 1,
+        "text": "That's the {w:lifecycle lag}. I'll take it. Fixed by Thursday.",
+        "ticket": 0
+      },
+      {
+        "s": 2,
+        "text": "While we're in there, {p:HeyMa} dropped the last minute of Tuesday's call.",
+        "ticket": 1
+      },
+      {
+        "s": 0,
+        "text": "Then somebody decide the {p:Shortwave} pairing flow."
+      },
+      {
+        "s": 3,
+        "text": "Decision: pair by QR, no codes. I'll write it up.",
+        "ticket": 2
+      },
+      {
+        "s": 1,
+        "text": "Last thing. {p:Candybar} owns the {w:nightly digest} now, not a cron.",
+        "ticket": 3
+      }
+    ],
+    "judgments": [
+      {
+        "q": "touches HOLOCENE?",
+        "a": "yes"
+      },
+      {
+        "q": "touches HEYMA?",
+        "a": "yes"
+      },
+      {
+        "q": "touches SHORTWAVE?",
+        "a": "yes"
+      },
+      {
+        "q": "touches CANDYBAR?",
+        "a": "yes"
+      },
+      {
+        "q": "small talk?",
+        "a": "no"
+      }
+    ],
+    "dictionaryTitle": "Dictionary · learned tonight",
+    "tickets": [
+      {
+        "board": "HOLOCENE",
+        "title": "Fix the lifecycle lag on the stuck-work panel"
+      },
+      {
+        "board": "HEYMA",
+        "title": "Recover the last minute of Tuesday's call"
+      },
+      {
+        "board": "SHORTWAVE",
+        "title": "Pair by QR, no codes"
+      },
+      {
+        "board": "CANDYBAR",
+        "title": "Move the nightly digest onto the clock"
+      }
+    ]
+  },
+  "nameplates": {
+    "_readme": "One-line nameplates for windows that have no line elsewhere in the manifest.",
+    "JEV": "Typesafe's System One model. Quick, typed, yes-or-no judgments.",
+    "PILOT": "A ticket-provider abstraction over Plane, Linear and Trello.",
+    "PM · HOLOCENE": "Runs one project, start to finish.",
+    "PM · HEYMA": "Runs one project, start to finish.",
+    "ENRICHER": "Makes every event findable by meaning.",
+    "PJANGLER": "The project factory. A registry and bootstrapper.",
+    "HEYMA": "Transcription, translation and telephony, on any stack."
+  }
+}
