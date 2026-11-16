@@ -1,0 +1,29 @@
+# Waybill: a flight recorder for one prompt across 33GOD.
+[tasks.test]
+description = "Run the waybill unit tests (no live systems)"
+run = "/usr/bin/python3 -m unittest discover -s tests -v"
+dir = "{{config_root}}"
+
+[tasks.install]
+description = "Put `waybill` on PATH (~/.local/bin/waybill)"
+run = "mkdir -p ~/.local/bin && ln -sf /home/delorenj/code/33GOD/33god-platform/waybill/bin/waybill ~/.local/bin/waybill"
+
+[tasks.capture]
+description = "Rebuild a past turn: mise run capture -- --session <id> [--turn N | --at ISO]"
+run = "bin/waybill capture"
+dir = "{{config_root}}"
+
+[tasks.record]
+description = "Arm live taps and follow the next prompt: mise run record -- [--cli claude|codex]"
+run = "bin/waybill record"
+dir = "{{config_root}}"
+
+[tasks.show]
+description = "Waterfall in the terminal: mise run show -- <file.waybill.json>"
+run = "bin/waybill show"
+dir = "{{config_root}}"
+
+[tasks.list]
+description = "Recent prompts you can capture"
+run = "bin/waybill list"
+dir = "{{config_root}}"

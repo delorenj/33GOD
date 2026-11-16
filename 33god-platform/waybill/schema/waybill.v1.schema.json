@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://33god.dev/schemas/waybill/waybill.v1.schema.json",
+  "title": "33god.waybill v1",
+  "description": "One prompt turn across 33GOD: spans, bus events, links, gaps and findings. Times in spans and events are milliseconds relative to clock.t0. Readers ignore unknown fields and reject an unknown major version. Source of truth: 33god-platform/waybill/SPEC.md section 2.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["format", "version", "id", "title", "recorded_at", "recorder", "origin", "prompt", "clock",
+               "components", "spans", "events", "links", "artifacts", "gaps", "findings", "sources", "stats"],
+  "properties": {
+    "format": {"const": "33god.waybill"},
+    "version": {"const": 1},
+    "id": {"type": "string", "pattern": "^wb_[0-9A-Za-z]{26}$"},
+    "title": {"type": "string"},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "recorder": {"$ref": "#/$defs/Recorder"},
+    "origin": {"$ref": "#/$defs/Origin"},
+    "prompt": {"$ref": "#/$defs/Prompt"},
+    "clock": {"$ref": "#/$defs/Clock"},
+    "components": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Component"}},
+    "spans": {"type": "array", "items": {"$ref": "#/$defs/Span"}},
+    "events": {"type": "array", "items": {"$ref": "#/$defs/BusEvent"}},
+    "links": {"type": "array", "items": {"$ref": "#/$defs/Link"}},
+    "artifacts": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Artifact"}},
+    "gaps": {"type": "array", "items": {"$ref": "#/$defs/Gap"}},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/Finding"}},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/Source"}},
+    "stats": {"type": "object", "additionalProperties": {"type": "number"}}
+  },
+  "$defs": {
+    "Recorder": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "version", "host", "mode", "profile"],
+      "properties": {
+        "name": {"const": "waybill"},
+        "version": {"type": "string"},
+        "host": {"type": "string"},
+        "mode": {"enum": ["record", "capture"]},
+        "profile": {"enum": ["full", "public"]},
+        "argv": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Origin": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["cli", "surface", "session_id", "turn_id", "turn_index", "cwd", "project", "model"],
+      "properties": {
+        "cli": {"type": "string"},
+        "surface": {"type": "string"},
+        "session_id": {"type": "string"},
+        "turn_id": {"type": ["string", "null"]},
+        "turn_index": {"type": ["integer", "null"]},
+        "cwd": {"type": ["string", "null"]},
+        "project": {"type": ["string", "null"]},
+        "model": {
+          "type": ["object", "null"],
+          "additionalProperties": true,
+          "required": ["requested", "served"],
+          "properties": {
+            "requested": {"type": ["string", "null"]},
+            "served": {"type": ["string", "null"]}
+          }
+        }
+      }
+    },
+    "Prompt": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["text", "chars", "sha256", "truncated"],
+      "properties": {
+        "text": {"type": ["string", "null"]},
+        "chars": {"type": "integer"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "truncated": {"type": "boolean"}
+      }
+    },
+    "Clock": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["t0", "t_end", "duration_ms", "settle_ms"],
+      "properties": {
+        "t0": {"type": "string", "format": "date-time"},
+        "t_end": {"type": "string", "format": "date-time"},
+        "duration_ms": {"type": "number"},
+        "settle_ms": {"type": "number"}
+      }
+    },
+    "Component": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name", "kind", "registry"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "kind": {"type": "string", "description": "cli | service | handler-host | bus | store | memory | model | device | external | string"},
+        "registry": {"type": "boolean"}
+      }
+    },
+    "Span": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind", "component", "name", "summary", "phase", "t0", "t1", "status", "evidence"],
+      "properties": {
+        "id": {"type": "string"},
+        "kind": {"type": "string", "description": "prompt | hook | handler | context | memory | publish | consume | state | notify | llm | tool | file | turn | string"},
+        "component": {"type": "string"},
+        "name": {"type": "string"},
+        "summary": {"type": "string"},
+        "phase": {"enum": ["prompt_submit", "model_call", "pre_tool", "tool", "post_tool", "turn_end", "async_after", "session_start", "session_end"]},
+        "t0": {"type": "number"},
+        "t1": {"type": ["number", "null"]},
+        "status": {"enum": ["ok", "skipped", "failed", "timeout", "pending", "dropped", "unknown"]},
+        "reason": {"type": ["string", "null"]},
+        "sync": {"type": "boolean"},
+        "parent": {"type": ["string", "null"]},
+        "refs": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "invocation_id": {"type": ["string", "null"]},
+            "event_id": {"type": ["string", "null"]},
+            "tool_use_id": {"type": ["string", "null"]},
+            "request_id": {"type": ["string", "null"]},
+            "seq": {"type": ["integer", "null"]},
+            "handler_id": {"type": ["string", "null"]}
+          }
+        },
+        "attrs": {"type": "object", "additionalProperties": true},
+        "payload": {"type": "string"},
+        "evidence": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "BusEvent": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "type", "subject", "stream", "seq", "t", "correlationid", "causationid", "producer", "publisher_span", "consumers"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string"},
+        "subject": {"type": ["string", "null"]},
+        "stream": {"type": ["string", "null"]},
+        "seq": {"type": ["integer", "null"]},
+        "t": {"type": "number"},
+        "stored": {"type": ["number", "null"]},
+        "archived": {"type": ["number", "null"]},
+        "correlationid": {"type": ["string", "null"]},
+        "causationid": {"type": ["string", "null"]},
+        "producer": {"type": ["string", "null"]},
+        "publisher_span": {"type": ["string", "null"]},
+        "consumers": {"type": "array", "items": {"$ref": "#/$defs/Consumer"}},
+        "payload": {"type": "string"},
+        "schema": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "file": {"type": ["string", "null"]},
+            "valid": {"type": ["boolean", "null"]},
+            "errors": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "Consumer": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "component", "kind", "filter", "outcome", "evidence"],
+      "properties": {
+        "name": {"type": "string"},
+        "component": {"type": "string"},
+        "kind": {"enum": ["durable", "ephemeral", "core"]},
+        "filter": {"type": ["string", "null"]},
+        "outcome": {"enum": ["archived", "collected", "routed", "rate-limited", "digested", "ignored", "enriched", "delivered", "dropped", "unknown"]},
+        "t": {"type": ["number", "null"]},
+        "evidence": {"enum": ["observed", "inferred"]},
+        "span": {"type": ["string", "null"]}
+      }
+    },
+    "Link": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["from", "to", "kind"],
+      "properties": {
+        "from": {"type": "string"},
+        "to": {"type": "string"},
+        "kind": {"enum": ["calls", "runs", "publishes", "delivers", "injects", "feeds", "triggers", "writes", "records", "mirrors", "causes"]},
+        "label": {"type": "string"}
+      }
+    },
+    "Artifact": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mime", "bytes", "sha256", "truncated"],
+      "properties": {
+        "mime": {"type": "string"},
+        "bytes": {"type": "integer"},
+        "sha256": {"type": "string"},
+        "truncated": {"type": "boolean"},
+        "text": {"type": "string"},
+        "json": {},
+        "note": {"type": "string"}
+      }
+    },
+    "Gap": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["component", "what", "why", "severity"],
+      "properties": {
+        "component": {"type": "string"},
+        "what": {"type": "string"},
+        "why": {"type": "string"},
+        "severity": {"enum": ["info", "warn", "broken"]},
+        "span": {"type": ["string", "null"]}
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "title", "detail", "component", "evidence"],
+      "properties": {
+        "severity": {"enum": ["info", "warn", "broken"]},
+        "title": {"type": "string"},
+        "detail": {"type": "string"},
+        "component": {"type": "string"},
+        "evidence": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind", "locator", "status", "items", "ms"],
+      "properties": {
+        "id": {"type": "string"},
+        "kind": {"type": "string"},
+        "locator": {"type": "string"},
+        "status": {"enum": ["ok", "empty", "error", "skipped"]},
+        "items": {"type": "integer"},
+        "ms": {"type": "number"},
+        "error": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
