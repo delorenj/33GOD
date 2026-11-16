@@ -1,0 +1,228 @@
+===== hook-hub
+# Hub receipt HTTP API :: Per-invocation timeline of every handler (status, reason, duration, exit code, publisher event_id/event_type/publish_status). Payload-free.
+  $ curl -s 127.0.0.1:8685/v1/hooks/invocations | jq .; curl -s 127.0.0.1:8685/v1/hooks/invocations/<invocation_id> | jq .
+  ! No stdout, stderr or payload. /v1/hooks/status shows some bindings as failed; this is a false alarm from the Orca shim reporting duplicate.
+# Receipts SQLite :: A live-tailable ordered stream of every handler state change (columns sequence, invocation_id, handler_id, status, reason, at). Also the invocations/executions tables.
+  $ sqlite3 -readonly ~/.local/state/33god/hook-hub/receipts.sqlite3 "select sequence,invocation_id,handler_id,status,reason,at from receipt_events where sequence>N order by sequence"
+  ! Use the plain path, not a file:?mode=ro URI (zsh globbing). Order by sequence, not at. WAL mode, so reads are safe. Rows older than 30 days or 100k invocations are pruned. About 1640 invocations are stuck in 'received' and 2397 executions are stuck in selected/started.
+# Candystore :: Full CloudEvents including prompt_text (turn.started), tool arguments, last_assistant_message fields, plus hook.updated observation facts with the full timeline.
+  $ curl -s localhost:8683/sessions/<sid>; curl -s localhost:8683/events/<event_id>/raw
+  ! hook.updated lags 2-10s behind the receipts. Attention events are not stored (core NATS only).
+# NATS subscribe :: Live publisher envelopes and attention events as they happen.
+  $ nats sub 'bloodbank.evt.>' and nats sub 'deckard.evt.attention'
+  ! Core NATS is fire and forget. Subscribe before the prompt. deckard.evt.attention has no JetStream retention.
+# Claude transcript :: hook_success (hookEvent, command, stdout, stderr, exitCode, durationMs) and hook_additional_context content as the model saw it.
+  $ jq -c 'select(.type=="attachment" and (.attachment.type|test("hook")))' ~/.claude/projects/<slug>/<session>.jsonl
+  ! bb-hook rows appear only when it printed output. Orca prints {}. Per-handler stdout is not split out, only the merged result.
+# Codex rollout :: Injected context (REMINDER, AAI_ROUTE_PROOF marker) as developer messages.
+  $ jq -c 'select(.type=="response_item" and .payload.role=="developer")' ~/.codex/sessions/YYYY/MM/DD/rollout-*-<thread>.jsonl
+  ! Context only. Hook stderr and exit codes are not recorded.
+# hub.log :: Request failures, SQLite OperationalErrors and JSONDecodeErrors that never reach receipts.
+  $ tail -f ~/.local/state/33god/hook-hub/hub.log (set HOOK_HUB_STDERR to mirror to stderr in the unit env)
+  ! The hub env is fixed at socket-activated start, so enabling HOOK_HUB_STDERR needs a service restart (use hermes-gateway-style restart discipline; do not do it while recording). Log is unstructured.
+# Redis ASM :: State machine transitions per agent scope with from/to and signal.
+  $ bash -c 'redis-cli XRANGE asm:transitions - +'; tail -f ~/.local/state/33god/asm/transitions.log
+  ! Under zsh, pipe via bash -c. Scopes may be pid-based when there is no session id.
+# Local state files :: Handler-owned side-effect state: buffered ask/turn text, recall journal, codex route proof, turn counters and last_event_id.
+  $ cat ~/.local/state/33god/hook-hub/capture/<cli>-<sid>.json ~/.agents/journal/sessions/<cli>-<sid>.jsonl ~/.local/state/automaticai/session-proof/<sid>.json ~/.local/state/33god/agent-hooks/<cli>/sessions/<sha256(sid)>.json
+  ! Files are mutated in place, so snapshot before and after the prompt and diff. Capture files hold prompt text.
+-- KEYS
+  native session_id (CLI-minted) | Claude Code / Codex CLI; native_session_id() normalizes it from the payload or env (CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID) | breaks: Some events carry no id (claude:p:<pid>.<starttime> ASM scope, native_session_identity_missing in codex proof, native_session_id_missing in capture). Pid-scoped events cannot be joined to the session.
+  hub invocation_id | receipts.invocation_identity (receipts.py:68) at claim. uuid5([cli,native,session,key]) for native event id or tool call id, else uuid4. | breaks: The publisher's CloudEvent does not carry the invocation_id. The join is executions.event_id (publisher receipt) to the Candystore event id. Prompt events get random uuid4 ids, so there is no dedupe o
+  bloodbank event id | agent-hooks core/publisher.py build_envelope; session.started id equals the correlation id | breaks: A failed publish (no PONG) or a lost state file resets the causation chain; attention events use a separate Deckard envelope not stored in JetStream.
+  turn_id | SessionState.begin_turn (<sid>:turn:N) or native_turn_id(payload) | breaks: Tool events use turn_number = session.turn_number+1, which can mismatch after missed hooks; subagent events share the parent's session.
+  tool_use_id / tool_call_id | Claude/Codex native payload (tool_use_id); fallback sha1(session:turn:tool)[:32] | breaks: Fallback ids collide for repeated same-tool calls within a turn; attention and non-tool events have none.
+  zellij pane (ZELLIJ_SESSION_NAME, ZELLIJ_PANE_ID) | zellij | breaks: Absent outside zellij (Orca panes, Desktop): attention fanout skips with missing_pane_context.
+  receipt_events.sequence / observation revision | SQLite AUTOINCREMENT in receipt_events; observation_revisions | breaks: Global per DB, resets if the DB is recreated; the 'at' timestamp can precede earlier rows, so order by sequence only.
+  traceparent | publisher envelope | breaks: Always all zeros, so there is no distributed trace correlation.
+===== bus
+# NATS JetStream: stream and consumer inventory (read-only monitoring) :: 3 streams, 31 consumers at the time. BLOODBANK_EVENTS has 24 consumers, including candystore-events, enricher-events, bloodbank-artifact-sidecar(+activity), bloodbank-artifact-vault-projector, candybar-dispatcher-ticks, candybar-steward-notify, curat
+  $ curl -s 'http://127.0.0.1:8222/jsz?streams=true&consumers=true&config=true' | python3 -c 'import json,sys; ...'  (loop account_details[].stream_detail[].consumer_detail[] and print name, config.filter_subject/filter_subjects, deliver_policy, ack_policy, delivered.stream_seq, ack_floor.stream_seq, num_ack_pending, num_pending, num_redelivered, push_bound). Also /connz?subs=detail&limit=200 for core subscribers and their subjects, and /varz.
+  ! A consumer whose filter matches a subject can be matched with subject-token logic ('>' and '*'). ack_floor.stream_seq >= seq proves the consumer acked everything up to seq that it was delivered; it is a lower bound: enricher-events had ack_floor 10429658 stuck behind a head-of-line 5 ack_pending mes
+# NATS JetStream: fetch a message by stream sequence (python nats-py from system python3; no nats CLI on host) :: Exact message (envelope JSON plus headers) and the JetStream store timestamp (publish-to-store latency: envelope time 25.506 -> stored 25.5077). Headers show whether Nats-Msg-Id was used. STREAM.INFO with {'subjects_filter':'bloodbank.evt.conversatio
+  $ python3 - <<'EOF'
+import asyncio,json,base64,nats
+async def main():
+    nc=await nats.connect('nats://127.0.0.1:4222',name='waybill-recorder')
+    r=await nc.request('$JS.API.STREAM.MSG.GET.BLOODBANK_EVENTS',json.dumps({'seq':10427983}).encode(),timeout=5)
+    m=json.loads(r.data)['message']  # subject, seq, time, hdrs(b64), data(b64)
+    # next message on a subject after a seq (allow_direct=true):
+    r=await nc.request('$JS.API.DIRECT.GET.BLOODBANK_EVENTS',json.dumps({'seq':10427900,'next_by_subj':'bloodbank.evt.conversation.turn.started'}).encode(),timeout=5)
+    print(r.headers['Nats-Sequence'],r.headers['Nats-Time-Stamp'],json.loads(r.data)['id'])
+asyncio.run(main())
+EOF
+(alternative: d
+  ! No lookup by event id or Nats-Msg-Id exists; find the seq through Holocene (items[].sequence) or by walking DIRECT.GET next_by_subj. 'start_time' in DIRECT.GET is ignored by 2.10.29 (it returned the oldest message), so time-based seeking needs a binary search over seq on the message time (about 20 r
+# Candystore HTTP (127.0.0.1:8683, unauthenticated, loopback only) :: Full CloudEvent per event, session timelines (this session: 342+ events), query by type/producer/service/cli/project/provenance class/lens/free text (q needs >=3 chars, trigram index; a bare UUID q resolves an event or session exactly).
+  $ curl -s http://127.0.0.1:8683/events/<id>/raw   # verbatim stored envelope
+curl -s http://127.0.0.1:8683/events/<id>        # envelope + derived project/class/summary
+curl -s http://127.0.0.1:8683/events/<id>/summary
+curl -s http://127.0.0.1:8683/sessions/<correlationid>             # {session_id, events[]} ascending by time, no paging
+curl -s 'http://127.0.0.1:8683/events?correlationid=<sid>&limit=500&offset=0&tools=1'   # newest first, key 'rows'
+curl -s 'http://127.0.0.1:8683/events?type=&domain=&producer=&service=&cli=&project=&class=&lens=&scope=&q=&from=&to=&limit=&offset=&total=1&tools=0'
+curl -s 'http://127.0.0.1:8683/summary/timeline?bucket=60&group=class&from=&to='
+plus /projects?w
+  ! Without from or correlationid or UUID-q, /events silently applies a 24h window (DEFAULT_WINDOW_HOURS=24); total is opt-in (?total=1, capped at 10,000); unknown project/class/lens return 400. The API does NOT return received_at (ingest time); /sessions/{id} only returns events whose correlationid equ
+# Candystore Postgres (127.0.0.1:5434, db candystore, user/password candystore per compose.yml; psql installed) :: Tables: events (id uuid PK, specversion, source, type, subject, time, datacontenttype, dataschema, correlationid, causationid, producer, service, domain, schemaref, traceparent, kind, actor jsonb, data jsonb, received_at timestamptz DEFAULT now(), or
+  $ PGPASSWORD=candystore psql -h 127.0.0.1 -p 5434 -U candystore -d candystore -X -c "select id,type,time,received_at,received_at-time as lag,causationid,correlationid from events where correlationid='7dcf25a3-9dee-4fe2-8da2-7d569ad24599' order by time"
+# model-call evidence:
+... -c "select id,time,data->>'route',data->'usage',data->>'latency_ms',data->>'request_id' from events where type='bloodbank.llm.usage.recorded' and data->>'session_id'='<sid>' order by time"
+# hook receipts for an invocation:
+... -c "select id,time,received_at,data->'invocation'->>'status' from events where type='bloodbank.agent.hook.updated' and correlationid='<invocation_id>'"
+# embeddings: select count(*) from event_e
+  ! received_at is Candystore's own insert time and is not updated on duplicate redelivery; it is the only 'archived at' timestamp. Credentials are the compose defaults, not a secret store; schema applies via migrations/*.sql replayed at boot (no ledger).
+# Holocene read model (127.0.0.1:4000) with stream sequence and collection time :: A live, ordered tail of every bloodbank.evt.> message with its JetStream sequence and arrival time (cursor 9473311 -> seq 10427983, collected 03:53:25.508Z). This is the best single tap for a recorder: one subscription gets the seq, the envelope and 
+  $ curl -s http://127.0.0.1:4000/api/events/status    # state, cursor, checkpoint (last stream seq), pending, history_gap
+curl -s 'http://127.0.0.1:4000/api/events?subject=bloodbank.evt.conversation.turn.started&after=<cursor>&limit=500'   # items[] {cursor,stream,sequence,subject,collected_at,envelope}
+curl -N http://127.0.0.1:4000/api/events/stream?after=<cursor>   # SSE live tail, Last-Event-ID resume
+  ! Filter params are only type, subject, source, after, limit<=500; there is no id or correlationid filter, so finding one event requires paging by cursor (seq to cursor is monotonic and roughly 1:1 offset 954,672 apart here). The sqlite file ~/.local/state/holocene/events.sqlite3 is readable directly 
+# hook-hub receipt API (127.0.0.1:8685) cross-link into the bus :: The bridge from a hook invocation to the bus: executions[handler=bloodbank-publisher].event_id = the published event id (fe69f4eb...), publish_status 'sent', 03:53:25.298 to 25.515 (46ms). Hub received_at 03:53:25.284 precedes event time 25.506, so t
+  $ curl -s http://127.0.0.1:8685/v1/hooks/invocations/<invocation_id> | jq '.invocation.executions[] | {handler_id,mode,status,reason,selected_at,started_at,finished_at,duration_ms,event_id,publish_status}'
+  ! publish_status='sent' means the PONG came back, not that JetStream stored it (see step 2); receipts hold no prompt/stdout. Real stored/ack truth comes from the stream seq lookup.
+# Container and journal logs of core-NATS consumers (no ack evidence elsewhere) :: ntfy-router disposition per event type with millisecond wall-clock (turn.started routed at 03:53:25,630; tool.* digested). Enricher embedding confirmation per tool event id. Dapr DROP warnings for the enricher's malformed session summaries.
+  $ docker logs --since <t0> --until <t1> bloodbank-ntfy-router   # 'routed:' | 'digested:' | 'rate-limited:' | 'duplicate:' lines, one per event
+docker logs bloodbank-turn-enricher   # (empty in the turn_end window; counts only in periodic stats)
+docker logs enricher | grep 'Successfully embedded tool event <id>'
+docker logs candystore-daprd | grep 'DROP status'
+journalctl --user -u bloodbank-artifact-sidecar -u deckard --since ...
+  ! ntfy-router lines carry only the event TYPE, not the event id, so correlation is by timestamp; docker log retention is whatever the daemon keeps; deckard, turn-enricher and artifact-sidecar log nothing per event by default.
+# Local schema files (Apicurio is not running) :: JSON Schema 2020-12 for each event type with a $ref to cloudevent_base.v1.json (required envelope fields, uuid/timestamp types, 4-token type regex, traceparent pattern) and per-type data requirements (turn.started needs data.thread_id and turn_id; pr
+  $ ls /home/delorenj/code/33GOD/bloodbank/schemas/bloodbank/<domain>/<entity>.<action>.json   # e.g. conversation/turn.started.json ($id https://33god.dev/schemas/bloodbank/conversation/turn.started.json)
+cat /home/delorenj/code/33GOD/bloodbank/schemas/_common/cloudevent_base.v1.json
+BLOODBANK_SCHEMAS_DIR overrides the validator's lookup (agent-hooks core/validate.py)
+  ! The envelope's dataschema 'apicurio://holyfields/<type>/versions/<n>' and schemaref '<type>.v<n>' cannot be dereferenced: no Apicurio container exists (docker ps shows none; :8080 is Traefik and returns 404 for /apis/registry/*). All values seen for hook events are version 1; some audio producers us
+# artifact-sidecar state (sqlite, read-only) :: For qualifying tool.completed events: source_event_id -> artifact -> published artifact.created event id (the causation link from a tool.completed to a vault note).
+  $ sqlite3 -readonly ~/.local/state/artifact-sidecar/state.sqlite3 'select artifact_id,revision,source_event_id,published_event_id,created_at from artifacts order by created_at desc limit 5; select * from processed_sources order by processed_at desc limit 5; select event_id,attempts,last_error,published_at from outbox order by outbox_id desc limit 5;'
+  ! Unqualified events leave no row, so absence of a row is not evidence the sidecar ignored or even received an event. Use the durable's ack_floor and a project.artifact.created lookup (causationid = source event id) instead.
+-- KEYS
+  correlationid (session UUID) | agent-hooks clients/base.py get_correlation_id: str(UUID(native session id)), else uuid5(NAMESPACE_URL,'bloodbank:<cli>:<sid>'); session.started has i | breaks: llm.usage.recorded/allowance.observed use their own id as correlationid (join via data.session_id); agent.hook.updated uses the hook invocation_id; enricher's report.session.completed is DROPped; code
+  causationid chain (previous event id) | SessionState.last_event_id persisted in the per-CLI session file; set by session.record_event(envelope.id) after a successful PONG; read by get_causat | breaks: It is a LINEAR per-session chain, not a causal tree: a tool.requested is caused by whatever event was published last (with subagents running in parallel, invocation.started events chain onto each othe
+  event id (envelope.id) | uuid4 in core.envelope.new_uuid for hook events; uuid5 for hook-hub hook.updated and aai usage events; session.started id = session UUID | breaks: turn.started/tool.* are published without Nats-Msg-Id, so the 120s JetStream dedupe does nothing for them; consumers dedupe by id themselves (Candystore ON CONFLICT, Holocene ON CONFLICT)
+  JetStream stream sequence (BLOODBANK_EVENTS seq) | NATS JetStream at store time | breaks: Not stored in Candystore or in the envelope; there is no id-to-seq index (Nats-Msg-Id is not indexed), so mapping event id to seq needs Holocene's read model or a scan (DIRECT.GET seq+next_by_subj is 
+  turn_id / thread_id ('<session>:turn:N') | SessionState.begin_turn() at UserPromptSubmit; native_turn_id when the CLI provides one | breaks: tool.requested/completed and invocation events do NOT carry turn_id. Their data.turn_number is a per-session TOOL counter (bump_tool; value 167 in a session with one turn). Tools can only be attribute
+  tool_call_id (toolu_...) | Claude native hook payload | breaks: codex payloads nest fields under data.payload and have different shapes; codex tool coverage is partial (496 requested / 476 completed over 3 days)
+  hook invocation_id (hub receipt id) | hook-hub per bb-hook call (generated or native identity) | breaks: transition invocations (ASM) have session_id null, so a recorder joins on received_at proximity and cli, or on invocation_id from the hook-hub status/API rather than from the bus
+  data.session_id + data.request_id on llm.usage.recorded | AutomaticAI gateway usage log (newapi-log row) reshaped by aai-llm-observability | breaks: correlationid is the event's own id; not discoverable through Candystore HTTP (q and correlationid return 0); only SQL on data->>'session_id' (GIN jsonb_path_ops index on data) or the Holocene store w
+  zellij_pane_id + zellij_session_name | agent-hooks zellij_origin() from ZELLIJ_PANE_ID/ZELLIJ_SESSION_NAME env | breaks: absent for non-zellij sessions and on codex turn.started payloads (data keys are hook,payload,turn_id,thread_id,git_branch,prompt_text,prompt_length,working_directory)
+  traceparent | core.envelope ZERO_TRACEPARENT constant | breaks: Always all-zero or absent: in the last 24h, 75,485 of 131,282 rows have the zero placeholder, 55,797 have NULL, 0 have a real trace. It cannot be used as a trace id; the recorder must mint its own way
+  ordering_key | publisher: '<bucket_prefix>:<correlation_id>' (thread:<session> for turn events); turn-enricher uses '<source id>.annotated'; aai uses usage:newapi-lo | breaks: Only a within-bucket ordering hint; it does not identify the prompt, and it differs per producer
+===== memory-state
+# hook-hub receipts API :: Per-hook ordered timeline (selected/started/succeeded|skipped|failed|timed_out with reason, started_at/finished_at/duration_ms, exit_code, publish_status, event_id) for every handler incl. hindsight-recall, hindsight-turn, nanoleaf, orca-status, guar
+  $ curl -s 'http://127.0.0.1:8685/v1/hooks/invocations?cli=claude&limit=200' | jq '.items[]|select(.session_id=="<SID>")'  then  curl -s http://127.0.0.1:8685/v1/hooks/invocations/<invocation_id> | jq .invocation
+  ! Payload-free (no prompt, no injected context, no stderr). Retention ~4 days (oldest 2026-11-12). Some rows stay at selected/started forever (99 native-clock-guard selected, 50 started) when the child died or the receipt write was lost. Sync rows are serial by `order`, async rows start together.
+# Hindsight session journal :: Bank, banks recalled, per-bank status/results/latency, query sizes, total injected chars, turn capture sizes, flush operation ids, triggers and delivery confirmation, all with invocation_id
+  $ cat ~/.agents/journal/sessions/<cli>-<SID>.jsonl | jq -c .   (events: briefing, recall, recall_skipped, turn_captured, turn_skipped, session_flush, session_flush_confirmed, session_flush_failed, session_flush_abandoned, session_flush_unverifiable)
+  ! Counts and ids only, never text. Confirmation rows have empty invocation_id. Written only when session_id is present. LOG.md summary (retains column) is always 0.
+# Hindsight capture buffer :: The cleaned ask text, final-answer text (<=2400 chars), edited file paths per turn, batch statuses/attempts/next_at, confirmed_turns, bank/repo/host/document_id
+  $ python3 ~/code/33GOD/bloodbank/services/hook-hub/session_capture.py status;  jq . ~/.local/state/33god/hook-hub/capture/<cli>-<SID>.json
+  ! Holds prompt and answer text (0600). Removed after delivery is confirmed and the session is closed; pending asks of an unfinished turn are overwritten into turns. Must be copied at Stop time to be recorded.
+# Hindsight server: audit log (recall and retain) :: For the prompt: exact query, budget, max_tokens, prefer_observations, types, started_at/ended_at/duration_ms, and response.results[] (memory text, type, document_id, chunk_id, entities, tags, scores final/reranker/semantic) plus the entities map
+  $ hindsight audit list <bank> --action recall --start-date <ISO> --end-date <ISO> -o json -l 20   (also --action retain)
+  ! No invocation or session id in the row (metadata is {}); join by bank + time window + query text. Server retention not verified. Contains the full prompt text.
+# Hindsight server: documents, memory units, operations, mental models :: Document with memory_unit_count, nodes_by_fact_type, original_text; retain operation status and result_metadata (unit_ids_count, total_tokens, extraction_errors_count); the following consolidation (progress stage and counts), graph_maintenance and re
+  $ hindsight document get <bank> session-<cli>-<SID> -o json ; curl -H 'Authorization: Bearer <key from ~/.hindsight/config>' https://api.hs.delo.sh/v1/default/banks/<bank>/operations/<operation_id> ; .../operations?limit=60 ; .../memories/list?limit=300 (filter document_id) ; hindsight mental-model list <bank> -o json ; GET .../config
+  ! document get 404s until the first flush. Consolidation/refresh ops are not linked to a document; use created_at adjacency. `hindsight memory list` lacks a document filter, use the REST list and filter locally.
+# ASM Redis :: Ordered state edges (from, to, reason in {start,prompt,tool_req,tool_done,fail,quiesce,attention,stale,gone,discover}, held_ms, tools, subs, seq, at_ms, cwd, pane) and the current hash (state, counters, block_kind, err_ms, prev, since)
+  $ bash -c 'redis-cli XRANGE asm:t:claude:s:<SID> - + ; redis-cli HGETALL asm:a:claude:s:<SID> ; redis-cli GET asm:idx:pane:<zellij session>:<pane>' ; live: redis-cli SUBSCRIBE asm:transitions
+  ! Scope is sid-keyed for hook rows, so the scope is derivable from session id. Stream/hash TTL is 900s after the LAST edge: snapshot at Stop or tail the stream/pub-sub during the turn. asm:transitions is pub/sub only (no history). This machine's zsh wraps redis-cli oddly; run under bash -c. Counter dr
+# ASM transitions log :: Human-readable from->to, scope, held_ms for every matched transition (asm-log matches all edges)
+  $ grep '<SID>' ~/.local/state/33god/asm/transitions.log
+  ! Local-time ISO timestamps; rotates at 1 MiB with one .1 generation.
+# Nanoleaf / painters state :: Latest panel state for the pane (active/hitl/error/idle) with ts; live nlp:events {pane,state}
+  $ bash -c 'redis-cli HGETALL nlp:pane:<zellij session>:<pane>; redis-cli SUBSCRIBE nlp:events'; zellij action list-tabs (tab names carry the ASM glyph)
+  ! Latest-value only, 6h TTL; physical light colour and the tab rename are not recorded anywhere; keyed by pane not session.
+# Hub log, journald, candystore :: Hub-level errors (handler TIMEOUT killed, 'request failed: JSONDecodeError'), sweep summaries, and the Candystore session/turn events for the same session
+  $ tail ~/.local/state/33god/hook-hub/hub.log ; journalctl --user -u hindsight-capture-sweep.service -u hook-hub.service --since <t> ; curl -s http://127.0.0.1:8683/sessions/<SID>
+  ! hub.log lines have no session or invocation id; 1 MiB rotation.
+# AutomaticAI proof (codex) :: Marker, routing snapshot (provider/model/status/authority), pending/verified/bypass, last_check, receipts from the gateway usage log
+  $ python3 ~/.agents/hooks/hub/automaticai.py status --session-id <codex session>  or  jq . ~/.local/state/automaticai/session-proof/<id>.json
+  ! Codex only; stores the prompt sha256, not the prompt.
+-- KEYS
+  session_id (native) | The agent CLI (Claude session UUID e.g. 7dcf25a3-9dee-4fe2-8da2-7d569ad24599; Codex thread uuid) | breaks: ASM hash fields session_id and correlationid are empty (only the scope embeds it, and only for sid-basis scopes; pid-keyed claude:p:<pid>.<starttime> rows have no session link); Hindsight audit rows a
+  invocation_id (BB_HOOK_INVOCATION_ID) | bb-hook / hook-hub per native hook call (uuid) | breaks: async confirmation rows (session_flush_confirmed) from the sweeper have invocation_id '' ; ASM transitions and nanoleaf writes do not carry it (join by scope/pane + at_ms); Hindsight audit does not ca
+  document_id = session-<cli>-<session_id> | session_capture.new_state at the first captured event of a session (derivable at any time) | breaks: does not exist on the server until the first flush (size >= 9000 chars, SessionEnd, or 2h idle); bank is fixed at first event so a cwd move later does not change the bank; one document per session acr
+  operation_id = uuid5(5b0f7a52-3c1e-4d59-9a57-7e0c5f1d2a61, '<bank>/<document_id>/<firstTurn>-<lastTurn>/<attempt>') | session_capture.operation_id when a batch is created/sent | breaks: changes when a batch's turn range is extended or the attempt increments; the following consolidation and refresh_mental_model operations have uuid4 ids with no document_id or parent link (correlate by
+  ASM scope (claude:s:<session> | claude:p:<pid>.<starttime> | hermes:a:<profile> | codex:s:/p:) | core/asm.py resolve_scope four-rung ladder, in the hub-spawned publisher process | breaks: hook-driven rows are sid-keyed for claude (hub child has no claude ancestor and CLAUDE_PID is not forwarded) while the sweeper's discover rows are pid-keyed, so one running agent can appear as two sco
+  zellij session + pane (ZELLIJ_SESSION_NAME / ZELLIJ_PANE_ID, e.g. Workspace:35) | zellij, forwarded by bb-hook's env allowlist | breaks: only exists for sessions running in zellij panes; Orca panes use ORCA_PANE_KEY instead; Codex Desktop and headless runs have neither
+  bank name (e.g. 33GOD) | hindsight.resolve_bank (override file > $HINDSIGHT_BANK > git origin repo name > checkout dir > declared dir > existing dir bank > general) | breaks: falls back to `general` (journaled in bank-fallback.jsonl) for non-repo cwd; hermes agents may also write/read a personal bank; ancestry/fanout banks are opt-in
+  timestamp (UTC ISO ms in receipts, ISO us in journal, epoch ms in ASM, local-tz ISO in transitions.log, epoch s in nlp) | each recorder's own clock on the same host | breaks: four different formats and timezones; the Hindsight audit started_at/ended_at (03:53:25.716-.075) are the join key for recall against receipts (.634-.087) because the audit row has no id
+===== model-transcripts
+# Claude transcript: slice one turn :: Ordered entries for the turn: user prompt, attachments (incl. hook_additional_context with the injected recall), api-request/shape/blob triples, assistant blocks with usage and requestRef, tool_use/tool_result with toolUseResult, hook_success per too
+  $ SID=<session>; F=$(ls ~/.claude/projects/*/$SID.jsonl); jq -c 'select(.type!="api-request-blob")' "$F" | awk 'BEGIN{n=0} {print NR"\t"$0}' > /tmp/t.tsv   # then: start = first line with type=user and promptSource=="typed" and turnPosition.turnIndex==N; end = next line with type=="system" and subtype=="turn_duration" (its parentUuid is the stop_hook_summary). Also: jq -c 'select(.promptId=="<promptId>")' "$F" for the prompt's entries, and for blobs: jq -c 'select(.type=="api-request-blob" and .hash=="<hash from api-request.tail>")'
+  ! The file is under the launch-dir slug, not the cwd slug, so glob it. api-request-blob and api-request-shape lines have no timestamp except api-request/shape; they sit adjacent to their api-request line. Sidechains are separate files: ls $(dirname $F)/$SID/subagents/workflows/*/agent-*.jsonl (filter 
+# hook-hub receipts (per hook handler timeline) :: Which handlers ran, skipped (with reason) or were async for each native event, with ms timings and the published event type. Example Claude UserPromptSubmit bdbdba89-...: 9 handlers, about 0.9s. Example Codex 3fab7fb4-...: 9 handlers incl. automatica
+  $ curl -s 'http://127.0.0.1:8685/v1/hooks/invocations?cli=claude&limit=500&offset=0' | jq '.items[]|select(.session_id=="'$SID'")'  # then curl -s http://127.0.0.1:8685/v1/hooks/invocations/<invocation_id> | jq '.invocation|{received_at,executions:[.executions[]|{handler_id,mode,status,reason,started_at,duration_ms,event_type}]}'
+  ! A session_id query param is silently IGNORED (total stays 102552), so page newest-first and filter client-side; list items have invocation_id, cli, native, role, status, session_id, identity_kind, received_at. Retention is about 4 days (oldest row 2026-11-12T18:22:37Z), so Desktop sessions from 11-0
+# Candystore: agent events for a session and the raw hook payload :: session.started, turn.started/completed/annotated, tool.requested/completed (tool_call_id) and invocation.started for subagents. Codex events keep the whole hook payload including transcript_path, cwd, model and permission_mode.
+  $ curl -s http://127.0.0.1:8683/sessions/$SID | jq '.events[]|{type,time,id,turn:.data.turn_id}'; curl -s http://127.0.0.1:8683/events/<event-id>/raw | jq '.data.payload'
+  ! Claude event payload is null (only curated data fields). The feed is capped (the /events default limit is 100) and the session lists hundreds of tool events, so page. Event time is publish time, not the transcript timestamp (turn.started 03:53:25.506Z vs transcript user entry 03:53:25.260Z).
+# Gateway usage rows for a session (no credentials needed) :: Per request: route actually served (e.g. claude-opus-5.5 vs claude-sonnet-5.5, sol-6.1), native model, effort, token breakdown, TTFT, outcome and status. Verified: 153 rows for the Claude session in one 7-minute window; 51 for a Codex session; 11 for
+  $ curl -s 'http://127.0.0.1:8683/events?type=bloodbank.llm.usage.recorded&from=<iso start>&to=<iso end+15s>&limit=500' | jq -c '.events[].data|select(.session_id=="'$SID'")|{at:.occurred_at,rid:.request_id,log:.gateway_log_id,req:.requested_model,route,nm:.native_model,eff:.effective_effort,in:.usage.input_tokens,cr:.usage.cache_read_input_tokens,cw:.usage.cache_write_input_tokens,out:.usage.output_tokens,reason:.usage.reasoning_output_tokens,lat:.latency_ms,ttft:.time_to_first_token_ms,outcome,status:.status_code,path:.request_path,tok:.consumer.token_name}'
+  ! Use from/to with a 10-15s margin after turn end (about 7s exporter lag). latency_ms is whole seconds (use_time*1000). occurred_at is the completion time. quota/cost is not in this event (subscription routes charge quota 0; metered OpenRouter routes only via the ledger). It carries no fallback chain 
+# Gateway ledger row + router decision + trace (fallback chain hops) :: Ledger row: automaticai_route/account/requested_model, automaticai_auto{role,role_source,rung,tier,effort,reasons,sticky,alternatives,classification}, frt, stream_status{end_reason,response_status}, response_model{requested,upstream,returned}, reques
+  $ TOK=$(op read 'op://DeLoSecrets/l2wcxoseb33kpdsfijbpitu73u/credential'); curl -s -H "Authorization: Bearer $TOK" "https://api.automaticai.io/api/log/?type=2&request_id=<rid>&p=1&page_size=5" | jq '(.data|if type=="array" then . else .items end)[0]|{id,request_id,created_at,use_time,prompt_tokens,completion_tokens,quota,channel,channel_name,is_stream,other:(.other|fromjson)}'; curl -s -H "Authorization: Bearer $TOK" https://api.automaticai.io/api/automaticai/traces/<rid> | jq '.data|{outcome,attempts,trace:{steps:.trace.steps,attempts:.trace.attempts}}'
+  ! Needs the admin PAT through 1Password (read-only GETs; the Authorization header must never be logged). The list endpoint filters only by time window, token_name, model_name and request_id, so session lookup means page by window and filter other.automaticai_session_id client-side (gateway-proof.py ch
+# Codex rollout: slice one turn exactly :: Exactly the lines (ordinals) of one turn: task_started, bootstrap and hook-injected developer messages, user message, reasoning, function_call/function_call_output, item_completed, token_usage_record (response_id, per-call usage), token_count, task_c
+  $ T=$(sqlite3 -readonly ~/.codex/thread_history_1.sqlite "select rollout_byte_offset||' '||rollout_end_byte_offset from thread_turns where thread_id='$SID' and turn_id='$TURN'"); set -- $T; R=$(sqlite3 -readonly ~/.codex/state_5.sqlite "select rollout_path from threads where id='$SID'"); tail -c +$(($1+1)) "$R" | head -c $(($2-$1)) | jq -c '[.ordinal,.timestamp,.type,(.payload.type//"")]'   # session_meta is line 1; also: jq 'select(.type=="token_usage_record" and .payload.turn_id=="'$TURN'")' "$R"
+  ! Offsets are bytes into the rollout (UTF-8, newline-delimited). A turn that is still running has no completed row (row appears at completion; not tested for in-progress turns). thread_history DB is paginated-history projection and may lag. Rollouts include full tool outputs and base instructions.
+# Codex Desktop vs CLI discriminator :: originator: codex_exec/exec (headless fleet agents, 14 of the 0.169.0 rollouts), codex-tui/cli (interactive TUI), codex_work_desktop/vscode (Desktop; older 'Codex Desktop'), plus subagent source objects (guardian review, thread_spawn with parent_thre
+  $ head -1 "$R" | jq '.payload|{originator,source,thread_source,cli_version,cwd,desktop_tools:([.dynamic_tools[]?|select(.type=="namespace")|.name])}'; sqlite3 -readonly ~/.codex/state_5.sqlite "select id,originator,source,thread_source from threads where id='$SID'"
+  ! source=vscode is not Desktop-only (codex-tui/vscode and hermes/vscode rows exist). Match on originator, not source. Hook payload and gateway cannot tell them apart. All recent live sessions in sessions/2026/11/14-15 are codex_exec, so no Desktop session is currently active to observe live (no Codex 
+-- KEYS
+  session_id (Claude: CLAUDE_CODE_SESSION_ID UUID; Codex: thread UUIDv7 == session_meta.id) | Claude Code process / Codex runtime at session start | breaks: usage.recorded.correlationid is the event's own id, so /sessions/{sid} and q= miss gateway rows; page the type=bloodbank.llm.usage.recorded feed by time window and filter data.session_id. Subagents re
+  turn_id (Claude '<session>:turn:N'; Codex native UUIDv7) | Claude: by the Bloodbank publisher (minting code not located in this slice); equals transcript user turnPosition.turnIndex (verified only for N=1). Co | breaks: Codex ids match exactly across hook events, rollout and thread_turns. The Claude id is synthetic and does not appear in the transcript; it must be mapped through turnPosition.turnIndex (human prompts 
+  promptId (Claude) | Claude Code at prompt submit | breaks: Not forwarded to hook-hub, Candystore or the gateway; it is a transcript-only join that groups everything caused by one typed prompt, including subagent files.
+  tool_use id (toolu_...) == hook_success.toolUseID == Candystore tool_call_id | Anthropic/gateway model response (tool_use block id) | breaks: Lifecycle hooks use synthetic ids (SessionStart, hook-<uuid> for UserPromptSubmit and PostToolBatch). 397 requested vs 394 completed in Candystore, so a missing completion is itself a signal. Codex to
+  api-request.id == assistant.requestRef; message.id (msg_...) | Claude Code client (id) and the upstream provider (msg_) | breaks: Client-side only. Neither id reaches the gateway ledger, so the gateway request_id must be joined by (session, time, tokens). The same usage is repeated on every content-block entry (dedupe by request
+  gateway request_id (e.g. 202611160355130300634458268d9d65BRZZsba) | aai-gateway (NewAPI) per request; also returned as X-Oneapi-Request-Id and the auto decision id | breaks: Not in the vendor transcripts, so the join is: same session_id AND gateway usage.input_tokens == transcript (input+cache_read+cache_creation) AND output_tokens equal AND occurred_at within seconds aft
+  response_id (Codex resp_...) | upstream OpenAI responses API | breaks: Not seen in the gateway ledger fields I inspected (a logs.upstream_request_id column exists in the attribution list but I did not verify it carries resp_ ids), so use token counts/time.
+  transcript_path (Codex hook payload) | Codex runtime | breaks: Claude hook payloads are not kept in Candystore events (payload null), so Claude's path is found by glob. Because transcript_path reaches the recorder only on Codex, it is the way to read session_meta
+===== live-probe
+# hook-hub receipts :: Every hook invocation and the per-handler timeline (sync and async), plus publisher event_ids and transition invocations (by time window)
+  $ sqlite3 -readonly -header ~/.local/state/33god/hook-hub/receipts.sqlite3 "select i.id,i.native,i.received_at,i.status,e.handler_id,e.status,e.reason,e.started_at,e.finished_at,e.event_id from invocations i join executions e on e.invocation_id=i.id where i.session_id='<sid>' or i.received_at between '<t0>' and '<t1>' order by i.received_at,e.started_at"
+  ! Handler stdout and stderr are not stored. exit_code is the wrapper's code (0 even on handler_exit_nonzero). Transition invocations have no session_id, so match them by time.
+# bus (all consumers' view) with JetStream seq :: Ordered CloudEvents with JetStream seq and collected_at for lifecycle, hook.updated, usage and report events
+  $ curl -s "localhost:4000/api/events?limit=500&after=<cursor>&type=<type>" | jq '.events[]|{sequence,collected_at,id:.envelope.id,type:.envelope.type,cause:.envelope.causationid,corr:.envelope.correlationid}'
+  ! `after` is the holocene cursor, not the JetStream seq. About 13 msg/s of background noise, so filter on session_id/correlationid. GET /api/events/status shows the current cursor.
+# Candystore raw event :: The full stored envelope, including data.prompt_text / reply_text
+  $ curl -s http://127.0.0.1:8683/events/<event-id>/raw
+  ! Fetches by id only. Use psql to search by time or session.
+# Candystore Postgres :: Ingest time (lag vs event time) and dead-lettered events
+  $ docker exec candystore-postgres sh -c 'psql -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}" -Atc "set default_transaction_read_only=on; select received_at, raw->>'\''id'\'', raw->>'\''type'\'' from events where received_at > now()-interval '\''5 min'\'' order by received_at; select received_at,event_id,reason,error,convert_from(raw,'\''UTF8'\'') from dead_letter order by received_at desc limit 5"'
+  ! dead_letter.raw is bytea. Events are keyed by id with no JetStream seq.
+# Redis ASM :: The live state hash and the per-session transition stream (start/prompt/quiesce, with held times)
+  $ redis-cli -p 6379 --scan --pattern '*<sid>*'; redis-cli -p 6379 HGETALL asm:a:<cli>:s:<sid>; redis-cli -p 6379 XRANGE asm:t:<cli>:s:<sid> - +; redis-cli -p 6379 ZSCORE asm:live <cli>:s:<sid>
+  ! TTL is about 900s, so capture within 15 minutes. asm:transitions does not exist. The pane index can point at the parent session.
+# ASM transitions log :: Durable from->to lines with held_ms and pid
+  $ tail -n 20 ~/.local/state/33god/asm/transitions.log
+  ! Uses local time (EST) and has no session id beyond the scope.
+# Claude transcript :: In order: hook_success, additional context, meta injections, api-request, assistant output, stop_hook_summary
+  $ jq -c '{t:.timestamp,type,sub:(.attachment.type // .subtype // .message.role),isMeta,promptId}' ~/.claude/projects/-tmp/<sid>.jsonl
+  ! The project dir is cwd-slugged. Cost lives in cost-state lines.
+# Codex rollout and state :: The codex turn timeline, response_id and token usage, plus the hidden memory-job outcome
+  $ jq -c '{t:.timestamp,type,p:(.payload.type)}' ~/.codex/sessions/YYYY/MM/DD/rollout-*-<sid>.jsonl; sqlite3 -readonly ~/.codex/state_5.sqlite "select * from threads where id='<sid>'"; sqlite3 -readonly ~/.codex/memories_1.sqlite 'select * from jobs'
+  ! The memory agent has transcript_path null and no rollout of its own in sessions/.
+# Hindsight side effects :: The briefing/recall/turn-skip decisions with latency, the bank fallback and the retain count
+  $ cat ~/.agents/journal/sessions/<cli>-<sid>.jsonl; tail -3 ~/.agents/journal/bank-fallback.jsonl; tail -3 ~/.agents/journal/LOG.md; docker logs --since <t0> --until <t1> hindsight 2>&1 | rg RECALL
+  ! The container log has no session id. The capture .json buffer is deleted at session end.
+# Downstream consumer logs :: Enricher rollup, turn-enricher classification, ntfy routing and rate-limit decisions, Dapr DROP
+  $ for c in enricher bloodbank-turn-enricher bloodbank-ntfy-router candystore candystore-daprd; do docker logs --since <t0> $c 2>&1 | tail -20; done
+  ! For turn-enricher, --since/--until missed lines, so use --tail. ntfy-router lines have no ids.
+# Filesystem side effects :: Every file each run touched (session state, publish log, MCP logs, codex sqlite and memories)
+  $ touch -d @<t0> /tmp/mark; find ~ /tmp -xdev -newer /tmp/mark -type f -not -path '*/node_modules/*' 2>/dev/null
+  ! Noisy from parallel agents. Attribute files by name and key, not mtime alone.
+-- KEYS
+  session_id | The CLI: claude-code mints a UUIDv4; codex mints a UUIDv7 (the shared prefix 01a1e288 is only a timestamp) | breaks: Several places drop or obscure the session id:
+- ASM transition invocations have no session_id, and the asm:a hash leaves correlationid/session_id empty.
+- ntfy-router logs carry no ids.
+- The hindsig
+  CloudEvent id / causationid chain | agent-hooks publish.py, once per lifecycle event | breaks: Three event types fall outside the chain:
+- hook.updated uses correlationid = invocation_id and carries no causation link to agent events.
+- llm.usage.recorded has no causationid to turn.started; join
+  invocation_id | hook-hub hub.py on socket receive | breaks: Agent CloudEvents do not carry it; the join is executions.event_id. Synthetic transition invocations cannot be tied to their parent hook invocation except by time and pid.
+  turn_id | Claude: the agent-hooks claude client mints '<sid>:turn:N'. Codex: the native payload turn_id (UUIDv7). | breaks: The two CLIs use different formats. It is absent from gateway usage events, and Claude's transcript promptId is not in any bus event.
+  request_id / gateway_log_id / usage_id | aai-gateway on receive (the request_id prefix encodes the receive time as yyyyMMddHHmmssSSS) | breaks: Nothing ties it to the transcript api-request id (7fb29e6c...) or the codex response_id (resp_...). occurred_at has only second precision.
+  consumer.token_name | aai-gateway per-consumer token | breaks: It identifies the CLI type, not the session.
+  JetStream sequence | bb-nats stream BLOODBANK_EVENTS | breaks: Candystore rows do not store it, and there is no nats CLI on the host. The holocene `after` parameter is a collector cursor (~9.47M), not the stream seq.
+  zellij pane (Workspace:35) | Inherited env ZELLIJ_SESSION_NAME / ZELLIJ_PANE_ID | breaks: Child and headless runs inherit the parent's pane. asm:idx:pane:Workspace:35 still points at the parent session 7dcf25a3, so pane-based attribution is wrong for nested runs.
+  AAI_ROUTE_PROOF marker | hook-hub automaticai.py on every action=start (SessionStart AND UserPromptSubmit) | breaks: The marker is regenerated at UserPromptSubmit, so there are two markers per session. The proof stayed pending/unverified. It is codex-only.
