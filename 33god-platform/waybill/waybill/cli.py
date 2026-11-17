@@ -236,7 +236,9 @@ def run_pipeline(window: M.TurnWindow, *, profile: str = "full", deep: bool = Fa
 
 def write_waybill(wb: dict, out: str | None, compact: bool = False) -> Path:
     path = Path(out) if out else Path.cwd() / f"{wb['id']}.waybill.json"
-    if path.is_dir():
+    # an existing dir, a trailing slash, or a suffix-less name means "write into this directory"
+    if path.is_dir() or (out and (out.endswith(("/", "\\")) or not path.suffix)):
+        path.mkdir(parents=True, exist_ok=True)
         path = path / f"{wb['id']}.waybill.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
