@@ -22,7 +22,15 @@ MONITOR_URL = os.environ.get("WAYBILL_NATS_MONITOR", "http://127.0.0.1:8222")
 STREAMS = ("BLOODBANK_EVENTS", "BLOODBANK_COMMANDS")
 SUB_PREFIXES = ("bloodbank.", "deckard.")
 STALE_MS = 3_600_000.0
+N8N_IDLE_MS = 86_400_000.0
 SNAPSHOT_GAP_MS = 60_000.0
+
+# BB-41: these exact legacy delegation durables were reported inactive in the
+# ticket's read-only check. The snapshot cannot verify current workflow state.
+RETIRED_DELEGATION_DURABLES = frozenset({
+    "n8n-l0J53w0TsS5PwETk-8b302a2c-5f47-5294-88de-9fbd52b2822b",
+    "n8n-8mmqdMwQYA28ZwUj-d1000000-0000-4000-8000-000000000001",
+})
 
 # (regex on the consumer name, component id); first match wins
 CONSUMER_COMPONENTS: list[tuple[str, str]] = [
@@ -162,6 +170,15 @@ def idle_consumers(consumers: list[dict], subjects: list[str], now: float) -> li
             continue
         last = ms(c.get("last_active"))
         unbound = c.get("push") and not c.get("push_bound")
+        if c.get("component") == "n8n":
+            # A waiting pull is live even if the last delivered message is old.
+            # Last delivery age alone cannot prove 24 hours without polling.
+            idle = not (c.get("push_bound") if c.get("push") else (c.get("num_waiting") or 0) > 0)
+            if c.get("kind") == "durable" and idle and last is not None and now - last > N8N_IDLE_MS:
+                out.append({**c, "subjects_hit": hit,
+                            "idle_diagnosis": "retired_lane_residual" if c.get("name") in RETIRED_DELEGATION_DURABLES
+                            else "orphan_candidate"})
+            continue
         stale = last is None or now - last > STALE_MS
         if unbound or (stale and c.get("kind") == "durable"):
             out.append({**c, "subjects_hit": hit})
@@ -202,10 +219,22 @@ def collect(ctx: Ctx) -> Fragment:
                 f"or removed in between are not reflected, and ack floors have moved on", "info"))
         subjects = sorted({p["subject"] for p in hookhub.published_events(ctx) if p.get("subject")})
         for c in idle_consumers(consumers, subjects, now):
+            diagnosis = c.get("idle_diagnosis")
+            if diagnosis == "retired_lane_residual":
+                title = f"JetStream consumer {c['name']} has a retired-lane residual backlog"
+                state = ("matches a historically inactive BB-41 delegation durable; current workflow state is not "
+                         "verified by this NATS snapshot. Do not reactivate or replay it; verify ownership before retirement")
+            elif diagnosis == "orphan_candidate":
+                title = f"JetStream consumer {c['name']} is an idle backlog candidate"
+                state = ("has no current bound push or waiting pull and last delivery was over 24 hours ago; "
+                         "one snapshot does not prove a continuous outage or workflow activation state")
+            else:
+                title = f"JetStream consumer {c['name']} is not consuming"
+                state = "unbound" if c.get("push") and not c.get("push_bound") else "idle"
             frag.findings.append(Finding(
-                "warn", f"JetStream consumer {c['name']} is not consuming",
+                "warn", title,
                 f"{c['name']} ({c['kind']}, filter {', '.join(c['filter_subjects']) or '>'}) matches "
-                f"{', '.join(c['subjects_hit'])} from this turn but is {'unbound' if c.get('push') and not c.get('push_bound') else 'idle'}"
+                f"{', '.join(c['subjects_hit'])} from this turn but {state}"
                 f" (last active {c.get('last_active') or 'never'}) with {c.get('num_pending')} messages pending.",
                 c["component"], [NAME]))
     except Exception as exc:  # fail soft
