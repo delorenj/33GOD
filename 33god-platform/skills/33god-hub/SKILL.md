@@ -1,6 +1,6 @@
 ---
 name: 33god-hub
-description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Plane/n8n ingress, Bloodbank events or commands, Candystore, Holocene, PJangler, Flume, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, HeyMa, hooks, changelogs, backfills, or local/cloud platform composition, especially when tracing a message end-to-end.
+description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Plane/n8n ingress, Bloodbank events or commands, Candystore, Holocene, PJangler, Flume, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, HeyMa, hooks, Waybill prompt-flow recordings, changelogs, backfills, or local/cloud platform composition, especially when tracing a message end-to-end.
 ---
 
 # 33GOD Hub
@@ -32,6 +32,7 @@ changelog, skill routing, and backfill coordination.
 | Recall/retain/journal memory hooks | Hindsight |
 | Compact MCP tool gateway | Pipeline MCP Hub |
 | Recurring/scheduled work (cron, timers, nightly jobs, poll loops); scheduling, metering and migration | Candybar (the single clock; never cron or a new `.timer`) via the `candybar` skill |
+| One prompt's end-to-end flight record (hooks, events, consumers, model calls) and its Factory replay | Waybill (`33god-platform/waybill`, `manual/sandbox`) via the `waybill` skill |
 | Voice/transcription/TTS interface | HeyMa |
 
 ## Platform skills
@@ -44,6 +45,7 @@ matching one rather than re-deriving its decisions here.
 | Adding or renaming a Plane label, choosing between a label and a state, wiring automation that writes to a board, scaffolding or reconciling a project board | `board-taxonomy` |
 | Landing a change forward across the component repos | `merge-forward` |
 | Publishing or composing skill packs | `skillex-skill-registry` |
+| Debugging whether a hook, handler or event fired, proving a change end to end across hook-hub, Bloodbank, Candystore, ASM, Hindsight and the gateway, or playing one prompt's flow back in the Factory | `waybill` (`waybill record\|capture\|show\|publish`) |
 | Simplifying repository ignores or reconciling already-tracked paths against the effective global ignore | `gitignore-maintenance` |
 
 ## Event and command spine
