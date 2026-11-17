@@ -394,7 +394,7 @@ html.dock-drag-x, html.dock-drag-x * { cursor: ew-resize !important; user-select
 /* inspector */
 .wbi { position: fixed; right: 12px; top: 70px; width: min(380px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100vh - 70px - var(--wb-bot) - 24px); display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); z-index: 45; }
 .wbi-in { overflow: auto; min-height: 0; padding: 12px 14px; }
-.wbi-x { position: absolute; z-index: 2; top: 4px; right: 8px; border: 0; background: none; font-size: 24px; color: var(--muted); }
+.wbi-x { position: absolute; z-index: 2; top: 4px; right: 8px; width: 30px; height: 30px; padding: 0; line-height: 1; border-radius: 99px; background: var(--paper); border: 0; font-size: 24px; color: var(--muted); }
 .wbi h3 { margin: 0 24px 2px 0; font: 600 18px/1.2 Fredoka, sans-serif; word-break: break-word; }
 .wbi h4 { margin: 10px 0 4px; font: 600 13px Fredoka, sans-serif; }
 .wbi-sub { font-size: 13px; color: var(--muted); }
@@ -504,7 +504,7 @@ html.dock-drag-x, html.dock-drag-x * { cursor: ew-resize !important; user-select
   .wb-hud.phone .wb-dots { display: none; }
   .wb-hud.phone .wb-count { display: inline; }
   .wb-hud.phone .wb-tr { gap: 8px; }
-  .wb-hud.phone.wf-open .wb-stop { display: none; }
+  .wb-hud.phone.wf-open .wb-stop, .wb-hud.phone.wf-open .wb-end { display: none; }
   .wb-hud.phone .wb-stop h3 { font-size: 17px; }
   .wb-hud.phone .wb-stop p { font-size: 14px; margin-bottom: 6px; }
 }

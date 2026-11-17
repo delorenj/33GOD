@@ -250,7 +250,13 @@ export function WaybillHud() {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null
       if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return
-      if (t?.closest?.('.dock-grip')) return // a focused dock grip owns arrows, space, Enter, Home and End
+      // a focused dock grip owns only the keys it handles (its own axis, Home/End, Enter/Space when it folds); Esc, W and the rest still reach the HUD
+      const grip = t?.closest?.('.dock-grip') as HTMLElement | null
+      if (grip) {
+        const k = e.key
+        const axis = grip.classList.contains('right') ? /^Arrow(Left|Right)$/ : /^Arrow(Up|Down)$/
+        if (axis.test(k) || k === 'Home' || k === 'End' || ((k === 'Enter' || k === ' ') && grip.dataset.fold === '1')) return
+      }
       const s = useWb.getState()
       if (e.key === 'Escape') {
         e.stopPropagation()

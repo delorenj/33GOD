@@ -129,6 +129,7 @@ export function DockGrip({ dock, label }: { dock: Dock; label: string }) {
     d.setDragging(false)
     document.documentElement.classList.remove('dock-drag-y', 'dock-drag-x')
     if (f.moved) d.persist(last.current)
+    e.currentTarget.blur() // a mouse drag must not leave the grip holding the keyboard
   }
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     const grow = vertical ? 'ArrowUp' : 'ArrowLeft'
@@ -147,7 +148,12 @@ export function DockGrip({ dock, label }: { dock: Dock; label: string }) {
     else handled = false
     if (handled) { e.preventDefault(); e.stopPropagation() }
   }
-  useEffect(() => () => document.documentElement.classList.remove('dock-drag-y', 'dock-drag-x'), [])
+  // unmounted mid-drag (the inspector closes when playback moves on): no pointerup will come, so end the drag here
+  const setDragging = d.setDragging
+  useEffect(() => () => {
+    if (from.current) { from.current = null; setDragging(false) }
+    document.documentElement.classList.remove('dock-drag-y', 'dock-drag-x')
+  }, [setDragging])
 
   return (
     <div
@@ -159,6 +165,7 @@ export function DockGrip({ dock, label }: { dock: Dock; label: string }) {
       aria-valuemax={d.max}
       aria-valuenow={d.collapsed ? 0 : Math.round(d.size)}
       tabIndex={0}
+      data-fold={d.collapsible ? '1' : undefined}
       title={`${label}: drag to resize${d.collapsible ? ', double-click to fold' : ''}`}
       onPointerDown={onDown}
       onPointerMove={onMove}
