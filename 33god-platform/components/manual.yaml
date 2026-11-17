@@ -1,0 +1,32 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: manual
+name: The Manual
+role: ui
+repo: .
+description: Picture manuals that explain how the platform works, one page at a time.
+changelog:
+  topics:
+  - g11
+  - ui
+kind: ui
+first_party: true
+domain: G11
+c4:
+  level: container
+  parent: ''
+status: partial
+summary: Picture manuals that explain how the platform works, one page at a time.
+role_in_system: Onboarding path for non-engineers and new builders (I-10).
+tech:
+- html
+- svg
+- nginx
+runtime: nginx container manual-web serves 33god-platform/manual/books read-only
+relations: []
+evidence:
+- 33god-platform/manual/README.md
+- ~/docker/stacks/websites/manual/compose.yml
+confidence: high
+notes: I-10. Creative direction is the operator's; pages are proposed, never redrawn.
+surfaces:
+- container:manual-web

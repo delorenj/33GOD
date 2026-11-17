@@ -1,0 +1,30 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: opencode-server
+name: OpenCode server
+role: service
+repo: ''
+description: Headless coding-agent server reachable from anywhere on the network.
+changelog:
+  topics:
+  - g3
+  - service
+kind: service
+first_party: false
+domain: G3
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Headless coding-agent server reachable from anywhere on the network.
+role_in_system: Remote entry point for driving a coding agent without a terminal.
+tech:
+- opencode
+runtime: 'systemd user unit opencode.service: opencode serve on the docker bridge :4096; Traefik dynamic route opencode.yml'
+relations: []
+evidence:
+- ~/.config/systemd/user/opencode.service
+- ~/docker/core/traefik/traefik-data/dynamic/opencode.yml
+confidence: high
+notes: Agent hook events from OpenCode sessions are claimed by agent-hooks (producer:opencode).
+surfaces:
+- systemd:opencode.service

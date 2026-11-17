@@ -14,7 +14,9 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_ntfy = softwareSystem "ntfy" "A push-notification server that delivers alerts to phones." { tags "External" }
     c_onepassword = softwareSystem "1Password" "Vault holding every credential; services carry references to it, never plaintext." { tags "External" }
     c_open_notebook = softwareSystem "Open Notebook" "The notebook site where the owner wants generated docs placed." { tags "External" }
+    c_opencode_server = softwareSystem "OpenCode server" "Headless coding-agent server reachable from anywhere on the network." { tags "External" }
     c_openrouter = softwareSystem "OpenRouter" "A paid model marketplace used as a fallback provider." { tags "External" }
+    c_orca = softwareSystem "Orca" "Worktree IDE where each agent's branch is a card." { tags "External" }
     c_plane = softwareSystem "Plane" "The ticket board where work is tracked in lanes." { tags "External" }
     c_postgres = softwareSystem "PostgreSQL" "Database engine behind Candystore, Candybar, pjangler, n8n and Plane." { tags "External" }
     c_redis = softwareSystem "Redis" "In-memory store for live agent state and the 1Password read cache." { tags "External" }
@@ -36,6 +38,8 @@ workspace "33GOD" "One map of every component (I-12)" {
       }
       group "Integration Plane" {
         c_curator = container "Curator" "Sorts and files incoming documents and folders automatically." "python" {
+        }
+        c_delosip = container "DeLoSIP ring bridge" "Makes the phone ring loudly for verified incoming calls." "python, n8n, adb" {
         }
         c_n8n_devjournal = container "Dev journal workflow" "An n8n workflow that writes development journal entries from events." "n8n" {
         }
@@ -81,7 +85,11 @@ workspace "33GOD" "One map of every component (I-12)" {
         }
       }
       group "Project Tooling" {
+        c_activity_report = container "Activity report" "Writes the periodic what-shipped update for each project and audience." "python, bash" {
+        }
         c_commonproject = container "CommonProject" "Shared scaffolding every project starts from." "" {
+        }
+        c_mobile_deploy_hub = container "Mobile deploy hub" "One deploy contract for every mobile app: build, publish, install, announce." "node, github-actions" {
         }
         c_pipeline_mcp_hub = container "Pipeline MCP Hub" "One place that exposes platform tools to agents over MCP." "mcp" {
         }
@@ -93,6 +101,8 @@ workspace "33GOD" "One map of every component (I-12)" {
         }
       }
       group "Voice Pipeline" {
+        c_earshot = container "Earshot" "Drop a sound file into a channel and the phone plays it." "python, kotlin, s3" {
+        }
         c_heyma = container "HeyMa" "The voice system: dictate, transcribe and hear replies." "python" {
           c_intake = component "Intake" "Takes transcribed voice notes and files them as tasks or notes." "python"
           c_transcribe = component "Transcription" "Turns recorded audio into text, using local Whisper models on a GPU." "whisper"
@@ -157,6 +167,10 @@ workspace "33GOD" "One map of every component (I-12)" {
         c_genesis = container "Genesis client liaison" "The agent clients talk to about their projects." "python" {
           c_genesis_desk_worker = component "Genesis desk Worker" "Public web desk on Cloudflare where clients reach Genesis." "cloudflare-workers"
         }
+        c_launch_site = container "33GOD launch page" "The public front door: one night at the company, told by the clock." "html, css, nginx" {
+        }
+        c_manual = container "The Manual" "Picture manuals that explain how the platform works, one page at a time." "html, svg, nginx" {
+        }
         c_milkshake = container "Milkshake billing" "Turns usage and cost events into client billing." "" {
         }
       }
@@ -189,6 +203,8 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_aai_llm_observability -> c_bb_nats "consumes-from" "JetStream BLOODBANK_EVENTS durable, bloodbank.evt.llm.>"
     c_aai_llm_observability -> c_bb_nats "publishes-to" "bloodbank.evt.llm.usage.recorded / allowance.observed"
     c_aai_llm_observability -> c_aai_gateway "reads" "route catalog file ops/routes.json (AAI_LLM_ROUTE_CATALOG)"
+    c_activity_report -> c_bb_nats "publishes-to" "bb-emit --strict bloodbank.project.activity.recorded"
+    c_activity_report -> c_candystore "reads" "GET /events for the report window"
     c_agent_hooks -> c_bb_nats "publishes-to" "bloodbank.evt.* per hooks.master.json"
     c_agent_hooks -> c_event_contract "reads" "core/validate.py allowlists"
     c_agent_hooks -> c_asm "calls" "core.asm.record() on every hook"
@@ -211,6 +227,7 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_asm -> c_hook_hub "calls" "Unix socket 33god/hook-hub.sock, transition op"
     c_asm -> c_pilot "calls" "px show <key> --json (asm-orcapaint)"
     c_asm -> c_candystore "reads" "GET :8683/events (asm-orcapaint)"
+    c_asm -> c_orca "writes" "Orca runtime RPC over its unix socket (card comments)"
     c_bb_cli -> c_bb_nats "publishes-to" "bb emit"
     c_bb_cli -> c_event_contract "reads" "bb contract / verify-envelope import core.validate"
     c_bb_cli -> c_bb_nats "publishes-to" "bb call: PUB command subject on core NATS"
@@ -276,6 +293,9 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_delonet_director -> c_pjangler "calls" "GET :8764 /v1/registry (PJ_REGISTRY_URL default)"
     c_delonet_director -> c_agents_registry "reads" "--fleet-metadata ~/.hermes/agents-registry.yaml"
     c_delonet_director -> c_event_contract "reads" "--bloodbank-home contract validator and schemas"
+    c_delosip -> c_ntfy "calls" "POST failure page on exhausted device or Telegram outcome"
+    c_delosip -> c_onepassword "reads" "op read of bridge bearer and ntfy token refs"
+    c_earshot -> c_minio "stores-in" "bucket earshot/<channel>/ via the delo mc alias"
     c_enricher -> c_bb_dapr "consumes-from" "enricher-daprd subscription"
     c_enricher -> c_candystore "writes" "Postgres pgvector"
     c_enricher -> c_bb_dapr "publishes-to" "POST enricher-daprd:3501 publish bloodbank-pubsub (report.session.completed)"
@@ -385,6 +405,7 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_milkshake -> c_openrouter "calls" "GET openrouter.ai/api/v1/key (usage squeeze)"
     c_milkshake -> c_postgres "stores-in" "milkshake-postgres 127.0.0.1:5441 ledger"
     c_milkshake -> c_onepassword "calls" "op run --env-file .env.vendors.op/.env.consumer.op"
+    c_mobile_deploy_hub -> c_bb_nats "publishes-to" "bb-emit --strict bloodbank.project.deployment.{completed,failed}"
     c_momo -> c_pilot "calls" "px move / px comment"
     c_mon_alerts -> c_aai_llm_observability "reads" "rule expr automaticai_llm_allowance_collection_*"
     c_mon_alerts -> c_jev_clairic_exporter "reads" "rule expr jev_key_up, clairic_errors_1h"

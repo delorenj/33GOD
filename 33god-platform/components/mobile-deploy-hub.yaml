@@ -1,0 +1,39 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: mobile-deploy-hub
+name: Mobile deploy hub
+role: library
+repo: ~/code/mobile-deploy-hub
+description: 'One deploy contract for every mobile app: build, publish, install, announce.'
+changelog:
+  topics:
+  - g5
+  - library
+kind: library
+first_party: true
+domain: G5
+c4:
+  level: container
+  parent: ''
+status: live
+summary: 'One deploy contract for every mobile app: build, publish, install, announce.'
+role_in_system: The only path a mobile app version takes to a device.
+tech:
+- node
+- github-actions
+runtime: Reusable workflow + composite action called by each app's deploy.yml; mobile-deploy-hub-catchup.service
+  installs pending builds when the phone reappears
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bb-emit --strict bloodbank.project.deployment.{completed,failed}
+  evidence: ~/code/mobile-deploy-hub/tools/catchup/catchup.mjs:819
+  anchor: emit = event => sendCatchupEvent({ event, env, home }),
+evidence:
+- ~/code/mobile-deploy-hub/README.md
+- ~/code/mobile-deploy-hub/tools/catchup/units/mobile-deploy-hub-catchup.service
+confidence: high
+notes: 'Policy of record: tools/ci/policy.json in the hub.'
+surfaces:
+- producer:mobile-deploy-hub
+- producer:mobile-deploy-hub-catchup
+- systemd:mobile-deploy-hub-catchup.service

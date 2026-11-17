@@ -1,0 +1,39 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: earshot
+name: Earshot
+role: service
+repo: ~/code/earshot
+description: Drop a sound file into a channel and the phone plays it.
+changelog:
+  topics:
+  - g6
+  - service
+kind: service
+first_party: true
+domain: G6
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Drop a sound file into a channel and the phone plays it.
+role_in_system: The last hop from any agent or job to the operator's ears.
+tech:
+- python
+- kotlin
+- s3
+runtime: systemd user unit earshot-folder.service (earshot watch) mirrors ~/Earshot/<channel>/ into the earshot
+  bucket; Android app sh.delo.earshot polls and plays
+relations:
+- to: minio
+  kind: stores-in
+  via: bucket earshot/<channel>/ via the delo mc alias
+  evidence: ~/code/earshot/host/earshot.py:47
+  anchor: ENDPOINT = os.environ.get("EARSHOT_ENDPOINT", "https://s3.delo.sh").rstrip("/")
+evidence:
+- ~/code/earshot/README.md
+- ~/code/earshot/host/earshot-folder.service
+confidence: high
+notes: Bloodbank facts bloodbank.evt.audio.earshot.* come from the Holocene upload proxy (see agent-pad), not from
+  this watcher.
+surfaces:
+- systemd:earshot-folder.service

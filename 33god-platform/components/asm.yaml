@@ -44,6 +44,11 @@ relations:
   via: GET :8683/events (asm-orcapaint)
   evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:128
   anchor: 'with urllib.request.urlopen(f"{CANDYSTORE}/events?{q}", timeout=10) as r:'
+- to: orca
+  kind: writes
+  via: Orca runtime RPC over its unix socket (card comments)
+  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:225
+  anchor: s.connect(endpoint)
 evidence:
 - bloodbank/services/hook-hub/handlers.toml
 confidence: medium

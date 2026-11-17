@@ -1,0 +1,41 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: activity-report
+name: Activity report
+role: service
+repo: ~/code/skillex/all-skills/activity-report
+description: Writes the periodic what-shipped update for each project and audience.
+changelog:
+  topics:
+  - g5
+  - service
+kind: service
+first_party: true
+domain: G5
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Writes the periodic what-shipped update for each project and audience.
+role_in_system: Turns a window of events, commits and tickets into one update per audience.
+tech:
+- python
+- bash
+runtime: 'skill scripts (run.sh -> ar cli): digest, lint, render, emit one bloodbank.project.activity.recorded per
+  audience'
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bb-emit --strict bloodbank.project.activity.recorded
+  evidence: ~/code/skillex/all-skills/activity-report/scripts/run.sh:392
+  anchor: step emit "$cli" emit --project "$slug" "$event" --out "$emit_json" || return $?
+- to: candystore
+  kind: reads
+  via: GET /events for the report window
+  evidence: ~/code/skillex/all-skills/activity-report/scripts/ar/candystore.py:117
+  anchor: return f"{base_url.rstrip('/')}/events?{urllib.parse.urlencode(params, safe=',:')}"
+evidence:
+- ~/code/skillex/all-skills/activity-report/SKILL.md
+confidence: high
+notes: Scheduling goes through Candybar per project (skill section 4).
+surfaces:
+- producer:activity-report

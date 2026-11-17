@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "2fe6f77ee0b5f1f0db890b0fcb790751f7fef13c4bba242183fec6ebbb8fd75d",
+  "registry_digest": "2af00dbc03dd9d87a48c19308106b6f3cd70032667ff5451dbd78e5dfe9b572f",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -148,6 +148,24 @@
         "python"
       ],
       "runtime": "docker compose",
+      "public_card": {}
+    },
+    {
+      "id": "activity-report",
+      "name": "Activity report",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Writes the periodic what-shipped update for each project and audience.",
+      "role_in_system": "Turns a window of events, commits and tickets into one update per audience.",
+      "tech": [
+        "python",
+        "bash"
+      ],
+      "runtime": "skill scripts (run.sh -> ar cli): digest, lint, render, emit one bloodbank.project.activity.recorded per audience",
       "public_card": {}
     },
     {
@@ -641,6 +659,44 @@
       "public_card": {}
     },
     {
+      "id": "delosip",
+      "name": "DeLoSIP ring bridge",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G2",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Makes the phone ring loudly for verified incoming calls.",
+      "role_in_system": "Turns a signed telephony callback into a guaranteed ring and a notification.",
+      "tech": [
+        "python",
+        "n8n",
+        "adb"
+      ],
+      "runtime": "systemd user unit delosip-ring-bridge.service on loopback :18746; the canonical n8n workflow forwards Telnyx's signed bytes to it",
+      "public_card": {}
+    },
+    {
+      "id": "earshot",
+      "name": "Earshot",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Drop a sound file into a channel and the phone plays it.",
+      "role_in_system": "The last hop from any agent or job to the operator's ears.",
+      "tech": [
+        "python",
+        "kotlin",
+        "s3"
+      ],
+      "runtime": "systemd user unit earshot-folder.service (earshot watch) mirrors ~/Earshot/<channel>/ into the earshot bucket; Android app sh.delo.earshot polls and plays",
+      "public_card": {}
+    },
+    {
       "id": "enricher",
       "name": "Candystore enricher",
       "kind": "service",
@@ -1099,6 +1155,25 @@
       }
     },
     {
+      "id": "launch-site",
+      "name": "33GOD launch page",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "The public front door: one night at the company, told by the clock.",
+      "role_in_system": "First impression for prospects; preview, not yet indexed.",
+      "tech": [
+        "html",
+        "css",
+        "nginx"
+      ],
+      "runtime": "nginx container 33god-web serves 33god-platform/overnight/site read-only; Traefik routes the 33god host to it",
+      "public_card": {}
+    },
+    {
       "id": "lifecycle-controller",
       "name": "lifecycle-controller",
       "kind": "service",
@@ -1114,6 +1189,25 @@
         "asyncpg"
       ],
       "runtime": "no systemd unit or container found",
+      "public_card": {}
+    },
+    {
+      "id": "manual",
+      "name": "The Manual",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Picture manuals that explain how the platform works, one page at a time.",
+      "role_in_system": "Onboarding path for non-engineers and new builders (I-10).",
+      "tech": [
+        "html",
+        "svg",
+        "nginx"
+      ],
+      "runtime": "nginx container manual-web serves 33god-platform/manual/books read-only",
       "public_card": {}
     },
     {
@@ -1146,6 +1240,24 @@
         "minio"
       ],
       "runtime": "docker container",
+      "public_card": {}
+    },
+    {
+      "id": "mobile-deploy-hub",
+      "name": "Mobile deploy hub",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "One deploy contract for every mobile app: build, publish, install, announce.",
+      "role_in_system": "The only path a mobile app version takes to a device.",
+      "tech": [
+        "node",
+        "github-actions"
+      ],
+      "runtime": "Reusable workflow + composite action called by each app's deploy.yml; mobile-deploy-hub-catchup.service installs pending builds when the phone reappears",
       "public_card": {}
     },
     {
@@ -1361,6 +1473,23 @@
       "public_card": {}
     },
     {
+      "id": "opencode-server",
+      "name": "OpenCode server",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Headless coding-agent server reachable from anywhere on the network.",
+      "role_in_system": "Remote entry point for driving a coding agent without a terminal.",
+      "tech": [
+        "opencode"
+      ],
+      "runtime": "systemd user unit opencode.service: opencode serve on the docker bridge :4096; Traefik dynamic route opencode.yml",
+      "public_card": {}
+    },
+    {
       "id": "openrouter",
       "name": "OpenRouter",
       "kind": "external",
@@ -1375,6 +1504,23 @@
         "openrouter"
       ],
       "runtime": "SaaS",
+      "public_card": {}
+    },
+    {
+      "id": "orca",
+      "name": "Orca",
+      "kind": "ui",
+      "first_party": false,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Worktree IDE where each agent's branch is a card.",
+      "role_in_system": "The operator's board of agent worktrees; the state machine paints onto it.",
+      "tech": [
+        "electron"
+      ],
+      "runtime": "systemd user unit orca-server.service (orca-ide serve); local runtime RPC over a unix socket",
       "public_card": {}
     },
     {
@@ -1760,6 +1906,18 @@
       "via": "route catalog file ops/routes.json (AAI_LLM_ROUTE_CATALOG)"
     },
     {
+      "from": "activity-report",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bb-emit --strict bloodbank.project.activity.recorded"
+    },
+    {
+      "from": "activity-report",
+      "to": "candystore",
+      "kind": "reads",
+      "via": "GET /events for the report window"
+    },
+    {
       "from": "agent-hooks",
       "to": "bb-nats",
       "kind": "publishes-to",
@@ -1890,6 +2048,12 @@
       "to": "candystore",
       "kind": "reads",
       "via": "GET :8683/events (asm-orcapaint)"
+    },
+    {
+      "from": "asm",
+      "to": "orca",
+      "kind": "writes",
+      "via": "Orca runtime RPC over its unix socket (card comments)"
     },
     {
       "from": "bb-cli",
@@ -2280,6 +2444,24 @@
       "to": "event-contract",
       "kind": "reads",
       "via": "--bloodbank-home contract validator and schemas"
+    },
+    {
+      "from": "delosip",
+      "to": "ntfy",
+      "kind": "calls",
+      "via": "POST failure page on exhausted device or Telegram outcome"
+    },
+    {
+      "from": "delosip",
+      "to": "onepassword",
+      "kind": "reads",
+      "via": "op read of bridge bearer and ntfy token refs"
+    },
+    {
+      "from": "earshot",
+      "to": "minio",
+      "kind": "stores-in",
+      "via": "bucket earshot/<channel>/ via the delo mc alias"
     },
     {
       "from": "enricher",
@@ -2936,6 +3118,12 @@
       "via": "op run --env-file .env.vendors.op/.env.consumer.op"
     },
     {
+      "from": "mobile-deploy-hub",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bb-emit --strict bloodbank.project.deployment.{completed,failed}"
+    },
+    {
       "from": "momo",
       "to": "pilot",
       "kind": "calls",
@@ -3495,10 +3683,10 @@
     }
   ],
   "counts": {
-    "components": 90,
-    "first_party": 72,
-    "external": 18,
-    "live": 80,
-    "edges": 296
+    "components": 98,
+    "first_party": 78,
+    "external": 20,
+    "live": 86,
+    "edges": 303
   }
 }

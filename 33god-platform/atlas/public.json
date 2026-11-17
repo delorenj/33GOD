@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "2fe6f77ee0b5f1f0db890b0fcb790751f7fef13c4bba242183fec6ebbb8fd75d",
+  "registry_digest": "2af00dbc03dd9d87a48c19308106b6f3cd70032667ff5451dbd78e5dfe9b572f",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -132,6 +132,22 @@
       "summary": "Collects and reshapes gateway usage logs into metrics.",
       "tech": [
         "python"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "activity-report",
+      "name": "Activity report",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Writes the periodic what-shipped update for each project and audience.",
+      "tech": [
+        "python",
+        "bash"
       ],
       "public_card": {}
     },
@@ -570,6 +586,40 @@
       "public_card": {}
     },
     {
+      "id": "delosip",
+      "name": "DeLoSIP ring bridge",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G2",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Makes the phone ring loudly for verified incoming calls.",
+      "tech": [
+        "python",
+        "n8n",
+        "adb"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "earshot",
+      "name": "Earshot",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G6",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Drop a sound file into a channel and the phone plays it.",
+      "tech": [
+        "python",
+        "kotlin",
+        "s3"
+      ],
+      "public_card": {}
+    },
+    {
       "id": "enricher",
       "name": "Candystore enricher",
       "kind": "service",
@@ -978,6 +1028,23 @@
       }
     },
     {
+      "id": "launch-site",
+      "name": "33GOD launch page",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "The public front door: one night at the company, told by the clock.",
+      "tech": [
+        "html",
+        "css",
+        "nginx"
+      ],
+      "public_card": {}
+    },
+    {
       "id": "lifecycle-controller",
       "name": "lifecycle-controller",
       "kind": "service",
@@ -990,6 +1057,23 @@
       "tech": [
         "python",
         "asyncpg"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "manual",
+      "name": "The Manual",
+      "kind": "ui",
+      "first_party": true,
+      "domain": "G11",
+      "level": "container",
+      "parent": "",
+      "status": "partial",
+      "summary": "Picture manuals that explain how the platform works, one page at a time.",
+      "tech": [
+        "html",
+        "svg",
+        "nginx"
       ],
       "public_card": {}
     },
@@ -1018,6 +1102,22 @@
       "summary": "Object storage for files.",
       "tech": [
         "minio"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "mobile-deploy-hub",
+      "name": "Mobile deploy hub",
+      "kind": "library",
+      "first_party": true,
+      "domain": "G5",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "One deploy contract for every mobile app: build, publish, install, announce.",
+      "tech": [
+        "node",
+        "github-actions"
       ],
       "public_card": {}
     },
@@ -1210,6 +1310,21 @@
       "public_card": {}
     },
     {
+      "id": "opencode-server",
+      "name": "OpenCode server",
+      "kind": "service",
+      "first_party": false,
+      "domain": "G3",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Headless coding-agent server reachable from anywhere on the network.",
+      "tech": [
+        "opencode"
+      ],
+      "public_card": {}
+    },
+    {
       "id": "openrouter",
       "name": "OpenRouter",
       "kind": "external",
@@ -1221,6 +1336,21 @@
       "summary": "A paid model marketplace used as a fallback provider.",
       "tech": [
         "openrouter"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "orca",
+      "name": "Orca",
+      "kind": "ui",
+      "first_party": false,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Worktree IDE where each agent's branch is a card.",
+      "tech": [
+        "electron"
       ],
       "public_card": {}
     },
@@ -1562,6 +1692,16 @@
       "kind": "reads"
     },
     {
+      "from": "activity-report",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "activity-report",
+      "to": "candystore",
+      "kind": "reads"
+    },
+    {
       "from": "agent-hooks",
       "to": "bb-nats",
       "kind": "publishes-to"
@@ -1670,6 +1810,11 @@
       "from": "asm",
       "to": "candystore",
       "kind": "reads"
+    },
+    {
+      "from": "asm",
+      "to": "orca",
+      "kind": "writes"
     },
     {
       "from": "bb-cli",
@@ -1995,6 +2140,21 @@
       "from": "delonet-director",
       "to": "event-contract",
       "kind": "reads"
+    },
+    {
+      "from": "delosip",
+      "to": "ntfy",
+      "kind": "calls"
+    },
+    {
+      "from": "delosip",
+      "to": "onepassword",
+      "kind": "reads"
+    },
+    {
+      "from": "earshot",
+      "to": "minio",
+      "kind": "stores-in"
     },
     {
       "from": "enricher",
@@ -2540,6 +2700,11 @@
       "from": "milkshake",
       "to": "onepassword",
       "kind": "calls"
+    },
+    {
+      "from": "mobile-deploy-hub",
+      "to": "bb-nats",
+      "kind": "publishes-to"
     },
     {
       "from": "momo",

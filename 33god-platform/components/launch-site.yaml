@@ -1,0 +1,33 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: launch-site
+name: 33GOD launch page
+role: ui
+repo: .
+description: 'The public front door: one night at the company, told by the clock.'
+changelog:
+  topics:
+  - g11
+  - ui
+kind: ui
+first_party: true
+domain: G11
+c4:
+  level: container
+  parent: ''
+status: partial
+summary: 'The public front door: one night at the company, told by the clock.'
+role_in_system: First impression for prospects; preview, not yet indexed.
+tech:
+- html
+- css
+- nginx
+runtime: nginx container 33god-web serves 33god-platform/overnight/site read-only; Traefik routes the 33god host
+  to it
+relations: []
+evidence:
+- 33god-platform/overnight/README.md
+- ~/docker/stacks/websites/33god/compose.yml
+confidence: high
+notes: First full pass 2026-11-17 (f649541); content not final, page is noindex.
+surfaces:
+- container:33god-web

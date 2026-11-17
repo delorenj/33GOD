@@ -33,3 +33,5 @@ evidence:
   archive) plus warm GPU faster-whisper servers: holocene-whisper.service (127.0.0.1:8766) and vocalinux-faster-whisper.service.
   Kind should be cli, status live, confidence high'
 confidence: low
+surfaces:
+- systemd:vocalinux-faster-whisper.service

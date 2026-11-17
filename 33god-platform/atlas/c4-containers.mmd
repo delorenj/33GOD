@@ -7,6 +7,7 @@ flowchart LR
   end
   subgraph G2["Integration Plane"]
     c_curator["Curator"]
+    c_delosip["DeLoSIP ring bridge"]
     c_n8n["n8n workflow engine"]
   end
   subgraph G3["Agent Fleet Runtime"]
@@ -15,6 +16,7 @@ flowchart LR
     c_hermes_fleet["Hermes Fleet"]
     c_hook_hub["hook-hub"]
     c_ntfy_router["ntfy-router"]
+    c_opencode_server["OpenCode server"]
     c_target_watch["target-watch"]
   end
   subgraph G4["Observability"]
@@ -23,13 +25,16 @@ flowchart LR
     c_mon_core["Monitoring core"]
   end
   subgraph G5["Project Tooling"]
+    c_activity_report["Activity report"]
     c_commonproject["CommonProject"]
+    c_mobile_deploy_hub["Mobile deploy hub"]
     c_pipeline_mcp_hub["Pipeline MCP Hub"]
     c_pjangler["PJangler"]
     c_pr_crusher["PR Crusher"]
     c_skillex["Skillex"]
   end
   subgraph G6["Voice Pipeline"]
+    c_earshot["Earshot"]
     c_heyma["HeyMa"]
   end
   subgraph G7["Enrichment and Memory"]
@@ -54,6 +59,7 @@ flowchart LR
   subgraph G10["Operator Desktop"]
     c_crank["Crank"]
     c_deckard["Deckard"]
+    c_orca["Orca"]
     c_shortwave["Shortwave relay"]
     c_wingman["Wingman"]
   end
@@ -61,6 +67,8 @@ flowchart LR
     c_client_portal["Client portal"]
     c_farm_command_bridge["farm-command-bridge"]
     c_genesis["Genesis client liaison"]
+    c_launch_site["33GOD launch page"]
+    c_manual["The Manual"]
     c_milkshake["Milkshake billing"]
   end
   subgraph G12["Shared Infra"]
@@ -83,6 +91,8 @@ flowchart LR
   c_mon_core -->|reads| c_aai_gateway
   c_mon_core -->|consumes-from| c_bloodbank
   c_mon_core -->|publishes-to| c_bloodbank
+  c_activity_report -->|publishes-to| c_bloodbank
+  c_activity_report -->|reads| c_candystore
   c_hook_hub -->|publishes-to| c_bloodbank
   c_hook_hub -->|reads| c_bloodbank
   c_hook_hub -->|writes| c_redis
@@ -100,6 +110,7 @@ flowchart LR
   c_hook_hub -->|stores-in| c_redis
   c_hook_hub -->|calls| c_pilot
   c_hook_hub -->|reads| c_candystore
+  c_hook_hub -->|writes| c_orca
   c_bloodbank -->|hosts| c_candystore
   c_candybar -->|schedules| c_krebs
   c_candybar -->|schedules| c_n8n
@@ -138,6 +149,9 @@ flowchart LR
   c_delonet_director -->|calls| c_pjangler
   c_delonet_director -->|reads| c_hermes_fleet
   c_delonet_director -->|reads| c_bloodbank
+  c_delosip -->|calls| c_ntfy
+  c_delosip -->|reads| c_onepassword
+  c_earshot -->|stores-in| c_minio
   c_enricher -->|consumes-from| c_bloodbank
   c_enricher -->|writes| c_candystore
   c_enricher -->|publishes-to| c_bloodbank
@@ -211,6 +225,7 @@ flowchart LR
   c_milkshake -->|calls| c_openrouter
   c_milkshake -->|stores-in| c_postgres
   c_milkshake -->|calls| c_onepassword
+  c_mobile_deploy_hub -->|publishes-to| c_bloodbank
   c_momo -->|calls| c_pilot
   c_mon_core -->|reads| c_candybar
   c_mon_core -->|reads| c_bloodbank

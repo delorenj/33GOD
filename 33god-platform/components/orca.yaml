@@ -1,0 +1,29 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: orca
+name: Orca
+role: ui
+repo: ''
+description: Worktree IDE where each agent's branch is a card.
+changelog:
+  topics:
+  - g10
+  - ui
+kind: ui
+first_party: false
+domain: G10
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Worktree IDE where each agent's branch is a card.
+role_in_system: The operator's board of agent worktrees; the state machine paints onto it.
+tech:
+- electron
+runtime: systemd user unit orca-server.service (orca-ide serve); local runtime RPC over a unix socket
+relations: []
+evidence:
+- ~/.config/systemd/user/orca-server.service
+confidence: high
+notes: Third-party app. asm-orcapaint (asm) writes ASM state onto its cards.
+surfaces:
+- systemd:orca-server.service

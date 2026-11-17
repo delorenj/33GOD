@@ -1,0 +1,42 @@
+# Atlas record (I-12), added 2026-11-17 from the first drift audit (33GOD-94). Edit freely; then `mise run platform:atlas`.
+id: delosip
+name: DeLoSIP ring bridge
+role: service
+repo: ~/code/delonet-n8n-workflows
+description: Makes the phone ring loudly for verified incoming calls.
+changelog:
+  topics:
+  - g2
+  - service
+kind: service
+first_party: true
+domain: G2
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Makes the phone ring loudly for verified incoming calls.
+role_in_system: Turns a signed telephony callback into a guaranteed ring and a notification.
+tech:
+- python
+- n8n
+- adb
+runtime: systemd user unit delosip-ring-bridge.service on loopback :18746; the canonical n8n workflow forwards Telnyx's
+  signed bytes to it
+relations:
+- to: ntfy
+  kind: calls
+  via: POST failure page on exhausted device or Telegram outcome
+  evidence: ~/code/delonet-n8n-workflows/delosip/ring_bridge.py:447
+  anchor: 'req = Request(config["failure_ntfy_url"], data=("DeLoSIP ring failure: " + reason).encode(),'
+- to: onepassword
+  kind: reads
+  via: op read of bridge bearer and ntfy token refs
+  evidence: ~/code/delonet-n8n-workflows/delosip/ring_bridge.py:30
+  anchor: 'def op_read(reference):'
+evidence:
+- ~/code/delonet-n8n-workflows/delosip/README.md
+confidence: high
+notes: LAN only (paired Wi-Fi ADB). Wax/Bloodbank persistence happens in the n8n workflow, not the bridge.
+surfaces:
+- systemd:delosip-ring-bridge.service

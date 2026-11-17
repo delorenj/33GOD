@@ -227,3 +227,7 @@ atlas_ignore:
   - {kind: container, pattern: "clipcascade", reason: household clipboard sync}
   - {kind: container, pattern: "comfyui*", reason: image generation workstation}
   - {kind: producer, pattern: "tiller", reason: product project}
+  - {kind: container, pattern: "cait-web", reason: "client update site (Intelliforia); written by hand, not by a 33GOD component"}
+  - {kind: container, pattern: "qdrant", reason: "shared persistence stack; its consumer is a product project (IdealScenario), no 33GOD component uses it"}
+  - {kind: container, pattern: "persistence-neo4j-*", reason: "shared persistence stack; no 33GOD component connects to it"}
+  - {kind: systemd, pattern: "boxd-client.service", reason: "third-party cloud-machine CLI daemon, not part of 33GOD"}

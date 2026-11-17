@@ -51,4 +51,6 @@ surfaces:
 - producer:claude-code
 - producer:codex-cli
 - producer:opencode
+- producer:antigravity-cli
+- producer:copilot*
 - repo:bloodbank/services/agent-hooks
