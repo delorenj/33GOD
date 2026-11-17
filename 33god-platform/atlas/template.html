@@ -18,7 +18,7 @@
   --focus: #0b5bd3;
   --good: #1b7f3b; --warn: #a26a00; --bad: #b3261e; --idle: #6f7c74;
   --d1: #2a78d6; --d2: #eb6834; --d3: #1baf7a; --d4: #eda100;
-  --d5: #e87ba4; --d6: #008300; --d7: #6250d6; --d8: #e34948; --d0: #8a948e;
+  --d5: #e87ba4; --d6: #008300; --d7: #6250d6; --d8: #e34948; --d9: #b4459f; --d0: #8a948e;
   --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -28,13 +28,13 @@
   --paper: #111714; --panel: #18201c; --ink: #e8eee9; --ink-2: #b4c0b8; --ink-3: #8a978f; --line: #2c3731;
   --wire: #ff7a4d; --wire-in: #6aa2ff; --focus: #8ab8ff;
   --good: #4cc272; --warn: #e0a640; --bad: #ff7b72; --idle: #8a978f;
-  --d1: #3987e5; --d2: #d95926; --d3: #199e70; --d4: #c98500; --d5: #d55181; --d6: #2f9a2f; --d7: #9085e9; --d8: #e66767; --d0: #75817a;
+  --d1: #3987e5; --d2: #d95926; --d3: #199e70; --d4: #c98500; --d5: #d55181; --d6: #2f9a2f; --d7: #9085e9; --d8: #e66767; --d9: #9a3aa8; --d0: #75817a;
   color-scheme: dark; } }
 :root[data-theme="dark"] {
   --paper: #111714; --panel: #18201c; --ink: #e8eee9; --ink-2: #b4c0b8; --ink-3: #8a978f; --line: #2c3731;
   --wire: #ff7a4d; --wire-in: #6aa2ff; --focus: #8ab8ff;
   --good: #4cc272; --warn: #e0a640; --bad: #ff7b72; --idle: #8a978f;
-  --d1: #3987e5; --d2: #d95926; --d3: #199e70; --d4: #c98500; --d5: #d55181; --d6: #2f9a2f; --d7: #9085e9; --d8: #e66767; --d0: #75817a;
+  --d1: #3987e5; --d2: #d95926; --d3: #199e70; --d4: #c98500; --d5: #d55181; --d6: #2f9a2f; --d7: #9085e9; --d8: #e66767; --d9: #9a3aa8; --d0: #75817a;
   color-scheme: dark; }
 
 * { box-sizing: border-box; }
@@ -179,7 +179,10 @@ const ATLAS = /*ATLAS_DATA*/null;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const byId = Object.fromEntries(ATLAS.components.map(c => [c.id, c]));
   const domIdx = Object.fromEntries(ATLAS.domains.map((d, i) => [d.id, i]));
-  const domColor = id => { const i = domIdx[id]; return i == null || i >= 8 ? 'var(--d0)' : `var(--d${i + 1})`; };
+  // A domain may pin its colour with `hue: <1-9>` in components.yaml; otherwise the first 8 take
+  // --d1..--d8 by position and the rest share neutral --d0.
+  const domColor = id => { const i = domIdx[id]; if (i == null) return 'var(--d0)'; const h = ATLAS.domains[i].hue;
+    return h ? `var(--d${h})` : i >= 8 ? 'var(--d0)' : `var(--d${i + 1})`; };
   const out = {}, inc = {};
   ATLAS.edges.forEach(e => { (out[e.from] ||= []).push(e); (inc[e.to] ||= []).push(e); });
   const children = {};

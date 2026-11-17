@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "ef770d34c757e7bf2074bfcc0b6ce08803db3563b5622741ee76f6fb7b6bd3d3",
+  "registry_digest": "6e63e9642a1defdc97218098845f4662335ea4db6fdde50bb9fae7b44bcae955",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -70,6 +70,7 @@
     {
       "id": "G13",
       "name": "Marketing",
+      "hue": 9,
       "summary": "The public face: the launch page, the picture manuals and the showcase pages that explain the platform to people outside it."
     }
   ],
