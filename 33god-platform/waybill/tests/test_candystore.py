@@ -37,6 +37,18 @@ class PureTests(unittest.TestCase):
         et, subj = cs.normalize_type({"type": "bloodbank.agent.session.started"})
         self.assertEqual(subj, "bloodbank.evt.agent.session.started")
 
+    def test_normalize_type_keeps_the_contract_session_report_type(self):
+        et, subj = cs.normalize_type({"type": "bloodbank.agent.session.annotated", "subject": "bloodbank.evt.agent.session.annotated"})
+        self.assertEqual((et, subj), ("bloodbank.agent.session.annotated", "bloodbank.evt.agent.session.annotated"))
+
+    def test_is_enricher_report_accepts_both_shapes(self):
+        from waybill.model import is_enricher_report
+        self.assertTrue(is_enricher_report("enricher", "com.dapr.event.sent"))                      # legacy Dapr wrapper
+        self.assertTrue(is_enricher_report(None, "bloodbank.report.session.completed"))             # legacy type
+        self.assertTrue(is_enricher_report("urn:33god:service:enricher", "bloodbank.agent.session.annotated"))
+        self.assertTrue(is_enricher_report(None, "bloodbank.agent.session.annotated"))
+        self.assertFalse(is_enricher_report("urn:33god:agent:hermes", "bloodbank.agent.tool.completed"))
+
     def test_phase_for_type(self):
         self.assertEqual(cs.phase_for_type("bloodbank.conversation.turn.started"), "prompt_submit")
         self.assertEqual(cs.phase_for_type("bloodbank.conversation.turn.annotated"), "turn_end")
@@ -96,6 +108,32 @@ class BuildTests(unittest.TestCase):
         self.assertTrue(any(l.kind == "mirrors" and l.to == Ids.evt(mid) for l in f.links))
         self.assertEqual([x.title for x in f.findings], ["enricher session report dead-lettered by Candystore"])
         self.assertEqual(f.findings[0].severity, "broken")
+
+    def _dead_build(self, dead_env, reason, err="x"):
+        eid = "00000000-0000-4000-8000-00000000000a"
+        env = {"id": eid, "type": "bloodbank.agent.session.started", "time": "2026-11-16T04:00:37.400Z",
+               "correlationid": SID, "producer": "claude-code", "data": {"session_id": SID}}
+        pg = {"archived": [], "mirrors": [], "caused": [],
+              "dead": [{"id": 1, "event_id": dead_env["id"], "topic": "t", "reason": reason, "error": err,
+                        "received_at": "2026-11-16T04:00:41.100Z",
+                        "raw_b64": base64.b64encode(json.dumps(dead_env).encode()).decode()}]}
+        f = frag()
+        cs.build(f, ctx(), [{"id": eid, "_env": env}], pg, set(), [])
+        return f
+
+    def test_contract_shaped_report_dead_letter_is_not_called_a_dapr_envelope(self):
+        did = "00000000-0000-4000-8000-00000000000c"
+        f = self._dead_build({"id": did, "type": "bloodbank.agent.session.annotated", "source": "urn:33god:service:enricher",
+                              "time": "2026-11-16T04:00:41.000Z", "data": {"session_id": SID, "summary": "S"}}, "malformed")
+        self.assertEqual([x.title for x in f.findings], ["enricher session report dead-lettered by Candystore"])
+        self.assertNotIn("com.dapr.event.sent", f.findings[0].detail)
+
+    def test_embedding_parent_absent_dead_letter_names_the_enricher_not_candystore(self):
+        did = "00000000-0000-4000-8000-00000000000d"
+        f = self._dead_build({"id": did, "type": "bloodbank.agent.tool.completed", "source": "urn:33god:agent:claude",
+                              "time": "2026-11-16T04:00:41.000Z", "data": {"tool_name": "t"}}, "embedding_parent_absent")
+        self.assertEqual([x.title for x in f.findings],
+                         ["enricher could not embed agent.tool.completed: its parent event never reached Candystore"])
 
     def test_caused_skips_agent_producers(self):
         eid = "00000000-0000-4000-8000-00000000000a"

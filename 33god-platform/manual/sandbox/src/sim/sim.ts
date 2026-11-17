@@ -49,7 +49,7 @@ const get = useWorld.getState
 const SUBJECT: Record<string, string> = {
   'turn started': 'bloodbank.evt.conversation.turn.started',
   'session ended': 'bloodbank.evt.agent.session.ended',
-  'summary written': 'bloodbank.evt.report.session.completed',
+  'summary written': 'bloodbank.evt.agent.session.annotated',
   'tick fired': 'bloodbank.evt.cron.tick.fired',
   'invocation completed': 'bloodbank.evt.agent.invocation.completed',
   'invocation failed': 'bloodbank.evt.agent.invocation.failed',

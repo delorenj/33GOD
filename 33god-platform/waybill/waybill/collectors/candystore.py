@@ -19,7 +19,8 @@ import urllib.request
 import uuid
 from typing import Any
 
-from ..model import (BusEvent, Consumer, Ctx, Finding, Fragment, Gap, Ids, Link, Source, Span, iso, ms, tilde)
+from ..model import (BusEvent, Consumer, Ctx, EMBEDDING_PARENT_ABSENT, Finding, Fragment, Gap, Ids, Link, Source, Span,
+                     is_enricher_report, iso, ms, tilde)
 from . import hookhub
 
 NAME = "candystore"
@@ -295,7 +296,7 @@ def build(frag: Fragment, ctx: Ctx, session_events: list[dict], pg: dict | None,
                 and ev.causationid != ev.id:
             frag.links.append(Link(Ids.evt(ev.causationid), Ids.evt(ev.id), "causes", ev.producer))
 
-    # dead letters that mention the session (the enricher's report.session.completed)
+    # dead letters that mention the session (the enricher's session report: agent.session.annotated, legacy report.session.completed)
     for r in (pg or {}).get("dead", []):
         try:
             raw_text = base64.b64decode(r.get("raw_b64") or "").decode("utf-8", "replace")
@@ -324,7 +325,12 @@ def build(frag: Fragment, ctx: Ctx, session_events: list[dict], pg: dict | None,
             _consume_span(frag, eid, et, ms(env.get("time")), arch, status="dropped", reason=reason,
                           summary=f"Candystore dead-lettered {short_type(et)} from {src}: {reason}"
                                   + (f" ({err})" if err else ""))
-        if src == "enricher" or et.endswith("report.session.completed"):
+        if reason == EMBEDDING_PARENT_ABSENT:
+            # the enricher's own record (33GOD-95): Candystore never refused this event, the enricher gave up
+            # embedding it because the parent events row never appeared.
+            frag.component("enricher", "enricher", "service")
+            title = f"enricher could not embed {short_type(et)}: its parent event never reached Candystore"
+        elif is_enricher_report(src, et):
             frag.component("enricher", "enricher", "service")
             title = "enricher session report dead-lettered by Candystore"
         else:
@@ -334,7 +340,8 @@ def build(frag: Fragment, ctx: Ctx, session_events: list[dict], pg: dict | None,
             "broken", title,
             f"Candystore rejected {et} {eid} from {src} on {r.get('topic') or 'its topic'} ({reason}: {err or 'no error text'})"
             + (f"; the summary '{summary_text}' survives only in dead_letter.raw" if summary_text else "")
-            + ". It is a Dapr envelope (type com.dapr.event.sent), not a 33GOD CloudEvent.",
+            + (". It is a Dapr envelope (type com.dapr.event.sent), not a 33GOD CloudEvent."
+               if env.get("type") == "com.dapr.event.sent" else "."),
             "candystore", [Ids.evt(eid), Ids.consume(CONSUMER, eid), NAME]))
 
 

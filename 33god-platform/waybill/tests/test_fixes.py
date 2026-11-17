@@ -310,6 +310,35 @@ class BbHookClients(unittest.TestCase):
         self.assertIn("UserPromptSubmit", gap[0]["what"])
 
 
+class SessionReportPublisher(unittest.TestCase):
+    """The enricher's per-session report hangs under its session.ended consume span, in both the canonical
+    (agent.session.annotated, 33GOD-95) and the legacy (report.session.completed) shape."""
+
+    ENDED = "00000000-0000-4000-8000-0000000000ee"
+
+    def _wb(self, report_type: str):
+        cs = M.Fragment(source=_src("candystore"))
+        cs.events.append(ev(self.ENDED, "bloodbank.agent.session.ended", T + 1500, stored=T + 1520))
+        cs.events.append(ev("e-report", report_type, T + 2000, stored=T + 2300, producer="enricher",
+                            causationid=self.ENDED))
+        cs.spans.append(M.Span(id=M.Ids.consume("enricher-events", self.ENDED), kind="consume", component="enricher",
+                               name="session.ended", summary="rollup", phase="turn_end", t0=T + 1520, t1=T + 1990,
+                               refs={"event_id": self.ENDED},
+                               attrs={"event_type": "bloodbank.agent.session.ended"}, evidence=["logs"]))
+        return build([cs])
+
+    def _publisher(self, wb):
+        return next(e for e in wb["events"] if e["id"] == "e-report").get("publisher_span")
+
+    def test_canonical_type_is_attributed_to_the_enricher_rollup(self):
+        self.assertEqual(self._publisher(self._wb("bloodbank.agent.session.annotated")),
+                         M.Ids.consume("enricher-events", self.ENDED))
+
+    def test_legacy_type_still_is(self):
+        self.assertEqual(self._publisher(self._wb("bloodbank.report.session.completed")),
+                         M.Ids.consume("enricher-events", self.ENDED))
+
+
 class NtfyJoins(unittest.TestCase):
     def _lg(self, lines):
         frag = M.Fragment(source=_src("logs"))

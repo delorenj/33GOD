@@ -6,7 +6,7 @@ evidence they acted. This collector reads, read-only:
 - bloodbank-ntfy-router: 'routed:' / 'rate-limited:' / 'digested:' / 'duplicate:' lines. They carry the
   event TYPE only, so each one is matched by time to an event this turn published and handed to the
   assembler as an attrs._join hint (plus attrs._join.event_id when the time match is unambiguous).
-- enricher: 'Successfully embedded tool event <id>', 'DB Error on <id>', session roll-ups.
+- enricher: 'Successfully embedded tool event <id>', 'DB Error on <id>', 'DROP embedding for <id>: parent event never appeared', session roll-ups.
 - bloodbank-turn-enricher: 'annotated: <turn.completed id> ...' / 'noise: <id> ...'. Its json-file log
   cannot be read with --since/--until (docker returns nothing), so an empty --since read falls back to --tail.
 - candystore-daprd: 'DROP status returned ... pub/sub event <id>' (dead-letters), 'RETRY'.
@@ -25,7 +25,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from ..model import Ctx, Finding, Fragment, Gap, Ids, Link, Source, Span, iso, ms, tilde
+from ..model import Ctx, Finding, Fragment, Gap, Ids, Link, Source, Span, is_enricher_report, iso, ms, tilde
 from . import hookhub
 
 NAME = "logs"
@@ -46,6 +46,8 @@ _TS = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z)\s(.*)$")
 _NTFY = re.compile(r"\[ntfy-router\]\s+\w+\s+(routed|rate-limited|digested|duplicate):\s+(\S+)\s*$")
 _EMBED = re.compile(r"Successfully embedded tool event ([0-9a-fA-F-]{36})")
 _DBERR = re.compile(r"DB Error on ([0-9a-fA-F-]{36}):\s*(.*)$")
+# the enricher gave up on an embedding after the bounded wait/retry for a parent event that never appeared (33GOD-95)
+_PARENT_DROP = re.compile(r"DROP embedding for ([0-9a-fA-F-]{36}): (parent event never appeared.*)$")
 _ROLLUP = re.compile(r"Session (\S+) ended\. Rolling up events")
 _NOEVENTS = re.compile(r"No events found for session (\S+)")
 _ANNOT = re.compile(r"\[turn-enricher\]\s+\w+\s+annotated:\s+([0-9a-fA-F-]{36})\s+signal=([\d.]+)\s+action=(.*?)\s+"
@@ -260,7 +262,7 @@ def build_ntfy(frag: Fragment, lines: list[dict], expected: list[dict]) -> int:
             evidence=[NAME]))
         n += 1
     # Every other line is offered to the assembler, which knows ALL of the turn's events (llm.usage.recorded,
-    # allowance, report.session.completed, Dapr-wrapped ones ...) and matches by type + stored time. Lines that match
+    # allowance, agent.session.annotated (legacy: report.session.completed), Dapr-wrapped ones ...) and matches by type + stored time. Lines that match
     # no event of this turn are shared-log noise and are dropped there (join.optional), never a gap (finding 7).
     seq: dict[int, int] = defaultdict(int)
     for ln in sorted(lines, key=lambda x: x["t"]):
@@ -311,7 +313,7 @@ def build_enricher(frag: Fragment, ctx: Ctx, lines: list[tuple[float, str]], pub
                                  f"{_ms_txt(t - t0)} after publish", "durable", "enriched")
             n += 1
             continue
-        m = _DBERR.search(msg)
+        m = _DBERR.search(msg) or _PARENT_DROP.search(msg)
         if m and m.group(1) in pubs:
             p = pubs[m.group(1)]
             t0 = p.get("t_end") or t
@@ -433,7 +435,7 @@ def build_daprd(frag: Fragment, ctx: Ctx, lines: list[tuple[float, str]], pubs: 
                             "dapr_drop", f"Candystore's Dapr sidecar DROPped {hookhub.short_type(et)} from {src}",
                             "durable", "dropped", {"daprd": "DROP"})
             title = ("enricher session report dead-lettered by Candystore"
-                     if src == "enricher" or et.endswith("report.session.completed")
+                     if is_enricher_report(src, et)
                      else f"{hookhub.short_type(et)} dead-lettered by Candystore")
             frag.findings.append(Finding(
                 "broken", title,

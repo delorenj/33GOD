@@ -56,6 +56,20 @@ def iso(epoch_ms: float | None) -> str | None:
     return _dt.datetime.fromtimestamp(epoch_ms / 1000.0, _dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
+# The enricher's per-session summary. Canonical since 33GOD-95: bloodbank.agent.session.annotated (a Bloodbank-contract
+# envelope). Recordings made before the fix carry the legacy bloodbank.report.session.completed, which Dapr stored as
+# com.dapr.event.sent (or Candystore dead-lettered); both stay understood so old recordings still render.
+SESSION_REPORT_TYPES = ("agent.session.annotated", "report.session.completed")
+EMBEDDING_PARENT_ABSENT = "embedding_parent_absent"   # dead_letter.reason the enricher writes when no parent event appeared
+
+
+def is_enricher_report(source: str | None, event_type: str | None) -> bool:
+    """True for the enricher's session report in either shape: the legacy Dapr wrapper (source 'enricher') or the
+    contract envelope (source urn:33god:service:enricher), by source or by type."""
+    src = str(source or "")
+    return src == "enricher" or src.endswith(":enricher") or str(event_type or "").endswith(SESSION_REPORT_TYPES)
+
+
 def now_ms() -> float:
     return time.time() * 1000.0
 

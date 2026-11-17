@@ -151,6 +151,27 @@ class BuildTests(unittest.TestCase):
         self.assertEqual((noise.status, noise.reason), ("skipped", "noise"))
         self.assertEqual(noise.attrs["_join"]["event_type"], "bloodbank.conversation.turn.completed")
 
+    def test_build_enricher_parent_absent_drop_is_a_failed_embed(self):
+        pubs = {E1: {"event_id": E1, "event_type": "bloodbank.agent.tool.completed", "t_end": 1000.0}}
+        lines = [(1090.0, f"ERROR enricher DROP embedding for {E1}: parent event never appeared after 3 deliveries "
+                          "(dead_letter recorded, reason embedding_parent_absent)")]
+        f = frag()
+        n, fk = logs.build_enricher(f, ctx(), lines, pubs)
+        self.assertEqual(n, 1)
+        bad = {s.id: s for s in f.spans}[Ids.consume("enricher-events", E1)]
+        self.assertEqual((bad.status, bad.reason), ("failed", "db_error"))
+        self.assertEqual(fk, [bad.id])
+
+    def test_build_daprd_drop_of_the_contract_shaped_report_is_still_the_enricher_report(self):
+        env = {"id": E1, "source": "urn:33god:service:enricher", "type": "bloodbank.agent.session.annotated",
+               "time": "2026-11-16T04:00:41.000Z", "data": {"session_id": SID}}
+        fake = {E1: {"type": "x", "subject": None, "envelope": env}}
+        lines = [(ms("2026-11-16T04:00:41.999Z"), f'level=warning msg="DROP status returned from app while processing pub/sub event {E1}"')]
+        f = frag()
+        with mock.patch("waybill.collectors.holocene.lookup", return_value=fake):
+            logs.build_daprd(f, ctx(), lines, {})
+        self.assertEqual([x.title for x in f.findings], ["enricher session report dead-lettered by Candystore"])
+
     def test_build_daprd_drop_becomes_broken_finding(self):
         env = {"id": E1, "source": "enricher", "topic": "bloodbank.evt.report.session.completed",
                "time": "2026-11-16T04:00:41.000Z", "data": {"session_id": SID}}

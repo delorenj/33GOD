@@ -20,6 +20,8 @@ from pathlib import Path
 from unittest import mock
 
 PLATFORM_ROOT = Path(__file__).resolve().parents[1]
+# main.py imports its sibling bb_envelope; the container runs from this dir.
+sys.path.insert(0, str(PLATFORM_ROOT / "enricher"))
 
 GATEWAY_URL = "https://api.automaticai.io/v1/chat/completions"
 DEFAULT_MODEL = "automaticai/free"
@@ -51,10 +53,10 @@ def _install_stubs() -> tuple[types.ModuleType, list[dict]]:
     responses: list[FakeResponse] = []
     gets: list[FakeResponse] = []
 
-    def _post(url, headers=None, json=None, timeout=None):
+    def _post(url, headers=None, json=None, timeout=None, data=None):
         # deepcopy: _chat_completion mutates its payload dict on the 400 retry,
         # and the log must preserve what each call actually sent.
-        posts.append({"url": url, "headers": dict(headers or {}), "json": copy.deepcopy(json), "timeout": timeout})
+        posts.append({"url": url, "headers": dict(headers or {}), "json": copy.deepcopy(json), "data": data, "timeout": timeout})
         return responses.pop(0)
 
     def _get(url, timeout=None):
@@ -109,7 +111,17 @@ def _install_stubs() -> tuple[types.ModuleType, list[dict]]:
         def cursor(self):
             return _FakeCursor()
 
+        def commit(self):
+            return None
+
+        def rollback(self):
+            return None
+
+        def close(self):
+            return None
+
     psycopg2_stub.connect = lambda *a, **k: _FakeConn()
+    psycopg2_stub.Binary = lambda raw: raw
 
     for name, module in (
         ("fastapi", fastapi_stub),
@@ -140,6 +152,19 @@ STUBS = sys.modules["_enricher_test_stubs"]
 
 def _chat_ok(content: str) -> FakeResponse:
     return FakeResponse(payload={"choices": [{"message": {"content": content}}]})
+
+
+SESSION_ID = "0d8c06e8-1fbb-5e96-bf89-22564a776074"
+SESSION_ENDED_ID = "dcd69da1-5d9a-42b8-a5a7-3cb69f678b43"
+
+
+def _session_ended_body() -> dict:
+    return {
+        "id": SESSION_ENDED_ID,
+        "type": "bloodbank.agent.session.ended",
+        "correlationid": SESSION_ID,
+        "data": {"session_id": "local-abc"},
+    }
 
 
 def _tool_event_body() -> dict:
@@ -289,16 +314,19 @@ class SessionSummaryHandlerTests(unittest.TestCase):
         ])
         emitted = {}
         with mock.patch.dict(main.os.environ, {"PATH": "/usr/bin", "OPENAI_COMPAT_API_KEY": "shared"}, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                self._run({"correlationid": "sess-1", "data": {}})
+            with mock.patch.object(main, "publish_envelope", side_effect=lambda topic, envelope: emitted.update({"topic": topic, "payload": envelope["data"], "envelope": envelope})):
+                self._run(_session_ended_body())
         post = STUBS.posts[0]
         self.assertEqual(post["url"], GATEWAY_URL)
         self.assertEqual(post["json"]["model"], DEFAULT_MODEL)
         self.assertNotIn("response_format", post["json"])
         self.assertEqual(post["headers"]["Authorization"], "Bearer shared")
-        self.assertEqual(emitted["topic"], "bloodbank.evt.report.session.completed")
+        self.assertEqual(emitted["topic"], "bloodbank.evt.agent.session.annotated")
+        self.assertEqual(emitted["envelope"]["type"], "bloodbank.agent.session.annotated")
+        self.assertEqual(emitted["payload"]["summary_source"], "gateway")
+        self.assertEqual(emitted["payload"]["tool_call_count"], 2)
         self.assertEqual(emitted["payload"]["summary"], "Did things and shipped them.")
-        self.assertEqual(emitted["payload"]["session_id"], "sess-1")
+        self.assertEqual(emitted["payload"]["session_id"], SESSION_ID)
         self.assertEqual(emitted["payload"]["cwd"], "/repo")
         self.assertEqual(emitted["payload"]["event_count"], 2)
 
@@ -306,8 +334,8 @@ class SessionSummaryHandlerTests(unittest.TestCase):
         STUBS.responses.append(FakeResponse(payload={"events": [{"data": {"tool_name": "t", "arguments": {}, "status": "ok"}}]}))
         emitted = {}
         with mock.patch.dict(main.os.environ, {"PATH": "/usr/bin"}, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                self._run({"correlationid": "sess-1", "data": {}})
+            with mock.patch.object(main, "publish_envelope", side_effect=lambda topic, envelope: emitted.update({"topic": topic, "payload": envelope["data"], "envelope": envelope})):
+                self._run(_session_ended_body())
         self.assertEqual(STUBS.posts, [])
         self.assertEqual(emitted["payload"]["summary"], "Session completed with 1 tool invocations.")
 
@@ -324,8 +352,8 @@ class SessionSummaryHandlerTests(unittest.TestCase):
             "SESSION_SUMMARY_MODEL": "automaticai/free",
         }
         with mock.patch.dict(main.os.environ, env, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
-                self._run({"correlationid": "sess-1", "data": {}})
+            with mock.patch.object(main, "publish_envelope", side_effect=lambda topic, envelope: emitted.update({"topic": topic, "payload": envelope["data"], "envelope": envelope})):
+                self._run(_session_ended_body())
         self.assertEqual(STUBS.posts[0]["url"], "http://summary-gw/v1/chat/completions")
         self.assertEqual(STUBS.posts[0]["json"]["model"], "automaticai/free")
         self.assertEqual(STUBS.posts[0]["headers"]["Authorization"], "Bearer sum-token")
@@ -344,7 +372,7 @@ class ToolCompletedEmbeddingOnlyTests(unittest.TestCase):
             "JEV_API_KEY": "jev-token",
         }
         with mock.patch.dict(main.os.environ, env, clear=True):
-            with mock.patch.object(main, "emit_event", side_effect=lambda topic, payload: emitted.update({"topic": topic, "payload": payload})):
+            with mock.patch.object(main, "publish_envelope", side_effect=lambda topic, envelope: emitted.update({"topic": topic, "envelope": envelope})):
                 status = main._do_handle_tool_completed(_tool_event_body())
         self.assertEqual(status, {"status": "SUCCESS"})
         self.assertEqual(STUBS.posts, [])

@@ -848,7 +848,7 @@ def _tool_hooks(acc: _Acc) -> int:
 def _event_publisher_parent(acc: _Acc, ev: dict) -> str | None:
     """The span that published an event no publish span exists for (finding 36): a hook.updated mirror is published
     by hook-hub on behalf of its hook invocation (correlationid); an event a service emitted while handling another
-    (turn.annotated, report.session.completed) hangs under that service's consume span of the causing event."""
+    (turn.annotated, agent.session.annotated, and the legacy report.session.completed) hangs under that service's consume span of the causing event."""
     corr = ev.get("correlationid")
     if str(ev.get("type") or "").endswith("agent.hook.updated") and corr and M.Ids.hook(corr) in acc.spans:
         return M.Ids.hook(corr)
@@ -1091,11 +1091,12 @@ def _session_edges(acc: _Acc, window: M.TurnWindow) -> None:
                 ev["publisher_span"] = ln["from"]
                 if not ev.get("producer"):
                     ev["producer"] = acc.spans[ln["from"]].get("component")
-    # the enricher's session rollup (on session.ended) is what emits report.session.completed
+    # the enricher's session rollup (on session.ended) is what emits agent.session.annotated (33GOD-95; recordings made
+    # before the fix carry the legacy report.session.completed, so both are accepted)
     rollups = [s for s in acc.spans.values() if s.get("kind") == "consume" and s.get("component") == "enricher"
                and _short_type((s.get("attrs") or {}).get("event_type") or s.get("name")).endswith("session.ended")]
     for ev in acc.events.values():
-        if ev.get("publisher_span") or not str(ev.get("type") or "").endswith("report.session.completed"):
+        if ev.get("publisher_span") or not str(ev.get("type") or "").endswith(M.SESSION_REPORT_TYPES):
             continue
         if rollups and (ev.get("producer") in (None, "enricher")):
             r = rollups[-1]
