@@ -41,8 +41,12 @@ export interface Dock {
 export interface DockState { size: number; collapsed: boolean }
 
 const KEY = (id: string) => `manual.dock.${id}`
-/** How far below `min` a drag has to go before the dock folds: a deliberate pull, not a twitch. */
-const SNAP = 56
+/**
+ * Hysteresis for folding by drag, in px. An open dock folds as soon as the drag goes this far below `min`; a folded dock
+ * opens once it is pulled this far up. It must stay small: the panel stops moving at `min`, so any distance past that is
+ * a dead zone where the user sees nothing happen (a 56px one read as "it will not minimize again").
+ */
+const SNAP = 16
 const STEP = 24
 
 function load(id: string): { size?: number; collapsed?: boolean } {
@@ -115,7 +119,8 @@ export function DockGrip({ dock, label }: { dock: Dock; label: string }) {
     if (!f.moved && Math.abs(delta) < 3) return
     f.moved = true
     const raw = f.size + delta
-    const next: DockState = d.collapsible && raw < d.min - SNAP
+    const fold = d.collapsible && (f.collapsed ? delta < SNAP : raw < d.min - SNAP)
+    const next: DockState = fold
       ? { size: f.collapsed ? last.current.size : Math.max(d.min, f.size), collapsed: true }
       : { size: Math.min(d.max, Math.max(d.min, raw)), collapsed: false }
     last.current = next
