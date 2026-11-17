@@ -67,8 +67,6 @@ flowchart LR
     c_client_portal["Client portal"]
     c_farm_command_bridge["farm-command-bridge"]
     c_genesis["Genesis client liaison"]
-    c_launch_site["33GOD launch page"]
-    c_manual["The Manual"]
     c_milkshake["Milkshake billing"]
   end
   subgraph G12["Shared Infra"]
@@ -84,6 +82,10 @@ flowchart LR
     c_postgres["PostgreSQL"]
     c_redis["Redis"]
     c_traefik["Traefik"]
+  end
+  subgraph G13["Marketing"]
+    c_launch_site["33GOD launch page"]
+    c_manual["The Manual"]
   end
   c_aai_gateway -->|routes-llm-via| c_openrouter
   c_aai_gateway -->|stores-in| c_postgres

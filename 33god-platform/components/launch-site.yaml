@@ -6,11 +6,11 @@ repo: .
 description: 'The public front door: one night at the company, told by the clock.'
 changelog:
   topics:
-  - g11
+  - g13
   - ui
 kind: ui
 first_party: true
-domain: G11
+domain: G13
 c4:
   level: container
   parent: ''

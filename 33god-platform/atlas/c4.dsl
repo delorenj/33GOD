@@ -167,15 +167,17 @@ workspace "33GOD" "One map of every component (I-12)" {
         c_genesis = container "Genesis client liaison" "The agent clients talk to about their projects." "python" {
           c_genesis_desk_worker = component "Genesis desk Worker" "Public web desk on Cloudflare where clients reach Genesis." "cloudflare-workers"
         }
-        c_launch_site = container "33GOD launch page" "The public front door: one night at the company, told by the clock." "html, css, nginx" {
-        }
-        c_manual = container "The Manual" "Picture manuals that explain how the platform works, one page at a time." "html, svg, nginx" {
-        }
         c_milkshake = container "Milkshake billing" "Turns usage and cost events into client billing." "" {
         }
       }
       group "Shared Infra" {
         c_op_token_guard = container "op-token-guard" "Self-heals drift in the 1Password service-account token that every service reads." "systemd, shell" {
+        }
+      }
+      group "Marketing" {
+        c_launch_site = container "33GOD launch page" "The public front door: one night at the company, told by the clock." "html, css, nginx" {
+        }
+        c_manual = container "The Manual" "Picture manuals that explain how the platform works, one page at a time." "html, svg, nginx" {
         }
       }
     }

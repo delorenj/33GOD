@@ -99,6 +99,9 @@ domains:
 - id: G12
   name: Shared Infra
   summary: 'Third-party infrastructure the platform runs on: databases, proxy, tunnels, secrets, object store.'
+- id: G13
+  name: Marketing
+  summary: 'The public face: the launch page, the picture manuals and the showcase pages that explain the platform to people outside it.'
 people:
 - id: operator
   name: Operator

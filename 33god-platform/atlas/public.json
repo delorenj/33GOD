@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "2af00dbc03dd9d87a48c19308106b6f3cd70032667ff5451dbd78e5dfe9b572f",
+  "registry_digest": "ef770d34c757e7bf2074bfcc0b6ce08803db3563b5622741ee76f6fb7b6bd3d3",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -55,6 +55,10 @@
     {
       "id": "G12",
       "name": "Shared Infra"
+    },
+    {
+      "id": "G13",
+      "name": "Marketing"
     }
   ],
   "people": [
@@ -1032,7 +1036,7 @@
       "name": "33GOD launch page",
       "kind": "ui",
       "first_party": true,
-      "domain": "G11",
+      "domain": "G13",
       "level": "container",
       "parent": "",
       "status": "partial",
@@ -1065,7 +1069,7 @@
       "name": "The Manual",
       "kind": "ui",
       "first_party": true,
-      "domain": "G11",
+      "domain": "G13",
       "level": "container",
       "parent": "",
       "status": "partial",
