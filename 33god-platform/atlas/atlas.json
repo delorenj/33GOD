@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "6e63e9642a1defdc97218098845f4662335ea4db6fdde50bb9fae7b44bcae955",
+  "registry_digest": "48e6a8a488ac60eab708c177eea1debdd260cb4051f1b6200e3de96e93f069ef",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -70,7 +70,6 @@
     {
       "id": "G13",
       "name": "Marketing",
-      "hue": 9,
       "summary": "The public face: the launch page, the picture manuals and the showcase pages that explain the platform to people outside it."
     }
   ],
@@ -2485,7 +2484,7 @@
       "from": "enricher",
       "to": "bb-dapr",
       "kind": "publishes-to",
-      "via": "POST enricher-daprd:3501 publish bloodbank-pubsub (report.session.completed)"
+      "via": "POST enricher-daprd:3501 publish bloodbank-pubsub (agent.session.annotated, application/cloudevents+json)"
     },
     {
       "from": "enricher",

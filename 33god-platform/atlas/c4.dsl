@@ -300,7 +300,7 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_earshot -> c_minio "stores-in" "bucket earshot/<channel>/ via the delo mc alias"
     c_enricher -> c_bb_dapr "consumes-from" "enricher-daprd subscription"
     c_enricher -> c_candystore "writes" "Postgres pgvector"
-    c_enricher -> c_bb_dapr "publishes-to" "POST enricher-daprd:3501 publish bloodbank-pubsub (report.session.completed)"
+    c_enricher -> c_bb_dapr "publishes-to" "POST enricher-daprd:3501 publish bloodbank-pubsub (agent.session.annotated, application/cloudevents+json)"
     c_enricher -> c_candystore "reads" "GET candystore:3001/sessions/{session_id}"
     c_enricher -> c_aai_gateway "routes-llm-via" "POST api.automaticai.io/v1/chat/completions (session summary)"
     c_farm_command_bridge -> c_bb_nats "publishes-to" "bloodbank.cmd.billing.* on BLOODBANK_COMMANDS"

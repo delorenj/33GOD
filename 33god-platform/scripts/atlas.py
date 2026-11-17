@@ -52,7 +52,7 @@ KINDS = {"service", "cli", "library", "agent", "datastore", "ui", "bus", "schedu
          "gateway", "contract", "feature", "external"}
 LEVELS = {"software-system", "container", "component"}
 STATUSES = {"live", "built-not-running", "partial", "planned", "retired"}
-DOMAIN_HUES = range(1, 10)  # atlas/template.html defines --d1..--d9 per theme
+DOMAIN_HUES = range(1, 14)  # atlas/template.html defines --d1..--d13 per theme
 RELATION_KINDS = {"publishes-to", "consumes-from", "calls", "stores-in", "schedules", "hosts",
                   "reads", "writes", "renders", "routes-llm-via", "deploys", "wraps"}
 # Fields a public showcase page may carry. Wires keep only from/to/kind.
@@ -143,7 +143,7 @@ def validate(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[str]:
                 errors.append(f"person {p['id']}: uses unknown id {target!r}")
     for d in cfg.get("domains", []):
         if "hue" in d and d["hue"] not in DOMAIN_HUES:
-            errors.append(f"domain {d['id']}: hue {d['hue']!r} must be 1-9 (a --d<n> token in atlas/template.html)")
+            errors.append(f"domain {d['id']}: hue {d['hue']!r} must be 1-13 (a --d<n> token in atlas/template.html)")
         if d["id"] in ids:
             errors.append(f"domain {d['id']}: collides with a component id")
     del people
