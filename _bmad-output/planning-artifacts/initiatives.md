@@ -675,7 +675,7 @@ owner_project: 33god
 project_home: 33god-platform/waybill
 spec: 33god-platform/waybill/SPEC.md
 dogfood_target: [Jarad, Damian]
-delegations: []            # candidates below, not yet ticketed
+delegations: [BB-37, BB-38, BB-39, BB-40, BB-41, BB-33, CANDYS-73, 33GOD-95]
 depends_on: [I-10]
 related_initiatives: [I-12]
 ```
@@ -692,20 +692,29 @@ related_initiatives: [I-12]
 - The Factory renders a waybill as a pure function of the playhead, unmapped
   components get auto-placed kiosks, and the end card lists findings and gaps.
 
-**Candidate delegations surfaced by the first recordings (2026-11-16)**
+**Delegations surfaced by the first recordings (ticketed 2026-11-17)**
 
-- bloodbank/hook-hub: the hub's PATH lacks mise shims and `~/.local/bin`, so
-  codegraph-prompt, code-review-graph-* and codex-turn-notify never run.
-  candystore-context fails on every SessionStart. Optionally, a per-handler
-  stdout tee so waybills can show what each handler injected.
-- enricher: `report.session.completed` is dead-lettered by Candystore on every
-  session (a Dapr envelope without the CloudEvents fields).
-- agent-hooks: `publish_status=sent` is only a core-NATS PONG. In every capture
-  all `llm.usage.recorded` events were published, but none were stored by a
-  JetStream ack.
-- ASM: session-keyed scopes never reach `gone`, and the hash carries no
-  session_id or correlationid.
-- Bloodbank: traceparent is all zeros on every event.
+- BB-37 (high): hook-hub's PATH lacks mise shims and `~/.local/bin`, so
+  codegraph-prompt and code-review-graph-* never run. The claude-notify symlink
+  also dangles.
+- BB-38 (high): hook-hub receipt journal SQLite contention. It caused 7.6k
+  OperationalErrors, 1,617 invocations stuck in `received`, and mis-stamped
+  handler starts.
+- BB-39: agent-hooks `publish_status=sent` is only a core-NATS PONG. Publish
+  with a PubAck instead. No loss was observed, because Holocene does store the
+  events.
+- BB-40: traceparent is all zeros on every event.
+- BB-41: two n8n JetStream consumers are unbound with backlogs (1,732 and 1,420
+  messages).
+- BB-33 (existing, commented): ASM never reaches `gone`, and its hash has no
+  session_id.
+- CANDYS-73: candystore-context exits 1 outside a registered project instead of
+  skipping.
+- 33GOD-95 (high): the enricher's `report.session.completed` is dead-lettered
+  on every session, and the event_embeddings foreign key races Candystore's
+  insert.
+- Not yet ticketed: a per-handler stdout tee in hook-hub, so waybills can show
+  what each handler injected.
 
 ## I-11 Agent ownership and impact awareness
 
