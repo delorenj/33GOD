@@ -1,5 +1,7 @@
 // The inspector: everything the waybill recorded about one span or one bus event.
 import { useMemo, useState } from 'react'
+import { DockGrip, useDock } from '../ui/dock'
+import { usePhone } from '../ui/usePhone'
 import { placeName } from './stations'
 import { useWb, wb } from './state'
 import { fmtMs, fmtInt, fmtT, short, type Artifact, type BusEvent, type Span, type Waybill } from './types'
@@ -151,14 +153,20 @@ export function Inspector() {
   const sel = useWb((s) => s.sel)
   const spans = useMemo(() => new Map(w.spans.map((s) => [s.id, s])), [w])
   const events = useMemo(() => new Map(w.events.map((e) => [e.id, e])), [w])
+  // docked on the right: drag its left edge to widen it for long payloads (a phone gets a bottom sheet instead)
+  const phone = usePhone()
+  const dock = useDock('inspector', { edge: 'right', min: 300, max: () => Math.max(300, window.innerWidth * 0.7 - 24), initial: () => 380 })
   if (!sel) return null
   const s = spans.get(sel)
   const e = sel.startsWith('evt:') ? events.get(sel.slice(4)) : undefined
   if (!s && !e) return null
   return (
-    <aside className="wbi" aria-label="Inspector">
+    <aside className="wbi" aria-label="Inspector" style={phone ? undefined : { width: dock.size }}>
+      {!phone && <DockGrip dock={dock} label="Inspector width" />}
       <button className="wbi-x" onClick={() => wb.select(null)} aria-label="Close the inspector">×</button>
-      {s ? <SpanView s={s} w={w} /> : <EventView e={e!} w={w} />}
+      <div className="wbi-in">
+        {s ? <SpanView s={s} w={w} /> : <EventView e={e!} w={w} />}
+      </div>
     </aside>
   )
 }

@@ -1,6 +1,8 @@
 // The waybill HUD: header, stop card, transport, waterfall, inspector and the end card.
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import voice from '../audio/voice'
+import { DockGrip, useDock, type Dock } from '../ui/dock'
+import { usePhone } from '../ui/usePhone'
 import { Inspector } from './Inspector'
 import { startNarrator } from './narrator'
 import { PlayWaybillButton } from './Picker'
@@ -12,16 +14,8 @@ import type { Stop } from './director'
 
 const RATES = [0.5, 1, 2, 4]
 
-function usePhone() {
-  const [p, setP] = useState(() => matchMedia('(max-width: 720px)').matches)
-  useEffect(() => {
-    const m = matchMedia('(max-width: 720px)')
-    const f = () => setP(m.matches)
-    m.addEventListener('change', f)
-    return () => m.removeEventListener('change', f)
-  }, [])
-  return p
-}
+/** Room the waterfall dock leaves above it: the header (70px), the gaps, and enough for the stop card to stay readable. */
+const DOCK_HEADROOM = 70 + 24 + 140
 
 function Header() {
   const w = useWb((s) => s.waybill)!
@@ -187,7 +181,7 @@ function EndCard() {
   )
 }
 
-function Transport() {
+function Transport({ dock }: { dock: Dock | null }) {
   const dir = useWb((s) => s.dir)!
   const si = useWb((s) => s.stop)
   const playing = useWb((s) => s.playing)
@@ -211,7 +205,12 @@ function Transport() {
             onClick={() => wb.go(i)} />
         ))}
       </div>
-      <span className="wb-keys">space · ← →</span>
+      <span className="wb-keys">space · ← →{dock ? ' · W' : ''}</span>
+      {dock && (
+        <button className="wb-wf-tog" onClick={() => dock.toggle()} aria-expanded={!dock.collapsed} aria-label={dock.collapsed ? 'Show the waterfall' : 'Hide the waterfall'} title={`${dock.collapsed ? 'Show' : 'Hide'} the waterfall (W). Drag the top edge to resize.`}>
+          {dock.collapsed ? '▴' : '▾'}
+        </button>
+      )}
     </div>
   )
 }
@@ -223,11 +222,35 @@ export function WaybillHud() {
   const sel = useWb((s) => s.sel)
   const phone = usePhone()
   const [open, setOpen] = useState(false)
+  // the waterfall dock: drag its top edge, fold it to just the transport, and it remembers both (desktop only;
+  // a phone keeps its own fold, the mini-strip)
+  const dock = useDock('waterfall', {
+    edge: 'bottom',
+    min: 140,
+    max: () => window.innerHeight - DOCK_HEADROOM,
+    initial: () => Math.min(window.innerHeight * 0.4, 330),
+    collapsible: true,
+  })
+  const toggleDock = useRef(dock.toggle)
+  toggleDock.current = dock.toggle
+  // the cards above size themselves off --wb-bot, so publish the dock's real height whatever made it change
+  const hud = useRef<HTMLDivElement>(null)
+  const bottom = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = bottom.current, h = hud.current
+    if (!el || !h) return
+    const put = () => h.style.setProperty('--wb-bot', `${Math.round(el.getBoundingClientRect().height)}px`)
+    put()
+    const ro = new ResizeObserver(put)
+    ro.observe(el)
+    return () => { ro.disconnect(); h.style.removeProperty('--wb-bot') }
+  }, [!!w])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null
       if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return
+      if (t?.closest?.('.dock-grip')) return // a focused dock grip owns arrows, space, Enter, Home and End
       const s = useWb.getState()
       if (e.key === 'Escape') {
         e.stopPropagation()
@@ -236,6 +259,7 @@ export function WaybillHud() {
       } else if (e.key === ' ' && t?.tagName !== 'BUTTON') { e.preventDefault(); wb.toggle() }
       else if (e.key === 'ArrowRight') { e.preventDefault(); wb.next() }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); wb.prev() }
+      else if ((e.key === 'w' || e.key === 'W') && !e.metaKey && !e.ctrlKey && !e.altKey && !matchMedia('(max-width: 720px)').matches) { e.preventDefault(); toggleDock.current() }
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
@@ -246,12 +270,13 @@ export function WaybillHud() {
   if (!w || !dir) return null
   const stop = dir.stops[si]
   return (
-    <div className={`wb-hud${sel ? ' has-insp' : ''}${phone ? ' phone' : ''}${phone && open ? ' wf-open' : ''}`}>
+    <div ref={hud} className={`wb-hud${sel ? ' has-insp' : ''}${phone ? ' phone' : ''}${phone && open ? ' wf-open' : ''}${dock.dragging ? ' dock-dragging' : ''}`}>
       <Header />
       {stop.kind === 'end' ? <EndCard /> : <StopCard stop={stop} prev={si > 0 ? dir.stops[si - 1] : null} n={si + 1} total={dir.stops.length} />}
       <Inspector />
-      <div className="wb-bottom card">
-        <Transport />
+      <div ref={bottom} className={`wb-bottom card${!phone && dock.collapsed ? ' folded' : ''}`} style={phone ? undefined : { height: dock.collapsed ? 'auto' : dock.size }}>
+        {!phone && <DockGrip dock={dock} label="Waterfall height" />}
+        <Transport dock={phone ? null : dock} />
         {phone && !open ? <MiniStrip onOpen={() => setOpen(true)} /> : (
           <>
             {phone && <div className="wb-oneline"><b>{si + 1}/{dir.stops.length}</b> {stop.title}</div>}
