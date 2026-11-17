@@ -856,3 +856,19 @@ related_initiatives: [I-6, I-10]
   export. Fix a hit by rewording the registry, never by editing the export.
   The art director's sign-off includes checking each page against this rule,
   personal names included, which the lint cannot catch.
+- **Drift control (2026-11-17):** the registry stays true to the running system
+  in three tiers. (1) *Commit:* the versioned `.githooks/pre-commit` dispatcher
+  (installed by mise on enter) re-renders the Atlas into any commit that touches
+  the registry and runs `check`, so views can never lag. (2) *Audit:*
+  `atlas.py audit --live` (`mise run platform:atlas:audit`) checks every
+  relation's cited line still holds its recorded `anchor`, finds running
+  systemd units, containers, Candystore producers and repos that no record's
+  `surfaces:` claims (non-33GOD workloads go in `components.yaml`
+  `atlas_ignore` with a reason), and flags `status` that disagrees with what is
+  running. (3) *Schedule:* the `atlas-drift` candybar (daily 07:17) runs
+  `scripts/atlas-drift.sh`: it heals moved evidence lines and stale renders and
+  pushes them, and files one Plane ticket per distinct finding set (keyed by
+  the finding digest) with a report on MinIO for the rest. A new component is
+  done when it has a record whose `surfaces:` claim it; a new relation is done
+  when it has `path:line` evidence and an anchor (`atlas.py anchor`).
+  Baseline: 33GOD-94 (14 unregistered surfaces).

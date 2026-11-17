@@ -70,7 +70,7 @@ case "$URL" in https://*) ;; *) echo "atlas-drift: publish failed: $(tail -3 "$O
 
 created="$(px task create "Atlas drift: $NEED finding(s) need a person" --idempotency-key "atlas-drift-$DIGEST" 2>&1)" \
   || { echo "atlas-drift: ticket create failed: $created" >&2; exit 2; }
-REF="$(grep -oE '\b[A-Z][A-Z0-9]+-[0-9]+\b' <<<"$created" | head -1)"
+REF="$(grep -oE '\b[A-Z0-9]*[A-Z][A-Z0-9]*-[0-9]+\b' <<<"$created" | head -1)"
 [ -n "$REF" ] || { echo "atlas-drift: no ticket ref in: $created" >&2; exit 2; }
 if ! px show "$REF" 2>/dev/null | grep -q "$DIGEST"; then
   body="$(cat "$OUT/atlas-drift.md")"

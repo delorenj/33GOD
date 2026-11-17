@@ -1,0 +1,12 @@
+[candybar]
+name = "atlas-drift"
+description = "Atlas drift pass (I-12): audit the component registry against the running system, heal moved evidence, ticket the rest"
+tags = ["atlas", "i-12", "drift"]
+schedule = "17 7 * * *"
+timezone = "America/New_York"
+enabled = false
+
+[candybar.runner]
+kind = "exec"
+argv = ["bash", "33god-platform/scripts/atlas-drift.sh"]
+timeout_s = 600
