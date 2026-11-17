@@ -489,3 +489,7 @@ kbd { font: 11px ui-monospace, monospace; background: rgba(255, 255, 255, 0.25);
   .wb-hud.phone .wb-stop p { font-size: 14px; margin-bottom: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { .wb-hud * { transition: none !important; animation: none !important; } }
+/* narration: the play button asks for the one tap the browser wants before it will speak */
+.wb-tr .wb-tap { animation: wb-tap 1.4s ease-in-out infinite; white-space: nowrap; }
+@keyframes wb-tap { 50% { box-shadow: 0 0 0 6px rgba(245, 184, 28, 0.45); } }
+.wb-tr .wb-voice.on { border-color: var(--bb); }

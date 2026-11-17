@@ -25,11 +25,13 @@ interface Wb {
   prevPaused: boolean
   /** waterfall zoom: fit the whole run, fit the current stop, or log-compress */
   zoom: 'fit' | 'stop' | 'log'
+  /** the browser refused to start the narration without a gesture: playback paused, the HUD asks for one tap */
+  needsTap: boolean
 }
 
 export const useWb = create<Wb>(() => ({
   waybill: null, dir: null, warnings: [], source: '', stop: 0, playing: true, rate: 1, sel: null, ended: false,
-  picker: false, load: { state: 'idle' }, prevPaused: false, zoom: 'stop',
+  picker: false, load: { state: 'idle' }, prevPaused: false, zoom: 'stop', needsTap: false,
 }))
 
 /** Progress through the current stop, 0..1. Written by the driver, read every frame. */
@@ -84,7 +86,7 @@ export const wb = {
     useWb.setState({
       // the axis follows the active stop (padded), so every stop's bars are readable; 'log' and 'linear' stay as overviews
       zoom: 'stop',
-      waybill: w, dir, warnings, source, stop: first, playing: true, sel: null, ended: false, picker: false, load: { state: 'idle' },
+      waybill: w, dir, warnings, source, stop: first, playing: true, sel: null, ended: false, picker: false, load: { state: 'idle' }, needsTap: false,
       prevPaused: was.mode === 'waybill' ? useWb.getState().prevPaused : was.paused,
     })
     useWorld.setState({ mode: 'waybill', intro: false, paused: true, station: null, inspect: null, bulb: null, mapOpen: false })

@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { direct, readerGroups } from '../../src/waybill/director'
+import { lineId, narrationFor, speakable } from '../../src/waybill/narration'
 import { place, stationOf } from '../../src/waybill/stations'
 import { normalize, parseWaybill } from '../../src/waybill/types'
 
@@ -27,6 +28,7 @@ if (bare.ok) {
   const d = direct(bare.waybill)
   ok(d.stops.some((s) => s.set === 'kiosk:zz'), 'an unknown kind on an unknown component lands on a kiosk')
 }
+ok(speakable('Read ×2 took 5.00 s (cached) → claude-opus-5-5 at 8.4k: SessionStart') === 'Read, twice took 5 seconds, cached, to Claude Opus 5 point 5 at 8.4 thousand, Session Start', 'speakable() turns HUD shorthand into words')
 const rg = readerGroups([
   { name: 'bloodbank-ntfy-router', component: 'ntfy-router', kind: 'core', filter: null, outcome: 'unknown', evidence: 'inferred' },
   { name: 'ntfy-router', component: 'ntfy-router', kind: 'core', filter: null, outcome: 'routed', evidence: 'observed', t: 4 },
@@ -61,6 +63,9 @@ for (const file of files) {
   ok(JSON.stringify(d.stops) === JSON.stringify(d2.stops), 'direct() is deterministic')
   ok(tDir < 400, `direct() is fast (${tDir.toFixed(0)} ms for ${w.spans.length} spans, parse ${tParse.toFixed(0)} ms)`)
   const kinds = d.stops.map((s) => s.kind)
+  const lines = d.stops.map(narrationFor)
+  ok(lines.every((l) => l.length > 10 && !l.startsWith('(') && !/[“”→×]/.test(l)), 'every stop has a speakable narration line (no stage-direction parenthesis, no arrows or quotes)')
+  ok(lines.every((l) => lineId(l) === lineId(l) && /^wbn-[a-z0-9]+$/.test(lineId(l))), 'narration ids are stable content hashes')
   ok(kinds[0] === 'prompt' && kinds[kinds.length - 1] === 'end', 'starts at the prompt, ends at "what did not happen"')
   const docks = d.stops.filter((s) => s.kind === 'dock')
   ok(docks.length > 0 && docks.every((s) => s.cards !== undefined), 'hooks become dock stops with job cards')

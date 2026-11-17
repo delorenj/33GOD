@@ -4,7 +4,9 @@
 //   node tools/voice/render.mjs <items.json|-> [options]
 //
 // items.json is a JSON list of { id, role, text } (or { "items": [...] }). `role` is a key of voices.json "roles"
-// (narrator | tips | floor) or a voice id (narrator-steady, ...), which is how auditions pick a specific variant.
+// (narrator | tips | floor | waybill) or a voice id (narrator-steady, ...), which is how auditions pick a specific variant.
+// A voice is either designed (a seeded reference clip made in stage 1, then cloned) or "mode": "registered", a voice
+// the Voxxy service already holds by name (GET https://vox.delo.sh/voices), e.g. kurzgesagt for waybill narration.
 //
 // Output: <out>/<id>.<format> per item and <out>/manifest.json mapping id -> { file, hash, duration, ... }.
 // Idempotent and resumable: an item whose hash (role + text + resolved voice config + output settings) matches the
@@ -214,6 +216,15 @@ async function makeRef(cfg, name, voice) {
 // ---------------------------------------------------------------- stage 2: a line
 
 async function renderLine(cfg, name, voice, text) {
+  if (voice.mode === 'registered') {
+    // a voice the service already holds (GET /voices): no design stage, the service picks its own reference
+    const s = voice.synth ?? {}
+    const body = { text, voice: voice.voice ?? name, cfg: s.cfg, steps: s.steps, seed: s.seed, normalize: s.normalize }
+    for (const k of Object.keys(body)) if (body[k] === undefined) delete body[k]
+    const r = await synthesize(cfg, body)
+    if (r.source && r.source !== 'registered') throw new Error(`service answered with voice source "${r.source}", not the registered voice ${body.voice}`)
+    return r.wav
+  }
   const ref = await ensureRef(cfg, name, voice)
   const s = voice.synth ?? {}
   const body = { cfg: s.cfg, steps: s.steps, seed: s.seed, normalize: s.normalize ?? false, reference_audio_b64: ref.b64 }

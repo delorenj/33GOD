@@ -12,3 +12,7 @@ run = "npm ci --silent && npm run build"
 [tasks.deploy]
 description = "Same as build: nginx bind-mounts ../books, so a build is a deploy"
 depends = ["build"]
+
+[tasks.narrate]
+description = "Render waybill narration (Voxxy voice kurzgesagt) into public/voice/; args: waybill files/URLs, --print, --dry-run, --force"
+run = "node --import ./tools/waybill/register.mjs --experimental-strip-types tools/waybill/narrate.ts"

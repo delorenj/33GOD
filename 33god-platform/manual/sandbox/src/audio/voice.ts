@@ -6,6 +6,8 @@
 // manifest, a missing file, a blocked autoplay or a muted state all resolve `say()` to `false`.
 //
 //   voice.say('intro-1')           // stops whatever is speaking, plays this line; resolves true if it played to the end
+//   voice.speak('intro-1')         // the same, resolving WHY it finished: ended | cut | missing | muted | blocked | error
+//   voice.pause() / voice.resume() // hold the current line where it is (the waybill player's pause button)
 //   voice.stop()
 //   voice.setMuted(true) / voice.toggleMute() / voice.muted
 //   voice.onSpeaking((on) => ...)  // true when a line starts sounding, false when it ends or is cut off (duck the music)
@@ -14,6 +16,9 @@
 // The mute flag persists in localStorage under `manual.voice` as {"muted": boolean}. Every storage access is guarded.
 
 export interface VoiceEntry { file: string; hash: string; duration: number }
+/** How a line finished: played to the end, cut off by another line or stop(), not in the manifest, muted,
+ *  refused by the browser's autoplay policy (no user gesture yet), or failed to load/decode. */
+export type SpeakOutcome = 'ended' | 'cut' | 'missing' | 'muted' | 'blocked' | 'error'
 type Manifest = Record<string, VoiceEntry>
 
 const STORAGE_KEY = 'manual.voice'
@@ -50,7 +55,8 @@ let manifest: Manifest | null = null
 let manifestLoad: Promise<Manifest | null> | null = null
 let manifestFailedAt = 0
 let audio: HTMLAudioElement | null = null
-let current: { token: number; finish: (completed: boolean) => void } | null = null
+let current: { token: number; finish: (outcome: SpeakOutcome) => void } | null = null
+let held = false
 let token = 0
 
 const speakingListeners = new Set<(speaking: boolean) => void>()
@@ -116,41 +122,45 @@ function getAudio(): HTMLAudioElement | null {
   }
 }
 
-function endCurrent(completed: boolean): void {
+function endCurrent(outcome: SpeakOutcome): void {
   const c = current
   current = null
+  held = false
   setSpeaking(false)
-  c?.finish(completed)
+  c?.finish(outcome)
 }
 
-async function say(id: string): Promise<boolean> {
-  if (muted) return false
+async function speak(id: string): Promise<SpeakOutcome> {
+  if (muted) return 'muted'
   const my = ++token
   // A new line always cuts off the old one, even if this one turns out to be missing.
-  if (current) endCurrent(false)
+  if (current) endCurrent('cut')
+  held = false
   const el = getAudio()
   if (el) el.pause()
 
   const m = await loadManifest()
-  if (my !== token || muted || !m || !el) return false // superseded, muted meanwhile, or nothing to play
+  if (my !== token) return 'cut' // superseded while the manifest loaded
+  if (muted) return 'muted'
+  if (!m || !el) return 'missing'
   const entry = entryFor(m, id)
-  if (!entry) return false
+  if (!entry) return 'missing'
 
-  return new Promise<boolean>((resolve) => {
+  return new Promise<SpeakOutcome>((resolve) => {
     let settled = false
     const cleanup = () => {
       el.removeEventListener('ended', onEnded)
       el.removeEventListener('error', onError)
       el.removeEventListener('playing', onPlaying)
     }
-    const finish = (completed: boolean) => {
+    const finish = (outcome: SpeakOutcome) => {
       if (settled) return
       settled = true
       cleanup()
-      resolve(completed)
+      resolve(outcome)
     }
-    const onEnded = () => { if (current?.token === my) endCurrent(true) }
-    const onError = () => { if (current?.token === my) endCurrent(false) }
+    const onEnded = () => { if (current?.token === my) endCurrent('ended') }
+    const onError = () => { if (current?.token === my) endCurrent('error') }
     const onPlaying = () => { if (current?.token === my) setSpeaking(true) }
 
     current = { token: my, finish }
@@ -162,12 +172,37 @@ async function say(id: string): Promise<boolean> {
       el.src = `voice/${encodeURIComponent(entry.file)}?v=${encodeURIComponent(entry.hash ?? '')}`
       const p = el.play()
       if (p && typeof p.catch === 'function') {
-        p.catch(() => { if (current?.token === my) endCurrent(false) }) // autoplay blocked, file missing, decode error
+        p.catch((e: unknown) => {
+          if (current?.token !== my) return
+          endCurrent((e as { name?: string })?.name === 'NotAllowedError' ? 'blocked' : 'error') // autoplay policy vs a bad file
+        })
       }
     } catch {
-      if (current?.token === my) endCurrent(false)
+      if (current?.token === my) endCurrent('error')
     }
   })
+}
+
+const say = async (id: string): Promise<boolean> => (await speak(id)) === 'ended'
+
+/** Hold the line being spoken; resume() picks it up where it stopped. A no-op when nothing is speaking. */
+function pause(): void {
+  if (!current || !audio || held) return
+  held = true
+  try { audio.pause() } catch { /* ignore */ }
+  setSpeaking(false)
+}
+
+function resume(): void {
+  if (!current || !audio || !held) return
+  held = false
+  const my = current.token
+  try {
+    const p = audio.play()
+    if (p && typeof p.catch === 'function') p.catch(() => { if (current?.token === my) endCurrent('error') })
+  } catch {
+    if (current?.token === my) endCurrent('error')
+  }
 }
 
 function stop(): void {
@@ -175,7 +210,7 @@ function stop(): void {
   if (audio) {
     try { audio.pause() } catch { /* ignore */ }
   }
-  if (current) endCurrent(false)
+  if (current) endCurrent('cut')
   else setSpeaking(false)
 }
 
@@ -189,11 +224,16 @@ function setMuted(next: boolean): void {
 
 export const voice = {
   say,
+  speak,
+  pause,
+  resume,
   stop,
   setMuted,
   toggleMute(): boolean { setMuted(!muted); return muted },
   get muted(): boolean { return muted },
   get speaking(): boolean { return speaking },
+  /** A line is loaded but held by pause(). */
+  get held(): boolean { return held },
   /** Seconds a line runs, or null when the manifest or the id is missing. Useful for timing a beat. */
   async duration(id: string): Promise<number | null> {
     const m = await loadManifest()

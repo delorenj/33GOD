@@ -10,6 +10,7 @@ import { C } from '../world/Props'
 import { Tag } from '../world/Tag'
 import type { HeroForm, Stop } from './director'
 import { placeName, spotOf, type Kiosk, type Placement } from './stations'
+import { narr } from './narrator'
 import { stopHold, useWb, wb, wbClock } from './state'
 import { fmtMs, fmtRel, fmtT, type Waybill } from './types'
 
@@ -18,17 +19,18 @@ const smooth = (x: number) => { const k = Math.max(0, Math.min(1, x)); return k 
 const lerp3 = (a: Vec3, b: Vec3, e: number): Vec3 => [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e]
 const add = (a: Vec3, d: Vec3): Vec3 => [a[0] + d[0], a[1] + d[1], a[2] + d[2]]
 
-/** The one clock: advances the playhead, hands over to the next stop, keeps the recording-time cursor. */
+/** The one clock: advances the playhead, hands over to the next stop, keeps the recording-time cursor.
+ *  A narrated stop is held at least as long as its line runs, and never left while the narrator is still talking. */
 function Driver() {
   useFrame((_, dt) => {
     const s = useWb.getState()
     const st = s.dir?.stops[s.stop]
     if (!s.dir || !st) return
     if (s.playing && st.kind !== 'end') {
-      wbClock.u += (Math.min(dt, 0.1) * 1000 * s.rate) / stopHold(st)
+      wbClock.u += (Math.min(dt, 0.1) * 1000 * s.rate) / Math.max(stopHold(st), narr.holdMs * s.rate)
       if (wbClock.u >= 1) {
         wbClock.u = 1
-        if (s.stop < s.dir.stops.length - 1) wb.next()
+        if (narr.done && s.stop < s.dir.stops.length - 1) wb.next()
       }
     }
     wbClock.t = st.t0 + wbClock.u * (st.t1 - st.t0)

@@ -16,12 +16,22 @@
   "roles": {
     "narrator": "narrator-steady",
     "tips": "tips-giddy",
-    "floor": "floor-drone"
+    "floor": "floor-drone",
+    "waybill": "kurzgesagt"
   },
   "lexicon": {
-    "idempotent": "eye-dem-poh-tent"
+    "idempotent": "eye-dem-poh-tent",
+    "ntfy": "notify",
+    "ASM": "A S M",
+    "bb-hook": "B B hook",
+    "AutomaticAI": "Automatic A I"
   },
   "voices": {
+    "kurzgesagt": {
+      "_note": "Registered on the Voxxy service itself (GET /voices), not a designed reference clip. Narrates waybill playback (role waybill).",
+      "mode": "registered",
+      "voice": "kurzgesagt"
+    },
     "narrator-steady": {
       "label": "Calm, warm man with beats of silence between ideas. Documentary pace.",
       "mode": "clone",

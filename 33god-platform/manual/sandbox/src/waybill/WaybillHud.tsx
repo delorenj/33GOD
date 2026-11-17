@@ -1,6 +1,8 @@
 // The waybill HUD: header, stop card, transport, waterfall, inspector and the end card.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import voice from '../audio/voice'
 import { Inspector } from './Inspector'
+import { startNarrator } from './narrator'
 import { PlayWaybillButton } from './Picker'
 import { placeName } from './stations'
 import { useWb, wb } from './state'
@@ -190,14 +192,17 @@ function Transport() {
   const si = useWb((s) => s.stop)
   const playing = useWb((s) => s.playing)
   const rate = useWb((s) => s.rate)
+  const needsTap = useWb((s) => s.needsTap)
+  const muted = useSyncExternalStore((f) => voice.onMuted(f), () => voice.muted)
   return (
     <div className="wb-tr" onClick={(e) => (e.target as HTMLElement).closest('button')?.blur()}>
       <button onClick={() => wb.prev()} disabled={si === 0} aria-label="Previous stop">⏮</button>
-      <button className="wb-play" onClick={() => wb.toggle()} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+      <button className={`wb-play${needsTap ? ' wb-tap' : ''}`} onClick={() => wb.toggle()} aria-label={needsTap ? 'Play with narration' : playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : needsTap ? '▶ Play with sound' : '▶'}</button>
       <button onClick={() => wb.next()} disabled={si >= dir.stops.length - 1} aria-label="Next stop">⏭</button>
       <select value={rate} onChange={(e) => wb.setRate(Number(e.target.value))} aria-label="Speed">
         {RATES.map((r) => <option key={r} value={r}>{r}×</option>)}
       </select>
+      <button className={`wb-voice${muted ? '' : ' on'}`} onClick={() => voice.toggleMute()} aria-label={muted ? 'Narration: off' : 'Narration: on'} title={muted ? 'Narration off' : 'Narration on: each stop is read out, and playback waits for it'}>{muted ? '🔇' : '🔊'}</button>
       <span className="wb-count" aria-live="polite">{si + 1}/{dir.stops.length}</span>
       <div className="wb-dots" role="tablist" aria-label="Stops">
         {dir.stops.map((s, i) => (
@@ -236,6 +241,8 @@ export function WaybillHud() {
     return () => window.removeEventListener('keydown', onKey, true)
   }, [])
   useEffect(() => setOpen(false), [si])
+  const loaded = !!w
+  useEffect(() => (loaded ? startNarrator() : undefined), [loaded]) // a new waybill is a stop change the narrator follows itself
   if (!w || !dir) return null
   const stop = dir.stops[si]
   return (
