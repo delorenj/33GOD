@@ -31,10 +31,12 @@ relations:
   kind: consumes-from
   via: pull consumer portal-cost-observations-v1 on BLOODBANK_EVENTS
   evidence: bloodbank/services/cost-bridge/main.py:351
+  anchor: sub = await bridge.js.pull_subscribe(SUBJECT, durable='portal-cost-observations-v1', stream='BLOODBANK_EVENTS', config=ConsumerConfig(ack_policy=AckPolicy.EXPLI
 - to: client-portal
   kind: calls
   via: POST COST_PORTAL_URL (automaticai.io/api/cost-observations)
   evidence: bloodbank/services/cost-bridge/main.py:221
+  anchor: request = urllib.request.Request(scope['portal_url'], data=canonical(event).encode(), headers={
 evidence:
 - bloodbank/services/cost-bridge/main.py
 - 'critic (summary): A narrow HTTPS ingress plus permanent archive that accepts billing cost observations onto the
@@ -44,3 +46,6 @@ evidence:
   not the repo; rebuild from bloodbank/services/cost-bridge'
 confidence: medium
 notes: The live container was built from a Claude scratchpad checkout, not the repo; rebuild from bloodbank/services/cost-bridge.
+surfaces:
+- container:bloodbank-cost-bridge-cost-bridge-1
+- repo:bloodbank/services/cost-bridge

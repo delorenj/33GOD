@@ -24,3 +24,6 @@ relations: []
 evidence:
 - 33god-platform/aperture/research/ship-board/data.json (g3)
 confidence: medium
+surfaces:
+- container:ntfy
+- container:ntfy-upstream-gate

@@ -25,3 +25,14 @@ evidence:
 - pilot default base https://plane.delo.sh
 confidence: high
 notes: Five stock lanes plus labels; Pilot is the only writer.
+surfaces:
+- container:plane-admin
+- container:plane-backend
+- container:plane-beat-worker
+- container:plane-frontend
+- container:plane-live
+- container:plane-minio
+- container:plane-rabbitmq
+- container:plane-redis
+- container:plane-space
+- container:plane-worker

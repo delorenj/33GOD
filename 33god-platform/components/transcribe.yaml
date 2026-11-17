@@ -25,6 +25,7 @@ relations:
   kind: writes
   via: mc cp to delo/recordings with --archive-s3
   evidence: ~/HeyMa/bin/transcribe:531
+  anchor: if "$MC_BIN" cp --quiet "$src" "${S3_ALIAS}/${S3_BUCKET}/${key}" >&2; then
 evidence:
 - 33god-platform/aperture/research/ship-board/data.json (g6)
 - 'critic (summary): No transcription-service compose or container exists. Transcription is the CLI HeyMa/bin/transcribe

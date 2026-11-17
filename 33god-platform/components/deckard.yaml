@@ -24,17 +24,22 @@ relations:
   kind: consumes-from
   via: bloodbank.evt.agent.{tool,session,invocation}.> and conversation.turn.>
   evidence: ~/code/deckard/crates/deckard-approve/src/bus.rs:64
+  anchor: '"bloodbank.evt.agent.tool.>",'
 - to: bb-nats
   kind: consumes-from
   via: deckard.evt.attention
   evidence: ~/code/deckard/crates/deckard-approve/src/bus.rs:79
+  anchor: 'pub const ATTENTION_SUBJECT: &str = "deckard.evt.attention";'
 - to: bb-nats
   kind: publishes-to
   via: deckard.evt.attention from installed attention hook
   evidence: ~/code/deckard/crates/deckard-daemon/src/hooks.rs:169
+  anchor: s.sendall(b"PUB " + subject.encode() + b" " + str(len(body)).encode() + b"\r\n" + body + b"\r\n")
 evidence:
 - /home/delorenj/code/deckard
 - 'critic (summary): Stream Deck control surface for Zellij (systemd deckard.service, ~/.local/bin/deckard run).
   The deckard.evt.attention consumes-from relation is unverified and should be dropped or re-proved'
 confidence: medium
 notes: Desktop-only per ship-board.
+surfaces:
+- systemd:deckard.service

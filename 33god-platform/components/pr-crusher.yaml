@@ -29,11 +29,15 @@ relations:
   kind: routes-llm-via
   via: named pr-crusher consumer token on AutomaticAI gateway
   evidence: ~/code/pr-crusher/src/pr_crusher/providers.py:28
+  anchor: GATEWAY_BASE_URL = "https://api.automaticai.io/v1"
 - to: onepassword
   kind: reads
   via: op read of the pr-crusher AutomaticAI token ref
   evidence: ~/code/pr-crusher/src/pr_crusher/security.py:135
+  anchor: '["op", "read", "--no-newline", ref],'
 evidence:
 - /home/delorenj/code/pr-crusher
 confidence: medium
 notes: Publisher off unless env set.
+surfaces:
+- producer:pr-crusher

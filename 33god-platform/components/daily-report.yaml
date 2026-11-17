@@ -26,20 +26,26 @@ relations:
 - to: candystore
   kind: reads
   via: Candystore API :8683
-  evidence: skillex/all-skills/delonet-daily-report
+  evidence: ~/code/skillex/all-skills/delonet-daily-report/scripts/run.py:116
+  anchor: DEFAULT_CANDYSTORE_URL = "http://127.0.0.1:8683"
 - to: candybar
   kind: reads
   via: GET :8700/candybars (fleet_health collector)
   evidence: ~/code/skillex/all-skills/delonet-daily-report/scripts/collectors/fleet_health.py:433
+  anchor: payload = _http_json(f"{base}/candybars", timeout)
 - to: open-notebook
   kind: writes
   via: POST /api/notes in notebook 'Dev Journal'
   evidence: ~/code/skillex/all-skills/delonet-daily-report/scripts/distribute.py:427
+  anchor: note = _post_json(f"{base}/api/notes", {
 - to: bb-nats
   kind: publishes-to
   via: Dapr :3504 bloodbank-pubsub, bloodbank.evt.reporting.report.*
   evidence: ~/code/skillex/all-skills/delonet-daily-report/scripts/run.py:879
+  anchor: url = f"http://127.0.0.1:{port}/v1.0/publish/{DAPR_PUBSUB}/{topic}"
 evidence:
 - /home/delorenj/code/skillex/all-skills/delonet-daily-report
 confidence: medium
 notes: Replaced candystore-daily-journal.
+surfaces:
+- producer:delonet-daily-report

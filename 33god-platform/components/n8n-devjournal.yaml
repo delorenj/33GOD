@@ -25,22 +25,27 @@ relations:
   kind: consumes-from
   via: bloodbank.reporting.report.completed (durable trigger)
   evidence: bloodbank/integrations/n8n-workflows/dev-journal/ingress.workflow.json:16
+  anchor: '"bloodbank.reporting.report.completed"'
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.reporting.journal.received
   evidence: bloodbank/integrations/n8n-workflows/dev-journal/ingress.workflow.json:56
+  anchor: '"event": "bloodbank.reporting.journal.received",'
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.reporting.incident.observed
   evidence: bloodbank/integrations/n8n-workflows/dev-journal/incidents.workflow.json:104
+  anchor: '"event": "bloodbank.reporting.incident.observed",'
 - to: aai-gateway
   kind: routes-llm-via
   via: POST api.automaticai.io/v1/chat/completions
   evidence: bloodbank/integrations/n8n-workflows/dev-journal/processor.workflow.json:104
+  anchor: '"url": "https://api.automaticai.io/v1/chat/completions",'
 - to: n8n-nodes-bb
   kind: calls
   via: node types bloodbankTrigger/devJournal/bloodbank
   evidence: bloodbank/integrations/n8n-workflows/dev-journal/ingress.workflow.json:8
+  anchor: '"type": "n8n-nodes-bloodbank.bloodbankTrigger",'
 evidence:
 - 33god-platform/aperture/research/ship-board/data.json (g2)
 - 'critic (evidence): Live and verifiable: repo bloodbank/integrations/n8n-workflows/dev-journal (ingress/processor/incidents/rollups/deadline

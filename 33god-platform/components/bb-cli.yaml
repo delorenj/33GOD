@@ -29,14 +29,17 @@ relations:
   kind: reads
   via: bb contract / verify-envelope import core.validate
   evidence: bloodbank/cli/bb.py:209
+  anchor: sys.path.insert(0, str(bloodbank_root() / "services" / "agent-hooks"))
 - to: bb-nats
   kind: publishes-to
   via: 'bb call: PUB command subject on core NATS'
   evidence: bloodbank/cli/call.py:38
+  anchor: sock.sendall(f'PUB {envelope["subject"]} {len(raw)}\r\n'.encode() + raw + b'\r\n')
 - to: bb-nats
   kind: consumes-from
   via: 'bb call: SUB bloodbank.rpy.lifecycle.task.invoke reply'
   evidence: bloodbank/cli/call.py:33
+  anchor: sock.sendall(f'SUB {inbox} 1\r\nPING\r\n'.encode())
 evidence:
 - bloodbank/cli/bb.py
 - bloodbank/CLAUDE.md:36

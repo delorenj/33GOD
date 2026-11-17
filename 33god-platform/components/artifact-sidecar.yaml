@@ -31,10 +31,16 @@ relations:
   kind: publishes-to
   via: bloodbank.evt.project.artifact.created
   evidence: bloodbank/services/artifact-sidecar/main.py:318
+  anchor: ack = await self._js.publish(
 - to: pjangler
   kind: calls
   via: GET :8764/v1/registry (project slug lookup)
   evidence: bloodbank/services/artifact-sidecar/main.py:194
+  anchor: url = _env("ARTIFACT_SIDECAR_REGISTRY_URL", "http://127.0.0.1:8764/v1/registry")
 evidence:
 - bloodbank/services/artifact-sidecar/main.py
 confidence: medium
+surfaces:
+- producer:artifact-sidecar
+- repo:bloodbank/services/artifact-sidecar
+- systemd:bloodbank-artifact-sidecar.service

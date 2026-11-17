@@ -51,30 +51,37 @@ relations:
   kind: reads
   via: loadHermesRegistry(~/.hermes/agents-registry.yaml)
   evidence: krebs/bin/krebs.mjs:61
+  anchor: const registry = await bb.registry.loadHermesRegistry(registryPath);
 - to: pilot
   kind: calls
   via: import pilot/src/plane.js Plane + config.js homeBinding
   evidence: krebs/tick/deps.mjs:60
+  anchor: const { Plane } = await import(pathToFileURL(join(dir, "src", "plane.js")).href);
 - to: n8n-nodes-bb
   kind: calls
   via: require dist/nats.js publish, buildEnvelope; dist/registry.js
   evidence: krebs/tick/deps.mjs:40
+  anchor: nats = require(join(dist, "nats.js"));
 - to: bb-nats
   kind: consumes-from
   via: durable krebs-execution-v2 on bloodbank.cmd.lifecycle.task.invoke
   evidence: krebs/src/krebs/service.py:43
+  anchor: sub = await js.pull_subscribe(COMMAND_SUBJECT, durable='krebs-execution-v2', config=ConsumerConfig(ack_policy=AckPolicy.EXPLICIT, ack_wait=180, max_ack_pending=
 - to: bb-nats
   kind: publishes-to
   via: outbox bloodbank.{evt,rpy,cmd}.lifecycle.<entity>.<action>
   evidence: krebs/src/krebs/service.py:36
+  anchor: await js.publish(row['subject'], canonical(row['envelope']).encode(), headers={'Nats-Msg-Id':row['id']})
 - to: postgres
   kind: stores-in
   via: KREBS_DATABASE_URL schema krebs (store, outbox)
   evidence: krebs/src/krebs/service.py:95
+  anchor: store = Store(os.environ['KREBS_DATABASE_URL'])
 - to: pilot
   kind: calls
   via: node provider-helper.js (KREBS_PILOT_HELPER) apply/read ops
   evidence: krebs/src/krebs/adapters.py:70
+  anchor: proc=subprocess.run(['node',self.helper],input=canonical(request),capture_output=True,text=True,timeout=60,env=env)
 evidence:
 - krebs/tick/run.mjs
 - krebs/.candybars/krebs-tick.candybar.toml

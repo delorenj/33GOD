@@ -78,7 +78,6 @@ flowchart LR
     c_traefik["Traefik"]
   end
   c_aai_gateway -->|routes-llm-via| c_openrouter
-  c_aai_gateway -->|routes-llm-via| c_jev_litellm
   c_aai_gateway -->|stores-in| c_postgres
   c_aai_gateway -->|stores-in| c_redis
   c_mon_core -->|reads| c_aai_gateway

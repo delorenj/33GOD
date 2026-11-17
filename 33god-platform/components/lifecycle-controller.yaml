@@ -26,12 +26,16 @@ relations:
   kind: wraps
   via: importlib krebs.project_health.main/reconciler/worker/sweeper
   evidence: bloodbank/services/lifecycle-controller/src/main.py:7
+  anchor: _canonical = importlib.import_module("krebs.project_health.main")
 - to: postgres
   kind: stores-in
   via: DATABASE_URL tables lifecycle_event_outbox etc, shared with candystore pg
   evidence: bloodbank/services/lifecycle-controller/src/db/001_lifecycle_controller.sql:2
+  anchor: -- Apply after candystore migrations (shares postgres instance)
 evidence:
 - bloodbank/services/lifecycle-controller/pyproject.toml (reconciler, sweeper, outbox_publisher modules)
 - systemctl and docker ps show no match
 confidence: medium
 notes: Likely superseded by krebs tick (krebs/docs/lifecycle.md says Krebs replaces Momo); confirm before drawing.
+surfaces:
+- repo:bloodbank/services/lifecycle-controller

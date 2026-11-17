@@ -25,21 +25,30 @@ relations:
   kind: routes-llm-via
   via: VINYL_CLEANUP_URL api.automaticai.io/v1 chat/completions
   evidence: ~/HeyMa/components/vinyl/vinyl/sentence_cleanup.py:95
+  anchor: self.url = os.environ.get("VINYL_CLEANUP_URL", "https://api.automaticai.io/v1").rstrip("/")
 - to: aai-gateway
   kind: routes-llm-via
   via: VINYL_TRANSLATE_URL api.automaticai.io/v1 (live translation)
   evidence: ~/HeyMa/components/vinyl/vinyl/live/translate.py:32
+  anchor: DEFAULT_BASE_URL = os.environ.get("VINYL_TRANSLATE_URL", "https://api.automaticai.io/v1")
 - to: jev-litellm
   kind: calls
   via: POST jev.delo.sh/typesafe/v1/systemone (dictionary judge)
   evidence: ~/HeyMa/components/vinyl/vinyl/dictionary.py:87
+  anchor: DEFAULT_JEV_URL = "https://jev.delo.sh/typesafe/v1/systemone"
 - to: wax
   kind: calls
   via: imports wax.dictionary and wax.jev from components/wax/src
   evidence: ~/HeyMa/components/vinyl/vinyl/dictionary.py:216
+  anchor: return candidate, len(words)
 evidence:
 - /home/delorenj/HeyMa
 - 'critic (repo): /home/delorenj/code/vinyl (also a HeyMa submodule at HeyMa/components/vinyl). Live units: vinyld.service
   (dictation daemon, sherpa-onnx parakeet-tdt-0.6b-v3), vinyld-serve.service (vinyl serve 0.0.0.0:7733, verified
   listening), vinyl-live.service (meeting captions + en/es translation, :7734), vinyl-tray.service'
 confidence: medium
+surfaces:
+- systemd:vinyl-live.service
+- systemd:vinyl-tray.service
+- systemd:vinyld-serve.service
+- systemd:vinyld.service

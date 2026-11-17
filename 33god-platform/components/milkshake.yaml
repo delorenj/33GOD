@@ -27,23 +27,27 @@ relations:
 - to: bb-nats
   kind: consumes-from
   via: bloodbank.cmd.billing.invoice.generate (milkshake-farm-consumer)
-  evidence: systemd milkshake-farm-consumer.service
+  evidence: 'live: systemctl --user is-active milkshake-farm-consumer.service'
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.billing.* (ledger outbox, command results)
   evidence: ~/code/Milkshake/src/milkshake/commands/outbox.py:372
+  anchor: bus.publish(event.subject, event.payload, event.msg_id)
 - to: bb-nats
   kind: consumes-from
   via: durable milkshake-mercury-hook on bloodbank.cmd.billing.transaction.receive
   evidence: ~/code/Milkshake/src/milkshake/consumer/nats_bus.py:30
+  anchor: 'HOOK_DURABLE: Final = "milkshake-mercury-hook"'
 - to: client-portal
   kind: calls
   via: POST MILKSHAKE_FARM_URL /api/milkshake-snapshot (ms farm push)
   evidence: ~/code/Milkshake/src/milkshake/farm/transport.py:110
+  anchor: response = http.post(
 - to: aai-gateway
   kind: routes-llm-via
   via: POST api.automaticai.io chat completions (category namer)
   evidence: ~/code/Milkshake/src/milkshake/gateway/__init__.py:127
+  anchor: f"{GATEWAY_BASE}{CHAT_PATH}",
 - to: jev-litellm
   kind: routes-llm-via
   via: POST jev.delo.sh/typesafe/v1/systemone
@@ -52,14 +56,17 @@ relations:
   kind: calls
   via: GET openrouter.ai/api/v1/key (usage squeeze)
   evidence: ~/code/Milkshake/src/milkshake/oldmacs/openrouter.py:40
+  anchor: 'URL: Final = "https://openrouter.ai/api/v1/key"'
 - to: postgres
   kind: stores-in
   via: milkshake-postgres 127.0.0.1:5441 ledger
   evidence: ~/code/Milkshake/ops/stack/compose.yml:27
+  anchor: '- "127.0.0.1:5441:5432"'
 - to: onepassword
   kind: calls
   via: op run --env-file .env.vendors.op/.env.consumer.op
   evidence: ~/code/Milkshake/ops/systemd/milkshake-farm-consumer.service:26
+  anchor: ExecStart=/usr/bin/env op run --env-file=%h/code/Milkshake/.env.vendors.op --env-file=%h/code/Milkshake/.env.consumer.op -- %h/.local/bin/milkshake-farm-consume
 evidence:
 - bloodbank/services/farm-command-bridge/main.py
 - 'critic (repo): /home/delorenj/code/Milkshake. Live: systemd user units milkshake-farm-consumer.service (op run
@@ -68,3 +75,9 @@ evidence:
   milkshake-mercury-backstop. Status live (not partial), confidence high. Closes open question 1'
 confidence: low
 notes: Repo path not confirmed.
+surfaces:
+- container:milkshake-postgres
+- container:milkshake-redis
+- producer:milkshake
+- systemd:milkshake-farm-consumer.service
+- systemd:milkshake-outbox.service

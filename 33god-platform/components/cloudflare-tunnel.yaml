@@ -25,3 +25,7 @@ evidence:
 - docker ps (three cloudflared containers Up 45h)
 confidence: medium
 notes: Genesis desk Worker -> tunnel route is unverified.
+surfaces:
+- container:cloudflare-tunnel
+- container:cloudflare-tunnel-automaticai
+- container:cloudflared-aai-cal

@@ -24,38 +24,47 @@ relations:
   kind: publishes-to
   via: bloodbank.evt.crank.<action> raw NATS PUB
   evidence: ~/code/Wingman/src/wingman/bus.py:91
+  anchor: + f"PUB {env['subject']} {len(body)}\r\n".encode() + body
 - to: bb-nats
   kind: consumes-from
   via: deckard.evt.attention subscription
   evidence: ~/code/Wingman/src/wingman/sources/events.py:138
+  anchor: nc = await nats.connect(settings.nats_url, connect_timeout=3, max_reconnect_attempts=-1,
 - to: asm
   kind: reads
   via: redis pubsub asm:transitions and asm:live / asm:a:<scope> hashes
   evidence: ~/code/Wingman/src/wingman/sources/events.py:104
+  anchor: r = aioredis.Redis.from_url(settings.redis_url, decode_responses=True)
 - to: crank
   kind: reads
   via: redis scan zcrank:tab:*
   evidence: ~/code/Wingman/src/wingman/sources/fleet.py:47
+  anchor: 'for key in r.scan_iter("zcrank:tab:*"):'
 - to: pjangler
   kind: reads
   via: GET 127.0.0.1:8764/v1/registry
   evidence: ~/code/Wingman/src/wingman/sources/fleet.py:99
+  anchor: data = httpx.get(settings.registry_url, timeout=5).json()
 - to: candystore
   kind: reads
   via: GET 127.0.0.1:8683/events
   evidence: ~/code/Wingman/src/wingman/evidence.py:55
+  anchor: f"{settings.candystore_url}/events",
 - to: vox
   kind: calls
   via: POST vox.delo.sh /synthesize and /sink/{key}/say
   evidence: ~/code/Wingman/src/wingman/voice.py:42
+  anchor: f"{settings.tts_url}/synthesize",
 - to: transcribe
   kind: calls
   via: POST 127.0.0.1:8766/v1/audio/transcriptions
   evidence: ~/code/Wingman/src/wingman/voice.py:94
+  anchor: settings.stt_url,
 - to: aai-gateway
   kind: routes-llm-via
   via: llm_base_url api.automaticai.io/v1 (pydantic-ai)
   evidence: ~/code/Wingman/src/wingman/brain.py:56
+  anchor: provider = OpenAIProvider(base_url=cfg.llm_base_url, api_key=cfg.llm_key)
 evidence:
 - /home/delorenj/code/Wingman
 confidence: medium

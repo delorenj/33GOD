@@ -25,6 +25,12 @@ relations:
   kind: reads
   via: nats-exporter -varz -jsz=all http://bloodbank-nats:8222
   evidence: monitoring/compose.yml:224
+  anchor: '- "http://bloodbank-nats:8222"'
 evidence:
 - monitoring/compose.yml
 confidence: medium
+surfaces:
+- container:cadvisor
+- container:nats-exporter
+- container:node-exporter
+- container:process-exporter

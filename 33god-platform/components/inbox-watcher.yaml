@@ -26,6 +26,7 @@ relations:
   kind: reads
   via: mc ls/cp delo/holocene-auto inbox/ prefix
   evidence: holocene/services/inbox-watcher/memo_common.py:375
+  anchor: 'def s3_list_inbox(timeout: int = 60) -> list[dict]:'
 - to: minio
   kind: writes
   via: mc pipe status/ and replies/ objects in holocene-auto
@@ -34,30 +35,40 @@ relations:
   kind: calls
   via: TRANSCRIBE CLI --no-diarization --ephemeral
   evidence: holocene/services/inbox-watcher/inbox_watcher.py:1636
+  anchor: 'def _transcribe_run(self, tmp: Path, audio: Path, mid: str, key: str, agent: str, audio_s: float | None,'
 - to: vox
   kind: calls
   via: POST VOX_URL /synthesize-url
   evidence: holocene/services/inbox-watcher/inbox_watcher.py:4772
+  anchor: 'def parse_transcript(md: str) -> str:'
 - to: bb-nats
   kind: publishes-to
   via: bb-emit command bloodbank.cmd.agent.invocation.invoke|start
   evidence: holocene/services/inbox-watcher/inbox_watcher.py:2398
+  anchor: brief_id=fu.get("brief_id"), brief_sha256=fu.get("brief_sha256"),
 - to: bb-nats
   kind: publishes-to
   via: bb-emit facts bloodbank.audio.memo.<stage>
   evidence: holocene/services/inbox-watcher/inbox_watcher.py:938
+  anchor: 'return "interactive", None # unreachable'
 - to: candystore
   kind: reads
   via: GET CANDYSTORE_URL /events?correlationid=<memo_id>
   evidence: holocene/services/inbox-watcher/memo_common.py:482
+  anchor: url = f"{CANDYSTORE_URL}/events?correlationid={urllib.parse.quote(correlation_id)}&limit={limit}"
 - to: bb-nats
   kind: calls
   via: HTTP monitor :8222 /jsz?consumers=true
   evidence: holocene/services/inbox-watcher/memo_common.py:804
+  anchor: body = http_json(f"{NATS_MONITOR_URL}/jsz?consumers=true&streams=true&config=true", timeout=4)
 - to: agents-registry
   kind: reads
   via: MEMO_AGENT_REGISTRY registry_route() yaml
   evidence: holocene/services/inbox-watcher/memo_common.py:178
+  anchor: parsed = yaml.safe_load(REGISTRY_PATH.read_text(encoding="utf-8"))
 evidence:
 - holocene/services/inbox-watcher
 confidence: medium
+surfaces:
+- producer:inbox-watcher
+- systemd:holocene-inbox-watcher.service

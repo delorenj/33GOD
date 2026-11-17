@@ -44,3 +44,6 @@ relations: []
 evidence:
 - 33god-platform/components/holocene.yaml
 confidence: high
+surfaces:
+- repo:holocene
+- systemd:holocene-whisper.service

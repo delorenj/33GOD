@@ -30,13 +30,17 @@ relations:
   kind: publishes-to
   via: bloodbank.evt.agent.invocation.* / conversation.turn.* lifecycle
   evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:1608
+  anchor: await self._js.publish(
 - to: agents-registry
   kind: reads
   via: extra.fleet_registry ~/.hermes/agents-registry.yaml
   evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:424
+  anchor: str(extra.get("fleet_registry", "~/.hermes/agents-registry.yaml"))
 evidence:
 - /home/delorenj/.hermes/plugins
 - 'critic (repo): Source is /home/delorenj/code/33GOD/bloodbank/services/hermes-gateway (bloodbank_hermes_gateway
   package, hermes-plugin/, plugin.yaml). ~/.hermes/plugins/bloodbank-platform is the deployed copy; config.yaml
   plugins.enabled lists bloodbank-platform. Subject patterns in the relation are unverified'
 confidence: high
+surfaces:
+- repo:bloodbank/services/hermes-gateway

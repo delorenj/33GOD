@@ -29,14 +29,19 @@ relations:
   kind: renders
   via: /api/modules/candybar/list and /schedule
   evidence: holocene/apps/web/app/candybar/candybar-app.tsx:367
+  anchor: const list = usePoll<CandybarPayload>("/api/modules/candybar/list", POLL_MS);
 - to: delonet-director
   kind: renders
   via: /api/modules/director/snapshot
   evidence: holocene/apps/web/app/director.tsx:185
+  anchor: 'const response = await fetch(`${apiBase}/api/modules/director/snapshot`, { cache: "no-store" });'
 - to: hermes-fleet
   kind: renders
   via: /api/modules/hermes-fleet/snapshot and /stream (SSE)
   evidence: holocene/apps/web/app/legacy/page.tsx:460
+  anchor: const response = await fetch(`${apiBase}/api/modules/hermes-fleet/snapshot`);
 evidence:
 - holocene/apps/web
 confidence: medium
+surfaces:
+- container:holocene-web

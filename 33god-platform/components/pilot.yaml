@@ -40,34 +40,45 @@ relations:
 - to: plane
   kind: calls
   via: REST https://plane.delo.sh
-  evidence: pilot default base
+  evidence: pilot/src/config.js:230
+  anchor: 'base: (process.env.PLANE_BASE || userCfg.base || DEFAULT_BASE).replace(/\/+$/, ""),'
 - to: onepassword
   kind: calls
   via: op read of op:// key refs
   evidence: pilot/src/secrets.js:26
+  anchor: return execFileSync("op", ["read", ref], {
 - to: pjangler
   kind: calls
   via: pj list --json (PILOT_PJ)
   evidence: pilot/src/providers/registry.js:61
+  anchor: 'const r = spawnSync(bin, ["list", "--json"], { encoding: "utf8", timeout: 20_000, maxBuffer: 64 * 1024 * 1024 });'
 - to: krebs
   kind: calls
   via: python -m krebs.capability (KREBS_CAPABILITY_PYTHON)
   evidence: pilot/src/provider-helper.js:49
+  anchor: const grant = spawnSync(process.env.KREBS_CAPABILITY_PYTHON,['-m','krebs.capability'],{input:JSON.stringify(request),encoding:'utf8',timeout:20000});
 - to: krebs
   kind: reads
   via: KREBS_MANIFESTS / ~/.config/krebs/manifests.json ownership registry
   evidence: pilot/src/config.js:138
+  anchor: 'const configuredRegistry=process.env.KREBS_MANIFESTS ? parseManifestList(process.env.KREBS_MANIFESTS) :'
 - to: bb-cli
   kind: calls
   via: spawnSync bb call (stdin envelope)
   evidence: pilot/src/lifecycle.js:73
+  anchor: const result = spawnSync('bb', ['call'], {input:JSON.stringify(envelope), encoding:'utf8', timeout:40000, maxBuffer:1048576});
 - to: bb-nats
   kind: publishes-to
   via: command bloodbank.cmd.lifecycle.task.invoke (request/reply)
   evidence: pilot/src/lifecycle.js:67
+  anchor: type:typ, subject:'bloodbank.cmd.lifecycle.task.invoke', domain:'lifecycle', kind:'command',
 evidence:
-- /home/delorenj/code/pilot/README.md
+- pilot/README.md
 - 'critic (repo): /home/delorenj/code/33GOD/pilot (submodule). /home/delorenj/code/pilot does not exist. The conflicts_resolved
   entry claiming correction to ~/code/pilot is wrong'
 confidence: high
 notes: Lifecycle hooks HMAC-signed.
+surfaces:
+- producer:pilot
+- repo:pilot
+- systemd:pilot-harvest-worker.service

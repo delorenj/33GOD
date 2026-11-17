@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "0597505166305261e0ccd20e4f0ff00f5c66a2cdfa3319a4c5ab12d560e5b859",
+  "registry_digest": "2fe6f77ee0b5f1f0db890b0fcb790751f7fef13c4bba242183fec6ebbb8fd75d",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -1533,11 +1533,6 @@
     },
     {
       "from": "aai-gateway",
-      "to": "jev-litellm",
-      "kind": "routes-llm-via"
-    },
-    {
-      "from": "aai-gateway",
       "to": "postgres",
       "kind": "stores-in"
     },
@@ -2639,11 +2634,6 @@
     {
       "from": "n8n-nodes-bb",
       "to": "bb-nats",
-      "kind": "publishes-to"
-    },
-    {
-      "from": "n8n-nodes-bb",
-      "to": "bb-nats",
       "kind": "consumes-from"
     },
     {
@@ -2690,11 +2680,6 @@
       "from": "op-token-guard",
       "to": "ntfy",
       "kind": "calls"
-    },
-    {
-      "from": "pdf2md",
-      "to": "n8n",
-      "kind": "hosts"
     },
     {
       "from": "pilot",

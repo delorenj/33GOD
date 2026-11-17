@@ -35,38 +35,47 @@ relations:
   kind: consumes-from
   via: plane.ticket.created/transitioned (Ticket Triage trigger)
   evidence: ~/code/delonet-n8n-workflows/workflows/ticket-triage--6wAGA5pdrmHLyhs2.json:63
+  anchor: '"plane.ticket.created",'
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.cmd.agent.invocation.start (Triage Ticket node)
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/nodes/Fleet/Fleet.node.ts:827
+  anchor: 'type: INVOCATION_COMMAND_TYPE,'
 - to: bb-nats
   kind: consumes-from
   via: bloodbank.agent.invocation.started/completed/failed (chip)
   evidence: ~/code/delonet-n8n-workflows/workflows/ticket-pickup-chip--wWXgCZiiIBWaRRzE.json:176
+  anchor: '"bloodbank.agent.invocation.started",'
 - to: plane
   kind: writes
   via: Plane REST labels/issues (agent:working chip)
   evidence: ~/code/delonet-n8n-workflows/workflows/ticket-pickup-chip--wWXgCZiiIBWaRRzE.json:378
+  anchor: '"url": "=https://plane.delo.sh/api/v1/workspaces/{{ $json.ws }}/projects/{{ $json.board }}/issues/{{ $json.ticketId }}/"'
 - to: candystore
   kind: reads
   via: GET :8683/events (stale chip sweep)
   evidence: ~/code/delonet-n8n-workflows/workflows/ticket-pickup-chip--wWXgCZiiIBWaRRzE.json:446
+  anchor: '"url": "={{ ($env.CANDYSTORE_URL || ''http://127.0.0.1:8683'').replace(/\\/$/, '''') }}/events"'
 - to: plane
   kind: reads
   via: Plane REST list issues (Ingress Reconcile)
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/reconcile.ts:116
+  anchor: const base = (options.baseUrl || 'https://plane.delo.sh').replace(/\/+$/, '');
 - to: ntfy
   kind: calls
   via: n8n-nodes-ntfy-client ntfySend (triage, unrouted)
   evidence: ~/code/delonet-n8n-workflows/workflows/ticket-triage--6wAGA5pdrmHLyhs2.json:122
+  anchor: '"type": "n8n-nodes-ntfy-client.ntfySend",'
 - to: n8n
   kind: calls
   via: GET 127.0.0.1:5678/api/v1/executions/<id>
   evidence: ~/code/delonet-n8n-workflows/workflows/lifecycle-lane-errors--72y5JKBSJqYIjIEv.json:93
+  anchor: '"url": "=http://127.0.0.1:5678/api/v1/executions/{{ $json.execution.id }}"'
 - to: n8n-nodes-bb
   kind: calls
   via: node types planeBloodbank/bloodbankFleet/bloodbankTrigger
   evidence: ~/code/delonet-n8n-workflows/workflows/plane-bloodbank--iMw484J1ZCqKME2C.json:104
+  anchor: '"type": "n8n-nodes-bloodbank.planeBloodbank",'
 evidence:
 - /home/delorenj/code/delonet-n8n-workflows/INDEX.md
 confidence: medium

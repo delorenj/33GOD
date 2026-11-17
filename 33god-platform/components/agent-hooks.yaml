@@ -33,14 +33,22 @@ relations:
   kind: calls
   via: core.asm.record() on every hook
   evidence: bloodbank/services/agent-hooks/core/publisher.py:168
+  anchor: asm.record(adapter.name, ce_type, alert_kind, payload, log=adapter.log,
 - to: bb-nats
   kind: publishes-to
   via: deckard.evt.attention
   evidence: bloodbank/services/agent-hooks/core/publisher.py:352
+  anchor: nats_publish(
 - to: redis
   kind: writes
   via: SET holocene:tooling:stat:* hook health snapshot
   evidence: bloodbank/services/agent-hooks/core/redis_publish.py:30
+  anchor: conn.command("SET", key, value, "EX", str(int(ttl_seconds)))
 evidence:
 - bloodbank/CLAUDE.md:190-195
 confidence: high
+surfaces:
+- producer:claude-code
+- producer:codex-cli
+- producer:opencode
+- repo:bloodbank/services/agent-hooks

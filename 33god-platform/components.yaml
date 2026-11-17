@@ -133,3 +133,97 @@ people:
   - vinyl
   - inbox-watcher
   - vox
+
+# Surfaces the drift audit (`atlas.py audit --live`) sees on the host that are NOT
+# 33GOD components: the desktop session, household services, and the client and
+# product projects that run on 33GOD. A component claims its own surfaces in its
+# record (`surfaces:`); everything else must be listed here with a reason, or the
+# audit reports it as unregistered. Patterns are shell globs.
+atlas_ignore:
+  - {kind: systemd, pattern: "org.gnome.*", reason: desktop session}
+  - {kind: systemd, pattern: "org.freedesktop.*", reason: desktop session}
+  - {kind: systemd, pattern: "gnome-*", reason: desktop session}
+  - {kind: systemd, pattern: "gvfs-*", reason: desktop session}
+  - {kind: systemd, pattern: "xdg-*", reason: desktop session}
+  - {kind: systemd, pattern: "evolution-*", reason: desktop session}
+  - {kind: systemd, pattern: "flatpak-*", reason: desktop session}
+  - {kind: systemd, pattern: "app-*", reason: desktop apps}
+  - {kind: systemd, pattern: "at-spi-*", reason: desktop session}
+  - {kind: systemd, pattern: "dbus.service", reason: desktop session}
+  - {kind: systemd, pattern: "dconf.service", reason: desktop session}
+  - {kind: systemd, pattern: "pipewire*", reason: desktop audio}
+  - {kind: systemd, pattern: "wireplumber.service", reason: desktop audio}
+  - {kind: systemd, pattern: "filter-chain.service", reason: desktop audio}
+  - {kind: systemd, pattern: "mpris-proxy.service", reason: desktop audio}
+  - {kind: systemd, pattern: "rygel.service", reason: desktop media sharing}
+  - {kind: systemd, pattern: "localsearch-*", reason: desktop indexer}
+  - {kind: systemd, pattern: "gcr-ssh-agent.service", reason: desktop keyring}
+  - {kind: systemd, pattern: "gpg-agent.service", reason: desktop keyring}
+  - {kind: systemd, pattern: "ssh-agent.service", reason: desktop keyring}
+  - {kind: systemd, pattern: "foot-server.service", reason: terminal emulator}
+  - {kind: systemd, pattern: "atuin-daemon.service", reason: shell history}
+  - {kind: systemd, pattern: "codex-update-manager.service", reason: CLI updater}
+  - {kind: systemd, pattern: "syncthing*", reason: file sync (household)}
+  - {kind: systemd, pattern: "ssh-audio.service", reason: household audio}
+  - {kind: systemd, pattern: "zellij-*", reason: terminal multiplexer that hosts agent panes (host tooling)}
+  - {kind: systemd, pattern: "delohome.service", reason: home automation (household)}
+  - {kind: systemd, pattern: "gruvato-*", reason: client/product project (Gruvato)}
+  - {kind: systemd, pattern: "intelliforia-*", reason: client project (Intelliforia)}
+  - {kind: systemd, pattern: "trinote-*", reason: client project (Trinote)}
+  - {kind: systemd, pattern: "tonny*", reason: product project (Tonnybox)}
+  - {kind: systemd, pattern: "slowburns-*", reason: product project (Slowburns)}
+  - {kind: systemd, pattern: "sidepiece-*", reason: product project (Sidepiece)}
+  - {kind: systemd, pattern: "nautilus-kraken-dashboard.service", reason: trading project}
+  - {kind: container, pattern: "gruvato*", reason: client/product project}
+  - {kind: container, pattern: "intelliforia-*", reason: client project}
+  - {kind: container, pattern: "trinote-*", reason: client project}
+  - {kind: container, pattern: "artcraft-*", reason: product project}
+  - {kind: container, pattern: "cal-diy*", reason: product project}
+  - {kind: container, pattern: "gib-*", reason: product project (Green in Between)}
+  - {kind: container, pattern: "tower-*", reason: product project (Tower of Dumb Things)}
+  - {kind: container, pattern: "lego-*", reason: household project}
+  - {kind: container, pattern: "tiller-*", reason: product project}
+  - {kind: container, pattern: "jimb-api", reason: client project (James Brennan)}
+  - {kind: container, pattern: "ipm-internal-dashboard", reason: client project (James Brennan)}
+  - {kind: container, pattern: "mirror-db", reason: client project (James Brennan)}
+  - {kind: container, pattern: "OpenSign*", reason: product project}
+  - {kind: container, pattern: "opensign-mongo", reason: product project}
+  - {kind: container, pattern: "naipkins", reason: product project}
+  - {kind: container, pattern: "lifelaunch", reason: product project}
+  - {kind: container, pattern: "hot-master", reason: website}
+  - {kind: container, pattern: "plain-*", reason: product project}
+  - {kind: container, pattern: "ssbnk-*", reason: product project}
+  - {kind: container, pattern: "amys-web", reason: website}
+  - {kind: container, pattern: "book-web", reason: website}
+  - {kind: container, pattern: "chaya-web", reason: website}
+  - {kind: container, pattern: "cr-validation-web", reason: website}
+  - {kind: container, pattern: "damian-web", reason: website}
+  - {kind: container, pattern: "dumply-web", reason: website}
+  - {kind: container, pattern: "florida-web", reason: website}
+  - {kind: container, pattern: "jaradd-web", reason: website}
+  - {kind: container, pattern: "james-web", reason: website}
+  - {kind: container, pattern: "leads-web", reason: website}
+  - {kind: container, pattern: "pallets-web", reason: website}
+  - {kind: container, pattern: "team-update-web", reason: website}
+  - {kind: container, pattern: "tolt-review-web", reason: website}
+  - {kind: container, pattern: "traskrunner2930-web", reason: website}
+  - {kind: container, pattern: "wilkins-web", reason: website}
+  - {kind: container, pattern: "traefik-test-whoami", reason: traefik test fixture}
+  - {kind: container, pattern: "assets-nginx", reason: static asset server for the proxy}
+  - {kind: container, pattern: "jellyfin", reason: household media}
+  - {kind: container, pattern: "minidlna", reason: household media}
+  - {kind: container, pattern: "metube", reason: household media}
+  - {kind: container, pattern: "qbittorrent", reason: household media}
+  - {kind: container, pattern: "gluetun", reason: household VPN}
+  - {kind: container, pattern: "adguard", reason: household DNS}
+  - {kind: container, pattern: "netguard", reason: household network}
+  - {kind: container, pattern: "rustdesk-*", reason: household remote desktop}
+  - {kind: container, pattern: "portainer", reason: container admin UI}
+  - {kind: container, pattern: "dockge", reason: container admin UI}
+  - {kind: container, pattern: "pgadmin", reason: database admin UI}
+  - {kind: container, pattern: "excalidraw*", reason: diagram tool}
+  - {kind: container, pattern: "file-share", reason: household file sharing}
+  - {kind: container, pattern: "delodrive", reason: household file sharing}
+  - {kind: container, pattern: "clipcascade", reason: household clipboard sync}
+  - {kind: container, pattern: "comfyui*", reason: image generation workstation}
+  - {kind: producer, pattern: "tiller", reason: product project}

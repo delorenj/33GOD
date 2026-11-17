@@ -25,6 +25,7 @@ relations:
   kind: calls
   via: CANDYBAR_API_URL https://candybar.delo.sh
   evidence: holocene/apps/api/src/candybar.ts:11
+  anchor: const CANDYBAR_API_URL = (process.env.CANDYBAR_API_URL ?? "https://candybar.delo.sh").replace(/\/$/, "");
 - to: candystore
   kind: reads
   via: Candystore HTTP
@@ -33,26 +34,32 @@ relations:
   kind: consumes-from
   via: JetStream BLOODBANK_EVENTS, filter bloodbank.evt.>
   evidence: holocene/packages/bloodbank-client/src/index.ts:41
+  anchor: 'name_prefix: `holocene_${randomUUID().replaceAll("-", "")}`, filter_subjects: "bloodbank.evt.>",'
 - to: redis
   kind: reads
   via: asm:live zset and asm:a:<scope> hashes
   evidence: holocene/apps/api/src/hub.ts:212
+  anchor: const rows = new Map<string, AsmRow>();
 - to: redis
   kind: reads
   via: key holocene:tooling:stat:* (hook health/tests/telemetry)
   evidence: holocene/apps/api/src/tooling.ts:369
+  anchor: const [raw, ttl] = await Promise.all([client.get(definition.redisKey), client.ttl(definition.redisKey)]);
 - to: redis
   kind: writes
   via: key holocene:tooling:stat:* with TTL
   evidence: holocene/apps/api/src/tooling.ts:392
+  anchor: await client.set(definition.redisKey, JSON.stringify(payload), {
 - to: delonet-director
   kind: calls
   via: GET :8790 /v1/capacity,/v1/receipts,/v1/readiness,/v1/contracts/*
   evidence: holocene/apps/api/src/director.ts:7
+  anchor: const DIRECTOR_API_URL = (process.env.DIRECTOR_API_URL ?? "http://127.0.0.1:8790").replace(/\/$/, "");
 - to: pjangler
   kind: calls
   via: GET PJ_REGISTRY_URL :8764 /v1/registry
   evidence: holocene/apps/api/src/hub.ts:126
+  anchor: const projects = new Map<string, ProjectRecord>();
 - to: agents-registry
   kind: reads
   via: HERMES_REGISTRY_PATH ~/.hermes/agents-registry.yaml
@@ -61,6 +68,7 @@ relations:
   kind: calls
   via: execFile wax --json catalog (WAX_EXECUTABLE)
   evidence: holocene/apps/api/src/wax.ts:290
+  anchor: const { stdout } = await execFileAsync(executable, ["--json", "catalog"], {
 - to: n8n
   kind: calls
   via: POST N8N_WEBHOOK_BASE_URL /webhook/clock{in,out}, GET /webhook/clockstate
@@ -69,10 +77,14 @@ relations:
   kind: calls
   via: op read of Telegram bot token refs (avatar sync)
   evidence: holocene/apps/api/src/avatars.ts:179
+  anchor: 'const { stdout } = await execFileAsync(OP_BIN, ["read", "--no-newline", ref], { timeout: 30_000 });'
 - to: mon-core
   kind: calls
   via: Prometheus GET /api/v1/query_range (PROMETHEUS_URL :9472)
   evidence: holocene/apps/api/src/systems.ts:554
+  anchor: '`${PROMETHEUS_URL}/api/v1/query_range?query=${encodeURIComponent(query)}` +'
 evidence:
 - holocene/apps/api/src
 confidence: high
+surfaces:
+- systemd:holocene-api.service

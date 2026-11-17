@@ -26,12 +26,16 @@ relations:
   kind: calls
   via: POST /v1.0/publish/bloodbank-pubsub/<topic>
   evidence: bloodbank/services/heartbeat-tick/main.py:92
+  anchor: url = f"{dapr_url}/v1.0/publish/{pubsub}/{topic}"
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.system.heartbeat.received via Dapr
   evidence: bloodbank/services/heartbeat-tick/main.py:47
+  anchor: SUBJECT = "bloodbank.evt.system.heartbeat.received"
 evidence:
 - bloodbank/compose/docker-compose.yml:185-249
 - docker ps shows no heartbeat container
 confidence: medium
 notes: Hermes per-agent heartbeats were retired; this is only the sandbox sample.
+surfaces:
+- repo:bloodbank/services/heartbeat-tick

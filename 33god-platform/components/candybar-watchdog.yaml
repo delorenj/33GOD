@@ -25,14 +25,17 @@ relations:
   kind: calls
   via: GET candybar.delo.sh/healthz and /candybars
   evidence: candybar/deploy/watchdog/candybar-watchdog.sh:57
+  anchor: code="$("$CURL" -fsS -m 10 -o /dev/null -w '%{http_code}' "$BASE_URL/healthz" 2>/dev/null || echo 000)"
 - to: candybar-executor
   kind: calls
   via: systemctl --user is-active candybar-executor.service
   evidence: candybar/deploy/watchdog/candybar-watchdog.sh:92
+  anchor: if ! $SYSTEMCTL is-active --quiet "$EXECUTOR_UNIT" 2>/dev/null; then
 - to: ntfy
   kind: calls
   via: ntfy-alert CLI page on OK->FAIL
   evidence: candybar/deploy/watchdog/candybar-watchdog.sh:101
+  anchor: if ! "$NTFY_ALERT" --title "$title" --tags "candybar,warning" "$@" >/dev/null 2>&1; then
 evidence:
 - candybar/deploy/watchdog/README.md
 confidence: high

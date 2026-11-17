@@ -57,24 +57,33 @@ relations:
   kind: deploys
   via: nats-init applies compose/nats/streams.json (BLOODBANK_EVENTS/COMMANDS)
   evidence: bloodbank/compose/docker-compose.yml:55
+  anchor: 'nats-init:'
 - to: bb-dapr
   kind: hosts
   via: compose daprd sidecars on pubsub.jetstream bloodbank-pubsub
   evidence: bloodbank/compose/docker-compose.yml:331
+  anchor: 'daprd-candystore:'
 - to: bb-apicurio
   kind: hosts
   via: compose service apicurio-registry :8080
   evidence: bloodbank/compose/docker-compose.yml:410
+  anchor: 'apicurio-registry:'
 - to: bb-catalog
   kind: hosts
   via: compose service eventcatalog :3000
   evidence: bloodbank/compose/docker-compose.yml:435
+  anchor: 'eventcatalog:'
 - to: candystore
   kind: hosts
   via: compose profile candystore, SUBSCRIBE_TOPIC bloodbank.evt.>
   evidence: bloodbank/compose/docker-compose.yml:300
+  anchor: 'candystore:'
 evidence:
 - bloodbank/compose/docker-compose.yml
 - bloodbank/CLAUDE.md:1-25
 confidence: high
 notes: Producers publish raw NATS; Dapr is subscribe-side only. No RabbitMQ, no FastAPI publisher.
+surfaces:
+- container:bloodbank-dapr-placement
+- container:bloodbank-nats
+- repo:bloodbank

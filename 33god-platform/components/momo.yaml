@@ -51,7 +51,10 @@ relations:
   kind: calls
   via: px move / px comment
   evidence: momo/skill/scripts/momo-board.sh:89
+  anchor: 'OUT="$(px move "$ID" "$LANE" --json)" || { printf ''momo-board: %s\n'' "$OUT" >&2; exit 1; }'
 evidence:
 - krebs/docs/lifecycle.md
 - 33god-platform/components/momo.yaml
 confidence: high
+surfaces:
+- repo:momo

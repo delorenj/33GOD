@@ -26,7 +26,8 @@ relations:
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.cmd.billing.* on BLOODBANK_COMMANDS
-  evidence: critic spot-check of bloodbank/services/farm-command-bridge
+  evidence: bloodbank/services/farm-command-bridge/main.py:884
+  anchor: 'receipt = await self.js.publish(event[''subject''], canonical(event).encode(''utf-8''), headers={''Nats-Msg-Id'': command_id}, timeout=10)'
 evidence:
 - bloodbank/services/farm-command-bridge/main.py
 - 'critic (summary): A signed HTTPS ingress: the portal Worker POSTs HMAC-signed Create Invoice and command-palette
@@ -35,3 +36,6 @@ evidence:
   commands onto BLOODBANK_COMMANDS. milkshake-farm-consumer is the consumer. Relation should be publishes-to bb-nats
   on bloodbank.cmd.billing.*, and milkshake consumes-from it'
 confidence: medium
+surfaces:
+- container:bloodbank-farm-command-bridge-farm-command-bridge-1
+- repo:bloodbank/services/farm-command-bridge

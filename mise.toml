@@ -18,6 +18,8 @@ run = "'{{config_root}}/.mise/scripts/materialize-env.sh'"
 run = "codegraph sync"
 [[hooks.enter]]
 run = "{{config_root}}/.agents/hooks/sync.py --install --quiet"
+[[hooks.enter]]
+run = "bash '{{config_root}}/.githooks/install.sh' --quiet"
 [[hooks.leave]]
 run = "{{config_root}}/.agents/hooks/sync.py --uninstall --quiet"
 
@@ -32,6 +34,14 @@ run = "python3 33god-platform/scripts/atlas.py render"
 [tasks."platform:atlas:check"]
 description = "Fail if a component record is incomplete or the rendered Atlas is stale (I-12)"
 run = "python3 33god-platform/scripts/atlas.py check"
+
+[tasks."platform:atlas:audit"]
+description = "Compare the Atlas registry with the running system: evidence anchors, unregistered surfaces, status (I-12)"
+run = "python3 33god-platform/scripts/atlas.py audit --live"
+
+[tasks."platform:atlas:drift"]
+description = "The daily drift pass the atlas-drift candybar fires: audit, heal, land, ticket the rest (I-12)"
+run = "bash 33god-platform/scripts/atlas-drift.sh"
 
 [tasks."platform:components"]
 description = "List productized 33GOD platform components"

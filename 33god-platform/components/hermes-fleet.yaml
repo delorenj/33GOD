@@ -46,10 +46,16 @@ relations:
   kind: writes
   via: 80-registry.sh appends agent row to registry file
   evidence: hermes-agent-template/template/.scripts/80-registry.sh:47
+  anchor: 'log "[80] appending to fleet registry: $REGISTRY_FILE"'
 - to: plane
   kind: calls
   via: Plane REST $PLANE_BASE/api/v1/workspaces (ticket provider)
   evidence: hermes-agent-template/template/.scripts/providers/plane.sh:169
+  anchor: API="$BASE/api/v1/workspaces/$WS"
 evidence:
 - /home/delorenj/.hermes/agents-registry.yaml (46 rows, 28 pm)
 confidence: high
+surfaces:
+- producer:hermes-agent
+- producer:hermes-agent:*
+- repo:hermes-agent-template

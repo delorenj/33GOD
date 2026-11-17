@@ -27,18 +27,22 @@ relations:
   kind: calls
   via: POST jev.delo.sh/typesafe/v1/systemone (zcrank-gate)
   evidence: ~/.agents/tools/jev-clairic/bin/zcrank-gate.py:65
+  anchor: import os as _os; JEV_URL = _os.environ.get("JEV_URL") or "https://jev.delo.sh/typesafe/v1/systemone"
 - to: cloudflare
   kind: calls
   via: Workers AI @cf/cloudflare/clairic (zcrank-gate)
   evidence: ~/.agents/tools/jev-clairic/bin/zcrank-gate.py:66
+  anchor: CLAIRIC_FMT = ("https://api.cloudflare.com/client/v4/accounts/"
 - to: redis
   kind: reads
   via: redis-cli KEYS/HGET zcrank:tab:* and zcrank:config
   evidence: ~/.agents/tools/jev-clairic/bin/zcrank.py:101
+  anchor: _TAB_KEYS = [k.split(":", 2)[2] for k in _redis("KEYS", "zcrank:tab:*").splitlines()
 - to: redis
   kind: writes
   via: redis-cli RPUSH zcrank:log:<tab> (zcrankctl)
   evidence: ~/.agents/tools/jev-clairic/bin/zcrankctl:439
+  anchor: strict_redis("RPUSH", key, raw)
 evidence:
 - ~/.local/bin/zcrank-send
 confidence: medium

@@ -39,10 +39,12 @@ relations:
   kind: calls
   via: bin/heyma and bin/wax launchers exec components/wax/bin/*
   evidence: ~/HeyMa/bin/heyma:5
+  anchor: exec "$repo_root/components/wax/bin/heyma" "$@"
 - to: transcribe
   kind: wraps
   via: hermes-transcribe-adapter shells out to bin/transcribe
   evidence: ~/HeyMa/bin/hermes-transcribe-adapter:15
+  anchor: import time
 evidence:
 - /home/delorenj/HeyMa
 - 33god-platform/components/heyma.yaml

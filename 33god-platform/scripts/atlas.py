@@ -7,6 +7,10 @@ script writes is generated: edit the registry, then `atlas.py render`.
 
     atlas.py check    validate records and fail if rendered views are stale
     atlas.py render   write atlas.json, c4.dsl, c4-containers.mmd, index.html, public.json
+    atlas.py audit    compare the registry with reality (evidence, coverage, status);
+                      --live adds systemd, containers and bus producers; --heal fixes
+                      moved evidence lines and re-renders
+    atlas.py anchor   record each relation's cited source line as its anchor
 
 public.json is the ONLY input a public showcase page may read: it drops runtime,
 role_in_system, evidence, notes and every wire's mechanism (via) and evidence,
@@ -15,9 +19,12 @@ and the scrub lint fails the build if anything internal is left in it.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import json
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -55,6 +62,8 @@ SCRUB = re.compile(r"(?i)([a-z0-9-]+\.(?:delo\.sh|ts\.net|automaticai\.io|intern
                    r"\b\d{1,3}(?:\.\d{1,3}){3}\b|(?<![\w-]):\d{4,5}\b|localhost|/home/|~/|op://|"
                    r"\bbig-chungus\b|\bdelorenj\b|\bjarad\b|\b[\w-]+\.(?:py|ya?ml|json|toml|env|sh|mjs|ts)\b|"
                    r"\b(?:bloodbank|candybar)\.(?:evt|cmd|rpy)\.)")
+SURFACE_KINDS = ("repo", "systemd", "container", "producer")
+LIVE_KINDS = {"systemd", "container", "producer"}
 PUBLIC_FIELDS = ("id", "name", "kind", "first_party", "domain", "level", "parent", "status",
                  "summary", "role_in_system", "tech", "runtime", "public_card")
 
@@ -78,6 +87,8 @@ def record(component: dict[str, Any]) -> dict[str, Any]:
         "relations": component.get("relations") or [],
         "evidence": component.get("evidence") or [],
         "notes": component.get("notes", ""),
+        "surfaces": component.get("surfaces") or [],
+        "_path": component.get("_path"),
     }
 
 
@@ -122,6 +133,9 @@ def validate(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[str]:
                 errors.append(f"{where}: relation to {target!r} names no mechanism (via)")
             if not rel.get("evidence"):
                 errors.append(f"{where}: relation to {target!r} has no evidence")
+        for surface in r["surfaces"]:
+            if not isinstance(surface, str) or surface.split(":", 1)[0] not in SURFACE_KINDS or ":" not in surface:
+                errors.append(f"{where}: surface {surface!r} must be <{'|'.join(SURFACE_KINDS)}>:<name or glob>")
     for p in cfg.get("people", []):
         for target in p.get("uses", []):
             if target not in ids:
@@ -134,7 +148,8 @@ def validate(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[str]:
 
 
 def digest(cfg: dict[str, Any], records: list[dict[str, Any]]) -> str:
-    payload = {"domains": cfg.get("domains", []), "people": cfg.get("people", []), "records": records}
+    clean = [{k: v for k, v in r.items() if k != "_path"} for r in records]
+    payload = {"domains": cfg.get("domains", []), "people": cfg.get("people", []), "records": clean}
     return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
 
 
@@ -332,11 +347,255 @@ def cmd_check(_: argparse.Namespace) -> int:
     return 0
 
 
+# --- Drift audit: does the registry still match reality? -------------------------------------
+
+SOURCE_ROOT = ROOT.parent  # evidence paths are relative to the 33GOD checkout
+EVIDENCE = re.compile(r"^(?P<path>[~/\w.@+-][^\s:]*)(?::(?P<line>\d+)(?:-\d+)?)?$")
+SECRETISH = re.compile(r"(?i)(sk-[a-z0-9]{8}|token\s*[=:]\s*['\"][^'\"]{8}|password\s*[=:]\s*['\"][^'\"]+|"
+                       r"-----BEGIN|api[_-]?key\s*[=:]\s*['\"][^'\"]{8})")
+
+
+def evidence_path(text: str) -> tuple[Path | None, int | None]:
+    m = EVIDENCE.match(str(text).strip())
+    if not m:
+        return None, None
+    raw = m.group("path")
+    path = Path(os.path.expanduser(raw)) if raw.startswith(("~", "/")) else SOURCE_ROOT / raw
+    return path, int(m.group("line")) if m.group("line") else None
+
+
+def read_lines(path: Path) -> list[str] | None:
+    try:
+        return path.read_text(errors="replace").splitlines()
+    except OSError:
+        return None
+
+
+def anchor_for(line: str) -> str | None:
+    text = " ".join(line.split())
+    if len(text) < 8 or SECRETISH.search(text):
+        return None
+    return text[:160]
+
+
+def check_relation_evidence(rec: dict[str, Any], rel: dict[str, Any]) -> tuple[str, str, int | None]:
+    """(state, detail, healed_line). state: ok | moved | gone | unverifiable."""
+    ev = str(rel.get("evidence", ""))
+    if ev.startswith("live:"):
+        return "ok", "", None
+    path, line = evidence_path(ev)
+    if path is None:
+        return "unverifiable", f"evidence {ev!r} is not a path[:line] or 'live: <probe>'", None
+    if path.is_dir():
+        return "ok", "", None
+    lines = read_lines(path)
+    if lines is None:
+        return "gone", f"evidence file {ev} no longer exists", None
+    if line and line > len(lines):
+        return "gone", f"evidence {ev} points past the end of the file ({len(lines)} lines)", None
+    anchor = rel.get("anchor")
+    if not anchor or not line:
+        return "ok", "", None
+    norm = [" ".join(x.split()) for x in lines]
+    if norm[line - 1].startswith(anchor):
+        return "ok", "", None
+    hits = [i + 1 for i, x in enumerate(norm) if x.startswith(anchor)]
+    if not hits:
+        return "gone", f"anchor no longer in {path.name}: {anchor[:70]!r}; re-verify the wire", None
+    best = min(hits, key=lambda i: abs(i - line))
+    return "moved", f"{ev} -> line {best}", best
+
+
+def discover(live: bool) -> tuple[dict[str, set[str]], list[str]]:
+    found: dict[str, set[str]] = {k: set() for k in SURFACE_KINDS}
+    problems: list[str] = []
+    gm = SOURCE_ROOT / ".gitmodules"
+    if gm.exists():
+        out = subprocess.run(["git", "config", "-f", str(gm), "--get-regexp", r"\.path$"],
+                             capture_output=True, text=True)
+        found["repo"] |= {line.split()[1] for line in out.stdout.splitlines() if line.strip()}
+    services = SOURCE_ROOT / "bloodbank" / "services"
+    if services.is_dir():
+        found["repo"] |= {f"bloodbank/services/{d.name}" for d in services.iterdir()
+                          if d.is_dir() and not d.name.startswith((".", "_"))}
+    if not live:
+        return found, problems
+    probes = {
+        "systemd": ["systemctl", "--user", "list-units", "--type=service", "--state=running",
+                    "--no-legend", "--plain"],
+        "container": ["docker", "ps", "--format", "{{.Names}}"],
+        "producer": ["docker", "exec", "candystore-postgres", "sh", "-c",
+                     "psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -Atc \"select distinct producer from events "
+                     "where time > now() - interval '7 days' and producer is not null\""],
+    }
+    for kind, argv in probes.items():
+        try:
+            out = subprocess.run(argv, capture_output=True, text=True, timeout=60)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            problems.append(f"probe {kind} failed: {exc}")
+            continue
+        if out.returncode != 0:
+            problems.append(f"probe {kind} failed: {out.stderr.strip()[:200]}")
+            continue
+        for line in out.stdout.splitlines():
+            name = line.split()[0] if line.split() else ""
+            if name:
+                found[kind].add(name)
+    return found, problems
+
+
+def claims_of(surfaces: list[str], kind: str) -> list[str]:
+    return [s.split(":", 1)[1] for s in surfaces if s.split(":", 1)[0] == kind]
+
+
+def audit(cfg: dict[str, Any], records: list[dict[str, Any]], live: bool) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    heals: list[tuple[dict[str, Any], int, int]] = []
+
+    def add(kind: str, subject: str, detail: str) -> None:
+        findings.append({"kind": kind, "subject": subject, "detail": detail})
+
+    for err in all_errors(cfg, records):
+        add("registry", "atlas", err)
+    for path, text in outputs(cfg, records).items():
+        if not path.exists() or path.read_text() != text:
+            add("stale-render", str(path.relative_to(ROOT)), "rendered view is older than the registry")
+
+    for r in records:
+        for i, rel in enumerate(r["relations"]):
+            state, detail, healed = check_relation_evidence(r, rel)
+            subject = f"{r['id']} --{rel.get('kind')}--> {rel.get('to')}"
+            if state == "moved":
+                heals.append((r, i, healed))
+                add("evidence-moved", subject, detail)
+            elif state in ("gone", "unverifiable"):
+                add(f"evidence-{state}", subject, detail)
+        for ev in r["evidence"]:
+            path, _ = evidence_path(str(ev))
+            if path is not None and str(ev).startswith(("/", "~", "33god-platform/", "bloodbank/")) \
+                    and not path.exists():
+                add("evidence-gone", r["id"], f"component evidence {ev} no longer exists")
+
+    found, problems = discover(live)
+    for p in problems:
+        add("probe", "audit", p)
+    ignores = cfg.get("atlas_ignore", [])
+    for kind, names in found.items():
+        for name in sorted(names):
+            owners = [r["id"] for r in records
+                      if any(fnmatch.fnmatchcase(name, pat) for pat in claims_of(r["surfaces"], kind))]
+            if owners:
+                continue
+            if any(i.get("kind") == kind and fnmatch.fnmatchcase(name, i["pattern"]) for i in ignores):
+                continue
+            add("unregistered", f"{kind}:{name}",
+                "no component claims it; add it to a component's surfaces, a new record, or atlas_ignore")
+    if live:
+        for r in records:
+            live_claims = [s for s in r["surfaces"] if s.split(":", 1)[0] in LIVE_KINDS]
+            if not live_claims:
+                continue
+            seen = [s for s in live_claims
+                    if any(fnmatch.fnmatchcase(n, s.split(":", 1)[1]) for n in found[s.split(":", 1)[0]])]
+            if r["status"] == "live" and not seen:
+                add("status", r["id"], f"status live, but none of {live_claims} was observed")
+            elif r["status"] in ("built-not-running", "planned", "retired") and seen:
+                add("status", r["id"], f"status {r['status']}, but {seen} is running")
+
+    keys = sorted(f"{f['kind']}|{f['subject']}" for f in findings if f["kind"] not in ("evidence-moved", "stale-render"))
+    return {
+        "live": live,
+        "components": len(records),
+        "surfaces_seen": {k: len(v) for k, v in found.items()},
+        "findings": findings,
+        "needs_human": len(keys),
+        "digest": hashlib.sha256("\n".join(keys).encode()).hexdigest()[:12],
+        "_heals": heals,
+    }
+
+
+def write_relations(path: Path, relations: list[dict[str, Any]]) -> None:
+    """Splice a new top-level relations block into a record, keeping its comments."""
+    import yaml
+    text = path.read_text()
+    block = yaml.safe_dump({"relations": relations}, sort_keys=False, allow_unicode=True, width=1000)
+    pat = re.compile(r"^relations:.*?(?=^[A-Za-z_#][^\n]*|\Z)", re.S | re.M)
+    text = pat.sub(lambda _: block, text, count=1) if pat.search(text) else text.rstrip("\n") + "\n" + block
+    path.write_text(text)
+    if (yaml.safe_load(path.read_text()).get("relations") or []) != relations:
+        raise SystemExit(f"{path}: relations splice did not round-trip")
+
+
+def cmd_audit(args: argparse.Namespace) -> int:
+    cfg, records = load_atlas()
+    report = audit(cfg, records, args.live)
+    heals = report.pop("_heals")
+    if args.heal and heals:
+        by_path: dict[Path, list[tuple[int, int]]] = {}
+        for r, i, line in heals:
+            by_path.setdefault(Path(r["_path"]), []).append((i, line))
+        for path, fixes in by_path.items():
+            rels = next(r for r in records if Path(r["_path"]) == path)["relations"]
+            for i, line in fixes:
+                ev = str(rels[i]["evidence"])
+                rels[i]["evidence"] = re.sub(r":\d+(-\d+)?$", f":{line}", ev)
+            write_relations(path, rels)
+        report["healed"] = len(heals)
+    if args.heal:
+        cfg, records = load_atlas()
+        if not validate(cfg, records):
+            for path, text in outputs(cfg, records).items():
+                if not path.exists() or path.read_text() != text:
+                    path.write_text(text)
+                    report.setdefault("rerendered", []).append(str(path.relative_to(ROOT)))
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        for f in report["findings"]:
+            print(f"{f['kind']:<20} {f['subject']:<48} {f['detail']}")
+        print(f"\naudit: {len(report['findings'])} finding(s), {report['needs_human']} need a person "
+              f"(digest {report['digest']}); healed {report.get('healed', 0)}")
+    return 1 if report["needs_human"] else 0
+
+
+def cmd_anchor(args: argparse.Namespace) -> int:
+    cfg, records = load_atlas()
+    total = 0
+    for r in records:
+        changed = False
+        for rel in r["relations"]:
+            if rel.get("anchor") and not args.refresh:
+                continue
+            path, line = evidence_path(str(rel.get("evidence", "")))
+            if not path or not line or not path.is_file():
+                continue
+            lines = read_lines(path) or []
+            if line > len(lines):
+                continue
+            anchor = anchor_for(lines[line - 1])
+            if anchor and rel.get("anchor") != anchor:
+                rel["anchor"] = anchor
+                changed = True
+                total += 1
+        if changed:
+            write_relations(Path(r["_path"]), r["relations"])
+    print(f"anchored {total} relation(s)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("render").set_defaults(func=cmd_render)
     sub.add_parser("check").set_defaults(func=cmd_check)
+    a = sub.add_parser("audit")
+    a.add_argument("--live", action="store_true", help="also probe systemd, containers and bus producers")
+    a.add_argument("--heal", action="store_true", help="fix moved evidence lines and re-render")
+    a.add_argument("--json", action="store_true")
+    a.set_defaults(func=cmd_audit)
+    an = sub.add_parser("anchor")
+    an.add_argument("--refresh", action="store_true", help="re-capture anchors that already exist")
+    an.set_defaults(func=cmd_anchor)
     args = parser.parse_args(argv)
     return args.func(args)
 

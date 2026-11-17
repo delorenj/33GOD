@@ -20,12 +20,10 @@ role_in_system: Backs the n8n-nodes-pdf-markdown node.
 tech:
 - python
 runtime: systemd user unit pdf2md-serve.service, 127.0.0.1:8788
-relations:
-- to: n8n
-  kind: hosts
-  via: HTTP 127.0.0.1:8788 called by n8n-nodes-pdf-markdown
-  evidence: systemctl --user show pdf2md-serve Description
+relations: []
 evidence:
 - 'systemctl --user show pdf2md-serve: pdf2md serve --host 127.0.0.1 --port 8788'
 confidence: medium
 notes: Ship-board bundles it with curator.
+surfaces:
+- systemd:pdf2md-serve.service

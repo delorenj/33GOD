@@ -25,26 +25,35 @@ relations:
   kind: publishes-to
   via: bloodbank.evt.audio.* (task, session, transcription) via raw NATS TCP
   evidence: ~/HeyMa/components/wax/src/wax/events.py:215
+  anchor: n.publish_ack(r["subject"], json.loads(r["envelope"]))
 - to: pjangler
   kind: calls
   via: GET project registry service 127.0.0.1:8764
   evidence: ~/HeyMa/components/wax/src/wax/pjregistry.py:40
+  anchor: DEFAULT_URL = "http://127.0.0.1:8764"
 - to: transcribe
   kind: calls
   via: WAX_TRANSCRIBE / transcribe CLI subprocess
   evidence: ~/HeyMa/components/wax/src/wax/transcribe_adapter.py:173
+  anchor: return {}
 - to: jev-litellm
   kind: calls
   via: POST jev.delo.sh/typesafe/v1/systemone (classification passes)
   evidence: ~/HeyMa/components/wax/src/wax/jev.py:35
+  anchor: DEFAULT_URL = "https://jev.delo.sh/typesafe/v1/systemone"
 - to: aai-gateway
   kind: routes-llm-via
   via: api.automaticai.io/v1 chat/completions (title, summarize, tickets)
   evidence: ~/HeyMa/components/wax/bin/wax:144
+  anchor: '# these mirror the bin defaults in config/passes.d/bin/{title-slug,ticketable}.'
 - to: pilot
   kind: calls
   via: px CLI files failure tickets on HEYMA board (wax failures sweep)
   evidence: ~/HeyMa/components/wax/src/wax/failures.py:63
+  anchor: PX_DEFAULT = Path.home() / ".local" / "bin" / "px"
 evidence:
 - /home/delorenj/HeyMa
 confidence: medium
+surfaces:
+- producer:wax
+- systemd:waxd.service

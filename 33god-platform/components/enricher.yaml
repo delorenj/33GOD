@@ -34,15 +34,21 @@ relations:
   kind: publishes-to
   via: POST enricher-daprd:3501 publish bloodbank-pubsub (report.session.completed)
   evidence: 33god-platform/enricher/main.py:166
+  anchor: url = f"http://enricher-daprd:3501/v1.0/publish/bloodbank-pubsub/{topic}"
 - to: candystore
   kind: reads
   via: GET candystore:3001/sessions/{session_id}
   evidence: 33god-platform/enricher/main.py:186
+  anchor: resp = requests.get(f"http://candystore:3001/sessions/{session_id}", timeout=5)
 - to: aai-gateway
   kind: routes-llm-via
   via: POST api.automaticai.io/v1/chat/completions (session summary)
   evidence: 33god-platform/enricher/main.py:30
+  anchor: GATEWAY_CHAT_URL = "https://api.automaticai.io/v1/chat/completions"
 evidence:
 - 33god-platform/enricher/main.py
 confidence: high
 notes: Backlog 0 pending at check.
+surfaces:
+- container:enricher
+- container:enricher-daprd

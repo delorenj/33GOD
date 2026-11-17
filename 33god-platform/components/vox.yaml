@@ -25,8 +25,12 @@ relations:
   kind: stores-in
   via: VOX_DATABASE_URL host postgres db vox
   evidence: ~/code/voxxy/compose.yml:11
+  anchor: 'VOX_DATABASE_URL: postgresql://${DEFAULT_USERNAME}:${DEFAULT_PASSWORD}@host.docker.internal:5432/vox'
 evidence:
 - /home/delorenj/HeyMa
 - 'critic (repo): /home/delorenj/code/voxxy. Live containers vox (voxxy-vox, healthy) and voxxy-engine-voxcpm from
   voxxy/compose.yml + compose.engines.yml; Hermes plugin entries ''vox'' and ''tts/vox'' enabled'
 confidence: medium
+surfaces:
+- container:vox
+- container:voxxy-engine-voxcpm

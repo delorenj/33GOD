@@ -24,7 +24,7 @@ relations:
 - to: hook-hub
   kind: calls
   via: Unix socket $XDG_RUNTIME_DIR/33god/hook-hub.sock
-  evidence: bloodbank/services/hook-hub/main.py
+  evidence: bloodbank/services/hook-hub/client/bb-hook
 evidence:
-- bloodbank/services/hook-hub/main.py
+- bloodbank/services/hook-hub/client/bb-hook
 confidence: high

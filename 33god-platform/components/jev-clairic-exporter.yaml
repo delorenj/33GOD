@@ -26,16 +26,21 @@ relations:
   kind: reads
   via: GET :8683/events?type=bloodbank.conversation.turn.annotated
   evidence: ~/.agents/tools/jev-clairic/bin/jev-clairic-exporter:108
+  anchor: st, d = http_json(CANDYSTORE)
 - to: openrouter
   kind: calls
   via: GET openrouter.ai/api/v1/keys/<id> (JEV_API_MGMT_KEY)
   evidence: ~/.agents/tools/jev-clairic/bin/jev-clairic-exporter:86
+  anchor: st, d = http_json(JEV_KEY_URL + key_id, key=mgmt)
 - to: onepassword
   kind: calls
   via: op run --env-file jev-clairic-exporter.env.op
   evidence: ~/.agents/tools/jev-clairic/systemd/jev-clairic-exporter.service:9
+  anchor: ExecStart=%h/.local/bin/op run --env-file=%h/.agents/tools/jev-clairic/systemd/jev-clairic-exporter.env.op -- /usr/bin/python3 %h/.local/bin/jev-clairic-exporte
 evidence:
 - systemctl --user show jev-clairic-exporter
 - Candybar job jev-rollup-cadence */10 enabled (roll-up sidecar for turn events)
 confidence: medium
 notes: Related Candybar job jev-rollup-cadence ticks bloodbank turn events into the vault.
+surfaces:
+- systemd:jev-clairic-exporter.service

@@ -46,3 +46,8 @@ evidence:
 - /home/delorenj/docker/stacks/ai/hindsight/compose.yml
 confidence: high
 notes: Third-party engine with first-party config; banks per repo.
+surfaces:
+- container:hindsight
+- container:hindsight-litellm
+- container:hindsight-reranker
+- producer:hindsight-memory-analyzer

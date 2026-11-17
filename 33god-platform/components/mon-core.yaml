@@ -26,30 +26,45 @@ relations:
   kind: calls
   via: prometheus alerting.alertmanagers alertmanager:9093
   evidence: monitoring/prometheus/prometheus.yml:17
+  anchor: '- alertmanager:9093'
 - to: aai-llm-observability
   kind: reads
   via: prometheus scrape aai-llm-observability:9480
   evidence: monitoring/prometheus/prometheus.yml:28
+  anchor: '- job_name: ''aai-llm-observability'''
 - to: jev-clairic-exporter
   kind: reads
   via: prometheus scrape host.docker.internal:9491
   evidence: monitoring/prometheus/prometheus.yml:32
+  anchor: '- job_name: ''jev-clairic'''
 - to: candybar
   kind: reads
   via: prometheus scrape candybar:8700
   evidence: monitoring/prometheus/prometheus.yml:73
+  anchor: '- job_name: ''candybar'''
 - to: candybar-executor
   kind: reads
   via: prometheus scrape host.docker.internal:8701
   evidence: monitoring/prometheus/prometheus.yml:81
+  anchor: '- job_name: ''candybar-executor'''
 - to: mon-exporters
   kind: reads
   via: prometheus scrape nats-exporter:7777
   evidence: monitoring/prometheus/prometheus.yml:56
+  anchor: '- job_name: ''nats-exporter'''
 - to: mon-exporters
   kind: reads
   via: prometheus scrape node-exporter:9100, cadvisor:8080
   evidence: monitoring/prometheus/prometheus.yml:41
+  anchor: '- job_name: ''cadvisor'''
 evidence:
 - monitoring/compose.yml
 confidence: medium
+surfaces:
+- container:alloy
+- container:grafana
+- container:loki
+- container:otel-collector
+- container:prometheus
+- container:uptime-kuma
+- repo:monitoring

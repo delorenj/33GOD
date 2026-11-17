@@ -32,3 +32,6 @@ evidence:
 - /home/delorenj/code/delonet-n8n-workflows/INDEX.md
 confidence: high
 notes: No schedule triggers allowed; Candybar fires recurring ones by webhook.
+surfaces:
+- producer:n8n
+- producer:n8n-plane-webhook

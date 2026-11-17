@@ -25,22 +25,29 @@ relations:
   kind: consumes-from
   via: workqueue durable on bloodbank.cmd.cron.candybar.invoke
   evidence: candybar/src/candybar/executor/role.py:118
+  anchor: sub = await js.pull_subscribe(
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.cron.candybar.invoked/completed/failed
   evidence: candybar/src/candybar/executor/worker.py:499
+  anchor: await self._publish(
 - to: postgres
   kind: stores-in
   via: DATABASE_URL registry; invocation rows
   evidence: candybar/deploy/host/executor.env.template:8
+  anchor: DATABASE_URL=op://DeLoSecrets/sxnfrbik4osfovqgofyuuszqda/dsn
 - to: n8n
   kind: calls
   via: POST {CANDYBAR_N8N_URL}/webhook/<path> (n8n runner)
   evidence: candybar/src/candybar/executor/n8n_runner.py:38
+  anchor: return f"{n8n_base()}/webhook/{runner.webhook}"
 - to: hermes-fleet
   kind: calls
   via: hermes -p <profile> cron run <job> --wait
   evidence: candybar/src/candybar/executor/hermes_runner.py:49
+  anchor: 'def hermes_argv(runner: HermesRunner) -> list[str]:'
 evidence:
 - candybar/README.md
 confidence: medium
+surfaces:
+- systemd:candybar-executor.service

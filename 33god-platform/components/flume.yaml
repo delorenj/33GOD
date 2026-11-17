@@ -51,35 +51,45 @@ relations:
 - to: agents-registry
   kind: writes
   via: ~/.hermes/agents-registry.yaml
-  evidence: flume-core (only writer)
+  evidence: flume/packages/flume-hr/src/org/inventory.ts:605
+  anchor: const agentsDefault = join(resolveFleetHome(env, home), "agents-registry.yaml");
 - to: pilot
   kind: calls
   via: px CLI (FLUME_PX_BIN) runPx
   evidence: flume/packages/flume-hr/src/workforce/plane.ts:132
+  anchor: 'const result = spawnSync(bin, args, { encoding: "utf8", timeout, shell: false, maxBuffer: 32 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"], env });'
 - to: pjangler
   kind: calls
   via: GET/POST PJ_REGISTRY_URL :8764 registry service
   evidence: flume/packages/flume-hr/src/kernel/registryClient.ts:43
+  anchor: const result = spawnSync(process.execPath, ["--input-type=module", "-e", REQUEST], {
 - to: pjangler
   kind: calls
   via: pj CLI (PJANGLER_BIN) parity reconcile
   evidence: flume/packages/flume-hr/src/parity/reconcile.ts:319
+  anchor: 'const result = spawnSync(bin, args, { encoding: "utf8", timeout: PJ_TIMEOUT_MS, maxBuffer: 64 * 1024 * 1024 });'
 - to: onepassword
   kind: calls
   via: op read of vault refs
   evidence: flume/packages/flume-hr/src/workforce/vault.ts:8
+  anchor: 'const read = spawnSync("op", ["read", reference], { encoding: "utf8", timeout: 30_000, maxBuffer: 64 * 1024 });'
 - to: hermes-gw
   kind: calls
   via: hermes-gateway-restart --reason
   evidence: flume/packages/flume-hr/src/workforce/channel.ts:283
+  anchor: 'const restart = spawnSync(GATEWAY_RESTART_COMMAND, ["--reason", reason], { encoding: "utf8", timeout: 30_000 });'
 - to: candybar
   kind: calls
   via: GET CANDYBAR_API_URL /candybars (parity check)
   evidence: flume/packages/flume-hr/src/parity/rules.ts:3027
+  anchor: 'let body: unknown;'
 - to: cloudflare
   kind: calls
   via: Cloudflare API v4 provisioning cfRequest
   evidence: flume/packages/flume-hr/src/workforce/provision.ts:153
+  anchor: return fetch(`${base}${path}`, {
 evidence:
 - 33god-platform/components/flume.yaml
 confidence: high
+surfaces:
+- repo:flume

@@ -30,12 +30,17 @@ relations:
   kind: consumes-from
   via: durable on bloodbank.evt.project.artifact.created
   evidence: bloodbank/services/artifact-vault-projector/main.py:670
+  anchor: self._sub = await self._js.pull_subscribe(
 - to: artifact-sidecar
   kind: reads
   via: content store dir ARTIFACT_VAULT_STORE (read-only)
   evidence: bloodbank/services/artifact-vault-projector/main.py:752
+  anchor: store_root = Path(_env("ARTIFACT_VAULT_STORE", str(_default_state_dir() / "../artifact-sidecar/store")))
 evidence:
 - systemctl --user show bloodbank-artifact-vault-projector (active running)
 - bloodbank/services/artifact-sidecar/README.md:1-12
 confidence: medium
 notes: Output path Projects/<dir>/<YYYY-MM-DD>/<title>.
+surfaces:
+- repo:bloodbank/services/artifact-vault-projector
+- systemd:bloodbank-artifact-vault-projector.service

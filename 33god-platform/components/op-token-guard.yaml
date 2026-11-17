@@ -25,11 +25,13 @@ relations:
 - to: onepassword
   kind: reads
   via: op-token-sync
-  evidence: systemctl --user show op-token-guard ExecStart
+  evidence: ~/.config/zshyzsh/bin/op-token-sync:17
+  anchor: '# The generated ~/.local/bin/op is also the universal choke point for the'
 - to: ntfy
   kind: calls
   via: ntfy-alert on ExecStopPost when sync fails
   evidence: ~/.config/systemd/user/op-token-guard.service:17
+  anchor: ExecStopPost=/bin/bash -c 'if [ "$EXIT_STATUS" != "0" ]; then /home/delorenj/.local/bin/ntfy-alert --title "1Password token guard FAILED" --priority urgent --ta
 evidence:
 - systemctl --user list-timers (op-token-guard.timer next Sun 00:01)
 confidence: medium

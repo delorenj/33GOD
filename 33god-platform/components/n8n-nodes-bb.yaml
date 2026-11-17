@@ -23,29 +23,30 @@ tech:
 runtime: loaded inside n8n
 relations:
 - to: bb-nats
-  kind: publishes-to
-  via: NATS publish
-  evidence: bloodbank/integrations/n8n-nodes-bloodbank/package.json (v0.9.0)
-- to: bb-nats
   kind: consumes-from
   via: BloodbankTrigger durable consumer on BLOODBANK_EVENTS
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/nodes/BloodbankTrigger/BloodbankTrigger.node.ts:530
+  anchor: const subscription = await consumeDurable(backend, {
 - to: pjangler
   kind: reads
   via: GET :8764/v1/registry (Plane board routes)
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/projects.ts:109
+  anchor: const url = new URL('/v1/registry', location);
 - to: agents-registry
   kind: reads
   via: ~/.hermes/agents-registry.yaml (Fleet node)
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/registry.ts:7
+  anchor: export const DEFAULT_HERMES_REGISTRY = '~/.hermes/agents-registry.yaml';
 - to: plane
   kind: calls
   via: Plane REST via planeReader (reconcile)
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/reconcile.ts:131
+  anchor: if (exhausted) throw new PlaneRateLimited(exhausted);
 - to: event-contract
   kind: reads
   via: codegen reads bloodbank/schemas/** for node events
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/codegen/generate-events.mjs:21
+  anchor: const schemasRoot = resolve(here, '..', '..', '..', 'schemas');
 evidence:
 - bloodbank/integrations/n8n-nodes-bloodbank
 confidence: high

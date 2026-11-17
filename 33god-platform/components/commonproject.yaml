@@ -24,10 +24,12 @@ relations:
   kind: calls
   via: POST /api/v1/workspaces/{ws}/projects/ (create-plane-project.sh)
   evidence: ~/code/CommonProject/.mise/scripts/create-plane-project.sh:90
+  anchor: '"${PLANE_BASE_URL}/api/v1/workspaces/${WORKSPACE}/projects/" \'
 - to: hook-hub
   kind: reads
   via: ~/.config/33god/hook-hub/ownership.json (BB_HOOK_OWNERSHIP)
   evidence: ~/code/CommonProject/template/.agents/hooks/sync.py:74
+  anchor: path = Path(os.environ.get("BB_HOOK_OWNERSHIP", Path.home() / ".config/33god/hook-hub/ownership.json"))
 evidence:
 - 33god-platform/aperture/research/ship-board/data.json (g5)
 - 'critic (repo): /home/delorenj/code/CommonProject exists (copier project template per ship-board). Closes open

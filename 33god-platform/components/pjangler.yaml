@@ -48,23 +48,30 @@ relations:
   kind: calls
   via: GET /api/v1/workspaces/{ws}/projects/{board}/ (X-API-Key)
   evidence: pjangler/src/project/boardQuery.ts:327
+  anchor: response = await fetch(url, {
 - to: open-notebook
   kind: calls
   via: HTTP /api/notebooks, /api/config, /api/auth/status
   evidence: pjangler/src/notebook/open-notebook-client.ts:171
+  anchor: const value = await this.request("/api/notebooks");
 - to: redis
   kind: writes
   via: redis-cli zcrank:tab:<tab> hashes (pj crank)
   evidence: pjangler/src/crank/index.ts:303
+  anchor: 'run("HSET", `zcrank:tab:${tab}`, "enabled", enabled ? "1" : "0");'
 - to: skillex
   kind: wraps
   via: pj skills passes through to bundled @delorenj/skillex bin
   evidence: pjangler/src/skills/cli.ts:124
+  anchor: .argument("[args...]", "skillex command and options, passed through unchanged")
 evidence:
-- ~/.config/pjangler/projects.yaml
 - 'critic (repo): Repo is /home/delorenj/code/33GOD/pjangler (submodule; ~/code/pjangler does not exist). Runtime
   is two systemd user services, pjangler-project-registry.service (dist/project-registry-service.js) and pjangler-journal-notebook.service;
   registry is the manifest file ~/.config/pjangler/projects.yaml, NOT Postgres. The stores-in postgres relation
   is unsupported and should be dropped; the real edge is candystore-project-sync (python -m candystore.projects,
   Candybar job candystore-project-sync, currently failed) copying the registry into Candystore tables'
 confidence: medium
+surfaces:
+- repo:pjangler
+- systemd:pjangler-journal-notebook.service
+- systemd:pjangler-project-registry.service

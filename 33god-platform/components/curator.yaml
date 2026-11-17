@@ -25,10 +25,12 @@ relations:
   kind: calls
   via: hermes chat --query ... --skills curate (CLI, own profile)
   evidence: ~/code/curator/src/curator/backend.py:208
+  anchor: argv = [
 - to: hindsight
   kind: calls
   via: hindsight memory recall <bank> (CLI)
   evidence: ~/code/curator/src/curator/memory.py:93
+  anchor: '"memory",'
 evidence:
 - /home/delorenj/code/curator
 - /home/delorenj/code/skillex/all-skills/folder-curator
@@ -37,3 +39,6 @@ notes: 'Status note: Live but unhealthy: curator-drain.service (Bloodbank -> n8n
   backpressure) active; curator-serve.service (folder-curator serve 127.0.0.1:8787 for the n8n-nodes-folder-curator
   node) is in ''activating auto-restart'', i.e. crash-looping. n8n workflow ''Folder Curator Intake'' active. pdf2md-serve
   (127.0.0.1:8788) is a separate sibling'
+surfaces:
+- systemd:curator-drain.service
+- systemd:curator-serve.service

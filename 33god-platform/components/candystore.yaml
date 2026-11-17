@@ -54,6 +54,7 @@ relations:
   kind: calls
   via: pjangler list --json (project sync)
   evidence: candystore/candystore/projects.py:74
+  anchor: 'completed = subprocess.run( # noqa: S603 - fixed binary, no shell, no user input'
 evidence:
 - bloodbank/CLAUDE.md:187
 - docker ps
@@ -62,3 +63,8 @@ evidence:
   https://candystore.delo.sh behind google-auth Traefik middleware, traefik dynamic/candystore.yml)'
 confidence: high
 notes: Rejects envelopes missing producer/service/domain/kind.
+surfaces:
+- container:candystore
+- container:candystore-daprd
+- container:candystore-postgres
+- repo:candystore

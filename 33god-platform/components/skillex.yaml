@@ -44,6 +44,7 @@ relations:
   kind: writes
   via: resyncs strict desks under ~/.hermes/profiles/<name>
   evidence: ~/code/skillex/scripts/hermes-skillex-resync.py:718
+  anchor: hermes_root / "profiles" / name,
 evidence:
 - /home/delorenj/code/skillex/all-skills
 confidence: high

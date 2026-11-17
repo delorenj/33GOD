@@ -25,10 +25,12 @@ relations:
   kind: reads
   via: aws s3 s3.delo.sh bucket recordings (Telnyx native recordings)
   evidence: ~/HeyMa/components/telnyx-s3-intake/intake.py:26
+  anchor: ENDPOINT = "https://s3.delo.sh"
 - to: wax
   kind: writes
   via: delivers mp3 files into HeyMa inbox/ directory
   evidence: ~/HeyMa/components/telnyx-s3-intake/intake.py:460
+  anchor: target, stage = self.inbox / row["final_name"], self.stage(row["receipt_id"])
 evidence:
 - /home/delorenj/HeyMa
 confidence: medium

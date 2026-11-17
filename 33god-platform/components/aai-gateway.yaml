@@ -28,20 +28,21 @@ relations:
 - to: openrouter
   kind: routes-llm-via
   via: OpenRouter passthrough channel
-  evidence: automaticai-gateway-ops skill / gateway channels
-- to: jev-litellm
-  kind: routes-llm-via
-  via: Jev typesafe channel
-  evidence: automaticai-gateway-ops skill / gateway channels
+  evidence: ~/code/client-portal/gateway/ops/routes.json:55
+  anchor: '"id": "automaticai/openrouter/claude-opus-5.5",'
 - to: postgres
   kind: stores-in
   via: SQL_DSN newapi-postgres (gateway's own instance)
   evidence: ~/code/client-portal/gateway/compose.yml:33
+  anchor: '- SQL_DSN=postgresql://${POSTGRES_USER:?run through gateway/ops/compose.sh}:${POSTGRES_PASSWORD:?run through gateway/ops/compose.sh}@postgres:5432/${POSTGRES_DB'
 - to: redis
   kind: stores-in
   via: REDIS_CONN_STRING newapi-redis (gateway's own instance)
   evidence: ~/code/client-portal/gateway/compose.yml:34
+  anchor: '- REDIS_CONN_STRING=redis://:${REDIS_PASSWORD:?run through gateway/ops/compose.sh}@redis:6379'
 evidence:
 - docker ps
 confidence: medium
 notes: NewAPI deployment; routes must exist in ops/routes.json.
+surfaces:
+- producer:free-scout

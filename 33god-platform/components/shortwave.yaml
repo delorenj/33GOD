@@ -26,7 +26,10 @@ relations:
   kind: calls
   via: VinylSession to vinyl serve :7733 (mic stream)
   evidence: ~/code/shortwave/app/src/main/java/sh/delo/shortwave/MainActivity.kt:185
+  anchor: val s = VinylSession(host, port, prefs.vinylToken, this)
 evidence:
 - systemctl --user show shortwave-relay Description
 confidence: medium
 notes: Operator-desktop sibling of wingman; platform relation not traced.
+surfaces:
+- systemd:shortwave-relay.service

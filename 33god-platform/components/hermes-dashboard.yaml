@@ -26,8 +26,11 @@ relations:
   kind: reads
   via: per-profile gateway_state.json runtime status
   evidence: ~/.hermes/hermes-agent/hermes_cli/web_server_gateway.py:191
+  anchor: runtime = read_runtime_status(home / "gateway_state.json")
 evidence:
 - 'systemctl --user show hermes-dashboard: ExecStart=/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes dashboard
   --host 0.0.0.0 --port 9119 --no-open, active running'
 confidence: medium
 notes: Ship-board lumps it into hermes-gw.
+surfaces:
+- systemd:hermes-dashboard.service

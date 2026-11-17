@@ -26,34 +26,46 @@ relations:
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.watch.target.detected (matcher) and bloodbank.watch.target.routed (sink)
-  evidence: systemctl --user show target-watch-match/target-watch-sink Descriptions
+  evidence: bloodbank/services/target-watch/target_watch/bus.py:28
+  anchor: receipt = await self.js.publish(
 - to: pilot
   kind: calls
   via: sink files or updates a ticket on the target's board
   evidence: bloodbank/services/target-watch/README.md:1-8
+  anchor: '# target-watch'
 - to: bb-nats
   kind: consumes-from
   via: durable target-watch-matcher, bloodbank.evt.messaging.> and telephony.>
   evidence: bloodbank/services/target-watch/target_watch/match_service.py:12
+  anchor: SUBJECTS = ["bloodbank.evt.messaging.>", "bloodbank.evt.telephony.>"]
 - to: bb-nats
   kind: consumes-from
   via: durable target-watch-sink, bloodbank.evt.watch.target.detected
   evidence: bloodbank/services/target-watch/target_watch/cli.py:130
+  anchor: subjects=["bloodbank.evt.watch.target.detected"], ack_wait=300)
 - to: ntfy
   kind: calls
   via: POST https://ntfy.delo.sh (loud push, ticket button)
   evidence: bloodbank/services/target-watch/target_watch/sink.py:679
+  anchor: status, answer = self.ntfy_http(url, headers, text.encode("utf-8"), NTFY_HTTP_TIMEOUT_S)
 - to: candystore
   kind: reads
   via: GET :8683/events (replay command)
   evidence: bloodbank/services/target-watch/target_watch/cli.py:169
+  anchor: events = fetch_events(since.isoformat().replace("+00:00", "Z"), base_url=args.candystore)
 - to: onepassword
   kind: calls
   via: op read of ntfy token ref
   evidence: bloodbank/services/target-watch/target_watch/sink.py:651
+  anchor: code, stdout, stderr = self.runner([self.op, "read", "--no-newline", ref], cwd=NOTIFY_CWD, timeout=OP_TIMEOUT_S)
 evidence:
 - bloodbank/services/target-watch/README.md
 - systemctl --user list-units (both active running)
 - curl 127.0.0.1:8700/candybars target-watch-gmail-poll enabled
 confidence: medium
 notes: New providers become watchable by adding an x-sender block to their inbound schema; no code change.
+surfaces:
+- producer:target-watch
+- repo:bloodbank/services/target-watch
+- systemd:target-watch-match.service
+- systemd:target-watch-sink.service

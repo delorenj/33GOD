@@ -34,6 +34,10 @@ relations:
   kind: calls
   via: op run --env-file .env.op (render-env.sh)
   evidence: bloodbank/services/ntfy-router/render-env.sh:12
+  anchor: op run --no-masking --env-file=.env.op -- sh -c \
 evidence:
 - bloodbank/services/ntfy-router/main.py
 confidence: high
+surfaces:
+- container:bloodbank-ntfy-router
+- repo:bloodbank/services/ntfy-router

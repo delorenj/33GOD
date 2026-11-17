@@ -29,15 +29,21 @@ relations:
   kind: consumes-from
   via: JetStream BLOODBANK_EVENTS durable, bloodbank.evt.llm.>
   evidence: monitoring/aai-llm-observability/main.py:1317
+  anchor: subscription = await js.pull_subscribe(
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.llm.usage.recorded / allowance.observed
   evidence: monitoring/aai-llm-observability/main.py:1285
+  anchor: 'await js.publish(subject, body.encode(), headers={"Nats-Msg-Id": event_id}, timeout=10)'
 - to: aai-gateway
   kind: reads
   via: route catalog file ops/routes.json (AAI_LLM_ROUTE_CATALOG)
   evidence: monitoring/compose.yml:114
+  anchor: '- ${AAI_GATEWAY_OPS_DIR:-/home/delorenj/code/client-portal/gateway/ops}:/catalog:ro'
 evidence:
 - monitoring/aai-llm-observability/main.py
 - monitoring/aai-llm-observability/transform.py
 confidence: medium
+surfaces:
+- container:aai-llm-observability
+- producer:automaticai-usage-exporter

@@ -27,18 +27,26 @@ relations:
   kind: consumes-from
   via: bloodbank.evt.conversation.turn.completed
   evidence: bloodbank/services/turn-enricher/main.py:68
+  anchor: SUBJECT = os.environ.get("SUBJECT_FILTER", "bloodbank.evt.conversation.turn.completed")
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.conversation.turn.annotated
   evidence: bloodbank/services/turn-enricher/main.py:69
+  anchor: PUBLISH_SUBJECT = os.environ.get("PUBLISH_SUBJECT", "bloodbank.evt.conversation.turn.annotated")
 - to: jev-litellm
   kind: calls
   via: POST https://jev.delo.sh/typesafe/v1/systemone
   evidence: bloodbank/services/turn-enricher/main.py:73
+  anchor: JEV_URL = os.environ.get("JEV_URL", "https://jev.delo.sh/typesafe/v1/systemone")
 - to: cloudflare
   kind: calls
   via: Workers AI @cf/cloudflare/clairic
   evidence: bloodbank/services/turn-enricher/main.py:164
+  anchor: return f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model}"
 evidence:
 - bloodbank/services/turn-enricher/main.py
 confidence: high
+surfaces:
+- container:bloodbank-turn-enricher
+- producer:turn-enricher
+- repo:bloodbank/services/turn-enricher

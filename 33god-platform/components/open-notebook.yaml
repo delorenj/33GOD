@@ -28,3 +28,6 @@ evidence:
 - /home/delorenj/code/33GOD/CLAUDE.md
 confidence: medium
 notes: Hostname notebooklm.delo.sh not curl-verified.
+surfaces:
+- container:open_notebook_core
+- container:open_notebook_surrealdb

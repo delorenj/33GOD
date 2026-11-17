@@ -24,21 +24,28 @@ relations:
 - to: aai-gateway
   kind: routes-llm-via
   via: gateway keys in container env
-  evidence: docker inspect (values not repeated)
+  evidence: ~/code/genesis/genesis/adapters.py:22
+  anchor: GATEWAY_URL = "https://api.automaticai.io/v1/chat/completions"
 - to: genesis-desk-worker
   kind: calls
   via: A2A v1 SendMessage POST GENESIS_DESK_URL/agents/a2a
   evidence: ~/code/genesis/genesis/workforce.py:98
+  anchor: 'if not isinstance(card, dict) or not isinstance(card.get("supportedInterfaces"), list):'
 - to: bb-nats
   kind: publishes-to
   via: JetStream bloodbank.cmd.agent.invocation.start (fleet gate)
   evidence: ~/code/genesis/genesis/adapters.py:246
+  anchor: return envelope
 - to: agent-hooks
   kind: calls
   via: import services/agent-hooks core.envelope.build_envelope
   evidence: ~/code/genesis/genesis/adapters.py:205
+  anchor: 'def observed(key):'
 evidence:
 - /home/delorenj/code/genesis
 - docker ps
 confidence: high
 notes: Container env holds plaintext gateway keys; should move to op:// refs.
+surfaces:
+- container:genesis
+- producer:genesis

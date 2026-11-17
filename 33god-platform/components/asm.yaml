@@ -27,20 +27,27 @@ relations:
 - to: redis
   kind: stores-in
   via: asm:live, asm:lane:*, channel asm:transitions
-  evidence: redis-cli keys asm:*
+  evidence: bloodbank/services/agent-hooks/core/asm.py:54
+  anchor: SEEN_KEY = "asm:seen"
 - to: hook-hub
   kind: calls
   via: Unix socket 33god/hook-hub.sock, transition op
   evidence: bloodbank/services/agent-hooks/core/asm.py:331
+  anchor: sock.connect(_hub_socket())
 - to: pilot
   kind: calls
   via: px show <key> --json (asm-orcapaint)
   evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:166
+  anchor: res = subprocess.run([PX, "show", key, "--json"], cwd=cwd, capture_output=True,
 - to: candystore
   kind: reads
   via: GET :8683/events (asm-orcapaint)
   evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:128
+  anchor: 'with urllib.request.urlopen(f"{CANDYSTORE}/events?{q}", timeout=10) as r:'
 evidence:
 - bloodbank/services/hook-hub/handlers.toml
 confidence: medium
 notes: asm-sweep timer runs outside Candybar.
+surfaces:
+- systemd:asm-orcapaint.service
+- systemd:asm-tabpaint.service

@@ -29,19 +29,25 @@ relations:
   kind: hosts
   via: plugins.enabled bloodbank-platform in config.yaml
   evidence: ~/.hermes/config.yaml:782
+  anchor: '- bloodbank-platform'
 - to: hermes-fleet
   kind: hosts
   via: agents-registry gateways.bloodbank scope fleet, hermes-gateway.service
   evidence: ~/.hermes/agents-registry.yaml:8
+  anchor: 'systemd_unit: hermes-gateway.service'
 - to: hindsight
   kind: calls
   via: memory.provider hindsight, GET /version and bank API
   evidence: ~/.hermes/plugins/hindsight/__init__.py:144
+  anchor: url = api_url.rstrip("/") + "/version"
 - to: vox
   kind: calls
   via: tts.vox.base_url https://vox.delo.sh
   evidence: ~/.hermes/config.yaml:335
+  anchor: 'base_url: https://vox.delo.sh'
 evidence:
 - systemctl --user status hermes-gateway
 confidence: high
 notes: Restart only via hermes-gateway-restart.
+surfaces:
+- systemd:hermes-gateway.service

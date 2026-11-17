@@ -25,11 +25,13 @@ relations:
 - to: hermes-gw
   kind: reads
   via: health probe then systemctl --user restart
-  evidence: systemctl --user show hermes-gateway-watchdog Description
+  evidence: ~/.local/bin/hermes-gateway-watchdog:2
+  anchor: '"""hermes-gateway-watchdog: external self-healing for hermes-gateway.service.'
 - to: ntfy
   kind: calls
   via: ntfy-alert to ntfy.delo.sh/infra
   evidence: ~/.local/bin/hermes-gateway-watchdog:776
+  anchor: rc, out = _run([cfg.ntfy_alert, "--title", title, "--priority", priority,
 evidence:
 - systemctl --user list-timers (fires every minute)
 - systemctl --user show hermes-gateway-watchdog

@@ -26,27 +26,35 @@ relations:
   kind: consumes-from
   via: durable candybar-steward on bloodbank.cmd.cron.candybar.steward
   evidence: candybar/src/candybar/steward/role.py:122
+  anchor: sub = await js.pull_subscribe(STEWARD_FILTER, durable=DURABLE, stream=COMMAND_STREAM, config=config)
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.cron.steward_task.* facts
   evidence: candybar/src/candybar/steward/worker.py:565
+  anchor: await self._publish_fact(fact)
 - to: bb-nats
   kind: consumes-from
   via: durable candybar-steward-notify on steward_task.>
   evidence: candybar/src/candybar/steward/notify.py:199
+  anchor: NOTIFY_FILTER, durable=NOTIFY_DURABLE, stream=EVENT_STREAM, config=consumer
 - to: postgres
   kind: stores-in
   via: DATABASE_URL registry; steward task rows
   evidence: candybar/deploy/host/steward.env.template:8
+  anchor: DATABASE_URL=op://DeLoSecrets/sxnfrbik4osfovqgofyuuszqda/dsn
 - to: pjangler
   kind: calls
   via: GET 127.0.0.1:8764/v1/registry
   evidence: candybar/src/candybar/steward/jev.py:39
+  anchor: DEFAULT_REGISTRY_URL = "http://127.0.0.1:8764/v1/registry"
 - to: jev-litellm
   kind: routes-llm-via
   via: POST jev.delo.sh/typesafe/v1/systemone (CANDYBAR_JEV_URL)
   evidence: candybar/src/candybar/steward/jev.py:41
+  anchor: DEFAULT_JEV_URL = "https://jev.delo.sh/typesafe/v1/systemone"
 evidence:
 - systemctl --user show candybar-steward candybar-unit-holder Descriptions
 confidence: medium
 notes: Executor listens on 0.0.0.0:8701 (candybar daemon --roles executor, pid 5234).
+surfaces:
+- systemd:candybar-steward.service

@@ -25,14 +25,21 @@ relations:
   kind: reads
   via: rule expr automaticai_llm_allowance_collection_*
   evidence: monitoring/prometheus/alert_rules.yml:72
+  anchor: 'expr: max by (account, provider) (automaticai_llm_allowance_collection_status_info{status!~"ok|not_collected"}) > 0'
 - to: jev-clairic-exporter
   kind: reads
   via: rule expr jev_key_up, clairic_errors_1h
   evidence: monitoring/prometheus/rules/extractors.yml:9
+  anchor: 'expr: jev_key_up == 0'
 - to: mon-exporters
   kind: reads
   via: rule expr jetstream_consumer_* from nats-exporter
   evidence: monitoring/prometheus/rules/bloodbank-lanes.yml:11
+  anchor: (jetstream_consumer_num_waiting{consumer_name=~"bloodbank-hermes-gateway(-interactive)?"} == 0)
 evidence:
 - monitoring/compose.yml
 confidence: medium
+surfaces:
+- container:alertmanager
+- container:docker-health-monitor
+- producer:docker-health-monitor

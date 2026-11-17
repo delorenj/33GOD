@@ -26,17 +26,22 @@ relations:
 - to: cloudflare
   kind: calls
   via: Cloudflare Access JWT verification (pinned iss/aud); the agents-facade Worker at identity.delo.sh proxies to this origin
-  evidence: traefik-data/dynamic/flume-access.yml:1-4
+  evidence: ~/docker/core/traefik/traefik-data/dynamic/flume-access.yml:1
+  anchor: '# Flume employee-access facade ORIGIN — identity-origin.delo.sh (the agents-facade Worker at identity.delo.sh proxies here)'
 - to: agents-registry
   kind: reads
   via: identityCensus() registryRows
   evidence: flume/packages/flume-hr/src/workforce/access.ts:301
+  anchor: const matches = identityCensus().definitions.filter(definition => {
 - to: onepassword
   kind: calls
   via: op read of GitHub App private key
   evidence: flume/packages/flume-hr/src/workforce/github.ts:181
+  anchor: try { privateKey = readVaultSecret(facts.keyRef, "GitHub App private key"); }
 evidence:
 - ss -ltnp :18791 (flume access serve pid 5293)
 - /home/delorenj/docker/core/traefik/traefik-data/dynamic/flume-access.yml
 confidence: medium
 notes: No google-auth middleware by design; trust comes from the Access JWT.
+surfaces:
+- systemd:flume-access.service

@@ -24,3 +24,5 @@ relations: []
 evidence:
 - systemctl/pgrep redis-server
 confidence: high
+surfaces:
+- container:redis

@@ -29,6 +29,7 @@ relations:
   kind: routes-llm-via
   via: GATEWAY_BASE_URL https://api.automaticai.io/v1
   evidence: ~/code/genesis/employees/cloudflare/wrangler.jsonc:27
+  anchor: '"GATEWAY_BASE_URL": "https://api.automaticai.io/v1",'
 evidence:
 - /home/delorenj/code/genesis
 confidence: medium
