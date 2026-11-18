@@ -1,0 +1,42 @@
+{
+  "full-suite": {
+    "exit": 0,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/full-suite.txt",
+    "tail": "ts_and_require_use_typescript_substitution (test_travels_typescript.TypeScriptImportTests.test_reexports_dynamic_imports_and_require_use_typescript_substitution) ... ok\ntest_staged_but_uncommitted_typescript_target_is_still_rejected (test_travels_typescript.TypeScriptImportTests.test_staged_but_uncommitted_typescript_target_is_still_rejected) ... ok\ntest_static_imports_in_multiline_template_text_are_not_dependencies (test_travels_typescript.TypeScriptImportTests.test_static_imports_in_multiline_template_text_are_not_dependencies) ... ok\ntest_untracked_typescript_target_is_still_rejected (test_travels_typescript.TypeScriptImportTests.test_untracked_typescript_target_is_still_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 102 tests in 9.920s\n\nOK\n"
+  },
+  "focused-suite": {
+    "exit": 0,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/focused-suite.txt",
+    "tail": "le_unverified_remote_tracking_cannot_hide_local_parent (__main__.MergeTopologyTests.test_stale_unverified_remote_tracking_cannot_hide_local_parent) ... ok\ntest_successful_scan_chains_local_hook_with_consumed_stdin (__main__.MergeTopologyTests.test_successful_scan_chains_local_hook_with_consumed_stdin) ... ok\ntest_unchanged_merge_importer_losing_build_source_is_rejected (__main__.MergeTopologyTests.test_unchanged_merge_importer_losing_build_source_is_rejected) ... ok\ntest_unreachable_remote_fails_closed (__main__.MergeTopologyTests.test_unreachable_remote_fails_closed) ... ok\ntest_unreadable_remote_base_fails_closed (__main__.MergeTopologyTests.test_unreadable_remote_base_fails_closed) ... ok\n\n----------------------------------------------------------------------\nRan 44 tests in 6.562s\n\nOK\n"
+  },
+  "compile": {
+    "exit": 0,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/compile.txt",
+    "tail": ""
+  },
+  "bash-syntax": {
+    "exit": 0,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/bash-syntax.txt",
+    "tail": ""
+  },
+  "travel-head": {
+    "exit": 0,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/travel-head.txt",
+    "tail": ""
+  },
+  "diff-check-full": {
+    "exit": 2,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/diff-check-full.txt",
+    "tail": "git/tests/evidence/33GOD-55-r4/red.txt:12: trailing whitespace.\n+test_merge_scan_batches_blobs_and_parses_each_parent_importer_once (git.tests.test_pre_push.MergeTopologyTests.test_merge_scan_batches_blobs_and_parses_each_parent_importer_once) ... \n"
+  },
+  "diff-check-working": {
+    "exit": 0,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/diff-check-working.txt",
+    "tail": ""
+  },
+  "historical-replay": {
+    "exit": 0,
+    "log": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-spec/historical-replay-stdout.txt",
+    "tail": "uard-repair/git/hooks/pre-push\",\n        \"delorenj\",\n        \"/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git\"\n      ],\n      \"cwd\": \"/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate\",\n      \"stdin\": \"refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\\n\",\n      \"exit_code\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\\n\",\n      \"seconds\": 3.00302187690977,\n      \"label\": \"repair\",\n      \"source_revision\": null,\n      \"all_fixture_state_including_objects_unchanged\": true\n    }\n  ]\n}\n"
+  }
+}

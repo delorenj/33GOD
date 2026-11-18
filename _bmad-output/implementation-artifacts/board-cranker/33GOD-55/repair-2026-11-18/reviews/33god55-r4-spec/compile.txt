@@ -1,0 +1,5 @@
+argv=["python3", "-B", "-m", "py_compile", "git/hooks/_travels.py", "git/tests/test_pre_push.py"]
+exit=0
+stdout:
+
+stderr:

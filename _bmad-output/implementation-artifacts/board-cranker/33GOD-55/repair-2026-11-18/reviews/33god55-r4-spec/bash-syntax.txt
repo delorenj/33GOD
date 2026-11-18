@@ -1,0 +1,5 @@
+argv=["bash", "-n", "git/hooks/pre-push", "git/hooks/_guard.sh"]
+exit=0
+stdout:
+
+stderr:

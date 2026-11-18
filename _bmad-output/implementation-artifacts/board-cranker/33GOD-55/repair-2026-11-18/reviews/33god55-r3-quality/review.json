@@ -1,0 +1,89 @@
+{
+  "ticket": "33GOD-55",
+  "gate": "QUALITY",
+  "verdict": "FAIL",
+  "reviewer": "independent-quality-security-subagent",
+  "implementer": "deleg_1ad3d607",
+  "independent": true,
+  "base": "7f7bdf5807aabfb748cb25dad5086ff6bb17dd39",
+  "head": "96eadfc503065b301002d01cdcc6f2126cb6a387",
+  "remote_feature_head_verified": true,
+  "findings": [
+    {
+      "id": "Q1",
+      "priority": "P1",
+      "title": "Parent suppression hides newly lost build-source dependencies",
+      "file": "git/hooks/_travels.py",
+      "lines": [498, 508],
+      "trigger": "One published parent has a consumer of ignored dist/dep.js backed by tracked src/dep.ts; another deletes consumer and source. The unpublished merge modifies/restores consumer but inherits source deletion, while ignored stale output remains on the author's disk.",
+      "cause": "Absence of a tracked target in a parent is treated as an already-missing import without checking whether that parent's tracked source satisfies the existing compiled-output exemption.",
+      "results": {
+        "published_parent_build_exit": 0,
+        "published_parent_runtime_exit": 0,
+        "parent_travel_with_importer_selected_exit": 0,
+        "review_base_hook_exit": 1,
+        "repair_hook_exit": 0,
+        "normal_private_push_exit": 0,
+        "destination_equals_candidate": true,
+        "fresh_clone_build_exit": 1,
+        "fresh_clone_build_error": "ENOENT src/dep.ts",
+        "fresh_clone_runtime_exit": 1,
+        "fresh_clone_runtime_error": "ERR_MODULE_NOT_FOUND dist/dep.js",
+        "hook_state_including_persistent_objects_unchanged": true
+      },
+      "correction": "Suppress only effective parent findings evaluated with the parent's travel rules, including tracked build-source support. Add source-losing merge rejection and source-preserving positive regressions.",
+      "evidence": ["generated-source-runtime.json", "reproduced-confirmed.json", "reproduce.md"]
+    },
+    {
+      "id": "Q2",
+      "priority": "P2",
+      "title": "Repeated parent parsing causes quadratic work and a 217x historical replay slowdown",
+      "file": "git/hooks/_travels.py",
+      "lines": [498, 506],
+      "related_lines": [676, 681],
+      "trigger": "An unchanged inherited parent importer contains many missing relative imports, or a normal merge has thousands of source files.",
+      "cause": "For each missing target the loop invokes git show and reparses all targets in the same parent file; merge scanning also spawns per-source blob reads.",
+      "results": {
+        "100_inherited_edges_base_seconds": 0.09008085692767054,
+        "100_inherited_edges_repair_seconds": 4.443866669898853,
+        "repeated_100_edge_base_seconds": 0.08417332998942584,
+        "repeated_100_edge_repair_seconds": 4.315945571055636,
+        "exact_historical_candidate": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+        "historical_base_seconds": 0.3673274890752509,
+        "historical_repair_seconds": 79.61453642998822,
+        "both_historical_exits": 0,
+        "original_first_parent_range_count": 4398,
+        "both_historical_unpublished_count": 1
+      },
+      "correction": "Cache target sets and effective findings once per parent/importer and batch committed blob reads. Add deterministic process-call/cache scaling coverage and rerun historical timing.",
+      "evidence": ["differential.json", "historical-base.json", "historical.json", "reproduced-confirmed.json", "reproduce.md"]
+    }
+  ],
+  "verification": {
+    "complete_guard_suite": "93 tests OK, exit 0, 7.507 seconds",
+    "static_gates": "AST syntax, bash -n, _travels.py HEAD, git diff --check all exit 0",
+    "independent_controls": "Cross-parent JS/TS deletion rejected; 81 inherited failures allowed; novel merge credential rejected with redacted output; remote-known credential allowed; remote-only custom-ref and nested non-commit tag accepted; hook snapshots including objects unchanged",
+    "retained_reproducer": "reproduce.md executed successfully; base rejects Q1, repair accepts and private push succeeds, fresh clone build/runtime fail",
+    "historical_replay": "Exact candidate and ordered parents, same stdin, private remotes, all fixture bytes including objects unchanged"
+  },
+  "not_reported_as_regressions": [
+    "Non-commit blob/tree credentials were already allowed by the pre-story 36d3ed6 hook; no novel commit/merge credential regression reproduced.",
+    "Repeating an existing importer-target edge in resolution does not establish a novel edge under the documented contract."
+  ],
+  "boundaries": {
+    "production_source_modified": false,
+    "production_refs_modified": false,
+    "production_candidate_published": false,
+    "board_writes": false,
+    "commits_or_merges": false,
+    "skills_or_memories_modified": false,
+    "fixture_mutations": "Only disposable repositories under active profile TMPDIR",
+    "review_outputs": "Only JSON/Markdown under /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r3-quality/"
+  },
+  "limits": [
+    "Historical replay is not a current live GitHub advertisement proof.",
+    "No installation, activation, integration, or SPEC acceptance is claimed.",
+    "CodeGraph sidecar was mostly fake embeddings; no index mutation performed."
+  ],
+  "report": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r3-quality/review.md"
+}

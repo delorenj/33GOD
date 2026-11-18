@@ -1,0 +1,80 @@
+[
+  {
+    "probe": "inherited-single-file-performance",
+    "import_count": 1,
+    "base": {
+      "exit_code": 0,
+      "seconds": 0.07964281004387885,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n"
+    },
+    "repair": {
+      "exit_code": 0,
+      "seconds": 0.08937000599689782,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n"
+    }
+  },
+  {
+    "probe": "inherited-single-file-performance",
+    "import_count": 30,
+    "base": {
+      "exit_code": 0,
+      "seconds": 0.10495584295131266,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n"
+    },
+    "repair": {
+      "exit_code": 0,
+      "seconds": 0.4875937409233302,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n"
+    }
+  },
+  {
+    "probe": "inherited-single-file-performance",
+    "import_count": 100,
+    "base": {
+      "exit_code": 0,
+      "seconds": 0.09008085692767054,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n"
+    },
+    "repair": {
+      "exit_code": 0,
+      "seconds": 4.443866669898853,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n"
+    }
+  },
+  {
+    "probe": "pre-story-credential-blob",
+    "pre_story": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    "base": {
+      "exit_code": 1,
+      "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdout": ""
+    },
+    "repair": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    }
+  },
+  {
+    "probe": "pre-story-credential-tree",
+    "pre_story": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    "base": {
+      "exit_code": 1,
+      "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdout": ""
+    },
+    "repair": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    }
+  }
+]

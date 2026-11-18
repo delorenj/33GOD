@@ -1,0 +1,5 @@
+argv=["python3", "-B", "git/hooks/_travels.py", "HEAD"]
+exit=0
+stdout:
+
+stderr:

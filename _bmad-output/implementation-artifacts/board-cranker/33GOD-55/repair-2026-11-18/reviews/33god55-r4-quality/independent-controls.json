@@ -1,0 +1,508 @@
+{
+  "source_losing": {
+    "candidate": "c2bc781cf4453cc7a57892fa7e1e2abf27c31f84",
+    "parents": [
+      "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e",
+      "ad35070c330b7643cdd5b5fe0123e80eb0c4d38e"
+    ],
+    "parent_build": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "parent_runtime": {
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    "parent_travel": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "stale_runtime": {
+      "exit": 0,
+      "stdout": "1\nnovel resolution\n",
+      "stderr": ""
+    },
+    "base": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-dk68g92t/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 1,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   c2bc781 source-losing resolution\n|\\  \n| * ad35070 published importer\n* | 1d4fdd1 published deletion\n|/  \n* 3d3c2a6 buildable baseline\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "c2bc781cf4453cc7a57892fa7e1e2abf27c31f84",
+        "ordered_parents": [
+          "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e",
+          "ad35070c330b7643cdd5b5fe0123e80eb0c4d38e"
+        ],
+        "unpublished": [
+          "c2bc781cf4453cc7a57892fa7e1e2abf27c31f84",
+          "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e",
+          "ad35070c330b7643cdd5b5fe0123e80eb0c4d38e",
+          "3d3c2a60c4b6251ca00fe18650978d4ec1256f32"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  consumer.mjs\n      imports  dist/dep.js   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add dist/dep.js\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdin": "refs/heads/feature c2bc781cf4453cc7a57892fa7e1e2abf27c31f84 refs/heads/feature 1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e\n",
+      "stdout": "",
+      "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+      "elapsed": 0.09002444299403578,
+      "persistent_files_and_objects_unchanged": true
+    },
+    "final": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-dk68g92t/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 1,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   c2bc781 source-losing resolution\n|\\  \n| * ad35070 published importer\n* | 1d4fdd1 published deletion\n|/  \n* 3d3c2a6 buildable baseline\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "c2bc781cf4453cc7a57892fa7e1e2abf27c31f84",
+        "ordered_parents": [
+          "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e",
+          "ad35070c330b7643cdd5b5fe0123e80eb0c4d38e"
+        ],
+        "unpublished": [
+          "c2bc781cf4453cc7a57892fa7e1e2abf27c31f84",
+          "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e",
+          "ad35070c330b7643cdd5b5fe0123e80eb0c4d38e",
+          "3d3c2a60c4b6251ca00fe18650978d4ec1256f32"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  consumer.mjs\n      imports  dist/dep.js   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add dist/dep.js\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdin": "refs/heads/feature c2bc781cf4453cc7a57892fa7e1e2abf27c31f84 refs/heads/feature 1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e\n",
+      "stdout": "",
+      "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+      "elapsed": 0.08471537299919873,
+      "persistent_files_and_objects_unchanged": true
+    },
+    "failed_quality": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-dk68g92t/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 0,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   c2bc781 source-losing resolution\n|\\  \n| * ad35070 published importer\n* | 1d4fdd1 published deletion\n|/  \n* 3d3c2a6 buildable baseline\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "c2bc781cf4453cc7a57892fa7e1e2abf27c31f84",
+        "ordered_parents": [
+          "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e",
+          "ad35070c330b7643cdd5b5fe0123e80eb0c4d38e"
+        ],
+        "unpublished": [
+          "c2bc781cf4453cc7a57892fa7e1e2abf27c31f84",
+          "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e",
+          "ad35070c330b7643cdd5b5fe0123e80eb0c4d38e",
+          "3d3c2a60c4b6251ca00fe18650978d4ec1256f32"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+      "stdin": "refs/heads/feature c2bc781cf4453cc7a57892fa7e1e2abf27c31f84 refs/heads/feature 1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e\n",
+      "stdout": "",
+      "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+      "elapsed": 0.09694578603375703,
+      "persistent_files_and_objects_unchanged": true
+    },
+    "ordinary_push": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  consumer.mjs\n      imports  dist/dep.js   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add dist/dep.js\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\nerror: failed to push some refs to '/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-dk68g92t/fork.git'\n"
+    },
+    "destination_after": "1d4fdd1cd3a4d9f1a11d0c81eb4731c372cf222e"
+  },
+  "source_preserving": {
+    "candidate": "33847fa7ec63aa2d673864dfbadd72aa3b40cb57",
+    "no_output": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-fk9r6o70/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 0,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   33847fa compiled merge resolution\n|\\  \n| * 166ae3c published runnable importer\n* | ed9a420 published deletion\n|/  \n* 454dbd9 compiled baseline\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "33847fa7ec63aa2d673864dfbadd72aa3b40cb57",
+        "ordered_parents": [
+          "ed9a420ecdaf5c2a9c51a47f25669ec8c8e7ceea",
+          "166ae3c56690b0b7b81bb85445e007ef612a7133"
+        ],
+        "unpublished": [
+          "33847fa7ec63aa2d673864dfbadd72aa3b40cb57",
+          "ed9a420ecdaf5c2a9c51a47f25669ec8c8e7ceea",
+          "166ae3c56690b0b7b81bb85445e007ef612a7133",
+          "454dbd99a9f94c119068bb1c2e355a01bd548887"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+      "stdin": "refs/heads/feature 33847fa7ec63aa2d673864dfbadd72aa3b40cb57 refs/heads/feature ed9a420ecdaf5c2a9c51a47f25669ec8c8e7ceea\n",
+      "stdout": "",
+      "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+      "elapsed": 0.09420389705337584,
+      "persistent_files_and_objects_unchanged": true
+    },
+    "build": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "with_output": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-fk9r6o70/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 0,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   33847fa compiled merge resolution\n|\\  \n| * 166ae3c published runnable importer\n* | ed9a420 published deletion\n|/  \n* 454dbd9 compiled baseline\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "33847fa7ec63aa2d673864dfbadd72aa3b40cb57",
+        "ordered_parents": [
+          "ed9a420ecdaf5c2a9c51a47f25669ec8c8e7ceea",
+          "166ae3c56690b0b7b81bb85445e007ef612a7133"
+        ],
+        "unpublished": [
+          "33847fa7ec63aa2d673864dfbadd72aa3b40cb57",
+          "ed9a420ecdaf5c2a9c51a47f25669ec8c8e7ceea",
+          "166ae3c56690b0b7b81bb85445e007ef612a7133",
+          "454dbd99a9f94c119068bb1c2e355a01bd548887"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+      "stdin": "refs/heads/feature 33847fa7ec63aa2d673864dfbadd72aa3b40cb57 refs/heads/feature ed9a420ecdaf5c2a9c51a47f25669ec8c8e7ceea\n",
+      "stdout": "",
+      "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+      "elapsed": 0.11609275895170867,
+      "persistent_files_and_objects_unchanged": true
+    },
+    "ordinary_push": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\nTo /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-fk9r6o70/fork.git\n   ed9a420..33847fa  HEAD -> feature\n"
+    },
+    "destination_after": "33847fa7ec63aa2d673864dfbadd72aa3b40cb57",
+    "clone": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "clone_build": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "clone_runtime": {
+      "exit": 0,
+      "stdout": "1\nnovel resolution\n",
+      "stderr": ""
+    }
+  },
+  "inherited_scaling": [
+    {
+      "edges": 1,
+      "candidate": "f1a4259a86f25567cb74241f57a20516248ee0e2",
+      "base": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-1q6_y3yj/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   f1a4259 inherit importer and lose path\n|\\  \n| * fb23994 published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "f1a4259a86f25567cb74241f57a20516248ee0e2",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "fb23994796565499be72a149a4ee9d5c64e23fe7"
+          ],
+          "unpublished": [
+            "f1a4259a86f25567cb74241f57a20516248ee0e2",
+            "fb23994796565499be72a149a4ee9d5c64e23fe7"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature f1a4259a86f25567cb74241f57a20516248ee0e2 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.13301363098435104,
+        "persistent_files_and_objects_unchanged": true
+      },
+      "final": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-1q6_y3yj/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   f1a4259 inherit importer and lose path\n|\\  \n| * fb23994 published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "f1a4259a86f25567cb74241f57a20516248ee0e2",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "fb23994796565499be72a149a4ee9d5c64e23fe7"
+          ],
+          "unpublished": [
+            "f1a4259a86f25567cb74241f57a20516248ee0e2",
+            "fb23994796565499be72a149a4ee9d5c64e23fe7"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature f1a4259a86f25567cb74241f57a20516248ee0e2 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.11883643199689686,
+        "persistent_files_and_objects_unchanged": true
+      },
+      "failed_quality": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-1q6_y3yj/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   f1a4259 inherit importer and lose path\n|\\  \n| * fb23994 published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "f1a4259a86f25567cb74241f57a20516248ee0e2",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "fb23994796565499be72a149a4ee9d5c64e23fe7"
+          ],
+          "unpublished": [
+            "f1a4259a86f25567cb74241f57a20516248ee0e2",
+            "fb23994796565499be72a149a4ee9d5c64e23fe7"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature f1a4259a86f25567cb74241f57a20516248ee0e2 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.16335952398367226,
+        "persistent_files_and_objects_unchanged": true
+      }
+    },
+    {
+      "edges": 30,
+      "candidate": "b637219cf6dd07d067c6cb759ab5c7c55d323c22",
+      "base": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-c90s62s6/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   b637219 inherit importer and lose path\n|\\  \n| * 7492edb published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "b637219cf6dd07d067c6cb759ab5c7c55d323c22",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "7492edb6a015dca09cbd93d450795e250d5cb965"
+          ],
+          "unpublished": [
+            "b637219cf6dd07d067c6cb759ab5c7c55d323c22",
+            "7492edb6a015dca09cbd93d450795e250d5cb965"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature b637219cf6dd07d067c6cb759ab5c7c55d323c22 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.13632417598273605,
+        "persistent_files_and_objects_unchanged": true
+      },
+      "final": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-c90s62s6/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   b637219 inherit importer and lose path\n|\\  \n| * 7492edb published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "b637219cf6dd07d067c6cb759ab5c7c55d323c22",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "7492edb6a015dca09cbd93d450795e250d5cb965"
+          ],
+          "unpublished": [
+            "b637219cf6dd07d067c6cb759ab5c7c55d323c22",
+            "7492edb6a015dca09cbd93d450795e250d5cb965"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature b637219cf6dd07d067c6cb759ab5c7c55d323c22 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.2760902139125392,
+        "persistent_files_and_objects_unchanged": true
+      },
+      "failed_quality": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-c90s62s6/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   b637219 inherit importer and lose path\n|\\  \n| * 7492edb published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "b637219cf6dd07d067c6cb759ab5c7c55d323c22",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "7492edb6a015dca09cbd93d450795e250d5cb965"
+          ],
+          "unpublished": [
+            "b637219cf6dd07d067c6cb759ab5c7c55d323c22",
+            "7492edb6a015dca09cbd93d450795e250d5cb965"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature b637219cf6dd07d067c6cb759ab5c7c55d323c22 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.8370289849117398,
+        "persistent_files_and_objects_unchanged": true
+      }
+    },
+    {
+      "edges": 100,
+      "candidate": "ada6010e46cd73f04065f1c8a347d2732402c6a5",
+      "base": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-3vg7ht4w/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   ada6010 inherit importer and lose path\n|\\  \n| * 6aab776 published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "ada6010e46cd73f04065f1c8a347d2732402c6a5",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "6aab776712195c93abc023c89653e989fe5f4b7d"
+          ],
+          "unpublished": [
+            "ada6010e46cd73f04065f1c8a347d2732402c6a5",
+            "6aab776712195c93abc023c89653e989fe5f4b7d"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature ada6010e46cd73f04065f1c8a347d2732402c6a5 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.08708132104948163,
+        "persistent_files_and_objects_unchanged": true
+      },
+      "final": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-3vg7ht4w/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   ada6010 inherit importer and lose path\n|\\  \n| * 6aab776 published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "ada6010e46cd73f04065f1c8a347d2732402c6a5",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "6aab776712195c93abc023c89653e989fe5f4b7d"
+          ],
+          "unpublished": [
+            "ada6010e46cd73f04065f1c8a347d2732402c6a5",
+            "6aab776712195c93abc023c89653e989fe5f4b7d"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature ada6010e46cd73f04065f1c8a347d2732402c6a5 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 0.16432566905859858,
+        "persistent_files_and_objects_unchanged": true
+      },
+      "failed_quality": {
+        "args": [
+          "origin",
+          "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-3vg7ht4w/fork.git"
+        ],
+        "bypass_used": false,
+        "exit_code": 0,
+        "fixture": {
+          "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+          "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "graph": "*   ada6010 inherit importer and lose path\n|\\  \n| * 6aab776 published inherited missing\n* | fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+          "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+          "merge": "ada6010e46cd73f04065f1c8a347d2732402c6a5",
+          "ordered_parents": [
+            "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+            "6aab776712195c93abc023c89653e989fe5f4b7d"
+          ],
+          "unpublished": [
+            "ada6010e46cd73f04065f1c8a347d2732402c6a5",
+            "6aab776712195c93abc023c89653e989fe5f4b7d"
+          ]
+        },
+        "state_unchanged": true,
+        "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+        "stdin": "refs/heads/feature ada6010e46cd73f04065f1c8a347d2732402c6a5 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+        "stdout": "",
+        "test": "fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+        "elapsed": 5.491564491065219,
+        "persistent_files_and_objects_unchanged": true
+      }
+    }
+  ]
+}

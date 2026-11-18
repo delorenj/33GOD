@@ -1,0 +1,59 @@
+{
+  "issue": "33GOD-55",
+  "reviewer": "33god-pm",
+  "date": "2026-11-18",
+  "independent_reviewer": "deleg_3db0d754",
+  "recommendation": "sent-back",
+  "pr": "https://github.com/delorenj/agents/pull/1",
+  "reviewed_head": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+  "landed_merge": "02481c8df4cedbdc11081fe41fcf01859a399566",
+  "scratch_execution_directory": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-review-bm8yfw_9",
+  "parent_verified": {
+    "landed_diff_read": true,
+    "github_merged_pr_read": true,
+    "complete_suite": "25 tests pass; python3 -m unittest discover -s git/tests -p test_*.py -v in immutable target export",
+    "adversarial_probe_rerun": "PYTHONDONTWRITEBYTECODE=1 python3 reviewer_probe.py in scratch execution directory; real pre-push and private local push",
+    "compatibility_probe_rerun": "PYTHONDONTWRITEBYTECODE=1 python3 compatibility_probes.py in scratch execution directory",
+    "production_source_modified": false,
+    "production_refs_modified": false,
+    "production_push_performed": false
+  },
+  "findings": [
+    {
+      "priority": "P1",
+      "criterion": 4,
+      "location": "git/hooks/_travels.py:434-440 at reviewed head",
+      "problem": "Combined diff omits an inherited importer when another merge parent removes its dependency. Both published parents are individually consistent, but their unpublished merge has a newly broken repository-local import and passes the hook.",
+      "verified_results": "Base hook exit 1; landed hook exit 0; ordinary private git push exit 0. The resulting tree contains new-importer.js importing ./dep.js but no dep.js.",
+      "required": "Detect missing dependencies introduced by cross-parent composition in the resulting merge tree without reclassifying existing remote-known failures as novel; add RED/GREEN regression for two individually clean published parents.",
+      "evidence": "adversarial-results.json"
+    },
+    {
+      "priority": "P2",
+      "criterion": 5,
+      "location": "git/hooks/_travels.py:405-410 at reviewed head",
+      "problem": "Valid annotated tag targeting an innocuous blob passes base hook but is rejected by landed hook because every update must peel to a commit.",
+      "required": "Preserve applicable guard behavior for non-commit tag updates with deterministic regression coverage.",
+      "evidence": "adversarial-results.json and additional-results.json"
+    },
+    {
+      "priority": "P2",
+      "criterion": 2,
+      "location": "git/hooks/_travels.py:324,405-409 at reviewed head",
+      "problem": "Existing notes refs are omitted by heads/tags-only advertisement and incorrectly rejected as advertised-base mismatches. Normal private notes push passes base and fails landed hook.",
+      "required": "Validate destination refs from stdin in custom namespaces too and cover normal notes-ref updates.",
+      "evidence": "compatibility-results.json"
+    }
+  ],
+  "acceptance_summary": {
+    "1": "Independent reviewer reproduced original RED against base; preserved original evidence inspected.",
+    "2": "Required branch ancestry cases pass; custom destination ref regression remains.",
+    "3": "Required clean merge cases pass without bypass.",
+    "4": "FAIL: cross-parent dependency breakage demonstrably passes.",
+    "5": "Committed cases pass; non-commit tag regression remains.",
+    "6": "Reviewer validated historical receipt and private replay of exact historical candidate. Original live ref has since advanced, so original advertisement cannot be replayed live unchanged.",
+    "7": "Parent reran complete suite; independent reviewer ran static gates and validated evidence hashes.",
+    "8": "Focused commit, merged PR, schema-valid receipts and distinct historical spec/quality reviews verified by independent reviewer. Original worktrees are gone; their cleanliness is historical only."
+  },
+  "reproduction_note": "Preserved probe sources expect sibling target/ and base/ immutable exports. Recreate with git archive 54aca968 git and git archive 36d3ed6 git under those directories, respectively. All Git mutations performed by probes are disposable private fixtures, never production. Runtime smoke in reviewer_probe.py imports the missing dependency directly; the broken importer text and resulting tree are separately recorded in adversarial-results.json."
+}

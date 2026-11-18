@@ -1,0 +1,93 @@
+{
+  "$schema": "handback.schema.json",
+  "ticket": "33GOD-55",
+  "reviewed_head": "14159669b8c03071856eb26f31557db2e3479317",
+  "landed_agents_main": "4ca095f1fc6445f14f4e6e288a9d3647ec4d9903",
+  "root_evidence_path": "/home/delorenj/code/33GOD/_bmad-output/implementation-artifacts/board-cranker/33GOD-55/repair-2026-11-18",
+  "review_gates": {
+    "spec": {
+      "verdict": "PASS",
+      "reviewer": "independent-spec-subagent-r5",
+      "receipt": "reviews/33god55-r5-spec/review.json"
+    },
+    "quality": {
+      "verdict": "PASS",
+      "reviewer": "independent-quality-subagent",
+      "receipt": "reviews/33god55-r5-quality/review.json"
+    }
+  },
+  "acceptance": {
+    "AC1": {
+      "result": "PASS: RED preceded source repair; byte-exact red.json stored in owning repository.",
+      "evidence": [
+        "https://github.com/delorenj/agents/blob/14159669b8c03071856eb26f31557db2e3479317/git/tests/evidence/33GOD-55-r4/red.json",
+        "reviews/33god55-r4-spec/review.json"
+      ]
+    },
+    "AC2": {
+      "result": "PASS: remote-known ancestry tests including stale/new/custom refs.",
+      "evidence": [
+        "reviews/33god55-r4-spec/execution.json",
+        "reviews/33god55-r5-spec/review.json"
+      ]
+    },
+    "AC3": {
+      "result": "PASS: clean preserving merge accepted by ordinary private porcelain push; fresh-clone build/runtime.",
+      "evidence": [
+        "reviews/33god55-r4-quality/independent-controls.json",
+        "reviews/33god55-r5-spec/review.json"
+      ]
+    },
+    "AC4": {
+      "result": "PASS: novel import and source-losing merge refused; private remote unchanged.",
+      "evidence": [
+        "reviews/33god55-r4-quality/independent-controls.json",
+        "reviews/33god55-r3-quality/generated-source-runtime.json"
+      ]
+    },
+    "AC5": {
+      "result": "PASS: existing credential/deletion/chaining/refs and noncommit protections.",
+      "evidence": [
+        "reviews/33god55-r4-spec/execution.json",
+        "reviews/33god55-r4-quality/review.json"
+      ]
+    },
+    "AC6": {
+      "result": "PASS: exact historical candidate 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d replay via private remotes/read-only alternates, NOT current live GitHub advertisement.",
+      "evidence": [
+        "reviews/33god55-r4-spec/historical-replay.json",
+        "reviews/33god55-r4-quality/historical-replay.json"
+      ]
+    },
+    "AC7": {
+      "result": "PASS: integration rerun 102 tests, compileall, bash -n, travels HEAD, changed-range diff --check; independent focused 44 tests.",
+      "evidence": [
+        "landing/33god55-integration-gates.json",
+        "reviews/33god55-r4-spec/focused-suite.txt",
+        "reviews/33god55-r5-spec/review.json"
+      ]
+    },
+    "AC8": {
+      "result": "PASS: independent SPEC/QUALITY final reviewed head, published component main and parent evidence handback; no board action.",
+      "evidence": [
+        "reviews/33god55-r5-spec/review.json",
+        "reviews/33god55-r5-quality/review.json",
+        "landing/33god55-agents-push.json"
+      ]
+    }
+  },
+  "integration": {
+    "commands": "landing/33god55-agents-push.json",
+    "checks": "landing/33god55-integration-gates.json",
+    "source_identity": "git diff --quiet 14159669b8c03071856eb26f31557db2e3479317 4ca095f1fc6445f14f4e6e288a9d3647ec4d9903 -- git/hooks/_travels.py git/tests/test_pre_push.py git/README.md => exit 0",
+    "remote_main_at_component_landing": "4ca095f1fc6445f14f4e6e288a9d3647ec4d9903",
+    "owning_repo_commit": "https://github.com/delorenj/agents/commit/4ca095f1fc6445f14f4e6e288a9d3647ec4d9903"
+  },
+  "limits": [
+    "Historical exact candidate replay was private, not a current advertised-base GitHub push.",
+    "No global core.hooksPath is installed; explicit reviewed hooks were enabled on landing push. Code landed does not imply live guard activation.",
+    "Existing Python resolver and generated-banner evidence can consult disk.",
+    "No board or approval actions; parent owns ticket transition."
+  ],
+  "board_writes": false
+}

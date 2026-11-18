@@ -1,0 +1,110 @@
+{
+  "base_red": {
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "expected_false_block": true
+  },
+  "push_noncommit_tag_base": {
+    "argv": [
+      "git",
+      "push",
+      "origin",
+      "refs/tags/metadata"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "To /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-x4m9ply2/fork.git\n * [new tag]         metadata -> metadata\n"
+  },
+  "push_noncommit_tag_target": {
+    "argv": [
+      "git",
+      "push",
+      "origin",
+      "refs/tags/metadata"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\nerror: failed to push some refs to '/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-x4m9ply2/fork.git'\n"
+  },
+  "replacement": {
+    "args": [
+      "origin",
+      "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-x4m9ply2/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: replacement ancestry cannot be verified\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "fixtures.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+  },
+  "grafted": {
+    "args": [
+      "origin",
+      "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-x4m9ply2/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "* 85601bd local merge\n* fe48160 published feature\n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: grafted ancestry cannot be verified\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "fixtures.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+  },
+  "shallow": {
+    "args": [
+      "origin",
+      "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-x4m9ply2/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 1,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: cannot scan what is leaving the machine: shallow ancestry cannot be verified; fetch full history first\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "fixtures.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+  }
+}

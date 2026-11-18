@@ -1,0 +1,8 @@
+{
+  "candidate": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "review_base": "7f7bdf5807aabfb748cb25dad5086ff6bb17dd39",
+  "exit_code": 0,
+  "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+  "seconds": 0.3673274890752509,
+  "all_fixture_state_including_objects_unchanged": true
+}

@@ -1,0 +1,19 @@
+{
+  "candidate": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "parents": [
+    "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+  ],
+  "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+  "seconds": 79.61453642998822,
+  "first_parent_range_count": 4398,
+  "verified_remote_exclusion_commits": [
+    "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+  ],
+  "all_fixture_state_including_objects_unchanged": true,
+  "production_push_performed": false,
+  "mode": "private historical replay using read-only alternate source objects"
+}

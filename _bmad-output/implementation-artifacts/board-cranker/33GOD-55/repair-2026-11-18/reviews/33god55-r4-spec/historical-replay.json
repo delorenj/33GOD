@@ -1,0 +1,373 @@
+{
+  "mode": "PRIVATE historical replay; not live GitHub advertisement proof",
+  "candidate": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+  "ordered_parents": [
+    "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+    "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+  ],
+  "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+  "first_parent_range_count": 4398,
+  "unpublished": [
+    "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+  ],
+  "production_push_performed": false,
+  "results": [
+    {
+      "argv": [
+        "bash",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/base/pre-push",
+        "delorenj",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+      "seconds": 0.37153405498247594,
+      "label": "base",
+      "source_revision": "7f7bdf5807aabfb748cb25dad5086ff6bb17dd39",
+      "all_fixture_state_including_objects_unchanged": true
+    },
+    {
+      "argv": [
+        "bash",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/failed-quality/pre-push",
+        "delorenj",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+      "seconds": 93.64394676394295,
+      "label": "failed-quality",
+      "source_revision": "96eadfc503065b301002d01cdcc6f2126cb6a387",
+      "all_fixture_state_including_objects_unchanged": true
+    },
+    {
+      "argv": [
+        "bash",
+        "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair/git/hooks/pre-push",
+        "delorenj",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+      "seconds": 3.00302187690977,
+      "label": "repair",
+      "source_revision": null,
+      "all_fixture_state_including_objects_unchanged": true
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "init",
+        "-q",
+        "-b",
+        "candidate",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.002180901006795466
+    },
+    {
+      "argv": [
+        "git",
+        "init",
+        "-q",
+        "--bare",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.0013244780711829662
+    },
+    {
+      "argv": [
+        "git",
+        "init",
+        "-q",
+        "--bare",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/upstream.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.001070674043148756
+    },
+    {
+      "argv": [
+        "git",
+        "update-ref",
+        "refs/heads/feat/33GOD-50-stateless-contractor-turns",
+        "cc00fe6ef855e506ad1bf8166473eecf725af8a8"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.0012553590349853039
+    },
+    {
+      "argv": [
+        "git",
+        "update-ref",
+        "refs/heads/main",
+        "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/upstream.git",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.00124251504894346
+    },
+    {
+      "argv": [
+        "git",
+        "update-ref",
+        "refs/heads/candidate",
+        "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.0015718820504844189
+    },
+    {
+      "argv": [
+        "git",
+        "read-tree",
+        "--reset",
+        "-u",
+        "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.6538102140184492
+    },
+    {
+      "argv": [
+        "git",
+        "remote",
+        "add",
+        "delorenj",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.0010579800000414252
+    },
+    {
+      "argv": [
+        "git",
+        "remote",
+        "add",
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/upstream.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "seconds": 0.0012736229691654444
+    },
+    {
+      "argv": [
+        "git",
+        "show",
+        "-s",
+        "--format=%P",
+        "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "cc00fe6ef855e506ad1bf8166473eecf725af8a8 b0ab2e163a50d4e6c36507eba955a6067fde6abc\n",
+      "stderr": "",
+      "seconds": 0.009094488923437893
+    },
+    {
+      "argv": [
+        "git",
+        "rev-list",
+        "--count",
+        "cc00fe6ef855e506ad1bf8166473eecf725af8a8..750ad5ccd79e1ea4dd6725486b2849c2a0defa1d"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "4398\n",
+      "stderr": "",
+      "seconds": 0.003570973058231175
+    },
+    {
+      "argv": [
+        "git",
+        "rev-list",
+        "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+        "--not",
+        "cc00fe6ef855e506ad1bf8166473eecf725af8a8",
+        "b0ab2e163a50d4e6c36507eba955a6067fde6abc"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d\n",
+      "stderr": "",
+      "seconds": 0.0011508030584082007
+    },
+    {
+      "argv": [
+        "git",
+        "show",
+        "7f7bdf5807aabfb748cb25dad5086ff6bb17dd39:git/hooks/pre-push"
+      ],
+      "cwd": "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "[hook source omitted; SHA256 recorded]",
+      "stderr": "",
+      "seconds": 0.0014736470766365528,
+      "stdout_sha256": "8b6d720b2fc1bb19a8c862af1ae2f16f765a045803a320c8422cb10bf83a4e06"
+    },
+    {
+      "argv": [
+        "git",
+        "show",
+        "7f7bdf5807aabfb748cb25dad5086ff6bb17dd39:git/hooks/_guard.sh"
+      ],
+      "cwd": "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "[hook source omitted; SHA256 recorded]",
+      "stderr": "",
+      "seconds": 0.001066214987076819,
+      "stdout_sha256": "b20387d29b671d654d16dd97e6b31d4913c9bff50fd4eab5fe7b8f223207eb5c"
+    },
+    {
+      "argv": [
+        "git",
+        "show",
+        "7f7bdf5807aabfb748cb25dad5086ff6bb17dd39:git/hooks/_travels.py"
+      ],
+      "cwd": "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "[hook source omitted; SHA256 recorded]",
+      "stderr": "",
+      "seconds": 0.0010496539762243629,
+      "stdout_sha256": "2b66cf8a078f5ce86a6e581c6caacef6550b0d487c000b00c3fe532dbf2d2f76"
+    },
+    {
+      "argv": [
+        "bash",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/base/pre-push",
+        "delorenj",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+      "seconds": 0.37153405498247594
+    },
+    {
+      "argv": [
+        "git",
+        "show",
+        "96eadfc503065b301002d01cdcc6f2126cb6a387:git/hooks/pre-push"
+      ],
+      "cwd": "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "[hook source omitted; SHA256 recorded]",
+      "stderr": "",
+      "seconds": 0.0010717660188674927,
+      "stdout_sha256": "8b6d720b2fc1bb19a8c862af1ae2f16f765a045803a320c8422cb10bf83a4e06"
+    },
+    {
+      "argv": [
+        "git",
+        "show",
+        "96eadfc503065b301002d01cdcc6f2126cb6a387:git/hooks/_guard.sh"
+      ],
+      "cwd": "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "[hook source omitted; SHA256 recorded]",
+      "stderr": "",
+      "seconds": 0.0009620599448680878,
+      "stdout_sha256": "b20387d29b671d654d16dd97e6b31d4913c9bff50fd4eab5fe7b8f223207eb5c"
+    },
+    {
+      "argv": [
+        "git",
+        "show",
+        "96eadfc503065b301002d01cdcc6f2126cb6a387:git/hooks/_travels.py"
+      ],
+      "cwd": "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair",
+      "stdin": null,
+      "exit_code": 0,
+      "stdout": "[hook source omitted; SHA256 recorded]",
+      "stderr": "",
+      "seconds": 0.0013013759162276983,
+      "stdout_sha256": "4dbdb097f09b8ad5aeb4186d53591537f3badccd6c4ad071e02c3980114ad931"
+    },
+    {
+      "argv": [
+        "bash",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/failed-quality/pre-push",
+        "delorenj",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+      "seconds": 93.64394676394295
+    },
+    {
+      "argv": [
+        "bash",
+        "/home/delorenj/.agents/.worktrees/33GOD-55-merge-guard-repair/git/hooks/pre-push",
+        "delorenj",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/fork.git"
+      ],
+      "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/33god55-r4-historical-s3rheza3/candidate",
+      "stdin": "refs/heads/feat/33GOD-50-stateless-contractor-turns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d refs/heads/feat/33GOD-50-stateless-contractor-turns cc00fe6ef855e506ad1bf8166473eecf725af8a8\n",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feat/33GOD-50-stateless-contractor-turns: 1 unpublished commit(s)\n",
+      "seconds": 3.00302187690977
+    }
+  ]
+}

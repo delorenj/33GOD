@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "33GOD-55 repair integration handback",
+  "type": "object",
+  "required": [
+    "ticket",
+    "reviewed_head",
+    "landed_agents_main",
+    "root_evidence_path",
+    "review_gates",
+    "acceptance",
+    "integration",
+    "limits",
+    "board_writes"
+  ],
+  "properties": {
+    "ticket": {
+      "const": "33GOD-55"
+    },
+    "reviewed_head": {
+      "const": "14159669b8c03071856eb26f31557db2e3479317"
+    },
+    "landed_agents_main": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "root_evidence_path": {
+      "type": "string"
+    },
+    "review_gates": {
+      "type": "object",
+      "required": [
+        "spec",
+        "quality"
+      ]
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC5",
+        "AC6",
+        "AC7",
+        "AC8"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "result",
+          "evidence"
+        ],
+        "properties": {
+          "result": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "required": [
+        "commands",
+        "checks",
+        "source_identity"
+      ]
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "board_writes": {
+      "const": false
+    }
+  }
+}

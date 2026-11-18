@@ -1,0 +1,269 @@
+[
+  {
+    "probe": "cross-parent-dependency-deletion",
+    "parents": [
+      "d8033ac98ae427d8c4447788f6a1cb7db0707585",
+      "97f3a5c3a162f50cda24fb7828232e1989ecbc19"
+    ],
+    "candidate": "cc0bea0bf695ad6ee4101df7b3d1aad28b78c8a5",
+    "merge_files": {
+      "README.md": "root\n",
+      "feature": "feature\n",
+      "new-importer.js": "import \"./dep.js\";\n"
+    },
+    "combined_changed_paths": "cc0bea0bf695ad6ee4101df7b3d1aad28b78c8a5",
+    "first_parent_changed_paths": "new-importer.js",
+    "parent1_tree": "README.md\nfeature",
+    "parent2_tree": "README.md\ndep.js\nnew-importer.js",
+    "base": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-epwtgdss/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 1,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   cc0bea0 merge creates broken dependency\n|\\  \n| * 97f3a5c published importer\n* | d8033ac published dependency removal\n|/  \n| * fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  new-importer.js\n      imports  dep.js   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add dep.js\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 the outgoing commits do not build from a clone\u001b[0m\n  (the missing files are listed above)\n  \n  Your suite is green because those files are in your working tree. Add them\n  and amend, or commit them, before this reaches anyone else.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdin": "refs/heads/feature cc0bea0bf695ad6ee4101df7b3d1aad28b78c8a5 refs/heads/feature d8033ac98ae427d8c4447788f6a1cb7db0707585\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    },
+    "landed": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-epwtgdss/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 0,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   cc0bea0 merge creates broken dependency\n|\\  \n| * 97f3a5c published importer\n* | d8033ac published dependency removal\n|/  \n| * fe48160 published feature\n|/  \n| * c9d94af published integration\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+      "stdin": "refs/heads/feature cc0bea0bf695ad6ee4101df7b3d1aad28b78c8a5 refs/heads/feature d8033ac98ae427d8c4447788f6a1cb7db0707585\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    },
+    "runtime": {
+      "argv": [
+        "node",
+        "--input-type=module"
+      ],
+      "stdin": "import \"./dep.js\";\n",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-epwtgdss/local/dep.js' imported from /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-epwtgdss/local/[eval1]\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-epwtgdss/local/dep.js'\n}\n\nNode.js v26.5.0\n"
+    },
+    "porcelain_push": {
+      "argv": [
+        "git",
+        "push",
+        "origin",
+        "feature"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\nTo /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-epwtgdss/fork.git\n   d8033ac..cc0bea0  feature -> feature\n"
+    }
+  },
+  {
+    "probe": "noncommit-annotated-tag",
+    "tag_oid": "17906b658945f299f400098774a420773356a538",
+    "target_oid": "cfd04b6442e34d77f13924e0332f08317bd16802",
+    "base": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-6xai7z9m/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 0,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "",
+      "stdin": "refs/heads/feature 17906b658945f299f400098774a420773356a538 refs/tags/release-metadata 0000000000000000000000000000000000000000\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    },
+    "landed": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-6xai7z9m/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 1,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: cannot scan what is leaving the machine: Git command failed (exit 128)\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdin": "refs/heads/feature 17906b658945f299f400098774a420773356a538 refs/tags/release-metadata 0000000000000000000000000000000000000000\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    }
+  },
+  {
+    "probe": "novel-missing-resolution-control",
+    "candidate": "a3d4f0175c7830bab1bbf551bb5cccce0674202c",
+    "base": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-4fzl2yqb/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 1,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   a3d4f01 novel missing resolution\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  historical.js\n      imports  historical-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n  resolution.js\n      imports  review-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add historical-missing review-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 the outgoing commits do not build from a clone\u001b[0m\n  (the missing files are listed above)\n  \n  Your suite is green because those files are in your working tree. Add them\n  and amend, or commit them, before this reaches anyone else.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdin": "refs/heads/feature a3d4f0175c7830bab1bbf551bb5cccce0674202c refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    },
+    "landed": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-4fzl2yqb/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 1,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   a3d4f01 novel missing resolution\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n\n\u001b[1;31m\u2716 git-guard: this commit does not TRAVEL \u2014 it imports files the repository does not contain\u001b[0m\n  resolution.js\n      imports  review-missing   \u001b[1;33m(on your disk, not in the commit)\u001b[0m\n\n  Your tests pass because these files are in your working tree.\n  A clone of this commit cannot import them.\n\n  Fix:  git add review-missing\n        git commit --amend --no-edit     (if it is not pushed yet)\n\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\n",
+      "stdin": "refs/heads/feature a3d4f0175c7830bab1bbf551bb5cccce0674202c refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    }
+  },
+  {
+    "probe": "annotated-commit-tag-control",
+    "candidate": "7a7c7e012be2dd42513d98414e69f78e619f0761",
+    "base": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-vt8ve2_t/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 0,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "",
+      "stdin": "refs/heads/feature 7a7c7e012be2dd42513d98414e69f78e619f0761 refs/tags/release-commit 0000000000000000000000000000000000000000\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    },
+    "landed": {
+      "args": [
+        "origin",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-vt8ve2_t/fork.git"
+      ],
+      "bypass_used": false,
+      "exit_code": 0,
+      "fixture": {
+        "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+        "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+        "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+        "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+        "ordered_parents": [
+          "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+          "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+        ],
+        "unpublished": [
+          "85601bd05d6a9f404503a3a3f2494abf267b7974"
+        ]
+      },
+      "state_unchanged": true,
+      "stderr": "git-travel: refs/tags/release-commit: 1 unpublished commit(s)\n",
+      "stdin": "refs/heads/feature 7a7c7e012be2dd42513d98414e69f78e619f0761 refs/tags/release-commit 0000000000000000000000000000000000000000\n",
+      "stdout": "",
+      "test": "review_fixture.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent"
+    }
+  }
+]

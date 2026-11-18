@@ -1,0 +1,73 @@
+{
+  "existing_notes_base": {
+    "old": "8189263f779b55ccfb809df245d659a03d8f018d",
+    "new": "d4fb403c598928580dd6e8dcbe252e960a347490",
+    "command": "git push origin refs/notes/review",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "To /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-4f1xxhbu/fork.git\n   8189263..d4fb403  refs/notes/review -> refs/notes/review\n"
+  },
+  "existing_notes_target": {
+    "old": "8189263f779b55ccfb809df245d659a03d8f018d",
+    "new": "d4fb403c598928580dd6e8dcbe252e960a347490",
+    "command": "git push origin refs/notes/review",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "git-travel: cannot scan what is leaving the machine: advertised remote base does not match pre-push stdin\n\n\u001b[1;31m\u2716 git-guard: refusing to PUSH \u2014 cannot scan or outgoing commits do not build from a clone\u001b[0m\n  See the ancestry error or missing files above. Fix the cause before pushing.\n\n  Override (only if you are certain): GIT_GUARD_OFF=1 git <cmd>\n\nerror: failed to push some refs to '/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-4f1xxhbu/fork.git'\n"
+  },
+  "sha256": {
+    "args": [
+      "origin",
+      "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-71f0omwi/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "470a14b9315e8d0321397e93707a3403ac943f249696fce6b3e6bb51189d3fc3",
+      "feature": "3def3c35980853c622346b6bb1f617fbd4a9a6312eaf8b4940b9f79b20ad6cc0",
+      "graph": "*   d840c77 local merge\n|\\  \n| * e5eb7a4 published integration\n* | 3def3c3 published feature\n|/  \n* 470a14b root",
+      "integration": "e5eb7a47c5236606b9f23fadacf8d82a246e092eae9cc03fc3b46d429eb34290",
+      "merge": "d840c777da0eaef0dc779990ab75bcf9d714c62178352e20d9c28d2de249fa9a",
+      "ordered_parents": [
+        "3def3c35980853c622346b6bb1f617fbd4a9a6312eaf8b4940b9f79b20ad6cc0",
+        "e5eb7a47c5236606b9f23fadacf8d82a246e092eae9cc03fc3b46d429eb34290"
+      ],
+      "unpublished": [
+        "d840c777da0eaef0dc779990ab75bcf9d714c62178352e20d9c28d2de249fa9a"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature d840c777da0eaef0dc779990ab75bcf9d714c62178352e20d9c28d2de249fa9a refs/heads/feature 3def3c35980853c622346b6bb1f617fbd4a9a6312eaf8b4940b9f79b20ad6cc0\n",
+    "stdout": "",
+    "test": "__main__.SHA256Case.test_existing_ref_clean_merge_excludes_remote_known_parent"
+  },
+  "custom_object_store": {
+    "args": [
+      "origin",
+      "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/travel-topology-dv08pbca/fork.git"
+    ],
+    "bypass_used": false,
+    "exit_code": 0,
+    "fixture": {
+      "base": "82f6ac04c12090444a1e6892c93334e2664c5cea",
+      "feature": "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+      "graph": "*   85601bd local merge\n|\\  \n| * c9d94af published integration\n* | fe48160 published feature\n|/  \n* 82f6ac0 root",
+      "integration": "c9d94afa4d514ad4520f99a5d43b2be2b61a4015",
+      "merge": "85601bd05d6a9f404503a3a3f2494abf267b7974",
+      "ordered_parents": [
+        "fe481600f6fbff1b144b9dc5173ef5e67e1cf91b",
+        "c9d94afa4d514ad4520f99a5d43b2be2b61a4015"
+      ],
+      "unpublished": [
+        "85601bd05d6a9f404503a3a3f2494abf267b7974"
+      ]
+    },
+    "state_unchanged": true,
+    "stderr": "git-travel: refs/heads/feature: 1 unpublished commit(s)\n",
+    "stdin": "refs/heads/feature 85601bd05d6a9f404503a3a3f2494abf267b7974 refs/heads/feature fe481600f6fbff1b144b9dc5173ef5e67e1cf91b\n",
+    "stdout": "",
+    "test": "fixtures_compat.MergeTopologyTests.test_existing_ref_clean_merge_excludes_remote_known_parent",
+    "custom_store_unchanged": true
+  }
+}
