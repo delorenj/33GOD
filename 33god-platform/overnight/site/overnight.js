@@ -223,6 +223,9 @@
       default: return { x: 0.12, y: 0, s: 1, o: 1 };
     }
   }
+  // Where each beat's own intro scrub finishes (q). A seam into the beat rests here, not mid-move.
+  // Keep in step with cam() and glassAt(): any beat whose camera or glass moves at the top of its hold.
+  var SETTLED = { 'pm-krebs': 0.34, 'hired-well': 0.5 };
   function glassAt(id, q) {
     if (id === 'transcript') return seg(q, 0.56, 0.82);
     if (id === 'jev' || id === 'speakers' || id === 'dictionary' || id === 'harvest') return 1;
@@ -519,7 +522,8 @@
     /* layout: beat lengths in px, and the scene's size */
     var measure = useCallback(function () {
       var vh = window.innerHeight, starts = [], lens = [], y = 0;
-      beats.forEach(function (bt) { var len = bt.len * PACE * vh / 100; starts.push(y); lens.push(len); y += len; });
+      // The last beat has nowhere to travel to, so it is all hold: no dead scroll before the footer.
+      beats.forEach(function (bt, n) { var len = bt.len * PACE * vh / 100 * (n === beats.length - 1 ? HOLD : 1); starts.push(y); lens.push(len); y += len; });
       layout.current = { starts: starts, lens: lens, total: y };
       if (trackRef.current) trackRef.current.style.height = (y + vh) + 'px';
       if (sceneRef.current) {
@@ -558,7 +562,7 @@
       var sz = sizeRef.current;
       var tx = K.x * sz.w, ty = K.y * sz.h;
       if (worldRef.current) { worldRef.current.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + K.s + ')'; worldRef.current.style.opacity = K.o; }
-      if (overlayRef.current) { overlayRef.current.style.transform = 'translate(' + tx + 'px,' + ty + 'px)'; overlayRef.current.style.opacity = K.s === 1 ? Math.min(K.o, 1 - tr * 1.6) : 0; }
+      if (overlayRef.current) { overlayRef.current.style.transform = 'translate(' + tx + 'px,' + ty + 'px)'; overlayRef.current.style.opacity = Math.max(0, Math.min(K.o, 1 - tr * 1.6, i === 0 ? 1 : seg(p, 0.02, 0.07)) * (1 - seg(K.s, 1, 1.05))); }
       var g = glassAt(bt.id, q);
       if (glassRef.current) { glassRef.current.style.opacity = g; glassRef.current.style.transform = 'scale(' + lerp(0.55, 1, g) + ')'; glassRef.current.style.visibility = g > 0.01 ? 'visible' : 'hidden'; }
 
@@ -605,7 +609,7 @@
       var L = layout.current; if (!L.total) return null;
       var n = beats.length, i = 0; while (i < n - 1 && t >= L.starts[i + 1]) i++;
       var p = (t - L.starts[i]) / L.lens[i];
-      function arrive(j) { return L.starts[j] + L.lens[j] * (beats[j].interlude ? 0.035 : 0.06); }
+      function arrive(j) { return L.starts[j] + L.lens[j] * (beats[j].interlude ? 0.035 : Math.max(0.06, (SETTLED[beats[j].id] || 0) * HOLD + 0.01)); }
       function between(a, b) { a = Math.ceil(a); b = Math.floor(b); return t > a + 1 && t < b - 1 ? { from: a, to: b } : null; }
       if (p >= HOLD && i < n - 1) return between(L.starts[i] + L.lens[i] * HOLD, arrive(i + 1));
       if (i > 0 && t < arrive(i)) return between(L.starts[i - 1] + L.lens[i - 1] * HOLD, arrive(i));
@@ -626,7 +630,12 @@
         setCrank(false); clearTimeout(idle);
         idle = setTimeout(function () { if (last.current.i < beats.length - 1) setCrank(true); }, 20000);
       }
-      function onResize() { measure(); dolly.refresh(); }
+      function onResize() {
+        var L0 = layout.current, top = trackRef.current ? trackRef.current.offsetTop : 0;
+        var f = L0.total ? clamp((window.scrollY - top) / L0.total, 0, 1) : 0;
+        measure();
+        dolly.rescale(f, function (fr) { return top + fr * layout.current.total; });
+      }
       idle = setTimeout(function () { setCrank(true); }, 20000);
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', onResize);
@@ -667,7 +676,7 @@
     var id = b.id, q = pos.q;
     if (id === 'premise') {
       var yp = at(YOU.f, YOU.c);
-      over.push(h('span', { key: 'leave', className: 'instrument leave', style: { left: yp.x + WIN_W * size.bs / 2 + 10, top: yp.y, opacity: seg(q, 0.2, 0.26) * (1 - seg(q, 0.42, 0.5)) } }, b.copy.youLeave));
+      over.push(h('span', { key: 'leave', className: 'instrument leave', style: { left: yp.x + WIN_W * size.bs / 2 + 10, top: yp.y } }, b.copy.youLeave));
     }
     if (id === 'pm-krebs') {
       M.transcript.tickets.forEach(function (t, n) {
@@ -680,7 +689,7 @@
     if (id === 'pms-talk') {
       var pa = at(PLACED['PM · HOLOCENE'][0], PLACED['PM · HOLOCENE'][1]), pb = at(PLACED['PM · HEYMA'][0], PLACED['PM · HEYMA'][1]);
       var len = Math.hypot(pb.x - pa.x, pb.y - pa.y), ang = Math.atan2(pb.y - pa.y, pb.x - pa.x) * 180 / Math.PI;
-      over.push(h('span', { key: 'sig', className: 'signal', 'aria-hidden': 'true', style: { left: pa.x, top: pa.y, width: len, transform: 'rotate(' + ang + 'deg)', opacity: seg(q, 0.1, 0.2) } },
+      over.push(h('span', { key: 'sig', className: 'signal', 'aria-hidden': 'true', style: { left: pa.x, top: pa.y, width: len, transform: 'rotate(' + ang + 'deg)' } },
         h('i', { style: { left: (Math.floor(pos.step / 4) % 2 === 0 ? seg((pos.step % 4) / 4, 0, 1) : 1 - seg((pos.step % 4) / 4, 0, 1)) * 100 + '%' } })));
       over.push(h('div', { key: 'pa', className: 'plate', style: { top: pa.y, right: size.w - bLeft + 22, maxWidth: room } }, h(O.Nameplate, { name: 'PM · HOLOCENE', line: seats.named['PM · HOLOCENE'].line })));
       over.push(h('div', { key: 'pb', className: 'plate', style: { top: pb.y, right: size.w - bLeft + 22, maxWidth: room } }, h(O.Nameplate, { name: 'PM · HEYMA', line: b.copy.message })));

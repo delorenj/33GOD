@@ -105,13 +105,14 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .plate__lead { position: absolute; left: 100%; top: 18px; height: 1px; background: var(--stage-ink-3); }
 .plate--up { transform: translateY(calc(-100% + 18px)); }
 .plate--up .plate__lead { top: auto; bottom: 18px; }
-.leave { position: absolute; transform: translateY(-50%); white-space: nowrap; padding: 2px 6px; background: var(--stage-ground); }
+.leave { position: absolute; transform: translateY(-50%); white-space: nowrap; padding: 2px 6px; background: var(--stage-ground);
+  opacity: calc(clamp(0, calc((var(--q) - 0.2) / 0.06), 1) * (1 - clamp(0, calc((var(--q) - 0.42) / 0.08), 1))); }
 .roll { position: absolute; color: var(--stage-ink-2); }
 .flyer { position: absolute; padding: 3px 8px; border-radius: 2px; background: var(--g33-lake-soft); color: var(--window-working); white-space: nowrap;
   --k: clamp(0, calc((var(--q) - var(--at)) * 4), 1);
   transform: translate(calc(var(--k) * var(--dx)), calc(var(--k) * var(--dy))) translate(-50%, -50%);
   opacity: calc(clamp(0, calc((var(--q) - var(--at) + 0.05) * 20), 1) * (1 - clamp(0, calc((var(--k) - 0.9) * 10), 1))); }
-.signal { position: absolute; height: 1px; background: var(--stage-ink-3); transform-origin: 0 50%; }
+.signal { position: absolute; height: 1px; background: var(--stage-ink-3); transform-origin: 0 50%; opacity: clamp(0, calc((var(--q) - 0.1) / 0.1), 1); }
 .signal i { position: absolute; top: -3px; width: 7px; height: 7px; margin-left: -3px; border-radius: var(--radius-window); background: var(--window-working); box-shadow: var(--glow-working); transition: left var(--dur-flicker) linear; }
 
 .scard { position: absolute; display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--stage-ground); border: 1px solid var(--stage-rule); border-radius: var(--radius-bezel); font: 400 13px/18px var(--font-sans); color: var(--stage-ink-2); }
