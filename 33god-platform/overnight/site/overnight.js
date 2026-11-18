@@ -687,7 +687,13 @@
     // Set pieces mount as beats change (a nav jump can land mid-night); give them their scrubbed styles at once.
     React.useLayoutEffect(function () { if (view === 'film') frame(); }, [size, view, frame, posSt[0].i]);
 
-    var toggleView = useCallback(function () { setView(function (v) { return v === 'film' ? 'log' : 'film'; }); window.scrollTo(0, 0); }, []);
+    // Leaving either view starts the other at the top; reset the film's state so it never mounts a stale beat.
+    var toggleView = useCallback(function () {
+      setView(function (v) { return v === 'film' ? 'log' : 'film'; });
+      window.scrollTo(0, 0);
+      playY.current = 0; last.current.i = -1; last.current.step = -1; last.current.minute = -1; last.current.clock = '';
+      setPos({ i: 0, step: 0, q: 0, minute: -1 });
+    }, []);
     var NC = M.site.night || {};
     var clock = h(LiveClock, { api: clockApi, initial: beats[0].time, label: R ? (NC.label || '{label}').replace('{label}', R.label) : M.site.stagedLabel, counter: R ? NC.counter : null });
 
