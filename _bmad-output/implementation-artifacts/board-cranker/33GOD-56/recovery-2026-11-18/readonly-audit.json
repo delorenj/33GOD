@@ -1,0 +1,220 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "readonly-recovery-feasibility-audit",
+  "issue": "33GOD-56",
+  "audited_at_utc": "2026-11-18T19:46:42Z",
+  "audit_worker": "Hermes delegated verification worker for 33god-pm",
+  "scope": {
+    "workspace": "/home/delorenj/code/33GOD",
+    "historical_evidence_root": "_bmad-output/implementation-artifacts/board-cranker/33GOD-56/no-source-r1",
+    "new_suite_execution": false,
+    "new_push": false,
+    "pr_or_plane_writes": false,
+    "worktree_creation_or_repair": false,
+    "source_dependency_hook_profile_or_existing_evidence_changes": false,
+    "only_intended_write": "_bmad-output/implementation-artifacts/board-cranker/33GOD-56/recovery-2026-11-18/readonly-audit.json",
+    "method": "Read historical handback and its builder before deciding whether to rerun; independently rehash receipts, validate JSON Schema, recompute node/error-class differential from raw pytest reports, compare UTC and monotonic receipt bounds, inspect Git objects and worktree registrations with GIT_OPTIONAL_LOCKS=0, and use read-only GitHub/Git remote queries. Historical scripts were read, not executed."
+  },
+  "overall": {
+    "historical_execution": "VERIFIED_DONE_WITH_CONCERNS_NOT_FRESH_ACCEPTANCE",
+    "current_literal_reexecution": "BLOCKED_WITHOUT_CHANGED_AUTHORIZATION",
+    "publication": "ALREADY_PUBLISHED_EXACT_SHA_AND_STILL_PRESENT",
+    "guard_dependency": "RETURNED_BY_CURRENT_PM_REVIEW",
+    "summary": "The historical 33GOD-56 run is substantive and internally consistent, not an unfinished stub: two complete sequential pairs, focused/static/target gates, normal guarded fast-forward push, PR metadata update/readback, and schema-valid handback already exist. Current remote and PR still point to the exact candidate. All three named /tmp worktrees are gone; the designated runtime changed and Ruff is absent. The exact 33GOD-55 guard used historically was sent back on 2026-11-18 for independently reproduced defects. Do not repeat suites or publish again merely because the ticket was redispatched. Historical results do not prove present worktree cleanliness, current runtime equivalence, fresh reviews, or acceptance of the returned prerequisite."
+  },
+  "criteria": [
+    {
+      "criterion": 1,
+      "requirement": "Pin candidate, baseline and integrated guard to exact SHAs; prove all three clean before and after.",
+      "historical_state": "VERIFIED_FROM_UNCHANGED_SNAPSHOTS",
+      "current_state": "BLOCKED_MISSING_WORKTREES",
+      "observations": [
+        "/tmp/hermes-board-cranker-50 does not exist; no current HEAD or cleanliness is measurable there.",
+        "/tmp/hermes-board-cranker-53-upstream-baseline does not exist; no current HEAD or cleanliness is measurable there.",
+        "/tmp/agents-board-cranker-55-postmerge-verification-r2 does not exist; its .agents Git registration is prunable because its gitdir file points to a nonexistent location.",
+        "Hermes worktree list contains only its primary and /home/delorenj/code/hermes-artifact-hooks, not either required Hermes worktree.",
+        "Historical candidate-before/final, baseline-before/final, and guard-before/final snapshots are byte-identical per pair, contain exact required HEADs, empty statuses, and unchanged source inventories.",
+        "Candidate and baseline commits remain available in the Hermes object database; guard commit remains available in .agents. No fetch, reset, checkout, prune or reconstruction was performed."
+      ]
+    },
+    {
+      "criterion": 2,
+      "requirement": "Preserve and verify 53 RED/GREEN, both 54 handbacks and blocker, and 55 integration/controller receipts by SHA-256.",
+      "historical_state": "VERIFIED",
+      "current_state": "PASS_FOR_EIGHT_NAMED_DOCUMENT_INPUTS",
+      "observations": [
+        "Both 53 logs, both 54 handbacks, 54 blocker, both 55 integration receipts and 54 decomposition receipt all match their exact historical expected SHA-256 values.",
+        "All 182 entries in no-source-r1/artifact-manifest.json are present and hash-identical. All 37 command logs match the handback hashes.",
+        "Historical preserved-inputs-before.json and preserved-inputs-final.json are byte-identical, each listing 28637 files. Today 1119 listed files match, 27518 are missing, and zero present files mismatch. Missing entries are 27516 runtime/isolation files under 33GOD-54 and the two absent /tmp guard files. No missing non-runtime, non-/tmp evidence was found in that inventory.",
+        "The guard worktree files cannot be rehashed at the absent paths, but git show of guard commit 02481c8df4cedbdc11081fe41fcf01859a399566 yields exactly the pinned pre-push and _travels.py hashes. This is object proof, not current worktree proof."
+      ]
+    },
+    {
+      "criterion": 3,
+      "requirement": "Complete deterministic isolated candidate/baseline suites strictly sequentially; machine node/error-class differential; no remaining candidate-only or changed error-class failures.",
+      "historical_state": "VERIFIED_BASELINE_EQUIVALENT_NOT_ALL_GREEN",
+      "current_state": "HISTORICAL_RECEIPTS_REUSABLE_NO_NEW_RUN",
+      "observations": [
+        "Raw reports were independently reaggregated, not accepted solely from PASS fields. All four broad runs have no collection errors; their raw failed-node/class/phase records and pass counts exactly match saved parsed receipts.",
+        "Pair 1: candidate 49 failed/7684 passed, baseline 48 failed/7642 passed. Sole candidate-only node is tests/gateway/test_hosted_rooms.py::test_room_log_pages_are_bounded_by_serialized_event_bytes; no changed shared-node class/phase.",
+        "The prescribed second full pair: candidate 48 failed/7685 passed, baseline 48 failed/7642 passed. Candidate-only set, baseline-only set and shared-node changed class/phase set are all empty.",
+        "UTC and monotonic bounds independently show candidate-1 then baseline-1 then candidate-2 then baseline-2 with no overlap. All four exit receipts record child subreaper enabled, no gateway process before/after, no remaining descendants, and all_descendants_gone=true.",
+        "Historical environments use distinct per-command HERMES_HOME/TMPDIR/cache/bytecode roots, UTC/C.UTF-8/hash-seed 0, an allowlisted environment and external evidence-only pytest instrumentation. No new suite was run in this audit.",
+        "Forty-eight shared failures remain, including environment-induced Unix-socket path length failures. This proves the permitted historical differential disposition, not an all-green suite or proof every failure is intrinsic upstream."
+      ],
+      "final_candidate_window_utc": ["2026-09-05T13:25:49.759053Z", "2026-09-05T13:40:21.354868Z"],
+      "final_baseline_window_utc": ["2026-09-05T13:40:21.423471Z", "2026-09-05T13:54:52.066072Z"]
+    },
+    {
+      "criterion": 4,
+      "requirement": "Focused 50, adjacent 24, Ruff, py_compile, diff check and isolated target-node repetitions with complete receipts.",
+      "historical_state": "VERIFIED_PASS",
+      "current_state": "RECEIPTS_REUSABLE_FRESH_RUNTIME_NOT_EQUIVALENT",
+      "observations": [
+        "Recomputed focused and adjacent raw reports contain 50 and 24 passing call reports respectively, no failed nodes or collection errors, and matching log summaries and exit 0 receipts.",
+        "Historical Ruff, py_compile and immutable-range diff check each exit 0. All six restart-node repetitions and both systemd abstract-socket probes report one pass each, after the complete broad runs ended.",
+        "All 17 test/static command windows are sequential by both UTC and monotonic bounds and all record descendant cleanup.",
+        "Current git diff --check b0ab2e163a50d4e6c36507eba955a6067fde6abc...750ad5ccd79e1ea4dd6725486b2849c2a0defa1d was additionally run read-only and exits 0.",
+        "Current designated Python exists and returns Python 3.14.7; historical receipts used Python 3.11.12. /home/delorenj/.hermes/hermes-agent/.venv/bin/ruff does not exist; historical Ruff was 0.16.6. No package installation or environment modification was attempted."
+      ]
+    },
+    {
+      "criterion": 5,
+      "requirement": "Only after regression proof, normal fast-forward push of exact SHA through integrated guard; no force/bypass/rewrite; verify remote.",
+      "historical_state": "VERIFIED_PUSH_OCCURRED_AFTER_GATES",
+      "current_state": "EXACT_SHA_ALREADY_PUBLISHED_GUARD_ACCEPTANCE_BLOCKED",
+      "observations": [
+        "publication-push.log shows the exact command-scoped pinned core.hooksPath, one unpublished commit, cc00fe6ef8..750ad5ccd7 fast-forward, and exit 0 on 2026-09-05T14:03:27Z, after all required gates.",
+        "push-trace2.jsonl and hook-execution-proof.json identify the pinned pre-push child_start and same-session child_exit code 0. Transcript and trace hashes match the historical manifest.",
+        "Read-only git ls-remote now returns 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d for both fork refs/heads/feat/33GOD-50-stateless-contractor-turns and upstream refs/pull/102409/head.",
+        "The old remote-before precondition cc00fe6ef855e506ad1bf8166473eecf725af8a8 is historical and cannot be replayed against the now-published branch without an unauthorized rewrite. A new no-op push would not recreate the original novel-commit guard proof.",
+        "The pinned guard was subsequently returned by PM review on 2026-11-18. Hook execution success remains a true historical fact, but does not establish that the guard is currently accepted or catches all novel merge breakage. No new push is needed or authorized by this audit."
+      ]
+    },
+    {
+      "criterion": 6,
+      "requirement": "Update/read back PR #102409 with both ticket keys, immutable range, accurate differential, pending reviews; no approval or merge.",
+      "historical_state": "VERIFIED",
+      "current_state": "PASS_METADATA_AND_HEAD_LIVE_UPSTREAM_CONFLICT_PRESENT",
+      "observations": [
+        "Current GitHub read returns OPEN, headRefOid 750ad5ccd79e1ea4dd6725486b2849c2a0defa1d, expected fork branch/owner, mergedAt=null, no approval review and no status check results.",
+        "Current title and body exactly equal historical pr-after.json. Both ticket keys and the exact immutable range are present, with correct baseline-equivalent counts, focused/static gates and explicit pending independent reviews.",
+        "The initial live GitHub mergeability read was UNKNOWN/UNKNOWN; the subsequent resolved read returned CONFLICTING/DIRTY. Historical MERGEABLE/BLOCKED is no longer current. This is a later integration concern, not permission to change this immutable candidate.",
+        "Only recorded GitHub review is a COMMENTED Copilot review on older commit 00346416144c0e42897b79129be2021908830d1d dated 2026-09-03. Its guard-swap cleanup comment is on an old diff and was not adjudicated here; it does not substitute for a fresh review of the exact candidate.",
+        "Historical gh pr edit failed at deprecated projectCards lookup; receipts show successful subsequent REST title/body PATCH and readback. This is resolved historical tooling failure, not a current publication blocker."
+      ]
+    },
+    {
+      "criterion": 7,
+      "requirement": "Schema-valid canonical machine handback with immutable SHAs, evidence hashes, publication/PR, cleanliness and forbidden-scope audit.",
+      "historical_state": "VERIFIED_SCHEMA_VALID",
+      "current_state": "ALREADY_EXISTS_SCHEMA_VALID_BUT_CONTAINS_HISTORICAL_NOT_LIVE_STATE",
+      "observations": [
+        "no-source-r1/handback.json and canonical 33GOD-56.implementation.json both validate now using Draft202012Validator against the historical no-source-r1 schema, with zero validation errors.",
+        "The worker handback matches handback-validation.json hash. Canonical handback differs from worker handback only in prose summary/check summaries/risks/notes; executable commands, times, counts, hashes, SHAs and verdict-bearing fields are the same.",
+        "The canonical file's note saying the canonical path was not written is inherited worker/launcher provenance, not evidence that the canonical file is currently absent.",
+        "Historical schema fixes worker identity, old paths and guard SHA as constants. It must not be used to impersonate the old worker or silently certify a different recovery guard/runtime. This audit is a separate artifact and does not overwrite either handback."
+      ]
+    },
+    {
+      "criterion": 8,
+      "requirement": "No source, primary-checkout, Plane/controller/WIP/Bloodbank/client mutation; independent specification and quality/security reviews remain mandatory.",
+      "historical_state": "FORBIDDEN_SCOPE_RECEIPT_PRESENT_REVIEWS_DEFERRED",
+      "current_state": "AUDIT_READONLY_NO_NEW_ACCEPTANCE",
+      "observations": [
+        "Historical forbidden-scope-final.json hashes correctly and records no source changes, commits, rewrite, approval or merge, with an independently advancing unpinned .agents primary explicitly reconciled rather than hidden.",
+        "This audit ran only read-only inspections and one immutable diff check; no long suite, publish, branch switch, worktree recreation, dependency install, hook change, Plane operation, controller write, profile write or existing-input change was performed.",
+        "Shared 33GOD checkout and both owning primaries remain dirty with unrelated work. No stash/reset/rebase/cleanup was performed.",
+        "Fresh independent specification and subsequent separate quality/security reviews of the published exact candidate are not established by the historical handback or live GitHub review listing. Their acceptance remains for the parent PM's review chain, not this audit."
+      ]
+    }
+  ],
+  "immutable_object_truth": {
+    "candidate_sha": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d",
+    "candidate_tree": "d5747a42f2b021439df6c47d9c738cbd43fd459a",
+    "ordered_parents": ["cc00fe6ef855e506ad1bf8166473eecf725af8a8", "b0ab2e163a50d4e6c36507eba955a6067fde6abc"],
+    "baseline_sha": "b0ab2e163a50d4e6c36507eba955a6067fde6abc",
+    "guard_sha": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "both_parents_verified_ancestors": true,
+    "actual_diff_files": ["gateway/platforms/base.py", "gateway/run.py", "tests/gateway/test_contractor_turns.py"],
+    "candidate_and_baseline_uv_lock_sha256": "6393f09ee88cc5683f0e563306f96b5c068f901a8baa60f7209f302c1ac602d9",
+    "guard_blob_pre_push_sha256": "ddc23c60fa6c67bd20a06d51b76d35d7b30fa812a54dfa9c1ee52280fea179dc",
+    "guard_blob_travels_sha256": "d395ff645cf25eceabe7e99f82ac969981a4b82a260f7046087d2103acf3615d"
+  },
+  "verified_prerequisite_files": [
+    {"path": "33GOD-53/red.log", "sha256": "7fe456453163f9369481543fdeef844717f891026b366570d61eb0132a8e0420", "matches": true},
+    {"path": "33GOD-53/green.log", "sha256": "0d27d89c5ee07b12752559c11f67d8c02baacc68b4a54904e9ea09c9ee6f4baa", "matches": true},
+    {"path": "33GOD-54.implementation.attempt-1.json", "sha256": "0bf1f17dbe5c99a150302374392c64d4fe2b8c313147d2215c2e444c7ae8f8c7", "matches": true},
+    {"path": "33GOD-54.blocker-reconciliation.json", "sha256": "34a312da67cb5e2095f163d461ed24877eaad2c5052da7f3b9c7044d768e2ffa", "matches": true},
+    {"path": "33GOD-54.implementation.json", "sha256": "79e286285266284134e34a6f7dd0814b682abe180517be3813946f0ba6878209", "matches": true},
+    {"path": "33GOD-55.integration.json", "sha256": "37ca03936fa8d58ba5bf740976c730517a9da098c283fba8a2d29cb4877f069e", "matches": true},
+    {"path": "33GOD-55.integration-controller-verification-r2.json", "sha256": "c7d83164bdade7452d6bc204ffd169d617475fb5dff6e45998cfbf24853d04a3", "matches": true},
+    {"path": "33GOD-54.decomposition-to-56.json", "sha256": "379a5dbf154c7c70e6f0270032dcf7db1d71fd21d13ad1df0a7fe88831b04ba3", "matches": true}
+  ],
+  "reusable_verified_receipts": [
+    {"path": "33GOD-56/no-source-r1/handback.json", "sha256": "6d44c876632c8c10b22abb0f7a561ea03911b7300bd48ca75bdaa8fe0d69da3e"},
+    {"path": "33GOD-56.implementation.json", "sha256": "a2768db0ff038a6e56f103227550f72cea990606dbac73bc65bc095c6204c533"},
+    {"path": "33GOD-56/no-source-r1/handback-validation.json", "sha256": "39fb0b67b69555e0bcdba6defe9803ae43e09aeb214331a17bbfb08be62b3c19"},
+    {"path": "33GOD-56/no-source-r1/artifact-manifest.json", "sha256": "8648ca9230717d17dcc94a86663d7e60018eb0bf4350bbba1b8cb5e9dd93bffc", "entries_rehashed_matching": 182},
+    {"path": "33GOD-56/no-source-r1/sequential-differential.json", "sha256": "298e0939f299995857b65e42e9e7b540ae294eab3cd21f245e0f99979ad1ab93"},
+    {"path": "33GOD-56/no-source-r1/gates-receipt-validation.json", "sha256": "c117600e2ebe23d76c59b01d6d7d450d14b496818934e88a103ecaef553db94d"},
+    {"path": "33GOD-56/no-source-r1/publication-push.log", "sha256": "02f7c9487a9d614e281d96aa58aa37d7abc7f18ba529e4ffd7b0554c1f0550a8"},
+    {"path": "33GOD-56/no-source-r1/push-trace2.jsonl", "sha256": "4b7a511d033707e2cdabd6af63effa677d7a9a995fb49f428912338bf6ccbae8"},
+    {"path": "33GOD-56/no-source-r1/pr-after.json", "sha256": "6fb6dbb91ac0099f4436c0e2b42020097d8341c86aaaa4e1b5434b87163a69c1"},
+    {"path": "33GOD-56/no-source-r1/candidate-before.json", "also_identical_to": "candidate-final.json", "sha256": "1737ecd061e9d1459d465e7ee0dd305b141246f6771bd730e5567ef6e644b78f"},
+    {"path": "33GOD-56/no-source-r1/baseline-before.json", "also_identical_to": "baseline-final.json", "sha256": "f3fe51ec3038dca365eb5ca1c4029489d91e3df4a90b4352dafe279a32235a35"},
+    {"path": "33GOD-56/no-source-r1/guard-before.json", "also_identical_to": "guard-final.json", "sha256": "638efb396790c580c21a8687a3b1db7fc0e5c6d09a44dd211df6af3c82018365"},
+    {"path": "33GOD-56/no-source-r1/forbidden-scope-final.json", "sha256": "207dfeb54bb2a0dc2f13f807d9a0c544e1d4f9cbc0c5374a29dbde71d502682c"},
+    {"path": "33GOD-56/no-source-r1/preserved-inputs-final.json", "also_identical_to": "preserved-inputs-before.json", "sha256": "68c2bee9731ca95a30d318d86a861d559c12e18b2326b4b0444efdbdff7a9100", "current_matching": 1119, "current_missing": 27518, "current_mismatched": 0},
+    {"path": "/home/delorenj/.hermes/profiles/33god-pm/runtime/board-cranker-33god-56-no-source-r1.schema.json", "sha256": "d39c7fbcc2061d9994987c8c74e0fdb3d2a1e2a7fc7570f418c4f112e6ded1d3"}
+  ],
+  "guard_dependency_evidence": {
+    "review": "33GOD-55/pm-review-2026-11-18/review.json",
+    "review_sha256": "272deca9c4c688bd067e9f1eb7e46c14093e4bfecf160de1c53aed8197132da1",
+    "recommendation": "sent-back",
+    "reviewed_head": "54aca968fd16e428fe1378f6f401c068d17e5c4a",
+    "landed_merge": "02481c8df4cedbdc11081fe41fcf01859a399566",
+    "live_guard_pr": {"url": "https://github.com/delorenj/agents/pull/1", "state": "MERGED", "head": "54aca968fd16e428fe1378f6f401c068d17e5c4a", "merge_commit": "02481c8df4cedbdc11081fe41fcf01859a399566", "merged_at": "2026-09-05T09:28:07Z"},
+    "findings": [
+      {"priority": "P1", "criterion": 4, "problem": "Cross-parent dependency deletion leaves an inherited importer newly broken in resulting merge; combined-diff selection omits importer. Base guard exit 1, landed guard exit 0, ordinary private push exit 0, missing module runtime failure exit 1.", "evidence": "adversarial-results.json", "sha256": "9f8c18a7efd0d331a98a04e1e51e24c6f92c6ad16071ab6de960ac26ecd92c5a"},
+      {"priority": "P2", "criterion": 5, "problem": "Annotated non-commit tag regression: valid innocuous blob tag passes base and is rejected by landed guard.", "evidence": "additional-results.json", "sha256": "a7ed1912a2017f036dcceb4ab01897a884b0de3ee882c567e81aa02d3f139a57"},
+      {"priority": "P2", "criterion": 2, "problem": "Existing custom notes-ref update passes base but fails landed guard because advertisement covers only heads/tags and treats notes destination as mismatched.", "evidence": "compatibility-results.json", "sha256": "0c74d6e5fae0396a49a98704c828e772fdca026be8712cf2b22db003aa6266ac"}
+    ],
+    "qualification": "This audit read and hashed the current independent-review evidence; it did not rerun its private fixture probes. The review records parent reruns and complete 25-test suite passing despite these reproduced defects. This invalidates assuming prerequisite acceptance, not the historical fact of successful candidate publication. No candidate-specific source regression is asserted by this audit.",
+    "current_primary_guard_is_not_the_pin": {"pre_push_sha256": "8b6d720b2fc1bb19a8c862af1ae2f16f765a045803a320c8422cb10bf83a4e06", "travels_sha256": "2b66cf8a078f5ce86a6e581c6caacef6550b0d487c000b00c3fe532dbf2d2f76", "substitution_authorized": false, "repair_acceptance_verified": false}
+  },
+  "live_readonly_receipts": {
+    "observed_window_utc": ["2026-11-18T19:42:55Z", "2026-11-18T19:46:42Z"],
+    "fork_query": {"command": "git -C /home/delorenj/.hermes/hermes-agent ls-remote --exit-code delorenj refs/heads/feat/33GOD-50-stateless-contractor-turns", "exit_code": 0, "stdout": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d\trefs/heads/feat/33GOD-50-stateless-contractor-turns\n"},
+    "upstream_pr_ref_query": {"command": "git -C /home/delorenj/.hermes/hermes-agent ls-remote --exit-code origin refs/pull/102409/head", "exit_code": 0, "stdout": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d\trefs/pull/102409/head\n"},
+    "pr_query": {"command": "gh pr view 102409 --repo NousResearch/hermes-agent --json state,headRefOid,title,body,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,reviews,mergedAt,updatedAt", "exit_code": 0, "head": "750ad5ccd79e1ea4dd6725486b2849c2a0defa1d", "state": "OPEN", "mergeable": "CONFLICTING", "merge_state_status": "DIRTY", "merged_at": null, "updated_at": "2026-09-05T14:06:53Z", "review_decision": "", "status_checks": [], "title_equals_historical": true, "body_equals_historical": true, "approved_reviews": 0},
+    "current_primaries": [
+      {"path": "/home/delorenj/code/33GOD", "head": "edeea58d11709460fe3a4e211655dccd442f17f5", "status_line_count": 13, "status_sha256_before_audit_artifact": "e3435ecbafcec60f27b3c9084f605141d9b111baf66f0718d1a3a7315f8ca96a", "unstaged_diff_sha256": "20c4bab587299382cccf152bc061db5353feff873c18b91e454351d7f5568af9", "staged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+      {"path": "/home/delorenj/.hermes/hermes-agent", "head": "d6100d8bda1af8c7f1ca121a7f99a29112c62045", "branch": "main", "status_line_count": 10, "status_sha256": "5b3ef54d7065c46543f1c420ed98f6238ce9f0135221c1d1f5b1d1815e10431a", "unstaged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "staged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+      {"path": "/home/delorenj/.agents", "head": "3b79ecf20eaa92405ab83211dbec239b5b28fbb5", "branch": "main", "status_line_count": 3, "status_sha256": "1e50655234cc441ae8ab617be696165f94c3fa5f4006ffc24cc48df5f8728eb0", "unstaged_diff_sha256": "9cfc4d0cc0413ca15effcd3254b6f34cc4cf9288b09b588a31c91913a62764e4", "staged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    ]
+  },
+  "exact_blockers_and_limits": [
+    {"id": "missing-immutable-worktrees", "blocks": "Fresh literal execution and present-tense clean before/after claims", "resolution_authority": "Parent must explicitly authorize reconstruction/location changes if a fresh run is genuinely required; audit authorization forbids creating worktrees."},
+    {"id": "returned-guard-prerequisite", "blocks": "Treating 33GOD-55 as accepted or certifying a fresh integrated-guard gate", "resolution_authority": "33GOD-55 owning repair/review chain must address findings; no silent switch to different current guard or rewrite of pinned acceptance."},
+    {"id": "runtime-drift", "blocks": "Replaying old exact environment without changed authorization", "resolution_authority": "Designated Python now 3.14.7 instead of 3.11.12; designated Ruff missing. No-install constraint means provision/use alternative only after explicit authorization."},
+    {"id": "historical-before-state-not-current", "blocks": "Blind rerun of historical preflight/publisher", "resolution_authority": "Remote already equals candidate; do not reset it to old SHA, run historical scripts, or call no-op push a new outgoing-commit proof."},
+    {"id": "fresh-reviews-unestablished", "blocks": "Acceptance/integration claims", "resolution_authority": "Parent handles independent exact-candidate specification review then separate quality/security review; audit is neither."},
+    {"id": "upstream-now-conflicting", "blocks": "Future upstream integration, not historical publication evidence", "resolution_authority": "New owning-repository task if reconciliation is requested; no source rewrite authorized here."},
+    {"id": "runtime-inventory-pruned", "blocks": "Claiming all 28637 historical input paths remain present today", "resolution_authority": "Report missing ephemeral paths honestly; named prerequisite evidence and all 182 manifested durable artifacts remain unchanged."}
+  ],
+  "smallest_authorized_next_step": {
+    "recommendation": "Parent records this recovery audit and reconciles redispatch against the already-existing schema-valid handback and still-published exact SHA. Preserve both old handbacks as historical evidence; do not overwrite them or rerun/publish preemptively. Route the returned 33GOD-55 findings through its existing repair/review owner, and explicitly decide whether 33GOD-56 can proceed to fresh exact-candidate review using these verified historical execution receipts or requires amended recovery scope.",
+    "if_fresh_execution_is_required": "Obtain explicit authorization for isolated replacement worktrees and supported tools/runtime, acknowledge loss of the old /tmp checkout and remote-before state, and name a reviewed guard revision. Keep the immutable Hermes candidate unchanged, use new scratch runtime roots, never mutate primaries or rewrite the published branch, and issue a new recovery receipt rather than impersonating old worker/schema identity.",
+    "not_required_now": ["Another hour of broad suites", "A repeated push of an already-published SHA", "Another identical PR metadata update", "New product source changes", "A new worktree without authorization"]
+  },
+  "errors_and_warnings": [
+    {"operation": "codegraph-voyage status", "exit_code": 0, "warning": "15427 of 15437 embeddings are fake test vectors; semantic retrieval was not trusted and no purge/index was run."},
+    {"operation": "optional discovery read no-source-r1/compare.py", "error": "File not found; actual run_gates.py and raw reports were used instead."},
+    {"operation": "discovery recovery-2026-11-18", "error": "Directory did not exist before this new audit artifact."},
+    {"operation": "optional inventory probe preserved-inputs-initial.json", "error": "File absent; correct preserved-inputs-before.json was subsequently found and verified byte-identical to final."},
+    {"operation": "git config --get core.hooksPath in Hermes primary", "exit_code": 1, "meaning": "No configured value; historical push used explicit command-scoped pin."},
+    {"operation": "historical schema validation and all live remote/API reads", "error": null},
+    {"operation": "guard adversarial probe rerun", "meaning": "Not performed in this read-only audit; findings are from read-and-hashed 2026-11-18 independent-review evidence."}
+  ]
+}
