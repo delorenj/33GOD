@@ -46,3 +46,6 @@ dirs total: 49  non-0700 after: 0
 secrets.env copies remaining under config-backups:
 -rw-------@ 1 hellosubconscious staff 3136 Nov 15 13:30 ./20261116T020642Z-resend/secrets.env
 ```
+
+## 2b. Resend backup copy (orchestrator, 2026-11-17)
+The kept copy `20261116T020642Z-resend/secrets.env` held Jarad's retired full-access Resend key (`OP_DELOSECRETS_WULYIISB24EHT3WKND6YNF2NYY_CREDENTIAL`). Its sha256 prefix (9a85e99edcff) matches `op://DeLoSecrets/wulyiisb24eht3wknd6ynf2nyy/credential`, so the vault holds it. The copy was removed with `rm -P`. No secrets.env copy is left under config-backups (count 0).
