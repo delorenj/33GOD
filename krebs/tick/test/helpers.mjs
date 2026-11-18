@@ -20,7 +20,7 @@ export const STATES = [
 
 export const LABEL_NAMES = [
   "agent:working", "lifecycle:triaged", "lifecycle:review", "lifecycle:needs-input",
-  "lifecycle:blocked", "agent:failed", "epic", "epic:big-thing", "repo:game", "repo:forge", "repo:tolt", "feature",
+  "lifecycle:blocked", "agent:failed", "lifecycle:human", "epic", "epic:big-thing", "repo:game", "repo:forge", "repo:tolt", "feature",
 ];
 
 export const labelId = (name) => `l-${name}`;

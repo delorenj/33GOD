@@ -1,62 +1,30 @@
 # Krebs
 
-The ticket-lifecycle and task-platform engine for 33GOD.
+The one ticket lifecycle every 33GOD board follows, and `krebs tick`, the small state manager that enforces it.
 
-**Current lifecycle: [Krebs lifecycle v2](docs/lifecycle.md)** (`spec/lifecycle.v2.yaml`): every board on the stock five Plane lanes, lifecycle meaning in labels, two implementation slots per scope, dispatched only by `krebs tick` on Candybar. Krebs retires Momo. The managed v2 execution engine described below is dormant and slated for archive; `spec/lifecycle.v1.yaml` is superseded.
+- **Spec:** [`spec/lifecycle.v2.yaml`](spec/lifecycle.v2.yaml) (the rules; it wins any disagreement).
+- **Explainer:** [`docs/lifecycle.md`](docs/lifecycle.md).
+- **Dispatcher:** [`tick/`](tick/README.md), fired by Candybar every 10 minutes ([`.candybars/krebs-tick.candybar.toml`](.candybars/krebs-tick.candybar.toml)).
+- **Agent skill:** [`skills/krebs/SKILL.md`](skills/krebs/SKILL.md) (what an agent on a Krebs board may and may not do).
+- **Decisions:** [`docs/adr/`](docs/adr/).
 
-Krebs owns the canonical state machine that drives work from intake to done and,
-in managed v2, the execution authority that turns agent command intents into
-provider mutations through Pilot. It does not ingest provider webhooks: the
-n8n `Plane → Bloodbank` workflow (`bloodbank/integrations/n8n-nodes-bloodbank`,
-`src/plane.ts`) is the single live normalizer, and Plane's webhook echo of a
-Krebs write is the fact (see `webhooks/README.md`).
+In one paragraph: every board uses Plane's five stock lanes, and lifecycle meaning lives in labels. A ticket entering Todo is triaged; `krebs tick` is the only thing that moves a triaged ticket to In Progress, two slots per scope; the implementation turn hands it back with `lifecycle:review`; Krebs then sends the scope's PM a review turn, and the PM closes it, sends it back to Todo, or asks a person. Hold labels (`lifecycle:needs-input`, `lifecycle:blocked`, `agent:failed`, and the owner's own `lifecycle:human`) take a ticket out of the flow. A ticket nobody is working on (Candystore shows no live turn) never keeps a slot or `agent:working`.
 
-## Managed execution v2
+```bash
+mise run tick:dry      # read-only plan, every scope
+mise run test          # node:test, fakes only
+```
 
-The implemented Plane execution authority is `src/krebs/`: durable attempts,
-leases, fencing, authenticated commands, provider intents, reconciliation and
-an event outbox. Pilot owns the Plane API adapter; Momo is the shared PM
-playbook; Hermes/systemd supervise runs; PJangler owns canonical bindings.
+No dependencies and no install step: Node 24, Pilot's Plane client (`../pilot/src`) and the bloodbank n8n package's built `dist/` (`../bloodbank/integrations/n8n-nodes-bloodbank`).
 
-`spec/lifecycle.v1.yaml` and the interfaces below describe the earlier lifecycle
-surface. They do not override the managed v2 command and lane contract.
+## Layout
 
-- [Execution contract](docs/execution-contract.md)
-- [Rollout evidence and enrollment blockers](docs/rollout-evidence.md)
-- [Activation runbook](docs/activation.md)
-- Required integration gate: `python ops/test.py` (Docker, user systemd and uv).
-- Immutable host installation: `python ops/install.py RELEASE.json --destination RELEASE_DIR`.
-  Installation does not enable or start the service; readiness must pass first.
-- Project-health remains separately packaged under `src/krebs/project_health/`.
+| Path | What |
+|---|---|
+| `tick/` | `krebs tick`: repairs, orphans, slots, dispatch, triage catch-up, review turns |
+| `bin/krebs.mjs` | the CLI entry |
+| `adapters/tp/` | the `tp` ticket-provider shell adapter (vendored into the Hermes agent template) |
+| `skills/krebs/` | the agent skill and `record-decision.py` |
+| `spec/`, `docs/` | the lifecycle spec, its explainer, ADRs |
 
-## Earlier lifecycle interfaces
-
-| Concern | Owner in Krebs | Consumed by |
-|---|---|---|
-| Lifecycle state machine | `spec/lifecycle.v1.yaml` | Momo, Hermes PM, MCP hub, Holocene |
-| Provider abstraction | `adapters/tp/` | Momo, Hermes PM, lifecycle engine, sync jobs |
-| Webhook ingress | none; n8n `Plane → Bloodbank` owns it (`webhooks/README.md`) | — |
-| Event observability | `observability/` | Candybar, Holocene, operators |
-| MCP surface | `mcp/` (design note, not implemented) | — |
-
-## Design principles
-
-- **One authority per mode.** Managed v2 is enforced by `src/krebs/contract.py`;
-  `spec/lifecycle.v1.yaml` documents the earlier interface.
-  Per-repo differences are limited to provider label maps and tunable guard knobs,
-  never a fork of the machine.
-- **Bloodbank is the fan-out bus.** Krebs consumes
-  `bloodbank.cmd.lifecycle.task.invoke` and publishes only lifecycle receipts;
-  ticket facts (`repo.task.*`, `repo.board.*`) come from the Plane webhook via
-  n8n, never from Krebs or an agent.
-- **Provider-agnostic by interface.** The `tp` adapter speaks five normalized
-  bands — `backlog`, `unstarted`, `started`, `in_review`, `completed` — and maps
-  those to each provider's native labels.
-
-## Quick links
-
-- `spec/lifecycle.v1.yaml` — canonical ticket lifecycle
-- `spec/event-schemas.md` — the Bloodbank events Krebs consumes and publishes
-- `adapters/tp/README.md` — ticket provider interface contract
-- `webhooks/README.md` — where provider webhook facts actually come from
-- `mcp/README.md` — MCP domain wrappers
+The Python managed-execution engine (`src/krebs`, Postgres schema `krebs`, `bloodbank.cmd.lifecycle.task.invoke`) and the v1 nine-phase spec were deleted on 2026-11-18. Neither was in use. `git log -- src spec/lifecycle.v1.yaml` has them.

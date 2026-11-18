@@ -1,13 +1,16 @@
 // One Krebs tick: for every scope, republish owed dispatches, repair the two
-// invariants, do the slot math and dispatch into free slots; then publish the
-// catch-up triages (spec catch_up.triage) for Todo tickets the n8n triage lane
-// never got to.
+// invariants, release orphans, do the slot math and dispatch into free slots;
+// then publish the board turns: catch-up triages (spec catch_up.triage) for
+// Todo tickets the n8n triage lane never got to, and review turns (spec
+// catch_up.review) that ask the scope's PM for a verdict on a ticket handed
+// back with lifecycle:review. One board turn per scope per tick, oldest first.
 //
 // Everything with a side effect is injected (plane, publish, journal, now), so
 // the tests drive it with fakes and --dry-run drives it with no writer at all.
 
 import { LABEL, SPEC_VERSION, heldBy, laneModel } from "./lifecycle.mjs";
 import {
+  REVIEW_MIN_AGE_MS,
   TRIAGE_MIN_AGE_MS,
   TRIAGE_SCOPE_CAP,
   TRIAGE_TICK_CAP,
@@ -18,13 +21,15 @@ import {
   orphanKind,
   pickDispatches,
   repairsFor,
+  reviewCandidatesOf,
+  reviewGuard,
   slotsOf,
   triageCandidatesOf,
   triageGuard,
 } from "./select.mjs";
-import { PENDING_MAX_AGE_MS, pendingPublishes, releaseCounts, sentCommands, triagedCommandIds } from "./journal.mjs";
+import { PENDING_MAX_AGE_MS, pendingPublishes, releaseCounts, reviewAttempts, sentCommands, triagedCommandIds } from "./journal.mjs";
 import { QUIET_MS, mapLimit } from "./liveness.mjs";
-import { dispatchPrompt } from "./prompt.mjs";
+import { dispatchPrompt, reviewPrompt } from "./prompt.mjs";
 
 /** spec orphans: caps on what one tick does, so a backlog of orphans drains over a few ticks. */
 export const ORPHAN_RELEASE_SCOPE_CAP = 2;
@@ -64,6 +69,13 @@ export const TRIAGE_REASON = "ticket-grooming";
 export const TRIAGE_PROVIDER_EVENT_TYPE = "krebs.catch_up.triage";
 /** The completion marker the triage prompt asks for; the Fleet node's GROOMED_LABEL. */
 export const TRIAGED_LABEL = LABEL.triaged;
+/** Review turns (spec catch_up.review): the PM's verdict on a lifecycle:review ticket. */
+export const REVIEW_OPERATION = "reviewTicket";
+export const REVIEW_REASON = "ticket-review";
+export const REVIEW_PROVIDER_EVENT_TYPE = "krebs.catch_up.review";
+/** A review turn that ended without a verdict is sent again after this long, up to REVIEW_MAX_ATTEMPTS per ticket version. */
+export const REVIEW_RETRY_MS = 3 * 60 * 60 * 1000;
+export const REVIEW_MAX_ATTEMPTS = 3;
 
 /** YYYY-MM-DD in `timeZone` (default: the host's zone): Plane's start_date. */
 export function localDate(date, timeZone) {
@@ -199,6 +211,65 @@ export function triageCommand({ fleet }, { scope, ticket, route, todoName, comma
   };
 }
 
+/**
+ * The deterministic ids of one review turn: board + ticket + updated_at +
+ * attempt. A verdict changes the ticket, so a new version is a new review; an
+ * attempt that ended without one is retried under the next attempt number.
+ */
+export function reviewIds({ fleet, nats }, { boardId, ticketId, updatedAt, agentId, attempt = 1 }) {
+  const reviewId = nats.deterministicUuid(`krebs:review:${boardId}:${ticketId}:${updatedAt ?? ""}:${attempt}`);
+  const commandId = fleet.fleetCommandId(reviewId, REVIEW_OPERATION, agentId);
+  return { reviewId, commandId };
+}
+
+/** The publish options of a review turn (reason ticket-review, krebs's reviewPrompt). */
+export function reviewCommand({ fleet }, { scope, ticket, route, commandId, observedAt, attempt = 1 }) {
+  const facts = fleet.ticketFactsFromEnvelope({
+    data: {
+      repo: scope.repo ?? "",
+      board_id: scope.boardId,
+      ticket_key: ticket.key,
+      ticket_id: ticket.id,
+      title: ticket.title,
+      workspace: scope.workspace,
+      phase: ticket.stateName ?? "In Progress",
+      provider_event_type: REVIEW_PROVIDER_EVENT_TYPE,
+      labels: ticket.labels,
+    },
+  });
+  return {
+    type: COMMAND_TYPE,
+    kind: "command",
+    data: {
+      target_agent_id: route.agentId,
+      prompt: reviewPrompt(facts, route.projectPath),
+      context: {
+        reason: REVIEW_REASON,
+        repo: facts.repo,
+        ticket_key: facts.ticketKey,
+        ticket_id: facts.ticketId,
+        board_id: facts.boardId,
+        workspace: facts.workspace,
+        title: facts.title,
+        phase: facts.phase,
+        provider_event_type: facts.providerEventType,
+        dispatcher: "krebs-tick",
+        review_attempt: attempt,
+        lifecycle_spec: SPEC_VERSION,
+      },
+    },
+    commandId,
+    eventId: commandId,
+    correlationId: fleet.ticketCorrelationId(scope.boardId, ticket.id),
+    causationId: null,
+    observedAt,
+    source: KREBS_SOURCE,
+    producer: "krebs",
+    service: "krebs-tick",
+    actor: { ...KREBS_ACTOR },
+  };
+}
+
 function message(err) {
   return String(err?.message ?? err).split("\n")[0];
 }
@@ -228,6 +299,7 @@ export async function runTick({
   triageMinAgeMs = TRIAGE_MIN_AGE_MS,
   triageScopeCap = TRIAGE_SCOPE_CAP,
   triageTickCap = TRIAGE_TICK_CAP,
+  reviewMinAgeMs = REVIEW_MIN_AGE_MS,
   liveness = null,
   orphanQuietMs = QUIET_MS,
   orphanReleaseScopeCap = ORPHAN_RELEASE_SCOPE_CAP,
@@ -245,9 +317,10 @@ export async function runTick({
   const triaged = triagedCommandIds(journalEntries);
   const sentByTicket = sentCommands(journalEntries);
   const releasedBefore = releaseCounts(journalEntries, started.getTime() - ORPHAN_LOOP_WINDOW_MS);
+  const reviewsSent = reviewAttempts(journalEntries);
   let releasesThisTick = 0;
   let unsticksThisTick = 0;
-  const triagePlans = []; // {scope, snap, out, entry, ticket}: picked per scope, capped tick-wide after the loop
+  const triagePlans = []; // board turns {kind, scope, snap, out, entry, ticket}: picked per scope, capped tick-wide after the loop
   const boards = new Map(); // `${ws}:${board}` -> snapshot | {error}
   const statesCache = new Map();
 
@@ -336,6 +409,9 @@ export async function runTick({
       triage: [],
       triageCapped: [],
       triageSeen: [],
+      reviews: [],
+      reviewsCapped: [],
+      reviewsSeen: [],
       waiting: [],
       excluded: [],
       warnings: [...(scope.warnings ?? [])],
@@ -573,13 +649,25 @@ export async function runTick({
         if (triaged.has(ids.commandId)) out.triageSeen.push(t.key);
         else fresh.push({ t, ...ids });
       }
-      for (const [i, { t, commandId }] of fresh.entries()) {
-        const entry = { ...ticketRef(t), updatedAt: t.updatedAt, agentId: scope.agentId, commandId };
+      // Review turns: a version gets REVIEW_MAX_ATTEMPTS sends, REVIEW_RETRY_MS apart.
+      for (const t of reviewCandidatesOf(mine, nowMs, reviewMinAgeMs)) {
+        const sent = reviewsSent.get(`${t.id}|${t.updatedAt ?? ""}`) ?? [];
+        const last = sent[sent.length - 1];
+        const lastMs = last ? Date.parse(last.at ?? "") : NaN;
+        if (sent.length >= REVIEW_MAX_ATTEMPTS) out.reviewsSeen.push({ key: t.key, why: `${sent.length} review turns ended without a verdict` });
+        else if (Number.isFinite(lastMs) && nowMs - lastMs < REVIEW_RETRY_MS) out.reviewsSeen.push({ key: t.key, why: `review turn sent ${Math.round((nowMs - lastMs) / 60000)} min ago` });
+        else fresh.push({ t, kind: "review", attempt: sent.length + 1, ...reviewIds({ fleet, nats }, { boardId: board, ticketId: t.id, updatedAt: t.updatedAt, agentId: scope.agentId, attempt: sent.length + 1 }) });
+      }
+      // One board turn per scope per tick (a desk serializes its board turns), oldest ticket first.
+      fresh.sort((a, b) => compareTriage(a.t, b.t));
+      for (const [i, { t, commandId, kind = "triage", attempt }] of fresh.entries()) {
+        const entry = { ...ticketRef(t), updatedAt: t.updatedAt, agentId: scope.agentId, commandId, ...(kind === "review" ? { attempt } : {}) };
+        const list = kind === "review" ? out.reviews : out.triage;
         if (i >= triageScopeCap) {
-          out.triageCapped.push({ ...ticketRef(t), updatedAt: t.updatedAt, why: `scope cap (${triageScopeCap} per scope per tick)` });
+          (kind === "review" ? out.reviewsCapped : out.triageCapped).push({ ...ticketRef(t), updatedAt: t.updatedAt, why: `scope cap (${triageScopeCap} board turn per scope per tick)` });
         } else {
-          out.triage.push(entry);
-          triagePlans.push({ scope, snap, out, entry, ticket: t });
+          list.push(entry);
+          triagePlans.push({ kind, attempt, scope, snap, out, entry, ticket: t });
         }
       }
     }
@@ -686,10 +774,83 @@ export async function runTick({
     }
   }
 
-  // Catch-up triage: tick-wide cap (oldest first across scopes), then one publish each.
+  /** One review turn: live re-read, guard, liveness, then the publish. */
+  async function publishReview({ scope, snap, out, entry, ticket: listed, attempt }) {
+    const ws = scope.workspace;
+    const board = scope.boardId;
+    let ticket = listed;
+    if (!dryRun) {
+      try {
+        ticket = normalizeTicket(await plane.issue(listed.id, ws, board), snap.ctx);
+      } catch (err) {
+        entry.result = "skipped";
+        entry.why = `live re-read failed: ${message(err)}`;
+        out.errors.push(`${entry.key}: review ${entry.why}`);
+        return;
+      }
+      const owner = fleet.resolveFleetAgentForBoard(registry, board, "", ticket.labels);
+      const why = reviewGuard(ticket, started.getTime(), reviewMinAgeMs) ?? (owner.matchedBy === "board" && owner.agentId === scope.agentId ? null : "moved to another scope");
+      if (why) {
+        entry.result = "skipped";
+        entry.why = `changed since the listing: ${why}`;
+        return;
+      }
+      if (ticket.updatedAt !== listed.updatedAt) {
+        entry.result = "skipped";
+        entry.why = "changed since the listing (new version; next tick)";
+        return;
+      }
+    }
+    if (liveness) {
+      const v = await liveness({ boardId: board, ticketId: ticket.id, key: ticket.key, sent: sentByTicket.get(ticket.id) ?? [] });
+      if (v.unknown || v.live) {
+        entry.result = "skipped";
+        entry.why = v.unknown ? v.why : `turn live: ${v.why}`;
+        if (v.unknown) out.warnings.push(`${ticket.key}: review not sent, ${v.why}`);
+        return;
+      }
+    }
+    const route = fleet.resolveFleetAgentForBoard(registry, board, scope.repo ?? "", ticket.labels);
+    if (!route.eligible || route.agentId !== scope.agentId) {
+      entry.result = "skipped";
+      entry.why = `route refused: ${route.agentId || "(none)"} ${route.why}`;
+      out.errors.push(`${ticket.key}: review ${entry.why}`);
+      return;
+    }
+    if (dryRun) {
+      entry.result = "planned";
+      return;
+    }
+    const { reviewId, commandId } = reviewIds({ fleet, nats }, { boardId: board, ticketId: ticket.id, updatedAt: ticket.updatedAt, agentId: route.agentId, attempt });
+    Object.assign(entry, { reviewId, commandId });
+    const command = reviewCommand({ fleet }, { scope, ticket, route, commandId, attempt, observedAt: new Date(ticket.updatedAt).toISOString() });
+    const base = { command_id: commandId, review_id: reviewId, agent_id: route.agentId, board_id: board, workspace: ws, ticket_id: ticket.id, key: ticket.key, ticket_updated_at: ticket.updatedAt, attempt };
+    try {
+      const res = await publish(command);
+      entry.result = "published";
+      entry.subject = res?.subject ?? null;
+      record({ action: "review.publish", ...base, ok: true, subject: res?.subject ?? null });
+    } catch (err) {
+      entry.result = "publish failed";
+      entry.error = message(err);
+      out.errors.push(`${ticket.key}: review publish failed (retried next tick, same command id): ${entry.error}`);
+      record({ action: "review.publish", ...base, ok: false, error: entry.error });
+    }
+  }
+
+  // Board turns (catch-up triage, review): tick-wide cap (oldest first across scopes), then one publish each.
   triagePlans.sort((a, b) => compareTriage(a.ticket, b.ticket) || (a.scope.agentId < b.scope.agentId ? -1 : 1));
   for (const [i, plan] of triagePlans.entries()) {
     const { scope, snap, out, entry } = plan;
+    if (plan.kind === "review") {
+      if (i >= triageTickCap) {
+        out.reviews.splice(out.reviews.indexOf(entry), 1);
+        out.reviewsCapped.push({ key: entry.key, ticketId: entry.ticketId, title: entry.title, updatedAt: entry.updatedAt, why: `tick cap (${triageTickCap} per tick)` });
+        continue;
+      }
+      await publishReview(plan);
+      continue;
+    }
     if (i >= triageTickCap) {
       out.triage.splice(out.triage.indexOf(entry), 1);
       out.triageCapped.push({ key: entry.key, ticketId: entry.ticketId, title: entry.title, updatedAt: entry.updatedAt, why: `tick cap (${triageTickCap} per tick)` });
@@ -757,6 +918,7 @@ export async function runTick({
     repaired: report.scopes.reduce((n, s) => n + s.repairs.filter((r) => r.result === "repaired").length, 0),
     republished: report.scopes.reduce((n, s) => n + s.republishes.filter((r) => r.result === "republished").length, 0),
     triaged: report.scopes.reduce((n, s) => n + s.triage.filter((t) => t.result === "published").length, 0),
+    reviews: report.scopes.reduce((n, s) => n + s.reviews.filter((t) => t.result === "published").length, 0),
     errors: report.scopes.reduce((n, s) => n + s.errors.length, 0),
   });
   return report;

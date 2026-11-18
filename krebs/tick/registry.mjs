@@ -145,7 +145,7 @@ export function scopesFromRegistry(registry, { activation, executionMode = execu
     const projectPath = text(row.project_path) || text(row.repo_path) || null;
     if (projectPath) {
       const mode = executionMode(projectPath);
-      if (mode !== "legacy") { skip(`fenced: ${projectPath}/.project.json execution.mode is ${mode} (v2 engine retired)`); continue; }
+      if (mode !== "legacy") { skip(`fenced: ${projectPath}/.project.json execution.mode is ${mode} (the managed execution engine was deleted 2026-11-18)`); continue; }
     }
     const workspace = text(plane.workspace) || defaultWorkspace || null;
     if (!workspace) { skip("plane block names no workspace"); continue; }

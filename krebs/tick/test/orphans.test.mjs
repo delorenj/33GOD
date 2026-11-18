@@ -148,8 +148,10 @@ test("stale agent:working on held, in-review and Todo tickets is removed; lanes 
   assert.equal(stateOf(plane, OTHER, "i-3"), "s-ip");
   assert.equal(stateOf(plane, OTHER, "i-9"), "s-todo");
   assert.ok(labelsOf(plane, OTHER, "i-3").includes(labelId("lifecycle:needs-input")));
-  // The unstuck Todo ticket becomes a triage catch-up candidate.
-  assert.deepEqual(report.scopes[0].triage.map((x) => x.key), ["OTH-9"]);
+  // Both become board-turn candidates: the in-review ticket a review, the Todo one a triage.
+  // One board turn per scope per tick, oldest first (same age: lower sequence), so the review goes first.
+  assert.deepEqual(report.scopes[0].reviews.map((x) => x.key), ["OTH-4"]);
+  assert.deepEqual(report.scopes[0].triageCapped.map((x) => x.key), ["OTH-9"]);
 });
 
 test("loop guard: a ticket already released twice this week is held with agent:failed instead", async () => {

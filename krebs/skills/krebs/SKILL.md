@@ -30,9 +30,11 @@ Lifecycle meaning lives in **labels**, never in extra lanes. Do not invent lanes
 | `lifecycle:needs-input` | waiting on a person; question is in a comment | any turn |
 | `lifecycle:blocked` | waiting on another ticket or outside thing | any turn |
 | `agent:failed` | a turn failed, nobody has looked | lane errors |
+| `lifecycle:human` | the owner took this ticket by hand (emergency hold) | the owner only |
 
-Hold labels = `needs-input`, `blocked`, `agent:failed`. A held ticket is never dispatched and never
-occupies a slot. `px task create -l` refuses `agent:` labels on purpose: they are automation-only.
+Hold labels = `needs-input`, `blocked`, `agent:failed`, `human`. A held ticket is never dispatched and never
+occupies a slot. **`lifecycle:human` means hands off entirely:** no agent adds or removes it, and on a
+ticket that carries it you write nothing at all (no label, state, comment or claim); stop the turn. `px task create -l` refuses `agent:` labels on purpose: they are automation-only.
 
 ## Hard rules
 
@@ -82,13 +84,18 @@ Progress and the ticket stops holding a slot, so krebs can dispatch the next one
 
 ## Verdict giver (the PM)
 
-You see tickets In Progress + `lifecycle:review`. Judge against the acceptance criteria and the
-evidence, not the implementer's summary; the reviewer is never the implementer.
+You see tickets In Progress + `lifecycle:review`, either in your own pass or because krebs tick sent
+you a **review turn** (reason `ticket-review`) for one that has waited 30 quiet minutes. Judge against
+the acceptance criteria and the evidence you check yourself, not the implementer's summary; the
+reviewer is never the implementer, so have an independent worker check code. End with exactly one:
 
-- **Accepted:** the PM closes it Done with a one-line reason.
-- **SENT BACK:** the PM moves it to **Todo** with the comment `returned: <criterion>` naming the
-  specific unmet criterion. It keeps `lifecycle:triaged` and waits for a slot; it is not re-triaged.
+- **Accepted:** `px close <ref> -m "<one-line reason>"` (Done).
+- **SENT BACK:** `px release <ref> -m "returned: <criterion>"` naming the specific unmet criterion.
+  It goes to Todo, keeps `lifecycle:triaged` and waits for a slot; it is not re-triaged.
   `lifecycle:review` is cleared when it leaves In Progress.
+- **Needs a person:** `px attention <ref> -m "<question>"`.
+
+A review turn that ends with none of these is sent again after 3 hours (at most 3 times).
 
 The PM ranks, flags and judges. It does not dispatch. In launch mode (`.launch.yaml`
 `mode: launch`) the same PM gives the verdict through the launch pass's `--apply`: a reviewed ticket

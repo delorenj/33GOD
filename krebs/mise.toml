@@ -1,13 +1,11 @@
 [tasks.test]
-run = "python3 ops/test.py"
-[tasks.migrate]
-run = "uv run krebs migrate"
-[tasks.readiness]
-run = "uv run krebs readiness"
-[tasks.health]
-run = "uv run krebs health"
-[tasks.reconcile]
-run = "uv run krebs reconcile"
+description = "krebs tick unit tests (node:test, fakes only)"
+run = "node --test tick/test/*.test.mjs"
 
-[tasks."test:pure"]
-run = "uv run pytest -q tests/test_state.py"
+[tasks.tick]
+description = "one live krebs tick (what Candybar runs)"
+run = "node bin/krebs.mjs tick --json"
+
+[tasks."tick:dry"]
+description = "read-only plan for every scope"
+run = "node bin/krebs.mjs tick --dry-run"

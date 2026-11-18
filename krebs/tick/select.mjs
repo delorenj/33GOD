@@ -204,3 +204,36 @@ export function compareTriage(a, b) {
 export function triageCandidatesOf(tickets, nowMs, minAgeMs = TRIAGE_MIN_AGE_MS) {
   return tickets.filter((t) => triageGuard(t, nowMs, minAgeMs) === null).sort(compareTriage);
 }
+
+/**
+ * spec catch_up.review: an In Progress ticket handed back with lifecycle:review
+ * and unchanged this long gets a review turn from its scope's PM (the verdict
+ * giver; Launch Directors are retired). Same quiet window as the orphan sweep.
+ */
+export const REVIEW_MIN_AGE_MS = 30 * 60 * 1000;
+
+/**
+ * Why a ticket is not a review candidate, or null when it is. Labels and lane
+ * only (the live re-read applies it again, and liveness is asked before the
+ * publish): In Progress, lifecycle:review, not archived or a draft, no hold
+ * label, no agent:working, not an epic, updated_at older than `minAgeMs`.
+ */
+export function reviewGuard(ticket, nowMs, minAgeMs = REVIEW_MIN_AGE_MS) {
+  if (ticket.archived) return "archived";
+  if (ticket.draft) return "draft";
+  if (ticket.lane !== "started") return `not In Progress (${ticket.stateName ?? ticket.lane})`;
+  if (!ticket.labels.includes(LABEL.review)) return "not handed back (no lifecycle:review)";
+  const holds = heldBy(ticket.labels);
+  if (holds.length) return `held (${holds.join(", ")})`;
+  if (ticket.labels.includes(LABEL.working)) return "agent:working (a turn is running on it)";
+  if (isContainer(ticket.labels)) return "epic container";
+  const updated = Date.parse(ticket.updatedAt ?? "");
+  if (!Number.isFinite(updated)) return "no updated_at";
+  if (nowMs - updated <= minAgeMs) return "updated within the last 30 minutes";
+  return null;
+}
+
+/** The scope's tickets that pass reviewGuard, oldest first. */
+export function reviewCandidatesOf(tickets, nowMs, minAgeMs = REVIEW_MIN_AGE_MS) {
+  return tickets.filter((t) => reviewGuard(t, nowMs, minAgeMs) === null).sort(compareTriage);
+}

@@ -13,9 +13,15 @@
 #   6. (2026-11-18, 33GOD-93) A ticket nobody is working on never holds a slot or
 #      agent:working. Krebs asks Candystore whether a turn is live; if not, it
 #      releases the ticket to Todo or removes the stale label (see `orphans`).
+#   7. (2026-11-18) The PM gives the verdict. Launch Directors are retired; a PM in
+#      launch mode drives a launch. Krebs sends the scope's PM a review turn for
+#      every handed-back ticket (see `catch_up.review`).
+#   8. (2026-11-18) lifecycle:human is the owner's emergency hold: the owner took
+#      the ticket by hand. Nothing automated dispatches, triages, reviews,
+#      releases or relabels it, and agents never add or remove it.
 #
-# Human-readable companion: ../docs/lifecycle.md. Supersedes lifecycle.v1.yaml.
-spec_version: 2.1.0
+# Human-readable companion: ../docs/lifecycle.md.
+spec_version: 2.2.0
 
 lanes:                       # exact Plane state names; order is the board order
   - {name: Backlog,     group: backlog,   default: true}
@@ -25,7 +31,7 @@ lanes:                       # exact Plane state names; order is the board order
   - {name: Cancelled,   group: cancelled}
 # Plane's hidden intake state (group: triage) is left alone; it is not a lane.
 
-labels:                      # lifecycle labels; every board carries all six
+labels:                      # lifecycle labels; every board carries all seven
   agent:working:
     meaning: an agent turn is running on this ticket right now
     set_by: [pickup-chip, krebs-dispatch, px claim]
@@ -39,7 +45,7 @@ labels:                      # lifecycle labels; every board carries all six
     meaning: implementation handed back; waiting for a verdict
     only_in: In Progress
     set_by: [implementation turn, on handback, when the scope requires review]
-    cleared_by: [krebs (outside In Progress), PM on SENT BACK]
+    cleared_by: [krebs (outside In Progress), the PM's verdict (close or SENT BACK)]
   lifecycle:needs-input:
     meaning: waiting on a person (human in the loop); the question is in a comment
     set_by: [any turn that needs an answer]
@@ -52,9 +58,14 @@ labels:                      # lifecycle labels; every board carries all six
     meaning: an agent turn on this ticket failed and nobody has looked yet
     set_by: [lane errors]
     cleared_by: [the person or PM who looked]
+  lifecycle:human:
+    meaning: the owner took this ticket by hand (emergency hold); automation leaves it alone
+    set_by: [owner only]
+    cleared_by: [owner only]
+    agents_touch: never      # no agent, chip, krebs repair or px write adds or removes it
 
 # Labels that take a ticket out of the flow: never dispatched, never hold a slot.
-hold_labels: [lifecycle:needs-input, lifecycle:blocked, agent:failed]
+hold_labels: [lifecycle:needs-input, lifecycle:blocked, agent:failed, lifecycle:human]
 # Labels that make a ticket non-dispatchable work containers.
 container_labels: [epic, "epic:*"]
 
@@ -98,9 +109,11 @@ transitions:
     does: +lifecycle:needs-input or +lifecycle:blocked and a comment saying what it waits on; the lane does not change
   - id: verdict
     in: In Progress + lifecycle:review
-    by: verdict giver (Launch Director, or the PM where there is none)
-    accepted: PM closes it (Done)
-    sent_back: 'PM moves it to Todo with "returned: <criterion>"; it keeps lifecycle:triaged and waits for a slot'
+    by: the scope's PM (the verdict giver; Launch Directors are retired), in a krebs review turn or its own pass
+    accepted: 'px close <ref> -m "<reason>"' (Done)
+    sent_back: 'px release <ref> -m "returned: <criterion>": back to Todo; it keeps lifecycle:triaged and waits for a slot'
+    needs_person: 'px attention <ref> -m "<question>"'
+    never: the implementer reviewing its own work
   - id: park
     from: [Todo, In Progress]
     to: Backlog
@@ -128,6 +141,7 @@ orphans:                     # 33GOD-93: turns that ended with no handback and n
     unknown: Candystore unreachable or erroring; krebs touches nothing and warns
   suspects:                  # only tickets unchanged for 30 minutes
     release: In Progress, holds a slot (no lifecycle:review, no hold label), not an epic
+    excluded: any ticket with lifecycle:human (no probe, no write)
     stale_working: agent:working in Todo or Backlog, or in In Progress without holding a slot, or on an epic
   actions:                   # only when no turn is live
     release: one write moves it to Todo and removes agent:working; other labels stay (a triaged ticket is not re-triaged); one comment says why. The freed slot refills on the same tick, in Todo order
@@ -138,6 +152,7 @@ orphans:                     # 33GOD-93: turns that ended with no handback and n
 
 catch_up:                    # covers webhooks lost while n8n restarts
   triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes, gets a triage turn (the n8n Ticket Triage lane's groomTicket command; no Plane write); the command id is derived from board + ticket + updated_at, so it fires once per ticket version; at most 1 per scope (a desk serializes board turns on its lease; two at once collide) and 6 per tick, oldest first
+  review: an In Progress ticket with lifecycle:review, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes and with no live turn (orphans.liveness), gets a review turn from its scope's PM (reason ticket-review, dispatcher krebs-tick; no Plane write; the chip sets agent:working while it runs); it shares the 1 board turn per scope per tick with triage, oldest first, and the 6 per tick; the command id is derived from board + ticket + updated_at + attempt; a version with no verdict is asked again after 3 hours, at most 3 times
   dispatch: a dispatch whose publish failed is republished with the same command id on the next tick
 
 clock: Candybar `krebs-tick` (exec runner). No private loop, no other dispatcher.
@@ -146,4 +161,4 @@ out_of_scope:                # owner, 2026-11-14
   boards: [TIKT]             # human content pipeline; keeps its own lanes
   workspaces: [automaticai]  # client boards AAI and JIMB; Krebs never writes there
   archived: skipped
-fence: a project whose .project.json execution.mode is not legacy is skipped (the v2 engine is retired).
+fence: a project whose .project.json execution.mode is not legacy is skipped (the managed execution engine was deleted 2026-11-18; no project sets it).

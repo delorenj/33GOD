@@ -4,7 +4,7 @@ Krebs is the name of the one ticket lifecycle every 33GOD board follows. It is a
 
 It replaces two things:
 
-- `spec/lifecycle.v1.yaml`, the nine-phase lifecycle.
+- The nine-phase v1 lifecycle (its spec was deleted on 2026-11-18).
 - Momo, the skill that pushed tickets through the lifecycle by prompt.
 
 ## Owner decisions (2026-11-14)
@@ -16,6 +16,10 @@ It replaces two things:
 5. **Epics take a slot.** An epic in In Progress counts against the project's two slots like any other ticket. Krebs never starts an epic itself, so whoever moves one to In Progress spends a slot on it.
 
 6. **Nobody working means no slot (2026-11-18, 33GOD-93).** A ticket whose agent turn ended without a handback or a hold label used to keep its slot, and its leftover `agent:working`, forever. Krebs now asks Candystore whether a turn is live and, if not, releases the ticket to Todo or removes the stale label. See [Orphans](#orphans-the-resume-path).
+
+7. **The PM gives the verdict (2026-11-18).** Launch Directors are retired; a launch is driven by the repo's PM in launch mode. Krebs sends the scope's PM a review turn for every ticket handed back with `lifecycle:review`, so no handback waits on a desk that no longer exists. See [Reviews](#reviews).
+
+8. **`lifecycle:human` is the owner's emergency hold (2026-11-18).** When Jarad takes a ticket by hand, it gets `lifecycle:human`. Nothing automated touches that ticket again until the label comes off: Krebs never dispatches, triages, reviews, releases or relabels it, it holds no slot, and no agent adds or removes the label.
 
 ## Lanes and labels
 
@@ -34,8 +38,9 @@ It replaces two things:
 | `lifecycle:needs-input` | Waiting on a person. The question is in a comment. | Any turn. |
 | `lifecycle:blocked` | Waiting on another ticket or an outside dependency. Record the blocker as a relation. | Any turn. |
 | `agent:failed` | A turn failed and nobody has looked at it yet. | Lane errors. |
+| `lifecycle:human` | The owner took the ticket by hand. Automation leaves it alone. | The owner only. |
 
-Three of these are hold labels: `lifecycle:needs-input`, `lifecycle:blocked` and `agent:failed`. A held ticket is never dispatched and never takes a slot.
+Four of these are hold labels: `lifecycle:needs-input`, `lifecycle:blocked`, `agent:failed` and `lifecycle:human`. A held ticket is never dispatched and never takes a slot.
 
 ## Flow
 
@@ -74,7 +79,8 @@ stateDiagram-v2
 | Dispatch Todo → In Progress | `krebs tick`, on the Candybar `krebs-tick` schedule. Nothing else dispatches. |
 | Release an orphan (turn over, no handback) | `krebs tick`, when Candystore shows no live turn. See [Orphans](#orphans-the-resume-path). |
 | Handback | The implementation turn. It adds `lifecycle:review` and an evidence comment, or closes the ticket if the scope has no review step. |
-| Verdict | The PM (in launch mode, through the launch pass). There is no Launch Director desk. Accepted means Done. Sent back means Todo, with the comment `returned: <criterion>`. |
+| Review turn | `krebs tick`. See [Reviews](#reviews). |
+| Verdict | The scope's PM, in a Krebs review turn or its own pass (in launch mode, the launch pass). There is no Launch Director desk. Accepted means Done (`px close`). Sent back means Todo with the comment `returned: <criterion>` (`px release`). A question for a person is `px attention`. |
 | Accept, park, cancel, Todo order | PM passes, through px, px-apply or the launch pass's `--apply`. |
 
 The dispatch guard requires all of the following:
@@ -102,7 +108,7 @@ Each tick, before the slot math, Krebs looks at every ticket that has been uncha
 
 If Candystore cannot answer, Krebs does nothing to that ticket and says so in the report.
 
-Why the label was left behind in the first place: the n8n Ticket Pickup Chip removes `agent:working` when a turn ends, unless the ticket moved into In Progress around the time the label was added. That exception protects a `px claim`, but a Krebs dispatch makes the same single write (In Progress plus the label), so the chip never removed the label from a Krebs-dispatched ticket. The Krebs sweep now cleans these up within about 30 minutes of the turn ending.
+Why the label was left behind in the first place: the n8n Ticket Pickup Chip removes `agent:working` when a turn ends, unless the ticket moved into In Progress around the time the label was added. That exception protects a `px claim`, but a Krebs dispatch makes the same single write (In Progress plus the label), so the chip never removed the label from a Krebs-dispatched ticket. Since 2026-11-18 the chip reads `dispatcher: krebs-tick` from the turn's context and does not count Krebs' own dispatch write as a claim, so the label comes off when the turn ends. The Krebs sweep stays as the backstop.
 
 When no turn is live:
 
@@ -114,6 +120,20 @@ When no turn is live:
 
 A tick releases at most 2 tickets per project and 12 overall, and removes at most 30 labels, so a backlog drains over a few ticks. The tick journal records `orphan.release`, `orphan.unstick` and `orphan.fail`.
 
+## Reviews
+
+A ticket handed back with `lifecycle:review` waits In Progress for a verdict and holds no slot. The PM gives it. Each tick, Krebs looks for In Progress tickets with `lifecycle:review`, no hold label and no `agent:working`, not an epic, and unchanged for 30 minutes. It asks Candystore whether a turn is live on each one, and if none is, it sends the scope's PM a review turn (reason `ticket-review`). Krebs writes nothing to Plane for it; the pickup chip shows `agent:working` while the turn runs.
+
+The review turn tells the PM to judge each acceptance criterion against evidence it checks itself (the PM is never the implementer, so code is checked by an independent worker), and to end with exactly one verdict:
+
+| Verdict | Command |
+|---|---|
+| Accepted | `px close <ref> -m "<reason>"` |
+| Sent back | `px release <ref> -m "returned: <criterion>"`. The ticket goes to Todo, keeps `lifecycle:triaged`, and waits for a slot. |
+| Needs a person | `px attention <ref> -m "<question>"` |
+
+Review turns share the scope's one board turn per tick with triage catch-up, oldest first, and the tick-wide cap of 6. A verdict changes the ticket, so each ticket version is reviewed once. A turn that ends without a verdict is sent again after 3 hours, at most 3 times per version; after that the tick lists the ticket as waiting.
+
 ## What it replaces
 
 | Before | Now |
@@ -124,4 +144,5 @@ A tick releases at most 2 tickets per project and 12 overall, and removes at mos
 | WIP 1, written in prose | 2 slots per scope, enforced in code |
 | Momo's WIP lock | The `board-lease.py` script in interval-driver |
 | Momo's `record-decision.py` | `skills/krebs/scripts/record-decision.py` |
-| The managed v2 execution engine (Postgres/NATS) | Retired. Projects fenced to `execution.mode` other than legacy are skipped. |
+| Launch Directors giving verdicts | The scope's PM, sent a review turn by Krebs |
+| The managed v2 execution engine (Python, Postgres) | Deleted 2026-11-18. A project whose `execution.mode` is not legacy would still be skipped; none is. |

@@ -125,7 +125,7 @@ export function pendingPublishes(entries) {
 
 /**
  * The start commands krebs itself sent, per ticket id: [{commandId, at, kind}],
- * kind "dispatch" or "triage". The gateway publishes invocation.started only
+ * kind "dispatch", "triage" or "review". The gateway publishes invocation.started only
  * when a turn gets a slot (measured waits up to 55 min), so a command krebs
  * sent with no end on record yet is queued or running: liveness counts it.
  */
@@ -145,6 +145,8 @@ export function sentCommands(entries) {
       add(intent?.ticket_id, { commandId: e.command_id, at: e.ts, kind: "dispatch" });
     } else if (e?.action === "triage.publish" && e.ok === true) {
       add(e.ticket_id, { commandId: e.command_id, at: e.ts, kind: "triage" });
+    } else if (e?.action === "review.publish" && e.ok === true) {
+      add(e.ticket_id, { commandId: e.command_id, at: e.ts, kind: "review" });
     }
   }
   return out;
@@ -173,4 +175,23 @@ export function triagedCommandIds(entries) {
     if (e?.action === "triage.publish" && e.ok === true && e.command_id) ids.add(e.command_id);
   }
   return ids;
+}
+
+/**
+ * Review turns already published per ticket version ("<ticket id>|<updated_at>"):
+ * [{attempt, at, commandId}], oldest first. A review that ended without a
+ * verdict leaves the version unchanged, so the tick sends it again after a
+ * cool-down, up to a few attempts (each attempt is its own command id).
+ */
+export function reviewAttempts(entries) {
+  const out = new Map();
+  for (const e of entries) {
+    if (e?.action !== "review.publish" || e.ok !== true || !e.ticket_id) continue;
+    const key = `${e.ticket_id}|${e.ticket_updated_at ?? ""}`;
+    const list = out.get(key) ?? [];
+    list.push({ attempt: Number(e.attempt) || 1, at: e.ts, commandId: e.command_id });
+    out.set(key, list);
+  }
+  for (const list of out.values()) list.sort((a, b) => a.attempt - b.attempt);
+  return out;
 }

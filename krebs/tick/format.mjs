@@ -52,6 +52,15 @@ export function formatReport(report, { verbose = false } = {}) {
       if (s.triageSeen.length) parts.push(`already triaged at this version: ${s.triageSeen.join(", ")}`);
       lines.push(`  triage catch-up: ${parts.length ? parts.join("; ") : "none"}`);
     }
+    {
+      const reviews = s.reviews ?? [];
+      const parts = reviews.map((t) => `${t.key} ${t.result ?? "?"}${t.attempt > 1 ? ` attempt ${t.attempt}` : ""}${t.commandId ? ` cmd ${t.commandId}` : ""}${t.why ? ` (${t.why})` : ""}${t.error ? ` (${t.error})` : ""}`);
+      const capped = s.reviewsCapped ?? [];
+      if (capped.length) parts.push(`waiting ${capped.length}: ${capped.slice(0, 4).map((c) => c.key).join(", ")}${capped.length > 4 ? ` +${capped.length - 4} more` : ""}`);
+      const seen = s.reviewsSeen ?? [];
+      if (seen.length) parts.push(`already asked: ${list(seen, (r) => `${r.key} (${r.why})`)}`);
+      if (parts.length) lines.push(`  review: ${parts.join("; ")}`);
+    }
     if (s.waiting.length) lines.push(`  queued: ${s.waiting.join(", ")}`);
     if (s.blocked.length) lines.push(`  blocked: ${list(s.blocked, (b) => `${b.key} (${b.why})`)}`);
     if (s.excluded.length) lines.push(`  todo not dispatchable: ${list(s.excluded, (e) => `${e.key} (${e.why})`)}`);

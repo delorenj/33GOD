@@ -78,7 +78,7 @@ test("shared board: each scope sees only the tickets routed to it, and dispatche
   assert.equal(byTicket["TOLT-6"].data.target_agent_id, "tolt-pm");
   assert.equal(byTicket["TOLT-4"].data.target_agent_id, "lost-things-forge-pm");
   assert.equal(byTicket["TOLT-5"].data.target_agent_id, "tolt-director");
-  for (const c of publish.sent) {
+  for (const c of publish.sent.filter((x) => x.data.context.reason !== "ticket-review")) {
     assert.equal(c.type, COMMAND_TYPE);
     assert.equal(c.kind, "command");
     assert.equal(c.data.context.reason, "ticket-delegation");

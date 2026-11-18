@@ -1,10 +1,10 @@
 // Krebs lifecycle v2 vocabulary (spec/lifecycle.v2.yaml), as the tick reads it.
 //
-// Only what `krebs tick` needs: the six lifecycle labels, which of them hold a
+// Only what `krebs tick` needs: the seven lifecycle labels, which of them hold a
 // ticket out of the flow, what makes a ticket a container, the dispatch order,
 // and how a board's states map onto the five stock lanes.
 
-export const SPEC_VERSION = "2.1.0";
+export const SPEC_VERSION = "2.2.0";
 
 export const LABEL = Object.freeze({
   working: "agent:working",
@@ -13,10 +13,14 @@ export const LABEL = Object.freeze({
   needsInput: "lifecycle:needs-input",
   blocked: "lifecycle:blocked",
   failed: "agent:failed",
+  human: "lifecycle:human",
 });
 
-/** spec hold_labels: never dispatched, never hold a slot. */
-export const HOLD_LABELS = Object.freeze([LABEL.needsInput, LABEL.blocked, LABEL.failed]);
+/**
+ * spec hold_labels: never dispatched, triaged or reviewed, never hold a slot.
+ * lifecycle:human is the owner's own hold: the owner took the ticket by hand.
+ */
+export const HOLD_LABELS = Object.freeze([LABEL.needsInput, LABEL.blocked, LABEL.failed, LABEL.human]);
 
 /** spec slots.default; a registry row overrides it with plane.wip. */
 export const DEFAULT_WIP = 2;

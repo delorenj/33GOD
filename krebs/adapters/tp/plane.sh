@@ -21,8 +21,11 @@
 #                      Todo or In Progress ticket only (krebs tick is the one
 #                      thing that moves Todo -> In Progress). Aliases:
 #                      needs_attention, waiting_reply.
+# A third hold, lifecycle:human, is the owner's own and is never written here.
 # The labels must already exist on the board (every board carries all six);
-# they are never created here. Every other target is a plain lane move, and
+# they are never created here. (lifecycle:human is the owner's hold label: this
+# adapter never adds or removes it, and refuses a label write onto a ticket that
+# carries it.) Every other target is a plain lane move, and
 # krebs tick strips a lifecycle:review left outside In Progress.
 #
 # Rate limiting: reads retry HTTP 429 up to PLANE_READ_MAX_ATTEMPTS (default 4)
@@ -45,24 +48,6 @@ OP="${1:-}"; shift 2>/dev/null || true
 ROLE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 ROLE_YAML="$ROLE_DIR/role.yaml"
 BASE="${PLANE_BASE:-https://plane.delo.sh}"
-
-# Managed/shadow execution owns every mutation; stop before credential fallback.
-EXECUTION_MODE="$(python3 - "$ROLE_DIR" <<'PYMODE'
-import json, pathlib, sys
-for parent in [pathlib.Path(sys.argv[1]), *pathlib.Path(sys.argv[1]).parents]:
-    path=parent/'.project.json'
-    if path.exists():
-        print(json.loads(path.read_text()).get('execution',{}).get('mode','legacy')); break
-PYMODE
-)"
-case "$EXECUTION_MODE" in
-  managed|shadow)
-    case "$OP" in
-      resolve|describe_board|list_issues|list_states|list_labels|active_milestone|get_issue) ;;
-      *) echo "plane: $EXECUTION_MODE lifecycle writes require px task through Krebs" >&2; exit 78 ;;
-    esac ;;
-esac
-
 
 FLEET_ENV="${HERMES_FLEET_ENV:-$HOME/.hermes/fleet.env}"
 
@@ -164,6 +149,9 @@ SM_UNSTARTED="$(tp_cfg unstarted)"
 SM_BACKLOG="$(tp_cfg backlog)"
 LABEL_REVIEW="lifecycle:review"
 LABEL_NEEDS_INPUT="lifecycle:needs-input"
+# Owner-applied hold: Jarad took the ticket by hand. Never written here; a transition that
+# writes a label onto a ticket carrying it is refused (agents never work a lifecycle:human ticket).
+LABEL_HUMAN="lifecycle:human"
 CALENDAR_TZ="$(pj_cfg timezone)"; [ -n "$CALENDAR_TZ" ] || CALENDAR_TZ="$(tp_cfg timezone)"
 CALENDAR_TZ="${CALENDAR_TZ:-${TICKET_PROVIDER_TIMEZONE:-${TZ:-}}}"
 API="$BASE/api/v1/workspaces/$WS"
@@ -704,12 +692,20 @@ print(comment_id.strip())'
     if [ -z "$LABEL" ]; then
       BODY="$(printf '{"state":"%s"}' "$SID")"
     else
-      LABEL_ID="$(api_all "projects/$PROJ/labels/" | pick_label "$LABEL")"
+      LABELS_JSON="$(api_all "projects/$PROJ/labels/")"
+      LABEL_ID="$(printf '%s' "$LABELS_JSON" | pick_label "$LABEL")"
+      # Tolerant on purpose: a board that has no lifecycle:human label yet cannot have a human-held ticket.
+      HUMAN_ID="$(printf '%s' "$LABELS_JSON" | LABEL_NAME="$LABEL_HUMAN" python3 -c 'import sys,json,os
+try:
+    d=json.load(sys.stdin); rows=d if isinstance(d,list) else d.get("results", []) if isinstance(d,dict) else []
+    print(next((str(x["id"]) for x in rows if isinstance(x,dict) and x.get("id") and x.get("name")==os.environ["LABEL_NAME"]), ""))
+except Exception:
+    print("")')"
       # Plane's issue PATCH replaces the whole labels list, so the issue is
       # read immediately before the write and only this label is added to that
       # fresh set: agent:working and lifecycle:triaged written by others survive.
       FRESH="$(api GET "projects/$PROJ/issues/$ID/")"
-      PLAN="$(printf '%s\0%s' "$FRESH" "$STATES" | EXPECTED_ID="$ID" SID="$SID" LABEL_ID="$LABEL_ID" TARGET="$TARGET" python3 -c 'import json,os,sys
+      PLAN="$(printf '%s\0%s' "$FRESH" "$STATES" | EXPECTED_ID="$ID" SID="$SID" LABEL_ID="$LABEL_ID" HUMAN_ID="$HUMAN_ID" TARGET="$TARGET" python3 -c 'import json,os,sys
 parts=sys.stdin.buffer.read().split(b"\0",1)
 target=os.environ["TARGET"]; sid=os.environ["SID"]; label_id=os.environ["LABEL_ID"]
 try:
@@ -731,6 +727,8 @@ ids=[]
 for item in raw:
     ident=str(item.get("id") or "") if isinstance(item,dict) else str(item)
     if ident and ident not in ids: ids.append(ident)
+if os.environ["HUMAN_ID"] and os.environ["HUMAN_ID"] in ids:
+    raise SystemExit("plane: this ticket is held by the owner (lifecycle:human); only the owner removes it; nothing was written")
 body={}
 if sid: body["state"]=sid
 if label_id not in ids: body["labels"]=ids+[label_id]

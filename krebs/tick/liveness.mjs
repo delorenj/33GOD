@@ -12,7 +12,7 @@
 // ticket key.
 //
 // A ticket's turn is LIVE when any of these hold, else it is IDLE:
-//   0. krebs itself sent a dispatch (triage) command for it less than
+//   0. krebs itself sent a dispatch (triage, review) command for it less than
 //      MAX_OPEN_TURN (MAX_OPEN_TRIAGE) ago and no end for that command is on
 //      record: the gateway publishes invocation.started only when the turn gets
 //      a slot (waits up to 55 min measured), so a queued command has no start;
@@ -27,7 +27,7 @@
 export const QUIET_MS = 30 * 60 * 1000;
 /** An invocation with a start and no end older than this is presumed dead (gateway crash). */
 export const MAX_OPEN_TURN_MS = 8 * 60 * 60 * 1000;
-/** The same cap for a triage command krebs sent (grooming turns ran at most 86 min, queueing included). */
+/** The same cap for a triage or review command krebs sent (grooming turns ran at most 86 min, queueing included). */
 export const MAX_OPEN_TRIAGE_MS = 3 * 60 * 60 * 1000;
 /** A detached turn's worker may outlive the turn; give it this long. */
 export const MAX_DETACHED_MS = 24 * 60 * 60 * 1000;
@@ -110,7 +110,7 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
   for (const cmd of sent) {
     const at = ms(cmd.at);
     if (at === null) continue;
-    const cap = cmd.kind === "triage" ? MAX_OPEN_TRIAGE_MS : MAX_OPEN_TURN_MS;
+    const cap = cmd.kind === "dispatch" ? MAX_OPEN_TURN_MS : MAX_OPEN_TRIAGE_MS;
     if (nowMs - at >= cap) continue;
     const inv = invocations.get(cmd.commandId);
     if (!inv || inv.ended === null) {
