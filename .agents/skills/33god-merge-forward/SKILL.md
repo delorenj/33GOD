@@ -64,8 +64,11 @@ Changes to these boundaries require an explicit product decision. Routine implem
    health probes and stop dependent work rather than polling for hours. After
    recovery, check affected services, read completed task and verifier outputs,
    and resume only unfinished tasks. A workflow completion notice is neither
-   user approval nor an acceptance result; report partial passes or missing
-   verification as such.
+   user approval nor an acceptance result. Read requested or already-running
+   review outputs before final closeout: fix confirmed in-scope findings, rerun
+   their focused checks, and name any deferred finding and why. Small verified
+   slices may land while review runs; distinguish pushed/live from review-complete
+   rather than adding automatic review rounds or calling pending checks passed.
    When moving an existing delivery target, confirm the replacement's delivery
    receipt before disabling the old path.
    When a change crosses a nested component boundary, run that component's

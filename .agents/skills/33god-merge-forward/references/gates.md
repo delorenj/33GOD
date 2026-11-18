@@ -53,6 +53,17 @@ Select checks that demonstrate the slice's actual behavior:
   rewriting history requires explicit authorization.
 - Holocene code changes: typecheck and build; add browser interaction or live
   route verification when the changed behavior is visible there.
+- Scroll/playhead changes: exercise small wheel and keyboard inputs separated
+  by pauses in both directions across a transition, including stopping midway.
+  Verify progress is not repeatedly snapped back to the starting boundary;
+  frame-motion counts or a fast continuous scroll alone miss this failure.
+- Event-derived replay changes (select affected paths): reconcile totals with
+  source events, separating activity credited to another component from counted
+  events. Check attribution precedence with representative jobs and handlers.
+  On the page, verify real versus staged labels and behavior at beat boundaries,
+  view-switch restoration, and staged fallback for malformed or incompatible
+  replay data. Check public output omits private event details even when those
+  events still count.
 - Release-console uploads: a platform consumes a version/build identifier once it enters any release draft, so `already used` means attached to a draft elsewhere, not uploaded. Before minting a new identifier or re-dropping the same artifact, read the track's drafts, its artifact library, and sibling tracks read-only to find the owning draft, and add from the library rather than re-uploading. Page metadata can lag processing or drop entries; decode the artifact's own manifest and signature to confirm version, package, and signing identity.
 - Configuration or credential-location changes: inspect consumers of the old
   location, including scheduled jobs, before removing it. Preserve unrelated
