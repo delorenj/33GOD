@@ -248,6 +248,34 @@ never as an empty successful result.
 A board audit reports findings first. Apply only requested or already-authorized
 changes. Keep batching bounded to the named project and task.
 
+## Launch-mode triage (the board differs while `.launch.yaml` says `mode: launch`)
+
+Steady-state grooming is the rest of this skill. When the repo's committed
+`.launch.yaml` declares `mode: launch` (absent or `steady` = none of this applies),
+the PM runs the board through the launch pass (`launch-pass.py`, interval-driver;
+wiring in `agent-fleet-operations` "Launch mode"). There is no Launch Director:
+the one PM decides and applies.
+
+- **Todo holds launch-critical work only.** Everything else waits in Backlog.
+  Off-cut Todo is parked to Backlog; cut-line work still in Backlog is pulled up or
+  re-ranked. The declaration's `cut_line` is a hint, the board is the truth.
+- **Owner-filed bugs go on top.** Order Todo (`rank`) with the owner's bugs first,
+  then launch-critical work by dependency. Only owner-filed High or Urgent bugs
+  block the finish line.
+- **Launch membership is the epic.** The declaration's `epic: <BOARD-n>` is the
+  launch epic; related tickets join it with `px epic add` / `px link` (see
+  `board-taxonomy`: no `launch:` or `path:` labels).
+- **Cut line.** Rank every open ticket launch-critical, after-launch or cut; cut
+  tickets are closed or cancelled with a one-line reason, never left to rot.
+- **No sign-off requests.** The owner's play is the gate and silence is approval.
+  A reviewed ticket shipped in a published build is accepted: close it, citing the
+  build. Evidence is the agent's to gather, or an automation-gap ticket.
+- **Readout.** At most one short comment a day on the epic, only on change, in
+  plain English. Owner-only steps (money, legal, passkey, product choices) are
+  batched, each with a recommendation and a default.
+- **Exit.** When the finish line is met on evidence, file one ticket proposing
+  `mode: steady`. Never edit `.launch.yaml`; the owner does.
+
 ## Completion and deployment
 
 Close implementation work only against its acceptance evidence. A main-branch
@@ -282,4 +310,4 @@ Plane writes are normalized through the signed n8n ingress at
 `bloodbank-integration` and its event-journey reference for transport diagnosis.
 Do not claim automatic hooks exist without checking the installed configuration.
 
-Related: running a recurring board-grooming pass over these tickets? See `interval-driver` (monitor diff as the work list, compact ticket reader, 0 tokens when nothing changed).
+Related: driving a launch? The PM's launch pass is the one way (section above; `agent-fleet-operations` "Launch mode"). Running another recurring board-grooming pass over these tickets? See `interval-driver` (monitor diff as the work list, compact ticket reader, 0 tokens when nothing changed).

@@ -80,7 +80,7 @@ Stuck mid-work: `+lifecycle:needs-input` (question as a comment) or `+lifecycle:
 it waits on; record the blocker as a Plane relation, `px link add A B --blocks`). The lane stays In
 Progress and the ticket stops holding a slot, so krebs can dispatch the next one. Park, do not tunnel.
 
-## Verdict giver (Launch Director, or the PM where there is none)
+## Verdict giver (the PM)
 
 You see tickets In Progress + `lifecycle:review`. Judge against the acceptance criteria and the
 evidence, not the implementer's summary; the reviewer is never the implementer.
@@ -90,13 +90,17 @@ evidence, not the implementer's summary; the reviewer is never the implementer.
   specific unmet criterion. It keeps `lifecycle:triaged` and waits for a slot; it is not re-triaged.
   `lifecycle:review` is cleared when it leaves In Progress.
 
-Verdict givers rank, flag and judge. They do not dispatch.
+The PM ranks, flags and judges. It does not dispatch. In launch mode (`.launch.yaml`
+`mode: launch`) the same PM gives the verdict through the launch pass's `--apply`: a reviewed ticket
+shipped in a published build is accepted and closed citing that build. There is no Launch Director
+desk; the role is retired.
 
 ## PM passes
 
 PMs accept (Backlog to Todo), order Todo (Plane `sort_order` is dispatch order, then priority, then
 sequence id), park (to Backlog), cancel, close accepted work and relay answers to `needs-input`
-tickets. Writes go through `px` or `px-apply.py` (interval-driver), under the board-driver lease
+tickets. Writes go through `px`, `px-apply.py` or, in launch mode, the launch pass's
+`launch-pass.py --apply` (interval-driver), under the board-driver lease
 (`interval-driver/scripts/board-lease.py`) when passes can overlap. The lease serializes board
 writes; it is not a work limit.
 

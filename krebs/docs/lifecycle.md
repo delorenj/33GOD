@@ -74,8 +74,8 @@ stateDiagram-v2
 | Dispatch Todo → In Progress | `krebs tick`, on the Candybar `krebs-tick` schedule. Nothing else dispatches. |
 | Release an orphan (turn over, no handback) | `krebs tick`, when Candystore shows no live turn. See [Orphans](#orphans-the-resume-path). |
 | Handback | The implementation turn. It adds `lifecycle:review` and an evidence comment, or closes the ticket if the scope has no review step. |
-| Verdict | The Launch Director, or the PM where there is none. Accepted means Done. Sent back means Todo, with the comment `returned: <criterion>`. |
-| Accept, park, cancel, Todo order | PM passes, through px or px-apply. |
+| Verdict | The PM (in launch mode, through the launch pass). There is no Launch Director desk. Accepted means Done. Sent back means Todo, with the comment `returned: <criterion>`. |
+| Accept, park, cancel, Todo order | PM passes, through px, px-apply or the launch pass's `--apply`. |
 
 The dispatch guard requires all of the following:
 
