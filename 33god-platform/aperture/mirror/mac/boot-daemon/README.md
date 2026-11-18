@@ -94,7 +94,7 @@ What the daemon does buy:
 | Reboot kind | After this change |
 |---|---|
 | Authenticated restart: `sudo fdesetup authrestart`, or a macOS software-update restart | Disk is unlocked for the boot. Colima and every container come up with nobody logged in. |
-| Restart from a logged-in session | Same as today, but Colima is up before the login window. |
+| Restart from a logged-in session (menu or `shutdown -r`) | With FileVault on, this also stops at the pre-boot password screen; the daemon only helps once the disk is unlocked. Use `fdesetup authrestart` instead. (Untested at a real boot.) |
 | Power loss or cold boot | Stops at the pre-boot password screen. Nothing runs until someone unlocks. The daemon cannot change that. |
 
 For planned reboots, use `sudo fdesetup authrestart` instead of `shutdown -r` or a menu restart.

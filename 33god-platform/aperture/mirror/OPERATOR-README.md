@@ -76,9 +76,9 @@ After a reboot today, Colima and its containers come back only once someone logs
 
 Three limits to know:
 
-1. **FileVault is ON.** After a cold start or a power cut the Mac stops at the pre-boot password screen and no daemon runs, ours included. The daemon helps authenticated and logged-in restarts only. For a planned reboot, run `sudo fdesetup authrestart` instead of a menu restart or `shutdown -r`. Turning FileVault off would make power-loss recovery unattended; that is Damian's call and nothing here changes it. `pmset autorestart` is already 1 and sleep is 0.
+1. **FileVault is ON.** After a cold start or a power cut the Mac stops at the pre-boot password screen and no daemon runs, ours included. The daemon helps authenticated restarts only (`fdesetup authrestart` or a software-update restart); a plain menu restart also stops at the pre-boot screen. For a planned reboot, run `sudo fdesetup authrestart` instead of a menu restart or `shutdown -r`. Turning FileVault off would make power-loss recovery unattended; that is Damian's call and nothing here changes it. `pmset autorestart` is already 1 and sleep is 0.
 2. **The native 33GOD agents still start at login.** `io.33god.hook-hub`, `io.33god.candybar-executor` and `io.33god.pjangler-registry` are `gui/501` agents. After an unattended reboot the containers and the bus come back, but hook capture, Candybar jobs and the registry wait for the next login. Moving them to the system domain is a separate change.
-3. The 2026-11-14 recovery worked because someone unlocked the Mac five minutes after boot and auto-login did the rest.
+3. The 2026-11-14 recovery worked because someone unlocked the Mac at the pre-boot screen five minutes after boot; that unlock also logs the user in (there is no auto-login user), which started the LaunchAgents.
 
 ## 5. Clocks: Candybar only
 
