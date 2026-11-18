@@ -20,7 +20,7 @@ A provider adapter must implement these targets:
 Plane boards follow [lifecycle v2](../../docs/lifecycle.md): the five stock lanes, with
 review and holds carried by labels. The adapter never creates a lifecycle label and
 writes labels as a delta on a fresh read, since Plane's PATCH replaces the whole list.
-Linear and Trello have no lifecycle labels here, so their `in_review` and
+Trello has no lifecycle labels here, so its `in_review` and
 `awaiting_decision` are lanes the role names. The nine-lane extended targets
 (`e2e_testing`, `ready_for_documentation`, `needs_re_evaluation`) are retired.
 
@@ -38,10 +38,9 @@ Each provider implements these operations:
 ## Provider implementations
 
 - `plane.sh` — Plane REST API adapter
-- `linear.sh` — Linear GraphQL adapter
 - `trello.sh` — Trello REST adapter
 
-These three files are the CANONICAL copies. They used to live only inside
+These two supported files are the CANONICAL copies. They used to live only inside
 `hermes-agent-template/template/.scripts/providers/`, which made them agent
 assets that a project could not use without one: pjangler created a project's
 ticket board by staging a fake Hermes role tree in a temp dir and running the
@@ -59,7 +58,8 @@ Change them HERE, then re-sync the template mirror.
 
 Provider credentials and board identifiers come from:
 
-1. `.project.json` `ticket_provider` block
+1. `.project.json` `ticket_provider` block (only `plane` or `trello` is supported;
+   an old `linear` binding remains readable but must fail before adapter/network use)
 2. Environment variables (provider-specific)
 3. Optional per-repo lane maps (e.g., `.momo/config.json` for Trello non-standard boards)
 
