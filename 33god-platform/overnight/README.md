@@ -17,6 +17,7 @@ This is the first full pass: every beat is staged so the whole vision can be jud
 | `site/manifest.json` | The scene manifest. Every word on the page, one record per beat, plus the staged transcript. | Content |
 | `site/overnight.js` | Staging: the scroll dolly, the camera, the seating plan, which window is in which state, the set pieces. No copy. | Design |
 | `site/dolly.js` | The scroll playhead: spring smoothing, cuts for nav jumps, seam settling. Page-agnostic. | Design |
+| `site/nights/<date>.json` | A real night: a `33god.night` digest from `waybill night`. `site.night.src` in the manifest picks which one plays. | `waybill night` |
 | `site/overnight.css` | Page layout and set-piece styles. Tokens only, no raw colours. | Design |
 | `site/ds/tokens.css` | The Overnight tokens, written out from the design system's `tokens.json`, plus the few base 33GOD values the page uses. | Design system first, then here |
 | `site/ds/bundle.js`, `site/ds/bundle.css` | The design system's six components (`window.Overnight`), copied unchanged. | Design system only |
@@ -39,6 +40,19 @@ Each beat carries design fields (`id`, `time`, `act`, `spectacle`, `camera`, `se
 - **View as log** shows the same night as one `LogLine` per beat. The page opens there under `prefers-reduced-motion` and on screens narrower than 760px.
 - **Crank**: stop scrolling for 20 seconds and one line appears.
 
+## The real night
+
+The page replays a real night of the company: **16–17 Nov 2026, 18:02 to 07:41 EST, 57,875 Bloodbank events from 30 components.** The clock time is the real time, so at 03:12 on the page you are looking at what the company did at 03:12 that night.
+
+- **Working windows are real** wherever the beat is not choreographing them (Acts I–II and the ambient building in Act IV). A window is working when its component published on the bus in the last three minutes. Seats left over after the named ones go to components that worked that night and have no seat of their own, so hovering shows who they are.
+- **The counter under the clock is real**: events archived so far tonight.
+- **The log view** interleaves real lines (blue rule) with the staged beats: per beat, up to three real moments between that beat's time and the next, rare events first.
+- **Still staged**: every set piece (the bus, the conference-room transcript, the tickets, the checklists, the car), and the window states those set pieces drive.
+
+Make another night: `waybill night --date 2026-11-16 -o site/nights/` (defaults: last night, 18:02 to 07:41, America/New_York, public profile), then point `site.night.src` at it. `?night=YYYY-MM-DD` plays any file in `site/nights/` without editing the manifest; `?night=staged` turns the replay off. If the file fails to load, the page plays the staged night and says so in the console.
+
+The digest holds producer, event type and minute only, never payloads. Candybar jobs and hook-hub handlers are credited to the component the work was for; third-party Hermes desks are aliased (`desk-3`) in the public profile.
+
 ## Real versus staged in this pass
 
 | Element | State |
@@ -46,13 +60,14 @@ Each beat carries design fields (`id`, `time`, `act`, `spectacle`, `camera`, `se
 | Component names and their one-liners | Real, from the landing page copy |
 | The five counts (72, 12, 214, 299, 1) | Real, stamped 15 Nov 2026 |
 | Event subjects | Real, from the Bloodbank contract. Which subject sits on which beat is a first guess and needs a content pass. |
-| Clock times, window activity | Staged, labelled once beside the clock |
+| Clock times, window activity | Real when a night file loads (see above), outside the set pieces. Beat times themselves are staged. |
+| Event counter under the clock | Real, from the night file |
 | Transcript words, speaker names, the translated call | Staged, written for this pass |
 | The briefing form | Lights your window and stores nothing. It says so under the field. |
 
 ## Not built yet
 
-These wait on the open decisions in the bible: sound and the Vox standup, the real-night replay, the live event counter, the one-machine reveal, and a designed phone layout (phones get the log view for now).
+These wait on the open decisions in the bible: sound and the Vox standup, the one-machine reveal, and a designed phone layout (phones get the log view for now). The real-night replay and the event counter are in (above); "always last night" needs a Candybar job to rebuild the file each morning.
 
 ## Preview locally
 

@@ -61,8 +61,35 @@
     return { className: 'rv' + (cls ? ' ' + cls : ''), style: style };
   }
 
+  /* ---------- the real night: a 33god.night digest (waybill night) ---------- */
+  // Seat names that are not just their registry id, upper-cased.
+  var CID = { 'HERMES': 'hermes-fleet', 'VAULT-PROJECTOR': 'artifact-vault-projector', 'GATEWAY-WATCHDOG': 'hermes-gateway-watchdog' };
+  var RECENT = 3;   // minutes: a window is working if its component published in the last three
+  function cidOf(name) { return name ? (CID[name] || name.toLowerCase()) : null; }
+  function deskOf(name) { return name && name.indexOf('PM · ') === 0 ? name.slice(5).toLowerCase() + '-pm' : null; }
+  // Per-key prefix sums over the night's minutes, so "how much in [a, b]" is one subtraction.
+  function prepNight(N) {
+    var len = N.window.minutes;
+    function sums(pairs) { var a = new Float64Array(len + 1); var d = new Float64Array(len); (pairs || []).forEach(function (p) { if (p[0] >= 0 && p[0] < len) d[p[0]] += p[1]; }); for (var k = 0; k < len; k++) a[k + 1] = a[k] + d[k]; return a; }
+    var comp = {}, desk = {};
+    Object.keys(N.minutes || {}).forEach(function (k) { comp[k] = sums(N.minutes[k]); });
+    Object.keys(N.desks || {}).forEach(function (k) { desk[k] = sums(N.desks[k]); });
+    var total = new Float64Array(len + 1);
+    (N.events_by_minute || []).forEach(function (n, k) { total[k + 1] = total[k] + n; });
+    var t0 = N.window.local_since.slice(11, 16);
+    return { N: N, len: len, comp: comp, desk: desk, total: total, start: mins(t0), label: N.window.label };
+  }
+  function nightMinute(R, clockMins) { return Math.floor(clockMins - R.start); }
+  function range(a, lo, hi, len) { lo = clamp(lo, 0, len); hi = clamp(hi, 0, len); return hi > lo ? a[hi] - a[lo] : 0; }
+  function seatBusy(R, seat, mi) {
+    if (!R || mi < 0 || mi >= R.len) return false;
+    var a = (seat.desk && R.desk[seat.desk]) || (seat.cid && R.comp[seat.cid]);
+    return !!a && range(a, mi - RECENT + 1, mi + 1, R.len) > 0;
+  }
+  function eventsSoFar(R, mi) { return R ? R.total[clamp(mi + 1, 0, R.len)] : 0; }
+
   /* ---------- the building's seating plan ---------- */
-  function buildSeats(M) {
+  function buildSeats(M, R) {
     var byKey = {}, list = [];
     function put(f, c, seat) { seat.f = f; seat.c = c; seat.h = hash(f, c); byKey[f + ':' + c] = seat; list.push(seat); return seat; }
     var lines = {};
@@ -98,12 +125,18 @@
     var others = beat['org-chart'].copy.departments.map(function (d) { return d.name; })
       .concat(['ENRICHER', 'PJANGLER', 'GENESIS', 'DECKARD'])
       .filter(function (n, i, a) { return !PLACED[n] && !staff.some(function (s) { return s.name === n; }) && a.indexOf(n) === i; });
+    // On a real night, the seats left over go to the components that worked tonight and have no seat of their own.
+    var seated = {};
+    list.forEach(function (s) { if (s.name) seated[cidOf(s.name)] = true; });
+    others.forEach(function (n) { seated[cidOf(n)] = true; });
+    var extra = R ? R.N.components.filter(function (c) { return !seated[c.id]; }) : [];
     rest.forEach(function (s, i) {
-      var name = others[i] || null;
-      put(s.f, s.c, { kind: 'comp', name: name, line: name ? (lines[name] || '') : '', overtime: i === others.length + 2 });
+      var name = others[i] || null, line = name ? (lines[name] || '') : '';
+      if (!name && extra.length) { var c = extra.shift(); name = c.id.toUpperCase(); line = c.name; }
+      put(s.f, s.c, { kind: 'comp', name: name, line: line, overtime: !R && i === others.length + 2 });
     });
     var named = {};
-    list.forEach(function (s) { if (s.name) named[s.name] = s; });
+    list.forEach(function (s) { if (s.name) { named[s.name] = s; s.cid = cidOf(s.name); s.desk = deskOf(s.name); } });
     return { byKey: byKey, list: list, named: named, staffSeats: staffSeats };
   }
 
@@ -114,7 +147,9 @@
     var states = new Array(floors * PER);
     var staffK = Math.min(seats.staffSeats.length - 1, Math.floor(q * seats.staffSeats.length));
 
+    var R = ctx.night, mi = ctx.minute;
     function ambient(s) {
+      if (R) return seatBusy(R, s, mi) ? 'working' : 'lit';
       if (s.overtime) return 'overtime';
       var r = (Math.floor(s.h * 97) + Math.floor(step / 8)) % 12;
       return r === 0 ? 'working' : 'lit';
@@ -122,7 +157,7 @@
     function comp(s) {
       var n = s.name;
       if (i === I.premise) return seg(q, 0.5, 0.95) > (s.f + s.h * 0.9) / 12.6 ? 'lit' : 'dark';
-      if (i < I.transcript) return 'lit';
+      if (i < I.transcript) return R && seatBusy(R, s, mi) ? 'working' : 'lit';
       if (i === I.transcript) return n === 'WAX' ? 'working' : (seg(q, 0.04, 0.3) > s.h * 0.98 ? 'dark' : 'lit');
       if (i < I['pm-krebs']) return n === 'WAX' ? 'working' : 'dark';
       if (i === I['pm-krebs']) {
@@ -242,9 +277,11 @@
 
   /* ---------- the clock: its own little island so the night can tick without redrawing the building ---------- */
   function LiveClock(props) {
-    var st = useState({ time: props.initial, precise: null });
+    var st = useState({ time: props.initial, precise: null, count: null });
     props.api.current = st[1];
-    return h(O.Clock, { time: st[0].time, precise: st[0].precise, staged: true, stagedLabel: props.label });
+    return h('div', { className: 'hud__clockin' },
+      h(O.Clock, { time: st[0].time, precise: st[0].precise, staged: true, stagedLabel: props.label }),
+      st[0].count != null && props.counter ? h('span', { className: 'hud__count' }, props.counter.replace('{n}', Math.round(st[0].count).toLocaleString('en-US'))) : null);
   }
 
   function Header(props) {
@@ -496,14 +533,15 @@
     var M = props.M;
     var beats = M.beats;
     var I = useMemo(function () { var m = {}; beats.forEach(function (b, n) { m[b.id] = n; }); return m; }, [beats]);
-    var seats = useMemo(function () { return buildSeats(M); }, [M]);
+    var R = props.night;
+    var seats = useMemo(function () { return buildSeats(M, R); }, [M, R]);
     var times = useMemo(function () { return beats.map(function (b) { return mins(b.time); }); }, [beats]);
 
     var prefersLog = useMemo(function () {
       return window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(max-width: 760px)').matches;
     }, []);
     var viewSt = useState(prefersLog ? 'log' : 'film'); var view = viewSt[0], setView = viewSt[1];
-    var posSt = useState({ i: 0, step: 0, q: 0 }); var pos = posSt[0], setPos = posSt[1];
+    var posSt = useState({ i: 0, step: 0, q: 0, minute: -1 }); var pos = posSt[0], setPos = posSt[1];
     var sizeSt = useState({ w: 760, h: 640, bs: 1 }); var size = sizeSt[0], setSize = sizeSt[1];
     var subSt = useState(false); var submitted = subSt[0], setSubmitted = subSt[1];
     var hoverSt = useState(null); var hover = hoverSt[0], setHover = hoverSt[1];
@@ -511,7 +549,7 @@
 
     var stageRef = useRef(null), trackRef = useRef(null), sceneRef = useRef(null), worldRef = useRef(null), overlayRef = useRef(null);
     var glassRef = useRef(null), spRef = useRef(null), capRef = useRef(null), interRef = useRef(null), horizonRef = useRef(null);
-    var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, clock: '', precise: null, theme: '' });
+    var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, minute: -1, clock: '', precise: null, theme: '' });
     var camNow = useRef({ x: 0, y: 0, s: 1, o: 1 });
     var dollyRef = useRef(null), playY = useRef(0);
     var sizeRef = useRef(size); sizeRef.current = size;
@@ -594,13 +632,17 @@
         horizonRef.current.style.setProperty('--band', mix(C.sky0500, C.sky0630, seg(m, mins('05:00'), mins('06:30'))));
       }
       var clock = fmt(m), precise = bt.id === 'jev' && tr === 0 ? '07.' + pad3(31 + Math.floor(q * 48)) : null;
+      var minute = R ? nightMinute(R, m) : -1;
       if (clockApi.current && (clock !== last.current.clock || precise !== last.current.precise)) {
-        last.current.clock = clock; last.current.precise = precise; clockApi.current({ time: clock, precise: precise });
+        last.current.clock = clock; last.current.precise = precise; clockApi.current({ time: clock, precise: precise, count: R ? eventsSoFar(R, minute) : null });
       }
 
+      // Re-render on a new step of the hold, and on a new real minute (windows follow the night during travels too).
       var step = Math.floor(q * STEPS);
-      if (i !== last.current.i || step !== last.current.step) { last.current.i = i; last.current.step = step; setPos({ i: i, step: step, q: q }); }
-    }, [beats, times, I, props.colors]);
+      if (i !== last.current.i || step !== last.current.step || minute !== last.current.minute) {
+        last.current.i = i; last.current.step = step; last.current.minute = minute; setPos({ i: i, step: step, q: q, minute: minute });
+      }
+    }, [beats, times, I, props.colors, R]);
 
     // A seam is a stretch where the frame is between two rest states: a camera travel with its caption
     // crossfade, or an act's statement handing over to the beat's words. Stop in one and the dolly
@@ -646,12 +688,13 @@
     React.useLayoutEffect(function () { if (view === 'film') frame(); }, [size, view, frame, posSt[0].i]);
 
     var toggleView = useCallback(function () { setView(function (v) { return v === 'film' ? 'log' : 'film'; }); window.scrollTo(0, 0); }, []);
-    var clock = h(LiveClock, { api: clockApi, initial: beats[0].time, label: M.site.stagedLabel });
+    var NC = M.site.night || {};
+    var clock = h(LiveClock, { api: clockApi, initial: beats[0].time, label: R ? (NC.label || '{label}').replace('{label}', R.label) : M.site.stagedLabel, counter: R ? NC.counter : null });
 
-    if (view === 'log') return h(LogView, { M: M, toggleView: toggleView, submitted: submitted, onSubmit: function () { setSubmitted(true); }, I: I });
+    if (view === 'log') return h(LogView, { M: M, toggleView: toggleView, submitted: submitted, onSubmit: function () { setSubmitted(true); }, I: I, night: R });
 
     /* geometry: where a window is, in the scene */
-    var wst = windowStates({ id: b.id, q: pos.q, step: pos.step, I: I, i: pos.i, seats: seats, floors: floors, submitted: submitted });
+    var wst = windowStates({ id: b.id, q: pos.q, step: pos.step, I: I, i: pos.i, seats: seats, floors: floors, submitted: submitted, night: R, minute: pos.minute });
     function at(f, c) { return { x: size.w / 2 + (PAD + c * PITCH_X + WIN_W / 2 - BW / 2) * size.bs, y: size.h - GROUND - (PAD + f * PITCH_Y + WIN_H / 2) * size.bs }; }
     var bLeft = size.w / 2 - BW / 2 * size.bs;
     var K0 = cam(b.id, pos.q);
@@ -808,20 +851,40 @@
   }
 
   /* ---------- the log view: the same night, no camera ---------- */
+  // Real moments from the replayed night between this beat's time and the next one's.
+  function realLines(R, M, bt) {
+    if (!R) return [];
+    var NC = M.site.night || {};
+    var n = M.beats.indexOf(bt), next = M.beats[n + 1];
+    var a = nightMinute(R, mins(bt.time)), b = next ? nightMinute(R, mins(next.time)) : R.len;
+    var names = {}; R.N.components.forEach(function (c) { names[c.id] = c.name; });
+    // Prefer what was rare tonight, then the first appearance of something routine; the night's first
+    // minute catches every routine stream starting at once, so those only fill in when nothing else did.
+    var picked = R.N.moments.filter(function (x) { return x.m >= a && x.m < Math.max(b, a + 1); })
+      .map(function (x, k) { return { x: x, k: k, rank: !x.first_of ? 0 : x.m > 0 ? 1 : 2 }; })
+      .sort(function (p, q) { return p.rank - q.rank || p.k - q.k; }).slice(0, 3)
+      .sort(function (p, q) { return p.k - q.k; }).map(function (p) { return p.x; });
+    return picked.map(function (x, k) {
+      var note = (names[x.component] || x.component) + (x.first_of ? ' · ' + (NC.firstOf || 'first of {n} tonight').replace('{n}', x.first_of.toLocaleString('en-US')) : '');
+      return h('div', { key: bt.id + 'real' + k, className: 'logline--real' }, h(O.LogLine, { time: fmt(R.start + x.m), subject: x.type, note: note }));
+    });
+  }
   function LogView(props) {
     var M = props.M, first = M.beats[0], ask = M.beats[props.I.ask];
     var acts = Object.keys(M.acts);
     return h('div', { className: 'logview' },
-      h(Header, { M: M, view: 'log', jump: function () { window.scrollTo(0, 0); }, jumpTo: function () {}, toggleView: props.toggleView, clock: h(O.Clock, { time: first.time + ' → ' + ask.time, staged: true, stagedLabel: M.site.stagedLabel }) }),
+      h(Header, { M: M, view: 'log', jump: function () { window.scrollTo(0, 0); }, jumpTo: function () {}, toggleView: props.toggleView, clock: h(O.Clock, { time: first.time + ' → ' + ask.time, staged: true, stagedLabel: props.night && M.site.night ? M.site.night.label.replace('{label}', props.night.label) : M.site.stagedLabel }) }),
       h('main', { id: 'log', className: 'logview__main' },
         h('p', { className: 'eyebrow' }, first.kicker),
         h('h1', { className: 'statement-act' }, first.title + ' ', h('span', { className: 'statement-hero__turn' }, first.titleTurn)),
         h('p', { className: 'cap__lede' }, M.site.logLead),
+        props.night && M.site.night ? h('p', { className: 'caption-note logview__real' }, M.site.night.logNote.replace('{label}', props.night.label)) : null,
         acts.map(function (a) {
           return h('section', { key: a, className: 'logview__act' },
             h('h2', { className: 'instrument' }, 'Act ' + a + ' · ' + M.acts[a]),
             M.beats.filter(function (bt) { return bt.act === a; }).map(function (bt) {
-              return (bt.log || []).map(function (l, n) { return h(O.LogLine, { key: bt.id + n, time: bt.time, subject: l.subject, note: l.note }); });
+              var staged = (bt.log || []).map(function (l, n) { return h(O.LogLine, { key: bt.id + n, time: bt.time, subject: l.subject, note: l.note }); });
+              return staged.concat(realLines(props.night, M, bt));
             }));
         }),
         h('section', { className: 'logview__ask' },
@@ -832,15 +895,24 @@
   }
 
   /* ---------- boot ---------- */
-  function boot(M) {
+  function boot(M, R) {
     var colors = { sky1802: cssVar('--sky-1802'), sky2200: cssVar('--sky-2200'), sky0200: cssVar('--sky-0200'), sky0500: cssVar('--sky-0500'), sky0630: cssVar('--sky-0630'), sky0730: cssVar('--sky-0730') };
     var root = document.getElementById('root');
     root.textContent = '';
-    ReactDOM.createRoot(root).render(h(App, { M: M, colors: colors }));
+    ReactDOM.createRoot(root).render(h(App, { M: M, colors: colors, night: R }));
   }
   fetch('manifest.json', { cache: 'no-cache' })
     .then(function (r) { if (!r.ok) throw new Error('manifest.json: ' + r.status); return r.json(); })
-    .then(boot)
+    .then(function (M) {
+      // ?night=YYYY-MM-DD replays another night; ?night=staged turns the replay off.
+      var want = new URLSearchParams(location.search).get('night');
+      var src = want === 'staged' ? null : want ? 'nights/' + want.replace(/[^0-9-]/g, '') + '.json' : (M.site.night && M.site.night.src);
+      if (!src) return boot(M, null);
+      return fetch(src, { cache: 'no-cache' })
+        .then(function (r) { if (!r.ok) throw new Error(src + ': ' + r.status); return r.json(); })
+        .then(function (N) { if (N.format !== '33god.night') throw new Error(src + ': not a 33god.night file'); boot(M, prepNight(N)); })
+        .catch(function (err) { console.warn('Overnight: no real night, staging instead.', err); boot(M, null); });
+    })
     .catch(function (err) {
       var root = document.getElementById('root');
       root.textContent = '';

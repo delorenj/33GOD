@@ -55,6 +55,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .hud__cta { color: var(--stage-ink); }
 .hud__clock { min-width: 108px; display: flex; justify-content: flex-end; }
 .hud__clock .on-clock { align-items: flex-end; }
+.hud__clockin { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.hud__count { font: 400 11px/14px var(--font-mono); color: var(--stage-ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.logview__real { padding-left: 12px; border-left: 2px solid var(--window-working); }
+.logline--real { border-left: 2px solid var(--window-working); padding-left: 10px; margin-left: -12px; }
 .mark { flex: none; display: block; }
 .mark__ink { fill: var(--stage-ink); }
 .mark__you { fill: var(--window-you); }

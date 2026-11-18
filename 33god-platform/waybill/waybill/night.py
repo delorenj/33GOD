@@ -223,6 +223,8 @@ def fold(rows: list[dict], lo: datetime, hi: datetime, registry: dict[str, dict]
                 desk = desk_alias.setdefault(desk, f"desk-{len(desk_alias) + 1}")
             d = desks.setdefault(desk, {})
             d[m] = d.get(m, 0) + n
+        if handler:
+            continue            # handler credit lights the component; it is not a bus event, so no type or moment
         t = types.setdefault((cid, et), {"component": cid, "type": et, "count": 0, "first": m, "minutes": []})
         t["count"] += n
         t["first"] = min(t["first"], m)

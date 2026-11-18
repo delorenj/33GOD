@@ -29,7 +29,14 @@ waybill record  [--cli claude|codex] [--profile full|public]
 waybill show    <file.waybill.json> [--width N] [--all] [--no-color]
 waybill publish <file.waybill.json> [--full] [--name N] [--dry-run]
 waybill list    [--cli claude|codex] [--limit N] [--json]     # pick a turn to capture
+waybill night   [--date YYYY-MM-DD] [--from 18:02] [--to 07:41] [--tz America/New_York] [-o DIR|FILE]
 ```
+
+**night** is the wide shot: instead of one prompt, every event Candystore archived in a window of
+wall-clock time, folded into per-minute activity per registry component (`33god.night` v1). Candybar
+jobs and hook-hub handlers are credited to the component the work was for (producer surface, registry
+id, longest id prefix, or the repo holding the job's `.candybars/` manifest). One read-only aggregate
+query; producer, type and minute only. The Overnight launch page (`overnight/site/nights/`) replays it.
 
 **capture** rebuilds a past turn from what every source still holds. It resolves the turn window
 (from the transcript, falling back to the hook-hub receipts), runs all collectors in parallel, each with
