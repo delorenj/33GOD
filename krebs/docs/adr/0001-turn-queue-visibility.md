@@ -1,6 +1,6 @@
 # ADR 0001: A queued agent turn is a fact on the bus
 
-- **Status:** proposed, 2026-11-18. Krebs step 2 (liveness before a catch-up triage) shipped the same day; the gateway `queued` event and the n8n triage retirement wait on Jarad.
+- **Status:** accepted, 2026-11-18 (Jarad: "build the gateway queued event and retire the n8n triage lane"). Shipped the same day: Krebs asks liveness before a board turn; the gateway publishes `bloodbank.agent.invocation.queued` at claim; Krebs liveness counts a queued turn whoever sent it; the n8n Ticket Triage lane is deactivated (its durable consumer deleted) and Krebs is the only triage sender, with the quiet window cut from 30 to 10 minutes. Open: the gateway's 4 batch slots have no turn timeout (see Consequences).
 - **Question (Jarad):** "Before locking in the sqlite solution: is it a code smell that commands can be
   queued by non-krebs sources? Is there a more idiomatic event-driven pattern to employ here?"
 - **Level this decides for (`belsky-doctrine`):** every consumer of agent turn state (Krebs liveness,

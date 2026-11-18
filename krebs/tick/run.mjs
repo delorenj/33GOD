@@ -329,6 +329,14 @@ export async function runTick({
     : null;
   const releasedBefore = releaseCounts(journalEntries, started.getTime() - ORPHAN_LOOP_WINDOW_MS);
   const reviewsSent = reviewAttempts(journalEntries);
+  // The kind of the last board turn each scope was sent ("<agent>|<board>" -> triage|review):
+  // when a scope has both kinds waiting, it alternates, so a review backlog never starves
+  // triage (the flow's gate) and a triage stream never starves reviews.
+  const lastBoardTurn = new Map();
+  for (const e of journalEntries) {
+    if (e?.ok !== true || (e.action !== "triage.publish" && e.action !== "review.publish")) continue;
+    lastBoardTurn.set(`${e.agent_id}|${e.board_id}`, e.action === "review.publish" ? "review" : "triage");
+  }
   let releasesThisTick = 0;
   let unsticksThisTick = 0;
   const triagePlans = []; // board turns {kind, scope, snap, out, entry, ticket}: picked per scope, capped tick-wide after the loop
@@ -674,7 +682,9 @@ export async function runTick({
       // with a turn already queued or running (an n8n triage, the implementer still at it) is
       // skipped and the next oldest gets the turn. At most BOARD_TURN_PROBES probes per scope;
       // Candystore unknown stops the scope's board turns for this tick.
-      fresh.sort((a, b) => compareTriage(a.t, b.t));
+      const prefer = lastBoardTurn.get(`${scope.agentId}|${board}`) === "triage" ? "review" : "triage";
+      const rank = (x) => ((x.kind ?? "triage") === prefer ? 0 : 1);
+      fresh.sort((a, b) => rank(a) - rank(b) || compareTriage(a.t, b.t));
       let chosen = 0;
       let probes = 0;
       let blind = null;
@@ -873,7 +883,10 @@ export async function runTick({
   }
 
   // Board turns (catch-up triage, review): tick-wide cap (oldest first across scopes), then one publish each.
-  triagePlans.sort((a, b) => compareTriage(a.ticket, b.ticket) || (a.scope.agentId < b.scope.agentId ? -1 : 1));
+  // Triage first (it gates dispatch; a review backlog from the 11-14 migration is weeks old and
+  // would otherwise win every oldest-first sort), then reviews; oldest first within each.
+  const kindRank = (plan) => (plan.kind === "review" ? 1 : 0);
+  triagePlans.sort((a, b) => kindRank(a) - kindRank(b) || compareTriage(a.ticket, b.ticket) || (a.scope.agentId < b.scope.agentId ? -1 : 1));
   for (const [i, plan] of triagePlans.entries()) {
     const { scope, snap, out, entry } = plan;
     if (plan.kind === "review") {

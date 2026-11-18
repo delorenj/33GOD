@@ -74,8 +74,7 @@ stateDiagram-v2
 
 | Step | Owner |
 |---|---|
-| Triage on Todo entry | The n8n Ticket Triage lane, which sends a triage turn to the scope's owner agent. |
-| Triage catch-up | `krebs tick`. A Todo ticket with no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, and unchanged for 30 minutes gets the same triage turn the lane would have sent (a lost webhook, an n8n restart). At most 1 per scope and 6 per tick, oldest first: a desk takes its board-driver lease for each turn, so two triage turns sent to one desk at the same moment collide and the second gives up without finishing. The command id comes from board, ticket and `updated_at`, so one ticket version is triaged once; a turn that changes nothing does not loop. Krebs writes nothing to Plane for it. |
+| Triage | `krebs tick`, the only triage sender. A Todo ticket with no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, and unchanged for 10 minutes gets a triage turn to the scope's owner agent. The n8n Ticket Triage lane that used to send it on Todo entry was retired on 2026-11-18 ([ADR 0001](adr/0001-turn-queue-visibility.md)): with two senders, a ticket could get two triage turns at once, and Krebs could not see the lane's queued command. At most 1 per scope and 6 per tick, triage before review, oldest first: a desk takes its board-driver lease for each turn, so two triage turns sent to one desk at the same moment collide and the second gives up without finishing. The command id comes from board, ticket and `updated_at`, so one ticket version is triaged once; a turn that changes nothing does not loop. Krebs writes nothing to Plane for it. |
 | Dispatch Todo → In Progress | `krebs tick`, on the Candybar `krebs-tick` schedule. Nothing else dispatches. |
 | Release an orphan (turn over, no handback) | `krebs tick`, when Candystore shows no live turn. See [Orphans](#orphans-the-resume-path). |
 | Handback | The implementation turn. It adds `lifecycle:review` and an evidence comment, or closes the ticket if the scope has no review step. |
@@ -100,7 +99,8 @@ An agent turn can end without doing what the lifecycle expects: it asks a questi
 
 Each tick, before the slot math, Krebs looks at every ticket that has been unchanged for 30 minutes and either holds a slot (In Progress, no `lifecycle:review`, no hold label, not an epic) or carries `agent:working`. For each one it asks Candystore whether an agent turn is live on it. Every turn on a ticket emits `agent.invocation.started` and then `.completed` or `.failed`, stamped with the ticket's correlation id, so the answer is exact. On the 14 days before the change, all 632 ticket turns had both ends on record. A turn counts as live when:
 
-- Krebs sent it a dispatch command under 8 hours ago (a triage command under 3 hours ago) and that command has not ended. The gateway only announces a turn's start once the turn gets one of its slots, and commands have waited up to 55 minutes in that queue, so Krebs trusts its own journal for the commands it sent;
+- Krebs sent it a dispatch command under 8 hours ago (a triage or review command under 3 hours ago) and that command has not ended. This covers the seconds between the publish and the gateway picking the command up;
+- the gateway queued it and it has not started or ended, queued under 8 hours ago (3 hours for a triage or review turn), whoever sent it. The gateway publishes `agent.invocation.queued` the moment it takes a command, and `.started` only once the turn gets one of its slots; commands have waited up to 55 minutes in that queue. The report names the sender (`queued by krebs-tick 12 min ago`);
 - it started and has not ended, and started under 8 hours ago (the longest delegation on record ran 4.6 hours);
 - it detached to a background worker under 24 hours ago;
 - there was any agent activity on the ticket in the last 30 minutes;
@@ -132,7 +132,7 @@ The review turn tells the PM to judge each acceptance criterion against evidence
 | Sent back | `px release <ref> -m "returned: <criterion>"`. The ticket goes to Todo, keeps `lifecycle:triaged`, and waits for a slot. |
 | Needs a person | `px attention <ref> -m "<question>"` |
 
-Review turns share the scope's one board turn per tick with triage catch-up, oldest first, and the tick-wide cap of 6. A verdict changes the ticket, so each ticket version is reviewed once. A turn that ends without a verdict is sent again after 3 hours, at most 3 times per version; after that the tick lists the ticket as waiting.
+Review turns share the scope's one board turn per tick with triage, and the tick-wide cap of 6. The scope alternates: after a triage turn its oldest review goes next, and after a review the oldest triage, so a backlog of old reviews never starves fresh triage (and the other way round). Across the tick, triage turns are picked before reviews. A verdict changes the ticket, so each ticket version is reviewed once. A turn that ends without a verdict is sent again after 3 hours, at most 3 times per version; after that the tick lists the ticket as waiting.
 
 ## What it replaces
 

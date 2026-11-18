@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "72df3e3a6a1a71f4e854ab49335788022466e269e84caaffdf81f7b6e5359bbd",
+  "registry_digest": "ac7bf41d37f972ad79bdbd20517457f1e2e63979d590bf6cf0c37acede503a52",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -1631,7 +1631,7 @@
       "level": "component",
       "parent": "n8n",
       "status": "live",
-      "summary": "n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react to ticket changes.",
+      "summary": "n8n workflows (Plane->Bloodbank, Pickup Chip, Lane Errors, Ingress Reconcile) that react to ticket changes. Ticket Triage was retired 2026-11-18 (krebs tick sends every ticket turn).",
       "role_in_system": "Turns a ticket move into a repo.task event that Krebs and agents act on.",
       "tech": [
         "n8n"
@@ -3372,18 +3372,6 @@
       "from": "plane-hook",
       "to": "bb-nats",
       "kind": "consumes-from",
-      "via": "plane.ticket.created/transitioned (Ticket Triage trigger)"
-    },
-    {
-      "from": "plane-hook",
-      "to": "bb-nats",
-      "kind": "publishes-to",
-      "via": "bloodbank.cmd.agent.invocation.start (Triage Ticket node)"
-    },
-    {
-      "from": "plane-hook",
-      "to": "bb-nats",
-      "kind": "consumes-from",
       "via": "bloodbank.agent.invocation.started/completed/failed (chip)"
     },
     {
@@ -3403,12 +3391,6 @@
       "to": "plane",
       "kind": "reads",
       "via": "Plane REST list issues (Ingress Reconcile)"
-    },
-    {
-      "from": "plane-hook",
-      "to": "ntfy",
-      "kind": "calls",
-      "via": "n8n-nodes-ntfy-client ntfySend (triage, unrouted)"
     },
     {
       "from": "plane-hook",
@@ -3680,6 +3662,6 @@
     "first_party": 78,
     "external": 20,
     "live": 86,
-    "edges": 301
+    "edges": 298
   }
 }

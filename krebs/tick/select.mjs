@@ -158,8 +158,12 @@ export function orphanKind(ticket, nowMs, quietMs) {
   return null;
 }
 
-/** spec catch_up.triage: a Todo ticket unchanged this long gets a triage turn. */
-export const TRIAGE_MIN_AGE_MS = 30 * 60 * 1000;
+/**
+ * spec triage: a Todo ticket unchanged this long gets a triage turn. One tick: krebs is the
+ * only triage sender since the n8n Ticket Triage lane was retired (2026-11-18, ADR 0001), and
+ * the quiet window only keeps it from triaging a ticket someone is still writing.
+ */
+export const TRIAGE_MIN_AGE_MS = 10 * 60 * 1000;
 /** At most this many catch-up triages per scope per tick, and per tick overall. */
 // One per scope: a desk serializes its board turns on the board-driver lease, so two triage
 // turns sent to one desk in the same instant collide and the second backs off unstamped
@@ -185,7 +189,7 @@ export function triageGuard(ticket, nowMs, minAgeMs = TRIAGE_MIN_AGE_MS) {
   if (isContainer(ticket.labels)) return "epic container";
   const updated = Date.parse(ticket.updatedAt ?? "");
   if (!Number.isFinite(updated)) return "no updated_at";
-  if (nowMs - updated <= minAgeMs) return "updated within the last 30 minutes";
+  if (nowMs - updated <= minAgeMs) return `updated within the last ${Math.round(minAgeMs / 60000)} minutes`;
   return null;
 }
 

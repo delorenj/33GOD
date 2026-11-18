@@ -108,20 +108,24 @@ test("a live turn on the ticket (the implementer still at it) holds the review b
   assert.ok(r2.scopes[0].warnings.some((w) => /review not sent/.test(w)));
 });
 
-test("one board turn per scope per tick: the oldest of triage and review goes, the rest wait", async () => {
-  const { publish, run } = setup({
-    liveness: idle,
-    issues: [
-      issue({ seq: 1, state: "todo", labels: [], updated: minsAgo(300) }),
-      issue({ seq: 2, state: "ip", labels: ["lifecycle:review"], updated: minsAgo(600) }),
-      issue({ seq: 3, state: "ip", labels: ["lifecycle:review"], updated: minsAgo(100) }),
-    ],
-  });
-  const s = (await run()).scopes[0];
-  assert.deepEqual(s.reviews.map((r) => r.key), ["OTH-2"]);
-  assert.deepEqual(s.reviewsCapped.map((r) => r.key), ["OTH-3"]);
-  assert.deepEqual(s.triageCapped.map((r) => r.key), ["OTH-1"]);
-  assert.equal(publish.sent.length, 1);
+test("one board turn per scope per tick: the scope alternates triage and review, oldest first within a kind", async () => {
+  const issues = [
+    issue({ seq: 1, state: "todo", labels: [], updated: minsAgo(300) }),
+    issue({ seq: 2, state: "ip", labels: ["lifecycle:review"], updated: minsAgo(600) }),
+    issue({ seq: 3, state: "ip", labels: ["lifecycle:review"], updated: minsAgo(100) }),
+  ];
+  // Nothing on record: triage first, even though the review is older (a review backlog never starves triage).
+  const first = setup({ liveness: idle, issues });
+  const s1 = (await first.run()).scopes[0];
+  assert.deepEqual(s1.triage.map((r) => r.key), ["OTH-1"]);
+  assert.deepEqual(s1.reviewsCapped.map((r) => r.key), ["OTH-2", "OTH-3"]);
+  assert.equal(first.publish.sent.length, 1);
+  // The last board turn was a triage: this tick the oldest review goes.
+  const journal = new MemoryJournal([{ action: "triage.publish", ok: true, agent_id: first.publish.sent[0].data.target_agent_id, board_id: first.publish.sent[0].data.context.board_id, ticket_id: "x", command_id: "c-x", ts: minsAgo(10) }]);
+  const second = setup({ liveness: idle, issues, journal });
+  const s2 = (await second.run()).scopes[0];
+  assert.deepEqual(s2.reviews.map((r) => r.key), ["OTH-2"]);
+  assert.deepEqual(s2.triageCapped.map((r) => r.key), ["OTH-1"]);
 });
 
 test("dry run plans a review and sends nothing", async () => {

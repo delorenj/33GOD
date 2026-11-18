@@ -42,9 +42,10 @@ test("triage eligibility: triaged, held, working, epic, too fresh, not Todo are 
   assert.match(why({ seq: 5, labels: ["agent:working"] }), /agent:working/);
   assert.match(why({ seq: 6, labels: ["epic"] }), /epic container/);
   assert.match(why({ seq: 7, labels: ["epic:big-thing"] }), /epic container/);
-  assert.match(why({ seq: 8, updated: FRESH }), /last 30 minutes/);
-  assert.match(why({ seq: 9, updated: "2026-11-14T14:30:00Z" }), /last 30 minutes/, "exactly 30 minutes is not older than 30 minutes");
-  assert.equal(why({ seq: 10, updated: "2026-11-14T14:29:59Z" }), null);
+  assert.match(why({ seq: 8, updated: "2026-11-14T14:55:00Z" }), /last 10 minutes/);
+  assert.match(why({ seq: 9, updated: "2026-11-14T14:50:00Z" }), /last 10 minutes/, "exactly 10 minutes (one tick) is not older than 10 minutes");
+  assert.equal(why({ seq: 10, updated: "2026-11-14T14:49:59Z" }), null);
+  assert.equal(why({ seq: 12, updated: FRESH }), null, "15 minutes old is past the one-tick window");
   assert.match(why({ seq: 11, updated: null }), /no updated_at/);
   assert.match(why({ seq: 12, state: "backlog" }), /not in Todo/);
   assert.match(why({ seq: 13, state: "ip" }), /not in Todo/);

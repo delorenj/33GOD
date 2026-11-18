@@ -47,7 +47,7 @@ workspace "33GOD" "One map of every component (I-12)" {
         }
         c_pdf2md = container "pdf2md" "Converts PDFs to Markdown for n8n workflows." "python" {
         }
-        c_plane_hook = container "Plane to Bloodbank workflows" "n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react to ticket changes." "n8n" {
+        c_plane_hook = container "Plane to Bloodbank workflows" "n8n workflows (Plane->Bloodbank, Pickup Chip, Lane Errors, Ingress Reconcile) that react to ticket changes. Ticket Triage was retired 2026-11-18 (krebs tick sends every ticket turn)." "n8n" {
         }
       }
       group "Agent Fleet Runtime" {
@@ -448,13 +448,10 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_pjangler -> c_skillex "wraps" "pj skills passes through to bundled @delorenj/skillex bin"
     c_plane_hook -> c_plane "consumes-from" "Plane webhook"
     c_plane_hook -> c_bb_nats "publishes-to" "bloodbank.evt.repo.task.*"
-    c_plane_hook -> c_bb_nats "consumes-from" "plane.ticket.created/transitioned (Ticket Triage trigger)"
-    c_plane_hook -> c_bb_nats "publishes-to" "bloodbank.cmd.agent.invocation.start (Triage Ticket node)"
     c_plane_hook -> c_bb_nats "consumes-from" "bloodbank.agent.invocation.started/completed/failed (chip)"
     c_plane_hook -> c_plane "writes" "Plane REST labels/issues (agent:working chip)"
     c_plane_hook -> c_candystore "reads" "GET :8683/events (stale chip sweep)"
     c_plane_hook -> c_plane "reads" "Plane REST list issues (Ingress Reconcile)"
-    c_plane_hook -> c_ntfy "calls" "n8n-nodes-ntfy-client ntfySend (triage, unrouted)"
     c_plane_hook -> c_n8n "calls" "GET 127.0.0.1:5678/api/v1/executions/<id>"
     c_plane_hook -> c_n8n_nodes_bb "calls" "node types planeBloodbank/bloodbankFleet/bloodbankTrigger"
     c_pr_crusher -> c_bb_nats "publishes-to" "PRC_BLOODBANK_PUBLISH_COMMAND"

@@ -149,9 +149,9 @@ test("stale agent:working on held, in-review and Todo tickets is removed; lanes 
   assert.equal(stateOf(plane, OTHER, "i-9"), "s-todo");
   assert.ok(labelsOf(plane, OTHER, "i-3").includes(labelId("lifecycle:needs-input")));
   // Both become board-turn candidates: the in-review ticket a review, the Todo one a triage.
-  // One board turn per scope per tick, oldest first (same age: lower sequence), so the review goes first.
-  assert.deepEqual(report.scopes[0].reviews.map((x) => x.key), ["OTH-4"]);
-  assert.deepEqual(report.scopes[0].triageCapped.map((x) => x.key), ["OTH-9"]);
+  // One board turn per scope per tick; with no board turn on record the scope starts with triage.
+  assert.deepEqual(report.scopes[0].triage.map((x) => x.key), ["OTH-9"]);
+  assert.deepEqual(report.scopes[0].reviewsCapped.map((x) => x.key), ["OTH-4"]);
 });
 
 test("loop guard: a ticket already released twice this week is held with agent:failed instead", async () => {
@@ -391,4 +391,31 @@ test("runTick hands the probe the commands krebs sent for that ticket", async ()
 test("orphanKind: a stale agent:working in Backlog is a suspect too", () => {
   assert.equal(orphanKind(t({ seq: 30, state: "backlog", labels: ["agent:working"], updated: OLD }), NOW_MS, QUIET_MS), "stale-working");
   assert.equal(orphanKind(t({ seq: 31, state: "backlog", labels: [], updated: OLD }), NOW_MS, QUIET_MS), null);
+});
+
+test("turnState: a queued invocation, whoever sent it, is live until it ends; a queued triage that never starts dies after the short cap", () => {
+  const q = (minutes, reason, extra = {}) => ev("bloodbank.agent.invocation.queued", minutes, { data: { context: { reason }, command_service: "n8n-ticket-grooming", ...extra } });
+  const live = turnState({ key: "POOL-62", nowMs: NOW_MS, correlated: [q(40, "ticket-grooming")] });
+  assert.equal(live.live, true);
+  assert.match(live.why, /queued by n8n-ticket-grooming 40 min ago/);
+  const over = turnState({ key: "POOL-62", nowMs: NOW_MS, correlated: [q(40, "ticket-grooming"), ev("bloodbank.agent.invocation.failed", 35)] });
+  assert.equal(over.live, false);
+  const stale = turnState({ key: "POOL-62", nowMs: NOW_MS, correlated: [q(4 * 60, "ticket-grooming")] });
+  assert.equal(stale.live, false, "a triage queued 4 h ago with no start is presumed dead");
+  const longDispatch = turnState({ key: "POOL-62", nowMs: NOW_MS, correlated: [q(4 * 60, "ticket-delegation")] });
+  assert.equal(longDispatch.live, true, "a delegation keeps the 8 h cap");
+  const startedLater = turnState({ key: "POOL-62", nowMs: NOW_MS, correlated: [q(300, "ticket-grooming"), ev("bloodbank.agent.invocation.started", 100)] });
+  assert.equal(startedLater.live, true);
+  assert.match(startedLater.why, /started/);
+});
+
+test("turnState: a command krebs sent that the gateway has queued reads as queued", () => {
+  const v = turnState({
+    key: "OTH-1",
+    nowMs: NOW_MS,
+    sent: [{ commandId: "inv-1", at: minsAgo(20), kind: "triage" }],
+    correlated: [ev("bloodbank.agent.invocation.queued", 19)],
+  });
+  assert.equal(v.live, true);
+  assert.match(v.why, /\(queued\)/);
 });

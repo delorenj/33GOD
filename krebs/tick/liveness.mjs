@@ -1,8 +1,10 @@
 // Turn liveness: is an agent turn running on this ticket right now?
 //
 // Candystore archives every Bloodbank event. Each agent turn on a ticket emits
-// bloodbank.agent.invocation.started and then .completed / .failed (or
-// .detached when the turn hands its work to a background worker), all stamped
+// bloodbank.agent.invocation.queued when the gateway durably accepts the
+// command (ADR 0001; before it waits for a slot), .started once it has a slot,
+// and then .completed / .failed (or .detached when the turn hands its work to
+// a background worker), all stamped
 // with the ticket's correlation id: fleet.ticketCorrelationId(board, ticket),
 // the same id krebs puts on a dispatch. Measured 2026-11-18: all 632 ticket
 // turns of the previous 14 days have both ends on record (the longest
@@ -14,9 +16,12 @@
 // A ticket's turn is LIVE when any of these hold, else it is IDLE:
 //   0. krebs itself sent a dispatch (triage, review) command for it less than
 //      MAX_OPEN_TURN (MAX_OPEN_TRIAGE) ago and no end for that command is on
-//      record: the gateway publishes invocation.started only when the turn gets
-//      a slot (waits up to 55 min measured), so a queued command has no start;
-//   1. an invocation started with no end on record, less than MAX_OPEN_TURN ago;
+//      record: this bridges the gap between krebs' publish and the gateway's
+//      claim (seconds, or minutes while a lane is paused), and covers gateways
+//      that predate the queued event;
+//   1. an invocation queued or started, whoever sent it, with no end on record,
+//      less than MAX_OPEN_TURN ago (MAX_OPEN_TRIAGE for a triage or review
+//      command that never started);
 //   2. an invocation detached less than MAX_DETACHED ago;
 //   3. any agent or conversation event on the ticket's correlation id in the
 //      last QUIET window (30 min);
@@ -34,7 +39,10 @@ export const MAX_DETACHED_MS = 24 * 60 * 60 * 1000;
 /** How far back a ticket's turn history is read (for the open-turn rules and the "why"). */
 export const HISTORY_MS = 7 * 24 * 60 * 60 * 1000;
 
+const QUEUED = "bloodbank.agent.invocation.queued";
 const STARTED = "bloodbank.agent.invocation.started";
+/** Board-turn reasons: a queued one that never started is presumed dead after MAX_OPEN_TRIAGE. */
+const SHORT_REASONS = new Set(["ticket-grooming", "ticket-review"]);
 const ENDED = new Set(["bloodbank.agent.invocation.completed", "bloodbank.agent.invocation.failed"]);
 const DETACHED = "bloodbank.agent.invocation.detached";
 const ACTIVITY_DOMAINS = new Set(["agent", "conversation"]);
@@ -83,7 +91,7 @@ function cliOf(event) {
  * Returns {live: boolean, why: string, lastEnd: {type, at} | null}.
  */
 export function turnState({ correlated = [], mentions = [], sent = [], key, nowMs }) {
-  const invocations = new Map(); // invocation id -> {started, ended, detached}
+  const invocations = new Map(); // invocation id -> {queued, started, ended, detached, reason, sender}
   let lastActivity = null;
   let lastEnd = null;
   for (const e of correlated) {
@@ -91,9 +99,12 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
     if (t === null) continue;
     const data = asObject(e.data);
     const id = data.invocation_id || data.command_id || e.id;
-    if (e.type === STARTED || ENDED.has(e.type) || e.type === DETACHED) {
-      const inv = invocations.get(id) ?? { started: null, ended: null, detached: null };
-      if (e.type === STARTED) inv.started = Math.max(inv.started ?? 0, t);
+    if (e.type === QUEUED || e.type === STARTED || ENDED.has(e.type) || e.type === DETACHED) {
+      const inv = invocations.get(id) ?? { queued: null, started: null, ended: null, detached: null, reason: null, sender: null };
+      inv.reason ??= asObject(data.context).reason ?? null;
+      inv.sender ??= data.command_service ?? asObject(data.context).dispatcher ?? null;
+      if (e.type === QUEUED) inv.queued = Math.max(inv.queued ?? 0, t);
+      else if (e.type === STARTED) inv.started = Math.max(inv.started ?? 0, t);
       else if (e.type === DETACHED) inv.detached = Math.max(inv.detached ?? 0, t);
       else {
         inv.ended = Math.max(inv.ended ?? 0, t);
@@ -101,7 +112,8 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
       }
       invocations.set(id, inv);
     }
-    if (ACTIVITY_DOMAINS.has(e.domain ?? String(e.type).split(".")[1]) && e.type !== "bloodbank.agent.invocation.skipped") {
+    // queued is a claim, not activity: rule 1 judges it with its own cap.
+    if (ACTIVITY_DOMAINS.has(e.domain ?? String(e.type).split(".")[1]) && e.type !== "bloodbank.agent.invocation.skipped" && e.type !== QUEUED) {
       if (lastActivity === null || t > lastActivity) lastActivity = t;
     }
   }
@@ -114,7 +126,7 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
     if (nowMs - at >= cap) continue;
     const inv = invocations.get(cmd.commandId);
     if (!inv || inv.ended === null) {
-      const state = inv?.started != null ? "running" : "queued or running";
+      const state = inv?.started != null ? "running" : inv?.queued != null ? "queued" : "queued or running";
       return { live: true, why: `krebs sent its ${cmd.kind} command ${ago(nowMs, at)}, no end on record yet (${state})`, lastEnd: end };
     }
   }
@@ -122,6 +134,13 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
   for (const [id, inv] of invocations) {
     if (inv.started !== null && inv.ended === null && inv.detached === null && nowMs - inv.started < MAX_OPEN_TURN_MS) {
       return { live: true, why: `turn ${id} started ${ago(nowMs, inv.started)} and has not ended`, lastEnd: end };
+    }
+    if (inv.queued !== null && inv.started === null && inv.ended === null && inv.detached === null) {
+      const cap = SHORT_REASONS.has(inv.reason) ? MAX_OPEN_TRIAGE_MS : MAX_OPEN_TURN_MS;
+      if (nowMs - inv.queued < cap) {
+        const who = inv.sender ? ` by ${inv.sender}` : "";
+        return { live: true, why: `turn ${id} queued${who} ${ago(nowMs, inv.queued)}, waiting for a gateway slot`, lastEnd: end };
+      }
     }
     if (inv.detached !== null && inv.ended === null && nowMs - inv.detached < MAX_DETACHED_MS) {
       return { live: true, why: `turn ${id} detached to a worker ${ago(nowMs, inv.detached)}`, lastEnd: end };

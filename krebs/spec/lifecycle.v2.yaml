@@ -19,9 +19,12 @@
 #   8. (2026-11-18) lifecycle:human is the owner's emergency hold: the owner took
 #      the ticket by hand. Nothing automated dispatches, triages, reviews,
 #      releases or relabels it, and agents never add or remove it.
+#   9. (2026-11-18, ADR 0001) Krebs is the one triage sender. The n8n Ticket
+#      Triage lane is retired; the gateway publishes agent.invocation.queued when
+#      it claims a command, so every queued turn is visible whoever sent it.
 #
 # Human-readable companion: ../docs/lifecycle.md.
-spec_version: 2.2.0
+spec_version: 2.3.0
 
 lanes:                       # exact Plane state names; order is the board order
   - {name: Backlog,     group: backlog,   default: true}
@@ -86,7 +89,7 @@ transitions:
   - id: triage
     trigger: Todo entry, or created in Todo
     unless: [lifecycle:triaged, any hold_label]   # SENT BACK / release re-entries skip triage
-    does: n8n Ticket Triage lane sends a triage turn to the scope owner; chip sets agent:working
+    does: krebs tick sends a triage turn to the scope owner (catch_up.triage; the n8n Ticket Triage lane is retired, ADR 0001); chip sets agent:working
     ends_with:                                    # exactly one of
       - +lifecycle:triaged when finished           # chip clears agent:working at turn end
       - +lifecycle:needs-input with the question as a comment
@@ -110,7 +113,7 @@ transitions:
   - id: verdict
     in: In Progress + lifecycle:review
     by: the scope's PM (the verdict giver; Launch Directors are retired), in a krebs review turn or its own pass
-    accepted: 'px close <ref> -m "<reason>"' (Done)
+    accepted: 'px close <ref> -m "<reason>" (Done)'
     sent_back: 'px release <ref> -m "returned: <criterion>": back to Todo; it keeps lifecycle:triaged and waits for a slot'
     needs_person: 'px attention <ref> -m "<question>"'
     never: the implementer reviewing its own work
@@ -133,7 +136,8 @@ orphans:                     # 33GOD-93: turns that ended with no handback and n
     source: Candystore GET /events (local, http://127.0.0.1:8683; KREBS_CANDYSTORE_URL)
     key: the ticket correlation id, fleet.ticketCorrelationId(board, ticket), which every dispatch and triage command carries
     live_when:               # any one of these
-      - krebs published a dispatch (triage) command for it under 8 (3) hours ago and no .completed/.failed for that command is on record; the gateway publishes .started only once a turn gets a slot (queues up to 55 min measured), so a queued command has no start yet
+      - krebs published a dispatch (triage, review) command for it under 8 (3) hours ago and no .completed/.failed for that command is on record (bridges the moment between publish and the gateway's claim)
+      - an agent.invocation.queued with no .started/.completed/.failed, queued under 8 hours ago (3 for ticket-grooming and ticket-review), whoever sent it; the gateway publishes it when it durably claims a command, and .started only once the turn gets a slot (queues up to 55 min measured)
       - an agent.invocation.started with no .completed/.failed, started under 8 hours ago
       - an agent.invocation.detached under 24 hours ago (its worker may still run)
       - any agent or conversation event on the ticket in the last 30 minutes
@@ -150,9 +154,9 @@ orphans:                     # 33GOD-93: turns that ended with no handback and n
   caps: 2 releases per scope and 12 per tick; 30 label removals per tick
   journal: orphan.release, orphan.unstick, orphan.fail
 
-catch_up:                    # covers webhooks lost while n8n restarts
-  triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes and with no live turn (orphans.liveness; a queued or running n8n triage counts), gets a triage turn (the n8n Ticket Triage lane's groomTicket command; no Plane write); the command id is derived from board + ticket + updated_at, so it fires once per ticket version; at most 1 per scope (a desk serializes board turns on its lease; two at once collide) and 6 per tick, oldest first; a candidate with a live turn is skipped and the next oldest takes the scope's turn (at most 3 liveness checks per scope per tick; ADR 0001)
-  review: an In Progress ticket with lifecycle:review, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes and with no live turn (orphans.liveness), gets a review turn from its scope's PM (reason ticket-review, dispatcher krebs-tick; no Plane write; the chip sets agent:working while it runs); it shares the 1 board turn per scope per tick with triage, oldest first, and the 6 per tick; the command id is derived from board + ticket + updated_at + attempt; a version with no verdict is asked again after 3 hours, at most 3 times
+catch_up:                    # krebs sends every board turn (triage, review) itself
+  triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for 10 minutes (one tick after the edit settles) and with no live turn (orphans.liveness), gets a triage turn (the Fleet node's groomTicket command; no Plane write); krebs is the only triage sender (the n8n Ticket Triage lane is retired, ADR 0001); the command id is derived from board + ticket + updated_at, so it fires once per ticket version; at most 1 per scope (a desk serializes board turns on its lease; two at once collide) and 6 per tick, triage before review across the tick, oldest first; a candidate with a live turn is skipped and the next oldest takes the scope's turn (at most 3 liveness checks per scope per tick; ADR 0001)
+  review: an In Progress ticket with lifecycle:review, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes and with no live turn (orphans.liveness), gets a review turn from its scope's PM (reason ticket-review, dispatcher krebs-tick; no Plane write; the chip sets agent:working while it runs); it shares the 1 board turn per scope per tick with triage (a scope alternates; after a triage turn its oldest review goes first, and the other way round, so neither backlog starves the other) and the 6 per tick; the command id is derived from board + ticket + updated_at + attempt; a version with no verdict is asked again after 3 hours, at most 3 times
   dispatch: a dispatch whose publish failed is republished with the same command id on the next tick
 
 clock: Candybar `krebs-tick` (exec runner). No private loop, no other dispatcher.

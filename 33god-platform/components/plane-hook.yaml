@@ -3,8 +3,8 @@ id: plane-hook
 name: Plane to Bloodbank workflows
 role: feature
 repo: ../../delonet-n8n-workflows
-description: n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react
-  to ticket changes.
+description: n8n workflows (Plane->Bloodbank, Pickup Chip, Lane Errors, Ingress Reconcile) that react
+  to ticket changes. Ticket Triage was retired 2026-11-18 (krebs tick sends every ticket turn).
 changelog:
   topics:
   - g2
@@ -16,8 +16,8 @@ c4:
   level: component
   parent: n8n
 status: live
-summary: n8n workflows (Plane->Bloodbank, Ticket Triage, Pickup Chip, Lane Errors, Ingress Reconcile) that react
-  to ticket changes.
+summary: n8n workflows (Plane->Bloodbank, Pickup Chip, Lane Errors, Ingress Reconcile) that react
+  to ticket changes. Ticket Triage was retired 2026-11-18 (krebs tick sends every ticket turn).
 role_in_system: Turns a ticket move into a repo.task event that Krebs and agents act on.
 tech:
 - n8n
@@ -34,16 +34,6 @@ relations:
   kind: publishes-to
   via: bloodbank.evt.repo.task.*
   evidence: /home/delorenj/code/delonet-n8n-workflows/INDEX.md
-- to: bb-nats
-  kind: consumes-from
-  via: plane.ticket.created/transitioned (Ticket Triage trigger)
-  evidence: ~/code/delonet-n8n-workflows/workflows/ticket-triage--6wAGA5pdrmHLyhs2.json:63
-  anchor: '"plane.ticket.created",'
-- to: bb-nats
-  kind: publishes-to
-  via: bloodbank.cmd.agent.invocation.start (Triage Ticket node)
-  evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/nodes/Fleet/Fleet.node.ts:827
-  anchor: 'type: INVOCATION_COMMAND_TYPE,'
 - to: bb-nats
   kind: consumes-from
   via: bloodbank.agent.invocation.started/completed/failed (chip)
@@ -64,11 +54,6 @@ relations:
   via: Plane REST list issues (Ingress Reconcile)
   evidence: bloodbank/integrations/n8n-nodes-bloodbank/src/reconcile.ts:116
   anchor: const base = (options.baseUrl || 'https://plane.delo.sh').replace(/\/+$/, '');
-- to: ntfy
-  kind: calls
-  via: n8n-nodes-ntfy-client ntfySend (triage, unrouted)
-  evidence: ~/code/delonet-n8n-workflows/workflows/ticket-triage--6wAGA5pdrmHLyhs2.json:122
-  anchor: '"type": "n8n-nodes-ntfy-client.ntfySend",'
 - to: n8n
   kind: calls
   via: GET 127.0.0.1:5678/api/v1/executions/<id>
