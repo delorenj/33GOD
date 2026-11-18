@@ -79,6 +79,9 @@
   "integration": {
     "commands": "landing/33god55-agents-push.json",
     "checks": "landing/33god55-integration-gates.json",
+    "root_commit_receipt": "landing/33god55-root-commit.json",
+    "root_push_receipt": "landing/33god55-root-push.json",
+    "root_first_evidence_commit": "https://github.com/delorenj/33GOD/commit/0b450338e5c33656260f5c25a6d7a447ff28fb49",
     "source_identity": "git diff --quiet 14159669b8c03071856eb26f31557db2e3479317 4ca095f1fc6445f14f4e6e288a9d3647ec4d9903 -- git/hooks/_travels.py git/tests/test_pre_push.py git/README.md => exit 0",
     "remote_main_at_component_landing": "4ca095f1fc6445f14f4e6e288a9d3647ec4d9903",
     "owning_repo_commit": "https://github.com/delorenj/agents/commit/4ca095f1fc6445f14f4e6e288a9d3647ec4d9903"

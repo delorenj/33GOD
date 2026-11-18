@@ -1,0 +1,15 @@
+[
+  {
+    "argv": [
+      "git",
+      "-c",
+      "core.hooksPath=/home/delorenj/.agents/git/hooks",
+      "push",
+      "origin",
+      "main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "git-travel: refs/heads/main: 1 unpublished commit(s)\nTo github.com:delorenj/33GOD.git\n   9529a6c..0b45033  main -> main\n"
+  }
+]
