@@ -42,6 +42,7 @@
       "src": "nights/2026-11-16.json",
       "label": "Real night · {label}",
       "counter": "{n} events so far",
+      "deskLine": "Hermes project manager desk.",
       "firstOf": "first of {n} tonight",
       "logNote": "Lines marked in blue are real: what the company actually published on the bus on the night of {label}, at the time it happened. The rest is the staged story."
     }

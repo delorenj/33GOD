@@ -144,10 +144,15 @@
     list.forEach(function (s) { if (s.name) seated[cidOf(s.name)] = true; });
     others.forEach(function (n) { seated[cidOf(n)] = true; });
     // Then the first-party components that were quiet tonight (lit, never working); a seat left after both stays dark.
-    var extra = R ? R.N.components.concat(R.N.idle || []).filter(function (c) { return !seated[c.id]; }) : [];
+    // First-party PM desks that worked tonight and have no PM seat get one too (a desk lights its own seat).
+    var deskSeated = {};
+    list.concat(others.map(function (n) { return { name: n }; })).forEach(function (s) { var d = deskOf(s.name); if (d) deskSeated[d] = true; });
+    var desks = R ? Object.keys(R.N.desks || {}).filter(function (d) { return /-pm$/.test(d) && !/^desk-\d+$/.test(d) && !deskSeated[d]; })
+      .map(function (d) { return { id: 'desk:' + d, plate: 'PM · ' + d.slice(0, -3).toUpperCase(), summary: (M.site.night && M.site.night.deskLine) || '' }; }) : [];
+    var extra = R ? R.N.components.filter(function (c) { return !seated[c.id]; }).concat(desks, (R.N.idle || []).filter(function (c) { return !seated[c.id]; })) : [];
     rest.forEach(function (s, i) {
       var name = others[i] || null, line = name ? (lines[name] || '') : '';
-      if (!name && extra.length) { var c = extra.shift(); name = c.id.toUpperCase(); line = c.summary || c.name; }
+      if (!name && extra.length) { var c = extra.shift(); name = c.plate || c.id.toUpperCase(); line = c.summary || c.name; }
       put(s.f, s.c, { kind: 'comp', name: name, line: line, overtime: !R && i === others.length + 2 });
     });
     var named = {};
@@ -569,7 +574,7 @@
 
     var stageRef = useRef(null), trackRef = useRef(null), sceneRef = useRef(null), worldRef = useRef(null), overlayRef = useRef(null);
     var glassRef = useRef(null), spRef = useRef(null), capRef = useRef(null), interRef = useRef(null), horizonRef = useRef(null);
-    var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, minute: -1, clock: '', precise: null, label: '', theme: '' });
+    var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, minute: -1, sig: '', clock: '', precise: null, label: '', theme: '' });
     var camNow = useRef({ x: 0, y: 0, s: 1, o: 1 });
     var dollyRef = useRef(null), playY = useRef(0);
     var sizeRef = useRef(size); sizeRef.current = size;
@@ -662,12 +667,15 @@
         clockApi.current({ time: clock, precise: precise, label: label, count: R ? eventsSoFar(R, nightMi) : null });
       }
 
-      // Re-render on a new step of the hold, and on a new real minute (windows follow the night during travels too).
+      // Re-render on a new step of the hold, and when a real minute flips some seat's busy bit (windows
+      // follow the night during travels too; a minute that changes no window re-renders nothing).
       var step = Math.floor(q * STEPS);
-      if (i !== last.current.i || step !== last.current.step || minute !== last.current.minute) {
-        last.current.i = i; last.current.step = step; last.current.minute = minute; setPos({ i: i, step: step, q: q, minute: minute });
+      var sig = '';
+      if (minute >= 0) for (var k2 = 0; k2 < seats.list.length; k2++) { var st2 = seats.list[k2]; if (st2.name && seatBusy(R, st2, minute)) sig += k2 + ','; }
+      if (i !== last.current.i || step !== last.current.step || sig !== last.current.sig) {
+        last.current.i = i; last.current.step = step; last.current.minute = minute; last.current.sig = sig; setPos({ i: i, step: step, q: q, minute: minute });
       }
-    }, [beats, times, I, props.colors, R, realLabel, M.site.stagedLabel]);
+    }, [beats, times, I, props.colors, R, realLabel, M.site.stagedLabel, seats]);
 
     // A seam is a stretch where the frame is between two rest states: a camera travel with its caption
     // crossfade, or an act's statement handing over to the beat's words. Stop in one and the dolly
@@ -717,7 +725,7 @@
     var toggleView = useCallback(function () {
       setView(function (v) { return v === 'film' ? 'log' : 'film'; });
       window.scrollTo(0, 0);
-      playY.current = 0; last.current.i = -1; last.current.step = -1; last.current.minute = -1; last.current.clock = ''; last.current.label = '';
+      playY.current = 0; last.current.i = -1; last.current.step = -1; last.current.minute = -1; last.current.sig = ''; last.current.clock = ''; last.current.label = '';
       setPos({ i: 0, step: 0, q: 0, minute: -1 });
     }, []);
     var clock = h(LiveClock, { api: clockApi, initial: beats[0].time, label: R && usesNight(beats[0].id) ? realLabel : M.site.stagedLabel, counter: R ? NC.counter : null });
