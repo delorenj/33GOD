@@ -19,9 +19,14 @@ summary: Nudges idle agent panes to keep work moving when the operator is away.
 role_in_system: Momentum while unattended.
 tech:
 - zellij
-runtime: Driven by Candybar jobs crank-beat (*/5, 1986 runs/7d, hermes-agent runner) and crank-watchdog (*/15),
-  typing into panes via ~/.local/bin/zcrank-send; hook-hub also has crank-tag and crank_keys_guard handlers. Not
-  desktop-only
+runtime: >-
+  Crank v2 (PJAN-214/215/216/218, since 2026-11-18): one exec Candybar per live interactive agent session
+  (crank-<cli>-<sid8>-<pid>, tag crank-session, staggered */5), attached and detached by hook-hub crank-attach /
+  crank-detach (pj crank attach|detach --hook). Each fire runs pj crank fire -> crank-pane, which wakes the
+  33god-pm crank officer only on poke/interrogateN/burnN. Candybar crank-attention-officer (10,25,40,55) reads the
+  crank-watchdog (*/15) and scheduling-policy-drift reports. The tab-keyed crank-beat (Hermes 777c511a009c) is
+  paused. Every keystroke goes through ~/.local/bin/zcrank-send; hook-hub crank-tag and crank-keys-guard enforce
+  the [crank] tag. Skill: 33god-hub subskills/crank/SUBSKILL.md. Not desktop-only
 relations:
 - to: jev-litellm
   kind: calls
@@ -64,6 +69,6 @@ notes: |-
   next_due/scan_ms/held/seq, 1d TTL), crank:idx:panes, crank:t:<session>:<pane> and crank:t (transition streams),
   crank:engine (heartbeat), pubsub channel crank:transitions (one JSON per edge). Operator views: zcrankctl pane,
   history, tail. The gate (zcrank-gate.py via zcrank.py classify) reads the ASM state of each pane first
-  (working/tool_running/delegating -> working; awaiting_human/failed/idle -> waiting; anything else falls back to the
-  screen) and reports state_source and asm_state per pane, skipping the 2.5s re-dump when ASM answers. The
+  (working/tool_running/delegating -> working; awaiting_human/idle -> waiting; failed and anything else fall back to
+  the screen) and reports state_source and asm_state per pane, skipping the 2.5s re-dump when ASM answers. The
   on_since.json writer is retired (its reader only seeds new panes; remove after 2026-12-01).

@@ -159,11 +159,49 @@ def validate_backfill_manifests() -> list[str]:
     return errors
 
 
+_MD_LINK = re.compile(r"\]\(([^)#\s]+)(?:#[^)]*)?\)")
+
+
+def validate_skills(skills_root: Path | None = None) -> list[str]:
+    """The hub-skill standard, structurally, for every skill this repo owns (skills/<name>/).
+
+    A platform feature that outgrows a route row becomes a sub-skill (subskills/<n>/SUBSKILL.md,
+    loaded by path). These are the rules that keep that lazy and drift-free, for ANY sub-skill:
+      * no SKILL.md below a skill root (a scanner would auto-list it; sub-skills use SUBSKILL.md);
+      * every relative markdown link resolves and stays inside its skill (other skills by name);
+      * every file under references/ and subskills/ is linked from somewhere in that skill.
+    """
+    root = skills_root or ROOT / "skills"
+    errors: list[str] = []
+    for skill in sorted(p for p in root.iterdir() if (p / "SKILL.md").is_file()):
+        docs = sorted(skill.rglob("*.md"))
+        linked: set[Path] = set()
+        for doc in docs:
+            if doc.name == "SKILL.md" and doc.parent != skill:
+                errors.append(f"{doc}: nested SKILL.md (use SUBSKILL.md for a sub-skill)")
+            for target in _MD_LINK.findall(doc.read_text(encoding="utf-8")):
+                if "://" in target or target.startswith(("mailto:", "/", "~")):
+                    continue
+                resolved = (doc.parent / target).resolve()
+                if not resolved.is_relative_to(skill.resolve()):
+                    errors.append(f"{doc}: link {target!r} leaves {skill.name}/ (name another skill in backticks)")
+                elif not resolved.exists():
+                    errors.append(f"{doc}: link {target!r} does not resolve")
+                else:
+                    linked.add(resolved)
+        for leaf in docs:
+            parts = leaf.relative_to(skill).parts
+            if parts[0] in {"references", "subskills"} and leaf.resolve() not in linked:
+                errors.append(f"{leaf}: orphan (nothing in {skill.name}/ links to it)")
+    return errors
+
+
 def cmd_validate(_: argparse.Namespace) -> int:
     errors = []
     errors.extend(validate_components())
     errors.extend(validate_changes())
     errors.extend(validate_backfill_manifests())
+    errors.extend(validate_skills())
     if errors:
         for error in errors:
             print(f"ERROR {error}", file=sys.stderr)

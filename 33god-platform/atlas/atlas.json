@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "ac7bf41d37f972ad79bdbd20517457f1e2e63979d590bf6cf0c37acede503a52",
+  "registry_digest": "3d47852304e4cec29bb5d74b919c16d2fc46926c47d92874dcd1de8cdad54477",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -594,7 +594,7 @@
       "tech": [
         "zellij"
       ],
-      "runtime": "Driven by Candybar jobs crank-beat (*/5, 1986 runs/7d, hermes-agent runner) and crank-watchdog (*/15), typing into panes via ~/.local/bin/zcrank-send; hook-hub also has crank-tag and crank_keys_guard handlers. Not desktop-only",
+      "runtime": "Crank v2 (PJAN-214/215/216/218, since 2026-11-18): one exec Candybar per live interactive agent session (crank-<cli>-<sid8>-<pid>, tag crank-session, staggered */5), attached and detached by hook-hub crank-attach / crank-detach (pj crank attach|detach --hook). Each fire runs pj crank fire -> crank-pane, which wakes the 33god-pm crank officer only on poke/interrogateN/burnN. Candybar crank-attention-officer (10,25,40,55) reads the crank-watchdog (*/15) and scheduling-policy-drift reports. The tab-keyed crank-beat (Hermes 777c511a009c) is paused. Every keystroke goes through ~/.local/bin/zcrank-send; hook-hub crank-tag and crank-keys-guard enforce the [crank] tag. Skill: 33god-hub subskills/crank/SUBSKILL.md. Not desktop-only",
       "public_card": {}
     },
     {
