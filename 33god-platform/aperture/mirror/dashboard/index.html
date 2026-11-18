@@ -130,11 +130,10 @@ footer { color: var(--soft); font-size: 14px; }
   </header>
 
   <section class="meter" aria-label="Progress">
-    <div class="bar" aria-hidden="true"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i><i></i></div>
+    <div class="bar" aria-hidden="true"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i><i class="d"></i><i class="d"></i></div>
     <div class="tally">
-      <span><i class="dot" style="background:var(--done)"></i>9 done</span>
+      <span><i class="dot" style="background:var(--done)"></i>10 done</span>
       <span><i class="dot" style="background:var(--cook)"></i>1 cooking</span>
-      <span><i class="dot" style="background:var(--next)"></i>1 next</span>
     </div>
   </section>
 
@@ -183,38 +182,42 @@ footer { color: var(--soft); font-size: 14px; }
       <li class="d"><span class="num">5</span><div><h3>One clock</h3><p>One clock runs every job now: your morning report, your project roll-ups and your skills check. The old timer is gone. It hasn't missed once, not even through your restart.</p></div><span class="chip d">Done</span></li>
       <li class="d"><span class="num">6</span><div><h3>Your AI team</h3><p>The helper upgrade is on, and every helper has the same 60 skills, team inbox included. Claude Code and Codex use them too. Your own skills, like the coaching catalog and org chart, are kept.</p></div><span class="chip d">Done</span></li>
       <li class="d"><span class="num">7</span><div><h3>Long-term memory</h3><p>New memory server is live. Your old memories moved over safely.</p></div><span class="chip d">Done</span></li>
-      <li class="c"><span class="num">8</span><div><h3>Talk to tasks</h3><p>Your helpers tag each chat with what got done. That came back on its own after your restart. Voice typing is installed on your Mac and waits for your OK on the microphone.</p></div><span class="chip c">Cooking</span></li>
-      <li class="d"><span class="num">9</span><div><h3>Morning report</h3><p>Your first one is in your email. A new one arrives every morning at 6, sent from your own account. Your projects also get a roll-up every hour. The first few reports will look thin while it learns your projects.</p></div><span class="chip d">Done</span></li>
-      <li class="n"><span class="num">10</span><div><h3>Final check</h3><p>Your restart was a good warm-up: everything came back by itself. Next we test it all and hand you the keys.</p></div><span class="chip n">Next</span></li>
+      <li class="c"><span class="num">8</span><div><h3>Talk to tasks</h3><p>Your helpers tag each chat with what got done. That came back on its own after your restart. This step is still cooking for one reason only: voice typing is installed and ready, and it waits for your OK on the microphone (job 1 below).</p></div><span class="chip c">Cooking</span></li>
+      <li class="d"><span class="num">9</span><div><h3>Morning report</h3><p>Your first one is in your email. A new one goes out every morning at 6, sent from your own account. It ran on its own two mornings in a row. Your projects also get a roll-up every hour. The first few reports will look thin while it learns your projects.</p></div><span class="chip d">Done</span></li>
+      <li class="d"><span class="num">10</span><div><h3>Final check</h3><p>We tested every part of your setup, 38 checks in all. 33 passed outright. The other 5 are small leftovers on our side, or they wait on your jobs below. What that means for you: it all works, and anyone on the team can re-run the whole check in about 15 seconds.</p></div><span class="chip d">Done</span></li>
     </ol>
   </section>
 
   <section class="list" aria-labelledby="wins-h">
-    <h2 id="wins-h">5 wins so far</h2>
+    <h2 id="wins-h">8 wins so far</h2>
     <div class="win"><span class="was">Your Mac froze solid</span><span class="arrow">→</span><span class="now">Back up. Nothing lost.</span></div>
     <div class="win"><span class="was">Memory server kept crashing</span><span class="arrow">→</span><span class="now">Fixed. All 9 chats safe.</span></div>
     <div class="win"><span class="was">Daily task backup broke</span><span class="arrow">→</span><span class="now">Fixed. Fresh backup made.</span></div>
     <div class="win"><span class="was">A restart could knock everything offline</span><span class="arrow">→</span><span class="now">Everything came back on its own.</span></div>
     <div class="win"><span class="was">Your restart scrambled your helpers' skills</span><span class="arrow">→</span><span class="now">Skills now survive any restart.</span></div>
+    <div class="win"><span class="was">Old leftovers sitting on your Mac</span><span class="arrow">→</span><span class="now">Cleared out. We kept safe copies of what mattered.</span></div>
+    <div class="win"><span class="was">Morning report was a one-time test</span><span class="arrow">→</span><span class="now">Ran on its own at 6 two mornings in a row.</span></div>
+    <div class="win"><span class="was">Apps wait for you to sign in after a restart</span><span class="arrow">→</span><span class="now">Fix is built. It needs your one command (job 4).</span></div>
   </section>
 
   <section class="yours" aria-labelledby="you-h">
     <span class="chip y">Only you can do these</span>
     <h2 id="you-h">Your 4 jobs</h2>
     <ol>
-      <li>Find your first morning report in your email. <span class="tip">It's from "Dev Journal". If it landed in Spam, mark it "not spam".</span></li>
-      <li>Tell us which ChatGPT plan you have. Then approve one sign-in code, so your ChatGPT account joins your lane.</li>
-      <li>Say it's fine to keep the automation app you already run. <span class="tip">That's our pick.</span></li>
       <li>Turn on voice typing. Open HeyMa from the menu bar, start dictating into any text box, and click Allow when your Mac asks about the Microphone and Accessibility. <span class="tip">If no Accessibility prompt shows up, tell Jarad and we'll walk you through it.</span></li>
+      <li>Find your 6 am morning report in your email. <span class="tip">It's from "Dev Journal". If it landed in Spam, mark it "not spam".</span></li>
+      <li>Tell us which ChatGPT plan you have. Then approve one sign-in code, so your ChatGPT account joins your lane.</li>
+      <li>Open Terminal, paste <code>sudo ~/33god-boot-daemon.sh --apply</code>, press Return, and type your Mac password (nothing shows as you type). <span class="tip">It makes your Mac start its background apps by itself after a restart, instead of waiting for you to sign in. It checks itself and undoes the change if anything looks wrong. Your apps blink off for a short while as it runs. Heads up: your disk is locked, so after a power cut the Mac still waits for your password first. For a planned restart, ask us for the one command.</span></li>
     </ol>
     <p class="did"><span class="chip d">Done</span><s>Run the setup script</s></p>
     <p class="did"><span class="chip d">Done</span><s>Restart your Mac</s></p>
     <p class="did"><span class="chip n">Not needed</span><s>Accept a network invite</s></p>
     <p class="did"><span class="chip d">Done</span><s>Pick your skills (Jarad picked them)</s></p>
     <p class="did"><span class="chip n">Not needed</span><s>Music Lab bot personality</s></p>
+    <p class="did"><span class="chip n">Not needed</span><s>Decide on the automation app (we're keeping it for you)</s></p>
   </section>
 
-  <footer>Updated November 16, 2026. We'll keep this page fresh as steps finish.</footer>
+  <footer>Updated November 17, 2026. We'll keep this page fresh as steps finish.</footer>
 </div>
 </body>
 </html>
