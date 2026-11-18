@@ -19,6 +19,11 @@ lesson only when it is directly applicable here. Do not merge, deploy, or
 report sibling-repository work as 33GOD work merely because the session opened
 in this directory.
 
+Installing selected artifacts does not authorize distributing their entire
+private source repository. Preserve owner-curated peer bundles; do not replace
+them with full clones or vendor private files into public components to unblock
+a dependency. Use the authorized delivery path or ask for the missing artifact.
+
 ## Product authority
 
 - **Momo:** owns the shared PM playbook: prioritization, readiness, delegation,
@@ -58,8 +63,9 @@ Changes to these boundaries require an explicit product decision. Routine implem
    executed the ticket. If a remote target becomes unreachable, bound the
    health probes and stop dependent work rather than polling for hours. After
    recovery, check affected services, read completed task and verifier outputs,
-   and resume only unfinished tasks. A workflow completion notice is not an
-   acceptance result; report partial passes or missing verification as such.
+   and resume only unfinished tasks. A workflow completion notice is neither
+   user approval nor an acceptance result; report partial passes or missing
+   verification as such.
    When moving an existing delivery target, confirm the replacement's delivery
    receipt before disabling the old path.
    When a change crosses a nested component boundary, run that component's
@@ -73,7 +79,9 @@ Changes to these boundaries require an explicit product decision. Routine implem
    be absent even though the work landed.
 6. Report implementation, installation/runtime proof, and activation readiness
    separately. A distributed skill, healthy service, or passing test does not
-   prove native actor enrollment or active-board cutover.
+   prove native actor enrollment or active-board cutover. Honor an explicit
+   owner waiver of an acceptance check without calling the unperformed check
+   a measured pass; it does not waive unrelated runtime or physical acceptance.
 
 ## Session tuning
 

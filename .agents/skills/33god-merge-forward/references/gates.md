@@ -17,7 +17,9 @@ Select checks that demonstrate the slice's actual behavior:
   together, and collector caveats promoted to tickets. For schedule changes,
   verify previous-day targeting and that a verified partial report counts as
   generated. For replay changes, check that reruns create no duplicate tickets
-  or rollups.
+  or rollups. For report delivery retries, prove one real delivery receipt and
+  a second invocation that sends nothing; distinguish provider delivery from
+  Inbox placement and manual execution from a scheduled fire.
 - Managed ticket changes: resolve the canonical project and board binding, then
   prove the actual `px`/Krebs path with provider readback. A worker must claim
   before execution; evidence must belong to that attempt; an unanswered
@@ -38,9 +40,17 @@ Select checks that demonstrate the slice's actual behavior:
   eligibility is separate: a missing `bloodbank.enabled` means enabled, while
   explicit `false` opts out. Verify provisioning preserves existing routing
   fields rather than writing empty values.
-- Skill distribution changes: compare the canonical source with the installed
-  bundle and load it through each affected native runtime; do not treat a
-  source diff or catalog entry as installed parity.
+- Cross-host or cross-repository distribution: check source provenance and
+  authorized destination before copying private files or committing them into
+  a public component. A curated bundle, not the full upstream catalog, is the
+  parity baseline when that is what the owner shipped. A stale gitdir, renamed
+  remote, or staged deletions do not alone prove that tree needs repair.
+  For skills, compare the authorized bundle with the installed selection and
+  load it through each affected installed native runtime; a catalog entry or
+  valid symlink alone does not prove runtime loading. Mark absent clients
+  unverified rather than claiming parity. When correcting a public exposure,
+  distinguish current-tree removal from reachable history and external copies;
+  rewriting history requires explicit authorization.
 - Holocene code changes: typecheck and build; add browser interaction or live
   route verification when the changed behavior is visible there.
 - Release-console uploads: a platform consumes a version/build identifier once it enters any release draft, so `already used` means attached to a draft elsewhere, not uploaded. Before minting a new identifier or re-dropping the same artifact, read the track's drafts, its artifact library, and sibling tracks read-only to find the owning draft, and add from the library rather than re-uploading. Page metadata can lag processing or drop entries; decode the artifact's own manifest and signature to confirm version, package, and signing identity.
@@ -63,6 +73,11 @@ Select checks that demonstrate the slice's actual behavior:
   Check the allowed and denied behavior of a changed guard; use fault injection
   only when an ordinary assertion cannot prove the boundary. Expand to a broad
   suite only for a concrete remaining risk.
+- Build/check tooling failures: when parallel runs empty a shared output tree,
+  stage builds separately and serialize shared publication/check access; verify
+  overlapping runs, not just a serial retry. When ownership guards reject test
+  fixtures because TMPDIR is inside a checkout, use a non-repository temp root
+  for those fixtures rather than weakening the guard.
 - Workflow changes: inspect `paths`/`paths-ignore`, required checks, and jobs
   with deployment or restart side effects before merge. If the change triggers
   one, verify its completion and the running commit separately from the merge.
