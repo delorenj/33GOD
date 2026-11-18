@@ -76,6 +76,8 @@ export const REVIEW_PROVIDER_EVENT_TYPE = "krebs.catch_up.review";
 /** A review turn that ended without a verdict is sent again after this long, up to REVIEW_MAX_ATTEMPTS per ticket version. */
 export const REVIEW_RETRY_MS = 3 * 60 * 60 * 1000;
 export const REVIEW_MAX_ATTEMPTS = 3;
+/** Liveness checks per scope per tick when picking its board turn (triage or review). */
+export const BOARD_TURN_PROBES = 3;
 
 /** YYYY-MM-DD in `timeZone` (default: the host's zone): Plane's start_date. */
 export function localDate(date, timeZone) {
@@ -300,7 +302,7 @@ export async function runTick({
   triageScopeCap = TRIAGE_SCOPE_CAP,
   triageTickCap = TRIAGE_TICK_CAP,
   reviewMinAgeMs = REVIEW_MIN_AGE_MS,
-  liveness = null,
+  liveness: probeLiveness = null,
   orphanQuietMs = QUIET_MS,
   orphanReleaseScopeCap = ORPHAN_RELEASE_SCOPE_CAP,
   orphanReleaseTickCap = ORPHAN_RELEASE_TICK_CAP,
@@ -316,6 +318,15 @@ export async function runTick({
   const pending = pendingPublishes(journalEntries);
   const triaged = triagedCommandIds(journalEntries);
   const sentByTicket = sentCommands(journalEntries);
+  // One Candystore verdict per ticket per tick: the orphan sweep and the board-turn pick may
+  // both ask about the same ticket (a ticket released this tick becomes a triage candidate).
+  const livenessSeen = new Map();
+  const liveness = probeLiveness
+    ? (req) => {
+        if (!livenessSeen.has(req.ticketId)) livenessSeen.set(req.ticketId, probeLiveness(req));
+        return livenessSeen.get(req.ticketId);
+      }
+    : null;
   const releasedBefore = releaseCounts(journalEntries, started.getTime() - ORPHAN_LOOP_WINDOW_MS);
   const reviewsSent = reviewAttempts(journalEntries);
   let releasesThisTick = 0;
@@ -659,16 +670,47 @@ export async function runTick({
         else fresh.push({ t, kind: "review", attempt: sent.length + 1, ...reviewIds({ fleet, nats }, { boardId: board, ticketId: t.id, updatedAt: t.updatedAt, agentId: scope.agentId, attempt: sent.length + 1 }) });
       }
       // One board turn per scope per tick (a desk serializes its board turns), oldest ticket first.
+      // Liveness is asked HERE, before a candidate takes the scope's turn (ADR 0001): a ticket
+      // with a turn already queued or running (an n8n triage, the implementer still at it) is
+      // skipped and the next oldest gets the turn. At most BOARD_TURN_PROBES probes per scope;
+      // Candystore unknown stops the scope's board turns for this tick.
       fresh.sort((a, b) => compareTriage(a.t, b.t));
-      for (const [i, { t, commandId, kind = "triage", attempt }] of fresh.entries()) {
+      let chosen = 0;
+      let probes = 0;
+      let blind = null;
+      for (const { t, commandId, kind = "triage", attempt } of fresh) {
         const entry = { ...ticketRef(t), updatedAt: t.updatedAt, agentId: scope.agentId, commandId, ...(kind === "review" ? { attempt } : {}) };
         const list = kind === "review" ? out.reviews : out.triage;
-        if (i >= triageScopeCap) {
-          (kind === "review" ? out.reviewsCapped : out.triageCapped).push({ ...ticketRef(t), updatedAt: t.updatedAt, why: `scope cap (${triageScopeCap} board turn per scope per tick)` });
-        } else {
-          list.push(entry);
-          triagePlans.push({ kind, attempt, scope, snap, out, entry, ticket: t });
+        const capped = kind === "review" ? out.reviewsCapped : out.triageCapped;
+        if (chosen >= triageScopeCap) {
+          capped.push({ ...ticketRef(t), updatedAt: t.updatedAt, why: `scope cap (${triageScopeCap} board turn per scope per tick)` });
+          continue;
         }
+        if (liveness) {
+          if (blind) {
+            list.push({ ...entry, result: "skipped", why: blind });
+            continue;
+          }
+          if (probes >= BOARD_TURN_PROBES) {
+            capped.push({ ...ticketRef(t), updatedAt: t.updatedAt, why: `probe cap (${BOARD_TURN_PROBES} liveness checks per scope per tick)` });
+            continue;
+          }
+          probes++;
+          const v = await liveness({ boardId: board, ticketId: t.id, key: t.key, sent: sentByTicket.get(t.id) ?? [] });
+          if (v.unknown) {
+            blind = v.why;
+            out.warnings.push(`${t.key}: ${kind} not sent, ${v.why}`);
+            list.push({ ...entry, result: "skipped", why: v.why });
+            continue;
+          }
+          if (v.live) {
+            list.push({ ...entry, result: "skipped", why: `turn live: ${v.why}` });
+            continue;
+          }
+        }
+        chosen++;
+        list.push(entry);
+        triagePlans.push({ kind, attempt, scope, snap, out, entry, ticket: t });
       }
     }
 
@@ -801,15 +843,7 @@ export async function runTick({
         return;
       }
     }
-    if (liveness) {
-      const v = await liveness({ boardId: board, ticketId: ticket.id, key: ticket.key, sent: sentByTicket.get(ticket.id) ?? [] });
-      if (v.unknown || v.live) {
-        entry.result = "skipped";
-        entry.why = v.unknown ? v.why : `turn live: ${v.why}`;
-        if (v.unknown) out.warnings.push(`${ticket.key}: review not sent, ${v.why}`);
-        return;
-      }
-    }
+    // Liveness was asked when the scope picked this ticket for its board turn (step 3b).
     const route = fleet.resolveFleetAgentForBoard(registry, board, scope.repo ?? "", ticket.labels);
     if (!route.eligible || route.agentId !== scope.agentId) {
       entry.result = "skipped";

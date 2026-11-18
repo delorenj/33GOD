@@ -156,3 +156,20 @@ test("lifecycle:human is a hold: never dispatched, triaged, reviewed or released
   assert.equal(publish.sent.length, 0);
   assert.equal(plane.writes().length, 0);
 });
+
+test("a board-turn candidate with a turn already queued or running is skipped, and the next oldest takes the turn", async () => {
+  const busy = new Set(["OTH-1"]);
+  const { publish, run } = setup({
+    liveness: async ({ key }) => (busy.has(key) ? { live: true, why: "agent activity on the ticket 3 min ago" } : { live: false, why: "idle" }),
+    issues: [
+      issue({ seq: 1, state: "todo", labels: [], updated: minsAgo(300) }),
+      issue({ seq: 2, state: "todo", labels: [], updated: minsAgo(200) }),
+      issue({ seq: 3, state: "ip", labels: ["lifecycle:review"], updated: minsAgo(100) }),
+    ],
+  });
+  const s = (await run()).scopes[0];
+  assert.deepEqual(s.triage.map((r) => [r.key, r.result]), [["OTH-1", "skipped"], ["OTH-2", "published"]]);
+  assert.match(s.triage[0].why, /^turn live:/);
+  assert.deepEqual(s.reviewsCapped.map((r) => r.key), ["OTH-3"]);
+  assert.equal(publish.sent.length, 1);
+});
