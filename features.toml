@@ -51,9 +51,11 @@ schema = 1
 summary = "Periodic LLM prodding of stalled agent panes; first feature to dogfood F1"
 repo = "delorenj/crank"
 status = "scattered"
-today = ["delorenj/agents tools/jev-clairic (engine, gate, ctl, watchdog)", "pjangler src/crank (pj crank, TUI)",
-         "skillex all-skills/crank-engine", "candybar deploy/migration/manifests/crank-*",
-         "hermes profile 33god-pm (job 777c511a009c, scripts/)"]
+today = ["delorenj/agents tools/jev-clairic (crank.lua arbiter, crank-pane, crank-attention, zcrank-send, legacy gate/ctl, watchdog)",
+         "pjangler src/crank (pj crank v2: policy, session bindings, fire, TUI; prompt segment)",
+         "bloodbank services/agent-hooks/core/statekit (Redis state-machine kit) + hook-hub crank-attach/detach, crank-tag, crank-keys-guard",
+         "33god-platform skills/33god-hub/subskills/crank (the skill)", "candybar crank-<session> exec rows, crank-attention-officer, crank-watchdog",
+         "hermes profile 33god-pm (officer profile; legacy job 777c511a009c paused)"]
 requires = ["agent.state", "agent.session", "pane.topology", "pane.input", "project.identity", "agent.job", "clock"]
 platforms = ["linux"]
 initiatives = ["I-8", "I-9"]
