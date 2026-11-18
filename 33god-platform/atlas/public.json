@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "7a7c120ed1ad07a55ab9e19ddea78335af39453fcaadf4300a8664a5ca5b7d6b",
+  "registry_digest": "72df3e3a6a1a71f4e854ab49335788022466e269e84caaffdf81f7b6e5359bbd",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -2084,6 +2084,11 @@
       "from": "crank",
       "to": "redis",
       "kind": "writes"
+    },
+    {
+      "from": "crank",
+      "to": "asm",
+      "kind": "reads"
     },
     {
       "from": "curator",

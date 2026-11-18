@@ -140,6 +140,7 @@ flowchart LR
   c_crank -->|calls| c_cloudflare
   c_crank -->|reads| c_redis
   c_crank -->|writes| c_redis
+  c_crank -->|reads| c_hook_hub
   c_curator -->|calls| c_hermes_fleet
   c_curator -->|calls| c_hindsight
   c_daily_report -->|reads| c_candystore

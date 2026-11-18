@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "7a7c120ed1ad07a55ab9e19ddea78335af39453fcaadf4300a8664a5ca5b7d6b",
+  "registry_digest": "72df3e3a6a1a71f4e854ab49335788022466e269e84caaffdf81f7b6e5359bbd",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -2370,13 +2370,19 @@
       "from": "crank",
       "to": "redis",
       "kind": "reads",
-      "via": "redis-cli KEYS/HGET zcrank:tab:* and zcrank:config"
+      "via": "FCALL_RO crank_resolve (the one copy of the on/off + interval rule) over zcrank:tab:*, zcrank:pane:*, zcrank:config; redis-cli KEYS/HGET zcrank:tab:* for tab-key matching"
     },
     {
       "from": "crank",
       "to": "redis",
       "kind": "writes",
-      "via": "redis-cli RPUSH zcrank:log:<tab> (zcrankctl)"
+      "via": "FCALL crank_apply (zcrankctl; every registry write, incl. the checked log row) and FCALL crank_scan (zcrank.py engine, one call per 5m tick for every live pane) on the Functions library \"crank\"; resolved state crank:p:<session>:<pane>, streams crank:t:<session>:<pane> and crank:t, channel crank:transitions, heartbeat crank:engine"
+    },
+    {
+      "from": "crank",
+      "to": "asm",
+      "kind": "reads",
+      "via": "GET asm:idx:pane:<session>:<N> -> HGET asm:a:<scope> state (zcrank.py classify; the gate then sees state_source asm|screen per pane)"
     },
     {
       "from": "curator",
@@ -3674,6 +3680,6 @@
     "first_party": 78,
     "external": 20,
     "live": 86,
-    "edges": 300
+    "edges": 301
   }
 }

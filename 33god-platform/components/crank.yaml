@@ -35,14 +35,35 @@ relations:
   anchor: CLAIRIC_FMT = ("https://api.cloudflare.com/client/v4/accounts/"
 - to: redis
   kind: reads
-  via: redis-cli KEYS/HGET zcrank:tab:* and zcrank:config
-  evidence: ~/.agents/tools/jev-clairic/bin/zcrank.py:101
-  anchor: _TAB_KEYS = [k.split(":", 2)[2] for k in _redis("KEYS", "zcrank:tab:*").splitlines()
+  via: >-
+    FCALL_RO crank_resolve (the one copy of the on/off + interval rule) over zcrank:tab:*, zcrank:pane:*, zcrank:config; redis-cli KEYS/HGET zcrank:tab:* for tab-key matching
+  evidence: ~/.agents/tools/jev-clairic/bin/crank_arbiter.py:210
+  anchor: 'def resolve(keys: list[str], owners: list[str] | None = None, pane: str | None = None) -> dict:'
 - to: redis
   kind: writes
-  via: redis-cli RPUSH zcrank:log:<tab> (zcrankctl)
-  evidence: ~/.agents/tools/jev-clairic/bin/zcrankctl:439
-  anchor: strict_redis("RPUSH", key, raw)
+  via: >-
+    FCALL crank_apply (zcrankctl; every registry write, incl. the checked log row) and FCALL crank_scan (zcrank.py engine, one call per 5m tick for every live pane) on the Functions library "crank"; resolved state crank:p:<session>:<pane>, streams crank:t:<session>:<pane> and crank:t, channel crank:transitions, heartbeat crank:engine
+  evidence: ~/.agents/tools/jev-clairic/bin/crank_arbiter.py:187
+  anchor: 'def apply(ops: list[dict], by: str) -> dict:'
+- to: asm
+  kind: reads
+  via: >-
+    GET asm:idx:pane:<session>:<N> -> HGET asm:a:<scope> state (zcrank.py classify; the gate then sees state_source asm|screen per pane)
+  evidence: ~/.agents/tools/jev-clairic/bin/zcrank.py:383
+  anchor: 'def asm_state(pane: str, session: str = SESSION) -> str:'
 evidence:
 - ~/.local/bin/zcrank-send
 confidence: medium
+notes: |-
+  Built on statekit (consumer 2 of bloodbank/services/agent-hooks/core/statekit.py; the ASM is consumer 1).
+  The arbiter is ~/.agents/tools/jev-clairic/bin/crank.lua, a Redis Functions library "crank" loaded through
+  statekit.Library by bin/crank_arbiter.py (`zcrankctl arbiter-load`). It is the single writer of the crank keys:
+  zcrank.py, zcrankctl and pjangler send signals (crank_apply, crank_scan) and ask crank_resolve; none writes a key
+  or carries the rule. Registry keys are unchanged (zcrank:tab:<key>, zcrank:pane:<owner>:<pane>, zcrank:log:<key>,
+  zcrank:config). New keys: crank:p:<session>:<pane> (resolved on/since/decided_by/interval/keys/owners/last_run/
+  next_due/scan_ms/held/seq, 1d TTL), crank:idx:panes, crank:t:<session>:<pane> and crank:t (transition streams),
+  crank:engine (heartbeat), pubsub channel crank:transitions (one JSON per edge). Operator views: zcrankctl pane,
+  history, tail. The gate (zcrank-gate.py via zcrank.py classify) reads the ASM state of each pane first
+  (working/tool_running/delegating -> working; awaiting_human/failed/idle -> waiting; anything else falls back to the
+  screen) and reports state_source and asm_state per pane, skipping the 2.5s re-dump when ASM answers. The
+  on_since.json writer is retired (its reader only seeds new panes; remove after 2026-12-01).
