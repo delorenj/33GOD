@@ -24,7 +24,7 @@ relations:
 - to: aai-gateway
   kind: routes-llm-via
   via: gateway keys in container env
-  evidence: ~/code/genesis/genesis/adapters.py:22
+  evidence: ~/code/genesis/genesis/adapters.py:23
   anchor: GATEWAY_URL = "https://api.automaticai.io/v1/chat/completions"
 - to: genesis-desk-worker
   kind: calls
@@ -34,12 +34,12 @@ relations:
 - to: bb-nats
   kind: publishes-to
   via: JetStream bloodbank.cmd.agent.invocation.start (fleet gate)
-  evidence: ~/code/genesis/genesis/adapters.py:246
+  evidence: ~/code/genesis/genesis/adapters.py:266
   anchor: return envelope
 - to: agent-hooks
   kind: calls
   via: import services/agent-hooks core.envelope.build_envelope
-  evidence: ~/code/genesis/genesis/adapters.py:205
+  evidence: ~/code/genesis/genesis/adapters.py:225
   anchor: 'def observed(key):'
 evidence:
 - /home/delorenj/code/genesis

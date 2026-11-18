@@ -29,12 +29,12 @@ relations:
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.agent.invocation.* / conversation.turn.* lifecycle
-  evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:1608
+  evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:1657
   anchor: await self._js.publish(
 - to: agents-registry
   kind: reads
   via: extra.fleet_registry ~/.hermes/agents-registry.yaml
-  evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:424
+  evidence: bloodbank/services/hermes-gateway/bloodbank_hermes_gateway/adapter.py:426
   anchor: str(extra.get("fleet_registry", "~/.hermes/agents-registry.yaml"))
 evidence:
 - /home/delorenj/.hermes/plugins

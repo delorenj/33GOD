@@ -27,7 +27,7 @@ relations:
 - to: minio
   kind: stores-in
   via: bucket earshot/<channel>/ via the delo mc alias
-  evidence: ~/code/earshot/host/earshot.py:47
+  evidence: ~/code/earshot/host/earshot.py:48
   anchor: ENDPOINT = os.environ.get("EARSHOT_ENDPOINT", "https://s3.delo.sh").rstrip("/")
 evidence:
 - ~/code/earshot/README.md
