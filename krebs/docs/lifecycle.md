@@ -15,6 +15,8 @@ It replaces two things:
 4. **Out of scope.** TIKT keeps its own lanes: it is a human content pipeline, not a ticket board. The client boards AAI and JIMB, in the `automaticai` workspace, are skipped entirely, and Krebs never writes there. Archived boards are left alone.
 5. **Epics take a slot.** An epic in In Progress counts against the project's two slots like any other ticket. Krebs never starts an epic itself, so whoever moves one to In Progress spends a slot on it.
 
+6. **Nobody working means no slot (2026-11-18, 33GOD-93).** A ticket whose agent turn ended without a handback or a hold label used to keep its slot, and its leftover `agent:working`, forever. Krebs now asks Candystore whether a turn is live and, if not, releases the ticket to Todo or removes the stale label. See [Orphans](#orphans-the-resume-path).
+
 ## Lanes and labels
 
 | Lane | Meaning |
@@ -70,6 +72,7 @@ stateDiagram-v2
 | Triage on Todo entry | The n8n Ticket Triage lane, which sends a triage turn to the scope's owner agent. |
 | Triage catch-up | `krebs tick`. A Todo ticket with no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, and unchanged for 30 minutes gets the same triage turn the lane would have sent (a lost webhook, an n8n restart). At most 1 per scope and 6 per tick, oldest first: a desk takes its board-driver lease for each turn, so two triage turns sent to one desk at the same moment collide and the second gives up without finishing. The command id comes from board, ticket and `updated_at`, so one ticket version is triaged once; a turn that changes nothing does not loop. Krebs writes nothing to Plane for it. |
 | Dispatch Todo → In Progress | `krebs tick`, on the Candybar `krebs-tick` schedule. Nothing else dispatches. |
+| Release an orphan (turn over, no handback) | `krebs tick`, when Candystore shows no live turn. See [Orphans](#orphans-the-resume-path). |
 | Handback | The implementation turn. It adds `lifecycle:review` and an evidence comment, or closes the ticket if the scope has no review step. |
 | Verdict | The Launch Director, or the PM where there is none. Accepted means Done. Sent back means Todo, with the comment `returned: <criterion>`. |
 | Accept, park, cancel, Todo order | PM passes, through px or px-apply. |
@@ -84,6 +87,32 @@ The dispatch guard requires all of the following:
 - no open blocking relation
 
 Candidates are taken in Plane's Todo order (`sort_order`), then by priority, then by sequence id.
+
+## Orphans: the resume path
+
+An agent turn can end without doing what the lifecycle expects: it asks a question in a comment but adds no hold label, it crashes, or it finishes the work and forgets the handback. Before 2026-11-18 such a ticket stayed In Progress with `agent:working` and held one of the project's two slots forever, and nothing could ever pick it up again. GRUV-182 was the first one reported. That day, FLUME, NAVI, PJAN and SSBNK each had both slots taken by one.
+
+Each tick, before the slot math, Krebs looks at every ticket that has been unchanged for 30 minutes and either holds a slot (In Progress, no `lifecycle:review`, no hold label, not an epic) or carries `agent:working`. For each one it asks Candystore whether an agent turn is live on it. Every turn on a ticket emits `agent.invocation.started` and then `.completed` or `.failed`, stamped with the ticket's correlation id, so the answer is exact. On the 14 days before the change, all 632 ticket turns had both ends on record. A turn counts as live when:
+
+- Krebs sent it a dispatch command under 8 hours ago (a triage command under 3 hours ago) and that command has not ended. The gateway only announces a turn's start once the turn gets one of its slots, and commands have waited up to 55 minutes in that queue, so Krebs trusts its own journal for the commands it sent;
+- it started and has not ended, and started under 8 hours ago (the longest delegation on record ran 4.6 hours);
+- it detached to a background worker under 24 hours ago;
+- there was any agent activity on the ticket in the last 30 minutes;
+- a coding worker (codex, claude, opencode) was active in the last 30 minutes in a working directory named for the ticket, such as `.worktrees/gruv-182-…`.
+
+If Candystore cannot answer, Krebs does nothing to that ticket and says so in the report.
+
+Why the label was left behind in the first place: the n8n Ticket Pickup Chip removes `agent:working` when a turn ends, unless the ticket moved into In Progress around the time the label was added. That exception protects a `px claim`, but a Krebs dispatch makes the same single write (In Progress plus the label), so the chip never removed the label from a Krebs-dispatched ticket. The Krebs sweep now cleans these up within about 30 minutes of the turn ending.
+
+When no turn is live:
+
+| Ticket | What Krebs does |
+|---|---|
+| Holds a slot | Moves it to Todo, removes `agent:working`, keeps every other label, and comments why. A triaged ticket is not re-triaged, and the freed slot refills on the same tick in Todo order. That is how GRUV-182's work resumes after its question is answered. |
+| Carries `agent:working` but holds no slot (held, in review, an epic, in Todo or in Backlog) | Removes `agent:working`. Nothing else changes. When the hold clears later, the ticket no longer looks worked on. |
+| Released twice in the last 7 days | Adds `agent:failed` instead, so it stops looping. It stays In Progress, holds no slot, and a comment asks a person to look. |
+
+A tick releases at most 2 tickets per project and 12 overall, and removes at most 30 labels, so a backlog drains over a few ticks. The tick journal records `orphan.release`, `orphan.unstick` and `orphan.fail`.
 
 ## What it replaces
 

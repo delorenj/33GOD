@@ -109,6 +109,11 @@ export class FakePlane {
     return structuredClone(row);
   }
 
+  async comment(id, html, ws, board) {
+    this.calls.push({ method: "comment", id, board, html });
+    return { id: `c-${this.calls.length}` };
+  }
+
   writes() {
     return this.calls.filter((c) => c.method === "editIssue");
   }

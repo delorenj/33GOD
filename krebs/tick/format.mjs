@@ -26,6 +26,12 @@ export function formatReport(report, { verbose = false } = {}) {
     lines.push(head);
     if (s.occupied.length) lines.push(`  in progress: ${s.occupied.join(", ")}`);
     if (s.republishes.length) lines.push(`  republish: ${list(s.republishes, (r) => `${r.key} ${r.commandId} ${r.result}${r.why ? ` (${r.why})` : ""}${r.error ? ` (${r.error})` : ""}`)}`);
+    {
+      const acted = (s.orphans ?? []).filter((o) => o.result !== "live");
+      const live = (s.orphans ?? []).filter((o) => o.result === "live");
+      for (const o of acted) lines.push(`  orphan: ${o.key} ${o.action ?? ""} ${o.result}${o.why ? ` (${o.why})` : ""}${o.error ? ` (${o.error})` : ""}`.replace(/  +/g, " ").replace(/^ /, "  "));
+      if (live.length) lines.push(`  turn live, left alone: ${list(live, (o) => `${o.key} (${o.why})`)}`);
+    }
     lines.push(`  repairs: ${s.repairs.length ? list(s.repairs, (r) => `${r.key} -${r.remove.join(" -")} ${r.result}`) : "none"}`);
     if (s.dispatches.length) {
       for (const d of s.dispatches) {

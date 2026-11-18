@@ -124,6 +124,45 @@ export function pendingPublishes(entries) {
 }
 
 /**
+ * The start commands krebs itself sent, per ticket id: [{commandId, at, kind}],
+ * kind "dispatch" or "triage". The gateway publishes invocation.started only
+ * when a turn gets a slot (measured waits up to 55 min), so a command krebs
+ * sent with no end on record yet is queued or running: liveness counts it.
+ */
+export function sentCommands(entries) {
+  const intents = new Map(); // dispatch_id -> intent
+  const out = new Map();
+  const add = (ticketId, cmd) => {
+    if (!ticketId || !cmd.commandId) return;
+    const list = out.get(ticketId) ?? [];
+    list.push(cmd);
+    out.set(ticketId, list);
+  };
+  for (const e of entries) {
+    if (e?.action === "dispatch.intent" && e.dispatch_id) intents.set(e.dispatch_id, e);
+    else if (e?.action === "dispatch.publish" && e.ok === true) {
+      const intent = intents.get(e.dispatch_id);
+      add(intent?.ticket_id, { commandId: e.command_id, at: e.ts, kind: "dispatch" });
+    } else if (e?.action === "triage.publish" && e.ok === true) {
+      add(e.ticket_id, { commandId: e.command_id, at: e.ts, kind: "triage" });
+    }
+  }
+  return out;
+}
+
+/** Successful orphan releases per ticket id since `sinceMs` (the loop guard's count). */
+export function releaseCounts(entries, sinceMs) {
+  const counts = new Map();
+  for (const e of entries) {
+    if (e?.action !== "orphan.release" || e.ok !== true || !e.ticket_id) continue;
+    const t = Date.parse(e.ts ?? "");
+    if (!Number.isFinite(t) || t < sinceMs) continue;
+    counts.set(e.ticket_id, (counts.get(e.ticket_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
  * Command ids of catch-up triages already published (action triage.publish,
  * ok true). A triage command id is derived from board + ticket + updated_at, so
  * one id is one ticket version: a version in this set is never triaged again.

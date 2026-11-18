@@ -10,9 +10,12 @@
 #      It retires Momo (a skill that drove the lifecycle by prompt).
 #   5. An epic in In Progress takes a slot like any other ticket (Krebs never
 #      dispatches an epic; whoever starts one spends a slot on it).
+#   6. (2026-11-18, 33GOD-93) A ticket nobody is working on never holds a slot or
+#      agent:working. Krebs asks Candystore whether a turn is live; if not, it
+#      releases the ticket to Todo or removes the stale label (see `orphans`).
 #
 # Human-readable companion: ../docs/lifecycle.md. Supersedes lifecycle.v1.yaml.
-spec_version: 2.0.0
+spec_version: 2.1.0
 
 lanes:                       # exact Plane state names; order is the board order
   - {name: Backlog,     group: backlog,   default: true}
@@ -26,7 +29,7 @@ labels:                      # lifecycle labels; every board carries all six
   agent:working:
     meaning: an agent turn is running on this ticket right now
     set_by: [pickup-chip, krebs-dispatch, px claim]
-    cleared_by: [pickup-chip at turn end, chip-sweep, px release/close/cancel]
+    cleared_by: [pickup-chip at turn end, krebs orphans sweep (no live turn), px release/close/cancel]
     agents_touch: never      # agents never add or remove it themselves
   lifecycle:triaged:
     meaning: triage finished; the ticket is ready for an implementation slot
@@ -109,6 +112,29 @@ transitions:
 invariants:                  # Krebs repairs these on every tick
   - lifecycle:review only on In Progress tickets (removed elsewhere)
   - agent:working never on Done or Cancelled tickets
+  - agent:working only while an agent turn is live (see orphans)
+  - a slot is only held by a ticket with a live turn (see orphans)
+
+orphans:                     # 33GOD-93: turns that ended with no handback and no hold
+  liveness:
+    source: Candystore GET /events (local, http://127.0.0.1:8683; KREBS_CANDYSTORE_URL)
+    key: the ticket correlation id, fleet.ticketCorrelationId(board, ticket), which every dispatch and triage command carries
+    live_when:               # any one of these
+      - krebs published a dispatch (triage) command for it under 8 (3) hours ago and no .completed/.failed for that command is on record; the gateway publishes .started only once a turn gets a slot (queues up to 55 min measured), so a queued command has no start yet
+      - an agent.invocation.started with no .completed/.failed, started under 8 hours ago
+      - an agent.invocation.detached under 24 hours ago (its worker may still run)
+      - any agent or conversation event on the ticket in the last 30 minutes
+      - an agent-CLI event in the last 30 minutes whose working directory names the ticket key (a worker in its worktree)
+    unknown: Candystore unreachable or erroring; krebs touches nothing and warns
+  suspects:                  # only tickets unchanged for 30 minutes
+    release: In Progress, holds a slot (no lifecycle:review, no hold label), not an epic
+    stale_working: agent:working in Todo or Backlog, or in In Progress without holding a slot, or on an epic
+  actions:                   # only when no turn is live
+    release: one write moves it to Todo and removes agent:working; other labels stay (a triaged ticket is not re-triaged); one comment says why. The freed slot refills on the same tick, in Todo order
+    stale_working: remove agent:working; nothing else
+    loop_guard: a ticket released 2 times in 7 days gets +agent:failed (and -agent:working) instead, stays In Progress, and a comment asks for a look
+  caps: 2 releases per scope and 12 per tick; 30 label removals per tick
+  journal: orphan.release, orphan.unstick, orphan.fail
 
 catch_up:                    # covers webhooks lost while n8n restarts
   triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes, gets a triage turn (the n8n Ticket Triage lane's groomTicket command; no Plane write); the command id is derived from board + ticket + updated_at, so it fires once per ticket version; at most 1 per scope (a desk serializes board turns on its lease; two at once collide) and 6 per tick, oldest first

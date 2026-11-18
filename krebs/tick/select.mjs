@@ -132,6 +132,32 @@ export async function pickDispatches(candidates, free, blockerOf) {
   return { picked, blocked, waiting: candidates.slice(i) };
 }
 
+/**
+ * spec orphans: a ticket that may have nobody on it, judged on labels, lane and
+ * quiet time alone (the caller then asks Candystore whether a turn is live).
+ *
+ *   "release"        In Progress, holds a slot (no review, no hold), not an epic:
+ *                    if no turn is live it goes back to Todo.
+ *   "stale-working"  carries agent:working in Todo or Backlog, or in In Progress
+ *                    without holding a slot (review or hold), or on an epic: if
+ *                    no turn is live the label is removed.
+ *
+ * Returns null for everything else, and for any ticket updated within quietMs
+ * (a dispatch write or a fresh turn's first edit is never second-guessed).
+ */
+export function orphanKind(ticket, nowMs, quietMs) {
+  if (ticket.archived || ticket.draft) return null;
+  const updated = Date.parse(ticket.updatedAt ?? "");
+  if (!Number.isFinite(updated) || nowMs - updated <= quietMs) return null;
+  const working = ticket.labels.includes(LABEL.working);
+  if (ticket.lane === "started") {
+    if (occupies(ticket) && !isContainer(ticket.labels)) return "release";
+    return working ? "stale-working" : null;
+  }
+  if (working && ticket.lane !== "terminal") return "stale-working"; // Todo, Backlog, any other open lane
+  return null;
+}
+
 /** spec catch_up.triage: a Todo ticket unchanged this long gets a triage turn. */
 export const TRIAGE_MIN_AGE_MS = 30 * 60 * 1000;
 /** At most this many catch-up triages per scope per tick, and per tick overall. */

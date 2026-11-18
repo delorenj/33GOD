@@ -18,6 +18,7 @@ import { runTick } from "../tick/run.mjs";
 import { Journal, defaultJournalPath, stateDir } from "../tick/journal.mjs";
 import { acquireLock } from "../tick/lock.mjs";
 import { formatReport } from "../tick/format.mjs";
+import { candystoreClient, candystoreLiveness } from "../tick/liveness.mjs";
 import { SPEC_VERSION } from "../tick/lifecycle.mjs";
 
 const USAGE = `krebs: Krebs lifecycle v2 state manager (spec ${SPEC_VERSION})
@@ -31,6 +32,12 @@ triaged Todo tickets into free slots (plane.wip, default 2): one Plane write
 (In Progress + agent:working + start_date) and one
 bloodbank.agent.invocation.start (reason ticket-delegation) to the scope owner.
 A publish that failed on an earlier tick is republished with the same command id.
+Before the slot math, orphans: an In Progress ticket holding a slot, or any ticket
+carrying agent:working, that has been quiet for 30 minutes and has no live agent turn
+(Candystore: the ticket's invocation started/completed events, recent agent activity,
+or a worker active in a worktree named for it) is released to Todo, or has its stale
+agent:working removed. Candystore unreachable means hands off. A ticket released twice
+in a week without a handback is held with agent:failed instead.
 Then catch-up triage: a Todo ticket with no lifecycle:triaged, hold label, agent:working or
 epic label, unchanged for 30 minutes, gets a triage start command (max 1 per scope, 6 per
 tick, oldest first; once per ticket version; no Plane write).
@@ -44,8 +51,14 @@ tick, oldest first; once per ticket version; no Plane write).
 
 Exit: 0 ok (also when there is nothing to do or another tick holds the lock),
 1 a scope or action failed, 2 usage error.
-Environment: NATS_URL (default nats://127.0.0.1:4222), KREBS_TZ (start_date zone),
+Environment: NATS_URL (default nats://127.0.0.1:4222), KREBS_CANDYSTORE_URL
+(default http://127.0.0.1:8683), KREBS_TZ (start_date zone),
 KREBS_STATE_DIR, KREBS_PILOT_DIR, KREBS_BLOODBANK_N8N_DIR, PLANE_API_KEY / PLANE_BASE (as px).`;
+
+/** Candystore's read API: where turn liveness comes from (local; the public hostname sits behind OIDC). */
+function candystoreUrl(env = process.env) {
+  return env.KREBS_CANDYSTORE_URL || "http://127.0.0.1:8683";
+}
 
 function emit(json, value, human) {
   process.stdout.write(`${json ? JSON.stringify(value, null, 2) : human}\n`);
@@ -99,6 +112,7 @@ async function tick(flags) {
       journal,
       dryRun,
       timeZone: process.env.KREBS_TZ || undefined,
+      liveness: candystoreLiveness({ client: candystoreClient({ base: candystoreUrl() }), fleet: bb.fleet }),
     });
     report.registry = registryPath;
     report.journal = journalPath;

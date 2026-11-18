@@ -9,7 +9,7 @@
 # id from the journal (~/.local/state/krebs/tick-journal.jsonl). Candybar is the
 # only clock: no timer, no cron, no private loop (spec: "no other dispatcher").
 #
-# Registered DISABLED: it writes Plane and publishes to the bus, so never
+# Enabled live since 2026-11-14. It writes Plane and publishes to the bus, so never
 # `candybar run` it to test; the first scheduled fire after `resume` is the proof.
 # Preview what the first fire would do (read-only, safe any time):
 #   node /home/delorenj/code/33GOD/krebs/bin/krebs.mjs tick --dry-run [--board KEY]
@@ -34,7 +34,7 @@ tags = ["krebs", "33god", "lifecycle", "dispatch"]
 schedule = "*/10 * * * *"
 timezone = "America/New_York"
 noise = true
-enabled = false
+enabled = true
 
 [candybar.runner]
 kind = "exec"

@@ -15,14 +15,41 @@ import {
   compareTriage,
   dispatchGuard,
   normalizeTicket,
+  orphanKind,
   pickDispatches,
   repairsFor,
   slotsOf,
   triageCandidatesOf,
   triageGuard,
 } from "./select.mjs";
-import { PENDING_MAX_AGE_MS, pendingPublishes, triagedCommandIds } from "./journal.mjs";
+import { PENDING_MAX_AGE_MS, pendingPublishes, releaseCounts, sentCommands, triagedCommandIds } from "./journal.mjs";
+import { QUIET_MS, mapLimit } from "./liveness.mjs";
 import { dispatchPrompt } from "./prompt.mjs";
+
+/** spec orphans: caps on what one tick does, so a backlog of orphans drains over a few ticks. */
+export const ORPHAN_RELEASE_SCOPE_CAP = 2;
+export const ORPHAN_RELEASE_TICK_CAP = 12;
+export const ORPHAN_UNSTICK_TICK_CAP = 30;
+/** A ticket released this many times in ORPHAN_LOOP_WINDOW_MS is held with agent:failed instead. */
+export const ORPHAN_RELEASE_LIMIT = 2;
+export const ORPHAN_LOOP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const LIVENESS_CONCURRENCY = 8;
+
+function releaseComment(why) {
+  return (
+    `<p>Krebs moved this back to Todo. Nobody was working on it: ${why}, and the turn left no handback ` +
+    `(no <code>lifecycle:review</code>, no hold label, not closed). It was holding one of the project's work ` +
+    `slots. Its other labels stay as they were, and it gets the next free slot in Todo order.</p>`
+  );
+}
+
+function failComment(why, count) {
+  return (
+    `<p>Krebs has already moved this back to Todo ${count} times this week, and each time the agent turn ended ` +
+    `without a handback (latest: ${why}). It now carries <code>agent:failed</code> so it stops looping. ` +
+    `Look at the last turn, fix what stops it, then remove <code>agent:failed</code>.</p>`
+  );
+}
 
 export const COMMAND_TYPE = "bloodbank.agent.invocation.start";
 export const INVOCATION_REASON = "ticket-delegation";
@@ -201,6 +228,11 @@ export async function runTick({
   triageMinAgeMs = TRIAGE_MIN_AGE_MS,
   triageScopeCap = TRIAGE_SCOPE_CAP,
   triageTickCap = TRIAGE_TICK_CAP,
+  liveness = null,
+  orphanQuietMs = QUIET_MS,
+  orphanReleaseScopeCap = ORPHAN_RELEASE_SCOPE_CAP,
+  orphanReleaseTickCap = ORPHAN_RELEASE_TICK_CAP,
+  orphanUnstickTickCap = ORPHAN_UNSTICK_TICK_CAP,
 }) {
   const started = now();
   const tickId = `tick:${started.toISOString()}`;
@@ -211,6 +243,10 @@ export async function runTick({
   const journalEntries = journal.read();
   const pending = pendingPublishes(journalEntries);
   const triaged = triagedCommandIds(journalEntries);
+  const sentByTicket = sentCommands(journalEntries);
+  const releasedBefore = releaseCounts(journalEntries, started.getTime() - ORPHAN_LOOP_WINDOW_MS);
+  let releasesThisTick = 0;
+  let unsticksThisTick = 0;
   const triagePlans = []; // {scope, snap, out, entry, ticket}: picked per scope, capped tick-wide after the loop
   const boards = new Map(); // `${ws}:${board}` -> snapshot | {error}
   const statesCache = new Map();
@@ -294,6 +330,7 @@ export async function runTick({
       overLimit: 0,
       republishes: [],
       repairs: [],
+      orphans: [],
       dispatches: [],
       blocked: [],
       triage: [],
@@ -317,7 +354,7 @@ export async function runTick({
       const route = fleet.resolveFleetAgentForBoard(registry, board, "", t.labels);
       return route.matchedBy === "board" ? route.agentId : null;
     };
-    const mine = snap.tickets.filter((t) => !t.archived && ownerOf(t) === scope.agentId);
+    let mine = snap.tickets.filter((t) => !t.archived && ownerOf(t) === scope.agentId);
     out.tickets = mine.length;
 
     // 1. Owed publishes from earlier ticks (same command id, byte-identical command).
@@ -372,6 +409,152 @@ export async function runTick({
         }
       }
       out.repairs.push(entry);
+    }
+
+    // 2b. Orphans (spec orphans): a ticket whose agent turn is over but still
+    // looks worked on. Candystore says whether a turn is live; unknown means
+    // hands off. Released tickets go back to Todo, which frees their slot below.
+    {
+      const nowMs = started.getTime();
+      const found = mine.map((t) => ({ t, kind: orphanKind(t, nowMs, orphanQuietMs) })).filter((x) => x.kind);
+      if (found.length && !liveness) {
+        out.warnings.push(`${found.length} possible orphan(s) not checked: no liveness probe (Candystore) configured`);
+      } else if (found.length) {
+        const todoId = snap.lanes.todoStateIds[0] ?? null;
+        const todoName = todoId ? snap.lanes.nameOf.get(todoId) : null;
+        const workingId = snap.labelIdOf.get(LABEL.working);
+        const failedId = snap.labelIdOf.get(LABEL.failed);
+        const verdicts = await mapLimit(found, LIVENESS_CONCURRENCY, ({ t }) =>
+          liveness({ boardId: board, ticketId: t.id, key: t.key, sent: sentByTicket.get(t.id) ?? [] }),
+        );
+        let releasedInScope = 0;
+        const replace = (ticket, patch) => {
+          const next = { ...ticket, ...patch };
+          mine = mine.map((x) => (x.id === ticket.id ? next : x));
+          return next;
+        };
+        for (const [i, { t, kind }] of found.entries()) {
+          const v = verdicts[i];
+          const entry = { ...ticketRef(t), kind, why: v.why };
+          out.orphans.push(entry);
+          if (v.unknown) {
+            entry.result = "unknown";
+            out.warnings.push(`${t.key}: ${v.why}; left alone`);
+            continue;
+          }
+          if (v.live) {
+            entry.result = "live";
+            continue;
+          }
+          const hasWorking = t.labels.includes(LABEL.working);
+          const record2 = (action, ok, extra = {}) =>
+            record({ action, agent_id: scope.agentId, board_id: board, key: t.key, ticket_id: t.id, why: v.why, ok, ...extra });
+
+          if (kind === "stale-working") {
+            if (unsticksThisTick >= orphanUnstickTickCap) {
+              entry.result = "capped";
+              continue;
+            }
+            unsticksThisTick++;
+            entry.action = `-${LABEL.working}`;
+            if (dryRun) entry.result = "planned";
+            else {
+              try {
+                await plane.editIssue(t.id, { removeLabels: [workingId].filter(Boolean) }, ws, board);
+                entry.result = "unstuck";
+                record2("orphan.unstick", true);
+              } catch (err) {
+                entry.result = "failed";
+                entry.error = message(err);
+                out.errors.push(`${t.key}: removing stale ${LABEL.working} failed: ${entry.error}`);
+                record2("orphan.unstick", false, { error: entry.error });
+                continue;
+              }
+            }
+            replace(t, { labels: t.labels.filter((l) => l !== LABEL.working) });
+            continue;
+          }
+
+          // kind === "release"
+          const priorReleases = releasedBefore.get(t.id) ?? 0;
+          if (priorReleases >= ORPHAN_RELEASE_LIMIT) {
+            entry.action = `+${LABEL.failed}${hasWorking ? ` -${LABEL.working}` : ""}`;
+            if (!failedId) {
+              entry.result = "skipped";
+              out.warnings.push(`${t.key}: would hold with ${LABEL.failed} but the board has no such label`);
+              continue;
+            }
+            if (dryRun) entry.result = "planned";
+            else {
+              try {
+                await plane.editIssue(t.id, { addLabels: [failedId], removeLabels: hasWorking && workingId ? [workingId] : [] }, ws, board);
+                record2("orphan.fail", true, { releases: priorReleases });
+                entry.result = "held";
+              } catch (err) {
+                entry.result = "failed";
+                entry.error = message(err);
+                out.errors.push(`${t.key}: holding a looping orphan failed: ${entry.error}`);
+                record2("orphan.fail", false, { error: entry.error });
+                continue;
+              }
+              try {
+                await plane.comment(t.id, failComment(v.why, priorReleases), ws, board);
+              } catch (err) {
+                out.warnings.push(`${t.key}: held, but the comment failed: ${message(err)}`);
+              }
+            }
+            replace(t, { labels: [...t.labels.filter((l) => l !== LABEL.working), LABEL.failed].sort() });
+            continue;
+          }
+          if (!todoId) {
+            entry.result = "skipped";
+            out.warnings.push(`${t.key}: cannot release, the board has no Todo lane`);
+            continue;
+          }
+          if (releasedInScope >= orphanReleaseScopeCap || releasesThisTick >= orphanReleaseTickCap) {
+            entry.result = "capped";
+            continue;
+          }
+          releasedInScope++;
+          releasesThisTick++;
+          entry.action = `-> ${todoName}${hasWorking ? ` -${LABEL.working}` : ""}`;
+          if (dryRun) entry.result = "planned";
+          else {
+            // Re-read live: a turn may have handed back or held it since the listing.
+            let fresh;
+            try {
+              fresh = normalizeTicket(await plane.issue(t.id, ws, board), snap.ctx);
+            } catch (err) {
+              entry.result = "skipped";
+              entry.why = `live re-read failed: ${message(err)}`;
+              out.errors.push(`${t.key}: orphan ${entry.why}`);
+              continue;
+            }
+            if (orphanKind(fresh, nowMs, orphanQuietMs) !== "release") {
+              entry.result = "skipped";
+              entry.why = "changed since the listing";
+              continue;
+            }
+            try {
+              await plane.editIssue(t.id, { removeLabels: hasWorking && workingId ? [workingId] : [], fields: { state: todoId } }, ws, board);
+              entry.result = "released";
+              record2("orphan.release", true, { to: todoName });
+            } catch (err) {
+              entry.result = "failed";
+              entry.error = message(err);
+              out.errors.push(`${t.key}: releasing an orphan failed: ${entry.error}`);
+              record2("orphan.release", false, { error: entry.error });
+              continue;
+            }
+            try {
+              await plane.comment(t.id, releaseComment(v.why), ws, board);
+            } catch (err) {
+              out.warnings.push(`${t.key}: released, but the comment failed: ${message(err)}`);
+            }
+          }
+          replace(t, { lane: "todo", stateId: todoId, stateName: todoName, labels: t.labels.filter((l) => l !== LABEL.working) });
+        }
+      }
     }
 
     // 3. Slots.

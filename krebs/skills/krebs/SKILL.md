@@ -106,7 +106,11 @@ Per scope (registry row): 2 implementation slots, `plane.wip` overrides. Occupie
 NOT `lifecycle:review` AND NOT a hold label. Over the limit it drains, never evicts. Dispatch guard:
 free slot, `lifecycle:triaged`, no `agent:working`, no hold label, not an `epic` container, no open
 blocking relation. Krebs also repairs `lifecycle:review` outside In Progress and `agent:working` on
-Done/Cancelled.
+Done/Cancelled. And it releases orphans: a ticket quiet for 30 minutes whose agent turn is over
+(Candystore shows no live turn) but that still holds a slot goes back to Todo with its other labels
+kept; a stale `agent:working` elsewhere is removed; a ticket released twice in a week gets
+`agent:failed`. So a turn that ends without a handback or a hold label costs a re-dispatch, not a
+slot forever. End your turn with a handback or a hold label anyway: that is the contract.
 
 ## Recording a decision
 
