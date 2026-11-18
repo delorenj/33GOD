@@ -2,27 +2,23 @@ id: krebs
 name: Krebs
 role: ticket-lifecycle-engine
 repo: ../krebs
-description: Fenced Plane execution authority with Postgres intents and Bloodbank commands; separate legacy project-health projection.
+description: The Krebs lifecycle v2 dispatcher (krebs tick); dispatches triaged Todo tickets into per-scope slots, sends triage and PM review turns, releases orphans whose turn is over.
 compose:
   files: []
   profiles: [integrations]
 health:
   commands:
-    - cd ../krebs && uv run krebs health
+    - cd ../krebs && node bin/krebs.mjs tick --dry-run
 source_of_truth:
-  - ../krebs/src/krebs
-  - ../krebs/spec/execution-command.v2.schema.json
-  - ../krebs/ops/install.py
-  - ../krebs/spec/lifecycle.v1.yaml
-  - ../krebs/spec/lifecycle.schema.json
-  - ../krebs/spec/event-schemas.md
+  - ../krebs/spec/lifecycle.v2.yaml
+  - ../krebs/docs/lifecycle.md
+  - ../krebs/tick
   - ../krebs/adapters/tp
-  - ../krebs/webhooks
 changelog:
-  topics: [lifecycle, tickets, plane, linear, trello, webhooks, events]
+  topics: [lifecycle, tickets, plane, slots, triage, review]
 public_card:
   title: Ticket Lifecycle Engine
-  promise: One lifecycle state machine and normalized event stream across Plane, Linear, Trello, and future trackers.
+  promise: One ticket lifecycle on every board, five lanes and a few labels, with exactly one dispatcher.
 backfills: []
 
 # --- Atlas (I-12): map fields, rendered by scripts/atlas.py ---
@@ -62,32 +58,13 @@ relations:
   via: require dist/nats.js publish, buildEnvelope; dist/registry.js
   evidence: krebs/tick/deps.mjs:40
   anchor: nats = require(join(dist, "nats.js"));
-- to: bb-nats
-  kind: consumes-from
-  via: durable krebs-execution-v2 on bloodbank.cmd.lifecycle.task.invoke
-  evidence: krebs/src/krebs/service.py:43
-  anchor: sub = await js.pull_subscribe(COMMAND_SUBJECT, durable='krebs-execution-v2', config=ConsumerConfig(ack_policy=AckPolicy.EXPLICIT, ack_wait=180, max_ack_pending=
-- to: bb-nats
-  kind: publishes-to
-  via: outbox bloodbank.{evt,rpy,cmd}.lifecycle.<entity>.<action>
-  evidence: krebs/src/krebs/service.py:36
-  anchor: await js.publish(row['subject'], canonical(row['envelope']).encode(), headers={'Nats-Msg-Id':row['id']})
-- to: postgres
-  kind: stores-in
-  via: KREBS_DATABASE_URL schema krebs (store, outbox)
-  evidence: krebs/src/krebs/service.py:95
-  anchor: store = Store(os.environ['KREBS_DATABASE_URL'])
-- to: pilot
-  kind: calls
-  via: node provider-helper.js (KREBS_PILOT_HELPER) apply/read ops
-  evidence: krebs/src/krebs/adapters.py:70
-  anchor: proc=subprocess.run(['node',self.helper],input=canonical(request),capture_output=True,text=True,timeout=60,env=env)
+- to: candystore
+  kind: reads
+  via: GET /events by ticket correlation id (turn liveness)
+  evidence: krebs/tick/liveness.mjs
 evidence:
 - krebs/tick/run.mjs
 - krebs/.candybars/krebs-tick.candybar.toml
-- 'critic (relations.evidence): Claim holds (Candybar API: krebs-tick enabled=true, */10, created 2026-11-14T11:43Z,
-  16 runs/0 failed). Note the repo manifest krebs/.candybars/krebs-tick.candybar.toml still says enabled = false
-  and comments ''Registered DISABLED'', so the file is stale vs live. Dispatch publishes type bloodbank.agent.invocation.start
-  which subjectFor maps to subject bloodbank.cmd.agent.invocation.start. krebs-execution.service exists but is disabled'
+- krebs/tick/liveness.mjs
 confidence: high
-notes: Enabled live.
+notes: Enabled live. The Python managed-execution engine (krebs-execution.service, Postgres schema krebs) was deleted 2026-11-18.

@@ -215,8 +215,7 @@ flowchart LR
   c_krebs -->|reads| c_hermes_fleet
   c_krebs -->|calls| c_pilot
   c_krebs -->|calls| c_n8n
-  c_krebs -->|consumes-from| c_bloodbank
-  c_krebs -->|stores-in| c_postgres
+  c_krebs -->|reads| c_candystore
   c_lifecycle_controller -->|wraps| c_krebs
   c_lifecycle_controller -->|stores-in| c_postgres
   c_milkshake -->|consumes-from| c_bloodbank

@@ -23,7 +23,7 @@ source_of_truth:
   - ../momo/skill
   - ../momo/adapter/RENDER_MAP.md
 consumes:
-  - krebs/spec/lifecycle.v1.yaml
+  - krebs/spec/lifecycle.v2.yaml
   - krebs/adapters/tp
 changelog:
   topics: [orchestration, delegation, decisions, board-awareness, pillars]

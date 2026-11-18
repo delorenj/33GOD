@@ -25,7 +25,7 @@ changelog, skill routing, and backfill coordination.
 | Project bootstrap, CommonProject, project registry | PJangler |
 | Hiring, onboarding and reviewing agents; the org chart | Flume |
 | PM planning, delegation and reviewed closeout | Momo shared skill |
-| Managed ticket attempts, leases, questions, evidence and recovery | Krebs execution authority |
+| Ticket lifecycle: slots, dispatch, triage and review turns, orphan release | Krebs (`krebs tick`) |
 | Authenticated Plane CLI and provider operations | Pilot (`px`) |
 | Long-running agents, profiles, fleet defaults | Hermes Fleet |
 | Skill packs and agent capability distribution | Skillex |
@@ -65,14 +65,12 @@ matching one rather than re-deriving its decisions here.
   registry supplies agent-to-profile routing. `pj project identity --apply` is
   the one cross-store write that joins them.
 
-Managed ticket execution uses `px` → `bb call` → Krebs → Pilot's internal
-provider adapter. A command receipt follows durable intent and provider readback;
-publication alone is not success. Momo supplies the PM playbook under the actual
-host's actor identity. Hermes and interactive hosts supervise runs; they do not
-own a second ticket state machine. Root PM delegates component work to that
-board's owning PM. Read `krebs/docs/execution-contract.md` and the rollout ledger
-before changing managed execution or enabling a board. An installed skill is not
-evidence that native actor enrollment or runtime cutover has passed.
+Ticket flow follows Krebs lifecycle v2 (`krebs/spec/lifecycle.v2.yaml`,
+`krebs/docs/lifecycle.md`): `krebs tick` on Candybar is the only Todo → In
+Progress dispatcher, and it sends the scope's PM the triage and review turns.
+The PM gives verdicts (Launch Directors are retired). Board writes go through
+`px`. `lifecycle:human` marks a ticket the owner took by hand: nothing automated
+touches it. Root PM delegates component work to that board's owning PM.
 
 Load [references/event-journey.md](references/event-journey.md) before changing
 any producer, consumer, webhook, subject, projection, or command route.

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "4b92af33e76e8e2aa47237d770ea62f4cdbe6baf612371d9d4eb32006e3a2355",
+  "registry_digest": "c0532d04a9827a2158c26d597665f0aae8e029503e80a24300a455d805e50d4b",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -1028,7 +1028,7 @@
       ],
       "public_card": {
         "title": "Ticket Lifecycle Engine",
-        "promise": "One lifecycle state machine and normalized event stream across Plane, Linear, Trello, and future trackers."
+        "promise": "One ticket lifecycle on every board, five lanes and a few labels, with exactly one dispatcher."
       }
     },
     {
@@ -2627,23 +2627,8 @@
     },
     {
       "from": "krebs",
-      "to": "bb-nats",
-      "kind": "consumes-from"
-    },
-    {
-      "from": "krebs",
-      "to": "bb-nats",
-      "kind": "publishes-to"
-    },
-    {
-      "from": "krebs",
-      "to": "postgres",
-      "kind": "stores-in"
-    },
-    {
-      "from": "krebs",
-      "to": "pilot",
-      "kind": "calls"
+      "to": "candystore",
+      "kind": "reads"
     },
     {
       "from": "lifecycle-controller",
