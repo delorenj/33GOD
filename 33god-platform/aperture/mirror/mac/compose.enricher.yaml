@@ -14,8 +14,8 @@
 # PLAN section 1 belongs to the embeddings enricher-daprd, a different service).
 #
 # Deviations from bloodbank/services/turn-enricher/compose.yml:
-#   - image is a LOCAL arm64 build of bloodbank 6b2a2bf (tag
-#     turn-enricher:mac-6b2a2bf@<containerd index digest>), built once by hand;
+#   - image is a LOCAL arm64 build of bloodbank bfe2a1e (tag
+#     turn-enricher:mac-bfe2a1e@<containerd index digest>), built once by hand;
 #     `pull_policy: never` and no `build:` section, so `up` never rebuilds or
 #     pulls. Rebuild recipe (build context is bloodbank's services/ directory;
 #     the base python:3.12-alpine was pulled by index digest
@@ -52,7 +52,7 @@ name: 33god-enricher
 
 services:
   turn-enricher:
-    image: turn-enricher:mac-6b2a2bf@sha256:803143ee652eb22c12c603155d786599a9ab160649b60ae402c97cfa276d9992
+    image: turn-enricher:mac-bfe2a1e@sha256:b8d1b92da2bc6f92922160ce4d62d8074eb55661bf67592f3b80c25297464089
     pull_policy: never
     container_name: bloodbank-turn-enricher
     environment:
