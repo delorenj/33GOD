@@ -68,16 +68,30 @@
   function cidOf(name) { return name ? (CID[name] || name.toLowerCase()) : null; }
   function deskOf(name) { return name && name.indexOf('PM · ') === 0 ? name.slice(5).toLowerCase() + '-pm' : null; }
   // Per-key prefix sums over the night's minutes, so "how much in [a, b]" is one subtraction.
-  function prepNight(N) {
-    var len = N.window.minutes;
+  // Beats whose windows follow the real night (the rest of the film is staged, and says so).
+  var NIGHT_BEATS = { premise: 1, numbers: 1, staff: 1, pjangler: 1, heyma: 1, flume: 1 };
+  function usesNight(id) { return !!NIGHT_BEATS[id]; }
+  function prepNight(N, times) {
+    var W = N && N.window;
+    if (N.version !== 1) throw new Error('33god.night version ' + N.version + ' is not 1');
+    if (!W || !(W.minutes > 0) || W.minutes !== Math.floor(W.minutes)) throw new Error('33god.night: window.minutes is not a positive integer');
+    if (!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(W.local_since || '')) throw new Error('33god.night: bad window.local_since');
+    if (!Array.isArray(N.components)) N.components = [];
+    if (!Array.isArray(N.moments)) N.moments = [];
+    if (!Array.isArray(N.idle)) N.idle = [];
+    if (!Array.isArray(N.events_by_minute)) N.events_by_minute = [];
+    var len = W.minutes;
     function sums(pairs) { var a = new Float64Array(len + 1); var d = new Float64Array(len); (pairs || []).forEach(function (p) { if (p[0] >= 0 && p[0] < len) d[p[0]] += p[1]; }); for (var k = 0; k < len; k++) a[k + 1] = a[k] + d[k]; return a; }
     var comp = {}, desk = {};
     Object.keys(N.minutes || {}).forEach(function (k) { comp[k] = sums(N.minutes[k]); });
     Object.keys(N.desks || {}).forEach(function (k) { desk[k] = sums(N.desks[k]); });
     var total = new Float64Array(len + 1);
     (N.events_by_minute || []).forEach(function (n, k) { total[k + 1] = total[k] + n; });
-    var t0 = N.window.local_since.slice(11, 16);
-    return { N: N, len: len, comp: comp, desk: desk, total: total, start: mins(t0), label: N.window.label };
+    var start = mins(W.local_since.slice(11, 16));
+    if (isNaN(start)) throw new Error('33god.night: bad window.local_since');
+    // The film's clock must land inside the night somewhere, or nothing it shows would be real.
+    if (times && !times.some(function (m) { return m - start >= 0 && m - start < len; })) throw new Error('33god.night: the window ' + W.local_since + ' + ' + len + 'm misses the film\'s clock');
+    return { N: N, len: len, comp: comp, desk: desk, total: total, start: start, label: W.label || '' };
   }
   function nightMinute(R, clockMins) { return Math.floor(clockMins - R.start); }
   function range(a, lo, hi, len) { lo = clamp(lo, 0, len); hi = clamp(hi, 0, len); return hi > lo ? a[hi] - a[lo] : 0; }
@@ -86,7 +100,7 @@
     var a = (seat.desk && R.desk[seat.desk]) || (seat.cid && R.comp[seat.cid]);
     return !!a && range(a, mi - RECENT + 1, mi + 1, R.len) > 0;
   }
-  function eventsSoFar(R, mi) { return R ? R.total[clamp(mi + 1, 0, R.len)] : 0; }
+  function eventsSoFar(R, mi) { return R ? R.total[clamp(mi, 0, R.len)] : 0; }   // events before minute mi
 
   /* ---------- the building's seating plan ---------- */
   function buildSeats(M, R) {
@@ -129,10 +143,11 @@
     var seated = {};
     list.forEach(function (s) { if (s.name) seated[cidOf(s.name)] = true; });
     others.forEach(function (n) { seated[cidOf(n)] = true; });
-    var extra = R ? R.N.components.filter(function (c) { return !seated[c.id]; }) : [];
+    // Then the first-party components that were quiet tonight (lit, never working); a seat left after both stays dark.
+    var extra = R ? R.N.components.concat(R.N.idle || []).filter(function (c) { return !seated[c.id]; }) : [];
     rest.forEach(function (s, i) {
       var name = others[i] || null, line = name ? (lines[name] || '') : '';
-      if (!name && extra.length) { var c = extra.shift(); name = c.id.toUpperCase(); line = c.name; }
+      if (!name && extra.length) { var c = extra.shift(); name = c.id.toUpperCase(); line = c.summary || c.name; }
       put(s.f, s.c, { kind: 'comp', name: name, line: line, overtime: !R && i === others.length + 2 });
     });
     var named = {};
@@ -148,16 +163,19 @@
     var staffK = Math.min(seats.staffSeats.length - 1, Math.floor(q * seats.staffSeats.length));
 
     var R = ctx.night, mi = ctx.minute;
+    // A real night lights a seat only if a component sits in it: a spare seat has nothing to replay.
+    function real(s) { return !s.name ? 'dark' : seatBusy(R, s, mi) ? 'working' : 'lit'; }
     function ambient(s) {
-      if (R) return seatBusy(R, s, mi) ? 'working' : 'lit';
+      if (R) return real(s);
       if (s.overtime) return 'overtime';
       var r = (Math.floor(s.h * 97) + Math.floor(step / 8)) % 12;
       return r === 0 ? 'working' : 'lit';
     }
     function comp(s) {
       var n = s.name;
-      if (i === I.premise) return seg(q, 0.5, 0.95) > (s.f + s.h * 0.9) / 12.6 ? 'lit' : 'dark';
-      if (i < I.transcript) return R && seatBusy(R, s, mi) ? 'working' : 'lit';
+      if (i === I.premise) return seg(q, 0.5, 0.95) > (s.f + s.h * 0.9) / 12.6 ? (R ? real(s) : 'lit') : 'dark';
+      if (i === I.numbers) return R ? real(s) : 'lit';
+      if (i < I.transcript) return 'lit';     // Act III: the building is offstage, and staged
       if (i === I.transcript) return n === 'WAX' ? 'working' : (seg(q, 0.04, 0.3) > s.h * 0.98 ? 'dark' : 'lit');
       if (i < I['pm-krebs']) return n === 'WAX' ? 'working' : 'dark';
       if (i === I['pm-krebs']) {
@@ -277,10 +295,10 @@
 
   /* ---------- the clock: its own little island so the night can tick without redrawing the building ---------- */
   function LiveClock(props) {
-    var st = useState({ time: props.initial, precise: null, count: null });
+    var st = useState({ time: props.initial, precise: null, count: null, label: props.label });
     props.api.current = st[1];
     return h('div', { className: 'hud__clockin' },
-      h(O.Clock, { time: st[0].time, precise: st[0].precise, staged: true, stagedLabel: props.label }),
+      h(O.Clock, { time: st[0].time, precise: st[0].precise, staged: true, stagedLabel: st[0].label || props.label }),
       st[0].count != null && props.counter ? h('span', { className: 'hud__count' }, props.counter.replace('{n}', Math.round(st[0].count).toLocaleString('en-US'))) : null);
   }
 
@@ -534,6 +552,8 @@
     var beats = M.beats;
     var I = useMemo(function () { var m = {}; beats.forEach(function (b, n) { m[b.id] = n; }); return m; }, [beats]);
     var R = props.night;
+    var NC = M.site.night || {};
+    var realLabel = R ? (NC.label || '{label}').replace('{label}', R.label) : '';
     var seats = useMemo(function () { return buildSeats(M, R); }, [M, R]);
     var times = useMemo(function () { return beats.map(function (b) { return mins(b.time); }); }, [beats]);
 
@@ -549,7 +569,7 @@
 
     var stageRef = useRef(null), trackRef = useRef(null), sceneRef = useRef(null), worldRef = useRef(null), overlayRef = useRef(null);
     var glassRef = useRef(null), spRef = useRef(null), capRef = useRef(null), interRef = useRef(null), horizonRef = useRef(null);
-    var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, minute: -1, clock: '', precise: null, theme: '' });
+    var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, minute: -1, clock: '', precise: null, label: '', theme: '' });
     var camNow = useRef({ x: 0, y: 0, s: 1, o: 1 });
     var dollyRef = useRef(null), playY = useRef(0);
     var sizeRef = useRef(size); sizeRef.current = size;
@@ -632,9 +652,14 @@
         horizonRef.current.style.setProperty('--band', mix(C.sky0500, C.sky0630, seg(m, mins('05:00'), mins('06:30'))));
       }
       var clock = fmt(m), precise = bt.id === 'jev' && tr === 0 ? '07.' + pad3(31 + Math.floor(q * 48)) : null;
-      var minute = R ? nightMinute(R, m) : -1;
-      if (clockApi.current && (clock !== last.current.clock || precise !== last.current.precise)) {
-        last.current.clock = clock; last.current.precise = precise; clockApi.current({ time: clock, precise: precise, count: R ? eventsSoFar(R, minute) : null });
+      // The clock says "real" only over beats whose windows replay the night; the counter is the real
+      // night at this clock time either way.
+      var realBeat = !!R && usesNight(bt.id);
+      var label = realBeat ? realLabel : M.site.stagedLabel;
+      var nightMi = R ? nightMinute(R, m) : -1, minute = realBeat ? nightMi : -1;
+      if (clockApi.current && (clock !== last.current.clock || precise !== last.current.precise || label !== last.current.label)) {
+        last.current.clock = clock; last.current.precise = precise; last.current.label = label;
+        clockApi.current({ time: clock, precise: precise, label: label, count: R ? eventsSoFar(R, nightMi) : null });
       }
 
       // Re-render on a new step of the hold, and on a new real minute (windows follow the night during travels too).
@@ -642,7 +667,7 @@
       if (i !== last.current.i || step !== last.current.step || minute !== last.current.minute) {
         last.current.i = i; last.current.step = step; last.current.minute = minute; setPos({ i: i, step: step, q: q, minute: minute });
       }
-    }, [beats, times, I, props.colors, R]);
+    }, [beats, times, I, props.colors, R, realLabel, M.site.stagedLabel]);
 
     // A seam is a stretch where the frame is between two rest states: a camera travel with its caption
     // crossfade, or an act's statement handing over to the beat's words. Stop in one and the dolly
@@ -665,6 +690,7 @@
     useEffect(function () {
       if (view !== 'film') { document.documentElement.setAttribute('data-theme', 'night'); last.current.theme = 'night'; return; }
       var idle = 0;
+      last.current.clock = ''; last.current.precise = null; last.current.label = '';   // a fresh clock island: tell it everything
       measure();
       var dolly = window.Dolly.create({ onFrame: frame, seam: seam, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
       dollyRef.current = dolly;
@@ -691,11 +717,10 @@
     var toggleView = useCallback(function () {
       setView(function (v) { return v === 'film' ? 'log' : 'film'; });
       window.scrollTo(0, 0);
-      playY.current = 0; last.current.i = -1; last.current.step = -1; last.current.minute = -1; last.current.clock = '';
+      playY.current = 0; last.current.i = -1; last.current.step = -1; last.current.minute = -1; last.current.clock = ''; last.current.label = '';
       setPos({ i: 0, step: 0, q: 0, minute: -1 });
     }, []);
-    var NC = M.site.night || {};
-    var clock = h(LiveClock, { api: clockApi, initial: beats[0].time, label: R ? (NC.label || '{label}').replace('{label}', R.label) : M.site.stagedLabel, counter: R ? NC.counter : null });
+    var clock = h(LiveClock, { api: clockApi, initial: beats[0].time, label: R && usesNight(beats[0].id) ? realLabel : M.site.stagedLabel, counter: R ? NC.counter : null });
 
     if (view === 'log') return h(LogView, { M: M, toggleView: toggleView, submitted: submitted, onSubmit: function () { setSubmitted(true); }, I: I, night: R });
 
@@ -916,7 +941,10 @@
       if (!src) return boot(M, null);
       return fetch(src, { cache: 'no-cache' })
         .then(function (r) { if (!r.ok) throw new Error(src + ': ' + r.status); return r.json(); })
-        .then(function (N) { if (N.format !== '33god.night') throw new Error(src + ': not a 33god.night file'); boot(M, prepNight(N)); })
+        .then(function (N) {
+          if (!N || N.format !== '33god.night') throw new Error(src + ': not a 33god.night file');
+          boot(M, prepNight(N, M.beats.map(function (b) { return mins(b.time); })));
+        })
         .catch(function (err) { console.warn('Overnight: no real night, staging instead.', err); boot(M, null); });
     })
     .catch(function (err) {

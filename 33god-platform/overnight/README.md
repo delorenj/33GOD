@@ -44,14 +44,15 @@ Each beat carries design fields (`id`, `time`, `act`, `spectacle`, `camera`, `se
 
 The page replays a real night of the company: **16–17 Nov 2026, 18:02 to 07:41 EST, 57,875 Bloodbank events from 30 components.** The clock time is the real time, so at 03:12 on the page you are looking at what the company did at 03:12 that night.
 
-- **Working windows are real** wherever the beat is not choreographing them (Acts I–II and the ambient building in Act IV). A window is working when its component published on the bus in the last three minutes. Seats left over after the named ones go to components that worked that night and have no seat of their own, so hovering shows who they are.
-- **The counter under the clock is real**: events archived so far tonight.
+- **Working windows are real** in six beats: the opening building once its windows have come on, the numbers beat, and the ambient building in Act IV (staff, pjangler, heyma, flume, outside each beat's own set piece). A window is working when its component published on the bus in the last three minutes; Hook-hub handler work lights the component it was for. Seats left over after the named ones go to components that worked that night and have no seat of their own (hover shows the registry summary); seats with no component stay dark. Act III and every set piece stay staged. The list is `NIGHT_BEATS` in `overnight.js`.
+- **The clock's label follows suit**: "Real night · 16–17 Nov 2026" over those six beats, "A night, staged" everywhere else.
+- **The counter under the clock is real** on every beat: events archived before that minute of the real night.
 - **The log view** interleaves real lines (blue rule) with the staged beats: per beat, up to three real moments between that beat's time and the next, rare events first.
 - **Still staged**: every set piece (the bus, the conference-room transcript, the tickets, the checklists, the car), and the window states those set pieces drive.
 
 Make another night: `waybill night --date 2026-11-16 -o site/nights/` (defaults: last night, 18:02 to 07:41, America/New_York, public profile), then point `site.night.src` at it. `?night=YYYY-MM-DD` plays any file in `site/nights/` without editing the manifest; `?night=staged` turns the replay off. If the file fails to load, the page plays the staged night and says so in the console.
 
-The digest holds producer, event type and minute only, never payloads. Candybar jobs and hook-hub handlers are credited to the component the work was for; third-party Hermes desks are aliased (`desk-3`) in the public profile.
+The digest holds producer, event type and local wall-clock minute only, never payloads. Candybar jobs and hook-hub handlers are credited to the component the work was for (client-project jobs stay with Candybar); third-party Hermes desks are aliased (`desk-3`) and message, call and payment event types are counted but never named in the public profile. If the file is malformed or its window misses the film's clock, the page plays the staged night.
 
 ## Real versus staged in this pass
 
@@ -60,7 +61,7 @@ The digest holds producer, event type and minute only, never payloads. Candybar 
 | Component names and their one-liners | Real, from the landing page copy |
 | The five counts (72, 12, 214, 299, 1) | Real, stamped 15 Nov 2026 |
 | Event subjects | Real, from the Bloodbank contract. Which subject sits on which beat is a first guess and needs a content pass. |
-| Clock times, window activity | Real when a night file loads (see above), outside the set pieces. Beat times themselves are staged. |
+| Clock times, window activity | Real in the six night beats when a night file loads (see above). Beat times themselves are staged. |
 | Event counter under the clock | Real, from the night file |
 | Transcript words, speaker names, the translated call | Staged, written for this pass |
 | The briefing form | Lights your window and stores nothing. It says so under the field. |

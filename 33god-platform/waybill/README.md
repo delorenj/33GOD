@@ -34,9 +34,15 @@ waybill night   [--date YYYY-MM-DD] [--from 18:02] [--to 07:41] [--tz America/Ne
 
 **night** is the wide shot: instead of one prompt, every event Candystore archived in a window of
 wall-clock time, folded into per-minute activity per registry component (`33god.night` v1). Candybar
-jobs and hook-hub handlers are credited to the component the work was for (producer surface, registry
-id, longest id prefix, or the repo holding the job's `.candybars/` manifest). One read-only aggregate
-query; producer, type and minute only. The Overnight launch page (`overnight/site/nights/`) replays it.
+jobs are credited to the component the work was for (producer surface or registry id, then the repo
+holding the job's `.candybars/` manifest, then the longest registry-id prefix, first-party ids first); a
+job whose manifest lives in a client repo stays with Candybar. Hook-hub handler successes light their
+owner (`minutes`, `credited`) without adding to `events`, so `sum(components[].events) ==
+totals.events - totals.unmapped_events`. Minutes are local wall-clock minutes, so a DST night lines up
+with a wall clock. Each component carries its registry `summary`; `idle` lists the first-party
+components that published nothing. The public profile aliases third-party Hermes desks and counts
+message, call and payment event types without naming them. One read-only aggregate query; producer,
+type and minute only. The Overnight launch page (`overnight/site/nights/`) replays it.
 
 **capture** rebuilds a past turn from what every source still holds. It resolves the turn window
 (from the transcript, falling back to the hook-hub receipts), runs all collectors in parallel, each with

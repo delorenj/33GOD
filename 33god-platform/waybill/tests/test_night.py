@@ -16,6 +16,7 @@ REG = {
     "krebs": {"name": "Krebs", "first_party": True, "producers": []},
     "hindsight": {"name": "Hindsight", "first_party": True, "producers": []},
     "genesis": {"name": "Genesis", "first_party": True, "producers": []},
+    "plane-hook": {"name": "Plane hook", "first_party": True, "producers": ["plane-ingress-reconcile"]},
 }
 LO = datetime(2026, 11, 16, 23, 2, tzinfo=timezone.utc)
 HI = datetime(2026, 11, 17, 12, 41, tzinfo=timezone.utc)
@@ -49,7 +50,36 @@ class ResolveTest(unittest.TestCase):
         self.assertEqual(who("hindsight-turn"), "hindsight")
         self.assertEqual(who("bloodbank-publisher"), "agent-hooks")
         self.assertEqual(who("nightly-sweep"), "genesis")
-        self.assertIsNone(who("gruvato-px-dedupe-sweep"))
+        self.assertIsNone(who("someone-px-dedupe-sweep"))
+
+    def test_first_party_prefix_beats_third_party_and_client_manifests_beat_both(self):
+        reg = dict(REG, **{"hindsight": {"name": "Hindsight", "first_party": False, "producers": []},
+                           "hindsight-ui": {"name": "Hindsight UI", "first_party": True, "producers": []}})
+        who = N.worker_resolver(reg, N.resolver(reg), {"hindsight-client-sync": "/home/x/code/clientco"}, {})
+        self.assertEqual(who("hindsight-turn"), "hindsight")              # a third-party service still gets its own work
+        self.assertEqual(who("hindsight-ui-build"), "hindsight-ui")
+        self.assertIsNone(who("hindsight-client-sync"))                   # a client repo's job: no prefix claims it
+
+    def test_manifest_repo_beats_prefix_and_client_jobs_stay_put(self):
+        who = N.worker_resolver(REG, N.resolver(REG), {
+            "krebs-nightly-report": "/home/x/code/clientco",          # a client repo: never claimed by the krebs- prefix
+            "genesis-rollup": "/home/x/code/33GOD/genesis",
+        }, {})
+        self.assertEqual(who("plane-ingress-reconcile"), "plane-hook")
+        self.assertIsNone(who("krebs-nightly-report"))
+        self.assertEqual(who("genesis-rollup"), "genesis")
+
+
+class DstTest(unittest.TestCase):
+    def test_fall_back_night_is_wall_clock_minutes(self):
+        lo, hi = N.night_window(date(2026, 10, 31))           # clocks fall back 1 Nov 2026, 02:00
+        self.assertEqual(int((hi - lo).total_seconds() // 60), 879)
+        self.assertEqual(N.wall_minutes(lo, hi, "America/New_York"), 819)
+        d = N.fold([row("hook-hub", "bloodbank.a.b", 818)], lo, hi, REG, "America/New_York")
+        self.assertEqual(d["window"]["minutes"], 819)
+        self.assertEqual(d["totals"]["events"], 1)
+        self.assertIn("at time zone 'America/New_York'", N.build_sql(lo, hi, "America/New_York"))
+        self.assertIn("'2026-10-31 18:02:00'::timestamp", N.build_sql(lo, hi, "America/New_York"))
 
 
 class FoldTest(unittest.TestCase):
@@ -77,6 +107,40 @@ class FoldTest(unittest.TestCase):
         self.assertEqual(d["events_by_minute"][5], 3)
         self.assertEqual(d["minutes"]["hindsight"], [[5, 3]])
         self.assertNotIn("who-knows", str(d))
+        h = next(c for c in d["components"] if c["id"] == "hindsight")
+        self.assertEqual((h["events"], h["credited"]), (0, 3))
+
+    def test_component_events_add_up_and_plumbing_handlers_credit_nothing(self):
+        d = self.doc([
+            row("hook-hub", "bloodbank.agent.hook.updated", 5, 4),
+            row("candybar", "bloodbank.cron.candybar.invoked", 6, 2, "krebs-tick"),
+            row("mystery", "bloodbank.x.y", 7, 5),
+            row("hook-handler", "hook.handler.succeeded", 5, 4, "nanoleaf"),
+            row("hook-handler", "hook.handler.succeeded", 5, 4, "hub-selftest"),
+            row("hook-handler", "hook.handler.succeeded", 5, 4, "hindsight-turn"),
+        ])
+        self.assertEqual(sum(c["events"] for c in d["components"]), d["totals"]["events"] - d["totals"]["unmapped_events"])
+        self.assertEqual(d["minutes"]["hook-hub"], [[5, 4]])
+        idle = [c["id"] for c in d["idle"]]
+        self.assertIn("genesis", idle)                 # first-party, quiet tonight
+        self.assertNotIn("krebs", idle)                # worked tonight
+
+    def test_public_profile_counts_but_never_names_private_types(self):
+        rows = [row("hook-hub", "bloodbank.telephony.call.started", 3), row("hook-hub", "bloodbank.messaging.sms.received", 4),
+                row("hook-hub", "bloodbank.billing.transaction.created", 5)]
+        pub = self.doc(rows)
+        self.assertEqual(pub["totals"]["events"], 3)
+        self.assertEqual(pub["minutes"]["hook-hub"], [[3, 1], [4, 1], [5, 1]])
+        self.assertNotIn("telephony", str(pub))
+        self.assertNotIn("messaging", str(pub))
+        self.assertNotIn("billing", str(pub))
+        self.assertEqual(len(self.doc(rows, "full")["types"]), 3)
+
+    def test_components_carry_their_registry_summary(self):
+        reg = N.load_registry()
+        self.assertTrue(reg["wax"]["summary"].startswith("Processes voice recordings"))
+        self.assertTrue(reg["plane-hook"]["summary"].endswith("to ticket changes."))
+        self.assertIn("producer:plane-ingress-reconcile".split(":", 1)[1], reg["plane-hook"]["producers"])
 
     def test_public_profile_aliases_third_party_desks(self):
         rows = [row("hermes-agent:33god-pm", "bloodbank.agent.tool.completed", 1),

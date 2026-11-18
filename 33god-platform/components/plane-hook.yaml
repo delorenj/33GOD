@@ -22,6 +22,9 @@ role_in_system: Turns a ticket move into a repo.task event that Krebs and agents
 tech:
 - n8n
 runtime: n8n workflows
+surfaces:
+- producer:plane-ingress-reconcile
+- producer:ticket-pickup-chip-sweep
 relations:
 - to: plane
   kind: consumes-from
