@@ -404,6 +404,24 @@ def cmd_list(a: argparse.Namespace, argv: list[str]) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- night
+
+def cmd_night(a: argparse.Namespace, argv: list[str]) -> int:
+    from datetime import date as _date, datetime as _dt, timedelta as _td
+    from zoneinfo import ZoneInfo
+    from . import night
+    day = _date.fromisoformat(a.date) if a.date else (_dt.now(ZoneInfo(a.tz)).date() - _td(days=1))
+    doc = night.build(day, a.start, a.end, a.tz, a.profile, a.label)
+    out = Path(a.output) if a.output else Path(f"night-{day.isoformat()}.json")
+    if out.is_dir():
+        out = out / f"{day.isoformat()}.json"
+    out.write_text(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n", encoding="utf-8")
+    t = doc["totals"]
+    print(f"{out}  {doc['window']['label']}  {t['events']:,} events  {t['components']} components  "
+          f"{t['desks']} desks  {t['unmapped_events']:,} unmapped  {out.stat().st_size / 1024:.0f} KiB")
+    return 0
+
+
 # ---------------------------------------------------------------- argparse
 
 def build_parser() -> argparse.ArgumentParser:
@@ -459,6 +477,17 @@ def build_parser() -> argparse.ArgumentParser:
     pb.add_argument("--project", help="artifact project slug (default: the publish script's own resolution)")
     pb.add_argument("--dry-run", action="store_true", help="show the publish plan, upload nothing")
     pb.set_defaults(func=cmd_publish)
+
+    nt = sub.add_parser("night", help="digest a window of wall-clock time (default: last night 18:02-07:41) into a 33god.night file")
+    nt.add_argument("--date", help="the evening the night starts on, YYYY-MM-DD (default: yesterday in --tz)")
+    nt.add_argument("--from", dest="start", default="18:02", help="local start time (default 18:02)")
+    nt.add_argument("--to", dest="end", default="07:41", help="local end time; at or before --from means the next day (default 07:41)")
+    nt.add_argument("--tz", default="America/New_York", help="time zone of --date/--from/--to (default America/New_York)")
+    nt.add_argument("--profile", choices=("full", "public"), default="public",
+                    help="public (default) aliases third-party Hermes desks and drops unmapped producer names")
+    nt.add_argument("--label", help="human label for the window (default: e.g. '16–17 Nov 2026')")
+    nt.add_argument("-o", "--output", help="output file or directory (default ./night-<date>.json)")
+    nt.set_defaults(func=cmd_night)
 
     ls = sub.add_parser("list", help="recent prompt invocations to pick one to capture")
     ls.add_argument("--cli", choices=("claude", "codex"), help="only list prompts from this CLI")
