@@ -34,8 +34,11 @@
 # transition sends at most ONE PATCH: without a version/precondition guard a
 # repeated PATCH can stomp a concurrent actor, so the live read-back after the
 # single attempt is the only success proof. PLANE_MAX_PAGES bounds every
-# paginated collection (default 1000). All numeric overrides are validated
-# before any request.
+# paginated collection (default 1000). Every request is bounded: it gives up
+# connecting after PLANE_CONNECT_TIMEOUT (default 10s) and in total after
+# PLANE_MAX_TIME (default 60s), so a half-open Plane connection fails the
+# caller instead of hanging a hire forever. All numeric overrides are
+# validated before any request.
 #
 # Plane model:  project = board, cycle = milestone, state.group in
 #   backlog|unstarted|started|completed|cancelled.
@@ -160,6 +163,8 @@ READ_MAX_ATTEMPTS="$(validated_uint PLANE_READ_MAX_ATTEMPTS "${PLANE_READ_MAX_AT
 RETRY_DEFAULT_DELAY="$(validated_uint PLANE_429_RETRY_DELAY "${PLANE_429_RETRY_DELAY:-1}" 0 3600)"
 RETRY_MAX_DELAY="$(validated_uint PLANE_429_MAX_DELAY "${PLANE_429_MAX_DELAY:-30}" 0 3600)"
 MAX_PAGES="$(validated_uint PLANE_MAX_PAGES "${PLANE_MAX_PAGES:-1000}" 1 1000)"
+CONNECT_TIMEOUT="$(validated_uint PLANE_CONNECT_TIMEOUT "${PLANE_CONNECT_TIMEOUT:-10}" 1 300)"
+MAX_TIME="$(validated_uint PLANE_MAX_TIME "${PLANE_MAX_TIME:-60}" 1 3600)"
 
 if [ -z "${PLANE_API_KEY:-}" ]; then
   KEY="$(workspace_key "$WS")"
@@ -200,12 +205,12 @@ api() {
     : > "$headers_file"
     curl_exit=0
     if [ -n "$body" ]; then
-      captured="$(curl -sS -o "$response_file" -D "$headers_file" -w '%{http_code}' -X "$method" "$API/$path" \
+      captured="$(curl -sS --connect-timeout "$CONNECT_TIMEOUT" --max-time "$MAX_TIME" -o "$response_file" -D "$headers_file" -w '%{http_code}' -X "$method" "$API/$path" \
         -H "X-API-Key: $PLANE_API_KEY" -H "Content-Type: application/json" \
         -H "User-Agent: curl/8.0" \
         -d "$body")" || curl_exit=$?
     else
-      captured="$(curl -sS -o "$response_file" -D "$headers_file" -w '%{http_code}' -X "$method" "$API/$path" \
+      captured="$(curl -sS --connect-timeout "$CONNECT_TIMEOUT" --max-time "$MAX_TIME" -o "$response_file" -D "$headers_file" -w '%{http_code}' -X "$method" "$API/$path" \
         -H "X-API-Key: $PLANE_API_KEY" \
         -H "User-Agent: curl/8.0")" || curl_exit=$?
     fi
@@ -823,7 +828,7 @@ else:
     [ -n "$DKEY" ] || DKEY="${PLANE_API_KEY:-}"
     DKEY="$(resolve_secret_value "$DKEY")"
     [ -n "$DKEY" ] || die "no Plane API key for workspace '$DWS' (looked for $DKEYVAR)"
-    DETAIL="$(curl -fsS "$BASE/api/v1/workspaces/$DWS/projects/$DBID/" \
+    DETAIL="$(curl -fsS --connect-timeout "$CONNECT_TIMEOUT" --max-time "$MAX_TIME" "$BASE/api/v1/workspaces/$DWS/projects/$DBID/" \
       -H "X-API-Key: $DKEY" -H "User-Agent: curl/8.0")" \
       || die "describe_board failed for $DWS/$DBID"
     printf '%s' "$DETAIL" | WS="$DWS" BID="$DBID" python3 -c 'import sys, json, os
