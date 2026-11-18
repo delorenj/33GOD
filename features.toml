@@ -43,7 +43,7 @@ schema = 1
 "project.identity" = { owner = "pjangler", state = "owned", interface = "registry :8764 (/v1/resolve planned)" }
 "agent.job"        = { owner = "hermes-agent", state = "owned" }
 "clock"            = { owner = "candybar", state = "owned", interface = ".candybars/*.candybar.toml" }
-"crank.binding"    = { owner = "crank", state = "approved", note = "keyed by agent session (cli + session id); pane looked up live" }
+"crank.binding"    = { owner = "crank", state = "approved", provisional = "pjangler: src/crank/binding.ts (pj crank attach|detach|reap; Candybar rows tagged crank-session)", note = "keyed by agent session (cli + session id + pid/start); pane is location only; ends with the session (2026-11-18, PJAN-214)" }
 
 # --- Features ------------------------------------------------------------------
 

@@ -525,6 +525,29 @@ not pjangler. ASM and terminal ownership are split; Deckard requires ASM, with n
 second fallback state fold. I-9 carries shared foundation outcomes; I-8 depends
 only on its required contracts, not on completion of every I-9 consumer migration.
 
+**Operator redefinition (2026-11-18, crank v2, PJAN-214 / BB-42).** A crank is bound to
+ONE live interactive agent session (cli + native session id + pid and its /proc start
+time) in one pane of the canonical zellij session; the pane is location only. Each crank
+is its own Candybar (`<project>/.candybars/crank-<cli>-<sid8>-<pid>.candybar.toml`,
+git-ignored machine-wide), created by the hook-hub `crank-attach` row on SessionStart and
+removed (archived, manifest deleted) on SessionEnd, pane close, policy off or a dead
+process; every removal emits `bloodbank.crank.binding.ended` with its reason, and
+`orphan_reaped` is the non-explicit termination. Policy is the `.project.json` `crank`
+block (enabled, interval, prompt, target, rules) over `~/.config/33god/crank.toml`.
+Decisions recorded with it:
+- **AD-3 amended:** the project block is the standing opt-in for every interactive
+  session that starts in the project; there is no per-session opt-in step.
+- **Dropped criterion:** "after a zellij restart the session id re-finds the pane". A
+  closed pane or session deletes its crank; a new session gets a new one.
+- **Provisional homes (F1):** `delorenj/crank` does not exist yet, so the registry lives
+  in pjangler `src/crank/{policy,binding,sessions}.ts` and the engine in jev-clairic
+  `bin/crank-pane`. Candybar is the registry (rows tagged `crank-session`); Redis
+  (`crank.lua` on statekit) is only the live projection, never the source of truth.
+- **Tab model retired from `pj crank`:** enabling v2 turns the project's legacy
+  `zcrank:tab:*` switch off; the 33god-pm crank-beat sweep retires once v2 is proven.
+- **Known accumulation:** Candybar has no hard delete (CAND-54), so ended cranks stay
+  archived rows.
+
 ## I-9 33GOD features: formal repos, one owner per atom
 
 **Outcome.** Cross-repo capabilities that become hard to maintain or extend can
