@@ -27,12 +27,12 @@ relations:
 - to: redis
   kind: stores-in
   via: asm:live, asm:lane:*, channel asm:transitions
-  evidence: bloodbank/services/agent-hooks/core/asm.py:54
+  evidence: bloodbank/services/agent-hooks/core/asm.py:57
   anchor: SEEN_KEY = "asm:seen"
 - to: hook-hub
   kind: calls
   via: Unix socket 33god/hook-hub.sock, transition op
-  evidence: bloodbank/services/agent-hooks/core/asm.py:331
+  evidence: bloodbank/services/agent-hooks/core/asm.py:334
   anchor: sock.connect(_hub_socket())
 - to: pilot
   kind: calls
@@ -52,7 +52,7 @@ relations:
 evidence:
 - bloodbank/services/hook-hub/handlers.toml
 confidence: medium
-notes: asm-sweep timer runs outside Candybar.
+notes: asm-sweep timer runs outside Candybar. Built on statekit (consumer 1; bloodbank/services/agent-hooks/core/statekit.py, README section 'statekit'); crank is consumer 2.
 surfaces:
 - systemd:asm-orcapaint.service
 - systemd:asm-tabpaint.service
