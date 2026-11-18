@@ -142,7 +142,7 @@ expecting the owner to follow.
   `origin/main` tip at checkpoint time.
 - **Runtime is never source.** Agent runtime state lives outside tracked source.
   Do not add a tracked runtime submodule.
-- **One lifecycle machine.** Consume `krebs/spec/lifecycle.v1.yaml` by pointer.
+- **One lifecycle machine.** Consume `krebs/spec/lifecycle.v2.yaml` by pointer.
   Per-repo differences are label maps, never a forked machine.
 - **Secrets.** `.env` is materialized by `op inject` from the committed
   `.env.op` reference file and is never tracked.

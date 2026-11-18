@@ -406,7 +406,7 @@ consumer must resolve it from there.
 
 Acceptance criteria:
 
-- `krebs/spec/lifecycle.v1.yaml` is the only machine; no component ships a fork.
+- `krebs/spec/lifecycle.v2.yaml` is the only machine; no component ships a fork.
 - Per-repo variation is limited to provider label maps and tunable guard knobs,
   expressed through the `tp` adapter's normalized-state map and the per-repo
   state map.
