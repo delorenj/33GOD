@@ -16,6 +16,7 @@ This is the first full pass: every beat is staged so the whole vision can be jud
 |---|---|---|
 | `site/manifest.json` | The scene manifest. Every word on the page, one record per beat, plus the staged transcript. | Content |
 | `site/overnight.js` | Staging: the scroll dolly, the camera, the seating plan, which window is in which state, the set pieces. No copy. | Design |
+| `site/dolly.js` | The scroll playhead: spring smoothing, cuts for nav jumps, seam settling. Page-agnostic. | Design |
 | `site/overnight.css` | Page layout and set-piece styles. Tokens only, no raw colours. | Design |
 | `site/ds/tokens.css` | The Overnight tokens, written out from the design system's `tokens.json`, plus the few base 33GOD values the page uses. | Design system first, then here |
 | `site/ds/bundle.js`, `site/ds/bundle.css` | The design system's six components (`window.Overnight`), copied unchanged. | Design system only |
@@ -29,7 +30,10 @@ Each beat carries design fields (`id`, `time`, `act`, `spectacle`, `camera`, `se
 
 ## How the night runs
 
-- **Scroll is the dolly.** Each beat holds for 72% of its length, then travels to the next. The clock, the camera and the sky are all read off scroll position; nothing has inertia of its own.
+- **Scroll is the dolly.** Each beat holds for 72% of its length, then travels to the next. The clock, the camera and the sky are all read off one playhead, and the playhead only ever chases the scroll position.
+- **The playhead is sprung** (`site/dolly.js`). A critically damped spring pulls it toward the scroll position every frame, so wheel notches, page-down and trackpad flicks all play as one continuous move that eases in and out. Every camera travel is smoothstepped too, so no move starts or stops at full speed. Before this, a mouse wheel played the night as a slideshow: 60 notches gave 60 frames of motion out of 636. `scroll-probe.py` measures it: now 409 of 412 frames move.
+- **Seams finish themselves.** A seam is a stretch between two rest states: a camera travel with its caption crossfade, or an act's statement handing over to the beat's words. Stop scrolling inside one and the dolly glides to the nearer rest point, leaning the way you were going. `seam()` in `overnight.js` defines them; rest points sit where the arriving words are fully up.
+- `dolly.js` has no dependencies and knows nothing about this page. Any scroll-driven page can use it: `Dolly.create({ onFrame, seam, origin })`, then `dolly.jump(px)` for nav links, which cut instead of gliding through the whole night.
 - **The building** is 12 floors of 8 windows. 72 can light, one per first-party component in the registry count. One is yours. 23 stay dark all night, and one of those is the seat Flume fills at 05:12. PJangler builds a 13th floor at 04:12.
 - **One cut**, from the building to the car at 07:30. That is also where the theme turns from Spruce to Snow.
 - **View as log** shows the same night as one `LogLine` per beat. The page opens there under `prefers-reduced-motion` and on screens narrower than 760px.

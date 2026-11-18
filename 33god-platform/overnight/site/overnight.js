@@ -42,6 +42,8 @@
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function seg(v, a, b) { return clamp((v - a) / (b - a), 0, 1); }
+  // Camera moves start and stop at rest: smoothstep on every travel, so no move begins or ends at full speed.
+  function ease(t) { return t * t * (3 - 2 * t); }
   function hash(f, c) { return ((f * 37 + c * 101 + f * c * 17 + 11) % 97) / 97; }
   function rgb(hex) { var n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
   function mix(a, b, t) {
@@ -210,14 +212,14 @@
       case 'premise': return { x: 0.2, y: 0, s: 1, o: 1 };
       case 'numbers': return { x: 0.3, y: 0, s: 0.9, o: 1 };
       case 'org-chart': case 'bus': case 'layers': case 'runs-on-itself': return { x: 0.36, y: 0, s: 0.86, o: 0 };
-      case 'transcript': t = seg(q, 0.3, 0.8); return { x: 0, y: 0, s: Math.pow(9, t), o: 1 - seg(t, 0.2, 0.7) };
+      case 'transcript': t = ease(seg(q, 0.3, 0.8)); return { x: 0, y: 0, s: Math.pow(9, t), o: 1 - seg(t, 0.2, 0.7) };
       case 'jev': case 'speakers': case 'dictionary': case 'harvest': return { x: 0, y: 0, s: 9, o: 0 };
-      case 'pm-krebs': t = seg(q, 0, 0.34); return { x: 0.2 * t, y: 0, s: Math.pow(9, 1 - t), o: seg(t, 0.15, 0.7) };
+      case 'pm-krebs': t = ease(seg(q, 0, 0.34)); return { x: 0.2 * t, y: 0, s: Math.pow(9, 1 - t), o: seg(t, 0.15, 0.7) };
       case 'pms-talk': case 'skillex': return { x: 0.2, y: 0, s: 1, o: 1 };
       case 'staff': return { x: 0.2, y: lerp(-0.035, 0.025, q), s: 1, o: 1 };
       case 'pjangler': case 'heyma': case 'flume': return { x: 0.2, y: 0.025, s: 1, o: 1 };
       case 'holocene-auto': return { x: 0.2, y: 0.025, s: 1, o: 0 };
-      case 'hired-well': t = seg(q, 0, 0.5); return { x: 0.12, y: 0, s: lerp(1.7, 1, t), o: seg(t, 0, 0.6) };
+      case 'hired-well': t = ease(seg(q, 0, 0.5)); return { x: 0.12, y: 0, s: lerp(1.7, 1, t), o: seg(t, 0, 0.6) };
       default: return { x: 0.12, y: 0, s: 1, o: 1 };
     }
   }
@@ -375,16 +377,17 @@
     var copy = props.beat.copy, q = props.q;
     var n = copy.steps.length;
     var turn = seg(q, 0.04, 0.9);
-    var passed = Math.floor(turn * n + 0.0001);
+    var passed = turn > 0 ? Math.floor(turn * n + 0.0001) + 1 : 0;   // a pip lights as the dot reaches it
     return h('div', { className: 'sp loop' },
       h('div', { className: 'loop__ring' },
         h('svg', { viewBox: '0 0 100 100', 'aria-hidden': 'true' },
           h('circle', { cx: 50, cy: 50, r: 46, className: 'loop__track' }),
-          h('circle', { cx: 50, cy: 50, r: 46, className: 'loop__drawn', pathLength: 1, style: { strokeDashoffset: 1 - turn } })),
-        h('span', { className: 'loop__dot', 'aria-hidden': 'true', style: { transform: 'rotate(' + (turn * 360) + 'deg)' } }, h(O.Window, { state: 'lit' })),
+          h('circle', { cx: 50, cy: 50, r: 46, className: 'loop__drawn', pathLength: 1 })),
+        // The ring and its dot follow --turn (CSS, read off the playhead every frame); only the pips step.
+        h('span', { className: 'loop__dot', 'aria-hidden': 'true' }, h(O.Window, { state: 'lit' })),
         copy.steps.map(function (s, i) {
           var a = (i / n) * Math.PI * 2 - Math.PI / 2;
-          return h('div', { key: i, className: 'loop__step' + (i < passed || (i === 0 && turn > 0) ? ' is-passed' : ''), style: { left: (50 + Math.cos(a) * 46) + '%', top: (50 + Math.sin(a) * 46) + '%' }, 'data-side': Math.cos(a) < -0.2 ? 'left' : Math.cos(a) > 0.2 ? 'right' : (Math.sin(a) < 0 ? 'top' : 'bottom') },
+          return h('div', { key: i, className: 'loop__step' + (i < passed ? ' is-passed' : ''), style: { left: (50 + Math.cos(a) * 46) + '%', top: (50 + Math.sin(a) * 46) + '%' }, 'data-side': Math.cos(a) < -0.2 ? 'left' : Math.cos(a) > 0.2 ? 'right' : (Math.sin(a) < 0 ? 'top' : 'bottom') },
             h('span', { className: 'loop__pip', 'aria-hidden': 'true' }),
             h('span', { className: 'loop__text' }, h('span', { className: 'instrument' }, '0' + (i + 1)), h('span', null, s)));
         }),
@@ -476,14 +479,14 @@
             h('span', { className: 'car__sub' }, s.sub)))),
       h('div', { className: 'car__standup' },
         h('p', { className: 'eyebrow' }, copy.standupTitle),
-        h('div', { className: 'car__wave', 'aria-hidden': 'true' }, Array.from({ length: 28 }, function (_, k) {
-          var v = Math.abs(Math.sin(k * 1.7 + q * 26)) * Math.abs(Math.sin(k * 0.45 + q * 9));
-          return h('i', { key: k, style: { height: (4 + v * 26) + 'px' } });
-        })),
+        // Bar heights are written by the dolly every frame (waveAt), so the voice moves smoothly.
+        h('div', { className: 'car__wave', 'aria-hidden': 'true' }, Array.from({ length: 28 }, function (_, k) { return h('i', { key: k }); })),
         copy.standup.map(function (line, n) {
           return h('div', Object.assign({ key: n }, rv(0.16 + n * 0.22, 'car__item')), h('span', { className: 'instrument' }, '0' + (n + 1)), h('span', null, line));
         })));
   }
+
+  function waveAt(k, q) { return 4 + Math.abs(Math.sin(k * 1.7 + q * 26)) * Math.abs(Math.sin(k * 0.45 + q * 9)) * 26; }
 
   /* ---------- the app ---------- */
   function App(props) {
@@ -507,6 +510,7 @@
     var glassRef = useRef(null), spRef = useRef(null), capRef = useRef(null), interRef = useRef(null), horizonRef = useRef(null);
     var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, clock: '', precise: null, theme: '' });
     var camNow = useRef({ x: 0, y: 0, s: 1, o: 1 });
+    var dollyRef = useRef(null), playY = useRef(0);
     var sizeRef = useRef(size); sizeRef.current = size;
 
     var b = beats[pos.i];
@@ -529,16 +533,18 @@
     var jump = useCallback(function (i, hold) {
       var L = layout.current, top = trackRef.current ? trackRef.current.offsetTop : 0;
       var bt = beats[i];
-      var into = hold != null ? hold : (bt.interlude ? 0.02 : 0.3);
-      window.scrollTo({ top: top + L.starts[i] + L.lens[i] * HOLD * into, behavior: 'auto' });
+      var into = hold != null ? hold : (bt.interlude ? 0.06 : 0.3);   // both are rest points, outside any seam
+      var px = top + L.starts[i] + L.lens[i] * HOLD * into;
+      if (dollyRef.current) dollyRef.current.jump(px); else window.scrollTo({ top: px, behavior: 'auto' });
     }, [beats]);
     var jumpTo = useCallback(function (id, hold) { jump(I[id], hold); }, [I, jump]);
 
     /* the dolly: scroll position in, camera, clock and sky out */
-    var frame = useCallback(function () {
+    var frame = useCallback(function (yAbs) {
+      if (yAbs == null) yAbs = playY.current; else playY.current = yAbs;
       var stage = stageRef.current; if (!stage || !trackRef.current) return;
       var L = layout.current; if (!L.total) return;
-      var y = clamp(window.scrollY - trackRef.current.offsetTop, 0, L.total - 1);
+      var y = clamp(yAbs - trackRef.current.offsetTop, 0, L.total - 1);
       var i = 0; while (i < beats.length - 1 && y >= L.starts[i + 1]) i++;
       var bt = beats[i], next = beats[i + 1];
       var p = clamp((y - L.starts[i]) / L.lens[i], 0, 1);
@@ -547,7 +553,7 @@
 
       // camera
       var a = cam(bt.id, q), K = a;
-      if (next && tr > 0 && !next.cut) { var z = cam(next.id, 0); K = { x: lerp(a.x, z.x, tr), y: lerp(a.y, z.y, tr), s: lerp(a.s, z.s, tr), o: lerp(a.o, z.o, tr) }; }
+      if (next && tr > 0 && !next.cut) { var z = cam(next.id, 0), e = ease(tr); K = { x: lerp(a.x, z.x, e), y: lerp(a.y, z.y, e), s: lerp(a.s, z.s, e), o: lerp(a.o, z.o, e) }; }
       camNow.current = K;
       var sz = sizeRef.current;
       var tx = K.x * sz.w, ty = K.y * sz.h;
@@ -566,6 +572,10 @@
       }
       stage.style.setProperty('--p', p.toFixed(4));
       stage.style.setProperty('--q', q.toFixed(4));
+      if (bt.id === 'holocene-auto' && spRef.current) {
+        var bars = spRef.current.querySelectorAll('.car__wave i');
+        for (var k = 0; k < bars.length; k++) bars[k].style.height = waveAt(k, q).toFixed(1) + 'px';
+      }
 
       // clock and sky
       var m = next ? lerp(times[i], times[i + 1], tr) : times[i];
@@ -588,23 +598,41 @@
       if (i !== last.current.i || step !== last.current.step) { last.current.i = i; last.current.step = step; setPos({ i: i, step: step, q: q }); }
     }, [beats, times, I, props.colors]);
 
+    // A seam is a stretch where the frame is between two rest states: a camera travel with its caption
+    // crossfade, or an act's statement handing over to the beat's words. Stop in one and the dolly
+    // finishes the move (see dolly.js). Rest points sit where the arriving words are fully up.
+    var seam = useCallback(function (t) {
+      var L = layout.current; if (!L.total) return null;
+      var n = beats.length, i = 0; while (i < n - 1 && t >= L.starts[i + 1]) i++;
+      var p = (t - L.starts[i]) / L.lens[i];
+      function arrive(j) { return L.starts[j] + L.lens[j] * (beats[j].interlude ? 0.035 : 0.06); }
+      function between(a, b) { a = Math.ceil(a); b = Math.floor(b); return t > a + 1 && t < b - 1 ? { from: a, to: b } : null; }
+      if (p >= HOLD && i < n - 1) return between(L.starts[i] + L.lens[i] * HOLD, arrive(i + 1));
+      if (i > 0 && t < arrive(i)) return between(L.starts[i - 1] + L.lens[i - 1] * HOLD, arrive(i));
+      if (beats[i].interlude) {
+        var h0 = L.starts[i] + L.lens[i] * HOLD * (INTER - 0.075), h1 = L.starts[i] + L.lens[i] * HOLD * (INTER + 0.035);
+        return between(h0, h1);
+      }
+      return null;
+    }, [beats]);
+
     useEffect(function () {
       if (view !== 'film') { document.documentElement.setAttribute('data-theme', 'night'); last.current.theme = 'night'; return; }
-      var raf = 0, idle = 0;
-      function tick() { raf = 0; frame(); }
+      var idle = 0;
+      measure();
+      var dolly = window.Dolly.create({ onFrame: frame, seam: seam, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
+      dollyRef.current = dolly;
       function onScroll() {
-        if (!raf) raf = requestAnimationFrame(tick);
         setCrank(false); clearTimeout(idle);
         idle = setTimeout(function () { if (last.current.i < beats.length - 1) setCrank(true); }, 20000);
       }
-      function onResize() { measure(); onScroll(); }
-      measure(); frame();
+      function onResize() { measure(); dolly.refresh(); }
       idle = setTimeout(function () { setCrank(true); }, 20000);
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', onResize);
       var fonts = document.fonts && document.fonts.ready; if (fonts) fonts.then(onResize);
-      return function () { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); cancelAnimationFrame(raf); clearTimeout(idle); };
-    }, [view, frame, measure, beats.length]);
+      return function () { dolly.destroy(); dollyRef.current = null; window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); clearTimeout(idle); };
+    }, [view, frame, seam, measure, beats.length]);
     // Set pieces mount as beats change (a nav jump can land mid-night); give them their scrubbed styles at once.
     React.useLayoutEffect(function () { if (view === 'film') frame(); }, [size, view, frame, posSt[0].i]);
 
