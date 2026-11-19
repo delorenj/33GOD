@@ -37,17 +37,17 @@ relations:
 - to: pilot
   kind: calls
   via: px show <key> --json (asm-orcapaint)
-  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:166
+  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:167
   anchor: res = subprocess.run([PX, "show", key, "--json"], cwd=cwd, capture_output=True,
 - to: candystore
   kind: reads
   via: GET :8683/events (asm-orcapaint)
-  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:128
+  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:129
   anchor: 'with urllib.request.urlopen(f"{CANDYSTORE}/events?{q}", timeout=10) as r:'
 - to: orca
   kind: writes
   via: Orca runtime RPC over its unix socket (card comments)
-  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:225
+  evidence: bloodbank/services/agent-hooks/bin/asm-orcapaint:226
   anchor: s.connect(endpoint)
 evidence:
 - bloodbank/services/hook-hub/handlers.toml

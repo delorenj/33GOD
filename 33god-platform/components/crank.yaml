@@ -40,20 +40,17 @@ relations:
   anchor: CLAIRIC_FMT = ("https://api.cloudflare.com/client/v4/accounts/"
 - to: redis
   kind: reads
-  via: >-
-    FCALL_RO crank_resolve (the one copy of the on/off + interval rule) over zcrank:tab:*, zcrank:pane:*, zcrank:config; redis-cli KEYS/HGET zcrank:tab:* for tab-key matching
-  evidence: ~/.agents/tools/jev-clairic/bin/crank_arbiter.py:210
+  via: FCALL_RO crank_resolve (the one copy of the on/off + interval rule) over zcrank:tab:*, zcrank:pane:*, zcrank:config; redis-cli KEYS/HGET zcrank:tab:* for tab-key matching
+  evidence: ~/.agents/tools/jev-clairic/bin/crank_arbiter.py:209
   anchor: 'def resolve(keys: list[str], owners: list[str] | None = None, pane: str | None = None) -> dict:'
 - to: redis
   kind: writes
-  via: >-
-    FCALL crank_apply (zcrankctl; every registry write, incl. the checked log row) and FCALL crank_scan (zcrank.py engine, one call per 5m tick for every live pane) on the Functions library "crank"; resolved state crank:p:<session>:<pane>, streams crank:t:<session>:<pane> and crank:t, channel crank:transitions, heartbeat crank:engine
-  evidence: ~/.agents/tools/jev-clairic/bin/crank_arbiter.py:187
+  via: FCALL crank_apply (zcrankctl; every registry write, incl. the checked log row) and FCALL crank_scan (zcrank.py engine, one call per 5m tick for every live pane) on the Functions library "crank"; resolved state crank:p:<session>:<pane>, streams crank:t:<session>:<pane> and crank:t, channel crank:transitions, heartbeat crank:engine
+  evidence: ~/.agents/tools/jev-clairic/bin/crank_arbiter.py:192
   anchor: 'def apply(ops: list[dict], by: str) -> dict:'
 - to: asm
   kind: reads
-  via: >-
-    GET asm:idx:pane:<session>:<N> -> HGET asm:a:<scope> state (zcrank.py classify; the gate then sees state_source asm|screen per pane)
+  via: GET asm:idx:pane:<session>:<N> -> HGET asm:a:<scope> state (zcrank.py classify; the gate then sees state_source asm|screen per pane)
   evidence: ~/.agents/tools/jev-clairic/bin/zcrank.py:383
   anchor: 'def asm_state(pane: str, session: str = SESSION) -> str:'
 evidence:

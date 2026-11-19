@@ -28,7 +28,7 @@ relations:
 - to: hermes-bloodbank-plugin
   kind: hosts
   via: plugins.enabled bloodbank-platform in config.yaml
-  evidence: ~/.hermes/config.yaml:782
+  evidence: ~/.hermes/config.yaml:785
   anchor: '- bloodbank-platform'
 - to: hermes-fleet
   kind: hosts

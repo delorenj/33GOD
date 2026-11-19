@@ -81,12 +81,12 @@ relations:
 - to: candybar
   kind: calls
   via: GET CANDYBAR_API_URL /candybars (parity check)
-  evidence: flume/packages/flume-hr/src/parity/rules.ts:3027
+  evidence: flume/packages/flume-hr/src/parity/rules.ts:3055
   anchor: 'let body: unknown;'
 - to: cloudflare
   kind: calls
   via: Cloudflare API v4 provisioning cfRequest
-  evidence: flume/packages/flume-hr/src/workforce/provision.ts:153
+  evidence: flume/packages/flume-hr/src/workforce/provision.ts:183
   anchor: return fetch(`${base}${path}`, {
 evidence:
 - 33god-platform/components/flume.yaml

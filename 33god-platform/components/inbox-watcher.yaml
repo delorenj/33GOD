@@ -39,12 +39,12 @@ relations:
 - to: vox
   kind: calls
   via: POST VOX_URL /synthesize-url
-  evidence: holocene/services/inbox-watcher/inbox_watcher.py:4772
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:4776
   anchor: 'def parse_transcript(md: str) -> str:'
 - to: bb-nats
   kind: publishes-to
   via: bb-emit command bloodbank.cmd.agent.invocation.invoke|start
-  evidence: holocene/services/inbox-watcher/inbox_watcher.py:2398
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:2402
   anchor: brief_id=fu.get("brief_id"), brief_sha256=fu.get("brief_sha256"),
 - to: bb-nats
   kind: publishes-to

@@ -46,7 +46,7 @@ relations:
 - to: agents-registry
   kind: reads
   via: loadHermesRegistry(~/.hermes/agents-registry.yaml)
-  evidence: krebs/bin/krebs.mjs:61
+  evidence: krebs/bin/krebs.mjs:74
   anchor: const registry = await bb.registry.loadHermesRegistry(registryPath);
 - to: pilot
   kind: calls

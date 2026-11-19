@@ -50,7 +50,7 @@ relations:
 - to: plane
   kind: calls
   via: Plane REST $PLANE_BASE/api/v1/workspaces (ticket provider)
-  evidence: hermes-agent-template/template/.scripts/providers/plane.sh:169
+  evidence: hermes-agent-template/template/.scripts/providers/plane.sh:160
   anchor: API="$BASE/api/v1/workspaces/$WS"
 evidence:
 - /home/delorenj/.hermes/agents-registry.yaml (46 rows, 28 pm)
