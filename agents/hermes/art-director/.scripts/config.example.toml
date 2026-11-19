@@ -1,0 +1,93 @@
+# hermes-agent-template — distributable configuration
+#
+# This file holds every environment-specific default the provisioning scripts
+# need. Copy it to ~/.config/hermes-agent-template/config.toml (the first
+# provisioning run does this for you) and edit the values for YOUR machine.
+#
+# Resolution precedence for each value (highest wins):
+#   explicit env var  >  ~/.hermes/fleet.env  >  this file  >  built-in fallback
+#
+# Override the config location with $HERMES_TEMPLATE_CONFIG if you keep it
+# somewhere other than $XDG_CONFIG_HOME/hermes-agent-template/config.toml.
+
+[fleet]
+# ONE Hermes install serves the gateway, every CLI wrapper and ~/.local/bin/hermes. This is the launcher
+# hermes-gateway.service execs; do not point anything at a second checkout (scripts/hermes-single-install-check.py).
+hermes_bin = "~/.hermes/hermes-agent/.hermes/bin/hermes"
+# Checkout of the shared hermes-agent repo (the same directory; it tracks delorenj/hermes-agent main).
+hermes_repo = "~/.hermes/hermes-agent"
+# The workforce CLI. Runtime provisioning delegates named profile topology to
+# this command; it never rewrites profile links itself.
+flume_bin = "flume"
+# Deprecated alias for flume_bin, read only so that role directories rendered
+# before the split keep resolving. Set both to the same value.
+pjangler_bin = "flume"
+# Fleet runtime publication: the install tracks this fork ref (`git pull --ff-only` deploys in place).
+# hermes_git_sha is the sha last recorded by fleet-sync; the drift guard requires the live HEAD to descend from it.
+hermes_git_url = "https://github.com/delorenj/hermes-agent.git"
+hermes_git_ref = "main"
+hermes_git_sha = ""
+# Fallback runtime scaffold dir — used only when an agent's vendored
+# ./.runtime-scaffold is missing.
+runtime_scaffold_dir = "~/code/hermes-agent-template/runtime-scaffold"
+# Shared fleet source-of-truth env file + fleet registry. ~ is expanded.
+fleet_env = "~/.hermes/fleet.env"
+registry_file = "~/.hermes/agents-registry.yaml"
+# Shared auth roots. HERMES_OAUTH_FILE is the Hermes provider OAuth store
+# (including openai-codex); CODEX_HOME is for Codex CLI/app-server auth.
+oauth_file = "~/.hermes/auth.json"
+codex_home = "~/.codex"
+# Skill selection lives in global/project .agents/skills.json. Step 10 uses
+# pinned Skillex profile sync; no external projection path is configured here.
+# Optional Vox plugin + service defaults for Hermes PM agents.
+vox_plugin_name = "vox"
+vox_plugin_dir = "~/code/voxxy/plugins/tts/vox"
+vox_voice = "carlin"
+vox_url = "https://vox.delo.sh"
+# Channel credentials are written directly to Password items in this vault;
+# only op:// references are recorded in named-profile config.delta.yaml.
+onepassword_vault = "DeLoSecrets"
+onepassword_item_prefix = "hermes-agent"
+# Canonical PM config.yaml the provisioner seeds each runtime's config.yaml from.
+# This is the fleet-wide Hermes inference/skill config (model, toolsets, etc.)
+# every agent runtime starts from. ~ is expanded.
+# canonical_pm_config = "~/.hermes/config.yaml"
+
+[paths]
+# Where this host keeps its checkouts. Defaults reproduce the Linux fleet host
+# (~/code/..., with the template at ~/code/33GOD/hermes-agent-template). A host
+# with a different layout (macOS: ~/Code/<repo>, no 33GOD/ level) sets these.
+# Env overrides: HERMES_CODE_ROOT, HERMES_TEMPLATE_REPO. Skillex's catalog
+# checkout is [skillex] registry_root (env PJ_SKILLS_REGISTRY_ROOT).
+# code_root = "~/code"
+# template_repo = "~/code/33GOD/hermes-agent-template"
+
+[skillex]
+# registry_root = "~/code/skillex"
+
+[github]
+# LEGACY INERT COMPATIBILITY METADATA ONLY. Older role manifests may still
+# carry this owner field. Current provisioning does not create, attach,
+# synchronize, restore, archive, or remove runtime storage from this value.
+runtime_repo_owner = ""
+
+[plane]
+# Plane instance base URL and workspace slug (one project per agent).
+base = "https://plane.delo.sh"
+workspace = "33god"
+
+[telegram]
+# Telegram user ids every wired bot always allows (the fleet's operator).
+# 30-telegram.sh appends these to any TELEGRAM_ALLOWED_USERS it resolves, so a
+# new bot never comes up denying its creator. Built-in fallback: 7564050286.
+operator_user_ids = ["7564050286"]
+
+[hindsight]
+# Bank-template manifest a new agent's identity bank starts from (retain /
+# reflect / observations missions, entity labels, mental models, directives).
+# Hire step 10 records it in the desk's hindsight/config.json as
+# `bank_template` (`hermes-profile-config.py memory-template`), and the Hermes
+# Hindsight provider imports it once: only into a bank that has no mission yet,
+# never over one that does. Empty = new identity banks start unsteered.
+# ~ and $VARS are expanded.
+agent_bank_template = ""
