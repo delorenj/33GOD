@@ -433,11 +433,19 @@ def scope_check(p: Paths, cid: str, before: dict | None) -> tuple[bool, str, lis
     was = (before or {"files": {}})["files"]
     changed = sorted(k for k in set(now["files"]) | set(was) if now["files"].get(k) != was.get(k))
     prefix = p.scope_prefix(cid)
-    stray = [k for k in changed if not k.startswith(prefix)]
+    # The agent is briefed inside the platform; the monorepo around it has other writers (bus logs, submodule
+    # pointers, parallel agents) whose edits during a 40-minute run are not the agent's doing. Watch the platform.
+    plat = os.path.relpath(p.root, p.repo_root()).replace(os.sep, "/")
+    plat = "" if plat == "." else plat + "/"
+    elsewhere = [k for k in changed if not k.startswith(plat)]
+    stray = [k for k in changed if k.startswith(plat) and not k.startswith(prefix)]
+    inside = len(changed) - len(stray) - len(elsewhere)
     moved = bool(before and before.get("head") and before["head"] != now["head"])
-    detail = f"{len(changed)} path(s) changed, {len(changed) - len(stray)} inside {prefix}"
+    detail = f"{len(changed)} path(s) changed, {inside} inside {prefix}"
     if moved:
         detail += f"; HEAD moved {before['head'][:8]} -> {now['head'][:8]} during the run (commits are not in this diff)"
+    if elsewhere:
+        detail += f"; {len(elsewhere)} outside {plat or 'the repo'} ignored (other writers): " + ", ".join(elsewhere[:6])
     if stray:
         detail += "; OUTSIDE: " + ", ".join(stray[:12])
     return not stray, detail, stray

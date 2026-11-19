@@ -283,6 +283,39 @@ class ScopeTest(GitTree):
         self.assertIn("HEAD moved", ff.scope_check(self.p, "a", before)[1])
 
 
+class MonorepoScopeTest(Tree):
+    """The platform lives inside a bigger repo with other writers: their edits during a run are not the agent's."""
+
+    def setUp(self):
+        super().setUp()
+        top = self.root.parent
+        git = lambda *a: subprocess.run(["git", "-C", str(top), *a], check=True, capture_output=True)   # noqa: E731
+        git("init", "-q"); git("config", "user.email", "t@t"); git("config", "user.name", "t")
+        (top / "_bmad-output").mkdir()
+        (top / "_bmad-output" / "events.jsonl").write_text("1\n")
+        (self.root / "keep.txt").write_text("v1\n")
+        self.comp("a"); self.cast(a="dock")
+        git("add", "-A"); git("commit", "-q", "-m", "init")
+
+    def test_a_parallel_writer_outside_the_platform_is_ignored_but_reported(self):
+        before = ff.snapshot(self.p)
+        (self.root.parent / "_bmad-output" / "events.jsonl").write_text("1\n2\n")
+        self.p.asset_dir("a").mkdir(parents=True)
+        (self.p.asset_dir("a") / "asset.json").write_text("{}")
+        ok, detail, stray = ff.scope_check(self.p, "a", before)
+        self.assertTrue(ok, detail)
+        self.assertEqual(stray, [])
+        self.assertIn("_bmad-output/events.jsonl", detail)
+        self.assertIn("ignored", detail)
+
+    def test_a_change_inside_the_platform_but_outside_the_asset_still_fails(self):
+        before = ff.snapshot(self.p)
+        (self.root / "keep.txt").write_text("v2\n")
+        ok, _, stray = ff.scope_check(self.p, "a", before)
+        self.assertFalse(ok)
+        self.assertEqual(stray, ["plat/keep.txt"])
+
+
 class ManifestTest(unittest.TestCase):
     def run_checks(self, m, cid="a", cast=None):
         return {n: (o, d) for n, o, d in ff.check_manifest(m, cid, cast if cast is not None else {"station": "dock"})}

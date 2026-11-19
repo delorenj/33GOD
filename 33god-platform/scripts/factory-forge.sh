@@ -133,7 +133,11 @@ ledger_commit() {  # push the ledger on its own, so tomorrow's pick sees tonight
     && git -C "$REPO" commit -q -m "chore(factory): forge ledger, $ID $1" -m "Co-Authored-By: Claude Code <noreply@anthropic.com>" -- "$L" \
     && { git -C "$REPO" push -q 2>/dev/null || { git -C "$REPO" pull -q --rebase --autostash && git -C "$REPO" push -q; }; }
 }
-restore() {  # exactly the asset dir, and the glb it generated
+restore() {  # exactly the asset dir, and the glb it generated (kept in the run dir first: a false verdict must not cost the work)
+  if [ -d "$ASSET_DIR" ]; then
+    mkdir -p "$RUN/asset-failed" && cp -a "$ASSET_DIR/." "$RUN/asset-failed/" 2>/dev/null
+    [ -f "$SANDBOX/public/assets/$ID/model.glb" ] && cp -a "$SANDBOX/public/assets/$ID/model.glb" "$RUN/asset-failed/model.glb" 2>/dev/null
+  fi
   git -C "$REPO" checkout -q -- "$ASSET_DIR" 2>/dev/null
   git -C "$REPO" clean -fdq -- "$ASSET_DIR" 2>/dev/null
   rm -rf "$SANDBOX/public/assets/$ID"          # a failed glb must never be served by the next build
@@ -158,7 +162,7 @@ if [ "$VERIFY_RC" -ne 0 ]; then
   restore
   ledger failed "$SCORE" "" "" "verification failed: ${FAILED:-no verdict}" "$FAILED"
   ledger_commit failed || echo "factory-forge: ledger not pushed" >&2
-  done_fail "$MODE $ID failed verification (${FAILED:-no verdict}); asset dir restored; verdict $RUN/verdict.json"
+  done_fail "$MODE $ID failed verification (${FAILED:-no verdict}); asset dir restored, the agent's work kept in $RUN/asset-failed; verdict $RUN/verdict.json"
 fi
 
 # ---- 4a. PASS: commit only the asset, push, deploy, showcase -------------------------------------------------
