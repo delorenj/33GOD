@@ -1,0 +1,9 @@
+# Queued first assignment — Atlas marketing (FLUME-87)
+
+**Owner:** `33god-marketing-director` · **Work home:** `33god-platform/atlas` · **State:** queued, not dispatched or authorized for execution. This is a retrievable brief, **not** a campaign plan or permission to run a campaign.
+
+When assigned by the 33GOD PM, draft a **short first-campaign plan for review**. Identify the intended first audience from people Jarad already works with (existing contacts as initial users and feedback sources), the proposed message, a proposed channel, and the path by which a reader of a showcase page reaches a Genesis desk. Propose how to measure which message and channel bring people to that desk and how to collect feedback. State assumptions and approval decisions; do not send messages, solicit contacts, publish, build pages or run the campaign under this brief.
+
+Marketing owns the message and story order for the showcase pages and index. The FLUME-85 art director owns the look, design system and **visual sign-off**. FLUME-86 designers produce pages and artwork; marketing neither produces them nor substitutes for visual sign-off. The PM owns board intake and assignment. A queued brief does not clear any page-production gate.
+
+**Jarad must explicitly approve before anything reaches the public or a client or uses a paid channel.** No paid spend or new account or Telegram bot without Jarad's exact authorization; if required, ask for one exact operator action and wait. Public material must not expose source code, internal paths, hostnames or secrets (or personal names). Public pages and index may read only the scrubbed Atlas `public.json`, never private component records or `atlas.json`; require the Atlas export/check and art director's manual privacy review before seeking approval. Do not execute the plan or campaign as part of FLUME-87.
