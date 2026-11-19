@@ -116,11 +116,63 @@ tp_cfg() {
   [ -f "$ROLE_YAML" ] || return 0
   python3 - "$ROLE_YAML" "$1" <<'PY'
 import sys, re, pathlib
-text = pathlib.Path(sys.argv[1]).read_text()
-m = re.search(r'(?ms)^ticket_provider:\s*$(.*?)(?=^\S)', text + "\n\x00")
-block = m.group(1) if m else ""
-mm = re.search(rf'(?m)^\s*{re.escape(sys.argv[2])}:\s*(?:"([^"]*)"|([^#\n]*))\s*(?:#.*)?$', block)
-print((mm.group(1) if mm.group(1) is not None else mm.group(2)).strip() if mm else "")
+
+# role.yaml uses single-line scalar fields here. Decode YAML quotes/escapes
+# without requiring PyYAML in every deployed employee's Python environment.
+def scalar(raw):
+    raw = raw.strip()
+    if not raw or raw.startswith("#"):
+        return ""
+    quote = raw[0]
+    if quote not in "\"'":
+        if raw[0] in "[{}]&*!>|":
+            raise ValueError("expected a single-line scalar")
+        return re.split(r"\s+#", raw, maxsplit=1)[0].rstrip()
+    out = []; i = 1
+    escapes = {"0": "\0", "a": "\a", "b": "\b", "t": "\t", "n": "\n", "v": "\v",
+               "f": "\f", "r": "\r", "e": "\x1b", " ": " ", '"': '"', "/": "/", "\\": "\\",
+               "N": "\x85", "_": "\xa0", "L": "\u2028", "P": "\u2029"}
+    while i < len(raw):
+        ch = raw[i]; i += 1
+        if ch == quote:
+            if quote == "'" and i < len(raw) and raw[i] == "'":
+                out.append("'"); i += 1; continue
+            rest = raw[i:]
+            if rest and not re.fullmatch(r"\s+(?:#.*)?", rest):
+                raise ValueError("unexpected text after quoted scalar")
+            return "".join(out)
+        if quote == '"' and ch == "\\":
+            if i == len(raw):
+                raise ValueError("unfinished escape")
+            esc = raw[i]; i += 1
+            if esc in escapes:
+                ch = escapes[esc]
+            elif esc in "xuU":
+                width = {"x": 2, "u": 4, "U": 8}[esc]
+                digits = raw[i:i + width]
+                if len(digits) != width or not re.fullmatch(r"[0-9a-fA-F]+", digits):
+                    raise ValueError("invalid Unicode escape")
+                ch = chr(int(digits, 16)); i += width
+            else:
+                raise ValueError(f"unsupported escape \\{esc}")
+        out.append(ch)
+    raise ValueError("unterminated quoted scalar")
+
+key = sys.argv[2]; active = False
+try:
+    for line in pathlib.Path(sys.argv[1]).read_text().splitlines():
+        if re.fullmatch(r"ticket_provider:\s*(?:#.*)?", line):
+            active = True; continue
+        if active and line and not line[0].isspace() and not line.startswith("#"):
+            break
+        if active:
+            match = re.fullmatch(rf"[ \t]+{re.escape(key)}:[ \t]*(.*)", line)
+            if match:
+                print(scalar(match.group(1)).strip()); break
+    else:
+        print("")
+except (ValueError, OSError) as exc:
+    raise SystemExit(f"plane: invalid role.yaml ticket_provider.{key}: {exc}")
 PY
 }
 
@@ -156,9 +208,14 @@ for parent in [start, *start.parents]:
             mapping = tp.get("state_map", {}) if isinstance(tp, dict) else {}
             if not isinstance(mapping, dict):
                 raise ValueError("state_map must be an object")
+            allowed = {"backlog", "unstarted", "started", "completed", "cancelled"}
+            unknown = sorted(set(mapping) - allowed)
+            if unknown:
+                raise ValueError(f"unsupported state_map keys: {', '.join(unknown)}")
+            for lane, configured in mapping.items():
+                if not isinstance(configured, str):
+                    raise ValueError(f"state_map.{lane} must be a string")
             value = mapping.get(key, "")
-            if not isinstance(value, str):
-                raise ValueError(f"state_map.{key} must be a string")
             print(value.strip())
         except (OSError, ValueError) as exc:
             raise SystemExit(f"plane: invalid .project.json ticket_provider.state_map: {exc}")
