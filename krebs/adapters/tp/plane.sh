@@ -8,9 +8,9 @@
 #   workspace: <workspace-slug>      (or env PLANE_WORKSPACE)
 #   board_id:  <project-uuid>        (set by create_board / 42-ticket-provider)
 #   timezone:  <IANA timezone>       optional project calendar override
-# Lane names (role.yaml `ticket_provider:`, each optional): backlog, unstarted,
-#   started, completed (default "Done"), cancelled (default "Cancelled"). An
-#   unnamed lane resolves only when its state group has exactly one member.
+# Lane names: .project.json ticket_provider.state_map overrides legacy role.yaml
+# ticket_provider keys; canonical defaults are Backlog, Todo, In Progress, Done,
+# Cancelled. Configured names must resolve uniquely within their state group.
 #
 # Krebs lifecycle v2 (krebs/spec/lifecycle.v2.yaml): every board has the five
 # stock lanes (Backlog, Todo, In Progress, Done, Cancelled); what the retired
@@ -119,8 +119,8 @@ import sys, re, pathlib
 text = pathlib.Path(sys.argv[1]).read_text()
 m = re.search(r'(?ms)^ticket_provider:\s*$(.*?)(?=^\S)', text + "\n\x00")
 block = m.group(1) if m else ""
-mm = re.search(rf'(?m)^\s*{re.escape(sys.argv[2])}:\s*"?([^"\n]*)"?\s*$', block)
-print(mm.group(1).strip() if mm else "")
+mm = re.search(rf'(?m)^\s*{re.escape(sys.argv[2])}:\s*(?:"([^"]*)"|([^#\n]*))\s*(?:#.*)?$', block)
+print((mm.group(1) if mm.group(1) is not None else mm.group(2)).strip() if mm else "")
 PY
 }
 
@@ -142,14 +142,46 @@ else:
 PY
 }
 
+# pj_state_map KEY — optional repo-wide name override for a normalized lane.
+# Reject malformed configured maps instead of silently falling back to a role.
+pj_state_map() {
+  python3 - "$ROLE_DIR" "$1" <<'PY'
+import sys, json, pathlib
+start = pathlib.Path(sys.argv[1]).resolve(); key = sys.argv[2]
+for parent in [start, *start.parents]:
+    f = parent / ".project.json"
+    if f.is_file():
+        try:
+            tp = json.loads(f.read_text()).get("ticket_provider") or {}
+            mapping = tp.get("state_map", {}) if isinstance(tp, dict) else {}
+            if not isinstance(mapping, dict):
+                raise ValueError("state_map must be an object")
+            value = mapping.get(key, "")
+            if not isinstance(value, str):
+                raise ValueError(f"state_map.{key} must be a string")
+            print(value.strip())
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f"plane: invalid .project.json ticket_provider.state_map: {exc}")
+        break
+else:
+    print("")
+PY
+}
+
 # Board binding: .project.json (SOT) first, then legacy role.yaml, then env.
 WS="$(pj_cfg workspace)"; [ -n "$WS" ] || WS="$(tp_cfg workspace)"; WS="${WS:-${PLANE_WORKSPACE:-}}"
 PROJ="$(pj_cfg board_id)"; [ -n "$PROJ" ] || PROJ="$(tp_cfg project)"; [ -n "$PROJ" ] || PROJ="$(tp_cfg board_id)"
-SM_DONE="$(tp_cfg completed)"; SM_DONE="${SM_DONE:-Done}"
-SM_CANCELLED="$(tp_cfg cancelled)"; SM_CANCELLED="${SM_CANCELLED:-Cancelled}"
-SM_STARTED="$(tp_cfg started)"
-SM_UNSTARTED="$(tp_cfg unstarted)"
-SM_BACKLOG="$(tp_cfg backlog)"
+# Read all five overrides before any API call, propagating invalid config errors.
+MAP_DONE="$(pj_state_map completed)" || exit 1
+MAP_CANCELLED="$(pj_state_map cancelled)" || exit 1
+MAP_STARTED="$(pj_state_map started)" || exit 1
+MAP_UNSTARTED="$(pj_state_map unstarted)" || exit 1
+MAP_BACKLOG="$(pj_state_map backlog)" || exit 1
+SM_DONE="${MAP_DONE:-$(tp_cfg completed)}"; SM_DONE="${SM_DONE:-Done}"
+SM_CANCELLED="${MAP_CANCELLED:-$(tp_cfg cancelled)}"; SM_CANCELLED="${SM_CANCELLED:-Cancelled}"
+SM_STARTED="${MAP_STARTED:-$(tp_cfg started)}"; SM_STARTED="${SM_STARTED:-In Progress}"
+SM_UNSTARTED="${MAP_UNSTARTED:-$(tp_cfg unstarted)}"; SM_UNSTARTED="${SM_UNSTARTED:-Todo}"
+SM_BACKLOG="${MAP_BACKLOG:-$(tp_cfg backlog)}"; SM_BACKLOG="${SM_BACKLOG:-Backlog}"
 LABEL_REVIEW="lifecycle:review"
 LABEL_NEEDS_INPUT="lifecycle:needs-input"
 # Owner-applied hold: Jarad took the ticket by hand. Never written here; a transition that
