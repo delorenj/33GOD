@@ -1,0 +1,139 @@
+# Hermes agent role manifest.  Tracked in the PROJECT repository.
+# The agent's actual state (memory, sessions, evolving SOUL) lives in the
+# ignored local runtime. This file is the immutable contract for this role.
+
+repo: "33god"
+role: "art-director"
+agent_id: "33god-art-director"
+display_name: "33god Art-Director"
+purpose: "Atlas visual direction, designer review and public-page sign-off for 33GOD"
+
+# Personality tone -- a key in the flume repo's `roles/_tones.yaml`.
+#
+# PERSISTED, and that is the point. Tone used to be a hire-time-only copier
+# variable that was written into SOUL.md prose and then forgotten, so
+# re-composing a deployed agent had no way to reproduce the operator's choice
+# and would silently normalise the whole fleet to `direct`. Roles provisioned
+# before this field existed are recovered by recognising the tone paragraph
+# already in their soul; every role provisioned from here carries its answer.
+soul_tone: "direct"
+
+# Process-local gateway inference target (empty = inherit from shared
+# ~/.hermes/config.yaml). key_env is a variable NAME only; its secret value is
+# injected at runtime and must never be written here.
+model:
+  provider: ""
+  name: ""
+  base_url: ""
+  api_mode: ""
+  key_env: ""
+
+# Hermes profile name. ~/.hermes/profiles/<name> is a REAL directory managed by
+# `flume remediate hermes.runtime-singleton`: shared config/auth/skills link to the
+# fleet root while role-owned state links into ./runtime. Never replace the
+# named profile with a symlink to runtime.
+profile: "33god-art-director"
+
+# Telegram bot identity (one bot per agent — see docs/architecture.md).
+telegram:
+  provisioning_status: "deferred"
+  bot_username: "33god_art-director_bot"
+  bot_id: ""
+
+# Slack is opt-in. Credentials live in 1Password and the profile maps only
+# op:// references; this block records safe state and auth.test identity.
+slack:
+  provisioning_status: "deferred"
+  team_id: ""
+  team_name: ""
+  bot_user_id: ""
+  bot_id: ""
+  bot_username: ""
+
+# Ticket-provider binding (plane | trello).
+# The heartbeat reconciliation pass talks ONLY to this via .scripts/lib/ticket-provider.sh;
+# swapping providers is a one-line change here. Filled in by 42-ticket-provider.sh.
+ticket_provider:
+  name: "plane"
+  board_id: "15258893-0206-4e8f-aea6-340eb217988c"
+  workspace: "33god"
+  project: "15258893-0206-4e8f-aea6-340eb217988c"
+  timezone: "" # IANA project calendar; empty = TICKET_PROVIDER_TIMEZONE, TZ, then host-local
+  # Optional lane-name overrides for non-standard boards.
+  backlog: "" # e.g. "Backlog"
+  unstarted: "" # e.g. "Todo"
+  started: "" # e.g. "In Progress"
+  completed: "" # e.g. "Done"
+  cancelled: "" # e.g. "Cancelled"
+  # Krebs lifecycle v2: a Plane board has exactly these five stock lanes.
+  # Review and holds are labels, not lanes: `tp transition <id> in_review` lands
+  # In Progress + lifecycle:review, and awaiting_decision (aliases
+  # needs_attention, waiting_reply) adds lifecycle:needs-input in place.
+  # lifecycle:human is the owner's own hold (the owner took the ticket by hand): agents
+  # never add, remove or work it.
+
+  # An advisory employee can use ticket_provider to read/file/comment on the
+  # repo board, but never claims tickets from the fleet command router.
+board_scope: "advisory"
+
+# Board-reconciliation knobs for the heartbeat sentinel pass.
+reconcile:
+  enabled: false
+  explicit_opt_out: true # distinguishes operator choice from the legacy default-off manifest
+  grace_hours: 0 # 0 = no human-approval wait (adversarially-reviewed review-lane = done); set >0 to require a wait
+  auto_review: true # autonomous adversarial review (act, do not wait) on/off
+
+# After every full pass, .scripts/land-outputs.sh commits and pushes the pass's own
+# evidence (no dangling work). ONE space-separated string of repo-relative paths;
+# omit for the default (BMAD issue-evidence dir + docs/operations/launch-readouts).
+# Turn it off for a run with LAND_OUTPUTS=0.
+# land:
+#   paths: "_bmad-output/implementation-artifacts/issue-evidence docs/operations/launch-readouts"
+
+# Plane project (1:1 with this agent) — retained for fleet-registry back-compat.
+plane:
+  # Empty -> resolved from ~/.config/hermes-agent-template/config.toml [plane].workspace
+  workspace: "33god"
+  # identifier is set by .scripts/42-ticket-provider.sh after creation (plane only)
+  identifier: "33GOD"
+
+# Bloodbank ingress is owned by one fleet-shared Hermes gateway. The gateway
+# reads the fleet registry and routes canonical commands by target_agent_id;
+# this profile does not install its own NATS consumer or inbox bridge.
+bloodbank:
+  # Activation gate: default on. An absent key also means enabled; set this to
+  # false (the strict YAML boolean) to quarantine the agent from dispatch.
+  enabled: true
+  gateway_scope: fleet
+  target_agent_id: "33god-art-director"
+  producer: "hermes-agent:33god-art-director"
+
+# Reconciled by 70-systemd.sh. These are lifecycle observations, not desired
+# state: gateway stays deferred until a dedicated chat credential is verified;
+# heartbeat is independent and drives PM board reconciliation by default.
+service_state:
+  gateway: "deferred"
+  heartbeat: "retired"
+
+# Pure-local role-owned state. HERMES_HOME itself is the named profile directory
+# above; the legacy GitHub identity remains metadata-only for locating old
+# archives, and provisioning never creates or attaches a submodule.
+runtime:
+  # Empty owner -> resolved from config.toml [github].runtime_repo_owner.
+  github_owner: ""
+  github_repo: "agent-hm-33god-art-director"
+  local_path: "./runtime"
+  checkpoint:
+    cadence: "disabled"
+    on_session_end: false
+
+# Provenance — managed by the template, do not hand-edit.
+provisioned_at: "2026-11-19T01:48:02Z"
+provisioned_by: hermes-agent-template
+# The template commit this role was rendered from; `flume remediate
+# hermes.pm-scaffold` moves it when it refreshes the scaffold to a newer pin.
+# The pjangler shell prompt shows it as the PM's manifest version.
+template_rev: "19ded0acc35c8e14ddcb94dd4ebde2b4421b5384"
+deployment:
+  local_only: false
+  systemd: required

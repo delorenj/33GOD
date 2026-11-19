@@ -8,14 +8,19 @@
     "identifier": "33GOD",
     "board_id": "15258893-0206-4e8f-aea6-340eb217988c",
     "state": "linked",
-    "board_confirmed_at": "2026-08-28T20:12:51.748Z",
+    "board_confirmed_at": "2026-11-19T06:48:24.225Z",
     "identifier_source": "provider",
-    "identifier_fetched_at": "2026-08-28T20:12:51.748Z"
+    "identifier_fetched_at": "2026-11-19T06:48:24.225Z"
   },
   "agents": {
     "33god-pm": {
       "role": "pm",
       "role_dir": "agents/hermes/pm"
+    },
+    "33god-art-director": {
+      "role": "art-director",
+      "role_dir": "agents/hermes/art-director",
+      "provisioning_state": "provisioned"
     }
   },
   "status": "planned",
