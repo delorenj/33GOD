@@ -419,3 +419,24 @@ test("turnState: a command krebs sent that the gateway has queued reads as queue
   assert.equal(v.live, true);
   assert.match(v.why, /\(queued\)/);
 });
+
+test("turnState: a turn the gateway refused before dispatch is not activity (BB-43)", () => {
+  const refused = { id: "r", data: { command_id: "r", turn_id: "r", error_code: "final_answer_capture_unavailable_before_dispatch" } };
+  const correlated = [
+    ev("bloodbank.agent.invocation.started", 5, { id: "r", data: { command_id: "r", turn_id: "r" } }),
+    ev("bloodbank.conversation.turn.started", 5, { id: "r", data: { turn_id: "r" } }),
+    ev("bloodbank.conversation.turn.completed", 5, { id: "r", data: { turn_id: "r", outcome: "failed" } }),
+    ev("bloodbank.agent.invocation.failed", 5, refused),
+  ];
+  const v = turnState({ key: "X-1", nowMs: NOW_MS, correlated });
+  assert.equal(v.live, false, v.why);
+  assert.match(v.why, /last turn failed/);
+});
+
+test("turnState: a turn that failed after it ran still holds the quiet window", () => {
+  const correlated = [
+    ev("bloodbank.agent.invocation.started", 20),
+    ev("bloodbank.agent.invocation.failed", 5, { data: { error_code: "agent_turn_failed" } }),
+  ];
+  assert.equal(turnState({ key: "X-1", nowMs: NOW_MS, correlated }).live, true);
+});

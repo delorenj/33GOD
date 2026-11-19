@@ -94,6 +94,19 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
   const invocations = new Map(); // invocation id -> {queued, started, ended, detached, reason, sender}
   let lastActivity = null;
   let lastEnd = null;
+  // A turn the gateway refused before handing it to an agent (error_code
+  // *_before_dispatch) did no work: its started/failed/turn events are
+  // bookkeeping, not activity, so they must not hold the ticket for the quiet
+  // window (BB-43: 23 refused commands kept their tickets idle 30 more minutes).
+  const refused = new Set();
+  for (const e of correlated) {
+    const data = asObject(e.data);
+    if (e.type === "bloodbank.agent.invocation.failed" && /_before_dispatch$/.test(String(data.error_code ?? ""))) {
+      for (const id of [data.invocation_id, data.command_id, data.turn_id]) if (id) refused.add(id);
+    }
+  }
+  const refusedEvent = (data) =>
+    refused.size > 0 && [data.invocation_id, data.command_id, data.turn_id].some((id) => id && refused.has(id));
   for (const e of correlated) {
     const t = ms(e.time);
     if (t === null) continue;
@@ -113,7 +126,7 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
       invocations.set(id, inv);
     }
     // queued is a claim, not activity: rule 1 judges it with its own cap.
-    if (ACTIVITY_DOMAINS.has(e.domain ?? String(e.type).split(".")[1]) && e.type !== "bloodbank.agent.invocation.skipped" && e.type !== QUEUED) {
+    if (ACTIVITY_DOMAINS.has(e.domain ?? String(e.type).split(".")[1]) && e.type !== "bloodbank.agent.invocation.skipped" && e.type !== QUEUED && !refusedEvent(data)) {
       if (lastActivity === null || t > lastActivity) lastActivity = t;
     }
   }
