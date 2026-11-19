@@ -1,0 +1,40 @@
+{
+  "format": "33god.factory-asset",
+  "version": 1,
+  "id": "hook-hub",
+  "title": "The receiving dock",
+  "placement": "station",
+  "replaces": [
+    "Dock"
+  ],
+  "footprint": [
+    4.0,
+    4.6
+  ],
+  "height": 3.5,
+  "scale": 1,
+  "rotationY": 0,
+  "handles": [
+    "parcel"
+  ],
+  "clips": {
+    "idle": "Idle",
+    "accept": "Accept",
+    "work": "Work",
+    "emit": "Emit"
+  },
+  "sockets": {
+    "in": "socket_in",
+    "hold": "socket_hold",
+    "out": "socket_out"
+  },
+  "budget": {
+    "tris": 15000,
+    "glbKB": 600
+  },
+  "forge": {
+    "run": "2026-11-19T01:06-0500",
+    "rounds": 3,
+    "score": 7
+  }
+}
