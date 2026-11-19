@@ -1,7 +1,10 @@
 # 33GOD — mise.toml
 # ═══════════════════════════════════════════════════════════
 [env]
-_.path = [".mise/scripts", "agents/hermes/pm", "agents/hermes/pm/hermes"]
+# The PM launcher (agents/hermes/pm/hermes) is deliberately NOT on PATH: it
+# shadowed the global hermes here and in every child repo (Story 7.1 AC4).
+# Talk to Grolf (33god-pm) with `hermes-pm`, which finds the nearest launcher.
+_.path = [".mise/scripts"]
 _.file = [".env"]
 
 # This block will handle the linking of
