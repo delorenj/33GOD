@@ -69,3 +69,5 @@ surfaces:
 - repo:bloodbank/services/target-watch
 - systemd:target-watch-match.service
 - systemd:target-watch-sink.service
+factory:
+  near: archive

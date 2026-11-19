@@ -65,3 +65,5 @@ surfaces:
 - container:agent-pad-upload
 - container:agent-pad-web
 - producer:agent-pad-upload
+factory:
+  station: entrance

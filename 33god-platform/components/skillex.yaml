@@ -49,3 +49,5 @@ evidence:
 - /home/delorenj/code/skillex/all-skills
 confidence: high
 notes: PM desks are Skillex-only.
+factory:
+  near: dock

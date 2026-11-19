@@ -39,3 +39,5 @@ confidence: medium
 notes: Likely superseded by krebs tick (krebs/docs/lifecycle.md says Krebs replaces Momo); confirm before drawing.
 surfaces:
 - repo:bloodbank/services/lifecycle-controller
+factory:
+  near: crew

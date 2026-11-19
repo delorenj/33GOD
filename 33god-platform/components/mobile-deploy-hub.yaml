@@ -37,3 +37,5 @@ surfaces:
 - producer:mobile-deploy-hub
 - producer:mobile-deploy-hub-catchup
 - systemd:mobile-deploy-hub-catchup.service
+factory:
+  near: crew

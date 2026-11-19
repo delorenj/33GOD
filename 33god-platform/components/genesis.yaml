@@ -49,3 +49,5 @@ notes: Container env holds plaintext gateway keys; should move to op:// refs.
 surfaces:
 - container:genesis
 - producer:genesis
+factory:
+  near: entrance

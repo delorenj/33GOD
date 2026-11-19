@@ -50,3 +50,6 @@ relations:
 evidence:
 - bloodbank/integrations/n8n-nodes-bloodbank
 confidence: high
+factory:
+  station: rules
+  aliases: [n8n-nodes-bloodbank]

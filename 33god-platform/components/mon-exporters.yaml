@@ -34,3 +34,5 @@ surfaces:
 - container:nats-exporter
 - container:node-exporter
 - container:process-exporter
+factory:
+  near: control

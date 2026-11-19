@@ -47,3 +47,6 @@ confidence: high
 surfaces:
 - repo:holocene
 - systemd:holocene-whisper.service
+factory:
+  station: control
+  aliases: [team-dashboard]

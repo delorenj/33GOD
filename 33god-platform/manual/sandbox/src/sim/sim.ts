@@ -11,7 +11,9 @@
 // - the courier waits at the dock window for a briefing card and carries it back; a shut dock means it
 //   turns round with the parcel; nothing queues at the door
 import { VENDORS, type Vec3 } from '../content'
-import { BELT, CATALOGUER, CLOCK, COLS, CREW, DOCK, HANDS, PLANNER, READERS, SOUND_OUTBOX, TRAY, notePos } from './layout'
+import type { VisitKind } from '../assets/contract'
+import { emitVisit, takerFor, type ItemLook } from '../assets/visits'
+import { BAY_X, BAY_Z, BELT, CATALOGUER, CLOCK, COLS, CREW, DOCK, HANDS, PLANNER, READERS, SOUND_OUTBOX, TRAY, notePos } from './layout'
 import { HANDS_SLOT, TRAY_SLOT, clock, hoursNow, useWorld, type Flyer, type FlyerLook, type Hatch, type Note } from './store'
 
 const WALK = 2.6 // sim seconds from bay to dock door
@@ -34,6 +36,33 @@ const later = (delay: number, run: () => void) => {
   let i = jobs.length
   while (i > 0 && jobs[i - 1].at > at) i--
   jobs.splice(i, 0, { at, run })
+}
+
+// ---------- asset hand-offs ----------
+// A station's asset (src/assets), when one stands there, plays the item that reaches it. The sim's rules do not change:
+// every count, note and timing stays as written; an asset only decides where and when a continuation starts from.
+// With no asset at the station, handOff and seen do exactly what the code did before they existed.
+const ASSET_WAIT = 12 // sim seconds the sim waits on an asset before carrying on without it
+
+/** An item reaches `station`, and what happens next waits for the asset to let go of it (from its socket_out).
+ *  `delay` is how long the plain floor waits before `run`; `run(p)` starts from the asset's point, or null for the floor's own. */
+function handOff(station: string, kind: VisitKind, from: Vec3, o: { look?: ItemLook; out?: ItemLook; tag?: string }, delay: number, run: (p: Vec3 | null) => void) {
+  const plain = () => (delay > 0 ? later(delay, () => run(null)) : run(null))
+  if (!takerFor(station, kind)) return plain()
+  let done = false
+  const release = (p?: Vec3) => {
+    if (done) return
+    done = true
+    if (p) later(0, () => run(p))
+    else plain()
+  }
+  if (!emitVisit(`station:${station}`, { kind, source: 'sim', from, release, ...o })) return plain()
+  later(delay + ASSET_WAIT, () => { if (!done) { done = true; run(null) } })
+}
+
+/** An item reaches `station` and nothing waits on it: the asset just plays it. */
+function seen(station: string, kind: VisitKind, from: Vec3, o: { look?: ItemLook; out?: ItemLook; tag?: string } = {}) {
+  if (takerFor(station, kind)) emitVisit(`station:${station}`, { kind, source: 'sim', from, ...o })
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a)
@@ -94,6 +123,7 @@ function stickPost(headline: string, from: string | null, barcode: string | null
       seq: frontSeq, bornH: hoursNow(), col: c, viaDesk, hatch: null, heldBy: null, tries: 0, retryAt: 0, readBy: [],
     }
     set((s) => ({ notes: [...s.notes, n] }))
+    seen('belt', 'post', notePos('post', c, 0), { look: look === 'summary' ? 'summary' : 'post', tag: headline })
     readersNotice(n)
   })
 }
@@ -109,6 +139,7 @@ function stickEnvelope(headline: string, hatch: Hatch, from: string, origin: Vec
       seq: backSeq, bornH: hoursNow(), col: c, viaDesk: true, hatch, heldBy: null, tries: 0, retryAt: 0, readBy: [],
     }
     set((s) => ({ notes: [...s.notes, n] }))
+    seen('belt', 'env', notePos('env', c, 0), { tag: headline })
   })
 }
 
@@ -116,6 +147,7 @@ const markRead = (id: number, reader: string) => patchNote(id, (x) => ({ readBy:
 
 // Readers come to the belt and tear off copies. The original stays.
 function readersNotice(n: Note) {
+  const copyKind: VisitKind = n.headline === 'summary written' ? 'summary' : 'post'
   const tear = (to: Vec3, delay: number, then: (live: Note) => void) =>
     later(delay, () => {
       const live = findNote(n.id)
@@ -131,34 +163,39 @@ function readersNotice(n: Note) {
       puff(above(READERS.archive), 'rejects drawer: label fields missing', 'warn')
       bump('rejected')
       markRead(n.id, 'archive-rejected')
+      seen('archive', copyKind, READERS.archive, { look: 'copy', tag: 'rejected' })
       return
     }
     bump('filed')
     set((s) => ({ lastRead: { ...s.lastRead, archive: n.id } }))
     markRead(n.id, 'archive')
+    seen('archive', copyKind, READERS.archive, { look: 'copy', tag: 'filed' })
   })
   // now and then the archive's signature is late, so the belt offers the same note again (~30 s ackWait)
   if (n.viaDesk && Math.random() < 0.08) {
     tear(READERS.archive, rand(7, 9), () => {
       puff(above(READERS.archive), `offered again: ${n.noteId} already filed`, 'info')
       bump('dupes')
+      seen('archive', copyKind, READERS.archive, { look: 'copy', tag: 'duplicate' })
     })
   }
   // the control room sees everything, a moment late
-  tear(READERS.control, rand(1.8, 3.2), () => { bump('control'); markRead(n.id, 'control') })
+  tear(READERS.control, rand(1.8, 3.2), () => { bump('control'); markRead(n.id, 'control'); seen('control', copyKind, READERS.control, { look: 'copy', tag: n.headline }) })
   // the rule card's pick list: finished jobs only
   if (n.headline === 'invocation completed') {
     tear(READERS.rules, 1.0, () => {
       bump('rules')
       set((s) => ({ lastRead: { ...s.lastRead, rules: n.id } }))
       markRead(n.id, 'rules')
+      seen('rules', 'post', READERS.rules, { look: 'copy', tag: n.headline })
     })
   }
   // the cataloguer acts on "session ended": it asks the archive for the history, then its runner sticks a summary
   if (n.headline === 'session ended') {
     tear([CATALOGUER[0], 1.2, CATALOGUER[2]], 0.6, () => {
       markRead(n.id, 'cataloguer')
-      later(2.6, () => stickPost('summary written', null, null, false, [CATALOGUER[0] - 1.1, 1.3, CATALOGUER[2] - 0.2], 'summary'))
+      const out: Vec3 = [CATALOGUER[0] - 1.1, 1.3, CATALOGUER[2] - 0.2]
+      handOff('cataloguer', 'post', [CATALOGUER[0], 1.2, CATALOGUER[2]], { look: 'copy', out: 'summary', tag: 'session ended' }, 2.6, (p) => stickPost('summary written', null, null, false, p ?? out, 'summary'))
     })
   }
   // the clock's planner reads every tick and, when a chore is due, sticks an envelope for the clock's own hands
@@ -167,7 +204,9 @@ function readersNotice(n: Note) {
       markRead(n.id, 'planner')
       if (Math.random() < 0.55) {
         bump('chores')
-        stickEnvelope(pick(CLOCK_CHORES), 'clock', 'clock', [PLANNER[0], 1.6, PLANNER[2]])
+        const chore = pick(CLOCK_CHORES)
+        const out: Vec3 = [PLANNER[0], 1.6, PLANNER[2]]
+        handOff('clock', 'post', [PLANNER[0], 1.2, PLANNER[2]], { look: 'copy', out: 'env', tag: 'chore due' }, 0, (p) => stickEnvelope(chore, 'clock', 'clock', p ?? out))
       }
     })
   }
@@ -191,23 +230,36 @@ function spawnParcel() {
       bump('turnedBack')
       puff([DOCK.door[0] - 1, 2.4, 0], 'door shut, turning round', 'warn')
       remove(WALK)
+      later(WALK, () => seen('bays', 'parcel', bayDoor(vendor), { tag: `${VENDORS[vendor].name}: turned back` }))
       return
     }
     // hand over the parcel, wait at the window for the clerk's answer, walk the briefing card back
     set((s) => ({ parcels: s.parcels.map((x) => (x.id === p.id ? { ...x, backT0: clock.t + OPEN, reply: true } : x)), dockPulseAt: clock.t }))
     remove(OPEN + WALK)
+    // the courier gets back to its bay with the briefing card
+    later(OPEN + WALK, () => seen('bays', 'env', bayDoor(vendor), { tag: VENDORS[vendor].name }))
     const conv = convs[vendor]
     const barcode = conv.code
     // a separate clerk at the back writes the post-it; the courier does not wait for that
-    later(OPEN, () => stickPost('turn started', VENDORS[vendor].name, barcode, true, DOCK.out))
     conv.left -= 1
-    if (conv.left <= 0) {
-      later(OPEN + 0.7, () => stickPost('session ended', VENDORS[vendor].name, barcode, true, DOCK.out))
+    const ended = conv.left <= 0
+    if (ended) {
       conv.code = `conv-${hex(4).toUpperCase()}`
       conv.left = 3 + Math.floor(Math.random() * 5)
     }
+    later(OPEN, () => {
+      // a dock asset takes the parcel at the window and hands the post-it out of its slot
+      handOff('dock', 'parcel', DOCK.door, { out: 'post', tag: VENDORS[vendor].name }, 0, (p) => {
+        const start = p ?? DOCK.out
+        stickPost('turn started', VENDORS[vendor].name, barcode, true, start)
+        seen('labeldesk', 'post', start, { tag: 'turn started' })
+        if (ended) later(0.7, () => stickPost('session ended', VENDORS[vendor].name, barcode, true, start))
+      })
+    })
   })
 }
+
+const bayDoor = (vendor: number): Vec3 => [BAY_X + 1.2, 1, BAY_Z[vendor]]
 
 const CLOCK_CHORES = ['start: daily report', 'start: disk sweep', 'start: journal']
 const CREW_JOBS = ['start: board triage', 'start: inbox sweep', 'start: code review', 'start: release notes']
@@ -229,20 +281,24 @@ export function step(realDt: number) {
     // drawn far less often than the real one-a-minute tick
     set({ clockRingAt: t })
     bump('ticks')
-    stickPost('tick fired', 'clock', null, true, [CLOCK[0], 5.6, CLOCK[2] + 0.6])
+    const tickAt: Vec3 = [CLOCK[0], 5.6, CLOCK[2] + 0.6]
+    // a clock asset strikes the tick and lets the post-it go from its own slot
+    handOff('clock', 'post', tickAt, { tag: 'tick fired' }, 0, (p) => stickPost('tick fired', 'clock', null, true, p ?? tickAt))
     nextTick = t + rand(5, 7)
   }
   if (t >= nextJob) {
-    stickEnvelope(pick(CREW_JOBS), 'crew', 'rules cabinet', RULES_OUT)
+    const job = pick(CREW_JOBS)
+    handOff('rules', 'env', RULES_OUT, { tag: job }, 0, (p) => stickEnvelope(job, 'crew', 'rules cabinet', p ?? RULES_OUT))
     nextJob = t + rand(4.5, 7)
   }
   if (t >= nextBatch) {
     // a batch handed on all at once: more than the desks and the tray can hold
-    for (let i = 0; i < 10; i++) later(i * 0.25, () => stickEnvelope(CREW_JOBS[i % CREW_JOBS.length], 'crew', 'rules cabinet', RULES_OUT))
+    for (let i = 0; i < 10; i++) later(i * 0.25, () => handOff('rules', 'env', RULES_OUT, { tag: CREW_JOBS[i % CREW_JOBS.length] }, 0, (p) => stickEnvelope(CREW_JOBS[i % CREW_JOBS.length], 'crew', 'rules cabinet', p ?? RULES_OUT)))
     nextBatch = t + rand(28, 36)
   }
   if (t >= nextAudio) {
-    stickEnvelope('start: audio task', null, 'sound wing', SOUND_OUTBOX) // a trace record: nobody is meant to take it
+    // a trace record: nobody is meant to take it
+    handOff('soundwing', 'env', SOUND_OUTBOX, { tag: 'start: audio task' }, 0, (p) => stickEnvelope('start: audio task', null, 'sound wing', p ?? SOUND_OUTBOX))
     nextAudio = t + rand(3, 5)
   }
 
@@ -256,6 +312,7 @@ export function step(realDt: number) {
       pinned++
       patchNote(n.id, (x) => ({ heldBy: TRAY_SLOT, tries: x.tries + 1 }))
       fly('env', posOf(n), CREW.tray, 0.8, 0.8)
+      if (takerFor('crew', 'env')) later(0.8, () => seen('crew', 'env', CREW.tray, { tag: n.headline }))
     }
   }
   // a free desk takes the oldest envelope in the tray
@@ -306,6 +363,7 @@ export function step(realDt: number) {
         patchNote(next.id, (x) => ({ heldBy: HANDS_SLOT, tries: x.tries + 1 }))
         set({ hands: { holding: next.id, startedAt: t, until: t + rand(2, 4) } })
         fly('env', posOf(next), [HANDS[0], 1.1, HANDS[2]], 0.9, 0.9)
+        if (takerFor('clock', 'env')) later(0.9, () => seen('clock', 'env', [HANDS[0], 1.1, HANDS[2]], { tag: next.headline }))
       }
     } else if (t >= hands.until) {
       const id = hands.holding

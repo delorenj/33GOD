@@ -47,3 +47,5 @@ confidence: low
 notes: Ship-board calls it mcp-hub.
 surfaces:
 - repo:mcp-hub
+factory:
+  near: dock

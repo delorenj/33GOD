@@ -43,3 +43,5 @@ surfaces:
 - container:alertmanager
 - container:docker-health-monitor
 - producer:docker-health-monitor
+factory:
+  near: control

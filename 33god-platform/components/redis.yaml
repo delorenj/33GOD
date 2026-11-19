@@ -26,3 +26,5 @@ evidence:
 confidence: high
 surfaces:
 - container:redis
+factory:
+  near: dock

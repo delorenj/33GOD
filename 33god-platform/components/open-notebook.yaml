@@ -31,3 +31,5 @@ notes: Hostname notebooklm.delo.sh not curl-verified.
 surfaces:
 - container:open_notebook_core
 - container:open_notebook_surrealdb
+factory:
+  near: library

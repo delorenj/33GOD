@@ -28,3 +28,5 @@ relations:
 evidence:
 - bloodbank/services/hook-hub/client/bb-hook
 confidence: high
+factory:
+  station: courier

@@ -47,3 +47,5 @@ confidence: medium
 surfaces:
 - container:aai-llm-observability
 - producer:automaticai-usage-exporter
+factory:
+  station: staffing

@@ -56,3 +56,6 @@ notes: asm-sweep timer runs outside Candybar. Built on statekit (consumer 1; blo
 surfaces:
 - systemd:asm-orcapaint.service
 - systemd:asm-tabpaint.service
+factory:
+  near: dock
+  aliases: [asm-orcapaint, asm-tabpaint]

@@ -6,6 +6,7 @@ import { STATIONS, VENDORS, type StationId, type Vec3 } from '../content'
 import { DOMAINS, domainById, type Domain } from '../domains'
 import { BAY_X, BAY_Z, BELT_TOP, CATALOGUER, CLOCK, CREW, DOCK, HANDS, LABEL_DESK, PLANNER, READERS, TRAY, courierPath } from '../sim/layout'
 import { TRAY_SLOT, clock, hoursNow, useWorld } from '../sim/store'
+import { Hideable } from './hidden'
 import { clockFace, floorSign, placeSign } from './textures'
 
 export const C = {
@@ -464,21 +465,22 @@ function ClipWires() {
   )
 }
 
+// Each station's primitive can be hidden by name: a loaded asset (src/assets/<id>/asset.json `replaces`) stands in for it.
 export function Props() {
   return (
     <group>
       <Floor />
-      <Bays />
-      <Dock />
-      <LabelDesk />
-      <Archive />
-      <RulesCabinet />
-      <ControlRoom />
-      <Cataloguer />
-      <Clock />
-      <CrewHall />
-      <ClockCrew />
-      <ClipWires />
+      <Hideable name="Bays"><Bays /></Hideable>
+      <Hideable name="Dock"><Dock /></Hideable>
+      <Hideable name="LabelDesk"><LabelDesk /></Hideable>
+      <Hideable name="Archive"><Archive /></Hideable>
+      <Hideable name="RulesCabinet"><RulesCabinet /></Hideable>
+      <Hideable name="ControlRoom"><ControlRoom /></Hideable>
+      <Hideable name="Cataloguer"><Cataloguer /></Hideable>
+      <Hideable name="Clock"><Clock /></Hideable>
+      <Hideable name="CrewHall"><CrewHall /></Hideable>
+      <Hideable name="ClockCrew"><ClockCrew /></Hideable>
+      <Hideable name="ClipWires"><ClipWires /></Hideable>
       <PlaceSigns />
     </group>
   )

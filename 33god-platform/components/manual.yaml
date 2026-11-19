@@ -30,3 +30,5 @@ confidence: high
 notes: I-10. Creative direction is the operator's; pages are proposed, never redrawn.
 surfaces:
 - container:manual-web
+factory:
+  near: entrance

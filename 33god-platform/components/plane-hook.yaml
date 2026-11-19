@@ -67,3 +67,5 @@ relations:
 evidence:
 - /home/delorenj/code/delonet-n8n-workflows/INDEX.md
 confidence: medium
+factory:
+  near: rules

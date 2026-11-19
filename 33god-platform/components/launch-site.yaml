@@ -31,3 +31,5 @@ confidence: high
 notes: First full pass 2026-11-17 (f649541); content not final, page is noindex.
 surfaces:
 - container:33god-web
+factory:
+  near: entrance

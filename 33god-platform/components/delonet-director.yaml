@@ -42,3 +42,5 @@ confidence: medium
 notes: Medium confidence it belongs inside the platform scope; confirm with owner.
 surfaces:
 - systemd:delonet-director-api.service
+factory:
+  near: control

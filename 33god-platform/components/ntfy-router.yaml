@@ -41,3 +41,5 @@ confidence: high
 surfaces:
 - container:bloodbank-ntfy-router
 - repo:bloodbank/services/ntfy-router
+factory:
+  near: control

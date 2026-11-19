@@ -27,3 +27,6 @@ confidence: medium
 surfaces:
 - container:ntfy
 - container:ntfy-upstream-gate
+factory:
+  near: control
+  aliases: [ext:ntfy]

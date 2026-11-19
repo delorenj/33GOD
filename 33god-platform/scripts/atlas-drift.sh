@@ -14,7 +14,7 @@ set -uo pipefail
 ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 cd "$ROOT"
 ATLAS="33god-platform/scripts/atlas.py"
-PATHS=(33god-platform/components 33god-platform/components.yaml 33god-platform/atlas)
+PATHS=(33god-platform/components 33god-platform/components.yaml 33god-platform/atlas 33god-platform/manual/sandbox/src/cast.generated.json)
 OUT="${XDG_STATE_HOME:-$HOME/.local/state}/atlas-drift"
 mkdir -p "$OUT"
 DAY="$(date +%F)"

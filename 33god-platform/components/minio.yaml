@@ -24,3 +24,5 @@ relations: []
 evidence:
 - docker ps
 confidence: medium
+factory:
+  near: archive

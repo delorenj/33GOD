@@ -3,6 +3,9 @@
 import { create } from 'zustand'
 import { isPortrait, type Vec3 } from '../content'
 import { ui, useWorld } from '../sim/store'
+import type { VisitKind } from '../assets/contract'
+import { assetFor } from '../assets/registry'
+import { emitVisit } from '../assets/visits'
 import { direct, type Direction, type Stop } from './director'
 import { fanoutView, pairView, spotOf, viewFor } from './stations'
 import type { Waybill } from './types'
@@ -70,6 +73,25 @@ export function cameraFor(stop: Stop, dir: Direction): { pos: Vec3; target: Vec3
   return { pos, target }
 }
 
+const KIND_OF: Partial<Record<Stop['hero'], VisitKind>> = { parcel: 'parcel', postit: 'post', envelope: 'env', card: 'env', slip: 'summary' }
+
+/** The playhead enters a stop: every component of it that has an asset gets a visit (a station asset by its station,
+ *  a kiosk asset by its id). The readers a post-it fans out to are not visited, only the component the stop is about. */
+function visitStop(stop: Stop, dir: Direction) {
+  const kind = KIND_OF[stop.hero] ?? 'post'
+  const readers = new Set((stop.fanout?.flatMap((f) => f.consumers.map((c) => c.component)) ?? []).filter((c) => dir.placement.setOf[c] !== stop.set))
+  const seen = new Set<string>()
+  for (const c of stop.components) {
+    if (readers.has(c)) continue
+    const a = assetFor(c)
+    if (!a) continue
+    const key = a.station ? `station:${a.station}` : `id:${a.id}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    emitVisit(key, { kind, source: 'waybill', stop: stop.id, tag: stop.title })
+  }
+}
+
 function fly(stop: Stop, dir: Direction) {
   const v = cameraFor(stop, dir)
   useWorld.setState((s) => ({ focus: { id: 'custom', nonce: (s.focus?.nonce ?? 0) + 1, view: v } }))
@@ -91,7 +113,7 @@ export const wb = {
     })
     useWorld.setState({ mode: 'waybill', intro: false, paused: true, station: null, inspect: null, bulb: null, mapOpen: false })
     document.body.classList.add('waybill-on')
-    if (dir.stops[first]) fly(dir.stops[first], dir)
+    if (dir.stops[first]) { fly(dir.stops[first], dir); visitStop(dir.stops[first], dir) }
   },
   go(i: number) {
     const { dir } = useWb.getState()
@@ -101,6 +123,7 @@ export const wb = {
     wbClock.t = dir.stops[k].t0
     useWb.setState({ stop: k, ended: dir.stops[k].kind === 'end', sel: null })
     fly(dir.stops[k], dir)
+    visitStop(dir.stops[k], dir)
   },
   next() { const s = useWb.getState(); if (s.dir && s.stop < s.dir.stops.length - 1) wb.go(s.stop + 1); else useWb.setState({ playing: false }) },
   prev() { const s = useWb.getState(); if (s.stop > 0) wb.go(s.stop - 1) },

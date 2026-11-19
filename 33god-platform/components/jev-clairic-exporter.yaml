@@ -44,3 +44,5 @@ confidence: medium
 notes: Related Candybar job jev-rollup-cadence ticks bloodbank turn events into the vault.
 surfaces:
 - systemd:jev-clairic-exporter.service
+factory:
+  near: staffing

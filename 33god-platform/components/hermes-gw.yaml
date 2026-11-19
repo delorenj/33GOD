@@ -51,3 +51,6 @@ confidence: high
 notes: Restart only via hermes-gateway-restart.
 surfaces:
 - systemd:hermes-gateway.service
+factory:
+  station: crew
+  aliases: [hermes-gateway]

@@ -40,3 +40,5 @@ confidence: high
 notes: LAN only (paired Wi-Fi ADB). Wax/Bloodbank persistence happens in the n8n workflow, not the bridge.
 surfaces:
 - systemd:delosip-ring-bridge.service
+factory:
+  near: soundwing

@@ -44,3 +44,5 @@ evidence:
 - bloodbank/cli/bb.py
 - bloodbank/CLAUDE.md:36
 confidence: high
+factory:
+  near: belt

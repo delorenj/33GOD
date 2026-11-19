@@ -34,3 +34,5 @@ confidence: medium
 notes: Ship-board lumps it into hermes-gw.
 surfaces:
 - systemd:hermes-dashboard.service
+factory:
+  near: control

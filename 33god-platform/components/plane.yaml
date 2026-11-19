@@ -36,3 +36,5 @@ surfaces:
 - container:plane-redis
 - container:plane-space
 - container:plane-worker
+factory:
+  near: crew

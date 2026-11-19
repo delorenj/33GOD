@@ -37,3 +37,5 @@ notes: Bloodbank facts bloodbank.evt.audio.earshot.* come from the Holocene uplo
   this watcher.
 surfaces:
 - systemd:earshot-folder.service
+factory:
+  near: soundwing

@@ -50,3 +50,5 @@ surfaces:
 - container:bloodbank-turn-enricher
 - producer:turn-enricher
 - repo:bloodbank/services/turn-enricher
+factory:
+  station: cataloguer

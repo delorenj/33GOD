@@ -24,3 +24,5 @@ relations: []
 evidence:
 - bloodbank/services/turn-enricher/main.py:19
 confidence: high
+factory:
+  near: entrance

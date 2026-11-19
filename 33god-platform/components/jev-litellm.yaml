@@ -27,3 +27,6 @@ confidence: high
 surfaces:
 - container:jev-litellm
 - container:jev-litellm-postgres
+factory:
+  near: staffing
+  aliases: [jev, ext:jev]

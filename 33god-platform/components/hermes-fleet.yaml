@@ -59,3 +59,5 @@ surfaces:
 - producer:hermes-agent
 - producer:hermes-agent:*
 - repo:hermes-agent-template
+factory:
+  near: crew

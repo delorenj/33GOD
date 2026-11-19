@@ -72,3 +72,5 @@ confidence: medium
 surfaces:
 - producer:inbox-watcher
 - systemd:holocene-inbox-watcher.service
+factory:
+  station: control

@@ -82,3 +82,5 @@ surfaces:
 - producer:pilot
 - repo:pilot
 - systemd:pilot-harvest-worker.service
+factory:
+  near: crew

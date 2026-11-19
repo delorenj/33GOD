@@ -52,3 +52,5 @@ surfaces:
 - systemd:vinyl-tray.service
 - systemd:vinyld-serve.service
 - systemd:vinyld.service
+factory:
+  near: soundwing

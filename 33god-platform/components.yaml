@@ -137,6 +137,29 @@ people:
   - inbox-watcher
   - vox
 
+# Factory extras (Factory floor, manual/sandbox): ids a waybill or the old floor table can name that are NOT
+# registry components (vendor CLIs and the devices around them). Each stands at a `station` or in a kiosk `near`
+# one, exactly like a component's `factory:` block. Rendered into src/cast.generated.json by atlas.py.
+factory_extras:
+  ext:claude-code: {station: bays, name: Claude Code}
+  ext:codex: {station: bays, name: Codex}
+  ext:codex-cli: {station: bays, name: Codex CLI}
+  ext:codex-desktop: {station: bays, name: Codex Desktop}
+  ext:codex-exec: {station: bays, name: Codex exec (headless)}
+  ext:copilot: {station: bays, name: GitHub Copilot CLI}
+  ext:gemini: {station: bays, name: Gemini CLI}
+  ext:kimi: {station: bays, name: Kimi CLI}
+  ext:opencode: {station: bays, name: opencode CLI}
+  ext:unknown: {station: bays, name: Unknown agent CLI}
+  ext:codex-mcp-helper-reaper: {near: bays, name: codex-mcp-helper-reaper}
+  ext:hook-command: {near: bays, name: Other hook command}
+  ext:nanoleaf: {near: bays, name: Nanoleaf panels}
+  ext:stream-deck: {near: bays, name: Stream Deck}
+  ext:zellij: {near: bays, name: Zellij}
+  zellij-notify: {near: bays, name: zellij-notify}
+  unknown: {near: belt, name: Unattributed span}
+  waybill: {near: belt, name: Waybill recorder}
+
 # Surfaces the drift audit (`atlas.py audit --live`) sees on the host that are NOT
 # 33GOD components: the desktop session, household services, and the client and
 # product projects that run on 33GOD. A component claims its own surfaces in its

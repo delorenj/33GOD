@@ -75,3 +75,5 @@ surfaces:
 - repo:pjangler
 - systemd:pjangler-journal-notebook.service
 - systemd:pjangler-project-registry.service
+factory:
+  near: crew

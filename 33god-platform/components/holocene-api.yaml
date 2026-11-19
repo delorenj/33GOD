@@ -88,3 +88,5 @@ evidence:
 confidence: high
 surfaces:
 - systemd:holocene-api.service
+factory:
+  station: control

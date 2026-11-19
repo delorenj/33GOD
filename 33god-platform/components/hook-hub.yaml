@@ -51,3 +51,6 @@ surfaces:
 - producer:hook-hub
 - repo:bloodbank/services/hook-hub
 - systemd:hook-hub.service
+factory:
+  station: dock
+  aliases: [hook-hub-receipts]

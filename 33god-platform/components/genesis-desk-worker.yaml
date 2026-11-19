@@ -33,3 +33,5 @@ relations:
 evidence:
 - /home/delorenj/code/genesis
 confidence: medium
+factory:
+  near: entrance

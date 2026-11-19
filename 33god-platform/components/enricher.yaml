@@ -52,3 +52,5 @@ notes: Backlog 0 pending at check.
 surfaces:
 - container:enricher
 - container:enricher-daprd
+factory:
+  station: cataloguer

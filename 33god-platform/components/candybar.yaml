@@ -96,3 +96,5 @@ surfaces:
 - producer:candybar
 - repo:candybar
 - systemd:candybar-unit-holder.service
+factory:
+  station: clock

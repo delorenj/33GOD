@@ -36,3 +36,5 @@ evidence:
 - systemctl --user list-timers (op-token-guard.timer next Sun 00:01)
 confidence: medium
 notes: Native timer outside Candybar.
+factory:
+  near: archive

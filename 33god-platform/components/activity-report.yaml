@@ -39,3 +39,5 @@ confidence: high
 notes: Scheduling goes through Candybar per project (skill section 4).
 surfaces:
 - producer:activity-report
+factory:
+  near: control

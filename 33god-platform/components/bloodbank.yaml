@@ -87,3 +87,5 @@ surfaces:
 - container:bloodbank-dapr-placement
 - container:bloodbank-nats
 - repo:bloodbank
+factory:
+  station: belt

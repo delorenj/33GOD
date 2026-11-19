@@ -33,3 +33,5 @@ confidence: medium
 notes: Operator-desktop sibling of wingman; platform relation not traced.
 surfaces:
 - systemd:shortwave-relay.service
+factory:
+  near: soundwing

@@ -34,3 +34,5 @@ relations:
 evidence:
 - /home/delorenj/HeyMa
 confidence: medium
+factory:
+  near: soundwing

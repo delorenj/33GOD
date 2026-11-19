@@ -1,69 +1,84 @@
-// Where each real component stands on the Factory floor during a waybill.
-// 1. A registry-id table maps known components to a station or a tour set (the canon cast table).
-// 2. Every other component gets an auto-placed KIOSK: a deterministic slot in an annex row near the
-//    station it is most related to, labelled with its REAL id. Adding a component never needs 3D work.
+// Where each real component stands on the Factory floor.
+// 1. The Atlas registry is the only table: every component's `factory:` block (station or near, plus aliases) and
+//    the `factory_extras` in components.yaml are rendered into cast.generated.json by atlas.py. Nothing is kept here.
+// 2. A component with a `station` IS that station. Every other component gets a KIOSK: a deterministic slot in an annex
+//    row beside the station it is `near`, labelled with its REAL id. Adding a component never needs 3D work.
+// 3. An id the cast does not know (a vendor CLI nobody listed, a new consumer name) still gets a kiosk, by kind.
+import cast from '../cast.generated.json' with { type: 'json' }
 import { VENDORS, type Vec3 } from '../content'
 import { BAY_X, BAY_Z, CATALOGUER, CREW, READERS } from '../sim/layout'
 import { setFor, type TourSet } from '../tour/sets'
 import type { Component, Waybill } from './types'
 
+// atlas.py reads this union to validate `station:` / `near:`: keep it one literal type.
 export type SetId =
   | 'bays' | 'courier' | 'dock' | 'labeldesk' | 'belt' | 'archive' | 'rules' | 'control' | 'cataloguer' | 'clock' | 'crew'
   | 'entrance' | 'voxxy' | 'library' | 'staffing' | 'soundwing'
 
-/** Registry id -> station / set. Canon: manual/world/warehouse-bible.md section 4.1. */
-export const STATION_OF: Record<string, SetId> = {
-  'ext:claude-code': 'bays', 'ext:codex-cli': 'bays', 'ext:codex-desktop': 'bays', 'ext:codex-exec': 'bays',
-  'claude-code': 'bays', 'codex': 'bays', 'codex-desktop': 'bays', 'ext:kimi': 'bays', 'ext:gemini': 'bays', 'ext:copilot': 'bays', 'ext:opencode': 'bays',
-  'bb-hook': 'courier',
-  'hook-hub': 'dock',
-  'event-contract': 'labeldesk', 'naming-contract': 'labeldesk', 'holyfields': 'labeldesk',
-  // the dock's poster: a publish passes the label desk on its way to the belt
-  'agent-hooks': 'labeldesk',
-  'bb-nats': 'belt', 'bloodbank': 'belt', 'nats': 'belt',
-  'candystore': 'archive', 'candystore-daprd': 'archive',
-  'holocene': 'control', 'holocene-api': 'control', 'team-dashboard': 'control', 'inbox-watcher': 'control',
-  'enricher': 'cataloguer', 'enricher-daprd': 'cataloguer', 'turn-enricher': 'cataloguer',
-  'n8n': 'rules', 'n8n-nodes-bloodbank': 'rules',
-  'candybar': 'clock',
-  'hermes-gw': 'crew', 'hermes-gateway': 'crew', 'hermes-bloodbank-plugin': 'crew',
-  'hindsight': 'library',
-  'aai-gateway': 'staffing', 'aai-llm-observability': 'staffing', 'automaticai-gateway': 'staffing',
-  'agent-pad': 'entrance',
-  'vox': 'voxxy', 'voxxy': 'voxxy',
-  'wax': 'soundwing', 'heyma': 'soundwing', 'waxd': 'soundwing',
+interface CastComponent { name: string; summary: string; domain: string; first_party: boolean; station: SetId | null; near: SetId | null; aliases: string[] }
+interface CastExtra { name: string; station: SetId | null; near: SetId | null }
+interface Cast {
+  format: string; version: number; digest: string
+  components: Record<string, CastComponent>
+  aliases: Record<string, string>
+  extras: Record<string, CastExtra>
+}
+const CAST = cast as unknown as Cast
+if (CAST.format !== '33god.factory-cast' || CAST.version !== 1) throw new Error(`cast.generated.json: unknown format ${CAST.format} v${CAST.version}; run: python3 33god-platform/scripts/atlas.py render`)
+
+export const CAST_DIGEST = CAST.digest
+
+/** Where a component stands: its station, or the station its kiosk stands beside. `id` is the canonical id (a registry id or an extra). */
+export interface Stand { id: string; name: string; registry: boolean; station: SetId | null; near: SetId | null }
+
+const standCache = new Map<string, Stand | null>()
+/** Resolve any id a waybill or an older table uses: a registry id, an alias, an `ext:` id, or a registry extra. */
+export function standOf(id: string): Stand | null {
+  if (standCache.has(id)) return standCache.get(id)!
+  const direct = (k: string): Stand | null => {
+    const c = CAST.components[k] ?? CAST.components[CAST.aliases[k]]
+    if (c) { const rid = CAST.components[k] ? k : CAST.aliases[k]; return { id: rid, name: c.name, registry: true, station: c.station, near: c.near } }
+    const e = CAST.extras[k]
+    return e ? { id: k, name: e.name, registry: false, station: e.station, near: e.near } : null
+  }
+  const s = direct(id) ?? (id.startsWith('ext:') ? direct(id.slice(4)) : direct(`ext:${id}`))
+  standCache.set(id, s)
+  return s
 }
 
-/** Components with no station of their own: which station their kiosk stands beside. */
-const NEAR: Record<string, SetId> = {
-  'asm': 'dock', 'redis': 'dock', 'skillex': 'dock', 'hook-hub-receipts': 'dock', 'crank': 'dock', 'crank-engine': 'dock',
-  'ext:nanoleaf': 'bays', 'ext:orca': 'bays', 'ext:stream-deck': 'bays', 'ext:zellij': 'bays', 'zellij-notify': 'bays', 'asm-orcapaint': 'bays', 'asm-tabpaint': 'bays',
-  'ntfy-router': 'control', 'deckard': 'control', 'ext:ntfy': 'control', 'monitoring': 'control',
-  'artifact-sidecar': 'archive', 'vault-projector': 'archive', 'bb-dapr': 'archive', 'curator': 'archive',
-  'cost-bridge': 'staffing', 'jev': 'staffing', 'ext:jev': 'staffing', 'jev-clairic-exporter': 'staffing',
-  'agents-registry': 'crew', 'flume': 'crew', 'pjangler': 'crew',
-  'transcribe': 'soundwing', 'vinyl': 'soundwing',
+/** Id -> station / set, for every registry id, alias and extra the cast names. */
+export const STATION_OF: Record<string, SetId> = {}
+/** Id -> the station its kiosk stands beside, for every id that has no station of its own. */
+export const NEAR: Record<string, SetId> = {}
+for (const id of [...Object.keys(CAST.components), ...Object.keys(CAST.aliases), ...Object.keys(CAST.extras)]) {
+  const s = standOf(id)
+  if (s?.station) STATION_OF[id] = s.station
+  else if (s?.near) NEAR[id] = s.near
 }
+
+/** Where a kiosk stands when the cast does not know the component at all: by the kind of thing it is. */
 const NEAR_BY_KIND: Record<string, SetId> = {
   cli: 'bays', device: 'bays', external: 'bays', bus: 'belt', store: 'archive', memory: 'library', model: 'staffing', 'handler-host': 'dock',
 }
 
-/** Annex rows: where kiosks line up beside a station, on open floor (checked against the props). */
-const ANNEX: Partial<Record<SetId, { start: Vec3; step: Vec3; row: Vec3; per: number }>> = {
-  dock: { start: [-13.4, 0, -3.0], step: [1.55, 0, 0], row: [0, 0, -1.5], per: 5 },
-  bays: { start: [-22.6, 0, 9.8], step: [0, 0, 1.7], row: [1.8, 0, 0], per: 3 },
-  control: { start: [-0.6, 0, 9.8], step: [1.7, 0, 0.2], row: [0, 0, 1.7], per: 3 },
+/** Annex rows: where kiosks line up beside a station, on open floor (src/sim/layout.ts and src/world/Props.tsx checked by tools/cast/selfcheck.ts). */
+export const ANNEX: Partial<Record<SetId, { start: Vec3; step: Vec3; row: Vec3; per: number }>> = {
+  dock: { start: [-13.4, 0, -3.0], step: [1.55, 0, 0], row: [0, 0, -1.5], per: 6 },
+  bays: { start: [-22.6, 0, 9.8], step: [0, 0, 1.5], row: [1.8, 0, 0], per: 4 },
+  control: { start: [-1.2, 0, 10.6], step: [1.7, 0, 0], row: [0, 0, 1.6], per: 3 },
   belt: { start: [-1.9, 0, 5.7], step: [1.6, 0, 0.15], row: [0, 0, 1.5], per: 3 },
-  archive: { start: [11.6, 0, 3.4], step: [0, 0, 1.55], row: [1.6, 0, 0], per: 4 },
-  library: { start: [6.4, 0, 12.2], step: [0, 0, 1.45], row: [-1.6, 0, 0], per: 3 },
+  archive: { start: [11.6, 0, 3.4], step: [0, 0, 1.55], row: [1.6, 0, 0], per: 5 },
+  library: { start: [6.4, 0, 12.2], step: [0, 0, 1.45], row: [-1.6, 0, 0], per: 5 },
   staffing: { start: [12.4, 0, -1.9], step: [-1.55, 0, 0], row: [0, 0, 1.4], per: 3 },
   cataloguer: { start: [6.3, 0, 0.7], step: [0, 0, -1.45], row: [1.5, 0, 0], per: 2 },
-  crew: { start: [4.2, 0, -11.6], step: [1.55, 0, 0], row: [0, 0, -1.4], per: 4 },
+  crew: { start: [4.2, 0, -11.6], step: [1.55, 0, 0], row: [0, 0, -1.4], per: 6 },
   clock: { start: [-3.6, 0, -10.2], step: [-1.55, 0, 0], row: [0, 0, -1.4], per: 4 },
   soundwing: { start: [17.2, 0, 2.6], step: [1.6, 0, 0], row: [0, 0, 1.5], per: 4 },
+  rules: { start: [-17.6, 0, -9.0], step: [1.5, 0, 0], row: [0, 0, -1.4], per: 6 },
+  entrance: { start: [-11.0, 0, 10.4], step: [1.5, 0, 0], row: [0, 0, 1.5], per: 3 },
 }
 
-export interface Kiosk { id: string; name: string; at: Vec3; near: SetId }
+export interface Kiosk { id: string; name: string; at: Vec3; near: SetId; /** a registry component (not a vendor extra or an unknown id) */ registry?: boolean }
 export interface Placement {
   /** component id -> station/set id, or 'kiosk:<component id>' */
   setOf: Record<string, string>
@@ -79,32 +94,85 @@ export function bayFor(cli: string, surface: string): number {
 }
 
 export function stationOf(c: Component | string): SetId | null {
-  const id = typeof c === 'string' ? c : c.id
-  return STATION_OF[id] ?? STATION_OF[id.replace(/^ext:/, '')] ?? null
+  return standOf(typeof c === 'string' ? c : c.id)?.station ?? null
 }
 
-/** Pure and deterministic: the same waybill always places the same kiosks in the same slots. */
+/** Slot `i` of a station's annex. Rows run on past the end of the table, so a slot always exists. */
+function slotAt(near: SetId, i: number): Vec3 {
+  const a = ANNEX[near] ?? ANNEX.dock!
+  const col = i % a.per
+  const row = Math.floor(i / a.per)
+  return [a.start[0] + a.step[0] * col + a.row[0] * row, 0, a.start[2] + a.step[2] * col + a.row[2] * row]
+}
+
+/** Every cast id that stands in a kiosk, in slot order: registry components (sorted), then extras (sorted), per station. */
+const castSlots = (() => {
+  const byNear: Partial<Record<SetId, string[]>> = {}
+  const add = (id: string, near: SetId | null, station: SetId | null) => { if (!station && near) (byNear[near] ??= []).push(id) }
+  for (const id of Object.keys(CAST.components).sort()) add(id, CAST.components[id].near, CAST.components[id].station)
+  for (const id of Object.keys(CAST.extras).sort()) add(id, CAST.extras[id].near, CAST.extras[id].station)
+  const slots = new Map<string, { near: SetId; index: number }>()
+  const count: Partial<Record<SetId, number>> = {}
+  for (const [near, ids] of Object.entries(byNear) as [SetId, string[]][]) {
+    ids.forEach((id, index) => slots.set(id, { near, index }))
+    count[near] = ids.length
+  }
+  return { slots, count }
+})()
+
+function kioskFor(id: string, name: string): Kiosk | null {
+  const s = castSlots.slots.get(id)
+  return s ? { id, name, at: slotAt(s.near, s.index), near: s.near, registry: !!CAST.components[id] } : null
+}
+
+let castPlaced: Placement | null = null
+/** The permanent floor: every registry component that has no station gets its kiosk, in the same slot every time.
+ *  Vendor extras get theirs too (registry: false). The ambient floor stands asset-bearing kiosks from this. */
+export function castPlacement(): Placement {
+  if (castPlaced) return castPlaced
+  const kiosks: Kiosk[] = []
+  const setOf: Record<string, string> = {}
+  for (const id of [...Object.keys(CAST.components), ...Object.keys(CAST.extras)].sort()) {
+    const s = standOf(id)!
+    if (s.station) { setOf[id] = s.station; continue }
+    const k = kioskFor(id, s.name)
+    if (k) { kiosks.push(k); setOf[id] = `kiosk:${id}` }
+  }
+  for (const [alias, id] of Object.entries(CAST.aliases)) setOf[alias] = setOf[id]
+  const kioskById: Record<string, Kiosk> = Object.fromEntries(kiosks.map((k) => [k.id, k]))
+  for (const [alias, id] of Object.entries(CAST.aliases)) if (kioskById[id]) kioskById[alias] = kioskById[id]
+  castPlaced = { setOf, kiosks, kioskById, bay: 0 }
+  return castPlaced
+}
+
+/** Pure and deterministic: the same waybill always places the same kiosks in the same slots.
+ *  A cast component keeps its permanent slot (the one castPlacement() uses); only ids the cast does not know
+ *  are appended after the cast's slots in the annex they belong to. */
 export function place(wb: Pick<Waybill, 'components' | 'origin'>): Placement {
   const setOf: Record<string, string> = {}
-  const byNear: Record<string, string[]> = {}
+  const unknown: Record<string, string[]> = {}
+  const kiosks: Kiosk[] = []
+  const seen = new Set<string>()
   for (const id of Object.keys(wb.components).sort()) {
-    const st = stationOf(id)
-    if (st) { setOf[id] = st; continue }
-    const near = NEAR[id] ?? NEAR[id.replace(/^ext:/, '')] ?? NEAR_BY_KIND[wb.components[id].kind] ?? 'dock'
-    ;(byNear[near] ??= []).push(id)
+    const s = standOf(id)
+    if (s?.station) { setOf[id] = s.station; continue }
+    const k = s && kioskFor(s.id, wb.components[s.id]?.name ?? wb.components[id]?.name ?? s.name)
+    if (k) {
+      setOf[id] = `kiosk:${k.id}`
+      if (!seen.has(k.id)) { seen.add(k.id); kiosks.push(k) }
+      continue
+    }
+    const near = NEAR_BY_KIND[wb.components[id].kind] ?? 'dock'
+    ;(unknown[near] ??= []).push(id)
     setOf[id] = `kiosk:${id}`
   }
-  const kiosks: Kiosk[] = []
-  for (const [near, ids] of Object.entries(byNear)) {
-    const a = ANNEX[near as SetId] ?? ANNEX.dock!
-    ids.forEach((id, i) => {
-      const col = i % a.per
-      const row = Math.floor(i / a.per)
-      const at: Vec3 = [a.start[0] + a.step[0] * col + a.row[0] * row, 0, a.start[2] + a.step[2] * col + a.row[2] * row]
-      kiosks.push({ id, name: wb.components[id]?.name ?? id, at, near: near as SetId })
-    })
+  for (const [near, ids] of Object.entries(unknown) as [SetId, string[]][]) {
+    ids.forEach((id, i) => kiosks.push({ id, name: wb.components[id]?.name ?? id, at: slotAt(near, (castSlots.count[near] ?? 0) + i), near, registry: false }))
   }
-  return { setOf, kiosks, kioskById: Object.fromEntries(kiosks.map((k) => [k.id, k])), bay: bayFor(wb.origin.cli, wb.origin.surface) }
+  const kioskById: Record<string, Kiosk> = Object.fromEntries(kiosks.map((k) => [k.id, k]))
+  // a waybill's alias (hermes-gateway) answers to the same kiosk as the registry id (hermes-gw)
+  for (const [id, set] of Object.entries(setOf)) if (set.startsWith('kiosk:') && !kioskById[id]) kioskById[id] = kioskById[set.slice(6)]
+  return { setOf, kiosks, kioskById, bay: bayFor(wb.origin.cli, wb.origin.surface) }
 }
 
 /** The point on a station where the hero object rests and fan-out copies land. */

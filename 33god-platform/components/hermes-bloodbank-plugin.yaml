@@ -44,3 +44,5 @@ evidence:
 confidence: high
 surfaces:
 - repo:bloodbank/services/hermes-gateway
+factory:
+  station: crew

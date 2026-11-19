@@ -27,3 +27,5 @@ confidence: medium
 notes: Ship-board bundles it with curator.
 surfaces:
 - systemd:pdf2md-serve.service
+factory:
+  near: rules

@@ -51,3 +51,5 @@ evidence:
 confidence: medium
 surfaces:
 - systemd:candybar-executor.service
+factory:
+  near: clock

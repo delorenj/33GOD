@@ -39,3 +39,5 @@ confidence: medium
 surfaces:
 - container:bloodbank-farm-command-bridge-farm-command-bridge-1
 - repo:bloodbank/services/farm-command-bridge
+factory:
+  near: entrance

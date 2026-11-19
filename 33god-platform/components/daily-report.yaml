@@ -49,3 +49,5 @@ confidence: medium
 notes: Replaced candystore-daily-journal.
 surfaces:
 - producer:delonet-daily-report
+factory:
+  near: control

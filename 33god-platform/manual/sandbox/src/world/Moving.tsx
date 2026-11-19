@@ -74,6 +74,31 @@ const LOOK: Record<Flyer['look'], { color: string; size: [number, number, number
   scrapEnv: { color: '#B9A27E', size: [0.55, 0.38, 0.02], opacity: 0.9 },
 }
 
+export type ItemLook = 'parcel' | 'post' | 'summary' | 'copy' | 'env'
+
+/** One item passing through an asset, in the same look the floor gives it in flight (a courier's parcel, a post-it, a copy, an envelope). */
+export function ItemMesh({ look, tape = '#D97757' }: { look: ItemLook; tape?: string }) {
+  if (look === 'parcel')
+    return (
+      <group>
+        <RoundedBox args={[0.46, 0.36, 0.42]} radius={0.04} castShadow>
+          <meshStandardMaterial color={C.parcel} roughness={0.9} />
+        </RoundedBox>
+        <mesh position={[0, 0.185, 0]}>
+          <boxGeometry args={[0.47, 0.02, 0.1]} />
+          <meshStandardMaterial color={tape} />
+        </mesh>
+      </group>
+    )
+  const l = LOOK[look]
+  return (
+    <mesh castShadow={look !== 'copy'}>
+      <boxGeometry args={l.size} />
+      <meshStandardMaterial color={l.color} transparent={l.opacity < 1} opacity={l.opacity} roughness={0.85} />
+    </mesh>
+  )
+}
+
 function FlyerMesh({ f }: { f: Flyer }) {
   const m = useRef<THREE.Mesh>(null)
   const look = LOOK[f.look]

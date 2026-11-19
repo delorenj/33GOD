@@ -54,3 +54,5 @@ surfaces:
 - producer:antigravity-cli
 - producer:copilot*
 - repo:bloodbank/services/agent-hooks
+factory:
+  station: labeldesk

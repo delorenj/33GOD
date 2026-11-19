@@ -51,3 +51,5 @@ surfaces:
 - container:hindsight-litellm
 - container:hindsight-reranker
 - producer:hindsight-memory-analyzer
+factory:
+  station: library

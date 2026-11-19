@@ -28,3 +28,5 @@ confidence: high
 notes: Agent hook events from OpenCode sessions are claimed by agent-hooks (producer:opencode).
 surfaces:
 - systemd:opencode.service
+factory:
+  near: bays

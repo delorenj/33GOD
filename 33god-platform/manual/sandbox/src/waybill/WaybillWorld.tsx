@@ -1,11 +1,15 @@
 // The 3D layer of the waybill player. A PURE function of the playhead: the driver below advances one
 // number (wbClock.u, 0..1 through the current stop) and everything else reads it. No sim later().
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { isPortrait, type Vec3 } from '../content'
 import { BAY_X, BAY_Z } from '../sim/layout'
+import { AssetBody } from '../assets/AssetLayer'
+import { assetFor } from '../assets/registry'
+import { emitVisit } from '../assets/visits'
 import { Figure } from '../tour/TourWorld'
+import { useLive } from '../world/hidden'
 import { C } from '../world/Props'
 import { Tag } from '../world/Tag'
 import type { HeroForm, Stop } from './director'
@@ -213,6 +217,16 @@ function Copy({ tg, at, i, n, label }: { tg: Target; at: Vec3; i: number; n: num
   const start = 0.18 + (0.5 * i) / Math.max(1, n)
   const dur = 0.24
   const landed = useReached(start + dur * 0.9)
+  // a copy that really reached its reader (seen, not inferred) is a visit at that reader's asset
+  const sent = useRef(false)
+  useEffect(() => {
+    if (!landed) { sent.current = false; return }
+    if (sent.current || !tg.observed) return
+    sent.current = true
+    const a = assetFor(tg.component)
+    if (a) emitVisit(a.station ? `station:${a.station}` : `id:${a.id}`, { kind: 'post', look: 'copy', source: 'waybill', from: at, tag: tg.names.join(' · ') })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [landed])
   useFrame(() => {
     if (!m.current) return
     const place = (mesh: THREE.Mesh, e: number, k: number) => {
@@ -378,12 +392,22 @@ function Marker({ at, text, sub, amber, info }: { at: Vec3; text: string; sub?: 
 function KioskProp({ k, active, always }: { k: Kiosk; active: boolean; always: boolean }) {
   const lamp = useRef<THREE.MeshStandardMaterial>(null)
   useFrame(({ clock }) => { if (lamp.current) lamp.current.emissiveIntensity = active ? 1.1 + Math.sin(clock.getElapsedTime() * 6) * 0.35 : 0.05 })
+  // a kiosk with its own asset (src/assets/<id>) is drawn by that body instead of the generic box, once the body is in
+  const asset = assetFor(k.id)
+  const own = asset && !asset.station ? asset : null
+  const live = useLive((s) => !!own && (s.ids[own.id] ?? 0) > 0)
+  const height = own ? own.manifest.height * own.manifest.scale : 1.4
   return (
     <group position={[k.at[0], 0, k.at[2]]}>
-      <mesh position={[0, 0.5, 0]} castShadow><boxGeometry args={[0.7, 1.0, 0.5]} /><meshStandardMaterial color={C.control} roughness={0.7} /></mesh>
-      <mesh position={[0, 1.12, 0.05]} rotation={[-0.35, 0, 0]} castShadow><boxGeometry args={[0.74, 0.46, 0.06]} /><meshStandardMaterial color="#0F172A" roughness={0.4} /></mesh>
-      <mesh position={[0, 1.38, 0.05]}><sphereGeometry args={[0.1, 14, 10]} /><meshStandardMaterial ref={lamp} color="#FBBF24" emissive="#F59E0B" emissiveIntensity={0.05} /></mesh>
-      {(always || active) && <Tag position={[0, 1.9, 0]}><Label real={k.id} tone={active ? undefined : 'dim'} place={active ? undefined : 'kiosk'} /></Tag>}
+      {own && <Suspense fallback={null}><AssetBody entry={own} at={[0, 0, 0]} rotY={own.anchor?.rotY ?? 0} ambient /></Suspense>}
+      {!live && (
+        <>
+          <mesh position={[0, 0.5, 0]} castShadow><boxGeometry args={[0.7, 1.0, 0.5]} /><meshStandardMaterial color={C.control} roughness={0.7} /></mesh>
+          <mesh position={[0, 1.12, 0.05]} rotation={[-0.35, 0, 0]} castShadow><boxGeometry args={[0.74, 0.46, 0.06]} /><meshStandardMaterial color="#0F172A" roughness={0.4} /></mesh>
+          <mesh position={[0, 1.38, 0.05]}><sphereGeometry args={[0.1, 14, 10]} /><meshStandardMaterial ref={lamp} color="#FBBF24" emissive="#F59E0B" emissiveIntensity={0.05} /></mesh>
+        </>
+      )}
+      {(always || active) && <Tag position={[0, live ? height + 0.45 : 1.9, 0]}><Label real={k.id} tone={active ? undefined : 'dim'} place={active ? undefined : 'kiosk'} /></Tag>}
     </group>
   )
 }

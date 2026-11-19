@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
+import { STAGE_ID } from './assets/forge'
 import { music } from './audio/music'
 import { voice } from './audio/voice'
 import { BULBS, STATIONS, bulbById, stationById, type StationId } from './content'
@@ -268,6 +269,7 @@ function BulbModal() {
 }
 
 export function Hud() {
+  if (STAGE_ID) return null // the forge's turntable: the asset alone, no panels
   return (
     <>
       <HudInner />

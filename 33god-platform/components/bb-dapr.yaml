@@ -33,3 +33,6 @@ evidence:
 - docker ps
 confidence: high
 notes: Docs call Dapr the production runtime; live, producers bypass it.
+factory:
+  near: archive
+  aliases: [candystore-daprd, enricher-daprd]

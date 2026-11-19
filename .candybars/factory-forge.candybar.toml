@@ -1,0 +1,12 @@
+[candybar]
+name = "factory-forge"
+description = "Nightly Factory forge (I-10): pick one Atlas component, have a headless Claude Code agent build or polish its 3D asset, verify it independently, then commit, deploy and showcase it"
+tags = ["factory", "forge", "i-10", "llm"]
+schedule = "40 1 * * *"
+timezone = "America/New_York"
+enabled = false
+
+[candybar.runner]
+kind = "exec"
+argv = ["/home/delorenj/code/33GOD/33god-platform/scripts/factory-forge.sh"]
+timeout_s = 6000

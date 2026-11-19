@@ -29,3 +29,5 @@ surfaces:
 - container:cloudflare-tunnel
 - container:cloudflare-tunnel-automaticai
 - container:cloudflared-aai-cal
+factory:
+  near: entrance

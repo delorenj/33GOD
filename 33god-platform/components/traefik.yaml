@@ -51,3 +51,5 @@ evidence:
 confidence: high
 surfaces:
 - container:traefik
+factory:
+  near: entrance

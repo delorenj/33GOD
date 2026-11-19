@@ -44,3 +44,6 @@ notes: Output path Projects/<dir>/<YYYY-MM-DD>/<title>.
 surfaces:
 - repo:bloodbank/services/artifact-vault-projector
 - systemd:bloodbank-artifact-vault-projector.service
+factory:
+  near: archive
+  aliases: [vault-projector]

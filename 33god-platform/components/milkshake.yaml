@@ -81,3 +81,5 @@ surfaces:
 - producer:milkshake
 - systemd:milkshake-farm-consumer.service
 - systemd:milkshake-outbox.service
+factory:
+  near: staffing

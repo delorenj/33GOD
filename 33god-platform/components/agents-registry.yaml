@@ -24,3 +24,5 @@ relations: []
 evidence:
 - /home/delorenj/.hermes/agents-registry.yaml
 confidence: high
+factory:
+  near: crew

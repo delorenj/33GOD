@@ -68,3 +68,5 @@ surfaces:
 - container:candystore-daprd
 - container:candystore-postgres
 - repo:candystore
+factory:
+  station: archive

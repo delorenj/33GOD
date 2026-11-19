@@ -68,3 +68,5 @@ evidence:
 - krebs/tick/liveness.mjs
 confidence: high
 notes: Enabled live. The Python managed-execution engine (krebs-execution.service, Postgres schema krebs) was deleted 2026-11-18.
+factory:
+  near: crew

@@ -41,3 +41,5 @@ confidence: medium
 notes: Publisher off unless env set.
 surfaces:
 - producer:pr-crusher
+factory:
+  near: crew

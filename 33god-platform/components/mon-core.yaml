@@ -68,3 +68,6 @@ surfaces:
 - container:prometheus
 - container:uptime-kuma
 - repo:monitoring
+factory:
+  near: control
+  aliases: [monitoring]

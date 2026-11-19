@@ -17,13 +17,13 @@ staged="$(git diff --cached --name-only --diff-filter=ACMRD)"
 bash "$ROOT/33god-platform/aperture/scripts/charter-pre-commit.sh" "$@" || exit 1
 
 # 2. ATLAS GATE: the rendered views can never lag the registry they came from.
-if printf '%s\n' "$staged" | grep -qE '^33god-platform/(components/|components\.yaml$|atlas/|scripts/atlas\.py$)'; then
+if printf '%s\n' "$staged" | grep -qE '^33god-platform/(components/|components\.yaml$|atlas/|scripts/atlas\.py$|manual/sandbox/src/(cast\.generated\.json|waybill/stations\.ts)$)'; then
   ATLAS="$ROOT/33god-platform/scripts/atlas.py"
   if ! python3 "$ATLAS" render >/dev/null; then
     echo "ATLAS GATE: render failed; fix the registry (python3 33god-platform/scripts/atlas.py check)" >&2
     exit 1
   fi
-  git -C "$ROOT" add 33god-platform/atlas
+  git -C "$ROOT" add 33god-platform/atlas 33god-platform/manual/sandbox/src/cast.generated.json
   if ! python3 "$ATLAS" check >&2; then
     echo "ATLAS GATE: registry is invalid or a public field leaks internal detail (see above)" >&2
     exit 1

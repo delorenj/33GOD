@@ -49,3 +49,5 @@ notes: The live container was built from a Claude scratchpad checkout, not the r
 surfaces:
 - container:bloodbank-cost-bridge-cost-bridge-1
 - repo:bloodbank/services/cost-bridge
+factory:
+  near: staffing

@@ -35,3 +35,5 @@ notes: No schedule triggers allowed; Candybar fires recurring ones by webhook.
 surfaces:
 - producer:n8n
 - producer:n8n-plane-webhook
+factory:
+  station: rules

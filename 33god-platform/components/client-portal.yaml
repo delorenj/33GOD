@@ -52,3 +52,5 @@ evidence:
 confidence: low
 surfaces:
 - producer:project-cost-collector
+factory:
+  near: entrance

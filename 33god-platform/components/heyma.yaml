@@ -49,3 +49,5 @@ evidence:
 - /home/delorenj/HeyMa
 - 33god-platform/components/heyma.yaml
 confidence: high
+factory:
+  station: soundwing

@@ -12,6 +12,9 @@ import { Moving } from './Moving'
 import { Props } from './Props'
 import { TourCast, TourSets } from '../tour/TourWorld'
 import { WaybillWorld } from '../waybill/WaybillWorld'
+import { AssetLayer, ForgeStage, FrameProbe } from '../assets/AssetLayer'
+import { STAGE_ID } from '../assets/forge'
+import { FLAGS } from '../assets/flags'
 
 function Sim() {
   useFrame((_, dt) => step(dt))
@@ -32,7 +35,7 @@ export function Scene({ fx }: { fx: boolean }) {
       <color attach="background" args={['#EDE4D3']} />
       <fog attach="fog" args={['#EDE4D3', 55, 120]} />
       <hemisphereLight args={['#FFF8EE', '#B9A98F', 0.9]} />
-      <directionalLight
+      {!STAGE_ID && <directionalLight
         position={[18, 30, 16]}
         intensity={1.7}
         castShadow
@@ -42,7 +45,7 @@ export function Scene({ fx }: { fx: boolean }) {
         shadow-camera-top={24}
         shadow-camera-bottom={-24}
         shadow-bias={-0.0004}
-      />
+      />}
       {/* local studio lighting: no network fetch for an HDR */}
       <Environment resolution={256} frames={1}>
         <Lightformer intensity={1.2} position={[0, 10, 10]} scale={[30, 8, 1]} color="#FFF3DD" />
@@ -50,20 +53,29 @@ export function Scene({ fx }: { fx: boolean }) {
         <Lightformer intensity={0.5} position={[20, 6, -10]} rotation-y={-Math.PI / 2} scale={[20, 6, 1]} color="#FFE2C6" />
       </Environment>
 
-      <Props />
-      <Belt />
-      {!wbMode && <Moving />}
-      {!wbMode && <Bulbs />}
-      {!wbMode && <StationLabels />}
-      <TourSets />
-      <TourCast />
-      {wbMode && <WaybillWorld />}
+      {STAGE_ID ? (
+        // ?at=<id>&forge: the asset alone on the forge's turntable; no floor, no sim, no labels
+        <ForgeStage />
+      ) : (
+        <>
+          <Props />
+          <AssetLayer />
+          <Belt />
+          {!wbMode && <Moving />}
+          {!wbMode && <Bulbs />}
+          {!wbMode && <StationLabels />}
+          <TourSets />
+          <TourCast />
+          {wbMode && <WaybillWorld />}
 
-      <Sim />
-      <CameraRig />
-      <WheelNav />
-      <FogFollow />
-      <OrbitControls
+          <Sim />
+          <CameraRig />
+          <WheelNav />
+          <FogFollow />
+          {FLAGS.forge && <FrameProbe />}
+        </>
+      )}
+      {!STAGE_ID && <OrbitControls
         makeDefault
         target={ov.target}
         enableDamping
@@ -73,7 +85,7 @@ export function Scene({ fx }: { fx: boolean }) {
         mouseButtons={top ? { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN } : { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }}
         touches={top ? { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN } : { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
         maxPolarAngle={Math.PI / 2.08}
-      />
+      />}
       {fx && (
         <EffectComposer multisampling={4}>
           <Bloom mipmapBlur intensity={0.7} luminanceThreshold={1} luminanceSmoothing={0.2} />

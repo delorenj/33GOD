@@ -72,3 +72,6 @@ notes: |-
   (working/tool_running/delegating -> working; awaiting_human/idle -> waiting; failed and anything else fall back to
   the screen) and reports state_source and asm_state per pane, skipping the 2.5s re-dump when ASM answers. The
   on_since.json writer is retired (its reader only seeds new panes; remove after 2026-12-01).
+factory:
+  near: dock
+  aliases: [crank-engine]

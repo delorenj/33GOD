@@ -5,8 +5,13 @@ node = "24"
 description = "Run the factory sandbox with hot reload"
 run = "npm run dev"
 
+[tasks.assets]
+description = "Build the Factory floor's 3D assets (src/assets/<id>/build.py, forge/fixture) into public/assets/ with Blender; only stale glbs rebuild. Args: --force, --only id,id, --strict"
+run = "node tools/assets/build.mjs"
+
 [tasks.build]
-description = "Typecheck and build into ../books/sandbox (served live at manual.delo.sh/sandbox/)"
+description = "Build the assets, typecheck and build into ../books/sandbox (served live at manual.delo.sh/sandbox/)"
+depends = ["assets"]
 run = "npm ci --silent && npm run build"
 
 [tasks.deploy]

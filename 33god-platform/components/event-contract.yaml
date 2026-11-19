@@ -28,3 +28,6 @@ evidence:
 - bloodbank/services/agent-hooks/core/validate.py
 confidence: high
 notes: Subject bloodbank.<evt|cmd|rpy>.<domain>.<entity>.<action>; no version token.
+factory:
+  station: labeldesk
+  aliases: [naming-contract, holyfields]

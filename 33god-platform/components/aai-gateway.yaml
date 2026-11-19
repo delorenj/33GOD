@@ -46,3 +46,6 @@ confidence: medium
 notes: NewAPI deployment; routes must exist in ops/routes.json.
 surfaces:
 - producer:free-scout
+factory:
+  station: staffing
+  aliases: [automaticai-gateway]

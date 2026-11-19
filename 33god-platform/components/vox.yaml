@@ -34,3 +34,6 @@ confidence: medium
 surfaces:
 - container:vox
 - container:voxxy-engine-voxcpm
+factory:
+  station: voxxy
+  aliases: [voxxy]

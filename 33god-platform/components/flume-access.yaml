@@ -45,3 +45,5 @@ confidence: medium
 notes: No google-auth middleware by design; trust comes from the Access JWT.
 surfaces:
 - systemd:flume-access.service
+factory:
+  near: crew

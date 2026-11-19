@@ -43,3 +43,5 @@ confidence: medium
 notes: Desktop-only per ship-board.
 surfaces:
 - systemd:deckard.service
+factory:
+  near: control

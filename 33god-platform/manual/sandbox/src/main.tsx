@@ -1,6 +1,8 @@
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Hud } from './Hud'
+import { STAGE_ID, installForge } from './assets/forge'
+import { flyToComponent } from './assets/links'
 import { bulbById, stationById, type BulbId, type StationId } from './content'
 import { seed } from './sim/sim'
 import { ui, useWorld } from './sim/store'
@@ -31,10 +33,13 @@ function App() {
 }
 
 seed()
-// Deep links: ?walk skips the intro; ?at=<station> starts there; ?bulb=<id> opens a lightbulb; ?tour[=N] starts the tour (at stop N).
+installForge()
+// Deep links: ?walk skips the intro; ?at=<station> or ?at=<component id> starts there; ?bulb=<id> opens a lightbulb;
+// ?tour[=N] starts the tour (at stop N); ?at=<id>&forge frames that component's asset alone (src/assets/forge.ts).
 {
   const q = new URLSearchParams(location.search)
   const at = q.get('at')
+  if (STAGE_ID) useWorld.setState({ intro: false, paused: true })
   const bulb = q.get('bulb')
   if (q.has('walk') || at || bulb) useWorld.setState({ intro: false })
   if (q.has('tour')) {
@@ -48,6 +53,7 @@ seed()
     setTimeout(() => void loadFromUrl(wbUrl, Math.max(0, Number(q.get('stop') ?? 1) - 1) || 0), 300)
   }
   if (at && at in stationById) setTimeout(() => ui.openStation(at as StationId), 400)
+  else if (at && !STAGE_ID) setTimeout(() => { if (!flyToComponent(at)) console.warn(`[factory] ?at=${at}: no station or Atlas component by that id`) }, 400)
   if (bulb && bulb in bulbById) setTimeout(() => ui.openBulb(bulb as BulbId), 600)
 }
 createRoot(document.getElementById('root')!).render(

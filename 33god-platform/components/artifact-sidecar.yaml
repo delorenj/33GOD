@@ -44,3 +44,5 @@ surfaces:
 - producer:artifact-sidecar
 - repo:bloodbank/services/artifact-sidecar
 - systemd:bloodbank-artifact-sidecar.service
+factory:
+  near: archive

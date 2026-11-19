@@ -1,0 +1,16 @@
+{
+  "format": "33god.factory-asset",
+  "version": 1,
+  "id": "fixture",
+  "title": "Test crate (pipeline fixture, never on the floor)",
+  "placement": "kiosk",
+  "replaces": [],
+  "footprint": [0.9, 0.8],
+  "height": 1.25,
+  "scale": 1,
+  "rotationY": 0,
+  "handles": ["any"],
+  "clips": { "idle": "Idle", "accept": "Accept", "work": "Work", "emit": "Emit" },
+  "sockets": { "in": "socket_in", "hold": "socket_hold", "out": "socket_out" },
+  "budget": { "tris": 4000, "glbKB": 120 }
+}

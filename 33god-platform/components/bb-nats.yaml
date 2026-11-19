@@ -29,3 +29,6 @@ evidence:
 - curl :8222/jsz (streams BLOODBANK_EVENTS 7d, BLOODBANK_COMMANDS workqueue 1d)
 confidence: high
 notes: GIB_EVENTS stream belongs to an excluded game.
+factory:
+  station: belt
+  aliases: [nats]

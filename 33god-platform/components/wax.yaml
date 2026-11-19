@@ -57,3 +57,6 @@ confidence: medium
 surfaces:
 - producer:wax
 - systemd:waxd.service
+factory:
+  station: soundwing
+  aliases: [waxd]

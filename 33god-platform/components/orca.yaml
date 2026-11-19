@@ -27,3 +27,6 @@ confidence: high
 notes: Third-party app. asm-orcapaint (asm) writes ASM state onto its cards.
 surfaces:
 - systemd:orca-server.service
+factory:
+  near: bays
+  aliases: [ext:orca]

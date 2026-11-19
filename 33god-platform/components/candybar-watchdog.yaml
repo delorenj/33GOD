@@ -39,3 +39,5 @@ relations:
 evidence:
 - candybar/deploy/watchdog/README.md
 confidence: high
+factory:
+  near: clock

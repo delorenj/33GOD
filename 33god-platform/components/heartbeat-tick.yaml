@@ -39,3 +39,5 @@ confidence: medium
 notes: Hermes per-agent heartbeats were retired; this is only the sandbox sample.
 surfaces:
 - repo:bloodbank/services/heartbeat-tick
+factory:
+  near: belt

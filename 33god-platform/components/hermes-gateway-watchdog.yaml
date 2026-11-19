@@ -37,3 +37,5 @@ evidence:
 - systemctl --user show hermes-gateway-watchdog
 confidence: medium
 notes: Native clock outside Candybar with no recorded exception; same for asm-sweep, infra-doctor, op-token-guard.
+factory:
+  near: crew

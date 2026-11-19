@@ -24,3 +24,5 @@ relations: []
 evidence:
 - ~/.claude/CLAUDE.md LLM routing
 confidence: high
+factory:
+  near: staffing
