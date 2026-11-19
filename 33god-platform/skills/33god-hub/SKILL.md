@@ -1,6 +1,6 @@
 ---
 name: 33god-hub
-description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Plane/n8n ingress, Bloodbank events or commands, Candystore, Holocene, PJangler, Flume, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, Crank (pj crank, crank officer, zcrank-send), HeyMa, Stitch UX ideation and BMAD handoffs, hooks, Waybill prompt-flow recordings, changelogs, backfills, or local/cloud platform composition, especially when tracing a message end-to-end.
+description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Plane/n8n ingress, Bloodbank events or commands, Candystore, Holocene, PJangler, Flume, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, Crank (pj crank, crank officer, zcrank-send), HeyMa, Stitch UX ideation and BMAD handoffs, hooks, Waybill prompt-flow recordings, the Factory (the 3D warehouse picture of 33GOD at manual.delo.sh/sandbox, its Atlas-placed stations and the nightly factory-forge that builds each component's animated 3D asset), changelogs, backfills, or local/cloud platform composition, especially when tracing a message end-to-end.
 ---
 
 # 33GOD Hub
@@ -36,6 +36,7 @@ changelog, skill routing, and backfill coordination.
 | Recurring/scheduled work (cron, timers, nightly jobs, poll loops) | Candybar (the single clock; never cron or a new `.timer`) via the `candybar` skill |
 | Metrics, logs and operator observability | Monitoring stack + Prometheus/Loki/Grafana |
 | One prompt's end-to-end flight record (hooks, events, consumers, model calls) and its Factory replay | Waybill (`33god-platform/waybill`, `manual/sandbox`) via the `waybill` skill |
+| The Factory: the 3D warehouse of 33GOD, where each Atlas component stands on the floor, its 3D asset and animation, the nightly forge | The Factory (`33god-platform/manual/sandbox`) via the [the-factory sub-skill](subskills/the-factory/SUBSKILL.md) |
 | Audio and document enrichment pipelines; voice/transcription interface | HeyMa / Wax (the `heyma` hub); TTS via Vox |
 
 ## Platform skills
@@ -67,6 +68,7 @@ never auto-listed). Read the one that matches, then come back.
 |---|---|
 | Crank: turning it on or off, "is the crank alive?", `⚠ crank stalled`, a pane poked wrongly or never, crank.lua / Redis / prompt segment, the retired tab-keyed beat | [subskills/crank/SUBSKILL.md](subskills/crank/SUBSKILL.md) |
 | Starting non-trivial work in any 33GOD repo, two agents might share a checkout, or auditing stale worktrees (where they live, rebasing, land-or-delete) | [subskills/worktrees/SUBSKILL.md](subskills/worktrees/SUBSKILL.md) |
+| The Factory: placing a component on the 3D floor, its Atlas link, building or polishing a component's 3D asset and animation, the nightly factory-forge (a hub sub-skill with its own children; self-evolving) | [subskills/the-factory/SUBSKILL.md](subskills/the-factory/SUBSKILL.md) |
 
 ## Portability / external deployment
 

@@ -14,7 +14,8 @@ showcases it.
 | `../../scripts/factory-forge.sh` | The candybar's entry: lock, pick, brief, agent, verify, commit, deploy, showcase, ledger. |
 | `../tools/forge/shoot.py` | The agent's eyes and the verifier's: turntable, every clip across its length, a live visit, an in-situ shot, a contact sheet, a console log. |
 | `../tools/forge/glbcheck.py` | The independent glb validator (budget, clips, Idle seam, sockets, footprint, textures). |
-| `/home/delorenj/code/33GOD/.candybars/factory-forge.candybar.toml` | The schedule: 01:40 America/New_York, exec runner, timeout 6000 s. Registered **disabled**. |
+| `/home/delorenj/code/33GOD/.candybars/factory-forge.candybar.toml` | The schedule: 01:40 America/New_York, exec runner, timeout 6000 s. Enabled 2026-11-19 after the first shipped run (hook-hub). |
+| `33god-platform/skills/33god-hub/subskills/the-factory/` | The **the-factory** skill hub and its `factory-maintenance` child: the agent's procedure and the lessons earlier nights learned. Self-evolving: each run may fold lessons back in; the wrapper lints them (`factory_forge.py skill`) and lands them in their own commit, on a pass or a fail. |
 
 ## Which component tonight
 
@@ -32,7 +33,8 @@ until that file exists it falls back to the registry's `factory:` blocks, then t
 
 ## What the agent does
 
-Reads the contract and the warehouse bible, writes `NOTES.md` first (the metaphor, and which real behaviour each
+Follows the `factory-maintenance` skill (its "Forge one asset" steps; `PROMPT.md` is now only the identity, the
+hard rules and the run's facts). It reads the contract and the warehouse bible, writes `NOTES.md` first (the metaphor, and which real behaviour each
 clip plays, cited to the record), writes a deterministic `build.py` on the runtime's Blender harness
 (`tools/assets/blender_run.py`), runs `mise run assets`, then up to three rounds of: `shoot.py`, read the PNGs,
 critique against the rubric, improve. It writes only `src/assets/<id>/` and never commits.
@@ -73,6 +75,6 @@ component). Every run leaves its prompt, the agent's JSON, the verdict and the s
 
 ## Enabling the nightly
 
-The candybar is registered but paused. Prove one real run first (`factory-forge.sh --component <id>`), then
-`candybar resume factory-forge`. The wrapper writes `CANDYBAR_RESULT_FILE` with `metrics.token_spend` (input plus
+Enabled 2026-11-19 after a proven real run (`candybar run factory-forge --wait`: hook-hub shipped at `c1614d8`).
+`candybar pause factory-forge` stops it; `run` still works while paused. The wrapper writes `CANDYBAR_RESULT_FILE` with `metrics.token_spend` (input plus
 output tokens from the agent's JSON), so the cost block fills in after the first night.

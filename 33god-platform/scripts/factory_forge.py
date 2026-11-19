@@ -7,6 +7,7 @@ The nightly `factory-forge` candybar runs scripts/factory-forge.sh, which drives
     factory_forge.py prompt ID                                      the agent's brief for that component
     factory_forge.py snapshot --out FILE                            dirty-tree fingerprint, taken before the agent runs
     factory_forge.py verify ID [--baseline FILE] [--dist DIR]       independent post-run checks, JSON verdict
+    factory_forge.py skill [--baseline FILE]                        the run's lessons in the Factory skill: changed paths, lint
     factory_forge.py usage CLAUDE_JSON                              token totals from `claude -p --output-format json`
     factory_forge.py showcase ID --shots DIR --out DIR              the showcase page for a shipped asset
     factory_forge.py ledger add|show ...                            the run ledger (manual/sandbox/forge/ledger.json)
@@ -71,6 +72,10 @@ class Paths:
     def public_glb(self): return self.sandbox / "public" / "assets"
     @property
     def tools(self): return self.sandbox / "tools" / "forge"
+    @property
+    def skill_dir(self): return self.root / "skills" / "33god-hub" / "subskills" / "the-factory"
+    @property
+    def skill_entry(self): return self.skill_dir / "subskills" / "factory-maintenance" / "SUBSKILL.md"
 
     def asset_dir(self, cid: str) -> Path: return self.assets / cid
     def glb(self, cid: str) -> Path: return self.public_glb / cid / "model.glb"
@@ -81,6 +86,9 @@ class Paths:
 
     def scope_prefix(self, cid: str) -> str:
         return os.path.relpath(self.asset_dir(cid), self.repo_root()).replace(os.sep, "/") + "/"
+
+    def skill_prefix(self) -> str:
+        return os.path.relpath(self.skill_dir, self.repo_root()).replace(os.sep, "/") + "/"
 
 
 def _run(argv, cwd=None, env=None, timeout=STEP_TIMEOUT) -> subprocess.CompletedProcess:
@@ -312,6 +320,8 @@ def render_prompt(p: Paths, cid: str, mode: str | None = None) -> str:
            f"- **Mode:** {mode}" + (" (an asset exists: improve it, do not restart from nothing)" if mode == "polish" else " (no asset yet: build the first one)"),
            f"- **Run stamp for `forge.run`:** `{run}`",
            f"- **Your directory (the only place you may write):** `src/assets/{cid}/`  (absolute: `{p.asset_dir(cid)}`)",
+           f"- **Your skill (procedure + lessons; read it first, feed lessons back into it):** `{p.skill_entry}` "
+           f"(its directory `{p.skill_dir}/` is the only other place you may write)",
            f"- **Generated glb:** `public/assets/{cid}/model.glb` (by `mise run assets`; gitignored; never edit it)",
            f"- **Contract:** `{p.forge / 'CONTRACT.md'}`",
            f"- **Placement:** " + (f"it IS station `{c['station']}`: `placement: \"station\"`, and list the Props.tsx primitives it hides in `replaces`" if c.get("station")
@@ -428,20 +438,27 @@ def snapshot(p: Paths) -> dict:
     return {"head": head, "files": files}
 
 
-def scope_check(p: Paths, cid: str, before: dict | None) -> tuple[bool, str, list[str]]:
+def _changed(p: Paths, before: dict | None) -> tuple[dict, list[str]]:
     now = snapshot(p)
     was = (before or {"files": {}})["files"]
-    changed = sorted(k for k in set(now["files"]) | set(was) if now["files"].get(k) != was.get(k))
-    prefix = p.scope_prefix(cid)
+    return now, sorted(k for k in set(now["files"]) | set(was) if now["files"].get(k) != was.get(k))
+
+
+def scope_check(p: Paths, cid: str, before: dict | None) -> tuple[bool, str, list[str]]:
+    now, changed = _changed(p, before)
+    prefix, skill = p.scope_prefix(cid), p.skill_prefix()
     # The agent is briefed inside the platform; the monorepo around it has other writers (bus logs, submodule
     # pointers, parallel agents) whose edits during a 40-minute run are not the agent's doing. Watch the platform.
     plat = os.path.relpath(p.root, p.repo_root()).replace(os.sep, "/")
     plat = "" if plat == "." else plat + "/"
     elsewhere = [k for k in changed if not k.startswith(plat)]
-    stray = [k for k in changed if k.startswith(plat) and not k.startswith(prefix)]
-    inside = len(changed) - len(stray) - len(elsewhere)
+    lessons = [k for k in changed if k.startswith(skill)]
+    stray = [k for k in changed if k.startswith(plat) and not k.startswith(prefix) and not k.startswith(skill)]
+    inside = len(changed) - len(stray) - len(elsewhere) - len(lessons)
     moved = bool(before and before.get("head") and before["head"] != now["head"])
     detail = f"{len(changed)} path(s) changed, {inside} inside {prefix}"
+    if lessons:
+        detail += f", {len(lessons)} in the Factory skill (lessons)"
     if moved:
         detail += f"; HEAD moved {before['head'][:8]} -> {now['head'][:8]} during the run (commits are not in this diff)"
     if elsewhere:
@@ -449,6 +466,58 @@ def scope_check(p: Paths, cid: str, before: dict | None) -> tuple[bool, str, lis
     if stray:
         detail += "; OUTSIDE: " + ", ".join(stray[:12])
     return not stray, detail, stray
+
+
+# ---- the Factory skill (self-evolving: the agent feeds lessons back into it) ---------------------------
+
+_LINK = re.compile(r"\]\(([^)\s]+)\)")
+_FRONT = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+
+
+def skill_lint(p: Paths) -> list[str]:
+    """The self-evolving skill's invariants: a valid tree the next agent can route through, inside its budgets."""
+    probs: list[str] = []
+    root = p.skill_dir
+    if not (root / "SUBSKILL.md").exists():
+        return [f"{root}/SUBSKILL.md is missing"]
+    for f in sorted(root.rglob("*.md")):
+        rel = f.relative_to(root).as_posix()
+        if f.name == "SKILL.md":
+            probs.append(f"{rel}: a nested SKILL.md would be auto-listed; sub-skills are SUBSKILL.md")
+            continue
+        text = f.read_text(encoding="utf-8", errors="replace")
+        if f.name == "SUBSKILL.md":
+            m = _FRONT.match(text)
+            meta = (yaml.safe_load(m.group(1)) if m else None) or {}
+            if not (isinstance(meta, dict) and meta.get("name") and meta.get("description")):
+                probs.append(f"{rel}: frontmatter needs name and description")
+            budget = ((meta.get("metadata") or {}).get("budget_lines") if isinstance(meta, dict) else None) or 500
+            lines = text.count("\n")
+            if lines > int(budget):
+                probs.append(f"{rel}: {lines} lines, over its budget_lines {budget}: split a section into subskills/<name>/SUBSKILL.md")
+        for target in _LINK.findall(text):
+            if re.match(r"^[a-z]+:", target) or target.startswith("#"):
+                continue
+            if not (f.parent / target.split("#")[0]).exists():
+                probs.append(f"{rel}: link {target} does not resolve")
+    for sub in sorted(root.rglob("SUBSKILL.md")):
+        if sub.parent == root:
+            continue
+        parent_entry = sub.parent.parent.parent / "SUBSKILL.md"
+        rel_from_parent = sub.relative_to(parent_entry.parent).as_posix()
+        if not parent_entry.exists() or rel_from_parent not in parent_entry.read_text(encoding="utf-8", errors="replace"):
+            probs.append(f"{sub.relative_to(root).as_posix()}: its parent SUBSKILL.md has no route to {rel_from_parent}")
+    return probs
+
+
+def skill_report(p: Paths, before: dict | None) -> dict:
+    """What a run did to the Factory skill: the changed paths, whether they lint, whether it was dirty before."""
+    _, changed = _changed(p, before)
+    pre = p.skill_prefix()
+    mine = [k for k in changed if k.startswith(pre)]
+    dirty_before = sorted(k for k in (before or {"files": {}})["files"] if k.startswith(pre))
+    probs = skill_lint(p) if mine else []
+    return {"changed": mine, "ok": not probs, "problems": probs, "dirty_before": dirty_before}
 
 
 # ---- verify -------------------------------------------------------------------------------------------
@@ -600,7 +669,8 @@ def verify(p: Paths, cid: str, baseline: dict | None = None, dist: Path | None =
 
     failed = [c["name"] for c in checks if not c["ok"]]
     forge = (asset or {}).get("forge") if isinstance(asset, dict) else None
-    return {"id": cid, "pass": not failed, "failed": failed, "score": (forge or {}).get("score") if isinstance(forge, dict) else None,
+    skill = skill_report(p, baseline) if baseline is not None else {"changed": [], "ok": True, "problems": [], "dirty_before": []}
+    return {"id": cid, "pass": not failed, "failed": failed, "skill": skill, "score": (forge or {}).get("score") if isinstance(forge, dict) else None,
             "title": (asset or {}).get("title") if isinstance(asset, dict) else None, "shots": str(shots), "out": str(out),
             "stray_paths": stray, "checks": checks}
 
@@ -688,6 +758,8 @@ def main(argv=None) -> int:
     s = sub.add_parser("snapshot"); s.add_argument("--out", type=Path, required=True)
     s = sub.add_parser("verify"); s.add_argument("id"); s.add_argument("--baseline", type=Path); s.add_argument("--dist", type=Path)
     s.add_argument("--out", type=Path); s.add_argument("--skip-build", action="store_true"); s.add_argument("--skip-browser", action="store_true"); s.add_argument("--keep-dist", action="store_true")
+    s = sub.add_parser("skill", help="what a run did to the Factory skill (changed, lint) as JSON; exit 1 if it fails lint")
+    s.add_argument("--baseline", type=Path)
     s = sub.add_parser("usage"); s.add_argument("file", type=Path)
     s = sub.add_parser("showcase"); s.add_argument("id"); s.add_argument("--shots", type=Path, required=True); s.add_argument("--out", type=Path, required=True)
     s.add_argument("--tokens", help="JSON from `usage`"); s.add_argument("--commit", default="")
@@ -712,6 +784,11 @@ def main(argv=None) -> int:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(snapshot(p)))
         return 0
+    if a.cmd == "skill":
+        before = json.loads(a.baseline.read_text()) if a.baseline else None
+        rep = skill_report(p, before) if before is not None else {"changed": [], "ok": not skill_lint(p), "problems": skill_lint(p), "dirty_before": []}
+        print(json.dumps(rep, indent=1))
+        return 0 if rep["ok"] else 1
     if a.cmd == "verify":
         base = json.loads(a.baseline.read_text()) if a.baseline else None
         v = verify(p, a.id, base, a.dist, a.out, a.skip_build, a.skip_browser, a.keep_dist)

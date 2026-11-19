@@ -316,6 +316,66 @@ class MonorepoScopeTest(Tree):
         self.assertEqual(stray, ["plat/keep.txt"])
 
 
+class SkillTest(GitTree):
+    """The Factory skill is self-evolving: a forge run may write lessons into it, and they must keep it routable."""
+
+    def write_skill(self, budget=150, child_budget=200, child_lines=10, route=True):
+        hub = self.p.skill_dir
+        (hub / "subskills" / "factory-maintenance").mkdir(parents=True, exist_ok=True)
+        (hub / "SUBSKILL.md").write_text(
+            f"---\nname: the-factory\ndescription: hub\nmetadata:\n  budget_lines: {budget}\n---\n# hub\n"
+            + ("[go](subskills/factory-maintenance/SUBSKILL.md)\n" if route else "nothing\n"))
+        self.p.skill_entry.write_text(
+            f"---\nname: factory-maintenance\ndescription: leaf\nmetadata:\n  budget_lines: {child_budget}\n---\n"
+            + "line\n" * child_lines)
+
+    def commit_all(self):
+        subprocess.run(["git", "-C", str(self.root), "add", "-A"], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.root), "commit", "-qm", "skill"], check=True, capture_output=True)
+
+    def test_a_valid_tree_lints_clean(self):
+        self.write_skill()
+        self.assertEqual(ff.skill_lint(self.p), [])
+
+    def test_lessons_in_the_skill_dir_are_in_scope(self):
+        self.write_skill(); self.commit_all()
+        before = ff.snapshot(self.p)
+        with self.p.skill_entry.open("a") as f:
+            f.write("- a lesson (2026-11-19)\n")
+        ok, detail, stray = ff.scope_check(self.p, "a", before)
+        self.assertTrue(ok, detail)
+        self.assertIn("lessons", detail)
+        rep = ff.skill_report(self.p, before)
+        self.assertEqual((rep["ok"], rep["dirty_before"]), (True, []))
+        self.assertEqual(len(rep["changed"]), 1)
+
+    def test_over_budget_asks_for_a_split(self):
+        self.write_skill(child_budget=20, child_lines=40)
+        self.assertTrue(any("budget_lines" in x for x in ff.skill_lint(self.p)))
+
+    def test_a_nested_skill_md_and_a_dead_link_fail(self):
+        self.write_skill()
+        (self.p.skill_dir / "subskills" / "factory-maintenance" / "SKILL.md").write_text("---\nname: x\n---\n")
+        with self.p.skill_entry.open("a") as f:
+            f.write("[gone](references/nope.md)\n")
+        probs = ff.skill_lint(self.p)
+        self.assertTrue(any("nested SKILL.md" in x for x in probs), probs)
+        self.assertTrue(any("does not resolve" in x for x in probs), probs)
+
+    def test_a_split_child_needs_a_route_from_its_parent(self):
+        self.write_skill(route=False)
+        self.assertTrue(any("no route" in x for x in ff.skill_lint(self.p)))
+
+    def test_dirt_before_the_run_is_reported(self):
+        self.write_skill(); self.commit_all()
+        with self.p.skill_entry.open("a") as f:
+            f.write("operator edit\n")
+        before = ff.snapshot(self.p)
+        with self.p.skill_entry.open("a") as f:
+            f.write("agent lesson\n")
+        self.assertTrue(ff.skill_report(self.p, before)["dirty_before"])
+
+
 class ManifestTest(unittest.TestCase):
     def run_checks(self, m, cid="a", cast=None):
         return {n: (o, d) for n, o, d in ff.check_manifest(m, cid, cast if cast is not None else {"station": "dock"})}
@@ -456,6 +516,7 @@ class PromptTest(Tree):
         self.assertIn("it IS station `dock`", text)
         self.assertIn(str(self.p.forge / "CONTRACT.md"), text)
         self.assertIn("No finished asset exists yet", text)
+        self.assertIn(str(self.p.skill_entry), text)                   # the self-evolving skill it follows and feeds
 
     def test_polish_prompt_carries_the_previous_notes_score_and_exemplar(self):
         self.comp("a", factory={"station": "dock"}); self.comp("b"); self.cast(a="dock", b="belt")

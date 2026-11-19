@@ -7,7 +7,9 @@
 #   2. brief a headless Claude Code agent (PROMPT.md + the record + the contract) and let it build the asset
 #   3. verify independently (factory_forge.py verify): scope, manifest, glb, typecheck, build, selfcheck, browser
 #   4. PASS: commit ONLY src/assets/<id>/, push, deploy the Factory, publish a showcase page, log the run
-#      FAIL: restore src/assets/<id>/ to HEAD, log the run, exit 1
+#      FAIL: restore src/assets/<id>/ to HEAD (the agent's copy kept in the run dir), log the run, exit 1
+#      Either way the agent's lessons in the Factory skill (skills/33god-hub/subskills/the-factory/) land in their
+#      own commit when they lint (self-evolving skill)
 #
 #   factory-forge.sh [--component ID] [--dry-run] [--no-deploy] [--no-publish]
 #
@@ -147,9 +149,36 @@ restore() {  # exactly the asset dir, and the glb it generated (kept in the run 
   rm -rf "$SANDBOX/public/assets/$ID"          # a failed glb must never be served by the next build
 }
 
+SKILL_DIR="$PLATFORM/skills/33god-hub/subskills/the-factory"
+LESSONS=""
+land_skill() {  # the agent's lessons (self-evolving skill): commit the Factory skill on its own when they lint
+  local rep rc n dirty
+  rep="$("$PY" "$FORGE" skill --baseline "$RUN/baseline.json" 2>/dev/null)"; rc=$?
+  printf '%s\n' "$rep" > "$RUN/skill.json"
+  n="$("$PY" -c 'import json,sys; print(len(json.load(sys.stdin)["changed"]))' <<<"$rep" 2>/dev/null || echo 0)"
+  dirty="$("$PY" -c 'import json,sys; print(len(json.load(sys.stdin)["dirty_before"]))' <<<"$rep" 2>/dev/null || echo 0)"
+  [ "${n:-0}" -gt 0 ] || return 0
+  mkdir -p "$RUN/skill-after" && cp -a "$SKILL_DIR/." "$RUN/skill-after/"
+  if [ "${dirty:-0}" -gt 0 ]; then   # someone else's edits were already there: never commit or wipe them
+    LESSONS="lessons left uncommitted (the skill was dirty before the run)"; echo "factory-forge: $LESSONS" >&2; return 0
+  fi
+  if [ "$rc" -ne 0 ]; then
+    git -C "$REPO" checkout -q -- "$SKILL_DIR" 2>/dev/null; git -C "$REPO" clean -fdq -- "$SKILL_DIR" 2>/dev/null
+    LESSONS="lessons rejected (skill lint: see $RUN/skill.json)"; echo "factory-forge: $LESSONS" >&2; return 0
+  fi
+  git -C "$REPO" add -A -- "$SKILL_DIR" \
+    && git -C "$REPO" commit -q -m "docs(factory): forge lessons from the $ID $1 run" \
+         -m "Self-evolving skill: the nightly forge agent folded what this run taught it back into the-factory." \
+         -m "Co-Authored-By: Claude Code <noreply@anthropic.com>" -- "$SKILL_DIR" \
+    && { git -C "$REPO" push -q 2>/dev/null || { git -C "$REPO" pull -q --rebase --autostash && git -C "$REPO" push -q; }; } \
+    && LESSONS="lessons landed ($n path(s))" || LESSONS="lessons commit failed"
+  echo "factory-forge: $LESSONS"
+}
+
 # The agent never ran (no usable result from claude at all): an infrastructure error, not a verdict on the asset.
 if [ -z "$SUBTYPE" ] && [ "$CLAUDE_RC" -ne 0 ]; then
   restore
+  land_skill error
   ledger error "" "" "" "claude produced no result (exit $CLAUDE_RC): $(tail -c 300 "$RUN/claude.err" | tr '\n' ' ')"
   ledger_commit error || true
   done_fail "claude produced no result (exit $CLAUDE_RC); see $RUN/claude.err"
@@ -164,7 +193,8 @@ FAILED="$(jfield failed)"; SCORE="$(jfield score)"; TITLE="$(jfield title)"
 # ---- 4b. FAIL: put the tree back -------------------------------------------------------------------------
 if [ "$VERIFY_RC" -ne 0 ]; then
   restore
-  ledger failed "$SCORE" "" "" "verification failed: ${FAILED:-no verdict}" "$FAILED"
+  land_skill failed
+  ledger failed "$SCORE" "" "" "verification failed: ${FAILED:-no verdict}${LESSONS:+; $LESSONS}" "$FAILED"
   ledger_commit failed || echo "factory-forge: ledger not pushed" >&2
   done_fail "$MODE $ID failed verification (${FAILED:-no verdict}); asset dir restored, the agent's work kept in $RUN/asset-failed; verdict $RUN/verdict.json"
 fi
@@ -179,6 +209,8 @@ git -C "$REPO" push -q 2>/dev/null || { git -C "$REPO" pull -q --rebase --autost
   || done_fail "committed $ID but could not push"
 COMMIT="$(git -C "$REPO" log -1 --format=%h --fixed-strings --grep="feat(factory): $ID ")"
 NOTE=""
+land_skill shipped
+[ -n "$LESSONS" ] && NOTE="$LESSONS"
 
 if [ "$DEPLOY" = 1 ]; then
   ( cd "$SANDBOX" && "$MISE" run assets && "$MISE" run build ) > "$RUN/deploy.log" 2>&1 \
