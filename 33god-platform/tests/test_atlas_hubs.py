@@ -17,8 +17,8 @@ def node(nid, kind, name, root=None, health="ok", findings=(), **extra):
             "findings": list(findings), "source": extra.pop("source", None), **extra}
 
 
-def rec(cid, parent="", level="container", first_party=True):
-    return {"id": cid, "parent": parent, "level": level, "first_party": first_party}
+def rec(cid, parent="", level="container", first_party=True, status="live"):
+    return {"id": cid, "parent": parent, "level": level, "first_party": first_party, "status": status}
 
 
 COUNT = {"code": "W_SOURCE_HUB_COUNT", "severity": "warning", "message": "2 skills"}
@@ -38,8 +38,10 @@ GRAPH = {
         {"from": "skill:alpha", "to": "skill:wild", "kind": "loads"},
     ],
 }
-RECORDS = [rec("alpha"), rec("bus"), rec("bus-part", parent="bus", level="component"), rec("lonely")]
-REPOS = {"alpha": Path("/r/alpha"), "bus": Path("/r/bus"), "bus-part": Path("/r/bus"), "lonely": Path("/r/lonely")}
+RECORDS = [rec("alpha"), rec("bus"), rec("bus-part", parent="bus", level="component"), rec("lonely"),
+           rec("gone", status="retired")]
+REPOS = {"alpha": Path("/r/alpha"), "bus": Path("/r/bus"), "bus-part": Path("/r/bus"), "lonely": Path("/r/lonely"),
+         "gone": Path("/r/gone")}
 
 
 class HubsDocumentTest(unittest.TestCase):
@@ -64,7 +66,7 @@ class HubsDocumentTest(unittest.TestCase):
 
     def test_gaps_both_ways(self):
         self.assertEqual(self.doc["unjoined"], ["stray"])
-        self.assertEqual(self.doc["no_hub"], ["lonely"])
+        self.assertEqual(self.doc["no_hub"], ["lonely"], "a retired component is not a gap")
         self.assertNotIn("wild", self.hub)
 
     def test_the_committed_render_keeps_the_hubs_placeholder_empty(self):

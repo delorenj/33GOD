@@ -24,7 +24,7 @@ changelog, skill routing, and backfill coordination.
 | Dashboard, live status, tool health | Holocene |
 | Project bootstrap, CommonProject, project registry | PJangler |
 | Hiring, onboarding and reviewing agents; the org chart | Flume |
-| PM planning, delegation and reviewed closeout | Momo shared skill |
+| PM planning, delegation and reviewed closeout | Krebs (the `krebs` skill; Momo is retired) |
 | Ticket lifecycle: slots, dispatch, triage and review turns, orphan release | Krebs (`krebs tick`) |
 | Prodding idle agent sessions forward while the operator is away (one Candybar-clocked crank per session) | Crank (`pj crank`) via the [crank sub-skill](subskills/crank/SUBSKILL.md) |
 | Authenticated Plane CLI and provider operations | Pilot (`px`) |

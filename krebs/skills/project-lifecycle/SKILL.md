@@ -1,6 +1,6 @@
 ---
 name: project-lifecycle
-description: Read and update Plane tickets, comments, and board state for a requested project. Use for ticket CRUD, scoped board audits, and evidence-backed status updates. Route board execution to momo and new-project provisioning to 33god-projects.
+description: Read and update Plane tickets, comments, and board state for a requested project. Use for ticket CRUD, scoped board audits, and evidence-backed status updates. Route board execution to krebs and new-project provisioning to 33god-projects.
 ---
 # Plane ticket operations
 
@@ -28,7 +28,7 @@ for board surveys when full descriptions would swamp the result. A rejected
   setup to `33god-projects`, preserving the current task's authorization.
 - Artwork, mascots, and art-theme documents are optional requested deliverables.
 - A request to select a next ticket returns a recommendation. Starting work or
-  assigning it requires execution scope; route board orchestration to `momo`.
+  assigning it requires execution scope; route board orchestration to `krebs`.
 
 ## Ticket writes
 

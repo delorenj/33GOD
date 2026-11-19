@@ -777,7 +777,9 @@ def hubs_document(graph: dict[str, Any], records: list[dict[str, Any]], repos: d
         src = sources.get(str(repos[cid]))
         entry["repo_hubs"] = (src or {}).get("hubs", entry["hubs"])
         entry["health"] = max((h["health"] for h in hubs if h["name"] in entry["hubs"]), key=rank, default="ok")
-    first_party = {r["id"] for r in records if r["first_party"] and r["level"] != "component"}
+    # A retired component (Momo) is not a gap: nobody should write it a hub.
+    first_party = {r["id"] for r in records
+                   if r["first_party"] and r["level"] != "component" and r.get("status") != "retired"}
     return {
         "schema": 1,
         "graph_page": "skills.html",
