@@ -1,24 +1,32 @@
 # 33GOD component CLIs on PATH, each on a pinned runtime (Story 7.1).
 #
-#   python3 33god-platform/scripts/cli-launchers.py install   # write ~/.local/bin wrappers
-#   python3 33god-platform/scripts/cli-launchers.py check     # exit 6 on drift, 1 on a broken CLI
+#   python3 33god-platform/scripts/cli-launchers.py install        # write ~/.local/bin launchers
+#   python3 33god-platform/scripts/cli-launchers.py check          # (or --check) exit 6 on drift, 1 on a broken CLI
+#   python3 33god-platform/scripts/cli-launchers.py upgrade pj skillex   # npm i -g those, then rewrite their launchers
 #
 # Every Node CLI below gets a generated /bin/sh wrapper in bin_dir that execs the
 # pinned Node with the package's real `bin` entry (read from its package.json), so
 # the CLI runs the same from any cwd (a mise pin of node 20 included), any PATH
-# (Candybar, systemd, `env -i`) and on the Mac peer. The entry file is not moved:
-# px/pilot and flume still run from their 33GOD checkouts, pj from the npm global
-# install, skillex from its mise npm install.
+# (Candybar, systemd, `env -i`, `mise exec`) and on the Mac peer. The entry file is
+# not moved: px/pilot and flume still run from their 33GOD checkouts; pj and skillex
+# from the global npm prefix.
 #
 # Package kinds:
 #   repo:<path>        a checkout under the 33GOD root (this file's parent's parent)
-#   npm-global:<name>  `npm i -g` install, looked up in npm_global_roots, then in the
-#                      pinned Node's own lib/node_modules
-#   mise-npm:<name>    a mise `npm:<name>` tool, resolved with `mise where` from $HOME
-#                      at install time (re-run install after `mise up` moves it)
+#   npm-global:<name>  `npm i -g --prefix <npm_prefix>` install, looked up in npm_global_roots,
+#                      then in the pinned Node's own lib/node_modules. Upgraded with the
+#                      installer's `upgrade` command (bare `npm i -g` deletes the launchers).
+# There is deliberately no mise-npm kind: a `npm:<pkg>` mise tool's path carries a version
+# directory that `mise upgrade`/`mise prune` invalidates, and its shim runs whatever node is on
+# PATH. Do not add a global `npm:@delorenj/*` mise tool for a 33GOD CLI: it would shadow the launcher.
 #
+# [[script_cli]] is a non-Node executable in a checkout, symlinked into bin_dir.
 # Python CLIs are not wrapped: uv tool venvs and repo launchers already pin their
 # interpreter. `check` only proves each one runs under a minimal PATH.
+#
+# Probes (`probe` plus optional `probes`, each naming one bin): args, expect
+# (version | prefix:<text> | suffix:<text> | exit0), exit (default 0), env ({god_root} expands).
+# Bins with no safe live invocation (pjangler-mcp, pjangler-prompt) still get `node --check`.
 
 schema = 1
 bin_dir = "~/.local/bin"
@@ -27,21 +35,31 @@ bin_dir = "~/.local/bin"
 # prune does not break it. Every Node CLI here needs Node >= 24.
 node = "24"
 npm_global_roots = ["~/.local/lib/node_modules"]
+npm_prefix = "~/.local"
+# Where mise shims live; the mise-exec probe puts them ahead of bin_dir, as an activated agent shell does.
+mise_shims = "~/.local/share/mise/shims"
 
 [[node_cli]]
 package = "npm-global:@delorenj/pjangler"
 bins = ["pj", "pjangler", "pjangler-mcp", "pjangler-prompt"]
 probe = { bin = "pj", args = ["--version"], expect = "version" }
+probes = [{ bin = "pjangler", args = ["--version"], expect = "version" }]
 
 [[node_cli]]
 package = "repo:pilot"
 bins = ["px", "pilot", "px-supervised"]
 probe = { bin = "px", args = ["--version"], expect = "version" }
+# px-supervised prints its usage and exits 1 when run without a run id.
+probes = [
+  { bin = "pilot", args = ["--version"], expect = "version" },
+  { bin = "px-supervised", args = ["--help"], expect = "prefix:pilot: usage: px-supervised", exit = 1 },
+]
 
 [[node_cli]]
 package = "repo:flume/packages/flume-hr"
 bins = ["flume", "fl"]
 probe = { bin = "flume", args = ["--version"], expect = "version" }
+probes = [{ bin = "fl", args = ["--version"], expect = "version" }]
 
 [[node_cli]]
 # No --version flag; --help prints usage and exits 0 without ticking.
@@ -50,9 +68,16 @@ bins = ["krebs"]
 probe = { bin = "krebs", args = ["--help"], expect = "prefix:krebs:" }
 
 [[node_cli]]
-package = "mise-npm:@delorenj/skillex"
+package = "npm-global:@delorenj/skillex"
 bins = ["skillex"]
 probe = { bin = "skillex", args = ["--version"], expect = "version" }
+
+[[script_cli]]
+# Talk to the PM of the repo you are standing in (bare `hermes` is the one global Hermes).
+# --pm-launcher prints the launcher it would exec and runs nothing.
+name = "hermes-pm"
+source = "repo:hermes-agent-template/bin/hermes-pm"
+probe = { args = ["--pm-launcher"], expect = "suffix:agents/hermes/pm/hermes", env = { HERMES_PM_FROM = "{god_root}" } }
 
 [[python_cli]]
 name = "candybar"

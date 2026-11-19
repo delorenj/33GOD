@@ -89,29 +89,54 @@ Every 33GOD component CLI runs by its native name from any cwd and any PATH
 declares them; one idempotent installer writes the `~/.local/bin` wrappers:
 
 ```bash
-python3 scripts/cli-launchers.py install [--dry-run]   # write the wrappers, then probe every CLI
-python3 scripts/cli-launchers.py check                 # exit 6 on drift, 1 on a broken CLI; --json for the envelope
+python3 scripts/cli-launchers.py install [--dry-run]   # write the launchers, then probe every CLI
+python3 scripts/cli-launchers.py check                 # (or --check) exit 6 on drift, 1 on a broken CLI; --json for the envelope
+python3 scripts/cli-launchers.py upgrade pj skillex    # npm i -g those packages, then rewrite their launchers
+python3 scripts/cli-launchers.py upgrade skillex@0.4.10 --dry-run   # pin a version / show the plan only
+python3 scripts/cli-launchers.py upgrade --all         # every declared npm-global package
 ```
 
 - **Node CLIs** (pj, pjangler, px, pilot, flume, fl, krebs, skillex and their
   sibling bins) get a generated `/bin/sh` wrapper that execs mise's Node 24
   (`installs/node/24`, resolved with `mise where node@24`, installed on demand)
   with the package's real `bin` entry from its `package.json`. Entry files stay
-  where they are: px/pilot, flume and krebs run from their 33GOD checkouts, pj
-  from the `npm i -g --prefix ~/.local` install, skillex from its mise npm
-  install. A node 20 pin in the caller's cwd, or a different `node` first on
-  PATH, no longer changes the interpreter.
+  where they are: px/pilot, flume and krebs run from their 33GOD checkouts; pj
+  and skillex from the one npm install path, the global prefix `~/.local`
+  (`~/.local/lib/node_modules/@delorenj/<pkg>`). A node 20 pin in the caller's
+  cwd, or a different `node` first on PATH, no longer changes the interpreter.
+- **One install path for npm-distributed CLIs.** No generated path carries a
+  version directory (`mise/installs/<tool>/0.4.10/...`), so `mise upgrade` and
+  `mise prune` cannot strand a wrapper; a launcher whose entry would carry one
+  is refused (`E_VERSIONED_PATH`). There is no global `npm:@delorenj/*` mise tool
+  for a 33GOD CLI: its shim runs whatever node is on PATH and shadows the
+  launcher (skillex failed with `E_NODE_VERSION` in every repo pinning node < 24
+  until the global tool was dropped). Per-repo `npm:@delorenj/skillex` pins are
+  Story 7.6.
+- **Upgrade with `upgrade`, never bare `npm i -g`.** npm deletes the generated
+  launchers of the package it replaces (even with `--no-bin-links`) and refuses
+  with EEXIST while one exists. `upgrade` runs `npm i -g --prefix ~/.local --force
+  --no-bin-links <pkg>@latest` with the pinned Node's npm, then re-runs install
+  for those packages' launchers even when npm failed, so PATH is never left
+  without them. `repo:` packages (px, flume, krebs) update with git.
+- **Script entries** (`[[script_cli]]`: hermes-pm) are symlinked from a checkout
+  file into `~/.local/bin`; `check` covers drift and runs them. This is how
+  `hermes-pm` reaches the Mac peer.
 - **Python CLIs** (candybar, candystore, bb, wax, waybill) are not wrapped:
   their uv tool venvs and repo launchers already pin the interpreter. `check`
   probes them too.
-- Probes run each CLI twice from a scratch directory: under
-  `env -i HOME PATH=~/.local/bin:/usr/bin:/bin`, and again with a decoy `node`
-  first on PATH and a `mise.toml` pinning node 20 in the cwd. A version probe
-  must print the version in the package's `package.json`.
-- Re-run `install` after a package moves: `mise up` of skillex (its entry path
-  is resolved at install time), or a pjangler global reinstall. `npm i -g`
-  refuses to replace a wrapper (EEXIST), so reinstall with `--force` and then
-  re-run `install`. `check` reports the drift either way.
+- Probes run each CLI from a scratch directory in three environments: under
+  `env -i HOME PATH=~/.local/bin:/usr/bin:/bin`; with a decoy `node` first on
+  PATH and a `mise.toml` pinning node 20 in the cwd; and under
+  `mise exec -- <cli>` with mise, the mise shims dir and `~/.local/bin` on PATH
+  as an agent shell has them, in a scratch dir whose trusted `mise.toml` pins
+  node 20. The third is the one that catches a shim or mise tool shadowing the
+  launcher. Limitation: the global mise config's `[env]` runs `op read`; with
+  no 1Password session `mise exec` fails and the probe is skipped with a
+  `W_MISE_PROBE_SKIPPED` warning (never a silent pass; `--no-mise-probe` skips
+  it deliberately). Every bin of every package is probed with a no-side-effect
+  invocation where one exists (`--version`, `--help`, `--pm-launcher`) and
+  every Node launcher's entry also gets `node --check`, so pjangler-mcp and
+  pjangler-prompt are proven to exist and parse.
 - Exits follow the shared table: 0 ok, 1 failure, 2 usage/config, 4 partial,
   6 drift. Tests: `tests/test_cli_launchers.py`.
 

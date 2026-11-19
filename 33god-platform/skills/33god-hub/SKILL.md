@@ -153,6 +153,7 @@ cd ~/code/33GOD/33god-platform
 python3 scripts/platform.py validate
 python3 scripts/platform.py components list
 python3 scripts/platform.py backfills check
-python3 scripts/cli-launchers.py check     # every component CLI on PATH, on its pinned runtime
-python3 scripts/cli-launchers.py install   # (re)write the ~/.local/bin wrappers (README "Component CLIs on PATH")
+python3 scripts/cli-launchers.py check     # (or --check) every component CLI on PATH, on its pinned runtime, also under `mise exec`
+python3 scripts/cli-launchers.py install   # (re)write the ~/.local/bin launchers (README "Component CLIs on PATH")
+python3 scripts/cli-launchers.py upgrade pj skillex   # upgrade npm-distributed CLIs: never bare `npm i -g` (it deletes the launchers)
 ```
