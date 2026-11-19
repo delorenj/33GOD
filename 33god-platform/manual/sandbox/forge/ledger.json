@@ -1,5 +1,32 @@
 {
  "format": "33god.factory-forge-ledger",
  "version": 1,
- "runs": []
+ "runs": [
+  {
+   "run": "2026-11-19T00:25-0500",
+   "id": "hook-hub",
+   "mode": "build",
+   "outcome": "failed",
+   "score": 8.0,
+   "commit": null,
+   "tokens": {
+    "input": 89,
+    "output": 120801,
+    "cache_creation": 537140,
+    "cache_read": 7926534,
+    "total": 120890,
+    "cost_usd": 10.669169000000002,
+    "turns": 52,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built the receiving dock for hook-hub: an orange dock shed with an open top on a concrete platform with a hazard-striped edge, wearing the Bloodbank-blue copings and the sign rail where the floor's RECEIVING sign hangs. In Accept the parcel is caught at the conveyor end, passes under the label reader's flashing beam, and rolls in through the strip curtain to the bench. In Work the clerk turns to"
+   },
+   "showcase_url": null,
+   "duration_s": 2285.0,
+   "note": "verification failed: scope",
+   "failed": [
+    "scope"
+   ]
+  }
+ ]
 }
