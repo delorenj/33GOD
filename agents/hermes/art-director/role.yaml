@@ -133,7 +133,7 @@ provisioned_by: hermes-agent-template
 # The template commit this role was rendered from; `flume remediate
 # hermes.pm-scaffold` moves it when it refreshes the scaffold to a newer pin.
 # The pjangler shell prompt shows it as the PM's manifest version.
-template_rev: "19ded0acc35c8e14ddcb94dd4ebde2b4421b5384"
+template_rev: "3b9b7e89b95dc505031c36245a93effa17dd2781"
 deployment:
   local_only: false
   systemd: required
