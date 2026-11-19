@@ -8,7 +8,7 @@ compose:
   profiles: [integrations]
 health:
   commands:
-    - cd ../krebs && node bin/krebs.mjs tick --dry-run
+    - krebs tick --dry-run
 source_of_truth:
   - ../krebs/spec/lifecycle.v2.yaml
   - ../krebs/docs/lifecycle.md
