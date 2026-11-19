@@ -1,0 +1,1193 @@
+{
+  "generated": "2026-11-19",
+  "source": "wf_a7fb9246-1b8 (3 candidate trees, judged)",
+  "verdict": "Yes, a single-root balanced tree works with these skills. But it is a B-tree with 3 to 12 children per hub, not a red-black tree. A binary tree would need about 8 router reads per prompt; this one needs 2.7 on average (1 to 3 hops). All 134 inventory skills appear exactly once, along with the-factory and factory-maintenance under 33god-hub. On the 20 test prompts the final tree routes 20/20 with no wrong turns (the ownership-first tree got 15/20, the task-first tree 17/20); on 12 held-out prompts it gets 11/12. Saving: one 1023-char root description replaces the roughly 55.5k-char flat skill listing in every session's context. Cost: 23 new router files (SUBSKILL.md or catalog hubs), each with a description of at most 1024 chars; all are drafted and validated. What blocks it: (1) Activation has to change so only the root is listed. Generated routers must be SUBSKILL.md files so Hermes' rglob does not list them, and a pinned set (belsky-doctrine, artifacts, kapture, candybar, web-search, pillars) must stay listed during the transition, because CLAUDE.md and other skills load them by name. (2) mobile-devex is not in the current selection and must be added, or the mobile-release route goes nowhere. (3) 33god-hub is at the max of 12 after the Factory insert; the next addSkill triggers the operator-desktop rotation. (4) The BMAD and vendored Stripe merges are blocked upstream, so their overlaps are handled by hub routers, not by merging the skills. Ownership pins the parent first and balancing never moves a repo-owned subtree. The Skillex PM owns the addSkill, rotate, split and merge operations in skill-maintenance.",
+  "scores": [
+    {
+      "angle": "A ownership-first",
+      "routing_correct": 15,
+      "wrong_turns": 6,
+      "avg_hops": 2.6,
+      "comments": "Weighted 74.5/100 (routing 37.5/50, balance 12/15, non-overlap 9/15, ADR-0002 fidelity 9/10, change cost 7/10). The structure is sound: repo-owned subtrees sit under 33god-hub, so the bloodbank, pjangler, skillex and Factory prompts land in 3 hops. The misses are lexical and fixable with descriptions alone: (1) mobile release went to mise-versioning, a hand version bump that CLAUDE.md forbids, because mobile-devex was absent; (2) market research went to web-search; (3) 'did my hook fire' went to bloodbank instead of waybill; (4) client update went to personal and then recap; (5) 'ring me when my landlord texts' went to personal. It has fewer new hubs than B and keeps every vendored hub under its owning repo. It wins the composite."
+    },
+    {
+      "angle": "B task-first",
+      "routing_correct": 17,
+      "wrong_turns": 5,
+      "avg_hops": 2.75,
+      "comments": "Weighted 71/100 (routing 42.5/50, balance 10.5/15, non-overlap 9/15, ADR-0002 fidelity 4/10, change cost 5/10). Intent verbs catch research, client updates and hook proof well. But B splits repo-owned subjects across verb hubs: bloodbank-integration sits away from 33god-hub, so the Plane-webhook trace stalls in operate-and-debug. It uses 35 hubs (32 new) against A's 25. The skill-tree prompt has no owning leaf (it goes to bmad-workflow-builder). 'Humanize' is not on the root, so that trace backtracks. Every verb hub (operate, review, publish) overlaps another, so B's misses are structural rather than lexical. ADR-0002 fidelity is low because vendored hubs would need re-parenting away from their repos."
+    },
+    {
+      "angle": "FINAL (A plus B grafts)",
+      "routing_correct": 20,
+      "wrong_turns": 0,
+      "avg_hops": 2.7,
+      "comments": "20/20 with 0 wrong turns. On 12 held-out prompts it scores 11/12; the miss is 'create a worktree for flume', which lands on worktrunk (correct how-to) instead of the 33god-hub worktrees policy sub-skill. It starts from A and takes two grafts from B: bmad-deep-recon moves beside web-search in agent-tools, and a code-review hub groups code-reviewer, bmad-code-review, bmad-review and bmad-walkthrough. Every wrong turn is fixed at the root and in the hub descriptions, and 'Not here' pointers are added on the hubs that misrouted. Shape: 165 nodes, 23 new hubs, 3 existing hubs, 138 leaves. All 134 inventory skills appear exactly once (validated against skills-inventory.json). Inventory depth is at most 3 (mean 2.57); the deepest node is at depth 4 (heyma sub-skills). Fan-out standard deviation is 2.85."
+    }
+  ],
+  "tree": {
+    "angle": "Ownership-first B-tree (ADR-0002 repo-owned hubs under 33god-hub) with two task-first grafts from B and lexical root fixes for every wrong turn",
+    "root_description": "33GOD: Bloodbank events, Plane webhooks, hook fan-out, did my hook fire (Waybill), Candystore last session, PJangler projects, Skillex, skill tree, Flume/Hermes fleet, px tickets, Plane labels, Candybar: any cron/timer/nightly job, monitoring, daily report, client updates, Hindsight memory, AutomaticAI gateway, HeyMa transcripts, Vox TTS, ring me when someone texts, zellij, crank, Factory, Atlas. DeLoNET: host conventions, .env/1Password, MinIO artifacts, delo.sh sites, mobile releases, disk full. BMAD: PRD, spec, architecture, UX, epics, build, loop, personas, CIS, pitch decks, builder. Practice: Belsky doctrine, pillars, merge-forward, code review, PRs, delegation, recaps, event design. Repo toolchain: mise, versioning, worktrees, gitignore. Tools: browser, desktop, web search, deep research, code search. Writing: humanize, de-slop prose. Design: UI, shadcn, Stitch, posters. Vendors: Stripe, paying a provider, Metronome, Power Automate. Personal: family, house, kids' devices, client deals, document triage.",
+    "fanout_bounds": {
+      "min": 3,
+      "max": 12,
+      "why": "A router has to name every child with its trigger words inside the 1024-char description cap and stay under the ~200-line SKILL.md target. At about 80 chars per child that allows roughly 12 children. Below 3 children a hub costs a hop without narrowing the choice. With 134 leaves, a fan-out of 3 to 12 gives depth 2 to 3, so 2.7 router reads per prompt on average, against about 8 for a binary red-black tree. Exceptions: the-factory (1 child) and heyma (2) are existing hubs whose sub-skills hold real content, so the underflow-merge rule does not apply to them. the-factory is a self-evolving hub expected to grow. 33god-hub is at the max of 12."
+    },
+    "nodes": [
+      {
+        "id": "skills",
+        "parent": "",
+        "kind": "root",
+        "description": "33GOD: Bloodbank events, Plane webhooks, hook fan-out, did my hook fire (Waybill), Candystore last session, PJangler projects, Skillex, skill tree, Flume/Hermes fleet, px tickets, Plane labels, Candybar: any cron/timer/nightly job, monitoring, daily report, client updates, Hindsight memory, AutomaticAI gateway, HeyMa transcripts, Vox TTS, ring me when someone texts, zellij, crank, Factory, Atlas. DeLoNET: host conventions, .env/1Password, MinIO artifacts, delo.sh sites, mobile releases, disk full. BMAD: PRD, spec, architecture, UX, epics, build, loop, personas, CIS, pitch decks, builder. Practice: Belsky doctrine, pillars, merge-forward, code review, PRs, delegation, recaps, event design. Repo toolchain: mise, versioning, worktrees, gitignore. Tools: browser, desktop, web search, deep research, code search. Writing: humanize, de-slop prose. Design: UI, shadcn, Stitch, posters. Vendors: Stripe, paying a provider, Metronome, Power Automate. Personal: family, house, kids' devices, client deals, document triage."
+      },
+      {
+        "id": "33god-hub",
+        "parent": "skills",
+        "kind": "hub-existing"
+      },
+      {
+        "id": "delonet",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "DeLoNET, the home lab: hosts, network, and shipping things onto it. delonet-conventions: where code lives, shells, secrets, containers, CI runners, per-network facts by hostname or tailnet, peer hosts like Damian's Mac. delonet-dotenv: .env and .env.op for Compose stacks, 1Password references, Traefik/delo.sh routing, Postgres, MinIO, ports. artifacts: publish any HTML page, report, dashboard, image or file to MinIO and return the public s3.delo.sh link. spa-host: host a static site or built front end at a *.delo.sh subdomain, or take it down. mobile-devex: ship, check or debug a mobile app release through mobile-deploy-hub (TestFlight, S26/iPad installs, deploy policy); never bump a mobile version by hand. disk-space-maintenance: disk full, ENOSPC, docker eating disk, logs that regrow. Not here: monitoring (33GOD observability); the house and TVs (personal-and-business)."
+      },
+      {
+        "id": "bmad",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "The BMAD method in BMAD-enabled repos (_bmad/). bmad-help: what to do next, which BMAD skill. bmad-core: brainstorm, party mode, deeper critique, pressure-test an idea, customize BMAD. bmad-personas: talk to Mary, John, Winston, Sally or Amelia. bmad-planning: product brief, PRFAQ, PRD, spec, architecture, UX spec, epics and stories, sprint planning, correct course. bmad-delivery: build a story, unattended loop iteration, e2e tests, retrospective, AGENTS.md project context, bmad-loop setup, escalation resolve, deferred-work sweep. bmad-creative-suite: CIS coaches with design thinking, innovation strategy, problem solving, storytelling, slide and pitch decks. bmad-builder: build or analyze agents, workflows, modules; run skill evals. Not here: code review and walkthroughs (code-review under engineering-practice); deep or market research (bmad-deep-recon under agent-tools)."
+      },
+      {
+        "id": "engineering-practice",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "How Jarad wants software built, in any repo. belsky-doctrine: solve one abstraction level up; load before planning any fix, feature or support request. pillars: decision acceptance criteria, PILLARS.md, justifying a judgement call. merge-forward: smallest observable slice, merge to main fast across a root repo and components. code-review: every review of a diff, PR or change, BMAD lenses and walkthroughs included. pr-creator: open a requested pull request. subagent-driven-development: an explicitly requested implement-and-review team. detached-worker-completion: a delegated worker that outlives the launching session. recap: post-run HTML report of one long session. event-driven-architecture: Kafka, RabbitMQ, SQS, CQRS, sagas, DLQs, idempotency as design knowledge. Not here: periodic client or project updates (activity-report); BMAD builds (bmad)."
+      },
+      {
+        "id": "repo-toolchain",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "Tools for working inside any git repository. mise-configuration: mise tools, nonsecret env, wrapping a task with op run. mise-tasks: task graphs, depends, mise run, build pipelines. mise-versioning: semver bump workflow, version parity across manifests, --version reporting a stale version. worktrunk: wt create, switch, merge, remove git worktrees for parallel agents. gitignore-maintenance: slim a .gitignore against the global excludesFile, untrack ignored files with git rm --cached. Not here: mobile app versions, which ship only through mobile-devex (delonet); 33GOD worktree policy (33god-hub worktrees sub-skill); DeLoNET secret conventions (delonet)."
+      },
+      {
+        "id": "agent-tools",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "Reaching outside the repo: browsers, desktops, search and research. kapture: the browser on this machine (open, read, click, fill, screenshot, console, network). ego-browser: only the authenticated Chromium profile on the Mac. agent-workspace-linux: an isolated hidden desktop for unattended, parallel or destructive browser and GUI work. computer-use: native app windows and browser chrome via Orca accessibility trees. liam-dev: building or releasing liam, kapture's successor fork (not for using it). web-search: quick public web search and page fetch via Tavily/Brave (built-in WebSearch/WebFetch fail here). bmad-deep-recon: research to support a decision (market, domain, technical, competitive, literature): draft or digest a research prompt, or run parallel searches. codegraph-voyage: semantic and hybrid symbol search over indexed code."
+      },
+      {
+        "id": "writing",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "Prose quality: text that reads like a person wrote it. humanizer: rewrite text to strip AI-isms and add voice (34-pattern catalog). antislop: shared antislop review criteria, load with any antislop companion. antislop-copywriting: headlines, tone, CTAs and anti-AI patterns while writing copy. antislop-code: clean AI-slop code comments without touching code. Not here: UI copy and interface review (design)."
+      },
+      {
+        "id": "design",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "Visual and interface design. impeccable: design, critique, audit, polish or redesign any frontend (hierarchy, layout, typography, color, motion, responsive, accessibility, design systems). antislop-ui: anti-generic UI review of color, layout, components, motion. antislop-human: contrast, keyboard, focus and state accessibility with the contrast checker. shadcn-components: add or modify shadcn components in an existing repo. stitch: Stitch CLI UX ideation, screens, variants, mockups, handoff into BMAD UX. design-md: synthesize a DESIGN.md design system from a Stitch project. canvas-design: posters and static art as PNG or PDF. Not here: BMAD UX specs (bmad-ux); slide and pitch decks (bmad-creative-suite, Caravaggio)."
+      },
+      {
+        "id": "vendor-apis",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "Third-party vendor APIs. Stripe: stripe-best-practices (integration decisions: Checkout vs PaymentIntents, Connect, billing, tax, keys, webhooks), connect-recommend (marketplace or platform money flows, which Connect setup), connect-required-verification-information (KYC fields a connected account must provide), stripe-apps (Dashboard apps and extensions), upgrade-stripe (API version and SDK upgrades), stripe-docs (read docs.stripe.com), stripe-pay (send funds to a Stripe business), stripe-directory (identify a provider and how to pay or engage it), stripe-projects (provision a third-party service through Stripe Projects). metronome: usage-based billing, contracts, credits, Stripe sync. power-automate: author, run and debug Power Automate cloud flows and Teams workflows."
+      },
+      {
+        "id": "personal-and-business",
+        "parent": "skills",
+        "kind": "hub-new",
+        "description": "Jarad's own affairs outside platform engineering. Family and home: delorenzo-family (who his wife and kids are, names, ages, family trips), delohome (lights, Hue scenes, Z-Wave, TVs, casting, Jellyfin), delonet-parental-controls (AdGuard, router access control, kids' device blocks). Business: deal-position (AutomaticAI's chess-style snapshot of a client deal, before any pricing or offer email) and domain-triage (route inbound documents, emails and transcripts to the right company or client folder, e.g. JobHunting). Not here: a client-facing project update (activity-report) and watching a person's texts or calls to ring the phone (target-watch), both under 33god-hub."
+      },
+      {
+        "id": "the-factory",
+        "parent": "33god-hub",
+        "kind": "hub-existing"
+      },
+      {
+        "id": "crank",
+        "parent": "33god-hub",
+        "kind": "skill"
+      },
+      {
+        "id": "worktrees",
+        "parent": "33god-hub",
+        "kind": "skill"
+      },
+      {
+        "id": "bloodbank",
+        "parent": "33god-hub",
+        "kind": "hub-new",
+        "description": "Bloodbank repo: the 33GOD event and command bus and the services inside it (Atlas G1 Core Bus; agent-hooks and target-watch are G3 components living in this repo). bloodbank-integration: publish or consume events, schemas, NATS/Dapr subjects, CloudEvents, Plane webhook ingress via n8n, command dispatch, Candystore projection, tracing a message end to end. agent-config-fanout: hooks.master.json and the generated per-CLI hook configs (services/agent-hooks), mapping locks, adapters, a new CLI dialect, hook config drift. target-watch: services/target-watch: watch a person across email, texts, chats, calls and voicemail, alert me or ring my phone, add or stop a target, quiet hours. Not here: did a hook or event fire on one prompt (waybill, in observability); past sessions (candystore-context); generic brokers (event-driven-architecture)."
+      },
+      {
+        "id": "pjangler",
+        "parent": "33god-hub",
+        "kind": "hub-new",
+        "description": "PJangler repo: the 33GOD project registry and what it scaffolds (Atlas G5). projects: use pjangler, pj init/describe/audit/migrate, .project.json, CommonProject bootstrap, asking for a PM on a repo, BMAD install, hook and skill fan-out adoption, mise/.env.op wiring. project-jangler: develop pjangler itself, Commands, Recipes, registry code, templates, parity rules, CLI/MCP server, tests. project-notebook: Project Notebook, Git-grounded project memory, Overview, scoped notes, binding audits, capture receipts, notebook hooks. Not here: hiring the PM (agent-fleet-operations in orchestration); generic mise tasks and versioning (repo-toolchain)."
+      },
+      {
+        "id": "skillex",
+        "parent": "33god-hub",
+        "kind": "hub-new",
+        "description": "Skillex repo: the skill catalog and the skill tree itself (Atlas G5). skillex-skill-registry: import, select, sync, sets, packs, manifests, activation roots, repo-owned hub sources, diagnosing installed skills. skill-maintenance: audit a loadout, conflicting or duplicate skills, broad triggers, stale content, feeding session lessons back into a skill, and the self-evolving tree operations (addSkill: find where a new skill fits; balance/rotate; split an oversized skill; merge overlapping siblings). find-skills: the user asks to find, install or extend capabilities from upstream. Not here: hook dialects (agent-config-fanout); running a skill's evals (bmad-eval-runner)."
+      },
+      {
+        "id": "orchestration",
+        "parent": "33god-hub",
+        "kind": "hub-new",
+        "description": "Who works which ticket, and when (Atlas G8 Orchestration + G9 Scheduling). Workforce: agent-fleet-operations (flume hire/onboard/roster/review/audit, Hermes profiles, the single hermes-gateway, PM deployment, launch mode, voice defaults), hermes-project-avatar (a bot's Telegram avatar from project branding), hermes-pm-template-maintenance (retired redirect, never select). Tickets: krebs (lifecycle v2: triage, dispatch, hand back, hold, verdict), project-lifecycle (scoped Plane ticket reads, updates, board audits), pilot (px for Plane and Trello: create, claim, move, close, comment, schema export/replay, px idea), board-taxonomy (label vs state, new or renamed labels, board scaffolding and drift). Clock: candybar (any schedule, cron, systemd timer, nightly or hourly job, poll loop, migrating a native clock), interval-driver (making a Candybar-fired agent pass cheap)."
+      },
+      {
+        "id": "observability",
+        "parent": "33god-hub",
+        "kind": "hub-new",
+        "description": "Seeing and reporting what the platform did (Atlas G4; activity-report is G5). monitoring-stack: Prometheus rules, Grafana, Alertmanager to Telegram, Loki, cadvisor, exporters, Uptime Kuma, CPU or memory hogs. waybill: did my hook, handler or event actually fire? Record, capture and replay one prompt's flight across hook-hub, Bloodbank, Candystore, ASM, Hindsight and the gateway, played back in the Factory. delonet-daily-report: reportctl, the daily developer journal, collectors, stale or missing sections, a report that did not run. activity-report: periodic what-shipped update for one project and one audience, client or internal (client update, the nightly 03:00 run). Not here: one long session's recap (recap); reading past conversations (candystore-context); scheduling (candybar)."
+      },
+      {
+        "id": "memory-and-routing",
+        "parent": "33god-hub",
+        "kind": "hub-new",
+        "description": "What agents remember and how their model calls are routed (Atlas G7; Candystore is G1). Memory: hindsight (recall and retain project facts in Hindsight banks, bank resolution), mental-model-jotting (remember this: jot a gotcha mid-session so the session-end hook retains it), candystore-context (candystore context latest: last sessions, resuming or switching agent CLIs, unfinished work). Routing: automaticai-provider-gateway (operate api.automaticai.io: routes, consumer tokens, OAuth grants, NewAPI on Lightsail, outages, backups, cost) and automaticai-provider-gateway-lazy-migration-strategy (an agent or service whose LLM inference bypasses the gateway: find the config owner, fix it, verify traffic)."
+      },
+      {
+        "id": "voice",
+        "parent": "33god-hub",
+        "kind": "hub-new",
+        "description": "The voice pipeline (Atlas G6): dictation in, speech out. heyma hub: HeyMa/Wax recording, transcription, diarization, enrichment passes, call and voicemail intake, latest or yesterday's transcripts, stuck inbox (doctor and create-enrichment-pass sub-skills). vox-tts: speak or narrate via vox.delo.sh, design, clone or register a voice, MCP registration. vox-voice-persona: make a voice talk in character, persona files, voxxy persona commands, Hermes persona enrichment. ebook-to-audiobook: turn an EPUB or PDF into a multi-voice audiobook chapter by chapter, resume a book."
+      },
+      {
+        "id": "zellij-workspace-ops",
+        "parent": "33god-hub",
+        "kind": "skill"
+      },
+      {
+        "id": "33god-features",
+        "parent": "33god-hub",
+        "kind": "skill"
+      },
+      {
+        "id": "delonet-conventions",
+        "parent": "delonet",
+        "kind": "skill"
+      },
+      {
+        "id": "delonet-dotenv",
+        "parent": "delonet",
+        "kind": "skill"
+      },
+      {
+        "id": "artifacts",
+        "parent": "delonet",
+        "kind": "skill"
+      },
+      {
+        "id": "spa-host",
+        "parent": "delonet",
+        "kind": "skill"
+      },
+      {
+        "id": "mobile-devex",
+        "parent": "delonet",
+        "kind": "skill"
+      },
+      {
+        "id": "disk-space-maintenance",
+        "parent": "delonet",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-help",
+        "parent": "bmad",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-core",
+        "parent": "bmad",
+        "kind": "hub-new",
+        "description": "BMAD core utilities usable at any phase. bmad-brainstorming: facilitated ideation. bmad-party-mode: roundtable of BMAD agents or custom personas, focus groups. bmad-advanced-elicitation: push for deeper critique (socratic, first principles, pre-mortem, red team). bmad-forge-idea: pressure-test a half-formed idea. bmad-customize: override installed BMAD skills or agent behaviour. Not here: research (bmad-deep-recon, agent-tools); reviews (code-review)."
+      },
+      {
+        "id": "bmad-personas",
+        "parent": "bmad",
+        "kind": "hub-new",
+        "description": "BMAD Method (bmm) agents, chosen by name or role. bmad-agent-analyst (Mary: research, competitive analysis, requirements), bmad-agent-pm (John: PRD and requirements discovery), bmad-agent-architect (Winston: technical design), bmad-agent-ux-designer (Sally: UX and UI), bmad-agent-dev (Amelia: implement stories). CIS personas (Carson, Dr. Quinn, Maya, Victor, Caravaggio, Sophia) are in bmad-creative-suite."
+      },
+      {
+        "id": "bmad-planning",
+        "parent": "bmad",
+        "kind": "hub-new",
+        "description": "BMAD Method planning artifacts, roughly in order. bmad-product-brief (brief), bmad-prfaq (working-backwards press release and FAQ), bmad-prd (create, update, validate a PRD), bmad-spec (condense any input into SPEC.md, validate or update it), bmad-architecture (architecture decision document), bmad-ux (DESIGN.md + EXPERIENCE.md), bmad-create-epics-and-stories (epics and stories list), bmad-sprint-planning (readiness check, sprint status file), bmad-correct-course (sprint change proposal after a big change)."
+      },
+      {
+        "id": "bmad-delivery",
+        "parent": "bmad",
+        "kind": "hub-new",
+        "description": "BMAD implementation, close-out and the bmad-loop orchestrator. bmad-build (turn a story, issue or change into reviewed working code), bmad-build-auto (one unattended loop iteration, by name only), bmad-qa-generate-e2e-tests (API and e2e tests), bmad-retrospective (epic retro with sourced findings), bmad-project-context (the repo's AGENTS.md block and pitfalls), bmad-loop-setup (install the loop module), bmad-loop-resolve (interactive fix of a CRITICAL escalation for a story key), bmad-loop-sweep (automation-only deferred-work triage). Not here: code review and walkthroughs (code-review)."
+      },
+      {
+        "id": "bmad-creative-suite",
+        "parent": "bmad",
+        "kind": "hub-new",
+        "description": "BMAD Creative Intelligence Suite (cis); each persona runs its matching workflow. bmad-cis-agent-brainstorming-coach (Carson), bmad-cis-agent-creative-problem-solver (Dr. Quinn) with bmad-cis-problem-solving, bmad-cis-agent-design-thinking-coach (Maya) with bmad-cis-design-thinking, bmad-cis-agent-innovation-strategist (Victor) with bmad-cis-innovation-strategy, bmad-cis-agent-storyteller (Sophia) with bmad-cis-storytelling, bmad-cis-agent-presentation-master (Caravaggio: slide and pitch decks)."
+      },
+      {
+        "id": "bmad-builder",
+        "parent": "bmad",
+        "kind": "hub-new",
+        "description": "BMad Builder (bmb): extend BMAD itself. bmad-agent-builder (create, edit, analyze an agent skill), bmad-workflow-builder (build, modify, quality-check a workflow or skill), bmad-module-builder (ideate, plan, create, validate a module), bmad-eval-runner (run a skill's evals, validate triggers, optimize a description), bmad-bmb-setup (install the bmb module)."
+      },
+      {
+        "id": "belsky-doctrine",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "pillars",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "merge-forward",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "code-review",
+        "parent": "engineering-practice",
+        "kind": "hub-new",
+        "description": "Review existing work; pick by what was asked. code-reviewer: the default, one reviewer for correctness, regression and maintainability defects in a local diff or PR. bmad-code-review: several independent reviewers in parallel, then triage (run code review, BMAD repos). bmad-review: installed lenses (adversarial, edge cases, verification gaps, structure, prose) on a diff, PR or document, only when the user says review. bmad-walkthrough: walk a human through a change: purpose, what to look at, how to test. Not here: acting on review feedback (that is a change); epic retrospectives and e2e test generation (bmad-delivery)."
+      },
+      {
+        "id": "pr-creator",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "subagent-driven-development",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "detached-worker-completion",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "recap",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "event-driven-architecture",
+        "parent": "engineering-practice",
+        "kind": "skill"
+      },
+      {
+        "id": "mise-configuration",
+        "parent": "repo-toolchain",
+        "kind": "skill"
+      },
+      {
+        "id": "mise-tasks",
+        "parent": "repo-toolchain",
+        "kind": "skill"
+      },
+      {
+        "id": "mise-versioning",
+        "parent": "repo-toolchain",
+        "kind": "skill"
+      },
+      {
+        "id": "worktrunk",
+        "parent": "repo-toolchain",
+        "kind": "skill"
+      },
+      {
+        "id": "gitignore-maintenance",
+        "parent": "repo-toolchain",
+        "kind": "skill"
+      },
+      {
+        "id": "kapture",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "ego-browser",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "agent-workspace-linux",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "computer-use",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "liam-dev",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "web-search",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-deep-recon",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "codegraph-voyage",
+        "parent": "agent-tools",
+        "kind": "skill"
+      },
+      {
+        "id": "humanizer",
+        "parent": "writing",
+        "kind": "skill"
+      },
+      {
+        "id": "antislop",
+        "parent": "writing",
+        "kind": "skill"
+      },
+      {
+        "id": "antislop-copywriting",
+        "parent": "writing",
+        "kind": "skill"
+      },
+      {
+        "id": "antislop-code",
+        "parent": "writing",
+        "kind": "skill"
+      },
+      {
+        "id": "impeccable",
+        "parent": "design",
+        "kind": "skill"
+      },
+      {
+        "id": "antislop-ui",
+        "parent": "design",
+        "kind": "skill"
+      },
+      {
+        "id": "antislop-human",
+        "parent": "design",
+        "kind": "skill"
+      },
+      {
+        "id": "shadcn-components",
+        "parent": "design",
+        "kind": "skill"
+      },
+      {
+        "id": "stitch",
+        "parent": "design",
+        "kind": "skill"
+      },
+      {
+        "id": "design-md",
+        "parent": "design",
+        "kind": "skill"
+      },
+      {
+        "id": "canvas-design",
+        "parent": "design",
+        "kind": "skill"
+      },
+      {
+        "id": "stripe-best-practices",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "connect-recommend",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "connect-required-verification-information",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "stripe-apps",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "upgrade-stripe",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "stripe-docs",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "stripe-pay",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "stripe-directory",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "stripe-projects",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "metronome",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "power-automate",
+        "parent": "vendor-apis",
+        "kind": "skill"
+      },
+      {
+        "id": "delorenzo-family",
+        "parent": "personal-and-business",
+        "kind": "skill"
+      },
+      {
+        "id": "delohome",
+        "parent": "personal-and-business",
+        "kind": "skill"
+      },
+      {
+        "id": "delonet-parental-controls",
+        "parent": "personal-and-business",
+        "kind": "skill"
+      },
+      {
+        "id": "deal-position",
+        "parent": "personal-and-business",
+        "kind": "skill"
+      },
+      {
+        "id": "domain-triage",
+        "parent": "personal-and-business",
+        "kind": "skill"
+      },
+      {
+        "id": "factory-maintenance",
+        "parent": "the-factory",
+        "kind": "skill"
+      },
+      {
+        "id": "bloodbank-integration",
+        "parent": "bloodbank",
+        "kind": "skill"
+      },
+      {
+        "id": "agent-config-fanout",
+        "parent": "bloodbank",
+        "kind": "skill"
+      },
+      {
+        "id": "target-watch",
+        "parent": "bloodbank",
+        "kind": "skill"
+      },
+      {
+        "id": "projects",
+        "parent": "pjangler",
+        "kind": "skill"
+      },
+      {
+        "id": "project-jangler",
+        "parent": "pjangler",
+        "kind": "skill"
+      },
+      {
+        "id": "project-notebook",
+        "parent": "pjangler",
+        "kind": "skill"
+      },
+      {
+        "id": "skillex-skill-registry",
+        "parent": "skillex",
+        "kind": "skill"
+      },
+      {
+        "id": "skill-maintenance",
+        "parent": "skillex",
+        "kind": "skill"
+      },
+      {
+        "id": "find-skills",
+        "parent": "skillex",
+        "kind": "skill"
+      },
+      {
+        "id": "agent-fleet-operations",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "hermes-project-avatar",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "hermes-pm-template-maintenance",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "krebs",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "project-lifecycle",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "pilot",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "board-taxonomy",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "candybar",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "interval-driver",
+        "parent": "orchestration",
+        "kind": "skill"
+      },
+      {
+        "id": "monitoring-stack",
+        "parent": "observability",
+        "kind": "skill"
+      },
+      {
+        "id": "delonet-daily-report",
+        "parent": "observability",
+        "kind": "skill"
+      },
+      {
+        "id": "waybill",
+        "parent": "observability",
+        "kind": "skill"
+      },
+      {
+        "id": "activity-report",
+        "parent": "observability",
+        "kind": "skill"
+      },
+      {
+        "id": "hindsight",
+        "parent": "memory-and-routing",
+        "kind": "skill"
+      },
+      {
+        "id": "mental-model-jotting",
+        "parent": "memory-and-routing",
+        "kind": "skill"
+      },
+      {
+        "id": "candystore-context",
+        "parent": "memory-and-routing",
+        "kind": "skill"
+      },
+      {
+        "id": "automaticai-provider-gateway",
+        "parent": "memory-and-routing",
+        "kind": "skill"
+      },
+      {
+        "id": "automaticai-provider-gateway-lazy-migration-strategy",
+        "parent": "memory-and-routing",
+        "kind": "skill"
+      },
+      {
+        "id": "heyma",
+        "parent": "voice",
+        "kind": "hub-existing"
+      },
+      {
+        "id": "vox-tts",
+        "parent": "voice",
+        "kind": "skill"
+      },
+      {
+        "id": "vox-voice-persona",
+        "parent": "voice",
+        "kind": "skill"
+      },
+      {
+        "id": "ebook-to-audiobook",
+        "parent": "voice",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-brainstorming",
+        "parent": "bmad-core",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-party-mode",
+        "parent": "bmad-core",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-advanced-elicitation",
+        "parent": "bmad-core",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-forge-idea",
+        "parent": "bmad-core",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-customize",
+        "parent": "bmad-core",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-agent-analyst",
+        "parent": "bmad-personas",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-agent-pm",
+        "parent": "bmad-personas",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-agent-architect",
+        "parent": "bmad-personas",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-agent-ux-designer",
+        "parent": "bmad-personas",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-agent-dev",
+        "parent": "bmad-personas",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-product-brief",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-prfaq",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-prd",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-spec",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-architecture",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-ux",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-create-epics-and-stories",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-sprint-planning",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-correct-course",
+        "parent": "bmad-planning",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-build",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-build-auto",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-qa-generate-e2e-tests",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-retrospective",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-project-context",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-loop-setup",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-loop-resolve",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-loop-sweep",
+        "parent": "bmad-delivery",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-agent-brainstorming-coach",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-agent-creative-problem-solver",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-problem-solving",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-agent-design-thinking-coach",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-design-thinking",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-agent-innovation-strategist",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-innovation-strategy",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-agent-storyteller",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-storytelling",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-cis-agent-presentation-master",
+        "parent": "bmad-creative-suite",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-agent-builder",
+        "parent": "bmad-builder",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-workflow-builder",
+        "parent": "bmad-builder",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-module-builder",
+        "parent": "bmad-builder",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-eval-runner",
+        "parent": "bmad-builder",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-bmb-setup",
+        "parent": "bmad-builder",
+        "kind": "skill"
+      },
+      {
+        "id": "code-reviewer",
+        "parent": "code-review",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-code-review",
+        "parent": "code-review",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-review",
+        "parent": "code-review",
+        "kind": "skill"
+      },
+      {
+        "id": "bmad-walkthrough",
+        "parent": "code-review",
+        "kind": "skill"
+      },
+      {
+        "id": "doctor",
+        "parent": "heyma",
+        "kind": "skill"
+      },
+      {
+        "id": "create-enrichment-pass",
+        "parent": "heyma",
+        "kind": "skill"
+      }
+    ],
+    "split_candidates": [
+      {
+        "skill": "33god-hub",
+        "reason": "After addSkill(the-factory) it is at the max fan-out of 12, so the next insert overflows it. Planned rotation: an operator-desktop hub (Atlas G10) holding crank, zellij-workspace-ops and 33god-features (operator-facing pieces), which brings 33god-hub to 10. Its router also carries a portability section that could become a sub-skill.",
+        "proposed_children": [
+          "operator-desktop (crank, zellij-workspace-ops, 33god-features)",
+          "portability sub-skill"
+        ]
+      },
+      {
+        "skill": "agent-fleet-operations",
+        "reason": "It is the largest vendored skill (flume hire/onboard/roster/review/audit plus gateway plus launch mode). Flume owns it under ADR-0002, so the split should happen in flume/skills/flume as a repo hub with SUBSKILL.md children, not in the catalog.",
+        "proposed_children": [
+          "hire-and-onboard",
+          "roster-and-review",
+          "gateway-and-launch"
+        ]
+      },
+      {
+        "skill": "humanizer",
+        "reason": "A 34-pattern catalog inline in SKILL.md. Moving the catalog into references/ keeps the router small.",
+        "proposed_children": [
+          "references/patterns.md"
+        ]
+      },
+      {
+        "skill": "pilot",
+        "reason": "Plane and Trello adapters plus schema export/replay plus px idea in one file. These are natural sub-skills per adapter.",
+        "proposed_children": [
+          "plane",
+          "trello",
+          "schema-replay"
+        ]
+      },
+      {
+        "skill": "project-lifecycle",
+        "reason": "Vendored from krebs/skills and overlaps krebs. Split the board-audit half out, or merge it into krebs (see merges).",
+        "proposed_children": [
+          "ticket-ops",
+          "board-audit"
+        ]
+      },
+      {
+        "skill": "delonet-daily-report",
+        "reason": "Collectors and the reportctl runbook are separable. Each collector could become a SUBSKILL.",
+        "proposed_children": [
+          "reportctl-runbook",
+          "collectors"
+        ]
+      },
+      {
+        "skill": "hindsight",
+        "reason": "Bank resolution and the retain/recall API are distinct concerns. Large reference set.",
+        "proposed_children": [
+          "bank-resolution",
+          "recall-retain"
+        ]
+      },
+      {
+        "skill": "impeccable",
+        "reason": "About 20 design commands in one skill. Group them into critique/audit versus build/polish sub-skills.",
+        "proposed_children": [
+          "critique-audit",
+          "build-polish"
+        ]
+      },
+      {
+        "skill": "vox-tts",
+        "reason": "Would become a voxxy repo hub (vox-tts, vox-voice-persona, ebook-to-audiobook) once the vox repo adopts ADR-0002.",
+        "proposed_children": [
+          "voxxy hub"
+        ]
+      },
+      {
+        "skill": "vendor-apis",
+        "reason": "11 children, near the max. When the next vendor arrives, rotate the 9 Stripe skills into a stripe hub, which leaves vendor-apis at 3.",
+        "proposed_children": [
+          "stripe (9)",
+          "metronome",
+          "power-automate"
+        ]
+      },
+      {
+        "skill": "connect-recommend",
+        "reason": "connect-recommend and connect-required-verification-information are vendored from the Stripe plugin. Group them under a future stripe hub, never edit them locally.",
+        "proposed_children": [
+          "stripe hub"
+        ]
+      },
+      {
+        "skill": "bmad-loop-resolve",
+        "reason": "Large, but BMAD skills are frozen upstream. Record it only; do not split it locally."
+      }
+    ],
+    "merge_candidates": [
+      {
+        "skills": [
+          "code-reviewer",
+          "bmad-code-review",
+          "bmad-review",
+          "bmad-walkthrough"
+        ],
+        "reason": "They are now siblings under code-review. A single skill would be cleaner, but the BMAD three are frozen upstream, so the hub router does the disambiguation instead."
+      },
+      {
+        "skills": [
+          "krebs",
+          "project-lifecycle"
+        ],
+        "reason": "Both vendored from krebs/skills and both cover ticket lifecycle. Merge them into one krebs repo hub with SUBSKILL.md children."
+      },
+      {
+        "skills": [
+          "agent-fleet-operations",
+          "hermes-project-avatar",
+          "hermes-pm-template-maintenance"
+        ],
+        "reason": "The flume trio. The template-maintenance skill is a retired redirect and should be deleted; the avatar becomes a flume sub-skill."
+      },
+      {
+        "skills": [
+          "automaticai-provider-gateway",
+          "automaticai-provider-gateway-lazy-migration-strategy"
+        ],
+        "reason": "Same subject (aai-gateway). The migration strategy should be a sub-skill of the gateway hub."
+      },
+      {
+        "skills": [
+          "vox-tts",
+          "vox-voice-persona",
+          "ebook-to-audiobook"
+        ],
+        "reason": "The voxxy trio, one repo. Becomes a voxxy hub."
+      },
+      {
+        "skills": [
+          "kapture",
+          "liam-dev"
+        ],
+        "reason": "liam is kapture's successor fork. liam-dev should become a kapture sub-skill until liam ships."
+      },
+      {
+        "skills": [
+          "humanizer",
+          "antislop-copywriting"
+        ],
+        "reason": "Both rewrite prose against AI patterns. Keep humanizer as the hub and make copywriting a sub-skill."
+      },
+      {
+        "skills": [
+          "antislop",
+          "antislop-copywriting",
+          "antislop-code",
+          "antislop-ui",
+          "antislop-human"
+        ],
+        "reason": "The antislop family is split across writing and design by subject, which is correct for routing. antislop (the shared criteria) could become a references file that the four load."
+      },
+      {
+        "skills": [
+          "mise-configuration",
+          "mise-tasks",
+          "mise-versioning"
+        ],
+        "reason": "Two of the three are vendored from pjangler. A pjangler-owned mise hub with three sub-skills would replace three leaves in repo-toolchain."
+      },
+      {
+        "skills": [
+          "stitch",
+          "design-md"
+        ],
+        "reason": "design-md only consumes Stitch projects. It should become a stitch sub-skill."
+      },
+      {
+        "skills": [
+          "hindsight",
+          "mental-model-jotting"
+        ],
+        "reason": "Jotting is a hindsight retain path. It should become a hindsight sub-skill."
+      },
+      {
+        "skills": [
+          "skillex-skill-registry",
+          "skill-maintenance",
+          "find-skills"
+        ],
+        "reason": "The skillex trio. Becomes the skillex repo hub (skills/skillex) with the tree operations in skill-maintenance."
+      },
+      {
+        "skills": [
+          "bloodbank-integration",
+          "agent-config-fanout",
+          "target-watch"
+        ],
+        "reason": "All three have their subject code in bloodbank. A bloodbank repo hub would own them; today agent-config-fanout is catalog-local and target-watch is wild."
+      },
+      {
+        "skills": [
+          "projects",
+          "project-jangler",
+          "project-notebook"
+        ],
+        "reason": "The pjangler trio, already vendored from pjangler. Becomes the pjangler repo hub."
+      },
+      {
+        "skills": [
+          "33god-hub",
+          "33god-features"
+        ],
+        "reason": "33god-features is a router-shaped leaf. Fold it into 33god-hub sub-skills or the operator-desktop rotation."
+      },
+      {
+        "skills": [
+          "bmad-agent-analyst",
+          "bmad-agent-pm",
+          "bmad-agent-architect",
+          "bmad-agent-ux-designer",
+          "bmad-agent-dev"
+        ],
+        "reason": "Each persona's workflow already lives in bmad-planning or bmad-delivery. Could be merged with their workflows, but this is blocked: BMAD is frozen upstream."
+      }
+    ],
+    "overlaps": [
+      {
+        "a": "code-reviewer",
+        "b": "bmad-review",
+        "why": "Both review a diff. Resolved as siblings under code-review: code-reviewer is the default, bmad-review only when the user says review in a BMAD repo."
+      },
+      {
+        "a": "web-search",
+        "b": "bmad-deep-recon",
+        "why": "Both search the web. Resolved as siblings in agent-tools: quick lookup versus decision research."
+      },
+      {
+        "a": "recap",
+        "b": "activity-report",
+        "why": "Both report what happened. Cross-hub: recap is one session (engineering-practice), activity-report is periodic and per audience (observability). Resolved with 'Not here' pointers in both directions."
+      },
+      {
+        "a": "bloodbank-integration",
+        "b": "waybill",
+        "why": "Both trace an event. Cross-hub: waybill proves that one prompt's hook or event fired; bloodbank-integration covers the bus itself. Resolved with 'Not here' in bloodbank and 'did my hook fire (Waybill)' on the root."
+      },
+      {
+        "a": "mise-versioning",
+        "b": "mobile-devex",
+        "why": "Both say 'version' and 'release'. Cross-hub: mobile versions ship only through mobile-deploy-hub. Resolved with 'Not here' in repo-toolchain and 'mobile releases' on the root."
+      },
+      {
+        "a": "worktrunk",
+        "b": "worktrees (33god-hub sub-skill)",
+        "why": "Both say 'worktree'. Unresolved: the held-out prompt lands on worktrunk. Fix: worktrunk's description should point to the 33GOD policy when the repo is under ~/code/33GOD."
+      },
+      {
+        "a": "krebs",
+        "b": "project-lifecycle",
+        "why": "Ticket lifecycle in both. Siblings in orchestration; merge pending."
+      },
+      {
+        "a": "pilot",
+        "b": "project-lifecycle",
+        "why": "Plane ticket updates in both. Siblings: pilot is the writer CLI, project-lifecycle is scoped reads and audits."
+      },
+      {
+        "a": "target-watch",
+        "b": "delonet-parental-controls",
+        "why": "Both 'watch a person'. Cross-hub: resolved with 'ring me when someone texts' on the root and 'Not here' in personal-and-business."
+      },
+      {
+        "a": "humanizer",
+        "b": "antislop-copywriting",
+        "why": "Both de-slop prose. Siblings in writing; merge candidate."
+      },
+      {
+        "a": "impeccable",
+        "b": "antislop-ui",
+        "why": "Both critique UI. Siblings in design: impeccable designs and polishes, antislop-ui is an anti-generic review."
+      },
+      {
+        "a": "bmad-ux",
+        "b": "stitch",
+        "why": "UX design. Cross-hub: bmad-ux is the BMAD artifact, stitch is mockups. 'Not here' in design."
+      },
+      {
+        "a": "hindsight",
+        "b": "candystore-context",
+        "why": "Both are agent memory. Siblings in memory-and-routing: project facts versus past sessions."
+      },
+      {
+        "a": "candybar",
+        "b": "interval-driver",
+        "why": "Both scheduling. Siblings: candybar owns when a job runs; interval-driver makes a fired agent pass cheap."
+      },
+      {
+        "a": "bmad-cis-agent-presentation-master",
+        "b": "canvas-design",
+        "why": "Both visual output. Cross-hub: decks versus posters. 'Not here' in design and 'pitch decks' on the root."
+      },
+      {
+        "a": "agent-fleet-operations",
+        "b": "projects",
+        "why": "Both 'PM on a repo'. Cross-hub: asking for a PM is in projects (pjangler); hiring it is agent-fleet-operations. 'Not here' in pjangler."
+      }
+    ],
+    "notes": "Changes from A, each tied to a wrong turn: (1) mobile-devex added under delonet, 'mobile releases' on the root, and 'Not here' in repo-toolchain (fixes A-P8 and B-P8). mobile-devex exists globally but is not in the 134-skill selection, so it must be selected. (2) bmad-deep-recon moved to agent-tools, a graft from B (fixes A-P10). (3) 'did my hook fire (Waybill)' added to the root and 33god-hub, with a 'Not here' pointer in bloodbank (fixes A-P12). (4) 'client updates' added to the root, with 'Not here' in personal-and-business and engineering-practice (fixes A-P18). (5) 'ring me when someone texts' added to the root and target-watch named in 33god-hub, with 'Not here' in personal-and-business (fixes A-P19 and B-P19). (6) A code-review hub grafted from B. Held-out fixes: 'pitch decks' and 'paying a provider' added to the root.\n\nAtlas mapping corrections, from components.yaml: G3 is Agent Fleet Runtime (agent-hooks, hook-hub, target-watch, hermes-fleet, asm), not a hook pipeline. agent-hooks and target-watch live in the bloodbank repo, which is why they sit under the bloodbank hub. G8 is Orchestration and Apps (flume, krebs, pilot, holocene, momo) and G9 is Scheduling (candybar).\n\nOwnership facts: vendored skills are bloodbank-integration (bloodbank); krebs and project-lifecycle (33GOD krebs/skills); agent-fleet-operations (flume); projects, project-jangler, mise-tasks and mise-versioning (pjangler); skillex-skill-registry (skillex); 33god-hub (33god-platform/skills). agent-config-fanout and pilot are catalog-local; target-watch and merge-forward are wild. Balancing never moves a repo-owned subtree.\n\nB-tree operations: addSkill pins the parent by ownership first, then chooses by subject. Overflow above 12 splits the hub and pushes a route row up to its parent. Underflow below 3 merges the hub into its parent or a sibling, except existing hubs with real sub-skill content. Rotation re-parents a child to an adjacent sibling hub, never across a repo boundary. A node split turns an oversized skill into a hub with SUBSKILL.md children; a node merge combines overlapping siblings into one hub.\n\naddSkill(the-factory) dogfood: the-factory went under 33god-hub, which is now at 12, the max. The next insert triggers the operator-desktop rotation (crank, zellij-workspace-ops, 33god-features).\n\nActivation caveat: the saving needs only the root SKILL.md to be listed. Generated routers must be SUBSKILL.md files so Hermes' rglob('SKILL.md') does not list them, and repo hubs are loaded by name. During the transition, keep a pinned set listed alongside the root, because CLAUDE.md and other skills load these by name: belsky-doctrine, artifacts, kapture, candybar, web-search, pillars.\n\nDangling references found in skills that point to missing skills: server-maintenance, product-changelog, unfuck-my-git-state, momo, folder-curator.\n\nResidual miss: the worktree prompt (see overlaps).\n\nFiles: build and validation script /home/delorenj/.claude/jobs/2a9b6ad7/tmp/tree_final_build.py; output /home/delorenj/.claude/jobs/2a9b6ad7/tmp/tree_final_out.json (also /tmp/skilltree-final/out.json). Validation passed: no duplicates, all 134 inventory skills present, every description at most 1024 chars, every hub-new description names each of its children."
+  }
+}

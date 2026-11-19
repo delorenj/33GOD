@@ -84,7 +84,7 @@ component's **body** (its 3D asset) lives in `manual/sandbox/src/assets/<id>/`, 
 
 ## Evolve this skill
 
-This subtree is a **self-evolving skill** (archetype owned by Skillex; see SKRILL ticket "Self-Evolving Skill
+This subtree is a **self-evolving skill** (archetype owned by Skillex; see SKRILL-49, "Self-Evolving Skill
 tree"). When a task routed here teaches you something that would have saved time, fold it back before you finish:
 
 1. Put the lesson where it bites: change the step, add an "Ask the system" row, or add one dated gotcha line

@@ -904,3 +904,43 @@ related_initiatives: [I-6, I-10]
   done when it has a record whose `surfaces:` claim it; a new relation is done
   when it has `path:line` evidence and an anchor (`atlas.py anchor`).
   Baseline: 33GOD-94 (14 unregistered surfaces).
+
+## I-13 Self-evolving skills and the skill tree
+
+**Outcome.** Every skill is a node in one balanced tree with a single root: each node has one parent (one
+route), siblings do not overlap, and a node that grows past its budget splits into lazily loaded children (a
+node that shrinks merges back). Skills declared **self-evolving** get better with use: every task routed
+through one folds its lessons back into it, written for the next run's speed, inside the budget. Agents load
+one root skill and traverse to what they need, instead of reading ~134 descriptions in every session.
+
+**Why now.** Jarad declared the Self-Evolving Skill archetype on 2026-11-19 while building the Factory forge,
+whose nightly agent repeats the same task and should learn from each night. The global listing costs ~55k
+characters of descriptions per session, and overlapping skills already route agents wrong.
+
+**Owner:** `skillex` (SKRILL, `skillex-pm`): the archetype doc, `skillex tree` (show, route, add, balance,
+split, merge), lint and activation. **Dogfood (33GOD, live):** `the-factory` hub under `33god-hub` and its
+self-evolving child `factory-maintenance`, fed nightly by the factory-forge (`c73260a`). Brief:
+[skill-tree-brief.md](skill-tree-brief.md).
+
+```yaml
+owner_project: skillex
+project_home: skillex (docs/skills, src/core/skill-graph.ts)
+dogfood: 33god-platform/skills/33god-hub/subskills/the-factory
+delegations: [SKRILL-49]   # skillex-pm, filed 2026-11-19
+depends_on: []
+related_initiatives: [I-10, I-12]
+```
+
+**Seam acceptance criteria**
+
+- `skillex tree add the-factory --dry-run` places it under `33god-hub`, and `factory-maintenance` under
+  `the-factory`, with no overlap warning; adding a deliberately overlapping skill warns and names the sibling.
+- A self-evolving node's lessons land through the owner's gate and keep `skillex skill lint` clean at any depth
+  (budget, parent route, links, no nested `SKILL.md`); the forge's `factory_forge.py skill` is the first
+  instance, and Skillex's lint replaces it once it covers the same rules.
+- `skillex tree balance --dry-run` over the global skills reports every hub out of fan-out bounds, every
+  oversize node and every overlapping sibling pair, and proposes the move for each.
+- Routing accuracy is measured, not asserted: a fixed set of real task prompts traced through the tree
+  (`skillex tree route`) lands on the right leaf, and the set runs in Skillex's tests.
+- Single-root activation is a selection change (depth-1 listing first, then root only), reversible, and never
+  removes a skill from disk.
