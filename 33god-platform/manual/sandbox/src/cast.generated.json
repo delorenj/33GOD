@@ -1,0 +1,1042 @@
+{
+  "format": "33god.factory-cast",
+  "version": 1,
+  "digest": "d964b86b1237628a655629aff91a2891a7ecc308447f3548656128a17e023b1c",
+  "components": {
+    "aai-gateway": {
+      "name": "AutomaticAI LLM gateway",
+      "summary": "One front door that routes every model request to the right provider.",
+      "domain": "G7",
+      "first_party": true,
+      "station": "staffing",
+      "near": null,
+      "aliases": [
+        "automaticai-gateway"
+      ]
+    },
+    "aai-llm-observability": {
+      "name": "AAI LLM observability",
+      "summary": "Collects and reshapes gateway usage logs into metrics.",
+      "domain": "G4",
+      "first_party": true,
+      "station": "staffing",
+      "near": null,
+      "aliases": []
+    },
+    "activity-report": {
+      "name": "Activity report",
+      "summary": "Writes the periodic what-shipped update for each project and audience.",
+      "domain": "G5",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "agent-hooks": {
+      "name": "agent-hooks publisher",
+      "summary": "Turns raw agent hooks into contract-valid events and publishes them.",
+      "domain": "G3",
+      "first_party": true,
+      "station": "labeldesk",
+      "near": null,
+      "aliases": []
+    },
+    "agent-pad": {
+      "name": "Agent pad",
+      "summary": "A Holocene screen for talking to and watching individual agents.",
+      "domain": "G8",
+      "first_party": true,
+      "station": "entrance",
+      "near": null,
+      "aliases": []
+    },
+    "agents-registry": {
+      "name": "Agents registry",
+      "summary": "A file listing every agent, its role and where it works.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "artifact-sidecar": {
+      "name": "artifact-sidecar",
+      "summary": "Captures files agents produce and links them to the events that made them.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "archive",
+      "aliases": []
+    },
+    "artifact-vault-projector": {
+      "name": "artifact-vault-projector",
+      "summary": "Writes captured agent artifacts into the operator's notes vault, organized by project and date.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "archive",
+      "aliases": [
+        "vault-projector"
+      ]
+    },
+    "asm": {
+      "name": "Agent State Machine",
+      "summary": "Keeps a live picture of what each agent process is doing right now.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "dock",
+      "aliases": [
+        "asm-orcapaint",
+        "asm-tabpaint"
+      ]
+    },
+    "bb-apicurio": {
+      "name": "Apicurio schema registry",
+      "summary": "A schema registry meant for looking up event schemas at runtime.",
+      "domain": "G1",
+      "first_party": false,
+      "station": null,
+      "near": "belt",
+      "aliases": []
+    },
+    "bb-catalog": {
+      "name": "EventCatalog",
+      "summary": "A browsable website listing every event type for humans.",
+      "domain": "G1",
+      "first_party": false,
+      "station": null,
+      "near": "belt",
+      "aliases": []
+    },
+    "bb-cli": {
+      "name": "bb operator CLI",
+      "summary": "Command-line tool to check the contract, emit, trace and replay bus events.",
+      "domain": "G1",
+      "first_party": true,
+      "station": null,
+      "near": "belt",
+      "aliases": []
+    },
+    "bb-dapr": {
+      "name": "Dapr sidecars",
+      "summary": "Dapr sidecars that deliver bus events to Candystore and the enricher.",
+      "domain": "G1",
+      "first_party": false,
+      "station": null,
+      "near": "archive",
+      "aliases": [
+        "candystore-daprd",
+        "enricher-daprd"
+      ]
+    },
+    "bb-hook": {
+      "name": "bb-hook",
+      "summary": "A tiny command each coding agent runs on every hook to hand the event to hook-hub.",
+      "domain": "G3",
+      "first_party": true,
+      "station": "courier",
+      "near": null,
+      "aliases": []
+    },
+    "bb-nats": {
+      "name": "Bloodbank NATS broker",
+      "summary": "The NATS JetStream server that stores and delivers bus messages.",
+      "domain": "G1",
+      "first_party": false,
+      "station": "belt",
+      "near": null,
+      "aliases": [
+        "nats"
+      ]
+    },
+    "bloodbank": {
+      "name": "Bloodbank",
+      "summary": "The event backbone: every service publishes and listens for CloudEvents on it.",
+      "domain": "G1",
+      "first_party": true,
+      "station": "belt",
+      "near": null,
+      "aliases": []
+    },
+    "candybar": {
+      "name": "Candybar",
+      "summary": "The single clock that starts every recurring job on time.",
+      "domain": "G9",
+      "first_party": true,
+      "station": "clock",
+      "near": null,
+      "aliases": []
+    },
+    "candybar-executor": {
+      "name": "Candybar host executor",
+      "summary": "Runs scheduled commands on the host when the clock fires.",
+      "domain": "G9",
+      "first_party": true,
+      "station": null,
+      "near": "clock",
+      "aliases": []
+    },
+    "candybar-steward": {
+      "name": "Candybar steward",
+      "summary": "Host-side role that keeps Candybar's registrations and units in order.",
+      "domain": "G9",
+      "first_party": true,
+      "station": null,
+      "near": "clock",
+      "aliases": []
+    },
+    "candybar-watchdog": {
+      "name": "Candybar watchdog timer",
+      "summary": "A tiny timer that pages if Candybar itself stops.",
+      "domain": "G9",
+      "first_party": true,
+      "station": null,
+      "near": "clock",
+      "aliases": []
+    },
+    "candystore": {
+      "name": "Candystore",
+      "summary": "Saves a permanent copy of every bus event so history can be searched later.",
+      "domain": "G1",
+      "first_party": true,
+      "station": "archive",
+      "near": null,
+      "aliases": []
+    },
+    "client-portal": {
+      "name": "Client portal",
+      "summary": "The automaticai.io website and the internal operator portal for services, accounts, statements and invoices.",
+      "domain": "G11",
+      "first_party": true,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "cloudflare": {
+      "name": "Cloudflare",
+      "summary": "Hosts tunnels, Workers and Workers AI models.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "cloudflare-tunnel": {
+      "name": "Cloudflare tunnels",
+      "summary": "Outbound tunnels that publish selected homelab services at public URLs.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "commonproject": {
+      "name": "CommonProject",
+      "summary": "Shared scaffolding every project starts from.",
+      "domain": "G5",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "cost-bridge": {
+      "name": "cost-bridge",
+      "summary": "Takes in billing cost records over HTTPS, puts them on the bus and replays them into the AutomaticAI portal until each one is confirmed saved.",
+      "domain": "G7",
+      "first_party": true,
+      "station": null,
+      "near": "staffing",
+      "aliases": []
+    },
+    "crank": {
+      "name": "Crank",
+      "summary": "Nudges idle agent panes to keep work moving when the operator is away.",
+      "domain": "G10",
+      "first_party": true,
+      "station": null,
+      "near": "dock",
+      "aliases": [
+        "crank-engine"
+      ]
+    },
+    "curator": {
+      "name": "Curator",
+      "summary": "Sorts and files incoming documents and folders automatically.",
+      "domain": "G2",
+      "first_party": true,
+      "station": null,
+      "near": "archive",
+      "aliases": []
+    },
+    "daily-report": {
+      "name": "DeLoNET daily report",
+      "summary": "A once-a-day summary of what happened across the platform.",
+      "domain": "G4",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "deckard": {
+      "name": "Deckard",
+      "summary": "A Stream Deck control surface for the operator's terminal workspace.",
+      "domain": "G10",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "delonet-director": {
+      "name": "DeLoNET Director read model",
+      "summary": "A read-only API over company capacity and contract data.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "delosip": {
+      "name": "DeLoSIP ring bridge",
+      "summary": "Makes the phone ring loudly for verified incoming calls.",
+      "domain": "G2",
+      "first_party": true,
+      "station": null,
+      "near": "soundwing",
+      "aliases": []
+    },
+    "earshot": {
+      "name": "Earshot",
+      "summary": "Drop a sound file into a channel and the phone plays it.",
+      "domain": "G6",
+      "first_party": true,
+      "station": null,
+      "near": "soundwing",
+      "aliases": []
+    },
+    "enricher": {
+      "name": "Candystore enricher",
+      "summary": "Adds search embeddings to stored events so they can be found by meaning.",
+      "domain": "G7",
+      "first_party": true,
+      "station": "cataloguer",
+      "near": null,
+      "aliases": []
+    },
+    "event-contract": {
+      "name": "Bloodbank event contract and schemas",
+      "summary": "The rulebook and 214 JSON schemas that say how every event is named and shaped.",
+      "domain": "G1",
+      "first_party": true,
+      "station": "labeldesk",
+      "near": null,
+      "aliases": [
+        "holyfields",
+        "naming-contract"
+      ]
+    },
+    "farm-command-bridge": {
+      "name": "farm-command-bridge",
+      "summary": "A signed web entry point that turns invoice requests from the portal and bank webhooks into billing commands on the bus.",
+      "domain": "G11",
+      "first_party": true,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "flume": {
+      "name": "Flume",
+      "summary": "Hires, onboards and reviews agents and keeps the roster.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "flume-access": {
+      "name": "Flume access facade",
+      "summary": "The front door that lets Cloudflare Access-authenticated employees reach agent identity data.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "genesis": {
+      "name": "Genesis client liaison",
+      "summary": "The agent clients talk to about their projects.",
+      "domain": "G11",
+      "first_party": true,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "genesis-desk-worker": {
+      "name": "Genesis desk Worker",
+      "summary": "Public web desk on Cloudflare where clients reach Genesis.",
+      "domain": "G11",
+      "first_party": true,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "heartbeat-tick": {
+      "name": "heartbeat-tick and recorder",
+      "summary": "A sample producer/consumer pair that emits and records system heartbeat events.",
+      "domain": "G1",
+      "first_party": true,
+      "station": null,
+      "near": "belt",
+      "aliases": []
+    },
+    "hermes-bloodbank-plugin": {
+      "name": "Hermes Bloodbank platform plugin",
+      "summary": "Lets the gateway receive work orders from the bus and start agent turns.",
+      "domain": "G3",
+      "first_party": true,
+      "station": "crew",
+      "near": null,
+      "aliases": []
+    },
+    "hermes-dashboard": {
+      "name": "Hermes Dashboard",
+      "summary": "A web dashboard for the whole Hermes agent runtime.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "hermes-fleet": {
+      "name": "Hermes Fleet",
+      "summary": "The set of AI agents (project managers, directors, specialists) that do the platform's work.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "hermes-gateway-watchdog": {
+      "name": "hermes-gateway-watchdog",
+      "summary": "Restarts the Hermes gateway if it is down or wedged and sends a phone alert.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "hermes-gw": {
+      "name": "Hermes gateway",
+      "summary": "The one long-running process that hosts every agent profile and their chat bots.",
+      "domain": "G3",
+      "first_party": true,
+      "station": "crew",
+      "near": null,
+      "aliases": [
+        "hermes-gateway"
+      ]
+    },
+    "heyma": {
+      "name": "HeyMa",
+      "summary": "The voice system: dictate, transcribe and hear replies.",
+      "domain": "G6",
+      "first_party": true,
+      "station": "soundwing",
+      "near": null,
+      "aliases": []
+    },
+    "hindsight": {
+      "name": "Hindsight",
+      "summary": "Long-term memory where agents store and recall project facts.",
+      "domain": "G7",
+      "first_party": false,
+      "station": "library",
+      "near": null,
+      "aliases": []
+    },
+    "holocene": {
+      "name": "Holocene",
+      "summary": "The operator's web app showing agents, schedules and events in one place.",
+      "domain": "G8",
+      "first_party": true,
+      "station": "control",
+      "near": null,
+      "aliases": [
+        "team-dashboard"
+      ]
+    },
+    "holocene-api": {
+      "name": "Holocene API",
+      "summary": "The backend that gathers fleet, schedule and event data for the web app.",
+      "domain": "G8",
+      "first_party": true,
+      "station": "control",
+      "near": null,
+      "aliases": []
+    },
+    "holocene-web": {
+      "name": "Holocene web",
+      "summary": "The browser front end of Holocene.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "hook-hub": {
+      "name": "hook-hub",
+      "summary": "Receives every agent hook and fans it out to handlers that publish, remember and alert.",
+      "domain": "G3",
+      "first_party": true,
+      "station": "dock",
+      "near": null,
+      "aliases": [
+        "hook-hub-receipts"
+      ]
+    },
+    "inbox-watcher": {
+      "name": "Voice memo inbox watcher",
+      "summary": "Watches for new voice memos and sends them to transcription.",
+      "domain": "G8",
+      "first_party": true,
+      "station": "control",
+      "near": null,
+      "aliases": []
+    },
+    "infra-doctor": {
+      "name": "infra-doctor",
+      "summary": "Runs synthetic probes against the homelab and platform and flags what is broken.",
+      "domain": "G4",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "intake": {
+      "name": "Intake",
+      "summary": "Takes transcribed voice notes and files them as tasks or notes.",
+      "domain": "G6",
+      "first_party": true,
+      "station": null,
+      "near": "soundwing",
+      "aliases": []
+    },
+    "jev-clairic-exporter": {
+      "name": "Jev/Clairic usage exporter",
+      "summary": "Publishes Jev and Clairic usage as Prometheus metrics.",
+      "domain": "G4",
+      "first_party": true,
+      "station": null,
+      "near": "staffing",
+      "aliases": []
+    },
+    "jev-litellm": {
+      "name": "Jev LiteLLM",
+      "summary": "A typed-question model service used for yes/no style judgments.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "staffing",
+      "aliases": [
+        "ext:jev",
+        "jev"
+      ]
+    },
+    "krebs": {
+      "name": "Krebs",
+      "summary": "Decides which ticket goes to which agent and sends the work order.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "launch-site": {
+      "name": "33GOD launch page",
+      "summary": "The public front door: one night at the company, told by the clock.",
+      "domain": "G13",
+      "first_party": true,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "lifecycle-controller": {
+      "name": "lifecycle-controller",
+      "summary": "Reconciles ticket lifecycle state from sentinel observations and publishes the results.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "manual": {
+      "name": "The Manual",
+      "summary": "Picture manuals that explain how the platform works, one page at a time.",
+      "domain": "G13",
+      "first_party": true,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "milkshake": {
+      "name": "Milkshake billing",
+      "summary": "Turns usage and cost events into client billing.",
+      "domain": "G11",
+      "first_party": true,
+      "station": null,
+      "near": "staffing",
+      "aliases": []
+    },
+    "minio": {
+      "name": "MinIO",
+      "summary": "Object storage for files.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "archive",
+      "aliases": []
+    },
+    "mobile-deploy-hub": {
+      "name": "Mobile deploy hub",
+      "summary": "One deploy contract for every mobile app: build, publish, install, announce.",
+      "domain": "G5",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "momo": {
+      "name": "Momo",
+      "summary": "The old board-driving loop that moved tickets to agents.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "mon-alerts": {
+      "name": "Monitoring alerts",
+      "summary": "Rules that fire when something looks unhealthy.",
+      "domain": "G4",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "mon-core": {
+      "name": "Monitoring core",
+      "summary": "Dashboards and metric storage for the platform.",
+      "domain": "G4",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": [
+        "monitoring"
+      ]
+    },
+    "mon-exporters": {
+      "name": "Monitoring exporters",
+      "summary": "Small collectors that expose host and service metrics.",
+      "domain": "G4",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "n8n": {
+      "name": "n8n workflow engine",
+      "summary": "Runs webhook workflows that convert ticket and journal events into bus events.",
+      "domain": "G2",
+      "first_party": false,
+      "station": "rules",
+      "near": null,
+      "aliases": []
+    },
+    "n8n-devjournal": {
+      "name": "Dev journal workflow",
+      "summary": "An n8n workflow that writes development journal entries from events.",
+      "domain": "G2",
+      "first_party": true,
+      "station": null,
+      "near": "rules",
+      "aliases": []
+    },
+    "n8n-nodes-bb": {
+      "name": "n8n-nodes-bloodbank",
+      "summary": "A custom n8n node that publishes contract-valid events onto Bloodbank.",
+      "domain": "G2",
+      "first_party": true,
+      "station": "rules",
+      "near": null,
+      "aliases": [
+        "n8n-nodes-bloodbank"
+      ]
+    },
+    "ntfy": {
+      "name": "ntfy",
+      "summary": "A push-notification server that delivers alerts to phones.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "control",
+      "aliases": [
+        "ext:ntfy"
+      ]
+    },
+    "ntfy-router": {
+      "name": "ntfy-router",
+      "summary": "Sends phone notifications for important bus events.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "control",
+      "aliases": []
+    },
+    "onepassword": {
+      "name": "1Password",
+      "summary": "Vault holding every credential; services carry references to it, never plaintext.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "archive",
+      "aliases": []
+    },
+    "op-token-guard": {
+      "name": "op-token-guard",
+      "summary": "Self-heals drift in the 1Password service-account token that every service reads.",
+      "domain": "G12",
+      "first_party": true,
+      "station": null,
+      "near": "archive",
+      "aliases": []
+    },
+    "open-notebook": {
+      "name": "Open Notebook",
+      "summary": "The notebook site where the owner wants generated docs placed.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "library",
+      "aliases": []
+    },
+    "opencode-server": {
+      "name": "OpenCode server",
+      "summary": "Headless coding-agent server reachable from anywhere on the network.",
+      "domain": "G3",
+      "first_party": false,
+      "station": null,
+      "near": "bays",
+      "aliases": []
+    },
+    "openrouter": {
+      "name": "OpenRouter",
+      "summary": "A paid model marketplace used as a fallback provider.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "staffing",
+      "aliases": []
+    },
+    "orca": {
+      "name": "Orca",
+      "summary": "Worktree IDE where each agent's branch is a card.",
+      "domain": "G10",
+      "first_party": false,
+      "station": null,
+      "near": "bays",
+      "aliases": [
+        "ext:orca"
+      ]
+    },
+    "pdf2md": {
+      "name": "pdf2md",
+      "summary": "Converts PDFs to Markdown for n8n workflows.",
+      "domain": "G2",
+      "first_party": true,
+      "station": null,
+      "near": "rules",
+      "aliases": []
+    },
+    "pilot": {
+      "name": "Pilot",
+      "summary": "The ticket command-line tool; the only thing allowed to change Plane.",
+      "domain": "G8",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "pipeline-mcp-hub": {
+      "name": "Pipeline MCP Hub",
+      "summary": "One place that exposes platform tools to agents over MCP.",
+      "domain": "G5",
+      "first_party": true,
+      "station": null,
+      "near": "dock",
+      "aliases": []
+    },
+    "pjangler": {
+      "name": "PJangler",
+      "summary": "Keeps the list of projects and their metadata consistent.",
+      "domain": "G5",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "plane": {
+      "name": "Plane",
+      "summary": "The ticket board where work is tracked in lanes.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "plane-hook": {
+      "name": "Plane to Bloodbank workflows",
+      "summary": "n8n workflows (Plane->Bloodbank, Pickup Chip, Lane Errors, Ingress Reconcile) that react to ticket changes. Ticket Triage was retired 2026-11-18 (krebs tick sends every ticket turn).",
+      "domain": "G2",
+      "first_party": true,
+      "station": null,
+      "near": "rules",
+      "aliases": []
+    },
+    "postgres": {
+      "name": "PostgreSQL",
+      "summary": "Database engine behind Candystore, Candybar, pjangler, n8n and Plane.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "archive",
+      "aliases": []
+    },
+    "pr-crusher": {
+      "name": "PR Crusher",
+      "summary": "Works through open pull requests automatically and reports progress.",
+      "domain": "G5",
+      "first_party": true,
+      "station": null,
+      "near": "crew",
+      "aliases": []
+    },
+    "redis": {
+      "name": "Redis",
+      "summary": "In-memory store for live agent state and the 1Password read cache.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "dock",
+      "aliases": []
+    },
+    "shortwave": {
+      "name": "Shortwave relay",
+      "summary": "Mirrors phone dictation into the focused terminal pane.",
+      "domain": "G10",
+      "first_party": true,
+      "station": null,
+      "near": "soundwing",
+      "aliases": []
+    },
+    "skillex": {
+      "name": "Skillex",
+      "summary": "The shared catalog of agent skills and the tool that installs them on each agent's desk.",
+      "domain": "G5",
+      "first_party": true,
+      "station": null,
+      "near": "dock",
+      "aliases": []
+    },
+    "target-watch": {
+      "name": "target-watch",
+      "summary": "Alerts the operator whenever a watched person messages on any channel and files a ticket for it.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "archive",
+      "aliases": []
+    },
+    "traefik": {
+      "name": "Traefik",
+      "summary": "Reverse proxy that routes each hostname on the home network to its service.",
+      "domain": "G12",
+      "first_party": false,
+      "station": null,
+      "near": "entrance",
+      "aliases": []
+    },
+    "transcribe": {
+      "name": "Transcription",
+      "summary": "Turns recorded audio into text, using local Whisper models on a GPU.",
+      "domain": "G6",
+      "first_party": true,
+      "station": null,
+      "near": "soundwing",
+      "aliases": []
+    },
+    "turn-enricher": {
+      "name": "turn-enricher",
+      "summary": "Reads each finished agent turn and tags it with its main action, artifacts and blocker.",
+      "domain": "G7",
+      "first_party": true,
+      "station": "cataloguer",
+      "near": null,
+      "aliases": []
+    },
+    "vinyl": {
+      "name": "Vinyl",
+      "summary": "Dictation server that turns speech into text in real time.",
+      "domain": "G6",
+      "first_party": true,
+      "station": null,
+      "near": "soundwing",
+      "aliases": []
+    },
+    "vox": {
+      "name": "Vox",
+      "summary": "Text-to-speech that reads replies aloud in chosen voices.",
+      "domain": "G6",
+      "first_party": true,
+      "station": "voxxy",
+      "near": null,
+      "aliases": [
+        "voxxy"
+      ]
+    },
+    "wax": {
+      "name": "Wax (waxd)",
+      "summary": "Processes voice recordings through cleanup and titling passes.",
+      "domain": "G6",
+      "first_party": true,
+      "station": "soundwing",
+      "near": null,
+      "aliases": [
+        "waxd"
+      ]
+    },
+    "wingman": {
+      "name": "Wingman",
+      "summary": "Voice relay that types the operator's dictated words into agent sessions.",
+      "domain": "G10",
+      "first_party": true,
+      "station": null,
+      "near": "soundwing",
+      "aliases": []
+    }
+  },
+  "aliases": {
+    "asm-orcapaint": "asm",
+    "asm-tabpaint": "asm",
+    "automaticai-gateway": "aai-gateway",
+    "candystore-daprd": "bb-dapr",
+    "crank-engine": "crank",
+    "enricher-daprd": "bb-dapr",
+    "ext:jev": "jev-litellm",
+    "ext:ntfy": "ntfy",
+    "ext:orca": "orca",
+    "hermes-gateway": "hermes-gw",
+    "holyfields": "event-contract",
+    "hook-hub-receipts": "hook-hub",
+    "jev": "jev-litellm",
+    "monitoring": "mon-core",
+    "n8n-nodes-bloodbank": "n8n-nodes-bb",
+    "naming-contract": "event-contract",
+    "nats": "bb-nats",
+    "team-dashboard": "holocene",
+    "vault-projector": "artifact-vault-projector",
+    "voxxy": "vox",
+    "waxd": "wax"
+  },
+  "extras": {
+    "ext:claude-code": {
+      "station": "bays",
+      "near": null,
+      "name": "Claude Code"
+    },
+    "ext:codex": {
+      "station": "bays",
+      "near": null,
+      "name": "Codex"
+    },
+    "ext:codex-cli": {
+      "station": "bays",
+      "near": null,
+      "name": "Codex CLI"
+    },
+    "ext:codex-desktop": {
+      "station": "bays",
+      "near": null,
+      "name": "Codex Desktop"
+    },
+    "ext:codex-exec": {
+      "station": "bays",
+      "near": null,
+      "name": "Codex exec (headless)"
+    },
+    "ext:codex-mcp-helper-reaper": {
+      "station": null,
+      "near": "bays",
+      "name": "codex-mcp-helper-reaper"
+    },
+    "ext:copilot": {
+      "station": "bays",
+      "near": null,
+      "name": "GitHub Copilot CLI"
+    },
+    "ext:gemini": {
+      "station": "bays",
+      "near": null,
+      "name": "Gemini CLI"
+    },
+    "ext:hook-command": {
+      "station": null,
+      "near": "bays",
+      "name": "Other hook command"
+    },
+    "ext:kimi": {
+      "station": "bays",
+      "near": null,
+      "name": "Kimi CLI"
+    },
+    "ext:nanoleaf": {
+      "station": null,
+      "near": "bays",
+      "name": "Nanoleaf panels"
+    },
+    "ext:opencode": {
+      "station": "bays",
+      "near": null,
+      "name": "opencode CLI"
+    },
+    "ext:stream-deck": {
+      "station": null,
+      "near": "bays",
+      "name": "Stream Deck"
+    },
+    "ext:unknown": {
+      "station": "bays",
+      "near": null,
+      "name": "Unknown agent CLI"
+    },
+    "ext:zellij": {
+      "station": null,
+      "near": "bays",
+      "name": "Zellij"
+    },
+    "unknown": {
+      "station": null,
+      "near": "belt",
+      "name": "Unattributed span"
+    },
+    "waybill": {
+      "station": null,
+      "near": "belt",
+      "name": "Waybill recorder"
+    },
+    "zellij-notify": {
+      "station": null,
+      "near": "bays",
+      "name": "zellij-notify"
+    }
+  }
+}

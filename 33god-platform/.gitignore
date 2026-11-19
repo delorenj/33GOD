@@ -1,2 +1,5 @@
 
 .env.enricher-gateway
+
+# atlas.py hubs: live skill-hub state from skillex graph (published, never committed)
+atlas/hubs/

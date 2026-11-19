@@ -30,6 +30,7 @@ changelog, skill routing, and backfill coordination.
 | Authenticated Plane CLI and provider operations | Pilot (`px`) |
 | Long-running agents, profiles, fleet defaults | Hermes Fleet |
 | Skill packs and agent capability distribution | Skillex |
+| Which skill hub a component owns, its sub-skills, what it loads, and its lint health | `skillex graph` (all hubs; `--html` page) joined to the Atlas by `python3 33god-platform/scripts/atlas.py hubs --publish` (Hubs tab) |
 | Recall/retain/journal memory hooks | Hindsight |
 | Compact MCP tool gateway | Pipeline MCP Hub |
 | Recurring/scheduled work (cron, timers, nightly jobs, poll loops) | Candybar (the single clock; never cron or a new `.timer`) via the `candybar` skill |

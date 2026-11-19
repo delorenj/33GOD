@@ -102,6 +102,8 @@ aside.detail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px)
 .detail p { margin: 0; }
 .detail .lead { font-size: 16px; }
 .detail .why { color: var(--ink-2); font-size: 14px; }
+.detail .factory-link { display: inline-flex; align-items: center; gap: 6px; justify-self: start; font-size: 13px; font-weight: 650; color: var(--ink); text-decoration: none; padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); }
+.detail .factory-link:hover, .detail .factory-link:focus-visible { border-color: var(--ink-2); }
 .detail h4 { margin: 4px 0 0; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag { font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--line); }
@@ -141,6 +143,7 @@ footer { font-size: 12px; color: var(--ink-3); display: flex; flex-wrap: wrap; g
       <a href="#context" data-view="context">Context</a>
       <a href="#containers" data-view="containers">Containers</a>
       <a href="#catalog" data-view="catalog">Catalog</a>
+      <a href="#hubs" data-view="hubs" hidden>Hubs</a>
     </nav>
     <div class="tools">
       <input type="search" id="q" placeholder="Find a component, subject, tech…" aria-label="Find a component">
@@ -169,11 +172,19 @@ footer { font-size: 12px; color: var(--ink-3); display: flex; flex-wrap: wrap; g
     <div class="table-wrap"><table><thead><tr><th>Id</th><th>Name</th><th>Domain</th><th>Kind</th><th>Status</th><th>What it does</th><th>Wires</th></tr></thead><tbody id="rows"></tbody></table></div>
   </section>
 
+  <section id="view-hubs" hidden>
+    <p class="why" id="hubsLead"></p>
+    <div class="table-wrap"><table><thead><tr><th>Hub</th><th>Components</th><th>Health</th><th>Findings</th><th>Sub-skills</th><th>Loads</th></tr></thead><tbody id="hubRows"></tbody></table></div>
+    <p class="why" id="hubsGaps"></p>
+  </section>
+
   <footer id="foot"></footer>
 </div>
 
 <script>
 const ATLAS = /*ATLAS_DATA*/null;
+// Filled only by `atlas.py hubs` (live skill-hub state from skillex graph); the committed render keeps null.
+const HUBS = /*HUBS_DATA*/null;
 (function () {
   if (!ATLAS) { document.querySelector('.wrap').insertAdjacentHTML('beforeend', '<p class="empty">No atlas data. Run: mise run platform:atlas</p>'); return; }
   const $ = s => document.querySelector(s);
@@ -277,15 +288,37 @@ const ATLAS = /*ATLAS_DATA*/null;
       ${c.public_card && c.public_card.promise ? `<p class="lead"><b>${esc(c.public_card.title || '')}</b>${c.public_card.title ? '. ' : ''}${esc(c.public_card.promise)}</p>` : ''}
       <p class="lead">${esc(c.summary)}</p>
       ${c.role_in_system ? `<p class="why">${esc(c.role_in_system)}</p>` : ''}
+      <a class="factory-link" href="https://manual.delo.sh/sandbox/?at=${encodeURIComponent(c.id)}" target="_blank" rel="noopener">See it in the Factory <span aria-hidden="true">&rarr;</span></a>
       ${parent ? `<p class="why">Part of <button class="rels" style="all:unset;cursor:pointer;text-decoration:underline" data-go="${esc(parent.id)}">${esc(parent.name)}</button>.</p>` : ''}
       ${kids.length ? `<h4>Inside it</h4><div class="tags">${kids.map(k => `<button class="tag" data-go="${esc(k.id)}" style="cursor:pointer">${esc(k.name)}</button>`).join('')}</div>` : ''}
       ${(c.tech || []).length ? `<h4>Built with</h4><div class="tags">${c.tech.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
       ${c.runtime ? `<h4>Runs as</h4><p class="mono">${esc(c.runtime)}</p>` : ''}
+      ${hubDetail(c.id)}
       <h4>Sends to / calls (${o.length})</h4>${relList(o, 'out')}
       <h4>Reached by (${i.length})</h4>${relList(i, 'in')}
       <p class="mono">id ${esc(c.id)}</p>`;
   }
   document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (!g) return; const id = g.dataset.go; if (location.hash !== '#containers') location.hash = 'containers'; query = ''; $('#q').value = ''; if (!shown.has(byId[id]?.status)) { shown.add(byId[id].status); renderAll(); } select(id); const t = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`); if (t) t.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+
+  const HEALTH = { ok: 'live', warning: 'partial', error: 'retired' };
+  const hubPill = h => `<span class="st ${HEALTH[h] || ''}">${esc(h)}</span>`;
+  const hubLink = name => `<a href="${esc(HUBS.graph_page)}#hub=${encodeURIComponent(name)}" target="_blank" rel="noopener">${esc(name)}</a>`;
+  function hubDetail(id) {
+    const entry = HUBS && HUBS.components[id];
+    if (!entry) return '';
+    const extra = entry.repo_hubs.length > 1 ? `<p class="why">Its repository holds ${entry.repo_hubs.length} skills (${entry.repo_hubs.map(esc).join(', ')}); a repository owns exactly one hub.</p>` : '';
+    return `<h4>Skill hub</h4><p>${entry.hubs.map(hubLink).join(', ')} ${hubPill(entry.health)}</p>${extra}`;
+  }
+  function renderHubs() {
+    if (!HUBS) return;
+    const s = HUBS.summary.nodes;
+    $('#hubsLead').innerHTML = `${HUBS.hubs.length} hub and vendored skills joined to components by repository, from <code>skillex graph</code> (${s.hub} repo-owned, ${s.vendored} vendored, ${s.subskill} sub-skills). <a href="${esc(HUBS.graph_page)}" target="_blank" rel="noopener">Open the full skill graph</a>.`;
+    const q = query;
+    $('#hubRows').innerHTML = HUBS.hubs.filter(h => !q || [h.name, h.source, ...h.components, ...h.codes].join(' ').toLowerCase().includes(q)).map(h =>
+      `<tr><td class="id">${hubLink(h.name)}</td><td>${h.components.map(c => `<button class="tag" data-go="${esc(c)}" style="cursor:pointer">${esc(byId[c] ? byId[c].name : c)}</button>`).join(' ') || '<span class="empty">no component</span>'}</td><td>${hubPill(h.health)}</td><td class="mono">${h.codes.map(esc).join(', ')}</td><td>${h.subskills.map(esc).join(', ')}</td><td>${h.loads.map(esc).join(', ')}</td></tr>`).join('');
+    const gaps = HUBS.no_hub.map(c => `<button class="tag" data-go="${esc(c)}" style="cursor:pointer">${esc(byId[c] ? byId[c].name : c)}</button>`).join(' ');
+    $('#hubsGaps').innerHTML = HUBS.no_hub.length ? `<b>First-party with a repository but no hub (${HUBS.no_hub.length}):</b> ${gaps}` : '';
+  }
 
   function renderRows() {
     const dn = Object.fromEntries(ATLAS.domains.map(d => [d.id, d.name]));
@@ -325,13 +358,15 @@ const ATLAS = /*ATLAS_DATA*/null;
     $('#ctxSvg').outerHTML = s.replace('<svg ', '<svg id="ctxSvg" role="img" aria-label="System context: who uses 33GOD and which outside systems it depends on" ');
   }
 
+  const VIEWS = HUBS ? ['context', 'containers', 'catalog', 'hubs'] : ['context', 'containers', 'catalog'];
+  if (HUBS) document.querySelector('nav.views a[data-view="hubs"]').hidden = false;
   function route() {
-    const v = ['context', 'containers', 'catalog'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'containers';
+    const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'containers';
     document.querySelectorAll('nav.views a').forEach(a => a.dataset.view === v ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
-    ['context', 'containers', 'catalog'].forEach(k => { $('#view-' + k).hidden = k !== v; });
+    ['context', 'containers', 'catalog', 'hubs'].forEach(k => { $('#view-' + k).hidden = k !== v; });
     if (v === 'containers') requestAnimationFrame(paintSpot);
   }
-  function renderAll() { renderLanes(); renderRows(); paintSpot(); renderDetail(); }
+  function renderAll() { renderLanes(); renderRows(); renderHubs(); paintSpot(); renderDetail(); }
   try { const s = localStorage.getItem('atlas.sel'); if (s && byId[s]) selected = s; } catch (_) {}
   renderContext(); renderAll(); route();
   addEventListener('hashchange', route);
