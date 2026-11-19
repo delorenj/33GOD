@@ -2,7 +2,7 @@
 title: 'Story 7.1: Resolve and Runtime-Pin Every 33GOD Component CLI'
 type: 'feature'
 created: '2026-11-19'
-status: 'in-progress'
+status: 'review'
 route: 'interactive'
 owner: 'Grolf (33god-pm)'
 epic: 'Epic 7: 33GOD CLI Surface — one contract, native binaries'
@@ -80,34 +80,34 @@ that broke today.
 
 ## Tasks / Subtasks
 
-- [ ] **T1 Launcher installer (AC2)**
-  - [ ] Write the declared list (CLI name, real entry file, runtime) for pj, pjangler, px, pilot, flume, fl, krebs, skillex; list candybar, candystore, bb, wax, waybill as Python with their current launchers.
-  - [ ] Add the tracked installer in `33god-platform/scripts/` (name per AC2), resolving node via `mise where node@24` or the `node/24` alias directory.
-  - [ ] Wrappers exec the pinned node with the entry file; idempotent writes.
-  - [ ] `--check` mode: exit nonzero on any missing, edited or stale wrapper; also probe the Python CLIs under the minimal PATH.
-  - [ ] Run it; record the `env -i` and node-20-cwd results per CLI in the Dev Agent Record.
-- [ ] **T2 krebs on PATH (AC1)**
-  - [ ] Include krebs in the installer list (`krebs/bin/krebs.mjs`).
-  - [ ] Prove `krebs --help` (or `tick --dry-run`) from /tmp under the minimal PATH, with no live tick.
-- [ ] **T3 Candybar krebs-tick (AC3)**
-  - [ ] Load `~/.agents/skills/candybar/SKILL.md`; change `krebs-tick.candybar.toml:41` argv to the absolute launcher, `tick`, `--json`.
-  - [ ] Commit and push the manifest in the krebs repo; apply/register it the documented way.
-  - [ ] Read back the registration through the Candybar API.
-  - [ ] Wait for the next scheduled fire; prove a terminal success and its intended effect. No manual `candybar run`.
-  - [ ] Scan every `.candybars/*.candybar.toml` under `~/code` for bare `node`/`npx`; report them; fix only trivially safe ones.
-- [ ] **T4 Hermes shadow (AC4)**
-  - [ ] Inventory callers first: `rg` across `~/code`, `~/.hermes`, `~/.agents` and the hermes-agent-template generators for reliance on the per-PM `hermes`.
-  - [ ] Remove `agents/hermes/pm` from `_.path` in `33GOD/mise.toml:4` and `skillex/mise.toml:14` (fix the generator that renders them, if any).
-  - [ ] Expose PM-desk HERMES_HOME/profile scoping under an explicit, documented name or mechanism; update every caller.
-  - [ ] Prove `command -v hermes` is identical from 33GOD, skillex and /tmp.
-- [ ] **T5 One skillex (AC5)**
-  - [ ] Make PATH skillex the latest npm release; prune stale mise installs.
-  - [ ] In pjangler: make `pj skills` exec PATH skillex; remove the `@delorenj/skillex` dependency; `npm version <X> --no-git-tag-version`; commit; push main; let `publish.yml` publish.
-  - [ ] After CI publishes: update the global pj install; verify `pj --version` and `pj skills --version` == `skillex --version`.
-  - [ ] Report flume's `github:delorenj/skillex#<sha>` pin (unchanged) and that it needs a reason and exit ticket under F3.
-- [ ] **T6 Land everything (AC6)**
-  - [ ] `git unpushed` clean for every touched repo; no secrets in files.
-  - [ ] Post the evidence on the Story 7.1 Plane ticket; Grolf gives the verdict.
+- [x] **T1 Launcher installer (AC2)**
+  - [x] Write the declared list (CLI name, real entry file, runtime) for pj, pjangler, px, pilot, flume, fl, krebs, skillex; list candybar, candystore, bb, wax, waybill as Python with their current launchers.
+  - [x] Add the tracked installer in `33god-platform/scripts/` (name per AC2), resolving node via `mise where node@24` or the `node/24` alias directory.
+  - [x] Wrappers exec the pinned node with the entry file; idempotent writes.
+  - [x] `--check` mode: exit nonzero on any missing, edited or stale wrapper; also probe the Python CLIs under the minimal PATH.
+  - [x] Run it; record the `env -i` and node-20-cwd results per CLI in the Dev Agent Record.
+- [x] **T2 krebs on PATH (AC1)**
+  - [x] Include krebs in the installer list (`krebs/bin/krebs.mjs`).
+  - [x] Prove `krebs --help` (or `tick --dry-run`) from /tmp under the minimal PATH, with no live tick.
+- [x] **T3 Candybar krebs-tick (AC3)**
+  - [x] Load `~/.agents/skills/candybar/SKILL.md`; change `krebs-tick.candybar.toml:41` argv to the absolute launcher, `tick`, `--json`.
+  - [x] Commit and push the manifest in the krebs repo; apply/register it the documented way.
+  - [x] Read back the registration through the Candybar API.
+  - [x] Wait for the next scheduled fire; prove a terminal success and its intended effect. No manual `candybar run`.
+  - [x] Scan every `.candybars/*.candybar.toml` under `~/code` for bare `node`/`npx`; report them; fix only trivially safe ones.
+- [x] **T4 Hermes shadow (AC4)**
+  - [x] Inventory callers first: `rg` across `~/code`, `~/.hermes`, `~/.agents` and the hermes-agent-template generators for reliance on the per-PM `hermes`.
+  - [x] Remove `agents/hermes/pm` from `_.path` in `33GOD/mise.toml:4` and `skillex/mise.toml:14` (fix the generator that renders them, if any).
+  - [x] Expose PM-desk HERMES_HOME/profile scoping under an explicit, documented name or mechanism; update every caller.
+  - [x] Prove `command -v hermes` is identical from 33GOD, skillex and /tmp.
+- [x] **T5 One skillex (AC5)**
+  - [x] Make PATH skillex the latest npm release; prune stale mise installs.
+  - [x] In pjangler: make `pj skills` exec PATH skillex; remove the `@delorenj/skillex` dependency; `npm version <X> --no-git-tag-version`; commit; push main; let `publish.yml` publish.
+  - [x] After CI publishes: update the global pj install; verify `pj --version` and `pj skills --version` == `skillex --version`.
+  - [x] Report flume's `github:delorenj/skillex#<sha>` pin (unchanged) and that it needs a reason and exit ticket under F3.
+- [x] **T6 Land everything (AC6)**
+  - [x] `git unpushed` clean for every touched repo; no secrets in files.
+  - [x] Post the evidence on the Story 7.1 Plane ticket; Grolf gives the verdict.
 
 ## Dev Notes
 
@@ -160,22 +160,40 @@ on them; other agents are changing this state now):
 
 ### Agent Model Used
 
+Claude Code (skillex session 6b6a1775), Workflow runs wmxtrwnl2 (implement + independent review) and wf_a6b0f009-aa1 (gap fixes + independent re-verify), 2026-11-19.
+
 ### Debug Log References
+
+- Root cause of the session's opening incident (skillex `core.bare=true`): hook-exported GIT_DIR leaking into test fixtures; fixed in skillex e893edc.
+- G1: `cd ~/code/chorescore && mise exec -- skillex --version` -> E_NODE_VERSION (node 22) because the global mise `npm:@delorenj/skillex` shim shadowed the launcher.
 
 ### Evidence per Acceptance Criterion
 
 | AC | Command / check | Result | Link (commit, ticket comment) |
 |----|-----------------|--------|-------------------------------|
-| AC1 | | | |
-| AC2 | | | |
-| AC3 | | | |
-| AC4 | | | |
-| AC5 | | | |
-| AC6 | | | |
+| AC1 | `env -i HOME=$HOME PATH=$HOME/.local/bin:/usr/bin:/bin krebs --help` from /tmp | met: prints spec 2.3.0, exit 0, no tick | 33GOD 8d81df9 |
+| AC2 | `cli-launchers.py --check` (3 envs: minimal-path, decoy-node+node20-pin, mise-exec+node20-pin) | met: 12 launchers in sync, 20 probes x 3 envs pass, 11/11 `node --check`; chorescore/capitalism/ssbnk `mise exec -- skillex` = 0.4.10 | 33GOD 8251d2b, ccfd430 + comment fix |
+| AC3 | `candybar show krebs-tick`; `candybar history -n 60` | met: argv `~/.local/bin/krebs tick --json`; 60/60 scheduled successes, none manual; tick journal shows triage effects | krebs 8d81df9 |
+| AC4 | `whence -ap hermes` in fresh login shells from 33GOD, skillex, /tmp | met: only ~/.local/bin/hermes; `hermes-pm --pm-launcher` declared + probed | hermes-agent-template 268370d, 33GOD c7fbfa7-era mise.toml |
+| AC5 | `npm view @delorenj/skillex version` == `skillex --version` == `pj skills --version`; `pj --version` == npm | partial: all 0.4.10 / pj 1.5.57; pjangler still declares `@delorenj/skillex@0.4.4` as a library (parity audit); per-repo `npm:@delorenj/skillex` pins (e.g. intelliforia 0.1.3) still win -> Story 7.6; flume `github:delorenj/skillex#f51ff3e` pin unchanged, needs F3 reason + exit ticket | pjangler c0538f5, c7e72f9; zshyzsh d67984c |
+| AC6 | `git unpushed`; diff scan | met: all story commits on origin; zshyzsh commit limited to the skillex hunks | see File List |
 
 ### Completion Notes List
 
+- One install path for npm-distributed 33GOD CLIs: `npm-global:` packages in prefix ~/.local; no version directories in launchers (E_VERSIONED_PATH guard); `mise-npm` kind retired.
+- `cli-launchers.py upgrade <pkg...>|--all` installs with the pinned node's npm then rewrites launchers (bare `npm i -g` deletes them).
+- `--check` alias; `[[script_cli]]` entries (hermes-pm); per-kind wrapper comments.
+- Needs Grolf: accept AC5 deviations (pjangler library dep kept; per-repo pins deferred to 7.6); Epic 7 Director Rule exception.
+- Residual risks: npm default prefix (installs/node/24.6.0/bin) precedes ~/.local/bin in login shells, so a bare `npm i -g @delorenj/pjangler` would shadow `pj` without `check` noticing; ~91 repo mise.tomls still put agents/hermes/pm on `_.path`; long-lived sessions keep stale PATH entries.
+
 ### File List
+
+- 33GOD: 33god-platform/scripts/cli-launchers.py, cli-launchers.toml, tests/test_cli_launchers.py, README.md, skills/33god-hub/SKILL.md, components/krebs.yaml, mise.toml
+- krebs: .candybars/krebs-tick.candybar.toml
+- hermes-agent-template: bin/hermes-pm
+- pjangler: src/skills/cli.ts, src/parity/rules.ts, package.json (1.5.57)
+- skillex: mise.toml, scripts/pre-push-checks.sh, tests/conftest.py, tests/node/hermetic-tmp.mjs
+- zshyzsh: mise/config.toml
 
 ## Spec Change Log
 

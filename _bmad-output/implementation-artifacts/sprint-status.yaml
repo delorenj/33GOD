@@ -67,7 +67,7 @@ development_status:
   # sprint-change-proposal-2026-11-19.md). Director Rule exception: do not run
   # bmad-loop in this repo; per-repo code lands in each child.
   epic-7: in-progress
-  7-1-resolve-and-runtime-pin-every-component-cli: in-progress
+  7-1-resolve-and-runtime-pin-every-component-cli: review
   7-2-adopt-the-usage-spec-as-the-self-describe-contract: backlog
   7-3-one-json-envelope-and-one-exit-code-table: backlog
   7-4-33god-discovery-and-health: backlog
