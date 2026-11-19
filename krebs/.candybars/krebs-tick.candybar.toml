@@ -12,7 +12,7 @@
 # Enabled live since 2026-11-14. It writes Plane and publishes to the bus, so never
 # `candybar run` it to test; the first scheduled fire after `resume` is the proof.
 # Preview what the first fire would do (read-only, safe any time):
-#   node /home/delorenj/code/33GOD/krebs/bin/krebs.mjs tick --dry-run [--board KEY]
+#   krebs tick --dry-run [--board KEY]
 #
 # This file lives in krebs/.candybars inside the 33GOD repo. Candybar's project is
 # the git toplevel (33GOD), which has no .candybars/ of its own, so this is read
@@ -24,9 +24,13 @@
 #
 # Environment: the Plane credential is Pilot's op:// reference, read with `op`
 # inside the job (OP_SERVICE_ACCOUNT_TOKEN comes from the user manager's
-# environment, never this file); node and op come from the executor's PATH
-# (mise shims, ~/.local/bin). Exit 0 = ok or nothing to do; 1 = a scope or
-# action failed (the JSON report on stdout says which).
+# environment, never this file); op comes from the executor's PATH. krebs runs
+# through its ~/.local/bin launcher, which pins Node 24 (33god-platform
+# cli-launchers.toml; rewrite with `python3 33god-platform/scripts/cli-launchers.py
+# install`), so the executor's PATH and mise pins never pick the interpreter.
+# After changing argv: `uv run candybar register --update ../krebs` from the candybar
+# checkout (krebs is a Candybar project, tag project:krebs). Exit 0 = ok or nothing
+# to do; 1 = a scope or action failed (the JSON report on stdout says which).
 [candybar]
 name = "krebs-tick"
 description = "Krebs lifecycle v2 dispatcher: repair lifecycle labels, fill each scope's free slots (plane.wip, default 2) from triaged Todo, publish agent.invocation.start (ticket-delegation); republish owed publishes"
@@ -38,7 +42,7 @@ enabled = true
 
 [candybar.runner]
 kind = "exec"
-argv = ["node", "/home/delorenj/code/33GOD/krebs/bin/krebs.mjs", "tick", "--json"]
+argv = ["/home/delorenj/.local/bin/krebs", "tick", "--json"]
 workdir = "/home/delorenj/code/33GOD/krebs"
 env = { NATS_URL = "nats://127.0.0.1:4222", KREBS_TZ = "America/New_York" }
 timeout_s = 300

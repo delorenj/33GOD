@@ -1,0 +1,75 @@
+# 33GOD component CLIs on PATH, each on a pinned runtime (Story 7.1).
+#
+#   python3 33god-platform/scripts/cli-launchers.py install   # write ~/.local/bin wrappers
+#   python3 33god-platform/scripts/cli-launchers.py check     # exit 6 on drift, 1 on a broken CLI
+#
+# Every Node CLI below gets a generated /bin/sh wrapper in bin_dir that execs the
+# pinned Node with the package's real `bin` entry (read from its package.json), so
+# the CLI runs the same from any cwd (a mise pin of node 20 included), any PATH
+# (Candybar, systemd, `env -i`) and on the Mac peer. The entry file is not moved:
+# px/pilot and flume still run from their 33GOD checkouts, pj from the npm global
+# install, skillex from its mise npm install.
+#
+# Package kinds:
+#   repo:<path>        a checkout under the 33GOD root (this file's parent's parent)
+#   npm-global:<name>  `npm i -g` install, looked up in npm_global_roots, then in the
+#                      pinned Node's own lib/node_modules
+#   mise-npm:<name>    a mise `npm:<name>` tool, resolved with `mise where` from $HOME
+#                      at install time (re-run install after `mise up` moves it)
+#
+# Python CLIs are not wrapped: uv tool venvs and repo launchers already pin their
+# interpreter. `check` only proves each one runs under a minimal PATH.
+
+schema = 1
+bin_dir = "~/.local/bin"
+# Node major, resolved with `mise where node@<major>` (installed on demand). The
+# wrapper uses mise's major alias (installs/node/24) so a 24.x patch upgrade or
+# prune does not break it. Every Node CLI here needs Node >= 24.
+node = "24"
+npm_global_roots = ["~/.local/lib/node_modules"]
+
+[[node_cli]]
+package = "npm-global:@delorenj/pjangler"
+bins = ["pj", "pjangler", "pjangler-mcp", "pjangler-prompt"]
+probe = { bin = "pj", args = ["--version"], expect = "version" }
+
+[[node_cli]]
+package = "repo:pilot"
+bins = ["px", "pilot", "px-supervised"]
+probe = { bin = "px", args = ["--version"], expect = "version" }
+
+[[node_cli]]
+package = "repo:flume/packages/flume-hr"
+bins = ["flume", "fl"]
+probe = { bin = "flume", args = ["--version"], expect = "version" }
+
+[[node_cli]]
+# No --version flag; --help prints usage and exits 0 without ticking.
+package = "repo:krebs"
+bins = ["krebs"]
+probe = { bin = "krebs", args = ["--help"], expect = "prefix:krebs:" }
+
+[[node_cli]]
+package = "mise-npm:@delorenj/skillex"
+bins = ["skillex"]
+probe = { bin = "skillex", args = ["--version"], expect = "version" }
+
+[[python_cli]]
+name = "candybar"
+probe = ["--version"]
+
+[[python_cli]]
+name = "candystore"
+probe = ["--help"]
+
+[[python_cli]]
+name = "bb"
+probe = ["--help"]
+
+[[python_cli]]
+name = "wax"
+probe = ["--help"]
+
+[[python_cli]]
+name = "waybill"
+probe = ["--version"]

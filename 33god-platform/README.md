@@ -82,6 +82,39 @@ and five adopted external volumes. Every checked-in JSON render uses Compose
 `--no-env-resolution`, so the optional Holocene component env file remains a
 path reference and its values do not enter captured output.
 
+## Component CLIs on PATH
+
+Every 33GOD component CLI runs by its native name from any cwd and any PATH
+(an agent shell, Candybar, a systemd unit, `env -i`). `cli-launchers.toml`
+declares them; one idempotent installer writes the `~/.local/bin` wrappers:
+
+```bash
+python3 scripts/cli-launchers.py install [--dry-run]   # write the wrappers, then probe every CLI
+python3 scripts/cli-launchers.py check                 # exit 6 on drift, 1 on a broken CLI; --json for the envelope
+```
+
+- **Node CLIs** (pj, pjangler, px, pilot, flume, fl, krebs, skillex and their
+  sibling bins) get a generated `/bin/sh` wrapper that execs mise's Node 24
+  (`installs/node/24`, resolved with `mise where node@24`, installed on demand)
+  with the package's real `bin` entry from its `package.json`. Entry files stay
+  where they are: px/pilot, flume and krebs run from their 33GOD checkouts, pj
+  from the `npm i -g --prefix ~/.local` install, skillex from its mise npm
+  install. A node 20 pin in the caller's cwd, or a different `node` first on
+  PATH, no longer changes the interpreter.
+- **Python CLIs** (candybar, candystore, bb, wax, waybill) are not wrapped:
+  their uv tool venvs and repo launchers already pin the interpreter. `check`
+  probes them too.
+- Probes run each CLI twice from a scratch directory: under
+  `env -i HOME PATH=~/.local/bin:/usr/bin:/bin`, and again with a decoy `node`
+  first on PATH and a `mise.toml` pinning node 20 in the cwd. A version probe
+  must print the version in the package's `package.json`.
+- Re-run `install` after a package moves: `mise up` of skillex (its entry path
+  is resolved at install time), or a pjangler global reinstall. `npm i -g`
+  refuses to replace a wrapper (EEXIST), so reinstall with `--force` and then
+  re-run `install`. `check` reports the drift either way.
+- Exits follow the shared table: 0 ok, 1 failure, 2 usage/config, 4 partial,
+  6 drift. Tests: `tests/test_cli_launchers.py`.
+
 ## Runtime inputs
 
 The root stack uses external networks `bloodbank-network`,
