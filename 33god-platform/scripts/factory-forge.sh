@@ -55,13 +55,16 @@ STATE="${FACTORY_FORGE_STATE:-${XDG_STATE_HOME:-$HOME/.local/state}/factory-forg
 mkdir -p "$STATE"
 
 # ---- the candybar result file is always written, whatever happens -----------------------------------
-R_STATUS=fail R_MSG="factory-forge exited before it finished" R_TOKENS=0
+R_STATUS=fail R_MSG="factory-forge exited before it finished" R_TOKENS=0 R_COST=""
 write_result() {
   [ -n "${CANDYBAR_RESULT_FILE:-}" ] || return 0
-  "$PY" - "$CANDYBAR_RESULT_FILE" "$R_STATUS" "$R_MSG" "$R_TOKENS" <<'PY' 2>/dev/null
+  "$PY" - "$CANDYBAR_RESULT_FILE" "$R_STATUS" "$R_MSG" "$R_TOKENS" "$R_COST" <<'PY' 2>/dev/null
 import json, sys
-f, status, msg, tok = sys.argv[1:5]
-json.dump({"status": status, "message": msg[:500], "metrics": {"token_spend": int(float(tok or 0))}}, open(f, "w"))
+f, status, msg, tok, cost = sys.argv[1:6]
+m = {"token_spend": int(float(tok or 0))}
+if cost not in ("", "None"):
+    m["cost_usd"] = round(float(cost), 4)
+json.dump({"status": status, "message": msg[:500], "metrics": m}, open(f, "w"))
 PY
 }
 trap write_result EXIT
@@ -118,6 +121,7 @@ T0=$SECONDS
 CLAUDE_RC=$?
 TOKENS_JSON="$("$PY" "$FORGE" usage "$RUN/claude.json" 2>/dev/null || echo '{"total":0}')"
 R_TOKENS="$("$PY" -c 'import json,sys; print(json.load(sys.stdin).get("total",0))' <<<"$TOKENS_JSON")"
+R_COST="$("$PY" -c 'import json,sys; print(json.load(sys.stdin).get("cost_usd") or "")' <<<"$TOKENS_JSON")"
 SUBTYPE="$("$PY" -c 'import json,sys; print(json.load(sys.stdin).get("subtype") or "")' <<<"$TOKENS_JSON")"
 echo "factory-forge: claude exit $CLAUDE_RC, $R_TOKENS tokens, subtype '${SUBTYPE:-none}'"
 
