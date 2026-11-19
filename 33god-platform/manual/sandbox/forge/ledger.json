@@ -27,6 +27,28 @@
    "failed": [
     "scope"
    ]
+  },
+  {
+   "run": "2026-11-19T01:06-0500",
+   "id": "hook-hub",
+   "mode": "build",
+   "outcome": "shipped",
+   "score": 7.0,
+   "commit": "c1614d8",
+   "tokens": {
+    "input": 99,
+    "output": 117795,
+    "cache_creation": 558599,
+    "cache_read": 6193443,
+    "total": 117894,
+    "cost_usd": 9.877295249999998,
+    "turns": 61,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built hook-hub as the receiving dock station, and it replaces the primitive `Dock`. It's an orange cutaway shed with Bloodbank-blue trim on a hazard-striped platform, open on the south side. It has a strip-curtain door fed by incoming rollers, a turntable under a red label-reader beam, a clerk, a house stamp over a post-it pad, a purple phone to the library, a driver's window with a briefing car"
+   },
+   "showcase_url": "https://s3.delo.sh/projects/33god/2026-11-19/factory-forge-hook-hub/index.html",
+   "duration_s": 2108.0
   }
  ]
 }
