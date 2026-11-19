@@ -169,9 +169,24 @@ an explicit prerequisite for this epic's dependent stories.
 catalog and receipt providers are cross-project seams (Krebs, Pilot, Hermes
 gateway) and become integration stories in `initiatives.md` when scheduled.
 
+### Epic 7: 33GOD CLI Surface — one contract, native binaries
+
+Every 33GOD component CLI runs by its native name from any cwd on a pinned runtime,
+describes itself in the `usage` spec, and speaks one JSON envelope and one exit-code
+table; a small `33god` command gives discovery and health only. Follows AWS's
+contract, not its monolith.
+**Requirements covered:** CS-1 to CS-6 (architecture spine
+`architecture-33GOD-2026-11-19-cli-surface`; no PRD covers the CLI surface).
+**Owner:** 33god (Grolf, `33god-pm`). Approved by Jarad on 2026-11-19
+(`sprint-change-proposal-2026-11-19.md`). A recorded exception to the Director Rule
+freeze above: the epic spans nine child repos; per-repo code lands in each child,
+and `bmad-loop` still does not run here.
+
 ### Dependency Flow
 
 Epic 1 provides the read-only workforce and company context. Epic 2 delivers the essential walking skeleton: repo-independent named specialists with curated skills, traveling memory, and event-driven invocation—decoupling agents from repositories and fulfilling the breadth-before-depth platform imperative. Epics 3–6 build upon this foundation to provide unified visibility (Now feed, Inbox, Agent Office) and consequential action execution across both repo-bound and cross-cutting specialist agents.
+
+Epic 7 is independent of Epics 1–6. Inside it, Story 7.1 (resolve and pin) goes first; 7.2 (usage spec) blocks 7.7 (generated skill blocks); 7.5 (guards unwrap `33god`) must land before any `33god` passthrough; 7.3 (envelope and exit table) and 7.6 (mise cleanup) proceed one component at a time by agent call frequency.
 
 <!-- Epic and story sections will be added in later workflow steps. -->
 
@@ -437,5 +452,207 @@ So that specialists can be triggered asynchronously from n8n, webhooks, or other
 **When** the agent executes
 **Then** it runs in its designated desk environment with full access to its curated skills and Hindsight bank, completing without repo-dependency errors.
 
+## Epic 7: 33GOD CLI Surface — one contract, native binaries
 
+Every 33GOD component CLI runs by its native name from any cwd on a pinned runtime,
+describes itself in the `usage` spec, and speaks one JSON envelope and one exit-code
+table; a small `33god` command gives discovery and health only.
 
+> **Owner: Grolf (`33god-pm`). Approved by Jarad 2026-11-19.** Decision and checklist:
+> `sprint-change-proposal-2026-11-19.md`. Architecture:
+> `architecture/architecture-33GOD-2026-11-19-cli-surface/ARCHITECTURE-SPINE.md`.
+> Evidence: `research/cli-surface-research-2026-11-19.md` (its corrected verdict
+> supersedes its design section). Plane: epic 33GOD-101; stories 7.1-7.7 are
+> 33GOD-102 to 33GOD-108 (Backlog). Native binary names stay canonical in skills,
+> guards and Candybar. Belsky level (`belsky-doctrine`): every 33GOD component CLI,
+> not a CLI platform with its own schema or framework.
+
+### Story 7.1: Resolve and Runtime-Pin Every 33GOD Component CLI
+
+> **In progress (2026-11-19):** implemented now in an interactive session at Jarad's
+> direction ("step 1"). Spec: `implementation-artifacts/spec-7-1-resolve-and-runtime-pin-every-component-cli.md`.
+
+As an agent (or Candybar, or a systemd unit),
+I want to run any 33GOD component CLI by its native name from any cwd and any PATH, on the runtime it needs,
+So that the CLI surface stops depending on luck of the shell.
+
+**Acceptance Criteria:**
+
+**Given** a minimal environment (`env -i HOME=$HOME PATH=$HOME/.local/bin:/usr/bin:/bin`) in `/tmp`
+**When** krebs is invoked with `--help` (or an equivalent no-side-effect invocation such as `tick --dry-run` if `--help` is unsupported)
+**Then** it succeeds, and it does NOT perform a live tick. (AC1)
+
+**Given** each 33GOD Node CLI launcher in `~/.local/bin` (at least pj, pjangler, px, pilot, flume, fl, krebs, skillex)
+**When** it is run with `--version` (or `--help` where there is no version flag) under the minimal PATH, and again from a directory whose mise config pins node 20
+**Then** it succeeds on a pinned Node >= 24 and reports the expected version, the wrappers having been written by ONE tracked, idempotent installer in the 33GOD repo that resolves the interpreter through mise and has a `--check` mode that exits nonzero on drift. (AC2)
+
+**Given** the krebs-tick Candybar manifest
+**When** it is switched to the pinned launcher (absolute `~/.local/bin/krebs`, `tick`, `--json`) and applied the documented way
+**Then** the registration reads back through the Candybar API and the next scheduled terminal invocation succeeds with its intended effect, without any manual `candybar run`; other `.candybars` manifests with bare `node`/`npx` are reported. (AC3)
+
+**Given** `~/code/33GOD`, `~/code/skillex` and `/tmp`
+**When** `hermes` is resolved from each
+**Then** it is the same binary, and the per-PM launcher's HERMES_HOME/profile scoping stays reachable under an explicit, documented name or mechanism with every caller updated. (AC4)
+
+**Given** the installed skillex, pjangler and flume
+**When** versions are compared
+**Then** PATH skillex equals the latest npm release, stale mise installs are pruned, `pj skills` execs PATH skillex (bundled dependency removed, pjangler released through trusted publishing) so `pj skills --version` == `skillex --version`, and flume's skillex sha pin is reported. (AC5)
+
+**Given** the story is finished
+**When** `git unpushed` runs
+**Then** every touched repo is committed and pushed, and no secret is in any file. (AC6)
+
+**Verbatim acceptance criteria (approved 2026-11-19):**
+
+- **AC1** krebs is on PATH: `env -i HOME=$HOME PATH=$HOME/.local/bin:/usr/bin:/bin krebs --help` (or its equivalent no-side-effect invocation, e.g. tick --dry-run if --help is unsupported) succeeds from /tmp. It must NOT perform a live tick.
+- **AC2** Every 33GOD Node CLI launcher in ~/.local/bin (at least pj, pjangler, px, pilot, flume, fl, krebs, skillex) runs on a pinned Node >=24 regardless of cwd mise pins or a minimal PATH: for each, `env -i HOME=$HOME PATH=$HOME/.local/bin:/usr/bin:/bin <cli> --version` (or --help where no version flag) succeeds and reports the expected version, and the same from a directory whose mise config pins node 20. Mechanism: ONE tracked, idempotent installer in the 33GOD repo (e.g. 33god-platform/scripts/cli-launchers.py or .sh) that writes the ~/.local/bin wrappers from a declared list, resolving the interpreter via mise (e.g. `mise where node@24` or the ~/.local/share/mise/installs/node/24 alias) so it is portable to the Mac peer, with a --check mode that exits nonzero on drift. Wrappers exec the pinned node with the CLI's real entry file. Python CLIs (candybar, candystore, bb, wax, waybill) are listed as already-pinned (uv tool venvs / launchers) or fixed if --check finds them broken under the minimal PATH.
+- **AC3** Candybar: the krebs-tick manifest (~/code/33GOD/krebs/.candybars/krebs-tick.candybar.toml) runs krebs through the pinned launcher (absolute path to ~/.local/bin/krebs, tick, --json) instead of bare `node` + repo path. Follow the candybar skill (~/.agents/skills/candybar/SKILL.md): commit the manifest, apply/register it the documented way, READ BACK the registration through the Candybar API, and prove the next scheduled terminal invocation succeeded and had its intended effect. NEVER `candybar run` krebs-tick manually (its manifest says not to). Also scan all other .candybars manifests across ~/code for bare node/npx interpreters and report them (fix only trivially safe ones).
+- **AC4** hermes resolves to the same binary from ~/code/33GOD, ~/code/skillex and /tmp. The per-PM launcher at agents/hermes/pm/hermes (put on PATH by `_.path` in ~/code/33GOD/mise.toml:4 and ~/code/skillex/mise.toml:14) stops shadowing the global hermes; whatever it provides (HERMES_HOME/profile scoping for PM desks) stays reachable under an explicit, documented name or mechanism, and every caller that relied on the shadow is updated. Investigate callers BEFORE changing anything (rg across ~/code, ~/.hermes, ~/.agents, hermes-agent-template generators — generated files are rendered, never hand-edited: fix the generator). Never restart hermes-gateway except via `hermes-gateway-restart --reason` and only if truly required.
+- **AC5** One skillex: the skillex on PATH equals the latest npm release (0.4.10 at time of writing; check `npm view @delorenj/skillex version`), stale co-installed mise versions are pruned, and `pj skills` execs the PATH skillex instead of its bundled @delorenj/skillex 0.4.4 (remove the dependency). Release pjangler the standard way: bump package.json (`npm version X --no-git-tag-version`), commit, push main; its .github/workflows/publish.yml publishes via npm trusted publishing (never `npm publish` locally, never --otp). After CI publishes, update the global install so `pj --version` shows the new version, then verify `pj skills --version` == `skillex --version`. Report flume's github:delorenj/skillex#<sha> pin (do not change it; note it needs a reason+exit ticket under features.toml F3).
+- **AC6** Every touched repo committed and pushed (`git unpushed` shows nothing new for them). No secrets in files.
+
+### Story 7.2: Adopt the usage Spec as the Self-Describe Contract
+
+As an agent,
+I want every 33GOD component CLI to answer `--usage-spec` in jdx's `usage` format,
+So that I can read any component's commands, flags and arguments without running or scraping it.
+
+**Acceptance Criteria:**
+
+**Given** usage-cli 3.3.0 is installed through mise
+**When** the story starts
+**Then** usage-cli is upgraded to the current release first, and `usage --version` reports it.
+
+**Given** the exporter packages named in the decision (`@usage-spec/commander` on npm, `usage-spec-typer` and `argparse-usage` on PyPI, the `clap_usage` crate)
+**When** each is needed for a component
+**Then** it is verified to exist and to produce a spec `usage` can parse before the component depends on it; a missing or broken exporter is recorded and the component ships a static `.usage.kdl` instead.
+
+**Given** px and skillex (the two nearest to conformant)
+**When** they are converted first
+**Then** `px --usage-spec` and `skillex --usage-spec` print specs that `usage` validates, generated from each CLI's own parser or command table, with a test in each repo that fails when the spec drifts from the parser.
+
+**Given** the remaining component CLIs (pj, flume, krebs, candybar, bb, candystore, waybill, wax)
+**When** they are converted one at a time
+**Then** each answers `--usage-spec` or ships a static `.usage.kdl`, and no `33god.cli/1` or other bespoke schema is created.
+
+### Story 7.3: One JSON Envelope and One Exit-Code Table
+
+As an agent,
+I want every converted 33GOD CLI to emit one JSON envelope and use one exit-code table,
+So that a single parser and a single meaning for each exit code work across the platform.
+
+**Acceptance Criteria:**
+
+**Given** skillex's `{schema, command, ok, exit, data, findings}` v2 envelope
+**When** the platform envelope is written down
+**Then** it is a superset that skillex already satisfies unchanged, with any extra fields optional.
+
+**Given** the platform exit table (0 ok, 1 failure, 2 usage/config, 3 refused, 4 partial, 5 lock-busy/retry, 6 drift, 130 interrupted)
+**When** a component is converted
+**Then** its `--json` output uses the envelope, an unknown command exits 2, and any native code that differs is declared in a native-to-platform map until it converts.
+
+**Given** components are converted one at a time by agent call frequency
+**When** pj is reached
+**Then** raw `pj list --json` stays unchanged until its consumers (pilot `registry.js:61`, candystore `projects.py:75`) read the envelope (consumers first).
+
+**Given** flume's `{schema_version: 1, ...}` FleetEnvelopeV1
+**When** flume converts
+**Then** it first emits `schema` alongside `schema_version`, and drops `schema_version` only after flume-mcp and `validateFleetEnvelope` consumers move.
+
+### Story 7.4: `33god` Discovery and Health
+
+As an agent,
+I want one `33god` command that lists, locates, version-checks, health-checks and describes every 33GOD component CLI,
+So that I can find what exists and whether it is healthy without knowing each tool's quirks.
+
+**Acceptance Criteria:**
+
+**Given** the component registry (`33god-platform/components/*.yaml`) and the components' usage specs
+**When** `33god ls`, `33god where <c>`, `33god versions`, `33god doctor --all` and `33god describe <c>` run
+**Then** they read only the registry and usage specs (no second component list), and each supports `--json` in the platform envelope.
+
+**Given** installed versions differ from the latest release or from each other (for example PATH skillex vs `pj skills` vs flume's pin)
+**When** `33god versions` runs
+**Then** it reports the skew and exits with the drift code (6).
+
+**Given** each component's own doctor/health verb and declared exit map
+**When** `33god doctor --all` runs
+**Then** results are normalised to the platform exit table.
+
+**Given** native names are canonical
+**When** `33god` ships
+**Then** it has NO passthrough (`33god <component> ...` does not exec components); passthrough may be added only after Story 7.5 lands, and native names remain canonical in skills, guards and Candybar even then. It may start as `platform.py` subcommands and owns no features.toml atom.
+
+### Story 7.5: Argv Guards Unwrap `33god`
+
+As the platform owner,
+I want every argv-parsing guard to see through `33god` and registry aliases,
+So that no CLI spelling can bypass the Candybar-only-clock rule or any other guard.
+
+**Acceptance Criteria:**
+
+**Given** bloodbank hook-hub `native_clock_guard.py` (its `strip_prefix` knows env/sudo/nohup/timeout/nice/exec, then branches on `name == "hermes"`)
+**When** a command such as `33god hermes cron create ...` is checked
+**Then** the guard unwraps `33god` (and any alias the registry defines) and blocks it exactly as it blocks `hermes cron create ...`.
+
+**Given** every other argv-parsing guard in the fleet (for example the crank keys guard)
+**When** the story is done
+**Then** each unwraps `33god` and maps aliases to canonical names, with a guard test per alias.
+
+**Given** Story 7.4's `33god` has no passthrough
+**When** anyone proposes passthrough
+**Then** it is refused until this story's guards and tests are merged.
+
+### Story 7.6: Retire skills:sync and Pure Alias Mise Tasks
+
+As an agent,
+I want skill-operation and pure alias mise tasks gone, with build, test, deploy and bootstrap tasks kept,
+So that each command has one spelling and the 2026-10-10 "use skillex directly" rule holds fleet-wide.
+
+**Acceptance Criteria:**
+
+**Given** `skillex integrations retire-mise` matchers are over-broad today
+**When** they are narrowed first
+**Then** a preview no longer selects Milkshake `skill:link`/`skill:reference`, pilot `skill:surface`, or IntelliForia `skills:bootstrap`/`skills:local`/`library:pull`, with tests for each.
+
+**Given** `skills:sync` in about 34 mise.toml files
+**When** `retire-mise` runs (preview, then `--apply`)
+**Then** every `skills:sync` task and its task-call edges are removed, and the generators that emit it (hermes-agent-template, `flume/templates/hermes-agent`) are fixed so it cannot return.
+
+**Given** a candidate alias task
+**When** it is considered for deletion
+**Then** it is deleted only if its body is exactly `<cli> <args>` with no `depends`, `env` or `dir`, and every doc and skill that cites it is rewritten in the same commit; build-gated tasks (for example flume `org:*`, which declare `depends = ["build"]`) stay.
+
+**Given** mise's retained roles
+**When** the story is done
+**Then** `[tools]`/runtime pins, `[env]`, enter/leave hooks, per-repo build/test, every deploy task (including mobile-deploy-hub `mise run deploy`) and the Mac peer's mise-based deployment are untouched.
+
+### Story 7.7: Generated Hub-Skill Command Blocks from usage Specs
+
+As an agent reading a hub skill,
+I want each hub's command block generated from its CLI's usage spec,
+So that the skill cannot disagree with the CLI.
+
+**Acceptance Criteria:**
+
+**Given** a component with a usage spec (Story 7.2)
+**When** its hub skill's command block is generated (for example with `usage generate markdown`)
+**Then** the block sits between markers in the hub `SKILL.md`, generalising px's `<!-- px:surface -->` block and drift test.
+
+**Given** a hub skill whose generated block no longer matches the spec
+**When** `skillex skill lint` runs
+**Then** it reports the drift as a finding with the drift exit code (6), because hub linting belongs to skillex under ADR-0002.
+
+**Given** Story 7.2 is not done for a component
+**When** this story reaches that component
+**Then** it waits (7.2 blocks 7.7) rather than hand-writing a block.
+
+### Epic 7 deferred items (explicitly not now)
+
+- **Bloodbank CLI-runner.** The bus has a closed command vocabulary and signed actor
+  envelopes, so a generic runner would step around both. Build only when a real
+  async or remote caller asks, through the typed command plane.
+- **mcp-hub `cli` domain.** The hosted container cannot run host binaries; a stdio
+  domain needs a read-only default and reviewed annotations. Build only when an
+  agent needs MCP access to a CLI that mcp-hub does not cover.
+- **`33god` passthrough.** Blocked on Story 7.5; never the canonical spelling.

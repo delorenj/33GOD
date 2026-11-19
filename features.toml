@@ -136,6 +136,20 @@ requires = ["pane.topology"]
 platforms = ["linux"]
 initiatives = ["I-9"]
 
+[candidate.cli-surface]
+summary = "Every 33GOD component CLI on PATH with a pinned runtime, self-described by the usage spec, speaking one JSON envelope and one exit-code table; a discovery/health-only `33god` (Epic 7, approved 2026-11-19)"
+repo = "delorenj/33god-platform"          # hypothetical home (control plane already owns the component registry); not authorization for a new repo or atom
+status = "scattered"
+today = ["pilot `px help --json` (src/surface.js surfaceData: the only machine-readable command tree)",
+         "skillex ResultEnvelope {schema:2, command, ok, exit, data, findings} + exit table (src/core/result.ts)",
+         "flume FleetEnvelopeV1 {schema_version:1, ok, command, data} (packages/flume-hr/src/org/output.ts)",
+         "~/.local/bin launchers (symlinks into repos, npm global, uv tools; krebs has none)",
+         "33god-platform components/*.yaml registry + scripts/platform.py (the only cross-component commands today)"]
+requires = ["clock", "project.identity", "agent.hooks"]   # Candybar argv runs the launchers; pj list --json consumers-first; argv guards live in bloodbank hook-hub
+# I-9: F1 candidate inventory under the features migration. I-12: `33god ls/where/versions` read the one component registry.
+# Tracking epic: Epic 7 in _bmad-output/planning-artifacts/epics.md (no dedicated I-n yet).
+initiatives = ["I-9", "I-12"]
+
 [candidate.skill-reminders]
 summary = "Hooks that remind agents of skills and lint skill files"
 repo = "delorenj/skill-reminders"

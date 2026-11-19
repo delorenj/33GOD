@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 07:17
-last_updated: 09-27-2026 10:49
+last_updated: 11-19-2026 13:43
 project: 33GOD
 project_key: NOKEY
 tracking_system: file-system
@@ -62,3 +62,16 @@ development_status:
 
   epic-6: backlog
   epic-6-retrospective: optional
+
+  # Epic 7: 33GOD CLI Surface (owner Grolf/33god-pm; approved 2026-11-19,
+  # sprint-change-proposal-2026-11-19.md). Director Rule exception: do not run
+  # bmad-loop in this repo; per-repo code lands in each child.
+  epic-7: in-progress
+  7-1-resolve-and-runtime-pin-every-component-cli: in-progress
+  7-2-adopt-the-usage-spec-as-the-self-describe-contract: backlog
+  7-3-one-json-envelope-and-one-exit-code-table: backlog
+  7-4-33god-discovery-and-health: backlog
+  7-5-argv-guards-unwrap-33god: backlog
+  7-6-retire-skills-sync-and-pure-alias-mise-tasks: backlog
+  7-7-generated-hub-skill-command-blocks-from-usage-specs: backlog
+  epic-7-retrospective: optional
