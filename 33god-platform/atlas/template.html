@@ -1,4 +1,5 @@
 <title>33GOD Atlas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +21,7 @@
   --d1: #2a78d6; --d2: #eb6834; --d3: #1baf7a; --d4: #eda100;
   --d5: #e87ba4; --d6: #008300; --d7: #6250d6; --d8: #e34948;
   --d9: #33c1db; --d10: #555b02; --d11: #904759; --d12: #469efa; --d13: #b4459f; --d0: #8a948e;
+  --e-call: #7d8a82; --e-bus: #e2552a; --e-data: #2a6fd6; --e-llm: #8a4fd0; --e-ops: #8c6d46;
   --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -30,12 +32,14 @@
   --wire: #ff7a4d; --wire-in: #6aa2ff; --focus: #8ab8ff;
   --good: #4cc272; --warn: #e0a640; --bad: #ff7b72; --idle: #8a978f;
   --d1: #3987e5; --d2: #d95926; --d3: #199e70; --d4: #c98500; --d5: #d55181; --d6: #2f9a2f; --d7: #9085e9; --d8: #e66767; --d9: #1386a1; --d10: #6f650d; --d11: #964d62; --d12: #2157e3; --d13: #9a3aa8; --d0: #75817a;
+  --e-call: #7f8c84; --e-bus: #ff7a4d; --e-data: #6aa2ff; --e-llm: #b49cff; --e-ops: #c8a27a;
   color-scheme: dark; } }
 :root[data-theme="dark"] {
   --paper: #111714; --panel: #18201c; --ink: #e8eee9; --ink-2: #b4c0b8; --ink-3: #8a978f; --line: #2c3731;
   --wire: #ff7a4d; --wire-in: #6aa2ff; --focus: #8ab8ff;
   --good: #4cc272; --warn: #e0a640; --bad: #ff7b72; --idle: #8a978f;
   --d1: #3987e5; --d2: #d95926; --d3: #199e70; --d4: #c98500; --d5: #d55181; --d6: #2f9a2f; --d7: #9085e9; --d8: #e66767; --d9: #1386a1; --d10: #6f650d; --d11: #964d62; --d12: #2157e3; --d13: #9a3aa8; --d0: #75817a;
+  --e-call: #7f8c84; --e-bus: #ff7a4d; --e-data: #6aa2ff; --e-llm: #b49cff; --e-ops: #c8a27a;
   color-scheme: dark; }
 
 * { box-sizing: border-box; }
@@ -119,6 +123,57 @@ aside.detail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px)
 .legend i { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--wire); vertical-align: middle; margin-right: 6px; }
 .legend i.in { border-top: 2px dashed var(--wire-in); }
 
+/* Graph: the same parts and wires as one network. Dots wear their domain lane's colour; wires wear their kind. */
+.gcol { display: grid; gap: 8px; min-width: 0; }
+.gkey { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; min-width: 0; }
+.gkey > b { flex: none; width: 70px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.gkey .chip { gap: 5px; padding: 3px 9px 3px 7px; white-space: nowrap; }
+.gkey .chip input { margin: 0; width: 13px; height: 13px; accent-color: var(--ink); flex: none; }
+.gkey .chip:has(input:not(:checked)) { opacity: .45; }
+.gkey .ct { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.gkey svg.sw { flex: none; overflow: visible; }
+@media (max-width: 640px) { .gkey { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .gkey > b { width: auto; } }
+.graph { position: relative; aspect-ratio: 4 / 3; max-height: 86vh; min-height: 380px; width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; touch-action: none; }
+@media (max-width: 640px) { .graph { aspect-ratio: 3 / 4; } }
+.graph > svg { display: block; width: 100%; height: 100%; cursor: grab; user-select: none; -webkit-user-select: none; font-family: var(--font-body); }
+.graph > svg.panning { cursor: grabbing; }
+.f-call { --ec: var(--e-call); } .f-bus { --ec: var(--e-bus); } .f-data { --ec: var(--e-data); } .f-llm { --ec: var(--e-llm); } .f-ops { --ec: var(--e-ops); }
+.ge { fill: none; stroke: var(--ec); stroke-width: 1.25; opacity: .5; }
+svg.sw .ge { opacity: 1; stroke-width: 2; }
+.ah { fill: var(--ec); stroke: none; }
+.gn { cursor: pointer; outline: none; }
+.gdisc { fill: var(--dc); fill-opacity: .06; stroke: var(--dc); stroke-opacity: .4; stroke-width: 1; transition: opacity .15s; }
+.gdisc.dim { opacity: .35; }
+.gn .body { fill: var(--dc); stroke: var(--panel); stroke-width: 1.5; }
+.gn.ext .body { fill: var(--panel); stroke: var(--dc); stroke-width: 2; stroke-dasharray: 3 2.2; }
+.gn .ring { fill: none; stroke: none; stroke-width: 2.2; }
+.gn.match .ring { stroke: var(--focus); }
+.gn.on .ring, .gn:focus-visible .ring { stroke: var(--ink); }
+.sb { stroke: var(--panel); stroke-width: 1.2; }
+.sb.live { fill: var(--good); } .sb.partial, .sb.built-not-running { fill: var(--warn); }
+.sb.planned { fill: var(--panel); stroke: var(--idle); stroke-width: 1.4; } .sb.retired { fill: var(--bad); }
+.gh { cursor: pointer; }
+.gh .hb { fill: var(--panel); stroke: var(--hc); stroke-width: 2; }
+.ghe { fill: none; stroke: var(--hc); stroke-width: 1.2; stroke-dasharray: 1.5 3; opacity: .7; }
+.h-ok { --hc: var(--good); } .h-warning { --hc: var(--warn); } .h-error { --hc: var(--bad); }
+.gl { font-size: 11px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--panel); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
+.gl.hub { font-family: var(--font-mono); font-weight: 400; font-size: 10.5px; fill: var(--ink-2); }
+.gd { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; fill: var(--ink-3); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.gn, .gh, .ge, .ghe, .gl, .gd { transition: opacity .15s; }
+.dim { opacity: .1; } .ge.dim, .ghe.dim { opacity: .05; } .gn.dim, .gh.dim { opacity: .18; }
+.ge.hi { opacity: .95; stroke-width: 2; } .ghe.hi { opacity: 1; }
+.gzoom { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+.gzoom button { min-width: 32px; height: 32px; padding: 0 9px; border: 1px solid var(--line); border-radius: var(--r); background: var(--paper); cursor: pointer; font-size: 13px; font-weight: 650; }
+.gzoom button:hover { border-color: var(--ink-2); }
+.gtip { position: absolute; z-index: 3; pointer-events: none; max-width: 300px; background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--dc, var(--line)); border-radius: var(--r); padding: 7px 10px; font-size: 12.5px; line-height: 1.4; display: grid; gap: 3px; box-shadow: 0 6px 18px rgb(0 0 0 / .12); }
+.gtip[hidden] { display: none; }
+.gtip b { font-size: 14px; }
+.gtip .k { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+.gcap { margin: 0; font-size: 12px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
+.gcap b { font-variant-numeric: tabular-nums; }
+.gcap button { background: none; border: 0; padding: 0; cursor: pointer; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 1001px) { .gcap .to-detail { display: none; } }
+
 figure.ctx { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; overflow-x: auto; }
 figure.ctx svg { display: block; width: 100%; min-width: 760px; height: auto; color: var(--ink); }
 figure.ctx figcaption { font-size: 13px; color: var(--ink-2); margin-top: 10px; max-width: 75ch; }
@@ -142,6 +197,7 @@ footer { font-size: 12px; color: var(--ink-3); display: flex; flex-wrap: wrap; g
     <nav class="views" aria-label="Views">
       <a href="#context" data-view="context">Context</a>
       <a href="#containers" data-view="containers">Containers</a>
+      <a href="#graph" data-view="graph">Graph</a>
       <a href="#catalog" data-view="catalog">Catalog</a>
       <a href="#hubs" data-view="hubs" hidden>Hubs</a>
     </nav>
@@ -165,6 +221,21 @@ footer { font-size: 12px; color: var(--ink-3); display: flex; flex-wrap: wrap; g
         <div class="board" id="board"><svg class="wires" id="wires" aria-hidden="true"></svg><div class="lanes" id="lanes"></div></div>
       </div>
       <aside class="detail" id="detail" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section id="view-graph" hidden>
+    <div class="stage">
+      <div class="gcol">
+        <div class="gkey" id="gKinds" role="group" aria-label="Relation kinds to draw"></div>
+        <div class="gkey" id="gDomains" role="group" aria-label="Domains to draw"></div>
+        <div class="graph" id="graph">
+          <svg id="gSvg" role="img" aria-label="Network of every component: dots are components, arrows are recorded relations"></svg>
+          <div class="gzoom"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">&minus;</button><button type="button" data-z="fit">Fit</button></div>
+          <div class="gtip" id="gTip" hidden></div>
+        </div>
+        <p class="gcap" id="gCap"></p>
+      </div>
     </div>
   </section>
 
@@ -202,7 +273,7 @@ const HUBS = /*HUBS_DATA*/null;
   const STATUSES = ['live', 'partial', 'built-not-running', 'planned', 'retired'];
   const STATUS_LABEL = { live: 'Live', partial: 'Partial', 'built-not-running': 'Built, off', planned: 'Planned', retired: 'Retired' };
   const shown = new Set(['live', 'partial', 'built-not-running', 'planned']);
-  let selected = null, query = '';
+  let selected = null, query = '', curView = 'containers';
 
   const n = ATLAS.counts;
   $('#meters').innerHTML = [[n.components, 'components'], [n.first_party, 'first-party'], [n.live, 'live now'], [n.edges, 'wires'], [ATLAS.domains.length, 'domains']]
@@ -213,7 +284,8 @@ const HUBS = /*HUBS_DATA*/null;
   $('#statusChips').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (!b) return; const s = b.dataset.st; shown.has(s) ? shown.delete(s) : shown.add(s); b.setAttribute('aria-pressed', shown.has(s)); renderAll(); });
   $('#q').addEventListener('input', e => { query = e.target.value.trim().toLowerCase(); renderAll(); });
 
-  const matches = c => shown.has(c.status) && (!query || [c.id, c.name, c.summary, c.runtime, (c.tech || []).join(' '), ...(out[c.id] || []).map(e => e.via)].join(' ').toLowerCase().includes(query));
+  const textMatch = c => !query || [c.id, c.name, c.summary, c.runtime, (c.tech || []).join(' '), ...(out[c.id] || []).map(e => e.via)].join(' ').toLowerCase().includes(query);
+  const matches = c => shown.has(c.status) && textMatch(c);
   const stPill = s => `<span class="st ${esc(s)}">${esc(STATUS_LABEL[s] || s)}</span>`;
 
   function renderLanes() {
@@ -237,7 +309,7 @@ const HUBS = /*HUBS_DATA*/null;
   function select(id) {
     selected = id;
     try { localStorage.setItem('atlas.sel', id || ''); } catch (_) {}
-    paintSpot(); renderDetail();
+    paintSpot(); renderDetail(); graph.paint();
   }
   function relatedIds(id) {
     const ids = new Set([id, ...(children[id] || []).map(c => c.id)]);
@@ -274,7 +346,10 @@ const HUBS = /*HUBS_DATA*/null;
   function renderDetail() {
     const el = $('#detail');
     if (!selected || !byId[selected]) {
-      el.innerHTML = `<div class="eyebrow">Pick a part</div><h3>The switchboard</h3><p class="why">Every tile is one component. Pick one to light up its wires: orange for what it sends to or calls, blue for what reaches it. Then follow a wire to keep walking the system.</p><h4>Domains</h4><div style="display:grid;gap:6px">${ATLAS.domains.map(d => `<div style="font-size:13px"><span class="dot" style="background:${domColor(d.id)}"></span> <b>${esc(d.name)}</b> <span style="color:var(--ink-3)">${esc(d.summary)}</span></div>`).join('')}</div>`;
+      const intro = curView === 'graph'
+        ? `<div class="eyebrow">Pick a dot</div><h3>The wiring</h3><p class="why">Every dot is one component, coloured by its domain and sized by the wires shown; a dashed ring is an outside service. Every arrow is one recorded relation, from the part that acts to the part it acts on. Hover a dot to light up its neighbours, click it for its card, drag to pan, scroll or pinch to zoom.</p>`
+        : `<div class="eyebrow">Pick a part</div><h3>The switchboard</h3><p class="why">Every tile is one component. Pick one to light up its wires: orange for what it sends to or calls, blue for what reaches it. Then follow a wire to keep walking the system.</p>`;
+      el.innerHTML = `${intro}<h4>Domains</h4><div style="display:grid;gap:6px">${ATLAS.domains.map(d => `<div style="font-size:13px"><span class="dot" style="background:${domColor(d.id)}"></span> <b>${esc(d.name)}</b> <span style="color:var(--ink-3)">${esc(d.summary)}</span></div>`).join('')}</div>`;
       return;
     }
     const c = byId[selected], d = ATLAS.domains[domIdx[c.domain]] || { name: c.domain };
@@ -298,7 +373,8 @@ const HUBS = /*HUBS_DATA*/null;
       <h4>Reached by (${i.length})</h4>${relList(i, 'in')}
       <p class="mono">id ${esc(c.id)}</p>`;
   }
-  document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (!g) return; const id = g.dataset.go; if (location.hash !== '#containers') location.hash = 'containers'; query = ''; $('#q').value = ''; if (!shown.has(byId[id]?.status)) { shown.add(byId[id].status); renderAll(); } select(id); const t = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`); if (t) t.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+  // A wire or part named in a card walks to it: in the Graph it stays on the graph, everywhere else on the switchboard.
+  document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (!g) return; const id = g.dataset.go; const inGraph = curView === 'graph'; if (!inGraph && location.hash !== '#containers') location.hash = 'containers'; query = ''; $('#q').value = ''; if (!shown.has(byId[id]?.status)) { shown.add(byId[id].status); document.querySelector(`[data-st="${byId[id].status}"]`)?.setAttribute('aria-pressed', 'true'); renderAll(); } select(id); if (inGraph) { graph.reveal(id); return; } const t = document.querySelector(`.tile[data-id="${CSS.escape(id)}"]`); if (t) t.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
 
   const HEALTH = { ok: 'live', warning: 'partial', error: 'retired' };
   const hubPill = h => `<span class="st ${HEALTH[h] || ''}">${esc(h)}</span>`;
@@ -358,18 +434,416 @@ const HUBS = /*HUBS_DATA*/null;
     $('#ctxSvg').outerHTML = s.replace('<svg ', '<svg id="ctxSvg" role="img" aria-label="System context: who uses 33GOD and which outside systems it depends on" ');
   }
 
-  const VIEWS = HUBS ? ['context', 'containers', 'catalog', 'hubs'] : ['context', 'containers', 'catalog'];
+  // ---- Graph: every component a node, every relation a directed edge -------------------------------
+  // Plain JS and inline SVG, no libraries. The layout is a seeded force simulation (no unseeded randomness):
+  // the same registry in the same box shape always draws the same picture, and positions stay put
+  // while filters change, so the map you have learned survives a toggle.
+  // One style per relation kind: a colour family (--e-*) and a dash. tests/test_atlas_graph.py holds
+  // this table to atlas.py's RELATION_KINDS and to the default-on set.
+  const EDGE_KINDS = {
+    'calls':          { fam: 'call', dash: '',          on: true },
+    'publishes-to':   { fam: 'bus',  dash: '',          on: true },
+    'consumes-from':  { fam: 'bus',  dash: '5 3',       on: true },
+    'reads':          { fam: 'data', dash: '5 3',       on: true },
+    'writes':         { fam: 'data', dash: '',          on: true },
+    'stores-in':      { fam: 'data', dash: '1.5 2.5',   on: true },
+    'routes-llm-via': { fam: 'llm',  dash: '',          on: true },
+    'renders':        { fam: 'data', dash: '8 3 1.5 3', on: false },
+    'hosts':          { fam: 'ops',  dash: '',          on: false },
+    'schedules':      { fam: 'ops',  dash: '5 3',       on: false },
+    'deploys':        { fam: 'ops',  dash: '1.5 2.5',   on: false },
+    'wraps':          { fam: 'ops',  dash: '8 3 1.5 3', on: false },
+  };
+  const graph = (function () {
+    const NS = 'http://www.w3.org/2000/svg';
+    const box = $('#graph'), svg = $('#gSvg'), tip = $('#gTip');
+    const mk = (tag, attrs, parent) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); if (parent) parent.appendChild(el); return el; };
+    const kinds = [...Object.keys(EDGE_KINDS), ...[...new Set(ATLAS.edges.map(e => e.kind))].filter(k => !EDGE_KINDS[k]).sort()];
+    const kstyle = k => EDGE_KINDS[k] || { fam: 'call', dash: '2 3', on: false };
+    const kindOn = Object.fromEntries(kinds.map(k => [k, kstyle(k).on]));
+    const kindRank = Object.fromEntries(kinds.map((k, i) => [k, i]));
+    const domOn = Object.fromEntries(ATLAS.domains.map(d => [d.id, true]));
+    const domName = Object.fromEntries(ATLAS.domains.map(d => [d.id, d.name]));
+    const tally = (list, key) => list.reduce((m, x) => (m[x[key]] = (m[x[key]] || 0) + 1, m), {});
+    const kindN = tally(ATLAS.edges, 'kind'), domN = tally(ATLAS.components, 'domain');
+    const degAll = {}; ATLAS.edges.forEach(e => { degAll[e.from] = (degAll[e.from] || 0) + 1; degAll[e.to] = (degAll[e.to] || 0) + 1; });
+    const hubList = HUBS ? HUBS.hubs.filter(h => h.components.some(c => byId[c])) : [];
+    const radius = d => 4.5 + Math.sqrt(d || 0) * 1.6;
+    const layers = {};
+    let ready = false, raf = 0, moved = false, hubsOn = false, hover = null;
+    let world = null, worldKey = '', cam = { k: 1, x: 0, y: 0 }, kFit = 1;
+    let vnodes = [], vedges = [], vhubs = [], vhubEdges = [], vdoms = [], at = {};
+
+    // Legend: a checkbox per relation kind (its line and count) and per domain; hover a domain to see it.
+    const swatch = k => { const s = kstyle(k); return `<svg class="sw f-${s.fam}" width="28" height="10" aria-hidden="true"><line x1="1" y1="5" x2="21" y2="5" class="ge"${s.dash ? ` stroke-dasharray="${s.dash}"` : ''}/><path d="M20,1.5 L27,5 L20,8.5 z" class="ah"/></svg>`; };
+    $('#gKinds').innerHTML = '<b>Wires</b>' + kinds.map(k => `<label class="chip"><input type="checkbox" data-kind="${esc(k)}"${kindOn[k] ? ' checked' : ''}>${swatch(k)}${esc(k)} <span class="ct">${kindN[k] || 0}</span></label>`).join('')
+      + (hubList.length ? `<label class="chip h-ok" title="Each component's skill hub, from skillex graph"><input type="checkbox" data-hubs><svg class="sw" width="12" height="12" aria-hidden="true"><rect x="2.5" y="2.5" width="7" height="7" transform="rotate(45 6 6)" style="fill:var(--panel);stroke:var(--hc);stroke-width:2"/></svg>skill hubs <span class="ct">${hubList.length}</span></label>` : '');
+    $('#gDomains').innerHTML = '<b>Domains</b>' + ATLAS.domains.map(d => `<label class="chip" data-dom-hover="${esc(d.id)}"><input type="checkbox" data-dom="${esc(d.id)}" checked><span class="dot" style="background:${domColor(d.id)}"></span>${esc(d.name)} <span class="ct">${domN[d.id] || 0}</span></label>`).join('');
+    $('#gKinds').addEventListener('change', e => { const i = e.target; if (i.dataset.kind) kindOn[i.dataset.kind] = i.checked; else if ('hubs' in i.dataset) hubsOn = i.checked; build(); });
+    $('#gDomains').addEventListener('change', e => { const i = e.target; if (i.dataset.dom) domOn[i.dataset.dom] = i.checked; build(); });
+    $('#gDomains').addEventListener('pointerover', e => { const c = e.target.closest('[data-dom-hover]'); if (c && e.pointerType === 'mouse' && hover?.dom !== c.dataset.domHover) { hover = { dom: c.dataset.domHover }; paint(); } });
+    $('#gDomains').addEventListener('pointerout', e => { if (hover?.dom && !e.relatedTarget?.closest?.(`[data-dom-hover="${CSS.escape(hover.dom)}"]`)) { hover = null; paint(); } });
+
+    // Seeded PRNG (mulberry32), so the starting scatter is the same on every load.
+    const prng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    function collide(nodes, pad) {
+      for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j], min = a.r + b.r + pad;
+        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+        if (d >= min) continue;
+        if (d < 1e-6) { dx = 1; dy = 0; d = 1; }
+        const p = (min - d) / d * .5; a.x -= dx * p; a.y -= dy * p; b.x += dx * p; b.y += dy * p;
+      }
+    }
+    // Force layout over ALL components and relations (filters only hide, never move), in two passes.
+    // 1. Each domain is a disc sized by its members; the wires between domains pull related discs together.
+    // 2. Each component settles inside its domain's disc: wires within a domain pull hard, wires across
+    //    domains only lean it toward its partners, and parts sit by their container.
+    function layout(aspect) {
+      const rand = prng(33), D = ATLAS.domains.length || 1;
+      const nodes = ATLAS.components.map(c => ({ id: c.id, dom: domIdx[c.domain] ?? 0, r: radius(degAll[c.id]), vx: 0, vy: 0 }));
+      const N = nodes.length, idx = Object.fromEntries(nodes.map((n, i) => [n.id, i]));
+      const doms = Array.from({ length: D }, () => ({ n: 0, vx: 0, vy: 0 }));
+      nodes.forEach(n => doms[n.dom].n++);
+      doms.forEach((d, i) => { const a = i / D * 2 * Math.PI - Math.PI / 2; d.r = d.n ? 20 + Math.sqrt(d.n) * 36 : 0;
+        d.x = Math.cos(a) * 420 * Math.sqrt(aspect); d.y = Math.sin(a) * 420 / Math.sqrt(aspect); });
+      const dw = new Map();
+      ATLAS.edges.forEach(e => { const a = nodes[idx[e.from]]?.dom, b = nodes[idx[e.to]]?.dom; if (a == null || b == null || a === b) return;
+        const k = Math.min(a, b) + ',' + Math.max(a, b); dw.set(k, (dw.get(k) || 0) + 1); });
+      const dl = [...dw].sort((x, y) => x[0] < y[0] ? -1 : 1).map(([k, w]) => [...k.split(',').map(Number), w]);
+      for (let t = 0, alpha = 1; t < 320; t++, alpha *= .985) {
+        for (const [a, b, w] of dl) { const s = doms[a], u = doms[b]; let dx = u.x - s.x, dy = u.y - s.y; const l = Math.hypot(dx, dy) || 1;
+          const f = (l - (s.r + u.r + 24)) / l * alpha * Math.min(.3, .04 * w); dx *= f; dy *= f; u.vx -= dx; u.vy -= dy; s.vx += dx; s.vy += dy; }
+        doms.forEach(d => { d.vx -= d.x * .03 * alpha / (aspect * aspect); d.vy -= d.y * .03 * alpha * aspect * aspect; d.vx *= .6; d.vy *= .6; d.x += d.vx; d.y += d.vy; });
+        collide(doms, 40);
+      }
+      for (let p = 0; p < 12; p++) collide(doms, 40);
+      // Stretch (never squeeze) the packing toward the box's shape, so a phone gets a tall map and a desk a wide one.
+      const bx = [Math.min(...doms.map(d => d.x - d.r)), Math.max(...doms.map(d => d.x + d.r))], by = [Math.min(...doms.map(d => d.y - d.r)), Math.max(...doms.map(d => d.y + d.r))];
+      const shape = (bx[1] - bx[0]) / (by[1] - by[0]), sx = Math.min(1.6, Math.max(1, aspect / shape)), sy = Math.min(1.6, Math.max(1, shape / aspect));
+      doms.forEach(d => { d.x *= sx; d.y *= sy; });
+      nodes.forEach(n => { const d = doms[n.dom], a = rand() * 2 * Math.PI, q = Math.sqrt(rand()) * d.r * .6; n.x = d.x + Math.cos(a) * q; n.y = d.y + Math.sin(a) * q; });
+      const pairs = new Map();
+      const link = (a, b) => { if (a == null || b == null || a === b) return; const k = a < b ? a + ',' + b : b + ',' + a; if (!pairs.has(k)) pairs.set(k, [a, b]); };
+      ATLAS.edges.forEach(e => link(idx[e.from], idx[e.to]));
+      ATLAS.components.forEach(c => { if (c.parent) link(idx[c.id], idx[c.parent]); });
+      const links = [...pairs.values()], cnt = new Array(N).fill(0);
+      links.forEach(([a, b]) => { cnt[a]++; cnt[b]++; });
+      const ticks = 320, decay = 1 - Math.pow(.001, 1 / ticks);
+      let alpha = 1;
+      for (let t = 0; t < ticks; t++) {
+        alpha -= alpha * decay;
+        for (const [a, b] of links) {
+          const s = nodes[a], u = nodes[b], same = s.dom === u.dom;
+          let dx = u.x + u.vx - s.x - s.vx, dy = u.y + u.vy - s.y - s.vy; const l = Math.hypot(dx, dy) || 1e-6;
+          const f = (l - (38 + s.r + u.r)) / l * alpha * (same ? .6 / Math.min(cnt[a], cnt[b]) : .012), bias = cnt[a] / (cnt[a] + cnt[b]);
+          dx *= f; dy *= f; u.vx -= dx * bias; u.vy -= dy * bias; s.vx += dx * (1 - bias); s.vy += dy * (1 - bias);
+        }
+        for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+          const a = nodes[i], b = nodes[j], dx = b.x - a.x, dy = b.y - a.y, d2 = Math.max(1, dx * dx + dy * dy);
+          if (a.dom !== b.dom && d2 > 14400) continue;
+          const w = 220 * alpha / d2; a.vx -= dx * w; a.vy -= dy * w; b.vx += dx * w; b.vy += dy * w;
+        }
+        nodes.forEach(n => {
+          const d = doms[n.dom], dx = d.x - n.x, dy = d.y - n.y, l = Math.hypot(dx, dy) || 1, over = Math.max(0, l - (d.r - n.r)) / l;
+          n.vx += dx * (.04 * alpha + over * .5); n.vy += dy * (.04 * alpha + over * .5);
+          n.vx *= .6; n.vy *= .6; n.x += n.vx; n.y += n.vy;
+        });
+        collide(nodes, 12);
+      }
+      for (let p = 0; p < 8; p++) collide(nodes, 12);
+      const w = { nodes, at: Object.fromEntries(nodes.map(n => [n.id, n])), hubs: [], doms: {} };
+      // Each domain's island is its planned disc: members are held inside it, and discs never overlap.
+      ATLAS.domains.forEach((d, i) => { if (doms[i].n) w.doms[d.id] = { x: doms[i].x, y: doms[i].y, r: doms[i].r + 4 }; });
+      // Skill hubs (only with `atlas.py hubs`) stand just outside the components they belong to; nodes never move for them.
+      const mx = nodes.reduce((s, n) => s + n.x, 0) / N, my = nodes.reduce((s, n) => s + n.y, 0) / N;
+      hubList.forEach((h, i) => {
+        const cs = h.components.filter(c => w.at[c]).map(c => w.at[c]);
+        const x = cs.reduce((s, n) => s + n.x, 0) / cs.length, y = cs.reduce((s, n) => s + n.y, 0) / cs.length;
+        let dx = x - mx, dy = y - my, l = Math.hypot(dx, dy);
+        if (l < 1) { dx = Math.cos(i * 2.4); dy = Math.sin(i * 2.4); l = 1; }
+        const off = Math.max(...cs.map(n => n.r)) + 24;
+        w.hubs.push({ id: 'hub:' + h.name, h, r: 7, x: x + dx / l * off, y: y + dy / l * off, comps: cs.map(n => n.id) });
+      });
+      for (let p = 0; p < 40; p++) w.hubs.forEach((h, i) => {
+        nodes.forEach(n => { const dx = h.x - n.x, dy = h.y - n.y, d = Math.hypot(dx, dy) || 1, min = n.r + h.r + 10; if (d < min) { h.x += dx / d * (min - d); h.y += dy / d * (min - d); } });
+        w.hubs.forEach((o, j) => { if (j <= i) return; let dx = o.x - h.x, dy = o.y - h.y, d = Math.hypot(dx, dy); if (d < 1e-6) { dx = Math.cos(j); dy = Math.sin(j); d = 1; }
+          const min = h.r + o.r + 16; if (d < min) { const q = (min - d) / d * .5; h.x -= dx * q; h.y -= dy * q; o.x += dx * q; o.y += dy * q; } });
+      });
+      return w;
+    }
+
+    function init() {
+      const defs = mk('defs', {}, svg);
+      ['call', 'bus', 'data', 'llm', 'ops'].forEach(f => mk('path', { d: 'M0,.8 L10,5 L0,9.2 z', class: 'ah' },
+        mk('marker', { id: 'ga-' + f, class: 'f-' + f, viewBox: '0 0 10 10', refX: 10, refY: 5, markerWidth: 7, markerHeight: 7, markerUnits: 'userSpaceOnUse', orient: 'auto' }, defs)));
+      ['discs', 'hubEdges', 'edges', 'nodes', 'hubs', 'labels'].forEach(k => { layers[k] = mk('g', {}, svg); });
+      ready = true;
+    }
+    // Rebuild what is visible after a filter changes. Positions come from the cached layout.
+    function build() {
+      if (!ready || !world) return;
+      Object.values(layers).forEach(g => g.replaceChildren());
+      const on = new Set(ATLAS.components.filter(c => shown.has(c.status) && domOn[c.domain]).map(c => c.id));
+      const es = ATLAS.edges.filter(e => kindOn[e.kind] && on.has(e.from) && on.has(e.to) && e.from !== e.to);
+      const deg = {}; es.forEach(e => { deg[e.from] = (deg[e.from] || 0) + 1; deg[e.to] = (deg[e.to] || 0) + 1; });
+      // Parallel wires between one pair fan out side by side instead of drawing over each other.
+      const groups = {};
+      es.forEach(e => { const k = e.from < e.to ? e.from + '\n' + e.to : e.to + '\n' + e.from; (groups[k] ||= []).push(e); });
+      vedges = [];
+      Object.values(groups).forEach(g => { g.sort((a, b) => (kindRank[a.kind] - kindRank[b.kind]) || (a.from < b.from ? -1 : 1));
+        g.forEach((e, i) => { const s = kstyle(e.kind);
+          const el = mk('path', { class: `ge f-${s.fam}`, 'marker-end': `url(#ga-${s.fam})` }, layers.edges);
+          if (s.dash) el.setAttribute('stroke-dasharray', s.dash);
+          vedges.push({ e, el, off: (i - (g.length - 1) / 2) * 9 }); }); });
+      at = {}; vdoms = [];
+      ATLAS.domains.forEach(d => { const wd = world.doms[d.id]; if (!wd || !ATLAS.components.some(c => c.domain === d.id && on.has(c.id))) return;
+        const disc = mk('circle', { class: 'gdisc' }, layers.discs); disc.style.setProperty('--dc', domColor(d.id));
+        const el = mk('text', { class: 'gd', 'text-anchor': 'middle' }, layers.labels); el.textContent = d.name; vdoms.push({ d, wd, el, disc }); });
+      vnodes = ATLAS.components.filter(c => on.has(c.id)).map(c => {
+        const el = mk('g', { class: 'gn' + (c.first_party ? '' : ' ext'), 'data-id': c.id, tabindex: 0, role: 'button',
+          'aria-label': `${c.name}, ${domName[c.domain] || c.domain}, ${STATUS_LABEL[c.status] || c.status}${c.first_party ? '' : ', outside service'}` }, layers.nodes);
+        el.style.setProperty('--dc', domColor(c.domain));
+        const n = { id: c.id, c, w: world.at[c.id], el, deg: deg[c.id] || 0, r: radius(deg[c.id]),
+          ring: mk('circle', { class: 'ring' }, el), body: mk('circle', { class: 'body' }, el),
+          // Status rides on the dot's shoulder in the chips' own marks; live (most parts) wears none.
+          sb: c.status === 'live' ? null : mk(c.status === 'retired' ? 'rect' : 'circle', { class: 'sb ' + c.status }, el), label: mk('text', { class: 'gl' }, layers.labels) };
+        n.label.textContent = c.name;
+        return (at[c.id] = n);
+      });
+      vhubs = []; vhubEdges = [];
+      if (hubsOn) world.hubs.forEach(w => {
+        const comps = w.comps.filter(id => at[id]); if (!comps.length) return;
+        const el = mk('g', { class: 'gh h-' + w.h.health, 'data-hub': w.h.name, tabindex: 0, role: 'link', 'aria-label': `Skill hub ${w.h.name}, ${w.h.health}` }, layers.hubs);
+        mk('rect', { class: 'hb', x: -5, y: -5, width: 10, height: 10, transform: 'rotate(45)' }, el);
+        const hn = { id: w.id, w, h: w.h, el, sr: 7, label: mk('text', { class: 'gl hub' }, layers.labels) };
+        hn.label.textContent = w.h.name;
+        comps.forEach(id => vhubEdges.push({ hub: hn, to: id, el: mk('path', { class: 'ghe h-' + w.h.health }, layers.hubEdges) }));
+        vhubs.push(hn);
+      });
+      if (hover?.node && !at[hover.node]) hover = null;
+      paint();
+    }
+
+    // Who is lit: the hovered (or picked) dot and its neighbours, a hovered hub and its parts, or a hovered domain.
+    function focus() {
+      const f = hover || (selected && at[selected] ? { node: selected } : null);
+      if (!f) return null;
+      const hi = new Set(), hh = new Set();
+      if (f.node) { hi.add(f.node); vedges.forEach(v => { if (v.e.from === f.node) hi.add(v.e.to); if (v.e.to === f.node) hi.add(v.e.from); }); vhubEdges.forEach(v => { if (v.to === f.node) hh.add(v.hub.h.name); }); }
+      else if (f.hub) { hh.add(f.hub); vhubEdges.forEach(v => { if (v.hub.h.name === f.hub) hi.add(v.to); }); }
+      else if (f.dom) vnodes.forEach(n => { if (n.c.domain === f.dom) hi.add(n.id); });
+      return { f, hi, hh };
+    }
+    function paint() {
+      if (!ready || !world) return;
+      const F = focus(), q = query;
+      if (!hover || hover.dom) tip.hidden = true;
+      vnodes.forEach(n => {
+        n.match = !!q && textMatch(n.c);
+        n.hi = F ? F.hi.has(n.id) : (!q || n.match);
+        n.el.classList.toggle('match', n.match); n.el.classList.toggle('on', n.id === selected); n.el.classList.toggle('dim', !n.hi);
+      });
+      vedges.forEach(v => {
+        const lit = !!F && (F.f.node ? v.e.from === F.f.node || v.e.to === F.f.node : F.f.dom ? byId[v.e.from].domain === F.f.dom && byId[v.e.to].domain === F.f.dom : false);
+        v.el.classList.toggle('hi', lit); v.el.classList.toggle('dim', F ? !lit : !!q && !(at[v.e.from].match && at[v.e.to].match));
+      });
+      vhubs.forEach(h => { h.match = !!q && h.h.name.toLowerCase().includes(q); h.hi = F ? F.hh.has(h.h.name) : (!q || h.match); h.el.classList.toggle('dim', !h.hi); });
+      vdoms.forEach(v => v.disc.classList.toggle('dim', F || q ? !vnodes.some(n => n.hi && n.c.domain === v.d.id) : false));
+      vhubEdges.forEach(v => { const lit = !!F && (F.f.hub ? v.hub.h.name === F.f.hub : F.f.node ? v.to === F.f.node : false);
+        v.el.classList.toggle('hi', lit); v.el.classList.toggle('dim', F ? !lit : !!q && !(v.hub.match || at[v.to].match)); });
+      const sel = selected && at[selected] ? byId[selected] : null;
+      $('#gCap').innerHTML = `<span><b>${vnodes.length}</b> of ${ATLAS.components.length} parts · <b>${vedges.length}</b> of ${ATLAS.edges.length} wires shown${q ? ` · <b>${vnodes.filter(n => n.match).length}</b> match the search` : ''}</span><span>Filled dot: ours · dashed ring: outside service · shoulder dot: status other than live, as in the chips · size: wires shown</span>`
+        + (sel ? `<span class="to-detail">Picked <b>${esc(sel.name)}</b> · <button type="button" data-to-detail>see its card</button></span>` : '');
+      schedule();
+    }
+
+    function schedule() { if (!raf) raf = requestAnimationFrame(render); }
+    function wire(a, b, off, gap) {
+      const flip = a.id > b.id, p = flip ? b : a, q = flip ? a : b;
+      const dx = q.sx - p.sx, dy = q.sy - p.sy, L = Math.hypot(dx, dy);
+      if (L < a.sr + b.sr + 3) return '';
+      const mx = (a.sx + b.sx) / 2 - dy / L * off * 2, my = (a.sy + b.sy) / 2 + dx / L * off * 2;
+      const ux = mx - a.sx, uy = my - a.sy, ul = Math.hypot(ux, uy), vx = b.sx - mx, vy = b.sy - my, vl = Math.hypot(vx, vy);
+      const f = v => v.toFixed(1), x1 = a.sx + ux / ul * a.sr, y1 = a.sy + uy / ul * a.sr, x2 = b.sx - vx / vl * (b.sr + gap), y2 = b.sy - vy / vl * (b.sr + gap);
+      return off ? `M${f(x1)} ${f(y1)}Q${f(mx)} ${f(my)} ${f(x2)} ${f(y2)}` : `M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}`;
+    }
+    function render() {
+      raf = 0;
+      if (!ready || !world) return;
+      const W = box.clientWidth, H = box.clientHeight, k = cam.k, grow = k <= 1 ? k : 1 + (k - 1) * .4;
+      for (const n of vnodes) {
+        n.sx = n.w.x * k + cam.x; n.sy = n.w.y * k + cam.y; n.sr = Math.max(3.2, n.r * grow);
+        n.el.setAttribute('transform', `translate(${n.sx.toFixed(1)} ${n.sy.toFixed(1)})`);
+        n.body.setAttribute('r', n.sr.toFixed(2)); n.ring.setAttribute('r', (n.sr + 3.2).toFixed(2));
+        const br = Math.max(2.4, Math.min(3.4, n.sr * .4)), bx = n.sr * .72, by = -n.sr * .72;
+        if (!n.sb) continue;
+        if (n.sb.tagName === 'rect') { n.sb.setAttribute('x', (bx - br).toFixed(2)); n.sb.setAttribute('y', (by - br).toFixed(2)); n.sb.setAttribute('width', (2 * br).toFixed(2)); n.sb.setAttribute('height', (2 * br).toFixed(2)); }
+        else { n.sb.setAttribute('cx', bx.toFixed(2)); n.sb.setAttribute('cy', by.toFixed(2)); n.sb.setAttribute('r', br.toFixed(2)); }
+      }
+      for (const h of vhubs) { h.sx = h.w.x * k + cam.x; h.sy = h.w.y * k + cam.y; h.el.setAttribute('transform', `translate(${h.sx.toFixed(1)} ${h.sy.toFixed(1)})`); }
+      for (const v of vdoms) { v.sx = v.wd.x * k + cam.x; v.sy = v.wd.y * k + cam.y; v.sr = v.wd.r * k;
+        v.disc.setAttribute('cx', v.sx.toFixed(1)); v.disc.setAttribute('cy', v.sy.toFixed(1)); v.disc.setAttribute('r', v.sr.toFixed(1)); }
+      for (const v of vedges) v.el.setAttribute('d', wire(at[v.e.from], at[v.e.to], v.off, 1));
+      for (const v of vhubEdges) v.el.setAttribute('d', wire(v.hub, at[v.to], 0, 1));
+      labels(W, H);
+    }
+
+    // Labels: placed greedily, most-wired first, right / left / below / above the dot, never on top of
+    // another label or a lit dot. What does not fit is dropped (hover it, search it or zoom in to see it).
+    const ctx = document.createElement('canvas').getContext('2d');
+    const bodyFont = getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim() || 'sans-serif';
+    let widths = {};
+    const textW = (s, font) => widths[font + s] ??= (ctx.font = font, ctx.measureText(s).width);
+    document.fonts?.ready.then(() => { widths = {}; schedule(); });
+    function labels(W, H) {
+      const F = focus(), placed = [], lit = [...vnodes, ...vhubs].filter(n => n.hi);
+      const free = r => r.x > 2 && r.y > 2 && r.x + r.w < W - 2 && r.y + r.h < H - 2
+        && !placed.some(p => r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y)
+        && !lit.some(c => { const x = Math.max(r.x, Math.min(c.sx, r.x + r.w)), y = Math.max(r.y, Math.min(c.sy, r.y + r.h)); return (x - c.sx) ** 2 + (y - c.sy) ** 2 < (c.sr + 1.5) ** 2; });
+      const put = (el, spots, force) => { const r = spots.find(free) || (force ? spots[0] : null);
+        if (!r) { el.setAttribute('display', 'none'); return; }
+        placed.push(r); el.removeAttribute('display'); el.setAttribute('x', (r.tx ?? r.x).toFixed(1)); el.setAttribute('y', (r.y + r.h - 3).toFixed(1)); };
+      const dFont = `700 10.5px ${bodyFont}`, nFont = `600 11px ${bodyFont}`, hFont = `400 10.5px ${getComputedStyle(document.documentElement).getPropertyValue('--font-mono').trim() || 'monospace'}`;
+      // Domain names sit on the rim of their island, only while nothing is focused or searched.
+      vdoms.forEach(({ d, el, sx, sy, sr }) => {
+        if (F && F.f.dom !== d.id || query) { el.setAttribute('display', 'none'); return; }
+        const w = textW(d.name.toUpperCase(), dFont) * 1.13, h = 13, x = Math.min(Math.max(sx - w / 2, 4), W - w - 4);
+        put(el, [{ x, tx: x + w / 2, y: sy - sr - h - 2, w, h }, { x, tx: x + w / 2, y: sy + sr + 3, w, h }, { x, tx: x + w / 2, y: sy - sr + 3, w, h }], false);
+      });
+      const pivot = F?.f.node || F?.f.hub && 'hub:' + F.f.hub;
+      const items = [...vnodes, ...vhubs].sort((a, b) => ((b.id === pivot) - (a.id === pivot)) || (!!b.h - !!a.h) * -1 || ((b.match || 0) - (a.match || 0)) || ((b.deg || 0) - (a.deg || 0)) || (a.id < b.id ? -1 : 1));
+      items.forEach(n => {
+        if (!n.hi) { n.label.setAttribute('display', 'none'); return; }
+        const w = textW(n.h ? n.h.name : n.c.name, n.h ? hFont : nFont), h = 13, gap = n.sr + 4;
+        put(n.label, [{ x: n.sx + gap, y: n.sy - 7, w, h }, { x: n.sx - gap - w, y: n.sy - 7, w, h },
+          { x: n.sx - w / 2, y: n.sy + n.sr + 2, w, h }, { x: n.sx - w / 2, y: n.sy - n.sr - 15, w, h }], n.id === pivot);
+      });
+    }
+
+    // Tooltip, with the same facts a tile carries.
+    function showTip(t) {
+      if (!t) { tip.hidden = true; return; }
+      if (t.dataset.hub) { const h = hubList.find(x => x.name === t.dataset.hub); if (!h) return;
+        tip.style.setProperty('--dc', `var(--${{ ok: 'good', warning: 'warn' }[h.health] || 'bad'})`);
+        tip.innerHTML = `<b>${esc(h.name)}</b><span class="k">skill hub · ${esc(h.source || 'no source')}</span><span>${hubPill(h.health)} · ${h.findings} finding${h.findings === 1 ? '' : 's'}</span>${h.subskills.length ? `<span>${h.subskills.length} sub-skills: ${esc(h.subskills.slice(0, 6).join(', '))}${h.subskills.length > 6 ? '…' : ''}</span>` : ''}<span class="k">click to open it in the skill graph</span>`;
+      } else { const c = byId[t.dataset.id]; if (!c) return; const o = vedges.filter(v => v.e.from === c.id).length, i = vedges.filter(v => v.e.to === c.id).length;
+        tip.style.setProperty('--dc', domColor(c.domain));
+        tip.innerHTML = `<b>${esc(c.name)}</b><span class="k">${esc(c.kind)} · ${esc(domName[c.domain] || c.domain)}${c.first_party ? '' : ' · outside service'}</span><span>${stPill(c.status)} · ${o} out · ${i} in shown</span><span>${esc(c.summary.length > 150 ? c.summary.slice(0, 149) + '…' : c.summary)}</span>`; }
+      tip.hidden = false;
+      // Park it in the corner that hides the fewest lit dots, so it never covers the neighbourhood it describes.
+      const W = box.clientWidth, H = box.clientHeight, tw = tip.offsetWidth, th = tip.offsetHeight, lit = [...vnodes, ...vhubs].filter(n => n.hi);
+      const cx = lit.reduce((s, n) => s + n.sx, 0) / (lit.length || 1), cy = lit.reduce((s, n) => s + n.sy, 0) / (lit.length || 1);
+      const spots = [[8, 8], [W - tw - 8, 48], [8, H - th - 8], [W - tw - 8, H - th - 8]].map(([x, y]) => ({ x, y,
+        hits: lit.filter(n => n.sx > x - 10 && n.sx < x + tw + 10 && n.sy > y - 10 && n.sy < y + th + 10).length,
+        far: Math.hypot(x + tw / 2 - cx, y + th / 2 - cy) }));
+      const best = spots.sort((a, b) => (a.hits - b.hits) || (b.far - a.far))[0];
+      tip.style.left = best.x + 'px'; tip.style.top = best.y + 'px';
+    }
+    const local = e => { const r = box.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    function zoomAt(px, py, f) {
+      const k = Math.min(kFit * 12, Math.max(kFit * .5, cam.k * f)), s = k / cam.k;
+      cam = { k, x: px - (px - cam.x) * s, y: py - (py - cam.y) * s }; moved = true; schedule();
+    }
+    function fit() {
+      const W = box.clientWidth, H = box.clientHeight; if (!W || !H || !world) return;
+      const pts = [...(vnodes.length ? vnodes.map(n => n.w) : world.nodes), ...vhubs.map(h => h.w), ...vdoms.map(v => v.wd)];
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      pts.forEach(p => { x0 = Math.min(x0, p.x - p.r); y0 = Math.min(y0, p.y - p.r); x1 = Math.max(x1, p.x + p.r); y1 = Math.max(y1, p.y + p.r); });
+      const side = Math.min(70, W * .1), k = Math.min((W - 2 * side) / Math.max(1, x1 - x0), (H - 64) / Math.max(1, y1 - y0), 2.5);
+      cam = { k, x: (W - (x1 - x0) * k) / 2 - x0 * k, y: (H - (y1 - y0) * k) / 2 - y0 * k + 8 }; kFit = k; moved = false; schedule();
+    }
+
+    // Pan with a drag, zoom with the wheel or a pinch; a tap without a drag picks (or unpicks) a dot.
+    const ptrs = new Map(); let down = null, pinch = null;
+    svg.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (ptrs.size === 1) down = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, t: e.target.closest('.gn, .gh'), moved: false };
+      else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()], [mx, my] = local({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, k: cam.k, wx: (mx - cam.x) / cam.k, wy: (my - cam.y) / cam.k }; if (down) down.moved = true; }
+    });
+    svg.addEventListener('pointermove', e => {
+      if (!ptrs.has(e.pointerId)) return;
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()], [mx, my] = local({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
+        const k = Math.min(kFit * 12, Math.max(kFit * .5, pinch.k * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
+        cam = { k, x: mx - pinch.wx * k, y: my - pinch.wy * k }; moved = true; schedule(); return; }
+      if (!down) return;
+      const dx = e.clientX - down.x, dy = e.clientY - down.y;
+      if (!down.moved && Math.abs(dx) + Math.abs(dy) < 5) return;
+      down.moved = true; moved = true; svg.classList.add('panning'); tip.hidden = true;
+      cam = { ...cam, x: down.cx + dx, y: down.cy + dy }; schedule();
+    });
+    const up = e => {
+      if (!ptrs.delete(e.pointerId)) return;
+      if (ptrs.size < 2) pinch = null;
+      if (ptrs.size === 1) { const [p] = [...ptrs.values()]; down = { x: p.x, y: p.y, cx: cam.x, cy: cam.y, t: null, moved: true }; return; }
+      svg.classList.remove('panning');
+      const d = down; down = null;
+      if (!d || d.moved || e.type !== 'pointerup') return;
+      if (d.t?.dataset.hub) { if (HUBS) window.open(`${HUBS.graph_page}#hub=${encodeURIComponent(d.t.dataset.hub)}`, '_blank', 'noopener'); return; }
+      if (d.t?.dataset.id) { select(d.t.dataset.id === selected ? null : d.t.dataset.id); return; }
+      if (selected) select(null);
+    };
+    svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+    svg.addEventListener('pointerover', e => {
+      if (e.pointerType !== 'mouse' || ptrs.size) return;
+      const t = e.target.closest('.gn, .gh'); if (!t) return;
+      hover = t.dataset.id ? { node: t.dataset.id } : { hub: t.dataset.hub }; paint(); showTip(t);
+    });
+    svg.addEventListener('pointerout', e => {
+      const t = e.target.closest('.gn, .gh'); if (!t || t.contains(e.relatedTarget)) return;
+      if (hover && !hover.dom) { hover = null; paint(); } tip.hidden = true;
+    });
+    svg.addEventListener('focusin', e => { const t = e.target.closest('.gn, .gh'); if (!t) return; hover = t.dataset.id ? { node: t.dataset.id } : { hub: t.dataset.hub }; paint();
+      showTip(t); });
+    svg.addEventListener('focusout', () => { hover = null; tip.hidden = true; paint(); });
+    svg.addEventListener('keydown', e => { const t = e.target.closest('.gn, .gh'); if (!t || (e.key !== 'Enter' && e.key !== ' ')) return; e.preventDefault();
+      if (t.dataset.hub) { if (HUBS) window.open(`${HUBS.graph_page}#hub=${encodeURIComponent(t.dataset.hub)}`, '_blank', 'noopener'); } else select(t.dataset.id === selected ? null : t.dataset.id); });
+    svg.addEventListener('wheel', e => { e.preventDefault(); const [x, y] = local(e); zoomAt(x, y, Math.exp(-(e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY) * .0016)); }, { passive: false });
+    box.querySelector('.gzoom').addEventListener('click', e => { const z = e.target.closest('[data-z]')?.dataset.z; if (!z) return;
+      if (z === 'fit') fit(); else zoomAt(box.clientWidth / 2, box.clientHeight / 2, z === 'in' ? 1.4 : 1 / 1.4); });
+    $('#gCap').addEventListener('click', e => { if (e.target.closest('[data-to-detail]')) $('#detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+
+    // The layout depends only on the registry and the box's shape (aspect, bucketed), never on the clock.
+    function show() {
+      const W = box.clientWidth, H = box.clientHeight; if (!W || !H) return;
+      if (!ready) init();
+      const key = (Math.round(Math.min(1.8, Math.max(.6, W / H)) * 5) / 5).toFixed(1);
+      if (key !== worldKey) { world = layout(+key); worldKey = key; build(); fit(); }
+      else if (!moved) fit();
+      schedule();
+    }
+    function reveal(id) {
+      const c = byId[id]; if (!c || !ready) return;
+      if (!domOn[c.domain]) { domOn[c.domain] = true; const i = document.querySelector(`#gDomains input[data-dom="${CSS.escape(c.domain)}"]`); if (i) i.checked = true; build(); }
+      const n = at[id]; if (!n) return;
+      const W = box.clientWidth, H = box.clientHeight;
+      if (n.sx < 40 || n.sy < 40 || n.sx > W - 40 || n.sy > H - 40) { cam = { ...cam, x: W / 2 - n.w.x * cam.k, y: H / 2 - n.w.y * cam.k }; moved = true; schedule(); }
+    }
+    return { show, build, paint, reveal };
+  })();
+
+  const VIEWS = ['context', 'containers', 'graph', 'catalog', ...(HUBS ? ['hubs'] : [])];
   if (HUBS) document.querySelector('nav.views a[data-view="hubs"]').hidden = false;
   function route() {
     const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'containers';
+    const was = curView; curView = v;
     document.querySelectorAll('nav.views a').forEach(a => a.dataset.view === v ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
-    ['context', 'containers', 'catalog', 'hubs'].forEach(k => { $('#view-' + k).hidden = k !== v; });
+    ['context', 'containers', 'graph', 'catalog', 'hubs'].forEach(k => { $('#view-' + k).hidden = k !== v; });
+    // One detail card serves the switchboard and the graph; it moves to whichever is showing.
+    const host = $(`#view-${v === 'graph' ? 'graph' : 'containers'} .stage`), det = $('#detail');
+    if (det.parentNode !== host) host.appendChild(det);
+    if (was !== v) renderDetail();
     if (v === 'containers') requestAnimationFrame(paintSpot);
+    if (v === 'graph') graph.show();
   }
-  function renderAll() { renderLanes(); renderRows(); renderHubs(); paintSpot(); renderDetail(); }
+  function renderAll() { renderLanes(); renderRows(); renderHubs(); paintSpot(); renderDetail(); graph.build(); }
   try { const s = localStorage.getItem('atlas.sel'); if (s && byId[s]) selected = s; } catch (_) {}
   renderContext(); renderAll(); route();
   addEventListener('hashchange', route);
-  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(paintSpot, 80); });
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { paintSpot(); if (curView === 'graph') graph.show(); }, 80); });
 })();
 </script>
