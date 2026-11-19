@@ -15,6 +15,7 @@ class ArtDirectorHireTest(unittest.TestCase):
     def test_one_new_advisory_post_preserves_pm_board(self):
         project = json.loads((ROOT / ".project.json").read_text())
         role = yaml.safe_load(ROLE.read_text())
+        self.assertIn("33god-platform/atlas", role["purpose"])
         self.assertEqual(role["agent_id"], "33god-art-director")
         self.assertEqual(role["board_scope"], "advisory")
         self.assertFalse(role["reconcile"]["enabled"])
