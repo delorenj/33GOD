@@ -1,0 +1,55 @@
+{
+  "status": "FAIL",
+  "execution_mode": "managed",
+  "config": {
+    "ecosystem_root": ".",
+    "g33_output_folder": "{project-root}/_bmad-output/implementation-artifacts"
+  },
+  "findings": [
+    {
+      "check": "project-binding",
+      "status": "PASS",
+      "evidence": "ticket_provider plane linked (workspace='fixture', board_id present)"
+    },
+    {
+      "check": "krebs-enrollment",
+      "status": "FAIL",
+      "evidence": "managed execution not ready (canonical executionReadiness): lane binding missing: Needs Re-evaluation; lane binding missing: E2E Testing & QA; lane binding missing: Ready for Documentation; lane binding missing: Needs Attention; momo_bundle_sha256 missing"
+    },
+    {
+      "check": "tool-px",
+      "status": "PASS",
+      "evidence": "/home/delorenj/.local/bin/px"
+    },
+    {
+      "check": "tool-node",
+      "status": "PASS",
+      "evidence": "/home/delorenj/.local/share/mise/installs/node/26.5.0/bin/node"
+    },
+    {
+      "check": "tool-uv",
+      "status": "PASS",
+      "evidence": "/home/delorenj/.local/bin/uv"
+    },
+    {
+      "check": "tool-python3",
+      "status": "PASS",
+      "evidence": "/home/delorenj/.hermes/installs/8939a02a6bce15ab/environments/20bc0be66e6249c9911383c4b9fce281/venv/bin/python3"
+    },
+    {
+      "check": "module-files",
+      "status": "PASS",
+      "evidence": "/home/delorenj/code/skillex/all-skills/g33-33god-integration"
+    },
+    {
+      "check": "bmad-structure",
+      "status": "FAIL",
+      "evidence": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/canonical/_bmad not found"
+    },
+    {
+      "check": "bmad-resolver",
+      "status": "WARN",
+      "evidence": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/canonical/_bmad/scripts/resolve_config.py not found (absent upstream baseline)"
+    }
+  ]
+}

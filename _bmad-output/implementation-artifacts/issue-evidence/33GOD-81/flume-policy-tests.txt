@@ -1,0 +1,511 @@
+..............................................FF.F.                      [100%]
+=================================== FAILURES ===================================
+_ test_current_real_pin_supports_evidenced_trust_independent_of_native_root[registered-missing-manifest] _
+../../.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/template-copy/tests/test_project_skills_policy.py:665: in test_current_real_pin_supports_evidenced_trust_independent_of_native_root
+    assert result.returncode == 0, result.stdout + result.stderr
+E   AssertionError: {
+E       "schema": "hermes-project-skills/3",
+E       "status": "blocked",
+E       "dry_run": false,
+E       "runtime": {
+E         "repo": "/home/delorenj/.hermes/hermes-agent",
+E         "bin": "/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes",
+E         "python": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+E         "features": {
+E           "project_discovery": true,
+E           "trusted_project_dirs": true
+E         },
+E         "adapter": "trusted-project-dirs",
+E         "supported": false,
+E         "source_evidence": [
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/skills_tool.py",
+E             "sha256": "0b6fbd304a6fff74c3e1afee3e959985b2205dc1926c7474ca5cc7a8bd8ea107"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/agent/skill_utils.py",
+E             "sha256": "9b643866caf9b0db3b568045e2b49bf2903f89197497c815a492afec89b33722"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_cli/config_defaults.py",
+E             "sha256": "f4832c0f2ff1b1c2be655832b0703b557f09e9f0ceba406df9bd1e31a51125c8"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/agent/runtime_cwd.py",
+E             "sha256": "09ae9418fe2eedd7f70e880737fa8307475a42a4492c098aef3005b1bdfee0c0"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_constants.py",
+E             "sha256": "74d849629c176703d48f9aa43a245fd8819545ac908c805e347db7d691976510"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_cli/config.py",
+E             "sha256": "15332e7250822b485415f81a37ebeeef51aaf0f1d23b29d8a765f53e734da18a"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/skills_guard.py",
+E             "sha256": "16c482ed91cda70c452689b6a592564427d74ae3dc5588e155f6d2127aa991c0"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/path_security.py",
+E             "sha256": "13439f63f555e7f441e1d8b7e1091906ac67f125fd97cdd227c5ff0c5e4a7de1"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes",
+E             "sha256": "af91516d68eee0ff0551e39a1b8268d8347ce538d31433a9bc6539dbe30d2d63"
+E           }
+E         ],
+E         "capability_probes": {
+E           "enabled": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project",
+E             "trusted": true,
+E             "project_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project/.agents/skills"
+E             ],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project/.agents/skills",
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/profile/skills"
+E             ],
+E             "skill_view": {
+E               "success": true,
+E               "_source_path": null,
+E               "error": null
+E             }
+E           },
+E           "disabled": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project",
+E             "trusted": true,
+E             "project_dirs": [],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/profile/skills"
+E             ]
+E           },
+E           "untrusted": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/project",
+E             "trusted": false,
+E             "project_dirs": [],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-36dto7af/profile/skills"
+E             ]
+E           }
+E         },
+E         "blocker": {
+E           "code": "runtime_project_discovery_unverified",
+E           "reason": "Pinned runtime execution did not prove exact-root trust, discovery toggles and lexical project skill precedence."
+E         }
+E       },
+E       "profiles": [
+E         {
+E           "agent_id": "demo-pm",
+E           "profile": "demo-pm",
+E           "project_root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-v__wexbh/home/project without git",
+E           "role_dir": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-v__wexbh/home/project without git/agents/hermes/pm",
+E           "config_changed": false,
+E           "outcome": "blocked",
+E           "blockers": [
+E             {
+E               "code": "runtime_project_discovery_unverified",
+E               "reason": "Pinned runtime execution did not prove exact-root trust, discovery toggles and lexical project skill precedence."
+E             }
+E           ],
+E           "trust_eligible": true,
+E           "config_enabled": false,
+E           "project_skills_dir": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-v__wexbh/home/project without git/.agents/skills",
+E           "skills_directory_status": "present",
+E           "manifest_status": "missing",
+E           "role_identity_status": "verified",
+E           "registry_identity_status": "verified",
+E           "binding_source": "registry+role",
+E           "soul_status": "symlink",
+E           "soul_target": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-v__wexbh/home/project without git/agents/hermes/pm/SOUL.md"
+E         }
+E       ],
+E       "counts": {
+E         "requested_bindings": 1,
+E         "registered_pms": 1,
+E         "trust_eligible": 1,
+E         "config_enabled": 0,
+E         "native_discovered": 0,
+E         "supported": 0,
+E         "blocked": 1,
+E         "updated": 0,
+E         "missing_skill_dirs": 0
+E       }
+E     }
+E     
+E   assert 3 == 0
+E    +  where 3 = CompletedProcess(args=['/usr/bin/python3', '-I', '/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit...red": 0,\n    "supported": 0,\n    "blocked": 1,\n    "updated": 0,\n    "missing_skill_dirs": 0\n  }\n}\n', stderr='').returncode
+_ test_current_real_pin_supports_evidenced_trust_independent_of_native_root[unregistered-non-git] _
+../../.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/template-copy/tests/test_project_skills_policy.py:665: in test_current_real_pin_supports_evidenced_trust_independent_of_native_root
+    assert result.returncode == 0, result.stdout + result.stderr
+E   AssertionError: {
+E       "schema": "hermes-project-skills/3",
+E       "status": "blocked",
+E       "dry_run": false,
+E       "runtime": {
+E         "repo": "/home/delorenj/.hermes/hermes-agent",
+E         "bin": "/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes",
+E         "python": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+E         "features": {
+E           "project_discovery": true,
+E           "trusted_project_dirs": true
+E         },
+E         "adapter": "trusted-project-dirs",
+E         "supported": false,
+E         "source_evidence": [
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/skills_tool.py",
+E             "sha256": "0b6fbd304a6fff74c3e1afee3e959985b2205dc1926c7474ca5cc7a8bd8ea107"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/agent/skill_utils.py",
+E             "sha256": "9b643866caf9b0db3b568045e2b49bf2903f89197497c815a492afec89b33722"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_cli/config_defaults.py",
+E             "sha256": "f4832c0f2ff1b1c2be655832b0703b557f09e9f0ceba406df9bd1e31a51125c8"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/agent/runtime_cwd.py",
+E             "sha256": "09ae9418fe2eedd7f70e880737fa8307475a42a4492c098aef3005b1bdfee0c0"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_constants.py",
+E             "sha256": "74d849629c176703d48f9aa43a245fd8819545ac908c805e347db7d691976510"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_cli/config.py",
+E             "sha256": "15332e7250822b485415f81a37ebeeef51aaf0f1d23b29d8a765f53e734da18a"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/skills_guard.py",
+E             "sha256": "16c482ed91cda70c452689b6a592564427d74ae3dc5588e155f6d2127aa991c0"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/path_security.py",
+E             "sha256": "13439f63f555e7f441e1d8b7e1091906ac67f125fd97cdd227c5ff0c5e4a7de1"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes",
+E             "sha256": "af91516d68eee0ff0551e39a1b8268d8347ce538d31433a9bc6539dbe30d2d63"
+E           }
+E         ],
+E         "capability_probes": {
+E           "enabled": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project",
+E             "trusted": true,
+E             "project_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project/.agents/skills"
+E             ],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project/.agents/skills",
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/profile/skills"
+E             ],
+E             "skill_view": {
+E               "success": true,
+E               "_source_path": null,
+E               "error": null
+E             }
+E           },
+E           "disabled": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project",
+E             "trusted": true,
+E             "project_dirs": [],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/profile/skills"
+E             ]
+E           },
+E           "untrusted": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/project",
+E             "trusted": false,
+E             "project_dirs": [],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-5e84i14l/profile/skills"
+E             ]
+E           }
+E         },
+E         "blocker": {
+E           "code": "runtime_project_discovery_unverified",
+E           "reason": "Pinned runtime execution did not prove exact-root trust, discovery toggles and lexical project skill precedence."
+E         }
+E       },
+E       "profiles": [
+E         {
+E           "agent_id": "demo-pm",
+E           "profile": "demo-pm",
+E           "project_root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-wgslp5pu/home/project without git",
+E           "role_dir": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-wgslp5pu/home/project without git/agents/hermes/pm",
+E           "config_changed": false,
+E           "outcome": "blocked",
+E           "blockers": [
+E             {
+E               "code": "runtime_project_discovery_unverified",
+E               "reason": "Pinned runtime execution did not prove exact-root trust, discovery toggles and lexical project skill precedence."
+E             }
+E           ],
+E           "trust_eligible": true,
+E           "config_enabled": false,
+E           "project_skills_dir": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-wgslp5pu/home/project without git/.agents/skills",
+E           "skills_directory_status": "present",
+E           "manifest_status": "verified",
+E           "role_identity_status": "verified",
+E           "registry_identity_status": "unregistered",
+E           "binding_source": "manifest+role",
+E           "soul_status": "symlink",
+E           "soul_target": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-wgslp5pu/home/project without git/agents/hermes/pm/SOUL.md"
+E         }
+E       ],
+E       "counts": {
+E         "requested_bindings": 1,
+E         "registered_pms": 0,
+E         "trust_eligible": 1,
+E         "config_enabled": 0,
+E         "native_discovered": 0,
+E         "supported": 0,
+E         "blocked": 1,
+E         "updated": 0,
+E         "missing_skill_dirs": 0
+E       }
+E     }
+E     
+E   assert 3 == 0
+E    +  where 3 = CompletedProcess(args=['/usr/bin/python3', '-I', '/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit...red": 0,\n    "supported": 0,\n    "blocked": 1,\n    "updated": 0,\n    "missing_skill_dirs": 0\n  }\n}\n', stderr='').returncode
+_______ test_current_real_pin_writer_and_resolver_on_disposable_project ________
+../../.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/template-copy/tests/test_project_skills_policy.py:700: in test_current_real_pin_writer_and_resolver_on_disposable_project
+    assert result.returncode == 0, result.stdout + result.stderr
+E   AssertionError: {
+E       "schema": "hermes-project-skills/3",
+E       "status": "blocked",
+E       "dry_run": false,
+E       "runtime": {
+E         "repo": "/home/delorenj/.hermes/hermes-agent",
+E         "bin": "/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes",
+E         "python": "/home/delorenj/.hermes/hermes-agent/.venv/bin/python",
+E         "features": {
+E           "project_discovery": true,
+E           "trusted_project_dirs": true
+E         },
+E         "adapter": "trusted-project-dirs",
+E         "supported": false,
+E         "source_evidence": [
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/skills_tool.py",
+E             "sha256": "0b6fbd304a6fff74c3e1afee3e959985b2205dc1926c7474ca5cc7a8bd8ea107"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/agent/skill_utils.py",
+E             "sha256": "9b643866caf9b0db3b568045e2b49bf2903f89197497c815a492afec89b33722"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_cli/config_defaults.py",
+E             "sha256": "f4832c0f2ff1b1c2be655832b0703b557f09e9f0ceba406df9bd1e31a51125c8"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/agent/runtime_cwd.py",
+E             "sha256": "09ae9418fe2eedd7f70e880737fa8307475a42a4492c098aef3005b1bdfee0c0"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_constants.py",
+E             "sha256": "74d849629c176703d48f9aa43a245fd8819545ac908c805e347db7d691976510"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/hermes_cli/config.py",
+E             "sha256": "15332e7250822b485415f81a37ebeeef51aaf0f1d23b29d8a765f53e734da18a"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/skills_guard.py",
+E             "sha256": "16c482ed91cda70c452689b6a592564427d74ae3dc5588e155f6d2127aa991c0"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/tools/path_security.py",
+E             "sha256": "13439f63f555e7f441e1d8b7e1091906ac67f125fd97cdd227c5ff0c5e4a7de1"
+E           },
+E           {
+E             "path": "/home/delorenj/.hermes/hermes-agent/.hermes/bin/hermes",
+E             "sha256": "af91516d68eee0ff0551e39a1b8268d8347ce538d31433a9bc6539dbe30d2d63"
+E           }
+E         ],
+E         "capability_probes": {
+E           "enabled": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project",
+E             "trusted": true,
+E             "project_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project/.agents/skills"
+E             ],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project/.agents/skills",
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/profile/skills"
+E             ],
+E             "skill_view": {
+E               "success": true,
+E               "_source_path": null,
+E               "error": null
+E             }
+E           },
+E           "disabled": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project",
+E             "trusted": true,
+E             "project_dirs": [],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/profile/skills"
+E             ]
+E           },
+E           "untrusted": {
+E             "cwd": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project",
+E             "features": {
+E               "project_discovery": true,
+E               "trusted_project_dirs": true
+E             },
+E             "api": {
+E               "find_project_root": true,
+E               "get_project_skills_dirs": true,
+E               "is_project_root_trusted": true,
+E               "scan_ordered_skills_dirs": true
+E             },
+E             "root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/project",
+E             "trusted": false,
+E             "project_dirs": [],
+E             "ordered_dirs": [
+E               "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-capability-i52l64ga/profile/skills"
+E             ]
+E           }
+E         },
+E         "blocker": {
+E           "code": "runtime_project_discovery_unverified",
+E           "reason": "Pinned runtime execution did not prove exact-root trust, discovery toggles and lexical project skill precedence."
+E         }
+E       },
+E       "profiles": [
+E         {
+E           "agent_id": "demo-pm",
+E           "profile": "demo-pm",
+E           "project_root": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-3d4chnak/home/project without git",
+E           "role_dir": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-3d4chnak/home/project without git/agents/hermes/pm",
+E           "config_changed": false,
+E           "outcome": "blocked",
+E           "blockers": [
+E             {
+E               "code": "runtime_project_discovery_unverified",
+E               "reason": "Pinned runtime execution did not prove exact-root trust, discovery toggles and lexical project skill precedence."
+E             }
+E           ],
+E           "trust_eligible": true,
+E           "config_enabled": false,
+E           "project_skills_dir": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-3d4chnak/home/project without git/.agents/skills",
+E           "skills_directory_status": "present",
+E           "manifest_status": "verified",
+E           "role_identity_status": "verified",
+E           "registry_identity_status": "verified",
+E           "binding_source": "registry+role",
+E           "soul_status": "symlink",
+E           "soul_target": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/hermes-project-policy-3d4chnak/home/project without git/agents/hermes/pm/SOUL.md"
+E         }
+E       ],
+E       "counts": {
+E         "requested_bindings": 1,
+E         "registered_pms": 1,
+E         "trust_eligible": 1,
+E         "config_enabled": 0,
+E         "native_discovered": 0,
+E         "supported": 0,
+E         "blocked": 1,
+E         "updated": 0,
+E         "missing_skill_dirs": 0
+E       }
+E     }
+E     
+E   assert 3 == 0
+E    +  where 3 = CompletedProcess(args=['/usr/bin/python3', '-I', '/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit...red": 0,\n    "supported": 0,\n    "blocked": 1,\n    "updated": 0,\n    "missing_skill_dirs": 0\n  }\n}\n', stderr='').returncode
+=========================== short test summary info ============================
+FAILED ../../.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/template-copy/tests/test_project_skills_policy.py::test_current_real_pin_supports_evidenced_trust_independent_of_native_root[registered-missing-manifest]
+FAILED ../../.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/template-copy/tests/test_project_skills_policy.py::test_current_real_pin_supports_evidenced_trust_independent_of_native_root[unregistered-non-git]
+FAILED ../../.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/template-copy/tests/test_project_skills_policy.py::test_current_real_pin_writer_and_resolver_on_disposable_project
+3 failed, 48 passed in 12.59s

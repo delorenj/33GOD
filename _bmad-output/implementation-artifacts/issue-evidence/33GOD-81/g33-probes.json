@@ -1,0 +1,266 @@
+{
+  "source_commit": "4145e541795fcaf7f565668e483ef4c0a4659550",
+  "live": {
+    "observe_status": "conflict",
+    "observe_summary": "owned g33 help registry rows are missing, duplicated or tampered; all canonical rows are required",
+    "dry_run_write_actions": [
+      "/home/delorenj/code/33GOD/_bmad/_config/bmad-help.csv"
+    ],
+    "resolver_module_code": "g33",
+    "resolved_bmad_overrides": [
+      "bmad-prd",
+      "bmad-spec",
+      "bmad-architecture",
+      "bmad-build",
+      "bmad-code-review"
+    ],
+    "sampled_hashes_unchanged": true
+  },
+  "scratch_fresh": {
+    "dry_unchanged": true,
+    "dry_status": "ok",
+    "apply_status": "ok",
+    "observe": "installed",
+    "rerun_converged": true,
+    "foreign_reject": "conflict",
+    "foreign_reject_unchanged": true,
+    "foreign_preserved_probe_assertion": false,
+    "foreign_preserved_probe_caveat": "False only because the assertion required a foreign YAML block at byte 0; the block remained unchanged after inserted core keys. Whole-file byte preservation not proven."
+  },
+  "managed_readiness": {
+    "canonical_js_errors": [],
+    "g33_status": "managed",
+    "g33_findings": [
+      {
+        "check": "krebs-enrollment",
+        "status": "FAIL",
+        "evidence": "managed execution not ready (canonical executionReadiness): lane binding missing: Needs Re-evaluation; lane binding missing: E2E Testing & QA; lane binding missing: Ready for Documentation; lane binding missing: Needs Attention; momo_bundle_sha256 missing"
+      }
+    ]
+  },
+  "subprocesses": [
+    {
+      "label": "live-observe",
+      "argv": [
+        "node",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_bridge_call.mjs",
+        "{\"schemaVersion\": 1, \"moduleId\": \"g33\", \"operation\": \"observe\", \"projectRoot\": \"/home/delorenj/code/33GOD\", \"reason\": \"audit\", \"options\": {}}"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "live-dry-run",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_install.py",
+        "--project-root",
+        "/home/delorenj/code/33GOD",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "live-resolve-config",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/33GOD/_bmad/scripts/resolve_config.py",
+        "--project-root",
+        "/home/delorenj/code/33GOD",
+        "--key",
+        "modules.g33"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "fresh-dry-run",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_install.py",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "fresh-apply",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_install.py",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "fresh-observe",
+      "argv": [
+        "node",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_bridge_call.mjs",
+        "{\"schemaVersion\": 1, \"moduleId\": \"g33\", \"operation\": \"observe\", \"projectRoot\": \"/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh\", \"reason\": \"audit\", \"options\": {}}"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "fresh-rerun",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_install.py",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "foreign-apply-reject",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_install.py",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/foreign-conflict"
+      ],
+      "exit": 2
+    },
+    {
+      "label": "canonical-execution-readiness",
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "import {executionReadiness} from './src/project/executionBinding.ts'; import {readFileSync} from 'node:fs'; console.log(JSON.stringify(executionReadiness(JSON.parse(readFileSync(process.argv[1])))))",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/canonical/.project.json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "g33-managed-preflight",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "preflight",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/canonical",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "g33-legacy-preflight",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "preflight",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/canonical",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "g33-malformed-preflight",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "preflight",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/canonical",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "evidence-valid",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "evidence",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh",
+        "--bundle",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/valid-bundle.json",
+        "--out",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/valid-handoff.md",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "evidence-missing-proof",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "evidence",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh",
+        "--bundle",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/missing-proof-bundle.json",
+        "--out",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/missing-proof-handoff.md",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "evidence-failed-proof",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "evidence",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh",
+        "--bundle",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/failed-proof-bundle.json",
+        "--out",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/failed-proof-handoff.md",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "evidence-unmapped",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "evidence",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh",
+        "--bundle",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/unmapped-bundle.json",
+        "--out",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/unmapped-handoff.md",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "label": "evidence-same-reviewer",
+      "argv": [
+        "/home/delorenj/code/skillex/.venv/bin/python",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_cli.py",
+        "evidence",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/fresh",
+        "--bundle",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/same-reviewer-bundle.json",
+        "--out",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/same-reviewer-handoff.md",
+        "--json"
+      ],
+      "exit": 0
+    }
+  ]
+}

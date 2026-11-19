@@ -1,0 +1,134 @@
+{
+  "schema": "33god-81-evidence-manifest/1",
+  "checks": [
+    {
+      "file": "flume-audit-report.md",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/report.md",
+      "type": "verbatim-raw-copy",
+      "sha256": "a17fc400229f6a64698d85a0e5b3761c11491257e952bdae6838959500425450",
+      "bytes": 11758
+    },
+    {
+      "file": "flume-policy-tests.txt",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/policy-tests-final.txt",
+      "type": "verbatim-raw-copy",
+      "sha256": "b9c206d470d57e05bd0ec3c118d5e9c27a6e8e8ebc8e12189f0ea845e1760aab",
+      "bytes": 26541
+    },
+    {
+      "file": "flume-lock-tests.txt",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/lock-tests-contained.txt",
+      "type": "verbatim-raw-copy",
+      "sha256": "abcd84d877bb4bcf7e61fec9fd56174ce704e84c6adefd6af88a59150fef1f30",
+      "bytes": 99
+    },
+    {
+      "file": "flume-locking-focused.txt",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/locking-focused.txt",
+      "type": "verbatim-raw-copy",
+      "sha256": "9b64c4bd18630cf35228b28e65b3f294aacb5daa1603608abc59981acb86c9eb",
+      "bytes": 113
+    },
+    {
+      "file": "flume-preservation.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/preservation.json",
+      "type": "verbatim-raw-copy",
+      "sha256": "6ec3aa6b81316b17d7e19f3d85b6fc81dcc3a922dc0e73ffb021c40741e196a6",
+      "bytes": 35
+    },
+    {
+      "file": "flume-provision-tests.txt",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/provision-tests-native.txt",
+      "type": "verbatim-raw-copy",
+      "sha256": "cb06734862b773aa102f0c7fcfa151f1d94cb7ca9d43d7dc98a0ccaf846ff42d",
+      "bytes": 114
+    },
+    {
+      "file": "g33-audit-report.md",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/report.md",
+      "type": "verbatim-raw-copy",
+      "sha256": "556c6357491da4cea42cd32ec9da21d0d5762aa5ce780a64facd28f857ff2309",
+      "bytes": 11035
+    },
+    {
+      "file": "g33-live-observe.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/live-observe.stdout",
+      "type": "verbatim-raw-copy",
+      "sha256": "898ea2e2c620913ccfe1b94190073b065a8528c23b0b8f0ea0f0dfec94c42429",
+      "bytes": 408
+    },
+    {
+      "file": "g33-managed-preflight.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/g33-managed-preflight.stdout",
+      "type": "verbatim-raw-copy",
+      "sha256": "13f6083d7fd6775a27ddc4370f01b2e2cf5b69c71c2c0db5b5a26ca2e7f20153",
+      "bytes": 1861
+    },
+    {
+      "file": "g33-pytest.txt",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/pytest.log",
+      "type": "verbatim-raw-copy",
+      "sha256": "29e792545bdfe709b11e7931b790c238839f9eacd0dbaaf1de22188b7d9ee877",
+      "bytes": 445
+    },
+    {
+      "file": "g33-valid-handoff.md",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/valid-handoff.md",
+      "type": "verbatim-raw-copy",
+      "sha256": "834864ca3f1ca950c608e3d670c03fe7a56b31c0a6a345fda95e8216bb5532d9",
+      "bytes": 1871
+    },
+    {
+      "file": "g33-same-reviewer-handoff.md",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/same-reviewer-handoff.md",
+      "type": "verbatim-raw-copy",
+      "sha256": "19f2c580bbef9291b4bf29ff367b71d11170a07b5d2833052ff5330105c08edf",
+      "bytes": 1870
+    },
+    {
+      "file": "pjangler-audit-report.md",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/report.md",
+      "type": "verbatim-raw-copy",
+      "sha256": "136b2ea8da39f5b31f04bcb7f3454268408e10625215ebeb1ff7f587c2a324c1",
+      "bytes": 5515
+    },
+    {
+      "file": "pjangler-canonical-readiness.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/canonical-execution-readiness.stdout",
+      "type": "verbatim-raw-copy",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    {
+      "file": "pjangler-owner-bridge.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-evidence.json",
+      "type": "verbatim-raw-copy",
+      "sha256": "ea35f96725b13d0363018996e40ce2c05c14eea1a958bc9ed2a0543927135e39",
+      "bytes": 4947
+    },
+    {
+      "file": "flume-inventory.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/flume42-audit-20261119/all-pm-runtime.json",
+      "type": "selected-derived-json",
+      "sha256": "5fdc13c513be63da0ef1e09ca4e8383d08057b8ab8b5a7362136d9c3e43e695a",
+      "origin_sha256": "41093cab46294fce09bc16334aa45da65a55f2788ba5d9ba86db548bc90e2091",
+      "bytes": 50769
+    },
+    {
+      "file": "g33-probes.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/g33-audit-20261119/probe-results.json",
+      "type": "selected-derived-json",
+      "sha256": "3591507f797423d52d0a39ef74f0d47182c3adc7c4b27a4bb539200e9d670cbb",
+      "origin_sha256": "9e2dd4dc7e232673f4b0f2ac05e9a8a38bbe910d089e14b6ac73c1c9941b5209",
+      "bytes": 9543
+    },
+    {
+      "file": "pjangler-probes.json",
+      "origin": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/owner-evidence.json",
+      "type": "selected-derived-json",
+      "sha256": "ae339a66d13ccf1d548a4c2d5bb10e073bdaf9927e84b888ee90c4fa12ad8cbb",
+      "origin_sha256": "41007233ceaa034a692480c429039d728b5e949deba667af469b9c8b258a7719",
+      "bytes": 4951
+    }
+  ]
+}

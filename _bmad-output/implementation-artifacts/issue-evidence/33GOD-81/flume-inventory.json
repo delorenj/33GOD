@@ -1,0 +1,1290 @@
+{
+  "source": {
+    "flume_main": "f85a126835ce3f4a4b5f30198b949d865a9b54b6",
+    "template_main": "19ded0acc35c8e14ddcb94dd4ebde2b4421b5384",
+    "installed_runtime": "d6100d8bda1af8c7f1ca121a7f99a29112c62045"
+  },
+  "method": "Pinned installed resolver imported via per-PM read-only bwrap against real profile; repository, gateway-process, and configured terminal CWD are simulated contexts, not a live gateway invocation. One sampled skill per available repository.",
+  "batch_dry_run_exit": 3,
+  "batch_counts": {
+    "requested_bindings": 32,
+    "registered_pms": 32,
+    "trust_eligible": 32,
+    "config_enabled": 26,
+    "native_discovered": 0,
+    "supported": 0,
+    "blocked": 32,
+    "updated": 0,
+    "missing_skill_dirs": 2
+  },
+  "batch_capability_source_path": null,
+  "native_counts": {
+    "registered_pms": 32,
+    "probe_exit_zero": 32,
+    "project_dirs_visible": 24,
+    "project_skill_selected": 23,
+    "profile_skill_selected": 6,
+    "no_repo_skill": 2,
+    "configured_terminal_project_visible": 23
+  },
+  "pms": [
+    {
+      "pm": "33god-pm",
+      "declared_repository": "/home/delorenj/code/33GOD",
+      "declared_skill_root": "/home/delorenj/code/33GOD/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/33GOD",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/33GOD/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/33god-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/33GOD/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "bloodbank-pm",
+      "declared_repository": "/home/delorenj/code/33GOD/bloodbank",
+      "declared_skill_root": "/home/delorenj/code/33GOD/bloodbank/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/33GOD/bloodbank",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/bloodbank/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/33GOD/bloodbank/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/bloodbank-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/33GOD/bloodbank/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/bloodbank/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "candystore-pm",
+      "declared_repository": "/home/delorenj/code/33GOD/candystore",
+      "declared_skill_root": "/home/delorenj/code/33GOD/candystore/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/33GOD/candystore",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/candystore/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/33GOD/candystore/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/candystore-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/33GOD/candystore/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/candystore/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "client-portal-pm",
+      "declared_repository": "/home/delorenj/code/client-portal",
+      "declared_skill_root": "/home/delorenj/code/client-portal/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/client-portal",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/client-portal/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/client-portal/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/client-portal-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/client-portal/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/client-portal/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "deckard-pm",
+      "declared_repository": "/home/delorenj/code/deckard",
+      "declared_skill_root": "/home/delorenj/code/deckard/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/deckard",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/deckard/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/deckard/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/deckard-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/deckard/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "a7cd079825a181ef84aed6500f1353362c550f7c1a27993e9be7e8f5ee2d6163",
+      "selected_disk_sha256": "a7cd079825a181ef84aed6500f1353362c550f7c1a27993e9be7e8f5ee2d6163",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/deckard/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "earshot-pm",
+      "declared_repository": "/home/delorenj/code/earshot",
+      "declared_skill_root": "/home/delorenj/code/earshot/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": false,
+      "exact_trust_at_repo_cwd": false,
+      "actual_native_root": "/home/delorenj/code/earshot",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/earshot-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/.hermes/profiles/earshot-pm/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "flume-pm",
+      "declared_repository": "/home/delorenj/code/33GOD/flume",
+      "declared_skill_root": "/home/delorenj/code/33GOD/flume/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/33GOD/flume",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/flume/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/33GOD/flume/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/flume-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/33GOD/flume/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/flume/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "green-in-between-pm",
+      "declared_repository": "/home/delorenj/code/green-in-between",
+      "declared_skill_root": "/home/delorenj/code/green-in-between/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/green-in-between",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/green-in-between/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/green-in-between/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/green-in-between-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/green-in-between/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/green-in-between/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "gruvato-pm",
+      "declared_repository": "/home/delorenj/code/gruvato",
+      "declared_skill_root": "/home/delorenj/code/gruvato/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/gruvato",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/gruvato/.hermes/skills",
+        "/home/delorenj/code/gruvato/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/gruvato/.hermes/skills"
+        },
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/gruvato/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/gruvato-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/gruvato/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/gruvato/.hermes/skills",
+        "/home/delorenj/code/gruvato/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "heyma-pm",
+      "declared_repository": "/home/delorenj/HeyMa",
+      "declared_skill_root": "/home/delorenj/HeyMa/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/HeyMa",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/HeyMa/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/HeyMa/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/heyma-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/HeyMa/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/HeyMa/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "holocene-pm",
+      "declared_repository": "/home/delorenj/code/33GOD/holocene",
+      "declared_skill_root": "/home/delorenj/code/33GOD/holocene/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/33GOD/holocene",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/skillex/sets/min-global-91a161"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/skillex/sets/min-global-91a161"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/holocene-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/skillex/sets/min-global-91a161/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/skillex/sets/min-global-91a161"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "idealscenario-pm",
+      "declared_repository": "/home/delorenj/code/IdealScenario",
+      "declared_skill_root": "/home/delorenj/code/IdealScenario/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/IdealScenario",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/IdealScenario/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/IdealScenario/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/idealscenario-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/IdealScenario/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/IdealScenario/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "infra-pm",
+      "declared_repository": "/home/delorenj/code/infra",
+      "declared_skill_root": "/home/delorenj/code/infra/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": false,
+      "exact_trust_at_repo_cwd": false,
+      "actual_native_root": "/home/delorenj/code/infra",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/infra-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/.hermes/profiles/infra-pm/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "jacksnaps-pm",
+      "declared_repository": "/home/delorenj/code/jacksnaps",
+      "declared_skill_root": "/home/delorenj/code/jacksnaps/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/jacksnaps",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/jacksnaps/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/jacksnaps/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/jacksnaps-pm/skills"
+        }
+      ],
+      "probed_skill": "33god-hub",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/jacksnaps/.agents/skills/33god-hub/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "33181fa5022df7a2fada2e1778aea53006ae4c5a37c6e7cb47eb4f6b9cd1951c",
+      "selected_disk_sha256": "33181fa5022df7a2fada2e1778aea53006ae4c5a37c6e7cb47eb4f6b9cd1951c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": true,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "james-brennan-pm",
+      "declared_repository": "/home/delorenj/code/james-brennan",
+      "declared_skill_root": "/home/delorenj/code/james-brennan/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/james-brennan",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/james-brennan/.hermes/skills",
+        "/home/delorenj/code/james-brennan/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/james-brennan/.hermes/skills"
+        },
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/james-brennan/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/james-brennan-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/james-brennan/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/james-brennan/.hermes/skills",
+        "/home/delorenj/code/james-brennan/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "keepy-money-pm",
+      "declared_repository": "/home/delorenj/code/KeepyMoney",
+      "declared_skill_root": "/home/delorenj/code/KeepyMoney/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/KeepyMoney",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/KeepyMoney/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/KeepyMoney/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/keepy-money-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/KeepyMoney/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/KeepyMoney/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "lost-things-forge-pm",
+      "declared_repository": "/home/delorenj/code/tolt/lost-things-forge",
+      "declared_skill_root": "/home/delorenj/code/tolt/lost-things-forge/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": false,
+      "exact_trust_at_repo_cwd": false,
+      "actual_native_root": "/home/delorenj/code/tolt/lost-things-forge",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/lost-things-forge-pm/skills"
+        }
+      ],
+      "probed_skill": "33god-features",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/.hermes/profiles/lost-things-forge-pm/skills/33god-features/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "da17d04d99c7dcfb9cbfd483f07af7089aa1948e8ae195f0ecc197577ba3e553",
+      "selected_disk_sha256": "da17d04d99c7dcfb9cbfd483f07af7089aa1948e8ae195f0ecc197577ba3e553",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "milkshake-pm",
+      "declared_repository": "/home/delorenj/code/Milkshake",
+      "declared_skill_root": "/home/delorenj/code/Milkshake/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": false,
+      "exact_trust_at_repo_cwd": false,
+      "actual_native_root": "/home/delorenj/code/Milkshake",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/milkshake-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/.hermes/profiles/milkshake-pm/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "monitoring-pm",
+      "declared_repository": "/home/delorenj/code/33GOD/monitoring",
+      "declared_skill_root": "/home/delorenj/code/33GOD/monitoring/.agents/skills",
+      "skill_root_status": "missing",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/33GOD/monitoring",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/monitoring-pm/skills"
+        }
+      ],
+      "probed_skill": null,
+      "same_name_profile_collision": false,
+      "repo_cwd_selected_path": null,
+      "repo_cwd_skill_view_success": null,
+      "selected_content_sha256": null,
+      "selected_disk_sha256": null,
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "nautilus-trader-pm",
+      "declared_repository": "/home/delorenj/code/nautilus_trader",
+      "declared_skill_root": "/home/delorenj/code/nautilus_trader/.agents/skills",
+      "skill_root_status": "missing",
+      "manifest_status": "missing",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/nautilus_trader",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/nautilus-trader-pm/skills"
+        }
+      ],
+      "probed_skill": null,
+      "same_name_profile_collision": false,
+      "repo_cwd_selected_path": null,
+      "repo_cwd_skill_view_success": null,
+      "selected_content_sha256": null,
+      "selected_disk_sha256": null,
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "navi-pm",
+      "declared_repository": "/home/delorenj/code/navi",
+      "declared_skill_root": "/home/delorenj/code/navi/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/navi",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/navi/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/navi/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/navi-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/navi/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/navi/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "pile-of-dumb-things-pm",
+      "declared_repository": "/home/delorenj/code/tolt/tower-of-lost-things",
+      "declared_skill_root": "/home/delorenj/code/tolt/tower-of-lost-things/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/tolt/tower-of-lost-things",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/tolt/tower-of-lost-things/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/tolt/tower-of-lost-things/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/pile-of-dumb-things-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/tolt/tower-of-lost-things/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/tolt/tower-of-lost-things/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "pilot-pm",
+      "declared_repository": "/home/delorenj/code/33GOD/pilot",
+      "declared_skill_root": "/home/delorenj/code/33GOD/pilot/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": false,
+      "exact_trust_at_repo_cwd": false,
+      "actual_native_root": "/home/delorenj/code/33GOD/pilot",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/pilot-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/.hermes/profiles/pilot-pm/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "pjangler-pm",
+      "declared_repository": "/home/delorenj/code/33GOD/pjangler",
+      "declared_skill_root": "/home/delorenj/code/33GOD/pjangler/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/33GOD/pjangler",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/pjangler/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/33GOD/pjangler/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/pjangler-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/33GOD/pjangler/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "68a19089a0073b299c705e9afaa8d18183e78f88a185a68e9efba2e14062effc",
+      "selected_disk_sha256": "68a19089a0073b299c705e9afaa8d18183e78f88a185a68e9efba2e14062effc",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/33GOD/pjangler/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "sidepiece-pm",
+      "declared_repository": "/home/delorenj/code/sidepiece",
+      "declared_skill_root": "/home/delorenj/code/sidepiece/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/sidepiece",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/sidepiece/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/sidepiece/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/sidepiece-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/sidepiece/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "68a19089a0073b299c705e9afaa8d18183e78f88a185a68e9efba2e14062effc",
+      "selected_disk_sha256": "68a19089a0073b299c705e9afaa8d18183e78f88a185a68e9efba2e14062effc",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/sidepiece/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "skillex-pm",
+      "declared_repository": "/home/delorenj/code/skillex",
+      "declared_skill_root": "/home/delorenj/code/skillex/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/skillex",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/skillex/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/skillex/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/skillex-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/skillex/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "68a19089a0073b299c705e9afaa8d18183e78f88a185a68e9efba2e14062effc",
+      "selected_disk_sha256": "68a19089a0073b299c705e9afaa8d18183e78f88a185a68e9efba2e14062effc",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/skillex/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "slowburns-pm",
+      "declared_repository": "/home/delorenj/code/slowburns",
+      "declared_skill_root": "/home/delorenj/code/slowburns/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/slowburns",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/slowburns/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/slowburns/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/slowburns-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/slowburns/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/slowburns/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "ssbnk-pm",
+      "declared_repository": "/home/delorenj/code/ssbnk",
+      "declared_skill_root": "/home/delorenj/code/ssbnk/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/ssbnk",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/ssbnk/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/ssbnk/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/ssbnk-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/ssbnk/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "a7cd079825a181ef84aed6500f1353362c550f7c1a27993e9be7e8f5ee2d6163",
+      "selected_disk_sha256": "a7cd079825a181ef84aed6500f1353362c550f7c1a27993e9be7e8f5ee2d6163",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/ssbnk/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "tolt-pm",
+      "declared_repository": "/home/delorenj/code/tolt",
+      "declared_skill_root": "/home/delorenj/code/tolt/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": false,
+      "exact_trust_at_repo_cwd": false,
+      "actual_native_root": "/home/delorenj/code/tolt",
+      "repo_cwd_project_skill_roots": [],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/tolt-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/.hermes/profiles/tolt-pm/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "tonnybox-pm",
+      "declared_repository": "/home/delorenj/code/TonnyBox",
+      "declared_skill_root": "/home/delorenj/code/TonnyBox/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/TonnyBox",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/TonnyBox/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/TonnyBox/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/tonnybox-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/TonnyBox/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/TonnyBox/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "voxxy-pm",
+      "declared_repository": "/home/delorenj/code/voxxy",
+      "declared_skill_root": "/home/delorenj/code/voxxy/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/code/voxxy",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/code/voxxy/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/code/voxxy/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/voxxy-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/code/voxxy/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/code/voxxy/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    },
+    {
+      "pm": "zshyzsh-pm",
+      "declared_repository": "/home/delorenj/.config/zshyzsh",
+      "declared_skill_root": "/home/delorenj/.config/zshyzsh/.agents/skills",
+      "skill_root_status": "present",
+      "manifest_status": "verified",
+      "role_identity": "verified",
+      "registry_identity": "verified",
+      "discovery_enabled": true,
+      "exact_trust_at_repo_cwd": true,
+      "actual_native_root": "/home/delorenj/.config/zshyzsh",
+      "repo_cwd_project_skill_roots": [
+        "/home/delorenj/.config/zshyzsh/.agents/skills"
+      ],
+      "repo_cwd_search_tiers": [
+        {
+          "tier": 0,
+          "path": "/home/delorenj/.config/zshyzsh/.agents/skills"
+        },
+        {
+          "tier": 1,
+          "path": "/home/delorenj/.hermes/profiles/zshyzsh-pm/skills"
+        }
+      ],
+      "probed_skill": "bmad-help",
+      "same_name_profile_collision": true,
+      "repo_cwd_selected_path": "/home/delorenj/.config/zshyzsh/.agents/skills/bmad-help/SKILL.md",
+      "repo_cwd_skill_view_success": true,
+      "selected_content_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "selected_disk_sha256": "72573fbbd205cab6119015b7a20951055c7f1f583162674ebed7a68368dc889c",
+      "gateway_process_cwd_project_skill_roots": [],
+      "configured_terminal_cwd_project_skill_roots": [
+        "/home/delorenj/.config/zshyzsh/.agents/skills"
+      ],
+      "terminal_cwd_is_relative_dot": false,
+      "probe_exit": 0,
+      "dry_run_blockers": [
+        "profile_config_drift",
+        "runtime_project_discovery_unverified"
+      ]
+    }
+  ]
+}

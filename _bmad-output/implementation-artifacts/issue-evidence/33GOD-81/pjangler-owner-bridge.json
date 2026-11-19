@@ -1,0 +1,72 @@
+{
+  "projectRoot": "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture",
+  "rows": [
+    {
+      "operation": "observe",
+      "status": "conflict",
+      "summary": "installed skill bmad-build has no g33 team override",
+      "details": [
+        "update-preservation: unavailable; no supported pre-update capture/protection, post-update restore/reconcile/verify or failure recovery. Refuse upstream BMAD updates before mutation until the owning updater supplies that contract."
+      ],
+      "evidenceCount": 4,
+      "changed": false
+    },
+    {
+      "operation": "plan",
+      "status": "planned",
+      "summary": "planned 1 action(s); zero target writes performed",
+      "details": [
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/config.yaml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/_config/bmad-help.csv",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/config.toml",
+        "create: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-build.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-code-review.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-prd.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-spec.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-architecture.toml",
+        "update-preservation: unavailable; no supported pre-update capture/protection, post-update restore/reconcile/verify or failure recovery. Refuse upstream BMAD updates before mutation until the owning updater supplies that contract."
+      ],
+      "evidenceCount": 2,
+      "changed": false
+    },
+    {
+      "operation": "apply",
+      "status": "changed",
+      "summary": "applied 1 action(s); re-observed installed",
+      "details": [
+        "create: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-build.toml",
+        "update-preservation: unavailable; no supported pre-update capture/protection, post-update restore/reconcile/verify or failure recovery. Refuse upstream BMAD updates before mutation until the owning updater supplies that contract."
+      ],
+      "evidenceCount": 14,
+      "changed": true
+    },
+    {
+      "operation": "observe",
+      "status": "installed",
+      "summary": "g33 installed: canonical activation and real resolvers verify required workflow content, active runtime, authoring and help surfaces",
+      "details": [
+        "update-preservation: unavailable; no supported pre-update capture/protection, post-update restore/reconcile/verify or failure recovery. Refuse upstream BMAD updates before mutation until the owning updater supplies that contract."
+      ],
+      "evidenceCount": 14,
+      "changed": false
+    },
+    {
+      "operation": "plan",
+      "status": "unchanged",
+      "summary": "no changes needed (already converged)",
+      "details": [
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/config.yaml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/_config/bmad-help.csv",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/config.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-build.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-code-review.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-prd.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-spec.toml",
+        "already-present: /home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/bridge-fixture/_bmad/custom/bmad-architecture.toml",
+        "update-preservation: unavailable; no supported pre-update capture/protection, post-update restore/reconcile/verify or failure recovery. Refuse upstream BMAD updates before mutation until the owning updater supplies that contract."
+      ],
+      "evidenceCount": 2,
+      "changed": false
+    }
+  ]
+}

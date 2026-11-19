@@ -1,0 +1,165 @@
+{
+  "source_checkout_at_probe": "bff0be551d9b071fc6905618749c52053ef83332",
+  "source_remote_main_at_parent_readback": "ddaf43f58ca6817c8503677d881ff6ecf7424daa",
+  "fixture_note": "Scratch-only clone of current installed PJangler BMAD and native skills; canonical owner activated by a scratch symlink. A single team override was removed before these commands. No live target changed.",
+  "owner_vs_caller": [
+    {
+      "label": "PJ dry-run cannot repair missing owner override",
+      "argv": [
+        "/home/delorenj/.local/share/mise/installs/node/26.5.0/bin/node",
+        "/home/delorenj/code/33GOD/pjangler/dist/index.js",
+        "migrate",
+        "bmad.g33-companion",
+        "--dry-run",
+        "--json"
+      ],
+      "exit": 1,
+      "changed": false,
+      "result": {
+        "ok": false,
+        "status": null,
+        "summary": null,
+        "rules": [
+          {
+            "id": "bmad.g33-companion",
+            "status": "partial",
+            "summary": "installed skill bmad-build has no g33 team override",
+            "changed_files": []
+          }
+        ],
+        "changed_files": []
+      }
+    },
+    {
+      "label": "PJ apply cannot repair missing owner override",
+      "argv": [
+        "/home/delorenj/.local/share/mise/installs/node/26.5.0/bin/node",
+        "/home/delorenj/code/33GOD/pjangler/dist/index.js",
+        "migrate",
+        "bmad.g33-companion",
+        "--json"
+      ],
+      "exit": 1,
+      "changed": false,
+      "result": {
+        "ok": false,
+        "status": null,
+        "summary": null,
+        "rules": [
+          {
+            "id": "bmad.g33-companion",
+            "status": "partial",
+            "summary": "installed skill bmad-build has no g33 team override",
+            "changed_files": []
+          }
+        ],
+        "changed_files": []
+      }
+    },
+    {
+      "label": "Canonical owner dry-run plans repair",
+      "argv": [
+        "python3",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_install.py",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/fixture",
+        "--dry-run",
+        "--json"
+      ],
+      "exit": 0,
+      "changed": false,
+      "result": {
+        "ok": null,
+        "status": "ok",
+        "summary": null,
+        "rules": [],
+        "changed_files": null
+      }
+    },
+    {
+      "label": "Canonical owner repairs override",
+      "argv": [
+        "python3",
+        "-B",
+        "/home/delorenj/code/skillex/all-skills/g33-33god-integration/scripts/g33_install.py",
+        "--project-root",
+        "/home/delorenj/.hermes/profiles/33god-pm/cache/scratch/pjan167-ac5-recheck/fixture",
+        "--json"
+      ],
+      "exit": 0,
+      "changed": true,
+      "result": {
+        "ok": null,
+        "status": "ok",
+        "summary": null,
+        "rules": [],
+        "changed_files": null
+      }
+    },
+    {
+      "label": "PJ repeat after owner repair",
+      "argv": [
+        "node",
+        "/home/delorenj/code/33GOD/pjangler/dist/index.js",
+        "migrate",
+        "bmad.g33-companion",
+        "--json"
+      ],
+      "exit": 0,
+      "changed": false,
+      "result": {
+        "ok": true,
+        "status": null,
+        "summary": null,
+        "rules": [
+          {
+            "id": "bmad.g33-companion",
+            "status": "noop",
+            "summary": "g33 installed: canonical activation and real resolvers verify required workflow content, active runtime, authoring and help surfaces",
+            "changed_files": []
+          }
+        ],
+        "changed_files": []
+      }
+    }
+  ],
+  "bridge_sequence": [
+    {
+      "operation": "observe",
+      "status": "conflict",
+      "summary": "installed skill bmad-build has no g33 team override",
+      "changed": false,
+      "evidence_count": 4
+    },
+    {
+      "operation": "plan",
+      "status": "planned",
+      "summary": "planned 1 action(s); zero target writes performed",
+      "changed": false,
+      "evidence_count": 2
+    },
+    {
+      "operation": "apply",
+      "status": "changed",
+      "summary": "applied 1 action(s); re-observed installed",
+      "changed": true,
+      "evidence_count": 14
+    },
+    {
+      "operation": "observe",
+      "status": "installed",
+      "summary": "g33 installed: canonical activation and real resolvers verify required workflow content, active runtime, authoring and help surfaces",
+      "changed": false,
+      "evidence_count": 14
+    },
+    {
+      "operation": "plan",
+      "status": "unchanged",
+      "summary": "no changes needed (already converged)",
+      "changed": false,
+      "evidence_count": 2
+    }
+  ],
+  "other_preservation_probe": "See 2026-11-19 parent report: customized native SKILL.md body/mode lost on controlled wrapper failure; external symlink target overwritten on upstream installer component failure despite changedFiles:[] (scratch only)."
+}
