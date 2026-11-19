@@ -130,8 +130,9 @@ them all; no structural change was needed. The root description must name the hi
 1. **Activation.** Only the root can be listed. Generated routers must be `SUBSKILL.md` files, or Hermes' rglob
    lists them. A pinned set stays listed during the transition because CLAUDE.md and other skills load these by
    name: `belsky-doctrine`, `artifacts`, `kapture`, `candybar`, `web-search` and `pillars`.
-2. **`mobile-devex` is missing from the global selection.** Without it, the mobile-release route ends at
-   `mise-versioning`, a hand version bump that CLAUDE.md forbids.
+2. ~~**`mobile-devex` is missing from the global selection.**~~ Resolved 2026-11-19 (`~/.agents` `4a97532`; all
+   46 strict Hermes desks resynced). Without it, the mobile-release route ended at `mise-versioning`, a hand
+   version bump that CLAUDE.md forbids.
 3. **`33god-hub` is full.** It reached the maximum of 12 children with the Factory insert, so the next `addSkill`
    overflows it. The planned rotation is an `operator-desktop` hub (Atlas G10) holding `crank`,
    `zellij-workspace-ops` and `33god-features`, which brings `33god-hub` back to 10.
