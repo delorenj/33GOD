@@ -7,6 +7,11 @@ description: 33GOD fleet policy for git worktrees — WHEN to create one, WHERE 
 
 The fleet runs many agents against the same repos. The main checkout of every repo is **shared infrastructure** — Hermes PMs, hooks, systemd units, and other agents all read from it. Two agents working in the same path step on each other; worktrees are how we prevent that. `wt` (worktrunk) is the only sanctioned tool for managing them — see the `worktrunk` skill for the HOW.
 
+Precedence: the global checkpointing rule outranks this page. Work never waits in a worktree;
+the moment a slice is verified it lands on `main` (optimistic merge or rebase). The `merge-forward`
+skill is stricter about when to open one ("only when the primary checkout is dirty or someone is
+using it"). When the two disagree, land sooner.
+
 ## The three rules
 
 ### 1. WHEN — default to a worktree
@@ -69,5 +74,5 @@ Worktrees change your absolute path, and several fleet systems key on it. Know w
 
 ## Relationship to other rules
 
-- **merge-forward skill:** worktrees are the delivery vehicle for merge-forward slices — smallest observable change in a worktree, landed on main immediately.
+- **`merge-forward` skill:** worktrees are the delivery vehicle for merge-forward slices — smallest observable change in a worktree, landed on main immediately.
 - **Global AGENTS.md checkpointing:** "always commit and push, never leave work sitting" — worktrees satisfy the isolation half of that rule; this skill's MAINTAIN section satisfies the landing half.

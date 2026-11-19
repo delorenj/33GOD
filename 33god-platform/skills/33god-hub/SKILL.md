@@ -46,8 +46,8 @@ matching one rather than re-deriving its decisions here.
 |---|---|
 | Resuming project work, switching agent CLIs, or finding recent requests, outcomes, decisions, and unfinished work in the event trail | `candystore-context` |
 | Adding or renaming a Plane label, choosing between a label and a state, wiring automation that writes to a board, scaffolding or reconciling a project board | `board-taxonomy` |
-| Landing a change forward across the component repos | `merge-forward` |
-| Publishing or composing skill packs | `skillex-skill-registry` |
+| Landing a change forward across the component repos | `merge-forward` (a wild skill: the generic base method) |
+| Publishing or composing skill packs | `skillex-skill-registry` (owned by the skillex repo) |
 | UX ideation from captured intent, Stitch screen/variant exploration, and a selected design handoff into BMAD UX | `stitch`; `bmad-ux` owns Discovery and final DESIGN.md / EXPERIENCE.md |
 | Anything HeyMa/Wax: provenance, CLI, folder bindings, passes, calls, n8n EP graphs, the read-only Holocene Wax tab | the `heyma` hub (`~/HeyMa/skills/heyma/SKILL.md`; `skillex skill show heyma`) |
 | Wax recording, diarization, archive or execution incident | the `heyma` hub's doctor sub-skill (`~/HeyMa/skills/heyma/subskills/doctor/SUBSKILL.md`) |
@@ -65,6 +65,7 @@ never auto-listed). Read the one that matches, then come back.
 | Load when | Sub-skill |
 |---|---|
 | Crank: turning it on or off, "is the crank alive?", `⚠ crank stalled`, a pane poked wrongly or never, crank.lua / Redis / prompt segment, the retired tab-keyed beat | [subskills/crank/SUBSKILL.md](subskills/crank/SUBSKILL.md) |
+| Starting non-trivial work in any 33GOD repo, two agents might share a checkout, or auditing stale worktrees (where they live, rebasing, land-or-delete) | [subskills/worktrees/SUBSKILL.md](subskills/worktrees/SUBSKILL.md) |
 
 ## Portability / external deployment
 
