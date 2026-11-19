@@ -8,9 +8,9 @@
 #   workspace: <workspace-slug>      (or env PLANE_WORKSPACE)
 #   board_id:  <project-uuid>        (set by create_board / 42-ticket-provider)
 #   timezone:  <IANA timezone>       optional project calendar override
-# Lane names (role.yaml `ticket_provider:`, each optional): backlog, unstarted,
-#   started, completed (default "Done"), cancelled (default "Cancelled"). An
-#   unnamed lane resolves only when its state group has exactly one member.
+# Lane names: .project.json ticket_provider.state_map overrides legacy role.yaml
+# ticket_provider keys; canonical defaults are Backlog, Todo, In Progress, Done,
+# Cancelled. Configured names must resolve uniquely within their state group.
 #
 # Krebs lifecycle v2 (krebs/spec/lifecycle.v2.yaml): every board has the five
 # stock lanes (Backlog, Todo, In Progress, Done, Cancelled); what the retired
@@ -116,11 +116,63 @@ tp_cfg() {
   [ -f "$ROLE_YAML" ] || return 0
   python3 - "$ROLE_YAML" "$1" <<'PY'
 import sys, re, pathlib
-text = pathlib.Path(sys.argv[1]).read_text()
-m = re.search(r'(?ms)^ticket_provider:\s*$(.*?)(?=^\S)', text + "\n\x00")
-block = m.group(1) if m else ""
-mm = re.search(rf'(?m)^\s*{re.escape(sys.argv[2])}:\s*"?([^"\n]*)"?\s*$', block)
-print(mm.group(1).strip() if mm else "")
+
+# role.yaml uses single-line scalar fields here. Decode YAML quotes/escapes
+# without requiring PyYAML in every deployed employee's Python environment.
+def scalar(raw):
+    raw = raw.strip()
+    if not raw or raw.startswith("#"):
+        return ""
+    quote = raw[0]
+    if quote not in "\"'":
+        if raw[0] in "[{}]&*!>|":
+            raise ValueError("expected a single-line scalar")
+        return re.split(r"\s+#", raw, maxsplit=1)[0].rstrip()
+    out = []; i = 1
+    escapes = {"0": "\0", "a": "\a", "b": "\b", "t": "\t", "n": "\n", "v": "\v",
+               "f": "\f", "r": "\r", "e": "\x1b", " ": " ", '"': '"', "/": "/", "\\": "\\",
+               "N": "\x85", "_": "\xa0", "L": "\u2028", "P": "\u2029"}
+    while i < len(raw):
+        ch = raw[i]; i += 1
+        if ch == quote:
+            if quote == "'" and i < len(raw) and raw[i] == "'":
+                out.append("'"); i += 1; continue
+            rest = raw[i:]
+            if rest and not re.fullmatch(r"\s+(?:#.*)?", rest):
+                raise ValueError("unexpected text after quoted scalar")
+            return "".join(out)
+        if quote == '"' and ch == "\\":
+            if i == len(raw):
+                raise ValueError("unfinished escape")
+            esc = raw[i]; i += 1
+            if esc in escapes:
+                ch = escapes[esc]
+            elif esc in "xuU":
+                width = {"x": 2, "u": 4, "U": 8}[esc]
+                digits = raw[i:i + width]
+                if len(digits) != width or not re.fullmatch(r"[0-9a-fA-F]+", digits):
+                    raise ValueError("invalid Unicode escape")
+                ch = chr(int(digits, 16)); i += width
+            else:
+                raise ValueError(f"unsupported escape \\{esc}")
+        out.append(ch)
+    raise ValueError("unterminated quoted scalar")
+
+key = sys.argv[2]; active = False
+try:
+    for line in pathlib.Path(sys.argv[1]).read_text().splitlines():
+        if re.fullmatch(r"ticket_provider:\s*(?:#.*)?", line):
+            active = True; continue
+        if active and line and not line[0].isspace() and not line.startswith("#"):
+            break
+        if active:
+            match = re.fullmatch(rf"[ \t]+{re.escape(key)}:[ \t]*(.*)", line)
+            if match:
+                print(scalar(match.group(1)).strip()); break
+    else:
+        print("")
+except (ValueError, OSError) as exc:
+    raise SystemExit(f"plane: invalid role.yaml ticket_provider.{key}: {exc}")
 PY
 }
 
@@ -142,14 +194,51 @@ else:
 PY
 }
 
+# pj_state_map KEY — optional repo-wide name override for a normalized lane.
+# Reject malformed configured maps instead of silently falling back to a role.
+pj_state_map() {
+  python3 - "$ROLE_DIR" "$1" <<'PY'
+import sys, json, pathlib
+start = pathlib.Path(sys.argv[1]).resolve(); key = sys.argv[2]
+for parent in [start, *start.parents]:
+    f = parent / ".project.json"
+    if f.is_file():
+        try:
+            tp = json.loads(f.read_text()).get("ticket_provider") or {}
+            mapping = tp.get("state_map", {}) if isinstance(tp, dict) else {}
+            if not isinstance(mapping, dict):
+                raise ValueError("state_map must be an object")
+            allowed = {"backlog", "unstarted", "started", "completed", "cancelled"}
+            unknown = sorted(set(mapping) - allowed)
+            if unknown:
+                raise ValueError(f"unsupported state_map keys: {', '.join(unknown)}")
+            for lane, configured in mapping.items():
+                if not isinstance(configured, str):
+                    raise ValueError(f"state_map.{lane} must be a string")
+            value = mapping.get(key, "")
+            print(value.strip())
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f"plane: invalid .project.json ticket_provider.state_map: {exc}")
+        break
+else:
+    print("")
+PY
+}
+
 # Board binding: .project.json (SOT) first, then legacy role.yaml, then env.
 WS="$(pj_cfg workspace)"; [ -n "$WS" ] || WS="$(tp_cfg workspace)"; WS="${WS:-${PLANE_WORKSPACE:-}}"
 PROJ="$(pj_cfg board_id)"; [ -n "$PROJ" ] || PROJ="$(tp_cfg project)"; [ -n "$PROJ" ] || PROJ="$(tp_cfg board_id)"
-SM_DONE="$(tp_cfg completed)"; SM_DONE="${SM_DONE:-Done}"
-SM_CANCELLED="$(tp_cfg cancelled)"; SM_CANCELLED="${SM_CANCELLED:-Cancelled}"
-SM_STARTED="$(tp_cfg started)"
-SM_UNSTARTED="$(tp_cfg unstarted)"
-SM_BACKLOG="$(tp_cfg backlog)"
+# Read all five overrides before any API call, propagating invalid config errors.
+MAP_DONE="$(pj_state_map completed)" || exit 1
+MAP_CANCELLED="$(pj_state_map cancelled)" || exit 1
+MAP_STARTED="$(pj_state_map started)" || exit 1
+MAP_UNSTARTED="$(pj_state_map unstarted)" || exit 1
+MAP_BACKLOG="$(pj_state_map backlog)" || exit 1
+SM_DONE="${MAP_DONE:-$(tp_cfg completed)}"; SM_DONE="${SM_DONE:-Done}"
+SM_CANCELLED="${MAP_CANCELLED:-$(tp_cfg cancelled)}"; SM_CANCELLED="${SM_CANCELLED:-Cancelled}"
+SM_STARTED="${MAP_STARTED:-$(tp_cfg started)}"; SM_STARTED="${SM_STARTED:-In Progress}"
+SM_UNSTARTED="${MAP_UNSTARTED:-$(tp_cfg unstarted)}"; SM_UNSTARTED="${SM_UNSTARTED:-Todo}"
+SM_BACKLOG="${MAP_BACKLOG:-$(tp_cfg backlog)}"; SM_BACKLOG="${SM_BACKLOG:-Backlog}"
 LABEL_REVIEW="lifecycle:review"
 LABEL_NEEDS_INPUT="lifecycle:needs-input"
 # Owner-applied hold: Jarad took the ticket by hand. Never written here; a transition that
