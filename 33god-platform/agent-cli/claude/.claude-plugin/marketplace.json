@@ -1,0 +1,13 @@
+{
+  "name": "33god",
+  "owner": {
+    "name": "delorenj"
+  },
+  "plugins": [
+    {
+      "name": "33god",
+      "source": "./33god",
+      "description": "33GOD commands for Claude Code: /identity and every later 33GOD command, each a thin adapter over a 33GOD component CLI"
+    }
+  ]
+}

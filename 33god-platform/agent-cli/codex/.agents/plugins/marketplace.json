@@ -1,0 +1,12 @@
+{
+  "name": "33god",
+  "plugins": [
+    {
+      "name": "33god",
+      "source": {
+        "source": "local",
+        "path": "./33god"
+      }
+    }
+  ]
+}

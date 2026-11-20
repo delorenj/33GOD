@@ -1,0 +1,3 @@
+# Editor types the Claude Code engine lays into a loaded plugin
+claude/*/.claude-plugin/types/
+claude/*/tsconfig.json

@@ -1,6 +1,6 @@
 ---
 name: 33god-hub
-description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Plane/n8n ingress, Bloodbank events or commands, Candystore, Holocene, PJangler, Flume, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, Crank (pj crank, crank officer, zcrank-send), HeyMa, Stitch UX ideation and BMAD handoffs, hooks, Waybill prompt-flow recordings, the Factory (the 3D warehouse picture of 33GOD at manual.delo.sh/sandbox, its Atlas-placed stations and the nightly factory-forge that builds each component's animated 3D asset), changelogs, backfills, or local/cloud platform composition, especially when tracing a message end-to-end.
+description: Unified entrypoint for the private 33GOD productized development environment. Use when work spans Plane/n8n ingress, Bloodbank events or commands, Candystore, Holocene, PJangler, Flume, Hermes Fleet, Skillex, Hindsight, Pipeline MCP Hub, Candybar, Crank (pj crank, crank officer, zcrank-send), HeyMa, Stitch UX ideation and BMAD handoffs, hooks, agent CLI extensions (the `33god` Claude Code/Codex/OpenCode plugins and slash commands like /identity), Waybill prompt-flow recordings, the Factory (the 3D warehouse picture of 33GOD at manual.delo.sh/sandbox, its Atlas-placed stations and the nightly factory-forge that builds each component's animated 3D asset), changelogs, backfills, or local/cloud platform composition, especially when tracing a message end-to-end.
 ---
 
 # 33GOD Hub
@@ -68,6 +68,7 @@ never auto-listed). Read the one that matches, then come back.
 |---|---|
 | Crank: turning it on or off, "is the crank alive?", `⚠ crank stalled`, a pane poked wrongly or never, crank.lua / Redis / prompt segment, the retired tab-keyed beat | [subskills/crank/SUBSKILL.md](subskills/crank/SUBSKILL.md) |
 | Starting non-trivial work in any 33GOD repo, two agents might share a checkout, or auditing stale worktrees (where they live, rebasing, land-or-delete) | [subskills/worktrees/SUBSKILL.md](subskills/worktrees/SUBSKILL.md) |
+| Adding or changing a 33GOD slash command, menu or pane in an agent CLI (Claude Code, Codex, OpenCode), e.g. `/identity`; one `33god` plugin per CLI under `33god-platform/agent-cli/` | [subskills/agent-cli-extensions/SUBSKILL.md](subskills/agent-cli-extensions/SUBSKILL.md) |
 | The Factory: placing a component on the 3D floor, its Atlas link, building or polishing a component's 3D asset and animation, the nightly factory-forge (a hub sub-skill with its own children; self-evolving) | [subskills/the-factory/SUBSKILL.md](subskills/the-factory/SUBSKILL.md) |
 
 ## Portability / external deployment
