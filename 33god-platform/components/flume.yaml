@@ -66,7 +66,7 @@ relations:
 - to: pjangler
   kind: calls
   via: pj CLI (PJANGLER_BIN) parity reconcile
-  evidence: flume/packages/flume-hr/src/parity/reconcile.ts:319
+  evidence: flume/packages/flume-hr/src/parity/reconcile.ts:325
   anchor: 'const result = spawnSync(bin, args, { encoding: "utf8", timeout: PJ_TIMEOUT_MS, maxBuffer: 64 * 1024 * 1024 });'
 - to: onepassword
   kind: calls
@@ -76,7 +76,7 @@ relations:
 - to: hermes-gw
   kind: calls
   via: hermes-gateway-restart --reason
-  evidence: flume/packages/flume-hr/src/workforce/channel.ts:283
+  evidence: flume/packages/flume-hr/src/workforce/channel.ts:309
   anchor: 'const restart = spawnSync(GATEWAY_RESTART_COMMAND, ["--reason", reason], { encoding: "utf8", timeout: 30_000 });'
 - to: candybar
   kind: calls
@@ -86,7 +86,7 @@ relations:
 - to: cloudflare
   kind: calls
   via: Cloudflare API v4 provisioning cfRequest
-  evidence: flume/packages/flume-hr/src/workforce/provision.ts:183
+  evidence: flume/packages/flume-hr/src/workforce/provision.ts:228
   anchor: return fetch(`${base}${path}`, {
 evidence:
 - 33god-platform/components/flume.yaml

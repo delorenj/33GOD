@@ -47,7 +47,7 @@ relations:
 - to: plane
   kind: calls
   via: GET /api/v1/workspaces/{ws}/projects/{board}/ (X-API-Key)
-  evidence: pjangler/src/project/boardQuery.ts:327
+  evidence: pjangler/src/project/boardQuery.ts:326
   anchor: response = await fetch(url, {
 - to: open-notebook
   kind: calls
@@ -62,7 +62,7 @@ relations:
 - to: skillex
   kind: wraps
   via: pj skills passes through to bundled @delorenj/skillex bin
-  evidence: pjangler/src/skills/cli.ts:124
+  evidence: pjangler/src/skills/cli.ts:199
   anchor: .argument("[args...]", "skillex command and options, passed through unchanged")
 evidence:
 - 'critic (repo): Repo is /home/delorenj/code/33GOD/pjangler (submodule; ~/code/pjangler does not exist). Runtime
