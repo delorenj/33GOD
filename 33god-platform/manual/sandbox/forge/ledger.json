@@ -49,6 +49,32 @@
    },
    "showcase_url": "https://s3.delo.sh/projects/33god/2026-11-19/factory-forge-hook-hub/index.html",
    "duration_s": 2108.0
+  },
+  {
+   "run": "2026-11-20T01:40-0500",
+   "id": "candybar",
+   "mode": "build",
+   "outcome": "failed",
+   "score": 8.0,
+   "commit": null,
+   "tokens": {
+    "input": 133,
+    "output": 123518,
+    "cache_creation": 437067,
+    "cache_read": 9806369,
+    "total": 123651,
+    "cost_usd": 11.12588475,
+    "turns": 95,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built candybar as \"The clock\", a Triggers-red clock tower. Its four contract clips are the dispatcher at a cream punch clock at the tower's foot. A copy lands in the in-tray, the chore chart's scanner stops on the due row, an exec-striped card steps out and the stamp comes down. A kraft envelope then slides down the chute. A Driver.tsx also plays a fifth clip, Strike, for each `tick fired`: the "
+   },
+   "showcase_url": null,
+   "duration_s": 2012.0,
+   "note": "verification failed: manifest-height; lessons landed (1 path(s))",
+   "failed": [
+    "manifest-height"
+   ]
   }
  ]
 }
