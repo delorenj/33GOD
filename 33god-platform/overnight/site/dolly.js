@@ -12,11 +12,19 @@
    rest), and never while a scrollbar thumb or a finger is still down. A page that never comes
    to rest half-dissolved.
 
+   Glides are timed, not sprung: the playhead travels to the rest point over a duration (the seam's
+   own `ms`, or one scaled to the distance) along the seam's `ease`, so a story beat plays as one
+   shaped move. Any scroll input during a glide hands the playhead straight back to the spring.
+
+   Stops (optional) make the keyboard step through the film: Space, Page Up/Down and the arrow keys
+   glide to the next or previous stop instead of scrolling a fixed distance. Home and End still cut.
+
    No dependencies. One instance per page:
 
      var dolly = Dolly.create({
        onFrame: function (y, info) { ... },  // y: playhead in px of scroll; info: { moving, velocity }
-       seam: function (y) { ... },            // optional: null, or { from, to } px around y
+       seam: function (y) { ... },            // optional: null, or { from, to, ms?, ease? } px around y
+       stop: function (y, dir) { ... },       // optional: the next rest point past y (dir 1 or -1), or null
        origin: function () { return 0; },     // optional: px from the document top to the film's start
      });
      dolly.jump(px)    // cut straight to a scroll position (nav links): no glide through the middle
@@ -32,9 +40,12 @@
   var IDLE_MS = 160;       // no scroll input for this long and the reader has stopped
   var POINTER_IDLE_MS = 260; // a released scrollbar thumb or finger gets a little longer
   var REST_PX = 0.25, REST_V = 2;   // the playhead is at rest under these (px, px/s)
+  var GLIDE_MS = [340, 1100];        // a glide with no ms of its own: 300ms + 500ms per screen, inside these
+  var STEP_KEYS = { ' ': 1, PageDown: 1, ArrowDown: 1, PageUp: -1, ArrowUp: -1 };
+  function smooth(t) { return t * t * (3 - 2 * t); }
 
   function create(opts) {
-    var onFrame = opts.onFrame, seamOf = opts.seam || null, origin = opts.origin || function () { return 0; };
+    var onFrame = opts.onFrame, seamOf = opts.seam || null, stopOf = opts.stop || null, origin = opts.origin || function () { return 0; };
     var omega = opts.omega || OMEGA;
     var mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
     function reduced() { return !!(mq && mq.matches); }
@@ -47,6 +58,7 @@
     var lastDir = 0;                          // sign of the reader's last real move (deltas over 2px)
     var burst = false;                        // a fly-through (End, Home, a long smooth scroll): hold the frame, cut at the end
     var burstT = NaN, prevT = y;
+    var tw = null;                            // a timed glide: { from, to, t0, ms, ease }
 
     function target() { return window.scrollY; }
 
@@ -56,6 +68,17 @@
       var dt = then ? Math.min(0.05, (now - then) / 1000) : 1 / 60;
       then = now;
       var t = target();
+      if (tw) {
+        if (t === tw.to) {
+          if (!tw.t0) tw.t0 = now;
+          var u = Math.min(1, (now - tw.t0) / tw.ms);
+          var ny = tw.from + (tw.to - tw.from) * tw.ease(u);
+          v = (ny - y) / dt; y = ny; prevT = t;
+          if (u >= 1) { tw = null; y = t; v = 0; onFrame(y, { moving: false, velocity: 0 }); then = 0; return; }
+          onFrame(y, { moving: true, velocity: v }); schedule(); return;
+        }
+        tw = null;                            // the reader took over: the spring picks up from here
+      }
       // Far behind the scroll position: the browser is flying through many scenes (End, Home, a long
       // smooth scroll). Rendering that strobes beats; hold the current frame and cut when it lands.
       var vh = window.innerHeight;
@@ -93,7 +116,16 @@
       var forward = lastDir ? lastDir > 0 : Math.abs(net) > 2 ? net > 0 : (t - o - s.from) > (s.to - s.from) / 2;
       var goal = (forward ? s.to : s.from) + o;
       anchor = goal; lastDir = 0;
-      if (Math.abs(goal - t) >= 1) window.scrollTo({ top: goal, behavior: 'auto' });   // the spring turns this into a glide
+      if (Math.abs(goal - t) >= 1) glide(goal, s.ms, s.ease);
+    }
+    // Play the playhead to px along ease over ms: the scroll position cuts there at once, the film follows.
+    function glide(px, ms, ease) {
+      if (reduced()) { jump(px); return; }
+      var dist = Math.abs(px - y), vh = window.innerHeight || 1;
+      tw = { from: y, to: 0, t0: 0, ms: ms || Math.max(GLIDE_MS[0], Math.min(GLIDE_MS[1], 300 + 500 * dist / vh)), ease: ease || smooth };
+      window.scrollTo({ top: px, behavior: 'instant' });
+      tw.to = window.scrollY; prevT = tw.to; v = 0;
+      schedule();
     }
     function arm(ms) { clearTimeout(idle); idle = setTimeout(settle, ms); }
 
@@ -114,10 +146,25 @@
     function onTouchStart() { touching = true; clearTimeout(idle); }
     function onTouchEnd(e) { if (!e.touches || e.touches.length === 0) { touching = false; arm(POINTER_IDLE_MS); } }
     // Browsers do not always deliver the pointerup for a scrollbar drag; any sign of a free hand clears the hold.
+    function onKey(e) {
+      var dir = STEP_KEYS[e.key];
+      if (!dir || !stopOf || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || held || touching) return;
+      var el = e.target, tag = el && el.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || (el && el.isContentEditable)) return;
+      if (e.key === ' ' && e.shiftKey) dir = -1;
+      var o = origin(), from = (tw ? tw.to : target()) - o;   // a second press chains from where the glide is going
+      var goal = stopOf(from, dir);
+      if (goal == null) return;                               // past the last stop: the browser scrolls as usual
+      e.preventDefault();
+      clearTimeout(idle); lastDir = 0;
+      anchor = goal + o;
+      glide(goal + o);
+    }
     function onFree(e) { if (held && !isTouch(e) && (e.type !== 'pointermove' || e.buttons === 0)) { held = 0; arm(POINTER_IDLE_MS); } }
 
     function jump(px) {
-      window.scrollTo({ top: px, behavior: 'auto' });
+      tw = null;
+      window.scrollTo({ top: px, behavior: 'instant' });
       y = lastTarget = anchor = prevT = window.scrollY; v = 0; lastDir = 0; burst = false;
       clearTimeout(idle);
       onFrame(y, { moving: false, velocity: 0 });
@@ -129,17 +176,17 @@
       alive = false; cancelAnimationFrame(raf); clearTimeout(idle);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('pointerdown', onDown); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onCancel);
-      window.removeEventListener('pointermove', onFree); window.removeEventListener('wheel', onFree); window.removeEventListener('keydown', onFree);
+      window.removeEventListener('pointermove', onFree); window.removeEventListener('wheel', onFree); window.removeEventListener('keydown', onFree); window.removeEventListener('keydown', onKey);
       window.removeEventListener('touchstart', onTouchStart); window.removeEventListener('touchend', onTouchEnd); window.removeEventListener('touchcancel', onTouchEnd);
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('pointerdown', onDown, { passive: true }); window.addEventListener('pointerup', onUp, { passive: true }); window.addEventListener('pointercancel', onCancel, { passive: true });
-    window.addEventListener('pointermove', onFree, { passive: true }); window.addEventListener('wheel', onFree, { passive: true }); window.addEventListener('keydown', onFree);
+    window.addEventListener('pointermove', onFree, { passive: true }); window.addEventListener('wheel', onFree, { passive: true }); window.addEventListener('keydown', onFree); window.addEventListener('keydown', onKey);
     window.addEventListener('touchstart', onTouchStart, { passive: true }); window.addEventListener('touchend', onTouchEnd, { passive: true }); window.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
     onFrame(y, { moving: false, velocity: 0 });
-    return { jump: jump, refresh: refresh, rescale: rescale, destroy: destroy, get y() { return y; } };
+    return { jump: jump, glide: glide, refresh: refresh, rescale: rescale, destroy: destroy, get y() { return y; } };
   }
 
   window.Dolly = { create: create };

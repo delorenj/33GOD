@@ -19,9 +19,11 @@
   var useCallback = React.useCallback;
 
   /* ---------- staging constants ---------- */
-  var PACE = 0.8;        // scales every beat's scroll length (manifest len is in vh)
-  var HOLD = 0.72;       // share of a beat the camera holds; the rest travels to the next beat
-  var INTER = 0.24;      // share of a hold an act's opening statement takes, when a beat has one
+  // Where every beat sits on the scroll, and the timelines inside it, is score.json (read by score.js):
+  // one major per beat, minors for the set pieces' story beats. Thresholds below read the score.
+  var SC = null;         // the compiled score, set at boot
+  var RV = 1 / 9;       // how much q an rv() reveal takes at its default rate: a reveal that should be
+                         // up at a story beat starts this much before it
   var PER = 8;           // windows per floor
   var FLOORS = 12;       // floors until PJangler builds one more
   var BW = 384, PITCH_X = 44, PITCH_Y = 36, PAD = 24, WIN_W = 28, WIN_H = 20; // Building size 'lg', from the tokens
@@ -36,23 +38,29 @@
     'CANDYBAR': [6, 0], 'SKILLEX': [1, 4], 'FLUME': [9, 1],
     'GATEWAY': [0, 3]          // the power company sits on the ground floor
   };
-  // The gateway beat: where pool 01 runs dry and the router moves on, and where the 04:37 scout lands (q).
-  var GW_SWITCH = 0.4, GW_SCOUT = 0.62;
+  // The gateway beat's story beats are the score's gateway/router minor: pool 01 runs dry and the
+  // router moves on (switch), the 04:37 scout lands (scout), the new pool settles (settled).
+  function gwBeat(q) { return SC.minor('gateway', 'router', q).beat; }   // -1 before the switch
+  function gwAt(id) { return SC.beatQ('gateway', 'router', id); }
   // Each pool's meter, scrubbed by CSS off --q: remaining share runs from..to across q in [a, b].
-  var GW_METERS = [
-    { from: 0.34, to: 0.02, a: 0.06, b: GW_SWITCH },
-    { from: 0.86, to: 0.7, a: GW_SWITCH, b: 0.95 },
-    { from: 1, to: 1, a: 0, b: 1 },
-    { from: 0.58, to: 0.68, a: GW_SCOUT, b: GW_SCOUT + 0.08 }
-  ];
+  function gwMeters() {
+    var sw = gwAt('switch'), sc = gwAt('scout');
+    return [
+      { from: 0.34, to: 0.02, a: 0.06, b: sw },
+      { from: 0.86, to: 0.7, a: sw, b: 0.95 },
+      { from: 1, to: 1, a: 0, b: 1 },
+      { from: 0.58, to: 0.68, a: sc, b: sc + 0.08 }
+    ];
+  }
   function poolAt(n, q, words) {
-    if (n === 0) return q < GW_SWITCH ? ['working', words.drawing] : ['dark', words.spent];
-    if (n === 1) return q < GW_SWITCH ? ['lit', words.standby] : ['working', words.drawing];
+    var k = gwBeat(q);
+    if (n === 0) return k < 0 ? ['working', words.drawing] : ['dark', words.spent];
+    if (n === 1) return k < 0 ? ['lit', words.standby] : ['working', words.drawing];
     if (n === 2) return ['lit', words.standby];
-    return q >= GW_SCOUT ? [q < 0.84 ? 'shipped' : 'lit', words.grown] : ['lit', words.lastResort];
+    return k >= 1 ? [k < 2 ? 'shipped' : 'lit', words.grown] : ['lit', words.lastResort];
   }
   // Which of the router's decisions is on the card: before the switch, after it, after the scout lands.
-  function decisionAt(q) { return q < GW_SWITCH ? 0 : q < GW_SCOUT ? 1 : 2; }
+  function decisionAt(q) { return Math.min(2, gwBeat(q) + 1); }
   var TICKET_SEATS = ['HOLOCENE', 'HEYMA', 'SHORTWAVE', 'CANDYBAR'];
   var NEW_FLOOR = { board: 1, repo: 2, pm: 3, notebook: 4, launch: 6 };
 
@@ -60,8 +68,6 @@
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function seg(v, a, b) { return clamp((v - a) / (b - a), 0, 1); }
-  // Camera moves start and stop at rest: smoothstep on every travel, so no move begins or ends at full speed.
-  function ease(t) { return t * t * (3 - 2 * t); }
   function hash(f, c) { return ((f * 37 + c * 101 + f * c * 17 + 11) % 97) / 97; }
   function rgb(hex) { var n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
   function mix(a, b, t) {
@@ -194,7 +200,7 @@
     var id = ctx.id, q = ctx.q, step = ctx.step, I = ctx.I, i = ctx.i, seats = ctx.seats;
     var floors = ctx.floors;
     var states = new Array(floors * PER);
-    var staffK = Math.min(seats.staffSeats.length - 1, Math.floor(q * seats.staffSeats.length));
+    var staffK = Math.min(seats.staffSeats.length - 1, SC.minor('staff', 'roll', q).step);
 
     var R = ctx.night, mi = ctx.minute;
     // A real night lights a seat only if a component sits in it: a spare seat has nothing to replay.
@@ -234,9 +240,10 @@
       if (i === I.skillex) {
         if (n === 'HOLOCENE') return 'working';
         if (s.f === PLACED.SKILLEX[0]) {
-          if (q < 0.3) return n === 'SKILLEX' ? 'working' : 'lit';
-          if (q < 0.6) return n === 'SKILLEX' ? 'working' : ((step + s.c) % 2 ? 'lit' : 'dark');
-          if (q < 0.84) return 'shipped';
+          var sk = SC.minor('skillex', 'ship', q).beat;   // -1 before build, then build, shipped, settled
+          if (sk < 0) return n === 'SKILLEX' ? 'working' : 'lit';
+          if (sk < 1) return n === 'SKILLEX' ? 'working' : ((step + s.c) % 2 ? 'lit' : 'dark');
+          if (sk < 2) return 'shipped';
         }
         return 'lit';
       }
@@ -264,7 +271,7 @@
     }
     function hire() {
       if (i < I.flume || i === I.ask) return 'dark';
-      if (i === I.flume) return q < 0.56 ? 'dark' : q > 0.78 && q < 0.92 ? 'shipped' : 'lit';
+      if (i === I.flume) return q < SC.range('flume', 'hire').from ? 'dark' : SC.minor('flume', 'shipped', q).active ? 'shipped' : 'lit';
       if (i === I['hired-well']) return seg(q, 0.45, 0.95) > (floors - 1 - HIRE.f) / floors ? 'dark' : 'lit';
       return 'lit';
     }
@@ -291,7 +298,7 @@
     var youLit = (i === I.premise && q < 0.28) || (i === I.ask && ctx.submitted);
     return { states: states, youLit: youLit, you: (floors - 1 - YOU.f) * PER + YOU.c, staffK: staffK };
   }
-  function checklistDone(q) { return Math.floor(seg(q, 0.08, 0.92) * 6.0001); }
+  function checklistDone(q) { return SC.minor('pjangler', 'checklist', q).step; }
 
   /* ---------- the camera: where the building sits in each beat ---------- */
   // x, y: shift as a share of the scene; s: scale; o: the building's opacity.
@@ -301,24 +308,23 @@
       case 'premise': return { x: 0.2, y: 0, s: 1, o: 1 };
       case 'numbers': return { x: 0.3, y: 0, s: 0.9, o: 1 };
       case 'org-chart': case 'bus': case 'layers': case 'runs-on-itself': return { x: 0.36, y: 0, s: 0.86, o: 0 };
-      case 'transcript': t = ease(seg(q, 0.3, 0.8)); return { x: 0, y: 0, s: Math.pow(9, t), o: 1 - seg(t, 0.2, 0.7) };
+      case 'transcript': t = SC.minor('transcript', 'push-in', q).t; return { x: 0, y: 0, s: Math.pow(9, t), o: 1 - seg(t, 0.2, 0.7) };
       case 'jev': case 'speakers': case 'dictionary': case 'harvest': return { x: 0, y: 0, s: 9, o: 0 };
-      case 'pm-krebs': t = ease(seg(q, 0, 0.34)); return { x: 0.2 * t, y: 0, s: Math.pow(9, 1 - t), o: seg(t, 0.15, 0.7) };
+      case 'pm-krebs': t = SC.minor('pm-krebs', 'pull-back', q).t; return { x: 0.2 * t, y: 0, s: Math.pow(9, 1 - t), o: seg(t, 0.15, 0.7) };
       case 'pms-talk': case 'skillex': return { x: 0.2, y: 0, s: 1, o: 1 };
       case 'staff': return { x: 0.2, y: lerp(-0.035, 0.025, q), s: 1, o: 1 };
       case 'pjangler': case 'gateway': case 'heyma': case 'flume': return { x: 0.2, y: 0.025, s: 1, o: 1 };
       case 'holocene-auto': return { x: 0.2, y: 0.025, s: 1, o: 0 };
-      case 'hired-well': t = ease(seg(q, 0, 0.5)); return { x: 0.12, y: 0, s: lerp(1.7, 1, t), o: seg(t, 0, 0.6) };
+      case 'hired-well': t = SC.minor('hired-well', 'pull-back', q).t; return { x: 0.12, y: 0, s: lerp(1.7, 1, t), o: seg(t, 0, 0.6) };
       default: return { x: 0.12, y: 0, s: 1, o: 1 };
     }
   }
-  // Where each beat's own intro scrub finishes (q). A seam into the beat rests here, not mid-move.
-  // Keep in step with cam() and glassAt(): any beat whose camera or glass moves at the top of its hold.
-  var SETTLED = { 'pm-krebs': 0.34, 'hired-well': 0.5 };
+  // A beat whose camera moves at the top of its hold lands where that move ends: score.json's
+  // "land" names the minor (pm-krebs, hired-well), so a glide into the beat never rests mid-move.
   function glassAt(id, q) {
-    if (id === 'transcript') return seg(q, 0.56, 0.82);
+    if (id === 'transcript') return SC.minor('transcript', 'glass', q).p;
     if (id === 'jev' || id === 'speakers' || id === 'dictionary' || id === 'harvest') return 1;
-    if (id === 'pm-krebs') return 1 - seg(q, 0, 0.18);
+    if (id === 'pm-krebs') return 1 - SC.minor('pm-krebs', 'glass-out', q).p;
     return 0;
   }
 
@@ -471,8 +477,8 @@
   function Loop(props) {
     var copy = props.beat.copy, q = props.q;
     var n = copy.steps.length;
-    var turn = seg(q, 0.04, 0.9);
-    var passed = turn > 0 ? Math.floor(turn * n + 0.0001) + 1 : 0;   // a pip lights as the dot reaches it
+    var lp = SC.minor('runs-on-itself', 'loop', q);
+    var passed = lp.p > 0 ? lp.step + 1 : 0;   // a pip lights as the dot reaches it
     return h('div', { className: 'sp loop' },
       h('div', { className: 'loop__ring' },
         h('svg', { viewBox: '0 0 100 100', 'aria-hidden': 'true' },
@@ -492,10 +498,10 @@
   /* ---------- Act III: one transcript, pinned on the conference-room glass, changed eight times ---------- */
   function Glass(props) {
     var M = props.M, T = M.transcript, id = props.id, q = props.q, I = props.I, i = props.i;
-    var labelled = i > I.speakers ? 99 : i === I.speakers ? Math.floor(seg(q, 0.12, 0.8) * (T.speakers.length + 0.01)) : 0;
-    var found = i > I.jev ? 99 : i === I.jev ? Math.floor(seg(q, 0.15, 0.8) * (T.judgments.length + 0.01)) : 0;
-    var learned = i > I.dictionary ? 99 : i === I.dictionary ? Math.floor(seg(q, 0.15, 0.75) * 3.01) : 0;
-    var peeled = i > I.harvest ? 99 : i === I.harvest ? Math.floor(seg(q, 0.12, 0.8) * (T.tickets.length + 0.01)) : 0;
+    var labelled = i > I.speakers ? 99 : i === I.speakers ? SC.minor('speakers', 'voices', q).step : 0;
+    var found = i > I.jev ? 99 : i === I.jev ? SC.minor('jev', 'judgments', q).step : 0;
+    var learned = i > I.dictionary ? 99 : i === I.dictionary ? SC.minor('dictionary', 'words', q).step : 0;
+    var peeled = i > I.harvest ? 99 : i === I.harvest ? SC.minor('harvest', 'tickets', q).step : 0;
     var pCount = 0, wCount = 0, words = [];
 
     function renderText(text) {
@@ -577,7 +583,7 @@
         // Bar heights are written by the dolly every frame (waveAt), so the voice moves smoothly.
         h('div', { className: 'car__wave', 'aria-hidden': 'true' }, Array.from({ length: 28 }, function (_, k) { return h('i', { key: k }); })),
         copy.standup.map(function (line, n) {
-          return h('div', Object.assign({ key: n }, rv(0.16 + n * 0.22, 'car__item')), h('span', { className: 'instrument' }, '0' + (n + 1)), h('span', null, line));
+          return h('div', Object.assign({ key: n }, rv(SC.stopQ('holocene-auto', 'standup', n + 1) - RV, 'car__item')), h('span', { className: 'instrument' }, '0' + (n + 1)), h('span', null, line));
         })));
   }
 
@@ -606,7 +612,7 @@
 
     var stageRef = useRef(null), trackRef = useRef(null), sceneRef = useRef(null), worldRef = useRef(null), overlayRef = useRef(null);
     var glassRef = useRef(null), spRef = useRef(null), capRef = useRef(null), interRef = useRef(null), horizonRef = useRef(null);
-    var clockApi = useRef(null), layout = useRef({ starts: [], lens: [], total: 0 }), last = useRef({ i: -1, step: -1, minute: -1, sig: '', clock: '', precise: null, label: '', theme: '' });
+    var clockApi = useRef(null), last = useRef({ i: -1, step: -1, minute: -1, sig: '', clock: '', precise: null, label: '', theme: '' });
     var camNow = useRef({ x: 0, y: 0, s: 1, o: 1 });
     var dollyRef = useRef(null), playY = useRef(0);
     var sizeRef = useRef(size); sizeRef.current = size;
@@ -614,12 +620,9 @@
     var b = beats[pos.i];
     var floors = pos.i > I.pjangler || (pos.i === I.pjangler && pos.q >= 0.06) ? FLOORS + 1 : FLOORS;
 
-    /* layout: beat lengths in px, and the scene's size */
+    /* layout: the score in px, and the scene's size */
     var measure = useCallback(function () {
-      var vh = window.innerHeight, starts = [], lens = [], y = 0;
-      // The last beat has nowhere to travel to, so it is all hold: no dead scroll before the footer.
-      beats.forEach(function (bt, n) { var len = bt.len * PACE * vh / 100 * (n === beats.length - 1 ? HOLD : 1); starts.push(y); lens.push(len); y += len; });
-      layout.current = { starts: starts, lens: lens, total: y };
+      var vh = window.innerHeight, y = SC.layout(vh);
       if (trackRef.current) trackRef.current.style.height = (y + vh) + 'px';
       if (sceneRef.current) {
         var r = sceneRef.current.getBoundingClientRect();
@@ -629,11 +632,10 @@
       }
     }, [beats]);
 
-    var jump = useCallback(function (i, hold) {
-      var L = layout.current, top = trackRef.current ? trackRef.current.offsetTop : 0;
-      var bt = beats[i];
-      var into = hold != null ? hold : (bt.interlude ? 0.06 : 0.3);   // both are rest points, outside any seam
-      var px = top + L.starts[i] + L.lens[i] * HOLD * into;
+    // A nav jump lands where a reader arriving at the beat would (a rest point), or at body progress q.
+    var jump = useCallback(function (i, q) {
+      var top = trackRef.current ? trackRef.current.offsetTop : 0;
+      var px = top + (q != null ? SC.qPx(i, q) : SC.landing(i));
       if (dollyRef.current) dollyRef.current.jump(px); else window.scrollTo({ top: px, behavior: 'auto' });
     }, [beats]);
     var jumpTo = useCallback(function (id, hold) { jump(I[id], hold); }, [I, jump]);
@@ -642,17 +644,18 @@
     var frame = useCallback(function (yAbs) {
       if (yAbs == null) yAbs = playY.current; else playY.current = yAbs;
       var stage = stageRef.current; if (!stage || !trackRef.current) return;
-      var L = layout.current; if (!L.total) return;
-      var y = clamp(yAbs - trackRef.current.offsetTop, 0, L.total - 1);
-      var i = 0; while (i < beats.length - 1 && y >= L.starts[i + 1]) i++;
-      var bt = beats[i], next = beats[i + 1];
-      var p = clamp((y - L.starts[i]) / L.lens[i], 0, 1);
-      var hold = seg(p, 0, HOLD), tr = next ? seg(p, HOLD, 1) : 0;
-      var q = bt.interlude ? seg(hold, INTER, 1) : hold;
+      if (!SC.total) return;
+      var y = clamp(yAbs - trackRef.current.offsetTop, 0, SC.total - 1);
+      var S = SC.at(y), Mj = S.major;
+      var i = S.i, bt = beats[i], next = beats[i + 1];
+      // p: through the whole beat; hold: through everything before it leaves; tr: the travel out;
+      // q: the set piece's own timeline. An act statement takes the beat's `in` (INTER of the hold).
+      var p = S.p, hold = S.stay, tr = next ? S.exit : 0, q = S.body;
+      var INTER = Mj.inLen / (Mj.bodyEnd - Mj.start);
 
       // camera
       var a = cam(bt.id, q), K = a;
-      if (next && tr > 0 && !next.cut) { var z = cam(next.id, 0), e = ease(tr); K = { x: lerp(a.x, z.x, e), y: lerp(a.y, z.y, e), s: lerp(a.s, z.s, e), o: lerp(a.o, z.o, e) }; }
+      if (next && tr > 0 && !next.cut) { var z = cam(next.id, 0), e = S.exitT; K = { x: lerp(a.x, z.x, e), y: lerp(a.y, z.y, e), s: lerp(a.s, z.s, e), o: lerp(a.o, z.o, e) }; }
       camNow.current = K;
       var sz = sizeRef.current;
       var tx = K.x * sz.w, ty = K.y * sz.h;
@@ -699,57 +702,46 @@
         clockApi.current({ time: clock, precise: precise, label: label, count: R ? eventsSoFar(R, nightMi) : null });
       }
 
-      // Re-render on a new step of the hold, and when a real minute flips some seat's busy bit (windows
-      // follow the night during travels too; a minute that changes no window re-renders nothing).
+      // Re-render on a new step of the hold, on every score stop (so a story beat the dolly rests on is
+      // drawn at exactly that beat, not a step short of it), and when a real minute flips some seat's
+      // busy bit (windows follow the night during travels too; a minute that changes no window re-renders nothing).
       var step = Math.floor(q * STEPS);
       var sig = '';
       if (minute >= 0) for (var k2 = 0; k2 < seats.list.length; k2++) { var st2 = seats.list[k2]; if (st2.name && seatBusy(R, st2, minute)) sig += k2 + ','; }
-      if (i !== last.current.i || step !== last.current.step || sig !== last.current.sig) {
-        last.current.i = i; last.current.step = step; last.current.minute = minute; last.current.sig = sig; setPos({ i: i, step: step, q: q, minute: minute });
+      if (i !== last.current.i || step !== last.current.step || S.stop !== last.current.stop || sig !== last.current.sig) {
+        last.current.i = i; last.current.step = step; last.current.stop = S.stop; last.current.minute = minute; last.current.sig = sig; setPos({ i: i, step: step, q: q, minute: minute });
       }
     }, [beats, times, I, props.colors, R, realLabel, M.site.stagedLabel, seats]);
 
-    // A seam is a stretch where the frame is between two rest states: a camera travel with its caption
-    // crossfade, or an act's statement handing over to the beat's words. Stop in one and the dolly
-    // finishes the move (see dolly.js). Rest points sit where the arriving words are fully up.
-    var seam = useCallback(function (t) {
-      var L = layout.current; if (!L.total) return null;
-      var n = beats.length, i = 0; while (i < n - 1 && t >= L.starts[i + 1]) i++;
-      var p = (t - L.starts[i]) / L.lens[i];
-      function arrive(j) { return L.starts[j] + L.lens[j] * (beats[j].interlude ? 0.035 : Math.max(0.06, (SETTLED[beats[j].id] || 0) * HOLD + 0.01)); }
-      function between(a, b) { a = Math.ceil(a); b = Math.floor(b); return t > a + 1 && t < b - 1 ? { from: a, to: b } : null; }
-      if (p >= HOLD && i < n - 1) return between(L.starts[i] + L.lens[i] * HOLD, arrive(i + 1));
-      if (i > 0 && t < arrive(i)) return between(L.starts[i - 1] + L.lens[i - 1] * HOLD, arrive(i));
-      if (beats[i].interlude) {
-        var h0 = L.starts[i] + L.lens[i] * HOLD * (INTER - 0.075), h1 = L.starts[i] + L.lens[i] * HOLD * (INTER + 0.035);
-        return between(h0, h1);
-      }
-      return null;
-    }, [beats]);
+    // Seams and stops come from the score: a camera travel with its caption crossfade, an act's
+    // statement handing over to the beat's words, a set piece's story beats. Stop in one and the dolly
+    // finishes the move (see dolly.js); the keyboard steps from stop to stop.
+    var seam = useCallback(function (t) { return SC.total ? SC.seam(t) : null; }, []);
+    var stop = useCallback(function (t, dir) { return SC.total ? SC.next(t, dir) : null; }, []);
 
     useEffect(function () {
       if (view !== 'film') { document.documentElement.setAttribute('data-theme', 'night'); last.current.theme = 'night'; return; }
       var idle = 0;
       last.current.clock = ''; last.current.precise = null; last.current.label = '';   // a fresh clock island: tell it everything
       measure();
-      var dolly = window.Dolly.create({ onFrame: frame, seam: seam, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
+      var dolly = window.Dolly.create({ onFrame: frame, seam: seam, stop: stop, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
       dollyRef.current = dolly;
       function onScroll() {
         setCrank(false); clearTimeout(idle);
         idle = setTimeout(function () { if (last.current.i < beats.length - 1) setCrank(true); }, 20000);
       }
       function onResize() {
-        var L0 = layout.current, top = trackRef.current ? trackRef.current.offsetTop : 0;
-        var f = L0.total ? clamp((window.scrollY - top) / L0.total, 0, 1) : 0;
+        var top = trackRef.current ? trackRef.current.offsetTop : 0;
+        var f = SC.total ? clamp((window.scrollY - top) / SC.total, 0, 1) : 0;
         measure();
-        dolly.rescale(f, function (fr) { return top + fr * layout.current.total; });
+        dolly.rescale(f, function (fr) { return top + fr * SC.total; });
       }
       idle = setTimeout(function () { setCrank(true); }, 20000);
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', onResize);
       var fonts = document.fonts && document.fonts.ready; if (fonts) fonts.then(onResize);
       return function () { dolly.destroy(); dollyRef.current = null; window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); clearTimeout(idle); };
-    }, [view, frame, seam, measure, beats.length]);
+    }, [view, frame, seam, stop, measure, beats.length]);
     // Set pieces mount as beats change (a nav jump can land mid-night); give them their scrubbed styles at once.
     React.useLayoutEffect(function () { if (view === 'film') frame(); }, [size, view, frame, posSt[0].i]);
 
@@ -808,7 +800,7 @@
       over.push(h('div', { key: 'pa', className: 'plate', style: { top: pa.y, right: size.w - bLeft + 22, maxWidth: room } }, h(O.Nameplate, { name: 'PM · HOLOCENE', line: seats.named['PM · HOLOCENE'].line })));
       over.push(h('div', { key: 'pb', className: 'plate', style: { top: pb.y, right: size.w - bLeft + 22, maxWidth: room } }, h(O.Nameplate, { name: 'PM · HEYMA', line: b.copy.message })));
     }
-    if (id === 'skillex') over.push(plate(seats.named.SKILLEX, q < 0.6 ? 'working' : q < 0.84 ? 'shipped' : 'lit', 'skillex'));
+    if (id === 'skillex') { var skb = SC.minor('skillex', 'ship', q).beat; over.push(plate(seats.named.SKILLEX, skb < 1 ? 'working' : skb < 2 ? 'shipped' : 'lit', 'skillex')); }
     if (id === 'staff' && !hover) {
       var ss = seats.staffSeats[wst.staffK];
       over.push(plate(ss, 'working', 'staff'));
@@ -824,11 +816,11 @@
       })), 'scard--list', 11));
     }
     if (id === 'gateway') {
-      var gc = b.copy, dn = gc.decisions[decisionAt(q)];
+      var gc = b.copy, dn = gc.decisions[decisionAt(q)], meters = gwMeters();
       over.push(card([
         h('div', { key: 'h', className: 'gw__head' }, h('span', { className: 'instrument gw__name' }, gc.cardTitle), h('span', { className: 'caption-note' }, gc.cardNote))
       ].concat(gc.pools.map(function (p, n) {
-        var st = poolAt(n, q, gc.states), mt = GW_METERS[n];
+        var st = poolAt(n, q, gc.states), mt = meters[n];
         return h('div', { key: 'p' + n, className: 'gw__pool' + (st[0] === 'working' || st[0] === 'shipped' ? ' is-on' : st[0] === 'dark' ? ' is-out' : '') },
           h('div', { className: 'gw__poolhead' }, h(O.Window, { state: st[0] }), h('span', { className: 'instrument gw__poolname' }, p.name)),
           h('div', { className: 'gw__poolfoot' },
@@ -836,7 +828,7 @@
             h('span', { className: 'gw__state' }, st[1])));
       })).concat([
         h('div', { key: 'd' + decisionAt(q), className: 'gw__decision', role: 'status' }, h('span', { className: 'instrument-log gw__route' }, dn.route), h('span', null, dn.line)),
-        h('p', Object.assign({ key: 'punch' }, rv(GW_SWITCH + 0.03, 'call__said gw__punch')), gc.punch),
+        h('p', Object.assign({ key: 'punch' }, rv(gwAt('switch') + 0.03, 'call__said gw__punch')), gc.punch),
         h('p', { key: 'stamp', className: 'caption-note gw__stamp' }, gc.stamp)
       ]), 'scard--list gw', null));
     }
@@ -847,17 +839,17 @@
           return h('div', { key: p.name, className: 'parts__row' }, h('span', { className: 'instrument' }, p.name), h('span', null, p.line));
         })),
         h('p', { key: 'pn', className: 'caption-note' }, b.copy.partsNote),
-        h('div', Object.assign({ key: 'call' }, rv(0.22, 'call')),
+        h('div', Object.assign({ key: 'call' }, rv(SC.beatQ('heyma', 'call', 'heard') - RV, 'call')),
           h('p', { className: 'eyebrow' }, call.label),
           h('p', { className: 'call__heard' }, call.heard),
-          h('p', Object.assign({}, rv(0.36, 'call__said')), call.translated)),
-        h('div', Object.assign({ key: 'wh' }, rv(0.58, 'call')),
+          h('p', Object.assign({}, rv(SC.beatQ('heyma', 'call', 'translated') - RV, 'call__said')), call.translated)),
+        h('div', Object.assign({ key: 'wh' }, rv(SC.beatQ('heyma', 'call', 'whisper') - RV, 'call')),
           h('p', { className: 'eyebrow' }, call.whisperLabel),
           h('p', { className: 'call__said' }, '“' + call.whisper + '”'))
       ], 'scard--list', null));
     }
     if (id === 'flume') {
-      var stageN = Math.min(4, Math.floor(seg(q, 0.12, 0.9) * 4.0001));
+      var stageN = SC.minor('flume', 'pipeline', q).step;
       over.push(card([
         h('p', { key: 'h', className: 'eyebrow' }, b.copy.rolesTitle)
       ].concat(b.copy.roles.map(function (r) {
@@ -867,9 +859,9 @@
           return h('span', { key: s, className: 'instrument pipe__step' + (n < stageN ? ' is-done' : '') }, s);
         }))
       ]), 'scard--list', 12));
-      if (q >= 0.56) {
+      if (q >= SC.range('flume', 'hire').from) {
         var hp = at(HIRE.f, HIRE.c);
-        over.push(h('div', { key: 'hire', className: 'plate plate--right', style: { top: hp.y, left: hp.x + WIN_W * size.bs / 2 + 14, maxWidth: 220 } }, h(O.Nameplate, { name: b.copy.hire.name, line: b.copy.hire.line, state: q > 0.78 && q < 0.92 ? 'shipped' : 'lit' })));
+        over.push(h('div', { key: 'hire', className: 'plate plate--right', style: { top: hp.y, left: hp.x + WIN_W * size.bs / 2 + 14, maxWidth: 220 } }, h(O.Nameplate, { name: b.copy.hire.name, line: b.copy.hire.line, state: SC.minor('flume', 'shipped', q).active ? 'shipped' : 'lit' })));
       }
     }
     if (hover && K0.s === 1 && K0.o === 1) {
@@ -989,9 +981,25 @@
     root.textContent = '';
     ReactDOM.createRoot(root).render(h(App, { M: M, colors: colors, night: R }));
   }
-  fetch('manifest.json', { cache: 'no-cache' })
-    .then(function (r) { if (!r.ok) throw new Error('manifest.json: ' + r.status); return r.json(); })
-    .then(function (M) {
+  // The score's majors are the manifest's beats, in order; counts the minors step through live in the copy.
+  function scoreFor(M, spec) {
+    var ids = spec.majors.map(function (m) { return m.id; }).join(','), want = M.beats.map(function (b) { return b.id; }).join(',');
+    if (ids !== want) throw new Error('score.json majors (' + ids + ') do not match the manifest beats (' + want + ')');
+    var B = {}; M.beats.forEach(function (b) { B[b.id] = b; });
+    var T = M.transcript;
+    var score = window.Score.compile(spec, { vars: {
+      staff: B.staff.copy.staff.length, loop: B['runs-on-itself'].copy.steps.length, checklist: B.pjangler.copy.checklist.length,
+      pipeline: B.flume.copy.pipeline.length, standup: B['holocene-auto'].copy.standup.length,
+      speakers: T.speakers.length, judgments: T.judgments.length, tickets: T.tickets.length
+    } });
+    score.layout(window.innerHeight);   // set pieces read minors on their first render, before the film measures
+    return score;
+  }
+  function getJSON(src) { return fetch(src, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(src + ': ' + r.status); return r.json(); }); }
+  Promise.all([getJSON('manifest.json'), getJSON('score.json')])
+    .then(function (both) {
+      var M = both[0];
+      SC = scoreFor(M, both[1]);
       // ?night=YYYY-MM-DD replays another night; ?night=staged turns the replay off.
       var want = new URLSearchParams(location.search).get('night');
       var src = want === 'staged' ? null : want ? 'nights/' + want.replace(/[^0-9-]/g, '') + '.json' : (M.site.night && M.site.night.src);

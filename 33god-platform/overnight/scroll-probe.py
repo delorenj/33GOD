@@ -39,7 +39,7 @@ with sync_playwright() as pw:
     results = []
     for bi in [1, 3, 7, 12]:
         # Use the page's own layout: scroll to 85% through beat bi (inside the travel), no wheel
-        y = pg.evaluate("""(bi) => { const vh=innerHeight; return fetch('manifest.json').then(r=>r.json()).then(m=>{ let y=0; for (let k=0;k<bi;k++) y+=m.beats[k].len*0.8*vh/100; return y + m.beats[bi].len*0.8*vh/100*0.85; }); }""", bi)
+        y = pg.evaluate("""(bi) => { const vh=innerHeight; return fetch('score.json').then(r=>r.json()).then(s=>{ const m=s.majors[bi], k=(s.scale||1)*vh/100; return (m.start + (m.end-m.start)*0.85)*k; }); }""", bi)
         pg.evaluate(f"window.scrollTo(0, {y})"); pg.wait_for_timeout(60)
         pg.mouse.wheel(0, 40); pg.wait_for_timeout(1500)
         st = pg.evaluate("({beat: document.querySelector('.stage').dataset.beat, p: +document.querySelector('.stage').style.getPropertyValue('--p'), cap: +document.querySelector('.captions').style.opacity, y: scrollY})")

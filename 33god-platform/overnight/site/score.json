@@ -1,0 +1,30 @@
+{
+  "_readme": "The scroll score: where every beat sits on the page's scroll, and the animation timelines inside it. Majors are the beats (ids match manifest.json, in order); minors are a set piece's timelines and story beats. Read by score.js; the format is documented at the top of that file. Positions are design, not content: edit here, refresh, no build.",
+  "format": "33god.score",
+  "scale": 0.8,
+  "defaults": {"land": "6%", "out": {"len": "28%", "curve": "smoothstep"}},
+  "majors": [
+    {"id": "premise", "start": 0, "end": 250},
+    {"id": "numbers", "start": 250, "end": 400},
+    {"id": "org-chart", "start": 400, "end": 640, "in": {"len": "17.28%", "seam": ["-5.4%", "2.52%"]}, "land": "3.5%"},
+    {"id": "bus", "start": 640, "end": 830},
+    {"id": "layers", "start": 830, "end": 1010},
+    {"id": "runs-on-itself", "start": 1010, "end": 1190, "minors": [{"id": "loop", "start": "4%", "end": "90%", "steps": "@loop"}]},
+    {"id": "transcript", "start": 1190, "end": 1450, "in": {"len": "17.28%", "seam": ["-5.4%", "2.52%"]}, "land": "3.5%", "minors": [{"id": "push-in", "start": "30%", "end": "80%", "curve": "smoothstep"}, {"id": "glass", "start": "56%", "end": "82%", "glide": false}]},
+    {"id": "jev", "start": 1450, "end": 1650, "minors": [{"id": "judgments", "start": "15%", "end": "80%", "steps": "@judgments"}]},
+    {"id": "speakers", "start": 1650, "end": 1820, "minors": [{"id": "voices", "start": "12%", "end": "80%", "steps": "@speakers"}]},
+    {"id": "dictionary", "start": 1820, "end": 1990, "minors": [{"id": "words", "start": "15%", "end": "75%", "steps": 3}]},
+    {"id": "harvest", "start": 1990, "end": 2180, "minors": [{"id": "tickets", "start": "12%", "end": "80%", "steps": "@tickets"}]},
+    {"id": "pm-krebs", "start": 2180, "end": 2380, "land": "pull-back", "minors": [{"id": "pull-back", "start": "0%", "end": "34%", "curve": "smoothstep"}, {"id": "glass-out", "start": "0%", "end": "18%", "glide": false}]},
+    {"id": "pms-talk", "start": 2380, "end": 2550},
+    {"id": "skillex", "start": 2550, "end": 2730, "minors": [{"id": "ship", "start": "0%", "end": "100%", "beats": [{"id": "build", "at": "30%"}, {"id": "shipped", "at": "60%"}, {"id": "settled", "at": "84%"}]}]},
+    {"id": "staff", "start": 2730, "end": 3050, "in": {"len": "17.28%", "seam": ["-5.4%", "2.52%"]}, "land": "3.5%", "minors": [{"id": "roll", "start": "0%", "end": "100%", "steps": "@staff"}]},
+    {"id": "pjangler", "start": 3050, "end": 3310, "in": {"len": "17.28%", "seam": ["-5.4%", "2.52%"]}, "land": "3.5%", "minors": [{"id": "checklist", "start": "8%", "end": "92%", "steps": "@checklist"}]},
+    {"id": "gateway", "start": 3310, "end": 3570, "minors": [{"id": "router", "start": "0%", "end": "100%", "beats": [{"id": "switch", "at": "40%"}, {"id": "scout", "at": "62%"}, {"id": "settled", "at": "84%"}]}]},
+    {"id": "heyma", "start": 3570, "end": 3800, "minors": [{"id": "call", "start": "0%", "end": "100%", "beats": [{"id": "heard", "at": "33%"}, {"id": "translated", "at": "47%"}, {"id": "whisper", "at": "69%"}]}]},
+    {"id": "flume", "start": 3800, "end": 4000, "minors": [{"id": "pipeline", "start": "12%", "end": "90%", "steps": "@pipeline"}, {"id": "hire", "start": "56%", "end": "100%", "glide": false}, {"id": "shipped", "start": "78%", "end": "92%", "glide": false}]},
+    {"id": "holocene-auto", "start": 4000, "end": 4240, "minors": [{"id": "standup", "start": "5%", "end": "71%", "steps": "@standup"}]},
+    {"id": "hired-well", "start": 4240, "end": 4440, "land": "pull-back", "minors": [{"id": "pull-back", "start": "0%", "end": "50%", "curve": "smoothstep"}]},
+    {"id": "ask", "start": 4440, "end": 4562.4}
+  ]
+}
