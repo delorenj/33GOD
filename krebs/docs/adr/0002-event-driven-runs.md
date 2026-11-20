@@ -12,8 +12,9 @@
    a durable JetStream consumer (`krebs-watch` on `BLOODBANK_EVENTS`). It is not a clock: no timer, cron or loop
    of its own. Candybar's `krebs-tick` (every 10 minutes) stays as the backstop and the only recurring schedule.
 2. **Two triggers, one board each.**
-   - `bloodbank.evt.repo.task.{created,updated,appended}` on an owned board: wait 60 s after the last event of
-     the burst (never longer than 180 s after its first), then run that board.
+   - `bloodbank.evt.repo.task.{created,updated,transitioned,deleted}` on an owned board: wait 60 s after the last
+     event of the burst (never longer than 180 s after its first), then run that board. Comments (`appended`)
+     change nothing the tick reads and are not watched.
    - `bloodbank.evt.agent.invocation.{completed,failed}` from the gateway for an agent that owns boards: wait 8 s
      (the pickup chip's clearing edit, Candystore's ingest), then run those boards. This is what chains
      triages back to back: the next one starts when the previous turn ends.
@@ -23,7 +24,9 @@
 4. **The triage quiet window drops from 10 minutes to 2** (spec `board_turns.triage_quiet_seconds`). The watcher
    debounces the edit itself, so the window only has to outlast the debounce. A ticket still inside its window when
    a run happens re-arms the board for the moment the window ends (read off the tick report), if that is under an
-   hour away; a later one is left to the backstop.
+   hour away; a later one is left to the backstop. The same goes for a candidate the run skipped as "turn live"
+   only because an agent was active on it in the last 30 minutes (liveness rules 3 and 4): the report carries
+   when that window ends (`busyUntil`), and the board is re-armed for it.
 5. **A scope holds at most one board turn at a time** (spec `board_turns.per_scope: 1`). The old rule ("one per
    scope per tick") was enough while ticks were 10 minutes apart; with runs back to back, the tick would send a
    second triage while the first is still running, and a desk serializes board turns on its lease (two at once
@@ -39,7 +42,9 @@
   no run. The shared Pilot identity cannot tell Krebs from the pickup chip, so the match is on the ticket key.
 - **Runaway cap.** At most 20 runs per board per 10 minutes, whatever the cause.
 - **One run at a time, a 10 s gap.** All runs go through one serialized queue and share `tick.lock` with the
-  Candybar tick. A held lock re-arms the board after 5, 10, 20, 40, 60 s, then leaves it to the backstop.
+  Candybar tick. Every tick waits up to 45 s for a held lock (a board run takes about a second, a full tick
+  under ten), so the Candybar tick on the :x0 mark never gives up its whole 10-minute period to a board run. A
+  lock still held after that re-arms the board after 5, 10, 20, 40, 60 s, then leaves it to the backstop.
   A per-board lock was rejected: scopes share the cross-scope cap and the journal.
 - **Candystore lag.** If the busy guard still sees a turn the watcher has seen end, it looks again after 10 s,
   up to 3 times.

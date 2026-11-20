@@ -131,7 +131,7 @@ export function classifyEvent({ subject, envelope }, routes, { echo = () => fals
 // ---------------------------------------------------------------------------------------------
 
 /** Journal actions that are one Plane write by krebs (ok true), keyed by the ticket's `key`. */
-export const WRITE_ACTIONS = new Set(["dispatch.write", "repair", "orphan.unstick", "orphan.release", "orphan.fail"]);
+export const WRITE_ACTIONS = new Set(["dispatch.write", "repair", "orphan.unstick", "orphan.release", "orphan.fail", "loop.park"]);
 
 /**
  * Does the journal hold a successful Krebs write on `ticketKey` within `windowMs` of `eventMs`? That Plane

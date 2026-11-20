@@ -22,10 +22,10 @@ import { loadBloodbank, loadDurable, loadPlane, natsUrl, realPublisher } from ".
 import { scopesFromRegistry } from "../tick/registry.mjs";
 import { runTick } from "../tick/run.mjs";
 import { Journal, TURN_WINDOW_MS, boardTurnSends, defaultJournalPath, lastBoardTurns, sentCommands, stateDir } from "../tick/journal.mjs";
-import { quietWindows } from "../tick/quiet.mjs";
+import { activityWindows, quietWindows } from "../tick/quiet.mjs";
 import { WATCH_SUBJECTS, Watcher, childTickRunner, classifyEvent, journalEcho, routesFromScopes } from "../tick/watch.mjs";
 import { readWatchState, writeWatchState } from "../tick/watch-state.mjs";
-import { acquireLock } from "../tick/lock.mjs";
+import { acquireLockWait } from "../tick/lock.mjs";
 import { formatReport } from "../tick/format.mjs";
 import { candystoreClient, candystoreLiveness, candystoreScopeBusy } from "../tick/liveness.mjs";
 import { SPEC_VERSION } from "../tick/lifecycle.mjs";
@@ -129,7 +129,9 @@ async function tick(flags) {
   const journal = new Journal(journalPath);
   let lock = null;
   if (!dryRun) {
-    lock = acquireLock(join(stateDir(), "tick.lock"));
+    // Wait (bounded) for a run already holding it: a board run by `krebs watch` takes about a second, and a
+    // Candybar tick that gave up at once would leave every other board to the next 10-minute mark.
+    lock = await acquireLockWait(join(stateDir(), "tick.lock"));
     if (!lock) {
       const report = { ok: true, busy: true, dryRun, at: new Date().toISOString(), spec: SPEC_VERSION, trigger, scopes: [], skipped, errors: [] };
       return { code: 0, report };
@@ -166,7 +168,8 @@ async function tick(flags) {
     });
     report.registry = registryPath;
     report.journal = journalPath;
-    report.quiet = quiet;
+    // ... and those skipped only for recent agent activity, whose 30-minute window ends with no event either.
+    report.quiet = [...quiet, ...activityWindows(report.scopes, Date.now())].sort((a, b) => a.eligibleAt - b.eligibleAt);
     return { code: report.ok ? 0 : 1, report };
   } finally {
     lock?.release();

@@ -772,7 +772,9 @@ export async function runTick({
             continue;
           }
           if (v.live) {
-            list.push({ ...entry, result: "skipped", why: `turn live: ${v.why}` });
+            // busyUntil: the ticket's 30-minute agent-activity window ends then (rules 3, 4); `krebs watch`
+            // re-arms the board for it, since no event marks that moment.
+            list.push({ ...entry, result: "skipped", why: `turn live: ${v.why}`, ...(Number.isFinite(v.busyUntil) ? { busyUntil: new Date(v.busyUntil).toISOString() } : {}) });
             continue;
           }
         }

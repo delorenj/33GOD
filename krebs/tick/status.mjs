@@ -468,7 +468,7 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
           } else {
             set("triage-queued", `queued for triage #${position}`, `${position - 1} untriaged ticket(s) go first; a scope runs 1 board turn at a time (shared with reviews${watch ? `, each starts when the last one ends, ~${BOARD_TURN_MS / 60000} min each` : ", one per tick"})`, { queuePosition: position });
           }
-          eta(proj.tickMs, `triage turn starts, then ${out.free > 0 ? "dispatch on a following tick (a WIP slot is free now)" : `it needs a WIP slot (${slotHolders.length}/${scope.wip} taken now)`}`);
+          eta(proj.tickMs, `triage turn starts, then ${out.free > 0 ? (watch ? "dispatch when that turn ends (a WIP slot is free now)" : "dispatch on a following tick (a WIP slot is free now)") : `it needs a WIP slot (${slotHolders.length}/${scope.wip} taken now)`}`);
         } else {
           set("triage-queued", "queued for triage", "waiting for a board turn (beyond the 24 h projection)");
         }
