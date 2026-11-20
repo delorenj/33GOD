@@ -72,9 +72,9 @@ class RenderTest(unittest.TestCase):
 
     def test_hub_layer_appears_only_with_hubs(self):
         self.assertIn("const HUBS = /*HUBS_DATA*/null;", self.html)
-        hubs = {"schema": 1, "graph_page": "skills.html", "summary": {"nodes": {}}, "hubs": [], "components": {},
+        hubs = {"schema": 1, "graph_page": "https://skills.delo.sh/?context=catalog", "summary": {"nodes": {}}, "hubs": [], "components": {},
                 "unjoined": [], "no_hub": []}
-        self.assertIn('"graph_page": "skills.html"', atlas.render_hubs_html(self.doc, hubs))
+        self.assertIn('"graph_page": "https://skills.delo.sh/?context=catalog"', atlas.render_hubs_html(self.doc, hubs))
         self.assertRegex(atlas.TEMPLATE.read_text(), r"hubList = HUBS \?")
 
 

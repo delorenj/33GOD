@@ -710,6 +710,9 @@ def cmd_anchor(args: argparse.Namespace) -> int:
 # --- Hubs: which skill hub each component owns, and its health (skillex graph) ---------------
 
 HUBS_OUT = ATLAS / "hubs"
+# The live skill graph (`skillex graph --serve`, skillex-graph.service). Hub links deep-link into it
+# (`#hub=<name>`); it reads the skill roots on every load, so the Atlas never ships a dated copy.
+SKILLS_URL = "https://skills.delo.sh/?context=catalog"
 HUB_NODE_KINDS = {"hub", "vendored"}
 
 
@@ -726,7 +729,8 @@ def component_repos() -> dict[str, Path]:
     return repos
 
 
-def hubs_document(graph: dict[str, Any], records: list[dict[str, Any]], repos: dict[str, Path]) -> dict[str, Any]:
+def hubs_document(graph: dict[str, Any], records: list[dict[str, Any]], repos: dict[str, Path],
+                  graph_page: str = SKILLS_URL) -> dict[str, Any]:
     """Join a skillex graph to the registry on repository directory (graph node `root`)."""
     nodes = graph["nodes"]
     by_id = {n["id"]: n for n in nodes}
@@ -782,7 +786,7 @@ def hubs_document(graph: dict[str, Any], records: list[dict[str, Any]], repos: d
                    if r["first_party"] and r["level"] != "component" and r.get("status") != "retired"}
     return {
         "schema": 1,
-        "graph_page": "skills.html",
+        "graph_page": graph_page,
         "summary": graph["summary"],
         "hubs": sorted(hubs, key=lambda h: h["name"]),
         "components": dict(sorted(components.items())),
@@ -802,11 +806,14 @@ def render_hubs_html(doc: dict[str, Any], hubs: dict[str, Any]) -> str:
 def cmd_hubs(args: argparse.Namespace) -> int:
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
-    cmd = [*args.skillex.split(), "graph", "--json", "--html", str(out / "skills.html")]
+    # Every definition, not the view of whichever PM this shell's project binds.
+    cmd = [*args.skillex.split(), "graph", "--json", "--context", "catalog"]
+    # Older bundles carried a dated graph snapshot; the hub links now open the live page.
+    (out / "skills.html").unlink(missing_ok=True)
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     except FileNotFoundError:
-        print(f"atlas hubs: {cmd[0]} not found (needs skillex >= 0.4.9)", file=sys.stderr)
+        print(f"atlas hubs: {cmd[0]} not found (needs skillex >= 0.5.0)", file=sys.stderr)
         return 1
     try:
         envelope = json.loads(proc.stdout)
@@ -819,7 +826,7 @@ def cmd_hubs(args: argparse.Namespace) -> int:
         print(f"atlas hubs: skillex graph failed: {envelope.get('findings')}", file=sys.stderr)
         return 1
     cfg, records = load_atlas()
-    hubs = hubs_document(graph, records, component_repos())
+    hubs = hubs_document(graph, records, component_repos(), args.graph_url)
     (out / "hubs.json").write_text(json.dumps(hubs, indent=2, ensure_ascii=False) + "\n")
     (out / "index.html").write_text(render_hubs_html(atlas_document(cfg, records), hubs))
     bad = [h for h in hubs["hubs"] if h["health"] != "ok"]
@@ -853,6 +860,7 @@ def main(argv: list[str] | None = None) -> int:
     h = sub.add_parser("hubs", help="join skillex graph to the registry (live state, untracked)")
     h.add_argument("--out", default=str(HUBS_OUT), help="bundle directory (default atlas/hubs)")
     h.add_argument("--skillex", default="skillex", help="skillex command (default: skillex on PATH)")
+    h.add_argument("--graph-url", default=SKILLS_URL, help=f"live skill graph the hub links open (default {SKILLS_URL})")
     h.add_argument("--publish", action="store_true", help="publish the bundle with the artifacts skill")
     h.set_defaults(func=cmd_hubs)
     args = parser.parse_args(argv)
