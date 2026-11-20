@@ -74,6 +74,10 @@ Select checks that demonstrate the slice's actual behavior:
   view-switch restoration, and staged fallback for malformed or incompatible
   replay data. Check public output omits private event details even when those
   events still count.
+- Public product copy: check each capability claim against live source and
+  runtime state, such as route config and scheduler history, not the brief or
+  design docs. A paused job or unbuilt input is not a present capability; reword
+  it or label it staged, and tell the user where copy departs from the brief.
 - Release-console uploads: a platform consumes a version/build identifier once it enters any release draft, so `already used` means attached to a draft elsewhere, not uploaded. Before minting a new identifier or re-dropping the same artifact, read the track's drafts, its artifact library, and sibling tracks read-only to find the owning draft, and add from the library rather than re-uploading. Page metadata can lag processing or drop entries; decode the artifact's own manifest and signature to confirm version, package, and signing identity.
 - Configuration or credential-location changes: inspect consumers of the old
   location, including scheduled jobs, before removing it. Preserve unrelated
