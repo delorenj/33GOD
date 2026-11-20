@@ -499,6 +499,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if "--usage-spec" in argv and "--" not in argv[:argv.index("--usage-spec")]:
+        sys.stdout.write(Path(__file__).with_name("waybill.usage.kdl").read_text())
+        return 0
     a = build_parser().parse_args(argv)
     try:
         return int(a.func(a, ["waybill", *argv]) or 0)

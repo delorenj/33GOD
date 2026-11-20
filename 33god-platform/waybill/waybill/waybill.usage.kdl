@@ -1,0 +1,59 @@
+name waybill
+bin waybill
+about "A flight recorder for one prompt across 33GOD"
+flag --version help="Show version"
+cmd capture help="Rebuild a past turn from retained sources" {
+    flag --session { arg <SESSION> }
+    flag --cli { arg <CLI> }
+    flag --turn { arg <TURN> }
+    flag --latest
+    flag --at { arg <TIME> }
+    flag --settle { arg <SECONDS> }
+    flag --profile { arg <PROFILE> }
+    flag --deep
+    flag "-o --output" { arg <PATH> }
+    flag --only { arg <COLLECTORS> }
+    flag --skip { arg <COLLECTORS> }
+    flag --timeout { arg <SECONDS> }
+    flag --max-kb { arg <KIB> }
+}
+cmd record help="Follow the next prompt through Stop" {
+    flag --cli { arg <CLI> }
+    flag --session { arg <SESSION> }
+    flag --cwd { arg <DIRECTORY> }
+    flag --any
+    flag --settle { arg <SECONDS> }
+    flag --profile { arg <PROFILE> }
+    flag --deep
+    flag "-o --output" { arg <PATH> }
+    flag --only { arg <COLLECTORS> }
+    flag --skip { arg <COLLECTORS> }
+    flag --timeout { arg <SECONDS> }
+}
+cmd show help="Display a DevTools-style waterfall" {
+    arg <FILE>
+    flag --width { arg <WIDTH> }
+    flag --all
+    flag --no-color
+}
+cmd publish help="Publish a public profile and print the Factory link" {
+    arg <FILE>
+    flag --full
+    flag --name { arg <NAME> }
+    flag --project { arg <PROJECT> }
+    flag --dry-run
+}
+cmd night help="Digest a wall-clock window into a night file" {
+    flag --date { arg <DATE> }
+    flag --from { arg <TIME> }
+    flag --to { arg <TIME> }
+    flag --tz { arg <ZONE> }
+    flag --profile { arg <PROFILE> }
+    flag --label { arg <LABEL> }
+    flag "-o --output" { arg <PATH> }
+}
+cmd list help="List recent prompt invocations" {
+    flag --cli { arg <CLI> }
+    flag --limit { arg <COUNT> }
+    flag --json
+}
