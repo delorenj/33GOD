@@ -7,6 +7,9 @@ cmd tick help="Repair lifecycle invariants and dispatch triaged tickets into fre
     }
     flag --dry-run help="Read-only plan: no Plane write, publish, or journal"
     flag --json help="Machine-readable report"
+    flag --trigger help="What started this run, recorded on the journal's tick line (default schedule)" {
+        arg <KIND>
+    }
     flag --verbose help="Show skipped registry rows"
     flag --registry help="Agents registry path" {
         arg <PATH>
@@ -14,6 +17,19 @@ cmd tick help="Repair lifecycle invariants and dispatch triaged tickets into fre
     flag --journal help="Journal path" {
         arg <PATH>
     }
+    flag "-h --help" help="Show usage"
+}
+cmd watch help="Event path: a Plane ticket edit or a finished agent turn runs a board-scoped tick (long-running JetStream consumer; krebs-watch.service)" {
+    flag --consumer help="Durable consumer name (default krebs-watch)" {
+        arg <NAME>
+    }
+    flag --registry help="Agents registry path" {
+        arg <PATH>
+    }
+    flag --journal help="Journal path (echo suppression reads it)" {
+        arg <PATH>
+    }
+    flag --verbose help="Log ignored events too"
     flag "-h --help" help="Show usage"
 }
 cmd status help="Read-only: what is happening on each board and when each ticket moves (stage, reason, ETA, turns in flight, recent activity)" {

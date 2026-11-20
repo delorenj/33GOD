@@ -4,7 +4,7 @@
 // ticket out of the flow, what makes a ticket a container, the dispatch order,
 // and how a board's states map onto the five stock lanes.
 
-export const SPEC_VERSION = "2.3.0";
+export const SPEC_VERSION = "2.4.0";
 
 export const LABEL = Object.freeze({
   working: "agent:working",

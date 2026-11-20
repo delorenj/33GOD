@@ -27,7 +27,7 @@ import {
   triageCandidatesOf,
   triageGuard,
 } from "./select.mjs";
-import { PENDING_MAX_AGE_MS, TURN_WINDOW_MS, boardTurnSends, lastBoardTurns, pendingPublishes, releaseCounts, sentCommands, triagedCommandIds } from "./journal.mjs";
+import { PENDING_MAX_AGE_MS, TURN_WINDOW_MS, boardTurnSends, lastBoardTurns, pendingPublishes, releaseCounts, sentBoardTurnsByAgent, sentCommands, triagedCommandIds } from "./journal.mjs";
 import { QUIET_MS, mapLimit } from "./liveness.mjs";
 import { judgeBoardTurn, parkComment } from "./turns.mjs";
 import { dispatchPrompt, reviewPrompt } from "./prompt.mjs";
@@ -310,6 +310,13 @@ export async function runTick({
   orphanReleaseTickCap = ORPHAN_RELEASE_TICK_CAP,
   orphanUnstickTickCap = ORPHAN_UNSTICK_TICK_CAP,
   inspect = null,
+  // ADR 0002: probe({scope, sent}) -> {busy, turns, why} | {unknown, why}. A scope with a board turn queued or
+  // running (triage or review, any ticket) is sent no new one. Null = no guard (tests, no Candystore).
+  scopeBusy = null,
+  // What started this run, for the journal's tick line: "schedule" (Candybar), "plane-edit", "turn-ended", ...
+  trigger = "schedule",
+  triggerDetail = null,
+  boardFilter = null,
 }) {
   const started = now();
   const tickId = `tick:${started.toISOString()}`;
@@ -337,6 +344,7 @@ export async function runTick({
   // it alternates, so a review backlog never starves triage (the flow's gate) and a triage
   // stream never starves reviews.
   const lastBoardTurn = lastBoardTurns(journalEntries);
+  const boardTurnsSent = sentBoardTurnsByAgent(journalEntries);
   let releasesThisTick = 0;
   let unsticksThisTick = 0;
   let parksThisTick = 0;
@@ -403,6 +411,7 @@ export async function runTick({
     tickId,
     at: started.toISOString(),
     spec: SPEC_VERSION,
+    trigger,
     scopes: [],
     skipped,
     errors: [],
@@ -432,6 +441,7 @@ export async function runTick({
       triageSeen: [],
       triageHeld: [],
       parks: [],
+      boardTurnBusy: null,
       reviews: [],
       reviewsCapped: [],
       reviewsSeen: [],
@@ -714,12 +724,34 @@ export async function runTick({
       let chosen = 0;
       let probes = 0;
       let blind = null;
+      // Scope-busy guard (ADR 0002): the desk serializes board turns on its lease, so while ANY board
+      // turn (any ticket) is queued or running for this scope, none is sent. Asked only when there is a
+      // candidate. Candystore unknown stops the scope's board turns, like the per-ticket probe below.
+      let busyWhy = null;
+      if (scopeBusy && fresh.length) {
+        const v = await scopeBusy({ scope, sent: boardTurnsSent.get(scope.agentId) ?? [] });
+        if (v.unknown) {
+          blind = v.why;
+          out.warnings.push(`board turns not sent: ${v.why}`);
+        } else if (v.busy) {
+          busyWhy = `scope busy: ${v.why}`;
+          out.boardTurnBusy = { why: v.why, turns: v.turns.map((x) => ({ invocationId: x.id, reason: x.reason, key: x.key, state: x.state, since: new Date(x.since).toISOString() })) };
+        }
+      }
       for (const { t, commandId, kind = "triage", attempt } of fresh) {
         const entry = { ...ticketRef(t), updatedAt: t.updatedAt, agentId: scope.agentId, commandId, ...(kind === "review" ? { attempt } : {}) };
         const list = kind === "review" ? out.reviews : out.triage;
         const capped = kind === "review" ? out.reviewsCapped : out.triageCapped;
+        if (busyWhy) {
+          list.push({ ...entry, result: "skipped", why: busyWhy });
+          continue;
+        }
         if (chosen >= triageScopeCap) {
           capped.push({ ...ticketRef(t), updatedAt: t.updatedAt, why: `scope cap (${triageScopeCap} board turn per scope per tick)` });
+          continue;
+        }
+        if (!liveness && blind) {
+          list.push({ ...entry, result: "skipped", why: blind });
           continue;
         }
         if (liveness) {
@@ -1059,12 +1091,16 @@ export async function runTick({
   record({
     action: "tick",
     ok: report.ok,
+    trigger,
+    ...(triggerDetail ? { trigger_detail: triggerDetail } : {}),
+    ...(boardFilter ? { board: boardFilter } : {}),
     scopes: report.scopes.length,
     dispatched: report.scopes.reduce((n, s) => n + s.dispatches.filter((d) => d.result === "dispatched").length, 0),
     repaired: report.scopes.reduce((n, s) => n + s.repairs.filter((r) => r.result === "repaired").length, 0),
     republished: report.scopes.reduce((n, s) => n + s.republishes.filter((r) => r.result === "republished").length, 0),
     triaged: report.scopes.reduce((n, s) => n + s.triage.filter((t) => t.result === "published").length, 0),
     reviews: report.scopes.reduce((n, s) => n + s.reviews.filter((t) => t.result === "published").length, 0),
+    busy: report.scopes.filter((s) => s.boardTurnBusy).length,
     errors: report.scopes.reduce((n, s) => n + s.errors.length, 0),
   });
   return report;

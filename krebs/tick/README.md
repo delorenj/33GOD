@@ -1,6 +1,6 @@
 # krebs tick
 
-The Krebs lifecycle v2 dispatcher ([spec](../spec/lifecycle.v2.yaml), [explainer](../docs/lifecycle.md)). It is the only thing that moves a ticket from Todo to In Progress. Candybar runs it every 10 minutes ([`../.candybars/krebs-tick.candybar.toml`](../.candybars/krebs-tick.candybar.toml)).
+The Krebs lifecycle v2 dispatcher ([spec](../spec/lifecycle.v2.yaml), [explainer](../docs/lifecycle.md)). It is the only thing that moves a ticket from Todo to In Progress. Candybar runs it every 10 minutes as the backstop ([`../.candybars/krebs-tick.candybar.toml`](../.candybars/krebs-tick.candybar.toml)), and `krebs watch` ([`../deploy/krebs-watch.service`](../deploy/krebs-watch.service), [ADR 0002](../docs/adr/0002-event-driven-runs.md)) runs it for one board when a Plane ticket is edited or an agent turn ends.
 
 ```bash
 node ~/code/33GOD/krebs/bin/krebs.mjs status --board PX         # what is happening, and when each ticket moves
@@ -70,15 +70,15 @@ Stages: `waiting: quiet window`, `waiting: agent activity`, `next for triage`, `
 
 | What | When | Notes |
 |---|---|---|
-| The tick | every 10 minutes on the mark (`:00 :10 :20 ...`), Candybar `krebs-tick` | everything below happens at a tick, never between two |
-| Triage eligibility | Todo, no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, `updated_at` older than 10 minutes | any edit (a comment, a label, a move into Todo) restarts the 10-minute clock |
-| Triage throughput | 1 board turn per scope per tick, 6 per tick across scopes, oldest `updated_at` first | the one turn is shared with review and alternates with it, so a review can take a triage turn's place |
+| The tick | every 10 minutes on the mark (`:00 :10 :20 ...`), Candybar `krebs-tick` (the backstop), and per board on events: `krebs watch` runs `krebs tick --board <id> --trigger plane-edit\|turn-ended\|quiet-window` 60 s after the last Plane edit of a burst, 8 s after an agent turn ends, or when a quiet window ends | everything below happens inside a tick run; the journal line records the `trigger` |
+| Triage eligibility | Todo, no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, `updated_at` older than 2 minutes (`board_turns.triage_quiet_seconds`) | any edit (a comment, a label, a move into Todo) restarts the 2-minute clock |
+| Triage throughput | 1 board turn per scope at a time (none while one is queued or running for the scope: Candystore, `board_turns.per_scope`), 1 sent per scope per run, 6 per run across scopes, oldest `updated_at` first | the one turn is shared with review and alternates with it, so a review can take a triage turn's place; a turn end starts the next run, so triages chain back to back (about 5 minutes each) |
 | Triage turn | starts at the tick, ends when the agent adds `lifecycle:triaged` (or `needs-input`) | minutes; the ticket cannot be dispatched until it ends |
 | Dispatch | the first tick after `lifecycle:triaged` lands, into free WIP slots (`plane.wip`, default 2), in Todo order | a full scope waits for a handback, a hold label or Done |
 | Review eligibility | In Progress + `lifecycle:review`, no hold, no `agent:working`, quiet 30 minutes | then 1 board turn per scope per tick as above; resent after 3 h, at most 3 times per handback, then parked with `agent:failed` |
 | Orphan release | In Progress holding a slot (or any `agent:working`), quiet 30 minutes, no live turn in Candystore | back to Todo; a second release in 7 days becomes `agent:failed` |
 
-Worst-case latency for N untriaged tickets dropped into Todo at once on one scope, assuming idle agents: the first triage starts at the first tick more than 10 minutes after the drop (10 to 20 minutes), then one more every 10 minutes, so the last starts 10N to 10N+10 minutes after the drop. Each ticket is dispatchable one tick after its own triage ends, so the last is dispatched about 10N+20 minutes after the drop (when a slot is free). N = 8: about 90 minutes to finish triage and 100 to dispatch the last one. Already-triaged tickets skip the queue and go at the next tick while slots are free. The PX drop of 2026-11-20 (5 untriaged, 2 triaged): dispatch of the triaged pair at the next tick, triage of the five at +10 min steps, the last one ~72 minutes after the drop.
+With `krebs watch` alive, N untriaged tickets dropped into Todo at once on one scope, assuming idle agents: the first triage starts about 2 to 3 minutes after the drop (60 s debounce, then the 2-minute window), and each next one starts when the previous turn ends (about 5 minutes each), so the last starts about 3+5(N-1) minutes after the drop. A triaged ticket dispatches into a free slot on the run that its triage turn's end starts. Without the watcher (service down) the old tick-only numbers apply: the first triage starts at the first tick after the window (up to 10 minutes) and one more every 10 minutes, so the last starts 10N to 10N+10 minutes after the drop. Each ticket is dispatchable one tick after its own triage ends, so the last is dispatched about 10N+20 minutes after the drop (when a slot is free). N = 8: about 90 minutes to finish triage and 100 to dispatch the last one. Already-triaged tickets skip the queue and go at the next tick while slots are free. The PX drop of 2026-11-20 (5 untriaged, 2 triaged): dispatch of the triaged pair at the next tick, triage of the five at +10 min steps, the last one ~72 minutes after the drop.
 
 ### `--json` shape (version 1)
 

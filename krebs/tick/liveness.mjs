@@ -46,6 +46,12 @@ const SHORT_REASONS = new Set(["ticket-grooming", "ticket-review"]);
 const ENDED = new Set(["bloodbank.agent.invocation.completed", "bloodbank.agent.invocation.failed"]);
 const DETACHED = "bloodbank.agent.invocation.detached";
 const ACTIVITY_DOMAINS = new Set(["agent", "conversation"]);
+/** The producer of the invocation lifecycle facts that name a command (hook-hub and claude-code events do not). */
+export const GATEWAY_SERVICE = "bloodbank-hermes-gateway";
+/** The board turns krebs sends (spec catch_up): a scope has at most one of them queued or running. */
+export const BOARD_TURN_REASONS = new Set(["ticket-grooming", "ticket-review"]);
+/** How many lifecycle events one scope-busy question reads; reaching it means the answer may be cut short. */
+export const BOARD_TURN_EVENT_LIMIT = 1000;
 
 const asObject = (v) => {
   if (v && typeof v === "object") return v;
@@ -202,6 +208,18 @@ export function candystoreClient({ base, fetchImpl = globalThis.fetch, timeoutMs
         type: "bloodbank.agent.invocation.queued,bloodbank.agent.invocation.started,bloodbank.agent.invocation.completed,bloodbank.agent.invocation.failed,bloodbank.agent.invocation.detached",
         limit: "300",
       }),
+    /**
+     * Every gateway invocation lifecycle event (queued, started, ended, detached) since `fromIso`, any agent,
+     * newest first: the raw material of the scope-busy guard (ADR 0002). One question covers every scope.
+     */
+    boardTurns: (fromIso) =>
+      get({
+        service: GATEWAY_SERVICE,
+        type: "bloodbank.agent.invocation.queued,bloodbank.agent.invocation.started,bloodbank.agent.invocation.completed,bloodbank.agent.invocation.failed,bloodbank.agent.invocation.detached",
+        from: fromIso,
+        limit: String(BOARD_TURN_EVENT_LIMIT),
+        total: "0",
+      }),
     /** Recent events whose text mentions `key` (worker activity is filtered by the caller). */
     mentions: (key, fromIso) => get({ q: String(key).toLowerCase(), from: fromIso, limit: "200", tools: "1" }),
   };
@@ -238,4 +256,83 @@ export async function mapLimit(items, limit, fn) {
   });
   await Promise.all(workers);
   return out;
+}
+
+/**
+ * The board turns (triage, review: any ticket) queued or running for one agent's desk. Pure.
+ *
+ * `events` are gateway invocation lifecycle events, any agent, any order (Candystore, newest first).
+ * `sent` are the board-turn commands krebs itself published for this agent, [{commandId, at, kind, key}]
+ * (the journal): they bridge the gap between krebs' publish and the gateway's queued event, and a send whose
+ * events Candystore has not ingested yet. A turn counts while it has no end on record and is younger than
+ * MAX_OPEN_TRIAGE (a queued turn the gateway never started is presumed dead after that, like rule 1 above).
+ * Returns {busy, turns: [{id, reason, key, state, since}], why}.
+ */
+export function boardTurnsInFlight({ events = [], sent = [], agentId, nowMs }) {
+  const byId = new Map(); // invocation id -> {id, reason, agent, key, queued, started, ended, detached}
+  for (const e of events) {
+    const type = e?.type;
+    if (type !== QUEUED && type !== STARTED && type !== DETACHED && !ENDED.has(type)) continue;
+    const t = ms(e.time);
+    if (t === null) continue;
+    const data = asObject(e.data);
+    const id = data.invocation_id || data.command_id;
+    if (!id) continue;
+    const context = asObject(data.context);
+    const inv = byId.get(id) ?? { id, reason: null, agent: null, key: null, queued: null, started: null, ended: null, detached: null };
+    inv.reason ??= context.reason ?? null;
+    inv.agent ??= data.target_agent_id ?? asObject(e.actor).agent_id ?? null;
+    inv.key ??= context.ticket_key ?? null;
+    if (type === QUEUED) inv.queued = Math.max(inv.queued ?? 0, t);
+    else if (type === STARTED) inv.started = Math.max(inv.started ?? 0, t);
+    else if (type === DETACHED) inv.detached = Math.max(inv.detached ?? 0, t);
+    else inv.ended = Math.max(inv.ended ?? 0, t);
+    byId.set(id, inv);
+  }
+  const turns = [];
+  for (const inv of byId.values()) {
+    if (inv.agent !== agentId || !BOARD_TURN_REASONS.has(inv.reason) || inv.ended !== null) continue;
+    const since = Math.min(...[inv.queued, inv.started].filter((x) => x !== null));
+    if (!Number.isFinite(since) || nowMs - since >= MAX_OPEN_TRIAGE_MS) continue;
+    turns.push({ id: inv.id, reason: inv.reason, key: inv.key, state: inv.started !== null ? "running" : "queued", since });
+  }
+  for (const cmd of sent) {
+    const at = ms(cmd.at);
+    if (at === null || nowMs - at >= MAX_OPEN_TRIAGE_MS) continue;
+    if (byId.get(cmd.commandId)?.ended != null) continue;
+    if (turns.some((x) => x.id === cmd.commandId)) continue;
+    turns.push({ id: cmd.commandId, reason: cmd.kind === "review" ? "ticket-review" : "ticket-grooming", key: cmd.key ?? null, state: byId.get(cmd.commandId) ? "queued" : "sent", since: at });
+  }
+  turns.sort((a, b) => a.since - b.since);
+  if (!turns.length) return { busy: false, turns, why: "no board turn queued or running" };
+  const first = turns[0];
+  return {
+    busy: true,
+    turns,
+    why: `a ${first.reason === "ticket-review" ? "review" : "triage"} turn${first.key ? ` on ${first.key}` : ""} is ${first.state} (since ${ago(nowMs, first.since)})${turns.length > 1 ? `, and ${turns.length - 1} more` : ""}`,
+  };
+}
+
+/**
+ * The scope-busy probe for runTick (ADR 0002): probe({scope, sent}) resolves to {busy, turns, why}, or
+ * {unknown: true, why} when Candystore cannot answer (the tick then sends no board turn). One Candystore
+ * question per probe instance, shared by every scope of the tick.
+ */
+export function candystoreScopeBusy({ client, now = () => new Date() }) {
+  let cached = null;
+  const load = () => {
+    if (!cached) {
+      const nowMs = now().getTime();
+      cached = client.boardTurns(new Date(nowMs - MAX_OPEN_TRIAGE_MS - 5 * 60 * 1000).toISOString()).then(
+        (events) => (events.length >= BOARD_TURN_EVENT_LIMIT ? { error: `lifecycle events hit the ${BOARD_TURN_EVENT_LIMIT}-row read limit` } : { events }),
+        (err) => ({ error: String(err?.message ?? err).split("\n")[0] }),
+      );
+    }
+    return cached;
+  };
+  return async ({ scope, sent = [] }) => {
+    const got = await load();
+    if (got.error) return { unknown: true, why: `board-turn state unknown (${got.error})` };
+    return boardTurnsInFlight({ events: got.events, sent, agentId: scope.agentId, nowMs: now().getTime() });
+  };
 }

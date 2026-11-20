@@ -3,12 +3,16 @@
 // Read-only. It never writes Plane, publishes, takes tick.lock or appends to the journal. The
 // plan comes from the tick itself (`runTick({dryRun: true, inspect})`), so triage eligibility,
 // dispatch order, slot math, blockers and orphans are the tick's own decisions, not a copy.
-// What this module adds is a projection in time: given the tick's rules (a tick every 10 minutes,
-// one board turn per scope per tick, shared and alternating between triage and review, a quiet
-// window before a ticket is eligible), when does each ticket's next transition happen?
+// What this module adds is a projection in time: given the tick's rules (one board turn per scope
+// at a time, shared and alternating between triage and review, a quiet window before a ticket is
+// eligible), when does each ticket's next transition happen?
 //
-// The projection is an estimate: it assumes every tick fires on the 10-minute mark, no ticket is
-// edited meanwhile, no turn takes long to finish, and the 6-per-tick cross-scope cap does not bite.
+// Two clocks. With `krebs watch` alive (ADR 0002) a board turn starts when its quiet window ends or
+// the previous board turn ends, and a turn is assumed to take BOARD_TURN_MS. Without it, only the
+// Candybar tick runs, on the 10-minute mark, and the scope's one board turn is per tick.
+//
+// The projection is an estimate: it assumes no ticket is edited meanwhile, and the 6-per-tick
+// cross-scope cap does not bite.
 
 import { LABEL, heldBy, isContainer } from "./lifecycle.mjs";
 import {
@@ -24,6 +28,12 @@ import { REVIEW_MAX_ATTEMPTS, REVIEW_RETRY_MS, TRIAGE_MAX_ATTEMPTS, TRIAGE_RETRY
 export const STATUS_VERSION = 1;
 /** Candybar fires `krebs tick` on this period (krebs/.candybars/krebs-tick.candybar.toml, every 10 minutes). */
 export const TICK_MS = 10 * 60 * 1000;
+/** What a board turn (triage or review) takes: measured median 4.4 min (triage) and 5.3 min (review), 2026-11. */
+export const BOARD_TURN_MS = 5 * 60 * 1000;
+/** After a board turn ends, `krebs watch` waits this long (turn_ended settle) before the next run. */
+const WATCH_TURN_END_SETTLE_MS = 8 * 1000;
+/** `krebs watch` re-arms a board for a quiet window ending sooner than this; a later one is the backstop's. */
+const WATCH_REARM_MAX_MS = 60 * 60 * 1000;
 /** A tick starts a moment after its boundary; ticket ages are judged at that moment. */
 const TICK_JITTER_MS = 2000;
 /** The orphan sweep's quiet window (liveness.QUIET_MS). */
@@ -209,21 +219,53 @@ export async function collectBusy({ liveness, boardId, tickets, sentByTicket, no
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Replay the tick's board-turn rule forward. Each tick, per scope: among the waiting tickets
- * that are past their quiet window, take ONE; the kind whose turn it is goes first (alternating
- * after each turn sent), oldest ticket first within a kind.
+ * Replay the board-turn rule forward. A scope has one board turn at a time; among the waiting
+ * tickets that are past their quiet window, take ONE; the kind whose turn it is goes first
+ * (alternating after each turn sent), oldest ticket first within a kind.
  *
- * items: [{ticket, kind: "triage"|"review", eligibleMs}]. A ticket is taken at tick time T when
+ * items: [{ticket, kind: "triage"|"review", eligibleMs}]. A ticket is taken at run time T when
  * T > eligibleMs (the tick tests `now - updated_at > window`).
+ *
+ * Without `watch` (only Candybar's tick): a run is a tick on the 10-minute mark, one board turn per tick.
+ * With `watch: {nowMs}` (krebs watch alive): a run starts when a ticket's quiet window ends (re-armed
+ * by the watcher, up to WATCH_REARM_MAX_MS ahead) or 8 s after the previous board turn ends, which is
+ * BOARD_TURN_MS after it started; an already-eligible ticket waits for the next event or the backstop tick.
+ *
+ * `freeAtMs`: a board turn is already in flight in this scope and ends then; none starts before it.
  * Returns Map(ticket.key -> {kind, tickMs, order}) where `order` counts turns of any kind in the order sent.
  */
-export function projectBoardTurns({ items, nextTickMs, prefer = "triage", maxTicks = PROJECTION_TICKS }) {
+export function projectBoardTurns({ items, nextTickMs, prefer = "triage", maxTicks = PROJECTION_TICKS, watch = null, freeAtMs = null }) {
   const pending = [...items];
   const out = new Map();
   const horizon = nextTickMs + maxTicks * TICK_MS;
   let turn = prefer;
-  let T = nextTickMs;
   let order = 0;
+  if (watch) {
+    const nowMs = watch.nowMs;
+    const backstop = nextTickMs + TICK_JITTER_MS;
+    const floor = freeAtMs !== null ? freeAtMs + WATCH_TURN_END_SETTLE_MS : null;
+    const trig = (i) => {
+      if (i.eligibleMs <= nowMs) return floor ?? backstop;
+      return i.eligibleMs - nowMs <= WATCH_REARM_MAX_MS ? i.eligibleMs + 1000 : nextTickAfter(i.eligibleMs) + TICK_JITTER_MS;
+    };
+    let c = floor ?? 0;
+    while (pending.length) {
+      const starts = pending.map((i) => Math.max(trig(i), c));
+      const first = Math.min(...starts);
+      if (first >= horizon) break;
+      const cands = pending.filter((i) => i.eligibleMs < first); // whatever starts the run, every eligible ticket is in the pool
+      cands.sort((a, b) => (a.kind === turn ? 0 : 1) - (b.kind === turn ? 0 : 1) || compareTriage(a.ticket, b.ticket));
+      const pick = cands[0];
+      order++;
+      out.set(pick.ticket.key, { kind: pick.kind, tickMs: first, order });
+      pending.splice(pending.indexOf(pick), 1);
+      turn = pick.kind === "triage" ? "review" : "triage";
+      c = first + BOARD_TURN_MS + WATCH_TURN_END_SETTLE_MS;
+    }
+    return out;
+  }
+  let T = nextTickMs;
+  if (freeAtMs !== null) T = Math.max(T, Math.ceil((freeAtMs - TICK_JITTER_MS) / TICK_MS) * TICK_MS);
   while (pending.length && T < horizon) {
     const at = T + TICK_JITTER_MS;
     const ready = pending.filter((i) => at > i.eligibleMs);
@@ -267,10 +309,11 @@ function fmtMin(n) {
  *   journal  {lastBoardTurn: "triage"|"review"|undefined, reviewsSent: Map("<ticket id>|<updated_at>" -> [{attempt, at}])}
  *   busyUntil Map(ticket key -> ms): tickets with recent agent activity on them (Candystore's 30-minute quiet rule:
  *            the tick skips them as "turn live" without spending the scope's board turn); null/absent when unknown
+ *   watch    true when `krebs watch` is alive: board turns are projected on events, not on the 10-minute mark
  *
  * Returns {rows: [...], inFlight: [...], projection} where rows cover every ticket (the caller filters).
  */
-export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {}, busyUntil = null }) {
+export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {}, busyUntil = null, watch = false }) {
   const nextTickMs = nextTickAfter(nowMs);
   const plannedTriage = new Set(out.triage.filter((x) => x.result === "planned" || x.result === "published").map((x) => x.key));
   const triageSeen = new Set(out.triageSeen);
@@ -309,10 +352,21 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
       busyOf.set(i.ticket.key, b);
     }
   }
-  const projection = projectBoardTurns({ items, nextTickMs, prefer: journal.lastBoardTurn === "triage" ? "review" : "triage" });
+  // The scope holds at most one board turn at a time (spec board_turns.per_scope): while one is in flight,
+  // no other starts, so the next can begin only once it ends (estimated by BOARD_TURN_MS).
+  let freeAtMs = null;
+  for (const t of tickets) {
+    for (const x of liveTurns(t)) {
+      if (x.kind === "triage" || x.kind === "review") freeAtMs = Math.max(freeAtMs ?? 0, x.since + BOARD_TURN_MS, nowMs + 30_000);
+    }
+  }
+  const projection = projectBoardTurns({ items, nextTickMs, prefer: journal.lastBoardTurn === "triage" ? "review" : "triage", watch: watch ? { nowMs } : null, freeAtMs });
   const triageOrder = [...projection.entries()].filter(([, v]) => v.kind === "triage").sort((a, b) => a[1].order - b[1].order).map(([k]) => k);
   const eligibleOf = new Map(items.map((i) => [i.ticket.key, i.eligibleMs]));
 
+  // when krebs next runs this board: with the watcher, as soon as the board turn now running ends (its end event
+  // starts a run), else the next tick on the mark
+  const runMs = watch && freeAtMs !== null ? Math.min(nextTickMs, freeAtMs + WATCH_TURN_END_SETTLE_MS) : nextTickMs;
   const slotHolders = out.occupied;
   const waitingOrder = new Map(waiting.map((k, i) => [k, i + 1]));
   const rows = [];
@@ -372,8 +426,8 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
         if (turns && quietFor !== null) eta(nextTickAfterMs(updatedMs + ORPHAN_QUIET_MS, nowMs), "orphan sweep clears the label");
       } else if (t.labels.includes(LABEL.triaged)) {
         if (dispatchPlanned.has(t.key)) {
-          set("ready", "ready to dispatch", `triaged, and ${scope.wip - slotHolders.length > 0 ? "a WIP slot is free" : "next in line"}: the next tick moves it to In Progress`);
-          eta(nextTickMs);
+          set("ready", "ready to dispatch", `triaged, and ${scope.wip - slotHolders.length > 0 ? "a WIP slot is free" : "next in line"}: the next ${watch ? "krebs run (an event, or the tick at the latest)" : "tick"} moves it to In Progress`);
+          eta(runMs);
         } else if (blockedBy.has(t.key)) {
           const why = blockedBy.get(t.key);
           set("blocked-by", `blocked_by ${(why.match(/blocked by (\S+)/) ?? [])[1] ?? "another ticket"}`, `${why}; dispatched once the blocker is Done or Cancelled`, { blockedBy: why });
@@ -387,8 +441,8 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
           );
           row.etaNote = "when a slot frees up";
         } else {
-          set("ready", "triaged", "triaged and waiting for the next tick's dispatch pass");
-          eta(nextTickMs);
+          set("ready", "triaged", watch ? "triaged and waiting for the next krebs run's dispatch pass" : "triaged and waiting for the next tick's dispatch pass");
+          eta(runMs);
         }
       } else if (triageSeen.has(t.key)) {
         const heldWhy = (out.triageHeld ?? []).find((x) => x.key === t.key)?.why;
@@ -406,13 +460,13 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
         const position = triageOrder.indexOf(t.key) + 1 || null;
         if (proj) {
           if (inQuiet && busyOf.has(t.key)) {
-            set("quiet-window", "waiting: agent activity", `an agent was active on it recently; krebs sends no board turn until the ticket has had 30 quiet minutes (eligible ~${hhmm(eligibleMs)}Z)${position > 1 ? `, then it is #${position} in the triage queue (1 turn per scope per tick)` : ""}`, { queuePosition: position });
+            set("quiet-window", "waiting: agent activity", `an agent was active on it recently; krebs sends no board turn until the ticket has had 30 quiet minutes (eligible ~${hhmm(eligibleMs)}Z)${position > 1 ? `, then it is #${position} in the triage queue (1 board turn per scope at a time)` : ""}`, { queuePosition: position });
           } else if (inQuiet) {
-            set("quiet-window", "waiting: quiet window", `edited ${fmtMin(quietFor)} ago; triage waits until a ticket has been quiet for 10 min (eligible ~${hhmm(eligibleMs)}Z)${position > 1 ? `, then it is #${position} in the triage queue (1 turn per scope per tick)` : ""}`, { queuePosition: position });
+            set("quiet-window", "waiting: quiet window", `edited ${fmtMin(quietFor)} ago; triage waits until a ticket has been quiet for ${TRIAGE_MIN_AGE_MS / 60000} min (eligible ~${hhmm(eligibleMs)}Z)${position > 1 ? `, then it is #${position} in the triage queue (1 board turn per scope at a time)` : ""}`, { queuePosition: position });
           } else if (position === 1) {
-            set("triage-next", "next for triage", "past the quiet window and first in line: the next tick sends its triage turn", { queuePosition: 1 });
+            set("triage-next", "next for triage", watch ? (freeAtMs !== null ? "past the quiet window and first in line: krebs watch sends its triage turn when the board turn now running ends" : "past the quiet window and first in line: sent on the next Plane or turn event, or by the next tick at the latest") : "past the quiet window and first in line: the next tick sends its triage turn", { queuePosition: 1 });
           } else {
-            set("triage-queued", `queued for triage #${position}`, `${position - 1} untriaged ticket(s) go first; a scope gets 1 board turn per tick (shared with reviews)`, { queuePosition: position });
+            set("triage-queued", `queued for triage #${position}`, `${position - 1} untriaged ticket(s) go first; a scope runs 1 board turn at a time (shared with reviews${watch ? `, each starts when the last one ends, ~${BOARD_TURN_MS / 60000} min each` : ", one per tick"})`, { queuePosition: position });
           }
           eta(proj.tickMs, `triage turn starts, then ${out.free > 0 ? "dispatch on a following tick (a WIP slot is free now)" : `it needs a WIP slot (${slotHolders.length}/${scope.wip} taken now)`}`);
         } else {
@@ -429,7 +483,7 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
         else if (reviewsSeen.has(t.key) && !proj) set("review-sent", "in review: turn already sent", `${reviewsSeen.get(t.key)}; it is asked again ${REVIEW_RETRY_MS / 3600000} h after the last turn, up to ${REVIEW_MAX_ATTEMPTS} times per handback, then krebs parks it with agent:failed`);
         else if (proj) {
           const eligibleMs = eligibleOf.get(t.key);
-          set("review-wait", eligibleMs !== undefined && nowMs <= eligibleMs ? "in review: waiting for quiet" : "in review: review turn queued", `handed back; the PM is asked for a verdict once it has been quiet 30 min (~${hhmm(eligibleMs)}Z), 1 board turn per scope per tick shared with triage`, { queuePosition: proj.order });
+          set("review-wait", eligibleMs !== undefined && nowMs <= eligibleMs ? "in review: waiting for quiet" : "in review: review turn queued", `handed back; the PM is asked for a verdict once it has been quiet 30 min (~${hhmm(eligibleMs)}Z), 1 board turn per scope at a time, shared with triage`, { queuePosition: proj.order });
           eta(proj.tickMs, "review turn starts");
         } else set("review-wait", "in review", "handed back, waiting for a verdict");
       } else if (live.length) {
@@ -482,7 +536,7 @@ const stageRank = (stage) => {
 };
 
 /** One sentence: what the board is waiting on, and what happens next. Only for a board with no live turn. */
-export function whyNothingMoved({ scope, rows, occupied }) {
+export function whyNothingMoved({ scope, rows, occupied, watch = false }) {
   const by = (...stages) => rows.filter((r) => stages.includes(r.stage));
   const untriaged = by("triage-next", "triage-queued", "quiet-window");
   const ready = by("ready");
@@ -494,7 +548,7 @@ export function whyNothingMoved({ scope, rows, occupied }) {
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
     parts.push(
-      `${untriaged.length} Todo ticket(s) untriaged; triage is serialized at 1 per ${TICK_MS / 60000} min per scope` +
+      `${untriaged.length} Todo ticket(s) untriaged; triage is serialized ${watch ? `at 1 at a time per scope (each starts when the last turn ends, ~${BOARD_TURN_MS / 60000} min each)` : `at 1 per ${TICK_MS / 60000} min per scope`}` +
         `${first.eta ? `; next: ${first.key} at ~${hhmm(Date.parse(first.eta))}Z` : ""}` +
         `${untriaged.length > 1 && last.eta ? `, last: ${last.key} at ~${hhmm(Date.parse(last.eta))}Z` : ""}`,
     );
@@ -577,7 +631,8 @@ export function lastTickOf(entries) {
  *   turnsByScope  Map(boardId|agentId -> {ok, error, byTicket}) from collectTurns
  *   include       (row) => boolean, which rows to list (default: live work: not done/cancelled/backlog)
  */
-export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, candystore, lastBoardTurn, reviewsSent, busyByScope = new Map(), include = defaultInclude, registryPath = null, journalPath = null }) {
+export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, candystore, lastBoardTurn, reviewsSent, busyByScope = new Map(), watch = null, include = defaultInclude, registryPath = null, journalPath = null }) {
+  const watching = Boolean(watch?.alive);
   const lastTick = lastTickOf(journalEntries);
   const nextTickMs = nextTickAfter(nowMs);
   const overdue = lastTick ? nowMs - Date.parse(lastTick.at) > 2.5 * TICK_MS : true;
@@ -593,6 +648,7 @@ export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, ca
       turns: turns?.ok ? turns.byTicket : null,
       journal: { lastBoardTurn: lastBoardTurn.get(`${scope.agentId}|${scope.boardId}`), reviewsSent },
       busyUntil: busyByScope.get(scopeKey) ?? null,
+      watch: watching,
     });
     const listed = rows.filter(include).sort((a, b) => stageRank(a.stage) - stageRank(b.stage) || (a.eta ?? "~").localeCompare(b.eta ?? "~") || a.key.localeCompare(b.key, undefined, { numeric: true }));
     const active = rows.filter(defaultInclude);
@@ -609,7 +665,7 @@ export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, ca
       reviewRequired: Boolean(scope.review),
       idle: active.length === 0,
       inFlight,
-      idleReason: inFlight.length === 0 && turns?.ok ? whyNothingMoved({ scope, rows: active, occupied: out.occupied }) : null,
+      idleReason: inFlight.length === 0 && turns?.ok ? whyNothingMoved({ scope, rows: active, occupied: out.occupied, watch: watching }) : null,
       tickets: listed,
       counts: Object.fromEntries([...new Set(active.map((r) => r.stage))].sort().map((s) => [s, active.filter((r) => r.stage === s).length])),
       recent,
@@ -620,9 +676,12 @@ export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, ca
   return {
     version: STATUS_VERSION,
     generatedAt: new Date(nowMs).toISOString(),
-    estimates: "every eta is an estimate: ticks assumed on the 10-minute mark, no edits meanwhile, turns assumed short, no cross-scope cap",
+    estimates: watching
+      ? `every eta is an estimate: krebs watch runs a board when a quiet window ends or a board turn ends (a turn assumed ${BOARD_TURN_MS / 60000} min), the 10-minute tick is the backstop, no edits meanwhile, no cross-scope cap`
+      : "every eta is an estimate: ticks assumed on the 10-minute mark, one board turn per scope at a time, no edits meanwhile, turns assumed short, no cross-scope cap",
     tick: {
       everyMinutes: TICK_MS / 60000,
+      watch: { alive: watching, why: watch ? watch.why : "not checked", lastRun: watch?.state?.lastRun ?? null },
       last: lastTick,
       overdue,
       nextEstimate: new Date(nextTickMs).toISOString(),
@@ -689,7 +748,8 @@ export function formatStatus(status, { compact = false, ticket = null } = {}) {
     ? `last tick ${clock(t.last.at, nowMs)} (${relAge(Math.round((nowMs - Date.parse(t.last.at)) / 60000))}): ${t.last.ok ? "ok" : "ERRORS"}, dispatched ${t.last.dispatched}, triage ${t.last.triaged}, review ${t.last.reviews}, repaired ${t.last.repaired}${t.last.errors ? `, errors ${t.last.errors}` : ""}`
     : "no tick on record in the journal";
   lines.push(`krebs status ${clock(status.generatedAt, nowMs)}   ${last}`);
-  lines.push(`next tick ~${clock(t.nextEstimate, nowMs)} (estimate: Candybar fires every ${t.everyMinutes} min on the :00 mark)${t.overdue ? "   WARNING: no recent tick; is the krebs-tick candybar running?" : ""}`);
+  lines.push(`next tick ~${clock(t.nextEstimate, nowMs)} (estimate: Candybar fires every ${t.everyMinutes} min on the :00 mark${t.watch?.alive ? "; krebs watch also runs a board on a Plane edit or a finished turn" : ""})${t.overdue ? "   WARNING: no recent tick; is the krebs-tick candybar running?" : ""}`);
+  if (t.watch && !t.watch.alive && t.watch.why !== "not checked") lines.push(`krebs watch is not running (${t.watch.why}): only the ${t.everyMinutes}-minute tick moves the board; start krebs-watch.service`);
   if (!status.candystore.ok) lines.push(`WARNING: Candystore unreachable (${status.candystore.error}): live turns unknown; stages assume nothing is running`);
 
   const PARKED = new Set(["held", "epic", "blocked-by", "other-lane"]);

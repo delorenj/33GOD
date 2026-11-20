@@ -40,8 +40,9 @@ ticket that carries it you write nothing at all (no label, state, comment or cla
 
 1. **Agents never touch `agent:working`.** Not add, not remove, not "to be safe". The pickup chip owns
    it during a turn; otherwise only `px claim` (adds) and `px release|close|cancel` (remove) touch it.
-2. **Only `krebs tick` dispatches Todo to In Progress.** It is the one dispatcher, on the Candybar
-   `krebs-tick` schedule. Never move a Todo ticket to In Progress yourself, never `px claim` a ticket
+2. **Only `krebs tick` dispatches Todo to In Progress.** It is the one dispatcher: the Candybar
+   `krebs-tick` schedule (every 10 minutes, the backstop) plus `krebs watch`, which runs the same tick
+   for one board within about a minute of a Plane edit or a finished agent turn. Never move a Todo ticket to In Progress yourself, never `px claim` a ticket
    you were not dispatched, never re-dispatch around a full scope. No slot means wait.
 3. **Never change a ticket's state from a triage turn.** Triage labels and comments only.
 4. **Hold with a label, not a lane.** The lane does not change.

@@ -1,0 +1,32 @@
+# krebs-watch: the event path of Krebs (ADR 0002, krebs/docs/adr/0002-event-driven-runs.md).
+#
+# An event-driven JetStream consumer, not a clock: it holds a durable consumer ("krebs-watch") on
+# BLOODBANK_EVENTS and, when a Plane ticket event or a finished agent turn arrives, runs
+# `krebs tick --board <id> --trigger <kind>` for that one board. Candybar's `krebs-tick` (every 10
+# minutes) stays as the backstop and the only recurring schedule; there is no timer, cron or loop here.
+#
+# Install (once; the unit is a symlink so this file stays the source of truth):
+#   ln -sfn ~/code/33GOD/krebs/deploy/krebs-watch.service ~/.config/systemd/user/krebs-watch.service
+#   systemctl --user daemon-reload && systemctl --user enable --now krebs-watch.service
+# It needs OP_SERVICE_ACCOUNT_TOKEN from the user manager (the tick reads Pilot's Plane credential with `op`).
+# Health: `krebs status` reads ~/.local/state/krebs/watch.json; logs: journalctl --user -u krebs-watch.
+[Unit]
+Description=Krebs watch: Plane edits and finished agent turns start a board-scoped krebs tick
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/delorenj/code/33GOD/krebs
+# the launcher pins Node 24 (33god-platform cli-launchers.toml), like Candybar's krebs-tick
+ExecStart=/home/delorenj/.local/bin/krebs watch
+Environment=PATH=/home/delorenj/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=NATS_URL=nats://127.0.0.1:4222
+Environment=KREBS_TZ=America/New_York
+Restart=always
+RestartSec=5
+Nice=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

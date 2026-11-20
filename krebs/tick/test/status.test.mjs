@@ -91,15 +91,50 @@ test("the PX scenario: triage is serialized one per tick, last untriaged ticket 
   assert.deepEqual(p.inspected[0].out.triageCapped.map((t) => t.key), ["SOLO-20", "SOLO-25", "SOLO-18", "SOLO-28"]);
 });
 
-test("a ticket still inside its 10-minute quiet window waits for it, then for its place in the queue", async () => {
-  const issues = [issue({ seq: 1, updated: at("11:30:30") }), issue({ seq: 2, updated: at("11:36:00") }), issue({ seq: 3, updated: at("11:08:00") })];
+test("a ticket still inside its 2-minute quiet window waits for it, then for its place in the queue", async () => {
+  const issues = [issue({ seq: 1, updated: at("11:36:30") }), issue({ seq: 2, updated: at("11:36:50") }), issue({ seq: 3, updated: at("11:08:00") })];
   const rows = byKey(classify(await plan({ issues })));
   assert.equal(rows["SOLO-3"].stage, "triage-next");
   assert.equal(hhmm(rows["SOLO-3"].eta), "11:40");
   assert.equal(rows["SOLO-1"].stage, "quiet-window");
-  assert.match(rows["SOLO-1"].reason, /quiet for 10 min \(eligible ~11:40Z\)/);
-  assert.equal(hhmm(rows["SOLO-1"].eta), "11:50", "11:30:30 + 10 min is just after the 11:40 tick");
-  assert.equal(hhmm(rows["SOLO-2"].eta), "12:00", "11:36 is eligible 11:46, but the 11:50 turn is taken");
+  assert.match(rows["SOLO-1"].reason, /quiet for 2 min \(eligible ~11:38Z\)/);
+  assert.equal(hhmm(rows["SOLO-1"].eta), "11:50", "eligible 11:38:30, but the 11:40 tick's one board turn is SOLO-3's");
+  assert.equal(hhmm(rows["SOLO-2"].eta), "12:00", "eligible 11:38:50, but the 11:50 turn is taken");
+});
+
+test("krebs watch alive: board turns chain back to back, each when the last one ends, not one per 10 minutes", async () => {
+  const issues = [issue({ seq: 1, updated: at("11:36:30") }), issue({ seq: 3, updated: at("11:08:00") }), issue({ seq: 4, updated: at("11:09:00") })];
+  const rows = byKey(classify(await plan({ issues }), { watch: true }));
+  // SOLO-1's window ends 11:38:30 and the watcher re-arms the board for it: that run is the first, and it takes the
+  // board's one turn for whichever eligible ticket is first in line; the next starts when that turn ends (+8 s).
+  const etas = ["SOLO-1", "SOLO-3", "SOLO-4"].map((k) => rows[k].eta.slice(11, 19)).sort();
+  assert.deepEqual(etas, ["11:38:31", "11:43:39", "11:48:47"]);
+  assert.deepEqual(["SOLO-1", "SOLO-3", "SOLO-4"].map((k) => rows[k].queuePosition).sort(), [1, 2, 3]);
+  assert.match(rows["SOLO-4"].reason + rows["SOLO-3"].reason, /1 board turn at a time/);
+});
+
+test("krebs watch alive: a ticket in its quiet window starts the moment the window ends, a turn in flight pushes it past the turn's end", async () => {
+  const lone = byKey(classify(await plan({ issues: [issue({ seq: 1, updated: at("11:36:30") })] }), { watch: true }));
+  assert.equal(lone["SOLO-1"].eta.slice(11, 19), "11:38:31", "window ends 11:38:30; the watcher re-arms the board for it");
+  const p = await plan({ issues: [issue({ seq: 1, updated: at("11:36:30") }), issue({ seq: 5, updated: at("11:20:00") })] });
+  const turns = new Map([["i-5", { turns: [{ id: "c1", reason: "ticket-grooming", kind: "triage", state: "running", since: Date.parse(at("11:35:00")) }], history: [] }]]);
+  const busy = byKey(classify(p, { watch: true, turns }));
+  assert.equal(busy["SOLO-1"].eta.slice(11, 19), "11:40:08", "triage SOLO-5 started 11:35:00, ~5 min: ends 11:40:00, +8 s");
+});
+
+test("scope busy, no watcher: the tick that would take the next ticket waits for the turn in flight", async () => {
+  const items = [{ ticket: { key: "T-1", updatedAt: at("11:00:00"), seq: 1, id: "a" }, kind: "triage", eligibleMs: Date.parse(at("11:02:00")) }];
+  const map = projectBoardTurns({ items, nextTickMs: Date.parse(at("11:40:00")), freeAtMs: Date.parse(at("11:44:00")) });
+  assert.equal(map.get("T-1").tickMs, Date.parse(at("11:50:00")));
+  const free = projectBoardTurns({ items, nextTickMs: Date.parse(at("11:40:00")), freeAtMs: Date.parse(at("11:39:00")) });
+  assert.equal(free.get("T-1").tickMs, Date.parse(at("11:40:00")));
+});
+
+test("a far-off quiet window (over an hour) is left to the backstop tick, not the watcher's re-arm", () => {
+  const nowMs = Date.parse(at("11:37:00"));
+  const items = [{ ticket: { key: "R-1", updatedAt: at("11:10:00"), seq: 1, id: "a" }, kind: "review", eligibleMs: Date.parse(at("13:30:00")) }];
+  const map = projectBoardTurns({ items, nextTickMs: Date.parse(at("11:40:00")), watch: { nowMs } });
+  assert.equal(map.get("R-1").tickMs, Date.parse(at("13:40:02")));
 });
 
 test("triage turn exactly 10 minutes old is not eligible, matching the tick (strictly older than 10 min)", () => {
@@ -334,11 +369,12 @@ test("status is read-only: the plan makes no Plane write, no publish, and leaves
 const BIN = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "bin", "krebs.mjs");
 const cli = (args, env = {}) => spawnSync(process.execPath, [BIN, ...args], { encoding: "utf8", env: { ...process.env, ...env }, timeout: 30_000 });
 
-test("cli: status is listed in --help, with the triage window the spec says (10 minutes, not 30)", () => {
+test("cli: status is listed in --help, with the triage window the spec says (2 minutes, not 10 or 30)", () => {
   const help = cli(["--help"]);
   assert.equal(help.status, 0);
   assert.match(help.stdout, /krebs status \[--board KEY\] \[--ticket KEY\] \[--json\]/);
-  assert.match(help.stdout, /unchanged for 10 minutes/);
+  assert.match(help.stdout, /unchanged for 2 minutes/);
+  assert.doesNotMatch(help.stdout, /unchanged for 10 minutes/);
   assert.doesNotMatch(help.stdout, /unchanged for 30 minutes/);
 });
 

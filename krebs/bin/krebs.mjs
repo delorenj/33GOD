@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 // krebs: the Krebs lifecycle v2 state manager (spec/lifecycle.v2.yaml).
 //
-//   krebs tick   [--board KEY] [--dry-run] [--json] [--verbose]
+//   krebs tick   [--board KEY] [--dry-run] [--json] [--verbose] [--trigger KIND]
 //                [--registry PATH] [--journal PATH]
 //   krebs status [--board KEY] [--ticket KEY] [--json] [--registry PATH] [--journal PATH]
+//   krebs watch  [--consumer NAME] [--registry PATH] [--journal PATH] [--verbose]
 //
 // `krebs tick` is the only Todo -> In Progress dispatcher. Candybar runs it
-// (krebs/.candybars/krebs-tick.candybar.toml); nothing else schedules it.
+// (krebs/.candybars/krebs-tick.candybar.toml) as the backstop; `krebs watch`
+// (deploy/krebs-watch.service) runs it per board when a Plane edit or a finished
+// agent turn says something changed (ADR 0002). Neither is a second clock.
 // No runtime dependencies: Pilot's Plane client and the bloodbank n8n
 // package's built dist are loaded from the sibling 33GOD checkouts.
 
@@ -14,21 +17,26 @@ import { parseArgs } from "node:util";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 
-import { loadBloodbank, loadPlane, realPublisher } from "../tick/deps.mjs";
+import { fileURLToPath } from "node:url";
+import { loadBloodbank, loadDurable, loadPlane, natsUrl, realPublisher } from "../tick/deps.mjs";
 import { scopesFromRegistry } from "../tick/registry.mjs";
 import { runTick } from "../tick/run.mjs";
 import { Journal, TURN_WINDOW_MS, boardTurnSends, defaultJournalPath, lastBoardTurns, sentCommands, stateDir } from "../tick/journal.mjs";
+import { quietWindows } from "../tick/quiet.mjs";
+import { WATCH_SUBJECTS, Watcher, childTickRunner, classifyEvent, journalEcho, routesFromScopes } from "../tick/watch.mjs";
+import { readWatchState, writeWatchState } from "../tick/watch-state.mjs";
 import { acquireLock } from "../tick/lock.mjs";
 import { formatReport } from "../tick/format.mjs";
-import { candystoreClient, candystoreLiveness } from "../tick/liveness.mjs";
+import { candystoreClient, candystoreLiveness, candystoreScopeBusy } from "../tick/liveness.mjs";
 import { SPEC_VERSION } from "../tick/lifecycle.mjs";
 import { buildStatus, collectBusy, collectTurns, formatStatus, formatTicket, recentActivity, ticketsInPool, ticketsWorthAsking, defaultInclude } from "../tick/status.mjs";
 
 const USAGE = `krebs: Krebs lifecycle v2 state manager (spec ${SPEC_VERSION})
 
 Usage:
-  krebs tick [--board KEY] [--dry-run] [--json] [--verbose] [--registry PATH] [--journal PATH]
+  krebs tick [--board KEY] [--dry-run] [--json] [--verbose] [--trigger KIND] [--registry PATH] [--journal PATH]
   krebs status [--board KEY] [--ticket KEY] [--json] [--registry PATH] [--journal PATH]
+  krebs watch [--consumer NAME] [--registry PATH] [--journal PATH] [--verbose]
 
 tick: for every scope in ~/.hermes/agents-registry.yaml (a row with a plane
 board, or board + scope_label), repair the lifecycle invariants, then dispatch
@@ -43,9 +51,19 @@ or a worker active in a worktree named for it) is released to Todo, or has its s
 agent:working removed. Candystore unreachable means hands off. A ticket released twice
 in a week without a handback is held with agent:failed instead.
 Then catch-up triage: a Todo ticket with no lifecycle:triaged, hold label, agent:working or
-epic label, unchanged for 10 minutes, gets a triage start command (max 1 board turn per scope
+epic label, unchanged for 2 minutes, gets a triage start command (max 1 board turn per scope
 per tick, shared with review turns; 6 per tick; oldest first; once per ticket version; no
-Plane write). Then review turns: In Progress + lifecycle:review, quiet 30 minutes.
+Plane write), and only while no board turn (triage or review, any ticket) is queued or running
+for that scope (Candystore; ADR 0002). Then review turns: In Progress + lifecycle:review, quiet 30 minutes.
+
+watch: the event path. A long-running JetStream consumer (durable "krebs-watch" on BLOODBANK_EVENTS)
+for Plane ticket events and the gateway's agent.invocation.completed/failed. Each event maps to a
+board; a burst of Plane edits settles 60 s, a finished turn 8 s, then 'krebs tick --board <id> --trigger
+<kind> --json' runs (the same code path as Candybar's tick). A ticket still inside its quiet window re-arms
+the board for the moment it ends; a held tick.lock retries (bounded). Krebs's own Plane writes are
+recognised in the journal and do not start a run. Writes ~/.local/state/krebs/watch.json (status reads it).
+  --trigger KIND  recorded on the journal's tick line (default "schedule", Candybar); watch passes
+                  plane-edit | turn-ended | quiet-window
 
 status: read-only (no Plane write, no publish, no lock, no journal write). Runs the tick's own
 dry-run plan and adds what the plan cannot say: per scope, the turns in flight right now
@@ -102,6 +120,8 @@ async function tick(flags) {
   // Belt and braces: Pilot's HTTP layer refuses every non-GET under PILOT_READ_ONLY.
   if (dryRun) process.env.PILOT_READ_ONLY = "1";
 
+  const trigger = flags.trigger || "schedule";
+  if (!/^[a-z][a-z0-9-]{0,31}$/.test(trigger)) return { code: 2, usage: `--trigger wants a short lowercase word (schedule, plane-edit, turn-ended), got ${JSON.stringify(flags.trigger)}` };
   const { bb, registryPath, registry, plane, scopes, skipped, usage } = await openRun(flags);
   if (usage) return { code: 2, usage };
 
@@ -111,11 +131,13 @@ async function tick(flags) {
   if (!dryRun) {
     lock = acquireLock(join(stateDir(), "tick.lock"));
     if (!lock) {
-      const report = { ok: true, busy: true, dryRun, at: new Date().toISOString(), spec: SPEC_VERSION, scopes: [], skipped, errors: [] };
+      const report = { ok: true, busy: true, dryRun, at: new Date().toISOString(), spec: SPEC_VERSION, trigger, scopes: [], skipped, errors: [] };
       return { code: 0, report };
     }
   }
+  let quiet = [];
   try {
+    const client = candystoreClient({ base: candystoreUrl() });
     const report = await runTick({
       registry,
       scopes,
@@ -131,10 +153,20 @@ async function tick(flags) {
       journal,
       dryRun,
       timeZone: process.env.KREBS_TZ || undefined,
-      liveness: candystoreLiveness({ client: candystoreClient({ base: candystoreUrl() }), fleet: bb.fleet }),
+      liveness: candystoreLiveness({ client, fleet: bb.fleet }),
+      scopeBusy: candystoreScopeBusy({ client }),
+      trigger,
+      triggerDetail: flags["trigger-detail"] || null,
+      boardFilter: flags.board || null,
+      // Tickets that only wait for their quiet window: `krebs watch` re-arms the board for the earliest.
+      inspect: (found) => {
+        const nowMs = Date.now();
+        quiet = found.flatMap((i) => quietWindows(i.tickets, nowMs).map((q) => ({ board: i.scope.identifier ?? i.scope.boardId, boardId: i.scope.boardId, ...q })));
+      },
     });
     report.registry = registryPath;
     report.journal = journalPath;
+    report.quiet = quiet;
     return { code: report.ok ? 0 : 1, report };
   } finally {
     lock?.release();
@@ -172,6 +204,7 @@ async function status(flags) {
     now: () => new Date(nowMs),
     timeZone: process.env.KREBS_TZ || undefined,
     liveness: candystoreLiveness({ client, fleet: bb.fleet, now: () => new Date(nowMs) }),
+    scopeBusy: candystoreScopeBusy({ client, now: () => new Date(nowMs) }),
     inspect: (found) => {
       inspected = found;
     },
@@ -208,6 +241,7 @@ async function status(flags) {
   const reviewsSent = boardTurnSends(journalEntries, nowMs - TURN_WINDOW_MS).review;
   const result = buildStatus({
     busyByScope,
+    watch: readWatchState({ nowMs }),
     inspected,
     journalEntries,
     nowMs,
@@ -236,6 +270,107 @@ async function status(flags) {
   return { code: 0, status: result, detail, compact: !flags.board && !focusKey };
 }
 
+const logLine = (line) => process.stdout.write(`${new Date().toISOString()} ${line}\n`);
+
+/**
+ * `krebs watch`: the event path (ADR 0002). Never returns while healthy; a fatal NATS error exits 1 and
+ * systemd restarts it. The durable consumer keeps its position on the server, so what arrives while this
+ * process is down is replayed on start (events older than ten minutes are skipped: the backstop tick has
+ * long since seen them).
+ */
+async function watch(flags) {
+  const bb = loadBloodbank();
+  const durable = loadDurable();
+  const registryPath = flags.registry || bb.registry.hermesRegistryPath();
+  const journalPath = flags.journal || defaultJournalPath();
+  const consumerName = flags.consumer || "krebs-watch";
+  const verbose = Boolean(flags.verbose);
+
+  let routes = null;
+  let routesAt = 0;
+  const refreshRoutes = async () => {
+    try {
+      const registry = await bb.registry.loadHermesRegistry(registryPath);
+      const { scopes } = scopesFromRegistry(registry, { activation: bb.registry.bloodbankActivation, defaultWorkspace: "33god" });
+      routes = routesFromScopes(scopes);
+      routesAt = Date.now();
+    } catch (err) {
+      if (!routes) throw err;
+      logLine(`registry reload failed (${String(err?.message ?? err).split("\n")[0]}); keeping the last routes`);
+      routesAt = Date.now();
+    }
+  };
+  await refreshRoutes();
+
+  const startedAt = new Date().toISOString();
+  const script = fileURLToPath(import.meta.url);
+  const watcher = new Watcher({ run: childTickRunner({ script }), log: logLine });
+  const echo = journalEcho(journalPath);
+  const state = () => ({ pid: process.pid, startedAt, consumer: consumerName, registry: registryPath, boardsWatched: routes?.byBoard.size ?? 0, ...watcher.snapshot() });
+  const heartbeat = () => {
+    try {
+      writeWatchState(state());
+    } catch (err) {
+      logLine(`cannot write watch state: ${String(err?.message ?? err)}`);
+    }
+  };
+  heartbeat();
+  const beat = setInterval(heartbeat, 30_000);
+
+  const sub = await durable.consumeDurable(
+    await durable.jetstreamBackend({
+      host: natsUrl(),
+      stream: "BLOODBANK_EVENTS",
+      name: consumerName,
+      subjects: WATCH_SUBJECTS,
+      description: "krebs watch: Plane ticket edits and finished agent turns start a board-scoped krebs tick (ADR 0002)",
+      connectionName: "krebs-watch",
+      maxAckPending: 64,
+      onEnsured: (r) => logLine(`consumer ${consumerName}: ${r.action}${r.drift?.length ? ` (${r.drift.join(", ")})` : ""}`),
+    }),
+    {
+      catchUpWindowMs: 10 * 60 * 1000,
+      onMessage: async (msg) => {
+        let envelope;
+        try {
+          envelope = JSON.parse(Buffer.from(msg.data).toString("utf8"));
+        } catch {
+          return "term";
+        }
+        if (Date.now() - routesAt > 60_000) await refreshRoutes();
+        const c = watcher.onClassified(classifyEvent({ subject: msg.subject, envelope }, routes, { echo }));
+        if (c.ignored) {
+          if (verbose) logLine(`ignored ${msg.subject.split(".").slice(2).join(".")}: ${c.ignored}`);
+        } else {
+          logLine(`event ${c.kind}: ${c.detail} -> board ${c.boards.map((b) => routes.byBoard.get(b)?.identifier ?? b).join(", ")}`);
+        }
+        return "ack";
+      },
+      onStale: (m, ageMs) => logLine(`skipped a stale ${m.subject.split(".").slice(2).join(".")} (${Math.round(ageMs / 1000)}s old)`),
+      onWarning: (m, e) => logLine(`warning: ${m}${e ? `: ${String(e.message ?? e).split("\n")[0]}` : ""}`),
+      onFatal: (e) => {
+        logLine(`fatal: ${String(e?.message ?? e)}`);
+        process.exit(1);
+      },
+    },
+  );
+  logLine(`watching ${routes.byBoard.size} boards on ${WATCH_SUBJECTS.length} subjects (registry ${registryPath})`);
+  const stop = async (signal) => {
+    logLine(`${signal}: closing`);
+    clearInterval(beat);
+    try {
+      await sub.close();
+    } catch {
+      // closing
+    }
+    process.exit(0);
+  };
+  process.once("SIGTERM", () => void stop("SIGTERM"));
+  process.once("SIGINT", () => void stop("SIGINT"));
+  await sub.done;
+  return 1;
+}
+
 async function main() {
   const argv = process.argv.slice(2);
   if (argv.includes("--usage-spec") && !argv.slice(0, argv.indexOf("--usage-spec")).includes("--")) {
@@ -248,7 +383,7 @@ async function main() {
     process.stdout.write(`${USAGE}\n`);
     return 0;
   }
-  if (command !== "tick" && command !== "status") {
+  if (command !== "tick" && command !== "status" && command !== "watch") {
     process.stderr.write(`krebs: unknown command ${JSON.stringify(command)}\n\n${USAGE}\n`);
     return 2;
   }
@@ -264,6 +399,9 @@ async function main() {
         json: { type: "boolean" },
         verbose: { type: "boolean" },
         ticket: { type: "string" },
+        trigger: { type: "string" },
+        "trigger-detail": { type: "string" },
+        consumer: { type: "string" },
         registry: { type: "string" },
         journal: { type: "string" },
         help: { type: "boolean", short: "h" },
@@ -277,6 +415,14 @@ async function main() {
     process.stderr.write(`krebs status: --dry-run and --verbose are tick flags (status is always read-only)\n\n${USAGE}\n`);
     return 2;
   }
+  if (command !== "tick" && (flags.trigger || flags["trigger-detail"])) {
+    process.stderr.write(`krebs ${command}: --trigger belongs to tick\n\n${USAGE}\n`);
+    return 2;
+  }
+  if (command === "watch" && (flags.board || flags["dry-run"] || flags.ticket || flags.json)) {
+    process.stderr.write(`krebs watch: takes --consumer, --registry, --journal and --verbose only\n\n${USAGE}\n`);
+    return 2;
+  }
   if (command === "tick" && flags.ticket) {
     process.stderr.write(`krebs tick: --ticket belongs to status\n\n${USAGE}\n`);
     return 2;
@@ -284,6 +430,14 @@ async function main() {
   if (flags.help) {
     process.stdout.write(`${USAGE}\n`);
     return 0;
+  }
+  if (command === "watch") {
+    try {
+      return await watch(flags);
+    } catch (err) {
+      process.stderr.write(`krebs watch: ${String(err?.message ?? err)}\n`);
+      return 1;
+    }
   }
   try {
     const result = command === "status" ? await status(flags) : await tick(flags);

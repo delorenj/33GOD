@@ -24,9 +24,9 @@ function setup({ boards, board, publish = fakePublisher(), journal = new MemoryJ
 const scopeOf = (report, agentId) => report.scopes.find((s) => s.agentId === agentId);
 const triages = (publish) => publish.sent.filter((c) => c.data.context.reason === TRIAGE_REASON);
 
-// NOW is 15:00Z. 14:00Z is an hour old; 14:45Z is 15 minutes old.
+// NOW is 15:00Z. 14:00Z is an hour old; 14:59Z is one minute old, inside the 2-minute quiet window.
 const OLD = "2026-11-14T14:00:00Z";
-const FRESH = "2026-11-14T14:45:00Z";
+const FRESH = "2026-11-14T14:59:00Z";
 
 const lanes = laneModel(STATES);
 const labelNameOf = new Map(LABEL_NAMES.map((n) => [labelId(n), n]));
@@ -42,10 +42,10 @@ test("triage eligibility: triaged, held, working, epic, too fresh, not Todo are 
   assert.match(why({ seq: 5, labels: ["agent:working"] }), /agent:working/);
   assert.match(why({ seq: 6, labels: ["epic"] }), /epic container/);
   assert.match(why({ seq: 7, labels: ["epic:big-thing"] }), /epic container/);
-  assert.match(why({ seq: 8, updated: "2026-11-14T14:55:00Z" }), /last 10 minutes/);
-  assert.match(why({ seq: 9, updated: "2026-11-14T14:50:00Z" }), /last 10 minutes/, "exactly 10 minutes (one tick) is not older than 10 minutes");
-  assert.equal(why({ seq: 10, updated: "2026-11-14T14:49:59Z" }), null);
-  assert.equal(why({ seq: 12, updated: FRESH }), null, "15 minutes old is past the one-tick window");
+  assert.match(why({ seq: 8, updated: "2026-11-14T14:59:00Z" }), /last 2 minutes/);
+  assert.match(why({ seq: 9, updated: "2026-11-14T14:58:00Z" }), /last 2 minutes/, "exactly 2 minutes is not older than 2 minutes");
+  assert.equal(why({ seq: 10, updated: "2026-11-14T14:57:59Z" }), null);
+  assert.equal(why({ seq: 12, updated: "2026-11-14T14:45:00Z" }), null, "15 minutes old is past the quiet window");
   assert.match(why({ seq: 11, updated: null }), /no updated_at/);
   assert.match(why({ seq: 12, state: "backlog" }), /not in Todo/);
   assert.match(why({ seq: 13, state: "ip" }), /not in Todo/);

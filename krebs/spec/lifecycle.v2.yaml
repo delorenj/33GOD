@@ -22,9 +22,14 @@
 #   9. (2026-11-18, ADR 0001) Krebs is the one triage sender. The n8n Ticket
 #      Triage lane is retired; the gateway publishes agent.invocation.queued when
 #      it claims a command, so every queued turn is visible whoever sent it.
+#  10. (2026-11-20, ADR 0002) Krebs also runs on events: a Plane edit or a finished agent turn
+#      starts a board-scoped tick (`krebs watch`); Candybar's 10-minute tick stays as the backstop.
+#      Because runs no longer happen one per 10 minutes, a scope may hold at most ONE board turn
+#      (triage or review, any ticket) queued or running at a time, enforced by the tick against
+#      Candystore, and the triage quiet window drops from 10 minutes to 2.
 #
 # Human-readable companion: ../docs/lifecycle.md.
-spec_version: 2.3.0
+spec_version: 2.4.0
 
 lanes:                       # exact Plane state names; order is the board order
   - {name: Backlog,     group: backlog,   default: true}
@@ -155,7 +160,7 @@ orphans:                     # 33GOD-93: turns that ended with no handback and n
   journal: orphan.release, orphan.unstick, orphan.fail
 
 catch_up:                    # krebs sends every board turn (triage, review) itself
-  triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for 10 minutes (one tick after the edit settles) and with no live turn (orphans.liveness), gets a triage turn (the Fleet node's groomTicket command; no Plane write); krebs is the only triage sender (the n8n Ticket Triage lane is retired, ADR 0001); the command id is derived from board + ticket + updated_at (a ticket version is sent at most once), and a ticket is capped per episode (catch_up_attempts); at most 1 per scope (a desk serializes board turns on its lease; two at once collide) and 6 per tick, triage before review across the tick, oldest first; a candidate with a live turn is skipped and the next oldest takes the scope's turn (at most 3 liveness checks per scope per tick; ADR 0001)
+  triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for board_turns.triage_quiet_seconds (2 minutes, since the event path debounces the edit itself) and with no live turn (orphans.liveness), gets a triage turn (the Fleet node's groomTicket command; no Plane write); krebs is the only triage sender (the n8n Ticket Triage lane is retired, ADR 0001); the command id is derived from board + ticket + updated_at (a ticket version is sent at most once), and a ticket is capped per episode (catch_up_attempts); at most 1 per scope per tick and 6 per tick, triage before review across the tick, oldest first, and none at all while the scope already has a board turn queued or running (board_turns.per_scope, ADR 0002); a candidate with a live turn is skipped and the next oldest takes the scope's turn (at most 3 liveness checks per scope per tick; ADR 0001)
   review: an In Progress ticket with lifecycle:review, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes and with no live turn (orphans.liveness), gets a review turn from its scope's PM (reason ticket-review, dispatcher krebs-tick; no Plane write; the chip sets agent:working while it runs); it shares the 1 board turn per scope per tick with triage (a scope alternates; after a triage turn its oldest review goes first, and the other way round, so neither backlog starves the other) and the 6 per tick; the command id is derived from board + ticket + updated_at + attempt; a review with no verdict is asked again after 3 hours, at most 3 times per episode (catch_up_attempts)
   dispatch: a dispatch whose publish failed is republished with the same command id on the next tick
 
@@ -182,7 +187,16 @@ catch_up_attempts:           # added 2026-11-20 (33GOD-33: 50 review turns in 42
   unreadable: if the activity log cannot be read, the ticket is neither sent a turn nor parked, and the tick warns
   first_turn: a ticket with no prior board turn on record never reads the activity log
 
-clock: Candybar `krebs-tick` (exec runner). No private loop, no other dispatcher.
+board_turns:                 # ADR 0002: when a board turn (triage, review) may be sent, and how the event path times a run
+  per_scope: 1               # a scope has at most ONE board turn queued or running, any ticket, either kind (a desk serializes board turns on its lease; two at once collide). The tick asks Candystore (gateway queued/started with no completed/failed, plus its own journalled sends) and sends none while one is in flight; Candystore unreachable means none. A board turn with no end on record after 3 hours is presumed dead.
+  triage_quiet_seconds: 120  # a Todo ticket unchanged this long is a triage candidate (600 while the 10-minute tick was the only clock)
+  review_quiet_seconds: 1800 # a handed-back ticket unchanged this long is a review candidate
+  settle_seconds:            # krebs watch: wait this long after the last event of a burst, then run that board's tick
+    plane_edit: 60           # (never later than 180 s after the burst's first edit)
+    turn_ended: 8            # a gateway agent.invocation.completed or .failed: the next board turn starts when the previous one ends
+  triggers: [schedule, plane-edit, turn-ended, quiet-window]   # recorded on the journal's tick line as `trigger`
+
+clock: Candybar `krebs-tick` (exec runner, every 10 minutes) is the backstop and the only clock. The event path (`krebs watch`, an event-driven systemd service on a JetStream consumer, no timer, no loop of its own) runs the same tick for one board when a Plane ticket event or a gateway turn end arrives, and re-arms a board only for a time already read off it (a ticket's quiet window ending) or a bounded retry (tick.lock held; Candystore not yet caught up). Krebs's own Plane writes are recognised in the journal and do not start a run. No other dispatcher.
 writes: Pilot plane.js (delta label edits) for Krebs; px / px-apply for PM passes.
 out_of_scope:                # owner, 2026-11-14
   boards: [TIKT]             # human content pipeline; keeps its own lanes

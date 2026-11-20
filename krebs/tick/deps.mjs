@@ -54,6 +54,21 @@ export function loadBloodbank(env = process.env) {
   return { fleet, nats, registry, dist };
 }
 
+/** The n8n package's durable JetStream consumer (`krebs watch`): consumeDurable + jetstreamBackend. */
+export function loadDurable(env = process.env) {
+  const dist = join(bloodbankN8nDir(env), "dist");
+  let durable;
+  try {
+    durable = require(join(dist, "durable.js"));
+  } catch (err) {
+    throw new Error(`cannot load the bloodbank n8n package dist at ${dist} (build it: npm run build there): ${err.message}`);
+  }
+  for (const name of ["consumeDurable", "jetstreamBackend"]) {
+    if (typeof durable[name] !== "function") throw new Error(`bloodbank n8n dist at ${dist} has no ${name}(); rebuild it`);
+  }
+  return durable;
+}
+
 /** Pilot's Plane client bound to the shared Pilot credential. */
 export async function loadPlane(env = process.env) {
   const dir = pilotDir(env);

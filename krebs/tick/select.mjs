@@ -159,15 +159,18 @@ export function orphanKind(ticket, nowMs, quietMs) {
 }
 
 /**
- * spec triage: a Todo ticket unchanged this long gets a triage turn. One tick: krebs is the
- * only triage sender since the n8n Ticket Triage lane was retired (2026-11-18, ADR 0001), and
- * the quiet window only keeps it from triaging a ticket someone is still writing.
+ * spec board_turns.triage_quiet_seconds: a Todo ticket unchanged this long gets a triage turn.
+ * krebs is the only triage sender since the n8n Ticket Triage lane was retired (2026-11-18, ADR 0001),
+ * and the quiet window only keeps it from triaging a ticket someone is still writing. Since the event
+ * path (`krebs watch`, ADR 0002) debounces Plane edits itself, two minutes is enough; it was ten when
+ * the only clock was a 10-minute tick. A spec test pins this number to spec/lifecycle.v2.yaml.
  */
-export const TRIAGE_MIN_AGE_MS = 10 * 60 * 1000;
+export const TRIAGE_MIN_AGE_MS = 2 * 60 * 1000;
 /** At most this many catch-up triages per scope per tick, and per tick overall. */
-// One per scope: a desk serializes its board turns on the board-driver lease, so two triage
+// One per scope per tick: a desk serializes its board turns on the board-driver lease, so two triage
 // turns sent to one desk in the same instant collide and the second backs off unstamped
-// (seen on navi-pm and pjangler-pm, 2026-11-14). One per scope per tick never races itself.
+// (seen on navi-pm and pjangler-pm, 2026-11-14). Event-driven runs no longer serialize board turns in
+// time, so the tick also refuses a board turn while one is queued or running for the scope (ADR 0002).
 export const TRIAGE_SCOPE_CAP = 1;
 export const TRIAGE_TICK_CAP = 6;
 

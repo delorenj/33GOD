@@ -236,3 +236,20 @@ export function lastBoardTurns(entries) {
   }
   return out;
 }
+
+/**
+ * The board turns (triage, review) krebs published, per agent id: [{commandId, at, kind, key}], oldest first.
+ * The scope-busy guard (ADR 0002) counts one with no end on record as queued or running, which covers the
+ * seconds between krebs' publish and the gateway's queued event reaching Candystore.
+ */
+export function sentBoardTurnsByAgent(entries) {
+  const out = new Map();
+  for (const e of entries) {
+    if (e?.ok !== true || !e.agent_id || !e.command_id) continue;
+    if (e.action !== "triage.publish" && e.action !== "review.publish") continue;
+    const list = out.get(e.agent_id) ?? [];
+    list.push({ commandId: e.command_id, at: e.ts, kind: e.action === "review.publish" ? "review" : "triage", key: e.key ?? null });
+    out.set(e.agent_id, list);
+  }
+  return out;
+}
