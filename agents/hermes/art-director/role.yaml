@@ -137,3 +137,21 @@ template_rev: "3b9b7e89b95dc505031c36245a93effa17dd2781"
 deployment:
   local_only: false
   systemd: required
+company_identity:
+  version: 1
+  subject: "7d3abe65-32ea-488c-a83c-bda671a0316a"
+  handle: "33god-art-director"
+  email: "33god-art-director@agents.delo.sh"
+  status: "active"
+  enrolled_at: "2026-11-20T02:41:52.384Z"
+  bindings:
+    cloudflare_access:
+      principal: "9e0a269a3151ac680f17d676ac8cea9f.access"
+      instance: "https://delonet.cloudflareaccess.com"
+      credential_ref: "op://DeLoSecrets/65owmx7tv37l43htr7uonznacu/qi7u4ebqsm3moxk3ctltcnjmj4"
+    plane:
+      principal: "0d5e8589-635d-41d1-9f8d-63963e61ce8e"
+      instance: "https://plane.delo.sh/33god"
+      credential_ref: "op://DeLoSecrets/cqm5e6uvt4rsxeqovqrfl5mxya/credential"
+      attribution_mode: "native"
+      native_actor_id: "0d5e8589-635d-41d1-9f8d-63963e61ce8e"
