@@ -29,7 +29,12 @@ Select checks that demonstrate the slice's actual behavior:
   behavior, ensure old attempts cannot close newer ones, and ensure parked or
   expired workers do not retain execution capacity. For label writes, prove PM
   updates preserve unrelated labels and assignees and cannot remove the
-  pipeline-owned `agent:working` label.
+  pipeline-owned `agent:working` label. For a board that looks stalled, read
+  `krebs status` or the tick journal before changing anything; triage and
+  queued turns write nothing visible to Plane. For trigger or cadence changes,
+  prove overlapping scheduled and event-triggered ticks both complete, and that
+  a scope never holds two board turns at once; a removed fixed interval may
+  have been the only thing spacing them.
 - Board consolidation: read archived status and tickets directly before moving
   or archiving a board; an archived board's empty list is not evidence that it
   has no open tickets. Read back the destination tickets before retiring a board.
