@@ -53,6 +53,11 @@ Select checks that demonstrate the slice's actual behavior:
   rewriting history requires explicit authorization.
 - Holocene code changes: typecheck and build; add browser interaction or live
   route verification when the changed behavior is visible there.
+- Factory asset changes: inspect the meaningful animation at the floor's actual
+  overview scale, not just in close-up. Clean asset validation, typechecks, and
+  console output do not prove the mechanism reads at that distance. Use the
+  Factory's temporary-output checks; its normal build output is a live deploy,
+  not an authorized validation step in an asset-only run.
 - Scroll/playhead changes: exercise small wheel and keyboard inputs separated
   by pauses in both directions across a transition, including stopping midway.
   Verify progress is not repeatedly snapped back to the starting boundary;
@@ -102,5 +107,5 @@ checks. Treat idle clients as unobserved until exercised.
 Preserve unrelated WIP. Triage audit failures against the current slice before
 remediating them: a finding caused by another agent's in-progress work is a
 coordination input, not a gate for unrelated delivery. Land coherent units
-promptly on component main and root main. Do not add speculative review layers
-or repeat unchanged checks.
+promptly on component main and root main unless the task assigns delivery to a
+wrapper. Do not add speculative review layers or repeat unchanged checks.

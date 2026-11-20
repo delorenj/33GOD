@@ -5,11 +5,16 @@ description: 33GOD-specific extension of the merge-forward workflow, including p
 
 # 33GOD merge-forward
 
-Apply the [generic merge-forward workflow](../../../../33god-platform/skills/merge-forward/SKILL.md), then these 33GOD boundaries. Live source and explicit user instructions outrank historical prose.
+Apply the [generic merge-forward workflow](../../../../33god-platform/skills/merge-forward/SKILL.md) within the task's explicit write and delivery boundaries, then these 33GOD boundaries. Live source and explicit user instructions outrank historical prose.
 
 ## Operating model
 
 This is one user and one decision-maker working in pre-production. Deliver the smallest useful slice, verify its changed behavior, and immediately land component `main` followed by root `main`. Preserve unrelated work and avoid long-lived integration branches.
+
+For wrapper-owned tasks with explicit path allowlists or no-Git instructions,
+honor those limits: leave prohibited staging, commits, and pushes to the wrapper.
+Report a handoff, not a completed merge. If a needed integration change is outside
+the allowlist, flag it in the permitted handoff rather than editing shared files.
 
 The 33GOD skill applies to this repository and its owned components only. If a
 request or transcript is primarily about a sibling repository, stop and resume
