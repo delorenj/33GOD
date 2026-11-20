@@ -19,8 +19,8 @@
      (the pickup chip's clearing edit, Candystore's ingest), then run those boards. This is what chains
      triages back to back: the next one starts when the previous turn ends.
 3. **The tick runs as `krebs tick --board <id> --json --trigger <kind>`** (the same code path as Candybar's), and its
-   journal line records `trigger` (`schedule`, `plane-edit`, `turn-ended`, `quiet-window`, `lock-retry`,
-   `busy-lag`), `trigger_detail` and `board`.
+   journal line records `trigger` (`schedule`, `plane-edit`, `turn-ended`, `quiet-window`; a lock or
+   Candystore-lag retry keeps the trigger of the run it repeats), `trigger_detail` and `board`.
 4. **The triage quiet window drops from 10 minutes to 2** (spec `board_turns.triage_quiet_seconds`). The watcher
    debounces the edit itself, so the window only has to outlast the debounce. A ticket still inside its window when
    a run happens re-arms the board for the moment the window ends (read off the tick report), if that is under an
