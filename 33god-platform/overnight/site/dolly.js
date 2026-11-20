@@ -123,7 +123,7 @@
       if (reduced()) { jump(px); return; }
       var dist = Math.abs(px - y), vh = window.innerHeight || 1;
       tw = { from: y, to: 0, t0: 0, ms: ms || Math.max(GLIDE_MS[0], Math.min(GLIDE_MS[1], 300 + 500 * dist / vh)), ease: ease || smooth };
-      window.scrollTo({ top: px, behavior: 'instant' });
+      window.scrollTo({ top: px, behavior: 'auto' });   // 'auto' is instant: the page sets no smooth scrolling
       tw.to = window.scrollY; prevT = tw.to; v = 0;
       schedule();
     }
@@ -152,19 +152,23 @@
       var el = e.target, tag = el && el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || (el && el.isContentEditable)) return;
       if (e.key === ' ' && e.shiftKey) dir = -1;
+      if (e.repeat && tw) { e.preventDefault(); return; }   // a held key plays one stop at a time, never races ahead
       var o = origin(), from = (tw ? tw.to : target()) - o;   // a second press chains from where the glide is going
       var goal = stopOf(from, dir);
       if (goal == null) return;                               // past the last stop: the browser scrolls as usual
       e.preventDefault();
       clearTimeout(idle); lastDir = 0;
       anchor = goal + o;
-      glide(goal + o);
+      // Play the stretch the way the score shapes it when one glide spans it (same move as a wheel stop).
+      var s = seamOf ? seamOf((from + goal) / 2) : null;
+      var own = s && s.from <= Math.min(from, goal) + 1 && s.to >= Math.max(from, goal) - 1;
+      glide(goal + o, own ? s.ms : 0, own ? s.ease : null);
     }
     function onFree(e) { if (held && !isTouch(e) && (e.type !== 'pointermove' || e.buttons === 0)) { held = 0; arm(POINTER_IDLE_MS); } }
 
     function jump(px) {
       tw = null;
-      window.scrollTo({ top: px, behavior: 'instant' });
+      window.scrollTo({ top: px, behavior: 'auto' });
       y = lastTarget = anchor = prevT = window.scrollY; v = 0; lastDir = 0; burst = false;
       clearTimeout(idle);
       onFrame(y, { moving: false, velocity: 0 });

@@ -163,6 +163,7 @@
     }
 
     api.layout = function (vh) {
+      vh = Math.max(1, vh || 0);                 // a hidden or not-yet-laid-out viewport still compiles
       var k = scale * vh / 100;
       var glides = [], stops = [];
       majors.forEach(function (M) {
@@ -175,17 +176,19 @@
         M.minors.forEach(function (mn) {
           var a = b0 + L(mn.start, M.body, k, where(M, mn) + '.start'), z = b0 + L(mn.end, M.body, k, where(M, mn) + '.end');
           if (!(z > a)) throw new Error(where(M, mn) + ': end must be after start');
+          if (a < b0 - 0.5 || z > b1 + 0.5) throw new Error(where(M, mn) + ': runs outside its major\'s body (start and end are shares or vh of the body)');
           var fr = [0], val = [0];
           if (mn.steps) { for (var n = 1; n <= mn.steps; n++) { fr.push(n / mn.steps); val.push(n / mn.steps); } }
           else {
             mn.beats.forEach(function (b) {
               var f = L(b.at, z - a, k, where(M, mn) + '.beats.' + b.id) / (z - a);
+              if (f > 1 && f < 1 + 1e-9) f = 1;
               if (!(f > fr[fr.length - 1]) || f > 1) throw new Error(where(M, mn) + ': beat ' + b.id + ' must come after the one before it, inside the minor');
               fr.push(f); val.push(b.value != null ? num(b.value, where(M, mn) + '.beats.' + b.id + '.value') : f);
             });
             if (fr[fr.length - 1] < 1) { fr.push(1); val.push(1); }
           }
-          mn.a = a; mn.z = z; mn.fr = fr; mn.val = val;
+          mn.a = a; mn.z = z; mn.fr = fr; mn.val = val; mn.tol = 1 / (z - a);   // one px, as a share of the minor
         });
         // Where an arriving reader lands: a share or vh from the start, or the end of a named minor.
         var land = M.land;
@@ -200,7 +203,8 @@
       });
       majors.forEach(function (M, i) {
         var N = majors[i + 1];
-        stops.push(M.landing);
+        // The film's first section is where the reader already is: its stop is the top, not its landing.
+        stops.push(i === 0 ? M.start : M.landing);
         if (N && M.outLen > 0) glides.push({ from: M.bodyEnd, to: N.landing, ms: M.outMs, ease: M.outTiming, kind: 'out', major: M.id });
         if (M.seamIn) glides.push({ from: M.seamIn.from, to: M.seamIn.to, ease: PRESETS.smoothstep, kind: 'in', major: M.id });
         var arrival = Math.max(M.landing, M.seamIn ? M.seamIn.to : -Infinity);
@@ -208,12 +212,13 @@
           if (!mn.glide) return;
           for (var n = 0; n < mn.fr.length - 1; n++) {
             var a = Math.max(lerp(mn.a, mn.z, mn.fr[n]), arrival), z = Math.min(lerp(mn.a, mn.z, mn.fr[n + 1]), M.bodyEnd);
-            if (z - a > 2) glides.push({ from: a, to: z, ms: mn.ms, ease: mn.timing, kind: 'minor', major: M.id, minor: mn.id });
+            // A minor's own start is no stop of its own: nothing has happened there yet.
+            if (z - a > 2) glides.push({ from: a, to: z, ms: mn.ms, ease: mn.timing, kind: 'minor', major: M.id, minor: mn.id, head: n === 0 && a > arrival });
           }
         });
       });
       // An act statement's handover starts on the same held card the reader landed on: not a stop of its own.
-      glides.forEach(function (g) { if (g.kind !== 'in') stops.push(g.from); stops.push(g.to); });
+      glides.forEach(function (g) { if (g.kind !== 'in' && !g.head) stops.push(g.from); stops.push(g.to); });
       // A stop strictly inside another glide would settle, then glide straight on: say so once.
       if (!api.warned) glides.forEach(function (g) {
         stops.forEach(function (y) { if (y > g.from + 2 && y < g.to - 2 && !api.warned) { api.warned = true; console.warn('Score: a stop at ' + Math.round(y) + 'px sits inside the ' + g.kind + ' glide of ' + g.major + (g.minor ? '/' + g.minor : '') + '; give one of the overlapping minors glide: false'); } });
@@ -232,12 +237,13 @@
     function majorAt(y) { var i = 0; while (i < majors.length - 1 && y >= majors[i + 1].start) i++; return majors[i]; }
     function idx(m) { return typeof m === 'number' ? majors[m] : byId[m]; }
 
-    function stopsPassed(y) { var s = api.stops, lo = 0, hi = s.length; while (lo < hi) { var mid = (lo + hi) >> 1; if (s[mid] <= y + 1e-6) lo = mid + 1; else hi = mid; } return lo; }
+    function stopsPassed(y) { var s = api.stops, lo = 0, hi = s.length; while (lo < hi) { var mid = (lo + hi) >> 1; if (s[mid] <= y + 1) lo = mid + 1; else hi = mid; } return lo; }
     api.index = function (id) { return byId[id] ? byId[id].i : -1; };
     api.at = function (y) {
       var M = majorAt(y);
       var enter = M.inLen > 0 ? seg(y, M.start, M.bodyStart) : 1;
-      var exit = M.outLen > 0 ? seg(y, M.bodyEnd, M.end) : 0;
+      // Rests sit up to a px past their stop (rounding, device pixels): a px of slack keeps the body whole there.
+      var exit = M.outLen > 0 ? seg(y, M.bodyEnd + 1, M.end) : 0;
       return {
         i: M.i, id: M.id, major: M,
         p: seg(y, M.start, M.end),                 // through the whole major
@@ -262,7 +268,7 @@
       var p = seg(y, mn.a, mn.z), fr = mn.fr, n = 0;
       while (n < fr.length - 2 && p >= fr[n + 1]) n++;
       var t = lerp(mn.val[n], mn.val[n + 1], mn.curve(seg(p, fr[n], fr[n + 1])));
-      var step = 0; for (var k = 1; k < fr.length; k++) if (p >= fr[k] - 1e-6) step = k;
+      var step = 0; for (var k = 1; k < fr.length; k++) if (p >= fr[k] - mn.tol) step = k;
       var beats = mn.beats.length, beat = beats ? Math.min(step, beats) - 1 : -1;
       return { p: p, t: t, step: step, steps: fr.length - 1, beat: beat, beatId: beat >= 0 ? mn.beats[beat].id : null, active: p > 0 && p < 1 };
     };

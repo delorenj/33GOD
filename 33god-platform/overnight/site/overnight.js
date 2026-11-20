@@ -633,12 +633,12 @@
     }, [beats]);
 
     // A nav jump lands where a reader arriving at the beat would (a rest point), or at body progress q.
-    var jump = useCallback(function (i, q) {
+    var jump = useCallback(function (i, q) {   // q: the beat's body progress (its set piece's timeline)
       var top = trackRef.current ? trackRef.current.offsetTop : 0;
-      var px = top + (q != null ? SC.qPx(i, q) : SC.landing(i));
+      var px = top + Math.ceil(q != null ? SC.qPx(i, q) : SC.landing(i));
       if (dollyRef.current) dollyRef.current.jump(px); else window.scrollTo({ top: px, behavior: 'auto' });
     }, [beats]);
-    var jumpTo = useCallback(function (id, hold) { jump(I[id], hold); }, [I, jump]);
+    var jumpTo = useCallback(function (id, q) { jump(I[id], q); }, [I, jump]);
 
     /* the dolly: scroll position in, camera, clock and sky out */
     var frame = useCallback(function (yAbs) {
@@ -986,6 +986,8 @@
     var ids = spec.majors.map(function (m) { return m.id; }).join(','), want = M.beats.map(function (b) { return b.id; }).join(',');
     if (ids !== want) throw new Error('score.json majors (' + ids + ') do not match the manifest beats (' + want + ')');
     var B = {}; M.beats.forEach(function (b) { B[b.id] = b; });
+    // An act statement lives in the manifest (the words) and the score (its `in`): they must agree.
+    spec.majors.forEach(function (m) { if (!!B[m.id].interlude !== !!(m['in'] && m['in'].len)) throw new Error('score.json: ' + m.id + (B[m.id].interlude ? ' opens an act in the manifest but has no "in" in the score' : ' has an "in" but no act statement in the manifest')); });
     var T = M.transcript;
     var score = window.Score.compile(spec, { vars: {
       staff: B.staff.copy.staff.length, loop: B['runs-on-itself'].copy.steps.length, checklist: B.pjangler.copy.checklist.length,
