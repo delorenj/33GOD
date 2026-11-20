@@ -742,17 +742,17 @@
       "setPiece": "building.power",
       "len": 260,
       "flagship": true,
-      "kicker": "The power company",
+      "kicker": "The power company. Tokens in, work out.",
       "title": "The Gateway. Every model, under one name.",
-      "body": "A provider-agnostic, multi-tenant LLM gateway with a multi-tiered, role-based router. Employees ask for a role, never a model, and never learn which provider answered. The router weighs every pool at once on usage windows, resets, token burn rate, recent trends and cooldowns, and keeps each one on schedule. Nothing drains early. Nothing expires unused.",
+      "body": "A provider-agnostic, multi-tenant LLM gateway with a multi-tiered, role-based router. Employees ask for a role, never a model, and never have to care which provider answers. The router paces every subscription against its own usage windows, reset times, burn rate and cooldowns. When a pool runs out, the chain knows where to go next: subscriptions, then metered, then free, held to 90% of each daily cap.",
       "tags": [
         "GATEWAY"
       ],
       "staged": true,
       "copy": {
-        "aside": "Every provider's cache goes in one ledger, and a thread stays with its model while its cache is warm. When it does have to move, it moves without losing the task.",
-        "cardTitle": "automaticai/auto",
-        "cardNote": "Orchestrator, subagent or fast. Seven rungs. One name for every tenant, and each draws on its own seats first.",
+        "aside": "Cache tokens from every provider are counted one way, in one ledger. A thread stays with its model while its cache pays off. When it has to move, its whole history moves with it, and the next model picks up the task.",
+        "cardTitle": "api.automaticai.io",
+        "cardNote": "Three roles: orchestrator, subagent, fast. Seven rungs. Every tenant gets the same roles, and each person's own subscriptions are walled off and spent first.",
         "pools": [
           {
             "name": "01 · Subscription"
@@ -771,34 +771,34 @@
           "drawing": "Drawing",
           "spent": "Spent",
           "standby": "Waiting",
-          "lastResort": "Last resort",
-          "grown": "+1 tonight"
+          "lastResort": "Backstop",
+          "grown": "+1 pool"
         },
         "punch": "Pool 01 just ran dry. Not one window flickered.",
-        "stamp": "Counted from the gateway's route catalog, 20 Nov 2026: 112 routes, 43 free models in 13 pools. Tonight's dry pool is staged.",
+        "stamp": "Counted from the gateway's route catalog, 20 Nov 2026: 112 routes, and a free family of 43 models in 13 pools. Tonight's dry pool and new free pool are staged.",
         "decisions": [
           {
-            "route": "orchestrator · rung 5 → pool 01 · pace",
+            "route": "orchestrator → pool 01 · resets first",
             "line": "01 resets soonest, so it spends first. Nothing expires unused."
           },
           {
-            "route": "orchestrator · rung 5 → pool 02 · pace",
-            "line": "01 is out until 09:00. 02 is furthest ahead of schedule, so it takes the work. Metered waits for every seat to run out; free never pushes a limit past 90%."
+            "route": "orchestrator → pool 02 · most room",
+            "line": "01 is out until 09:00. 02 is furthest ahead of schedule, so it takes the work. Metered starts only when every subscription is spent."
           },
           {
-            "route": "scout · 04:37 → pool 04 · deployed",
-            "line": "The scout signs up one more free provider, tests it and deploys it. The free pool only grows: 44 models in 14 pools."
+            "route": "scout · 04:37 → automaticai/free",
+            "line": "Every night at 04:37 a scout goes looking for one more free provider. When one qualifies, it signs up, tests it and deploys it."
           }
         ]
       },
       "log": [
         {
           "subject": "bloodbank.llm.allowance.observed",
-          "note": "A seat runs low. The router moves the work to the next pool before anyone notices."
+          "note": "A pool's usage window is read. When it runs low, the work moves to the next one."
         },
         {
           "subject": "bloodbank.workflow.task.completed",
-          "note": "The scout adds one more free provider. The pool only grows."
+          "note": "The scout finds one more free provider and deploys it."
         }
       ]
     },
@@ -1085,6 +1085,6 @@
     "ENRICHER": "Makes every event findable by meaning.",
     "PJANGLER": "The project factory. A registry and bootstrapper.",
     "HEYMA": "Transcription, translation and telephony, on any stack.",
-    "GATEWAY": "Every model under one name. Picks the provider so nobody else has to."
+    "GATEWAY": "Every model behind one front door. Picks the provider so nobody else has to."
   }
 }

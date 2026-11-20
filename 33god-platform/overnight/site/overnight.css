@@ -140,24 +140,30 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .gw__name { color: var(--stage-ink); text-transform: none; }
 .gw__pool { display: flex; flex-direction: column; gap: 5px; padding: 7px 0; border-top: 1px solid var(--stage-rule); transition: opacity var(--dur-window-on) var(--ease-settle); }
 .gw__pool.is-out { opacity: 0.6; }
-.gw__poolhead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; }
+.gw__poolhead { display: flex; align-items: center; gap: 10px; }
 .gw__poolname { color: var(--stage-ink-2); white-space: nowrap; transition: color var(--dur-window-on) var(--ease-settle); }
 .gw__pool.is-on .gw__poolname { color: var(--stage-ink); }
-.gw__state { margin-left: auto; font: 400 12px/16px var(--font-mono); color: var(--stage-ink-3); white-space: nowrap; }
+.gw__poolfoot { display: flex; align-items: center; gap: 12px; }
+.gw__state { flex: none; min-width: 7ch; text-align: right; font: 400 12px/16px var(--font-mono); color: var(--stage-ink-3); white-space: nowrap; }
 .gw__pool.is-on .gw__state { color: var(--window-working); }
-.gw__meter { position: relative; height: 3px; background: var(--stage-rule); border-radius: 1px; overflow: hidden; }
+.gw__meter { position: relative; flex: 1; height: 3px; background: var(--stage-rule); border-radius: 1px; overflow: hidden; }
 .gw__meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--stage-ink-3);
   width: calc((var(--from) + (var(--to) - var(--from)) * clamp(0, (var(--q) - var(--a)) / (var(--b) - var(--a)), 1)) * 100%); }
 .gw__pool.is-on .gw__meter i { background: var(--window-working); }
 .gw__decision { display: flex; flex-direction: column; gap: 4px; padding: 10px 0 2px; border-top: 1px solid var(--stage-ink-3); color: var(--stage-ink); }
 .gw__route { font-size: 12px; line-height: 16px; color: var(--window-working); }
-.gw__punch { padding-top: 8px; border-top: 1px solid var(--stage-rule); }
+/* The punch takes no room until the pool runs dry (rv's --k), so the early card has no hole in it. */
+.gw__punch { max-height: calc(var(--k) * 64px); overflow: hidden; padding-top: calc(var(--k) * 8px); border-top: 1px solid var(--stage-rule); }
 .gw__stamp { padding-top: 8px; border-top: 1px solid var(--stage-rule); }
-/* Short stages: the card must stand on the ground without reaching the header. The body already
-   says multi-tenant and the decision already says the pool ran dry, so those two lines go first. */
+/* Short stages: a card standing on the ground must not reach the header. Notes go first, on every
+   card; the gateway card also drops its tenancy note (the body says multi-tenant) and its punch line
+   (the router's decision already says the pool ran dry). */
 @media (max-height: 800px) {
-  .gw__head .caption-note, .gw__punch { display: none; }
+  .scard--list > .caption-note:not(.gw__stamp), .gw__head .caption-note, .gw__punch { display: none; }
 }
+/* Hovering a window puts its nameplate where the beat's card stands; the card steps back meanwhile. */
+.scard { transition: opacity var(--dur-window-on) var(--ease-settle); }
+.overlay.is-hovering .scard { opacity: 0.12; }
 
 /* ---------- set pieces ---------- */
 .sp-wrap { position: absolute; inset: 0; pointer-events: none; }
@@ -308,6 +314,8 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 @media (max-width: 900px) {
   .hud__nav a { display: none; }
   .hud__status, .hud__rule { display: none; }
+  .hud__clock { min-width: 0; }
+  .logview .on-clock__staged { display: none; }
   .sky { -webkit-mask-image: none; mask-image: none; }
   .captions, .captions--hero { left: 0; right: 0; width: auto; top: auto; bottom: 0; height: 48%; padding: 16px var(--stage-gutter) 0; align-items: flex-start; overflow: hidden; background: var(--stage-ground); border-top: 1px solid var(--stage-rule); }
   .scene { left: var(--stage-gutter); top: 8px; bottom: 48%; }

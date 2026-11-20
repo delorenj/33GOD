@@ -830,8 +830,10 @@
       ].concat(gc.pools.map(function (p, n) {
         var st = poolAt(n, q, gc.states), mt = GW_METERS[n];
         return h('div', { key: 'p' + n, className: 'gw__pool' + (st[0] === 'working' || st[0] === 'shipped' ? ' is-on' : st[0] === 'dark' ? ' is-out' : '') },
-          h('div', { className: 'gw__poolhead' }, h(O.Window, { state: st[0] }), h('span', { className: 'instrument gw__poolname' }, p.name), h('span', { className: 'gw__state' }, st[1])),
-          h('span', { className: 'gw__meter', 'aria-hidden': 'true' }, h('i', { style: { '--from': mt.from, '--to': mt.to, '--a': mt.a, '--b': mt.b } })));
+          h('div', { className: 'gw__poolhead' }, h(O.Window, { state: st[0] }), h('span', { className: 'instrument gw__poolname' }, p.name)),
+          h('div', { className: 'gw__poolfoot' },
+            h('span', { className: 'gw__meter', 'aria-hidden': 'true' }, h('i', { style: { '--from': mt.from, '--to': mt.to, '--a': mt.a, '--b': mt.b } })),
+            h('span', { className: 'gw__state' }, st[1])));
       })).concat([
         h('div', { key: 'd' + decisionAt(q), className: 'gw__decision', role: 'status' }, h('span', { className: 'instrument-log gw__route' }, dn.route), h('span', null, dn.line)),
         h('p', Object.assign({ key: 'punch' }, rv(GW_SWITCH + 0.03, 'call__said gw__punch')), gc.punch),
@@ -915,7 +917,7 @@
                 h('div', { className: 'bldg', style: { '--bs': size.bs } },
                   floors > FLOORS ? h('span', { className: 'beacon' + (beaconOn ? ' is-on' : ''), 'aria-hidden': 'true', style: { left: PAD + NEW_FLOOR.launch * PITCH_X + WIN_W / 2 } }) : null,
                   h(O.Building, { floors: floors, perFloor: PER, states: wst.states, you: wst.you, youLit: wst.youLit, size: 'lg', label: 'The company: a building of ' + floors + ' floors. Yours is the one window that stays dark.' }))),
-              h('div', { className: 'overlay', ref: overlayRef }, over),
+              h('div', { className: 'overlay' + (hover ? ' is-hovering' : ''), ref: overlayRef }, over),
               showGlass ? h('div', { className: 'glass-wrap' }, h(Glass, { M: M, id: id, q: q, I: I, i: pos.i, glassRef: glassRef, origin: waxAt.x + 'px ' + waxAt.y + 'px', waxLine: seats.named.WAX.line })) : null,
               h('div', { className: 'sp-wrap', ref: spRef }, sp))),
           h('div', { className: 'interlude', ref: interRef, 'aria-hidden': b.interlude ? null : 'true' },
