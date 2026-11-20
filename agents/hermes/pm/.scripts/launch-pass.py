@@ -3,8 +3,10 @@
 
 An interval driver (the interval-driver skill). A script, not the model, holds the context. Launch
 mode is DECLARED by a committed file at the repo root, `.launch.yaml`; this script never guesses it
-and never edits it. No file, or any mode other than `launch`, means steady state: the snapshot is
-the single line `launch-mode: steady`, so the unchanged snapshot costs 0 tokens.
+and never edits it. Only `launch` is active. No file, `steady` (pre-launch or internal) or `live`
+(in production: people can buy it and are using it) is quiet: the snapshot is the single line
+`launch-mode: steady` or `launch-mode: live`, so the unchanged snapshot costs 0 tokens. The lifecycle
+is `launch` -> `live`; `steady` is for projects that are neither.
 
   launch-pass.py --monitor         stable snapshot (Hermes hashes it; unchanged = the agent never starts)
   launch-pass.py --brief           the pass contract, the declaration, the rules pointer, the snapshot,
@@ -14,13 +16,16 @@ the single line `launch-mode: steady`, so the unchanged snapshot costs 0 tokens.
   launch-pass.py --check           parse and print the declaration as JSON (debugging; exit 1 if broken)
 
 Declaration (`.launch.yaml`, no status inside):
-  mode: launch | steady          declared: YYYY-MM-DD       source: "<doc + owner decision>"
+  mode: launch | live | steady   declared: YYYY-MM-DD       source: "<doc + owner decision>"
   finish_line: "<what launched means>"    target_date: YYYY-MM-DD or empty
   contract: [<repo-relative paths>]       epic: <BOARD-n>
   scopes: [<child dirs>]         # optional, monorepo parent only: child directories whose px scope this PM also drives
   cut_line:                      # optional ranking hint; the board stays the truth
     launch_critical: [..]
     after_launch: [..]
+  live_since: YYYY-MM-DD         # `mode: live` only: the day it went live (launch history fields stay)
+  live: {name, tagline, store_url, offer, platform, package, release, board, support, checkout,
+         fulfilment}            # `mode: live` only: read by the Holocene Live hub, never by this pass
 
 Allowed apply ops: comment, create, move, close, cancel, rank, link. Everything else is refused.
 `rank` has no px verb (px cannot reorder a lane), so it degrades to a `launch rank N` comment and the
@@ -66,6 +71,7 @@ PRIORITIES = ("urgent", "high", "medium", "low", "none")
 REF = re.compile(r"^([A-Z][A-Z0-9]*)-(\d+)$")
 MAX_CREATES = 3
 ROADMAP_LINES = 40
+MODES = ("launch", "live", "steady")  # lifecycle: launch (racing to a finish line) -> live (in production); steady is neither
 WAITING_SHOWN = 40
 STALE_HOURS = 48
 AGENT_COMMENT = re.compile(r"^(\[[A-Za-z0-9 _:.-]+\]|krebs\b|hermes\b|momo\b)", re.I)
@@ -173,49 +179,45 @@ def _scalar(value: str):
 
 
 def parse_yaml(text: str) -> dict:
-    """The tiny YAML subset `.launch.yaml` uses: scalars, inline and block lists, one nested map."""
-    out: dict = {}
-    top: str | None = None   # open top-level key
-    sub: str | None = None   # open key inside a nested map
+    """The tiny YAML subset `.launch.yaml` uses: scalars, inline and block lists, maps nested by indent
+    (the `live:` block of a `mode: live` declaration goes three deep)."""
+    rows = []
     for raw in text.splitlines():
         line = _strip_comment(raw).rstrip()
-        if not line.strip():
-            continue
-        indent = len(line) - len(line.lstrip())
-        body = line.strip()
-        if indent == 0:
-            if ":" not in body:
+        if line.strip():
+            rows.append((len(line) - len(line.lstrip()), line.strip()))
+    if rows and rows[0][0] != 0:
+        raise ValueError(f"indented line with no parent: {rows[0][1]!r}")
+
+    def block(i: int, indent: int):
+        if rows[i][1].startswith("- "):
+            items = []
+            while i < len(rows) and rows[i][0] == indent and rows[i][1].startswith("- "):
+                items.append(_scalar(rows[i][1][2:]))
+                i += 1
+            return items, i
+        out: dict = {}
+        while i < len(rows) and rows[i][0] == indent:
+            body = rows[i][1]
+            if ":" not in body or body.startswith("- "):
                 raise ValueError(f"not a key: {body!r}")
             key, _, val = body.partition(":")
             key = key.strip()
-            top, sub = key, None
-            out[key] = _scalar(val) if val.strip() else None
-            continue
-        if top is None:
-            raise ValueError(f"indented line with no parent: {body!r}")
-        if body.startswith("- "):
-            item = _scalar(body[2:])
-            if sub is not None:
-                container = out[top]
-                if not isinstance(container, dict):
-                    raise ValueError(f"list item under non-map {top}")
-                if not isinstance(container.get(sub), list):
-                    container[sub] = []
-                container[sub].append(item)
+            i += 1
+            if val.strip():
+                out[key] = _scalar(val)
+            elif i < len(rows) and (rows[i][0] > indent or (rows[i][0] == indent and rows[i][1].startswith("- "))):
+                out[key], i = block(i, rows[i][0])
             else:
-                if not isinstance(out[top], list):
-                    out[top] = []
-                out[top].append(item)
-            continue
-        if ":" not in body:
-            raise ValueError(f"not a key: {body!r}")
-        key, _, val = body.partition(":")
-        if not isinstance(out[top], dict):
-            out[top] = {}
-        key = key.strip()
-        out[top][key] = _scalar(val) if val.strip() else None
-        sub = key
-    return out
+                out[key] = None
+        if i < len(rows) and rows[i][0] > indent:
+            raise ValueError(f"indented line with no parent: {rows[i][1]!r}")
+        return out, i
+
+    if not rows:
+        return {}
+    parsed, _ = block(0, 0)
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def _list(value) -> list[str]:
@@ -227,7 +229,8 @@ def _list(value) -> list[str]:
 
 
 def load_declaration(repo: Path) -> dict:
-    """Always returns a dict with `active` (bool), never raises: no file or a broken file is steady."""
+    """Always returns a dict with `active` (bool), never raises: no file or a broken file is steady.
+    `mode` is one of launch | live | steady; `active` is true only for launch."""
     path = repo / ".launch.yaml"
     decl = {"active": False, "path": str(path), "error": "", "raw": "", "mode": "steady"}
     try:
@@ -241,11 +244,14 @@ def load_declaration(repo: Path) -> dict:
         decl["error"] = str(e)
         return decl
     mode = str(data.get("mode") or "").strip().lower()
+    if mode not in MODES:
+        mode = "steady"
     cut = data.get("cut_line") if isinstance(data.get("cut_line"), dict) else {}
     decl.update(
-        mode=mode or "steady",
+        mode=mode,
         active=mode == "launch",
         declared=str(data.get("declared") or ""),
+        live_since=str(data.get("live_since") or ""),
         source=str(data.get("source") or ""),
         finish_line=str(data.get("finish_line") or ""),
         target_date=str(data.get("target_date") or ""),
@@ -458,7 +464,7 @@ def snapshot_lines(decl: dict, rows: list[dict] | None) -> list[str]:
 def snapshot(repo: Path) -> tuple[dict, list[str], list[dict] | None, str]:
     decl = load_declaration(repo)
     if not decl["active"]:
-        return decl, ["launch-mode: steady"], None, ""
+        return decl, [f"launch-mode: {decl['mode']}"], None, ""
     try:
         ident, rows = board(repo, decl)
     except Exception:
@@ -491,8 +497,11 @@ PLAN_SCHEMA = """\
 def brief(repo: Path) -> int:
     decl, lines, rows, ident = snapshot(repo)
     if not decl["active"]:
-        print("launch-mode: steady")
-        print("No launch declaration (.launch.yaml absent or mode is not `launch`). Nothing to do: answer `quiet: steady`.")
+        print(f"launch-mode: {decl['mode']}")
+        if decl["mode"] == "live":
+            print("The product is live (.launch.yaml `mode: live`): there is no finish line to drive. Nothing to do: answer `quiet: live`.")
+        else:
+            print("No launch declaration (.launch.yaml absent or mode is not `launch`). Nothing to do: answer `quiet: steady`.")
         if decl.get("error"):
             print(f"(.launch.yaml is unreadable: {decl['error']}. Treated as steady. Tell the owner in the pass note.)")
         return 0
@@ -597,7 +606,7 @@ def take_lease(lock: Path, owner: str) -> bool:
 def apply(repo: Path, plan_arg: str | None) -> int:
     decl = load_declaration(repo)
     if not decl["active"]:
-        print("launch-mode: steady: apply refused, nothing written.")
+        print(f"launch-mode: {decl['mode']}: apply refused, nothing written.")
         return 0
     proj = project(repo)
     if not LEASE_SCRIPT.is_file():
