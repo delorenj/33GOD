@@ -1,6 +1,8 @@
 # Queued first assignment — Atlas marketing (FLUME-87)
 
-**Owner:** `33god-marketing-director` · **Work home:** `33god-platform/atlas` · **State:** queued, not dispatched or authorized for execution. This is a retrievable brief, **not** a campaign plan or permission to run a campaign.
+**Owner:** `peggy-olson` (Peggy Olson, Director of Marketing — 33GOD; portable specialist) · **Work home:** `33god-platform/atlas` · **State:** queued, not dispatched or authorized for execution. This is a retrievable brief, **not** a campaign plan or permission to run a campaign.
+
+Peggy's owning charter is `~/.agents/workforce/peggy-olson/agent.yaml`. Her platform-wide remit also includes the marketing site, the Manual's editorial coherence and reader outcomes, and standalone product positioning for components such as HeyMa, Pilot and Voxxy. This Atlas campaign brief is one queued assignment within that broader remit, not its boundary. The older proposed id `33god-marketing-director` does not identify a second hired employee.
 
 When assigned by the 33GOD PM, draft a **short first-campaign plan for review**. Identify the intended first audience from people Jarad already works with (existing contacts as initial users and feedback sources), the proposed message, a proposed channel, and the path by which a reader of a showcase page reaches a Genesis desk. Propose how to measure which message and channel bring people to that desk and how to collect feedback. State assumptions and approval decisions; do not send messages, solicit contacts, publish, build pages or run the campaign under this brief.
 
