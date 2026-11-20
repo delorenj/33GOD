@@ -1,5 +1,5 @@
 {
-  "_readme": "The scene manifest. One record per beat. Design fields (id, time, act, spectacle, camera, setPiece, len) are read by the set pieces; content fields (kicker, title, body, tags, staged, log and the per-beat extras under 'copy') are read by the captions. Rewriting copy never moves a scene. Every time is staged.",
+  "_readme": "The scene manifest. One record per beat. Design fields (id, time, act, spectacle, camera, setPiece, len) are read by the set pieces; content fields (kicker, title, body, tags, staged, log and the per-beat extras under 'copy') are read by the captions. Rewriting copy never moves a scene. A beat with flagship: true is numbered F-01, F-02 … in page order, and {flagships} in an interlude kicker becomes their range, so adding a flagship never renumbers by hand. Every time is staged.",
   "countedOn": "15 Nov 2026",
   "site": {
     "name": "33GOD",
@@ -699,10 +699,10 @@
       "setPiece": "building.grow",
       "len": 260,
       "interlude": {
-        "kicker": "Flagships · F-01–F-04",
+        "kicker": "Flagships · {flagships}",
         "line": "And then it starts to read like fiction."
       },
-      "kicker": "F-01 · Day one of every project",
+      "kicker": "Day one of every project",
       "title": "PJangler. The project factory.",
       "body": "A project registry and bootstrapper. Every project is built from a vetted pipeline template, so on day one it already has a ticket board, a git repo, its own project manager and its own Open Notebook. A mobile app gets one more hire: a Launch Director, who works with Google and Apple to see it through a smooth launch.",
       "tags": [
@@ -730,6 +730,76 @@
           "subject": "bloodbank.project.app_launch.recorded",
           "note": "A mobile app gets a Launch Director."
         }
+      ],
+      "flagship": true
+    },
+    {
+      "id": "gateway",
+      "time": "04:37",
+      "act": "IV",
+      "spectacle": 8.5,
+      "camera": "hold",
+      "setPiece": "building.power",
+      "len": 260,
+      "flagship": true,
+      "kicker": "The power company",
+      "title": "The Gateway. Every model, under one name.",
+      "body": "A provider-agnostic, multi-tenant LLM gateway with a multi-tiered, role-based router. Employees ask for a role, never a model, and never learn which provider answered. The router weighs every pool at once on usage windows, resets, token burn rate, recent trends and cooldowns, and keeps each one on schedule. Nothing drains early. Nothing expires unused.",
+      "tags": [
+        "GATEWAY"
+      ],
+      "staged": true,
+      "copy": {
+        "aside": "Every provider's cache goes in one ledger, and a thread stays with its model while its cache is warm. When it does have to move, it moves without losing the task.",
+        "cardTitle": "automaticai/auto",
+        "cardNote": "Orchestrator, subagent or fast. Seven rungs. One name for every tenant, and each draws on its own seats first.",
+        "pools": [
+          {
+            "name": "01 · Subscription"
+          },
+          {
+            "name": "02 · Subscription"
+          },
+          {
+            "name": "03 · Metered"
+          },
+          {
+            "name": "04 · Free"
+          }
+        ],
+        "states": {
+          "drawing": "Drawing",
+          "spent": "Spent",
+          "standby": "Waiting",
+          "lastResort": "Last resort",
+          "grown": "+1 tonight"
+        },
+        "punch": "Pool 01 just ran dry. Not one window flickered.",
+        "stamp": "Counted from the gateway's route catalog, 20 Nov 2026: 112 routes, 43 free models in 13 pools. Tonight's dry pool is staged.",
+        "decisions": [
+          {
+            "route": "orchestrator · rung 5 → pool 01 · pace",
+            "line": "01 resets soonest, so it spends first. Nothing expires unused."
+          },
+          {
+            "route": "orchestrator · rung 5 → pool 02 · pace",
+            "line": "01 is out until 09:00. 02 is furthest ahead of schedule, so it takes the work. Metered waits for every seat to run out; free never pushes a limit past 90%."
+          },
+          {
+            "route": "scout · 04:37 → pool 04 · deployed",
+            "line": "The scout signs up one more free provider, tests it and deploys it. The free pool only grows: 44 models in 14 pools."
+          }
+        ]
+      },
+      "log": [
+        {
+          "subject": "bloodbank.llm.allowance.observed",
+          "note": "A seat runs low. The router moves the work to the next pool before anyone notices."
+        },
+        {
+          "subject": "bloodbank.workflow.task.completed",
+          "note": "The scout adds one more free provider. The pool only grows."
+        }
       ]
     },
     {
@@ -740,7 +810,7 @@
       "camera": "push-in",
       "setPiece": "building.call",
       "len": 230,
-      "kicker": "F-02 · The audio department",
+      "kicker": "The audio department",
       "title": "HeyMa. Transcription, translation and telephony, on any stack.",
       "body": "A full-featured audio pipeline that runs on any platform, next to whatever you already use. On its own, it is the most flexible, full-featured audio pipeline you can run today. Inside 33GOD it fits so well that you forget it is there. It just works.",
       "tags": [
@@ -784,7 +854,8 @@
           "subject": "bloodbank.telephony.transcription.completed",
           "note": "You whisper one line and a floor reacts."
         }
-      ]
+      ],
+      "flagship": true
     },
     {
       "id": "flume",
@@ -794,7 +865,7 @@
       "camera": "hold",
       "setPiece": "building.hire",
       "len": 200,
-      "kicker": "F-03 · Human resources",
+      "kicker": "Human resources",
       "title": "Flume. A whole HR department, for agents.",
       "body": "Open a role and Flume fills it: directors, managers, project managers. It onboards each hire, gives them a desk and a title, and tells you honestly how they are doing.",
       "tags": [
@@ -833,7 +904,8 @@
           "subject": "bloodbank.agent.session.started",
           "note": "Flume fills a role. A window that has never been lit turns on."
         }
-      ]
+      ],
+      "flagship": true
     },
     {
       "id": "holocene-auto",
@@ -844,7 +916,7 @@
       "cut": true,
       "setPiece": "car.standup",
       "len": 240,
-      "kicker": "F-04 · On the road",
+      "kicker": "On the road",
       "title": "Holocene Auto. Your department heads, over the car speakers.",
       "body": "An Android Auto app that keeps your finger on the pulse on the go: a direct, two-way, hands-free line between you and every department head.",
       "tags": [
@@ -872,7 +944,8 @@
           "subject": "bloodbank.cron.candybar.invoked",
           "note": "The directors' standup, over the car speakers. Two things need you."
         }
-      ]
+      ],
+      "flagship": true
     },
     {
       "id": "hired-well",
@@ -1011,6 +1084,7 @@
     "PM · HEYMA": "Runs one project, start to finish.",
     "ENRICHER": "Makes every event findable by meaning.",
     "PJANGLER": "The project factory. A registry and bootstrapper.",
-    "HEYMA": "Transcription, translation and telephony, on any stack."
+    "HEYMA": "Transcription, translation and telephony, on any stack.",
+    "GATEWAY": "Every model under one name. Picks the provider so nobody else has to."
   }
 }

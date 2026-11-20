@@ -5,7 +5,7 @@ One night at the company, told by the clock. You leave at 18:02, the company wor
 **Live (preview, noindex):** https://33god.delo.sh
 
 - Design system: [33GOD Overnight](https://claude.ai/artifact/3fX6X9vkEHw6tTG9z3DTQN), which extends [33GOD](https://claude.ai/artifact/BujKg4bcBTeuW1b1qwHDRA)
-- Experience bible (laws, the 21 beats, camera, open decisions): [Overnight: Experience Bible](https://claude.ai/artifact/THg8wjmCVLk5WMFUqGepXu)
+- Experience bible (laws, the original 21 beats, camera, open decisions; the page now has 22, see "Flagships" below): [Overnight: Experience Bible](https://claude.ai/artifact/THg8wjmCVLk5WMFUqGepXu)
 - Copy source: [33GOD Landing Page](https://claude.ai/artifact/Liw6BUy95RR77TxhammtPo), `Main`
 
 This is the first full pass: every beat is staged so the whole vision can be judged end to end. The content underneath is not final.
@@ -40,12 +40,26 @@ Each beat carries design fields (`id`, `time`, `act`, `spectacle`, `camera`, `se
 - **View as log** shows the same night as one `LogLine` per beat. The page opens there under `prefers-reduced-motion` and on screens narrower than 760px.
 - **Crank**: stop scrolling for 20 seconds and one line appears.
 
+## Flagships
+
+A beat with `"flagship": true` is a flagship. Flagships are numbered `F-01`, `F-02` … in page order, prefixed to the beat's `kicker`, and `{flagships}` in an interlude kicker becomes their range (`F-01–F-05` today). Adding one is a manifest record plus its set piece; nothing is renumbered by hand.
+
+| # | Beat | Time | Set piece |
+|---|---|---|---|
+| F-01 | `pjangler` | 04:12 | the 13th floor and its day-one checklist |
+| F-02 | `gateway` | 04:37 | the power company: four pools, the router's decision, the nightly free-provider scout |
+| F-03 | `heyma` | 04:40 | the audio parts and the translated call |
+| F-04 | `flume` | 05:12 | the hire |
+| F-05 | `holocene-auto` | 07:30 | the car |
+
+**The gateway beat** sits at 04:37 because that is when the real `aai-free-scout` Candybar job fires (`candybar/deploy/migration/manifests/aai-free-scout/candybar.toml`). The `GATEWAY` window (ground floor) works all beat; the rest of the building stays ambient, which is the point: a pool runs dry and nothing flickers. The card's numbers (112 routes, 43 free models in 13 pools, 7 rungs, 3 roles) are counted from `~/code/client-portal/gateway/ops/routes.json` on 20 Nov 2026; which pool runs dry, and when, is staged and the card says so. Staging (`GW_SWITCH`, `GW_SCOUT`, `GW_METERS`) is in `overnight.js`; every word is in the beat's `copy`. Below 800px of height the card drops its tenancy note and its punch line so it never reaches the header.
+
 ## The real night
 
 The page replays a real night of the company: **16–17 Nov 2026, 18:02 to 07:41 EST, 57,875 Bloodbank events from 30 components.** The clock time is the real time, so at 03:12 on the page you are looking at what the company did at 03:12 that night.
 
-- **Working windows are real** in six beats: the opening building once its windows have come on, the numbers beat, and the ambient building in Act IV (staff, pjangler, heyma, flume, outside each beat's own set piece). A window is working when its component published on the bus in the last three minutes; Hook-hub handler work lights the component it was for. Seats left over after the named ones go to components that worked that night and have no seat of their own (hover shows the registry summary); a first-party Hermes PM desk that worked and has no PM seat gets one (`PM · 33GOD`); seats with no component stay dark. Hover works where the building is at full size (staff, pjangler, heyma, flume), not in the zoomed-out numbers beat. The film re-renders on a real minute only when that minute flips a window. Act III and every set piece stay staged. The list is `NIGHT_BEATS` in `overnight.js`.
-- **The clock's label follows suit**: "Real night · 16–17 Nov 2026" over those six beats, "A night, staged" everywhere else.
+- **Working windows are real** in seven beats: the opening building once its windows have come on, the numbers beat, and the ambient building in Act IV (staff, pjangler, gateway, heyma, flume, outside each beat's own set piece). A window is working when its component published on the bus in the last three minutes; Hook-hub handler work lights the component it was for. Seats left over after the named ones go to components that worked that night and have no seat of their own (hover shows the registry summary); a first-party Hermes PM desk that worked and has no PM seat gets one (`PM · 33GOD`); seats with no component stay dark. Hover works where the building is at full size (staff, pjangler, gateway, heyma, flume), not in the zoomed-out numbers beat. The film re-renders on a real minute only when that minute flips a window. Act III and every set piece stay staged. The list is `NIGHT_BEATS` in `overnight.js`.
+- **The clock's label follows suit**: "Real night · 16–17 Nov 2026" over those seven beats, "A night, staged" everywhere else.
 - **The counter under the clock is real** on every beat: events archived before that minute of the real night.
 - **The log view** interleaves real lines (blue rule) with the staged beats: per beat, up to three real moments between that beat's time and the next, rare events first.
 - **Still staged**: every set piece (the bus, the conference-room transcript, the tickets, the checklists, the car), and the window states those set pieces drive.
@@ -61,7 +75,7 @@ The digest holds producer, event type and local wall-clock minute only, never pa
 | Component names and their one-liners | Real, from the landing page copy |
 | The five counts (72, 12, 214, 299, 1) | Real, stamped 15 Nov 2026 |
 | Event subjects | Real, from the Bloodbank contract. Which subject sits on which beat is a first guess and needs a content pass. |
-| Clock times, window activity | Real in the six night beats when a night file loads (see above). Beat times themselves are staged. |
+| Clock times, window activity | Real in the seven night beats when a night file loads (see above). Beat times themselves are staged. |
 | Event counter under the clock | Real, from the night file |
 | Transcript words, speaker names, the translated call | Staged, written for this pass |
 | The briefing form | Lights your window and stores nothing. It says so under the field. |

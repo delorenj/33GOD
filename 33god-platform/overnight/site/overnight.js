@@ -33,8 +33,26 @@
     'WAX': [8, 2], 'JEV': [8, 4], 'KREBS': [5, 1], 'PILOT': [5, 2],
     'HOLOCENE': [10, 6], 'PM · HOLOCENE': [10, 5],
     'HEYMA': [3, 3], 'PM · HEYMA': [3, 2], 'VINYL': [3, 4], 'SHORTWAVE': [3, 5], 'PHONOGRAPH': [3, 6],
-    'CANDYBAR': [6, 0], 'SKILLEX': [1, 4], 'FLUME': [9, 1]
+    'CANDYBAR': [6, 0], 'SKILLEX': [1, 4], 'FLUME': [9, 1],
+    'GATEWAY': [0, 3]          // the power company sits on the ground floor
   };
+  // The gateway beat: where pool 01 runs dry and the router moves on, and where the 04:37 scout lands (q).
+  var GW_SWITCH = 0.4, GW_SCOUT = 0.62;
+  // Each pool's meter, scrubbed by CSS off --q: remaining share runs from..to across q in [a, b].
+  var GW_METERS = [
+    { from: 0.34, to: 0.02, a: 0.06, b: GW_SWITCH },
+    { from: 0.86, to: 0.7, a: GW_SWITCH, b: 0.95 },
+    { from: 1, to: 1, a: 0, b: 1 },
+    { from: 0.58, to: 0.68, a: GW_SCOUT, b: GW_SCOUT + 0.08 }
+  ];
+  function poolAt(n, q, words) {
+    if (n === 0) return q < GW_SWITCH ? ['working', words.drawing] : ['dark', words.spent];
+    if (n === 1) return q < GW_SWITCH ? ['lit', words.standby] : ['working', words.drawing];
+    if (n === 2) return ['lit', words.standby];
+    return q >= GW_SCOUT ? [q < 0.84 ? 'shipped' : 'lit', words.grown] : ['lit', words.lastResort];
+  }
+  // Which of the router's decisions is on the card: before the switch, after it, after the scout lands.
+  function decisionAt(q) { return q < GW_SWITCH ? 0 : q < GW_SCOUT ? 1 : 2; }
   var TICKET_SEATS = ['HOLOCENE', 'HEYMA', 'SHORTWAVE', 'CANDYBAR'];
   var NEW_FLOOR = { board: 1, repo: 2, pm: 3, notebook: 4, launch: 6 };
 
@@ -60,16 +78,27 @@
     if (rate) style['--rate'] = rate;
     return { className: 'rv' + (cls ? ' ' + cls : ''), style: style };
   }
+  // Flagships are numbered by page order (a beat with flagship: true), so adding one never renumbers by hand.
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function flagshipsOf(M) { return M.beats.filter(function (x) { return x.flagship; }); }
+  function kickerOf(M, b) {
+    if (!b.flagship) return b.kicker;
+    return 'F-' + pad2(flagshipsOf(M).indexOf(b) + 1) + (b.kicker ? ' · ' + b.kicker : '');
+  }
+  function fill(M, text) {
+    var n = flagshipsOf(M).length;
+    return (text || '').replace('{flagships}', n > 1 ? 'F-01–F-' + pad2(n) : 'F-01');
+  }
 
   /* ---------- the real night: a 33god.night digest (waybill night) ---------- */
   // Seat names that are not just their registry id, upper-cased.
-  var CID = { 'HERMES': 'hermes-fleet', 'VAULT-PROJECTOR': 'artifact-vault-projector', 'GATEWAY-WATCHDOG': 'hermes-gateway-watchdog' };
+  var CID = { 'HERMES': 'hermes-fleet', 'VAULT-PROJECTOR': 'artifact-vault-projector', 'GATEWAY-WATCHDOG': 'hermes-gateway-watchdog', 'GATEWAY': 'aai-gateway' };
   var RECENT = 3;   // minutes: a window is working if its component published in the last three
   function cidOf(name) { return name ? (CID[name] || name.toLowerCase()) : null; }
   function deskOf(name) { return name && name.indexOf('PM · ') === 0 ? name.slice(5).toLowerCase() + '-pm' : null; }
   // Per-key prefix sums over the night's minutes, so "how much in [a, b]" is one subtraction.
   // Beats whose windows follow the real night (the rest of the film is staged, and says so).
-  var NIGHT_BEATS = { premise: 1, numbers: 1, staff: 1, pjangler: 1, heyma: 1, flume: 1 };
+  var NIGHT_BEATS = { premise: 1, numbers: 1, staff: 1, pjangler: 1, gateway: 1, heyma: 1, flume: 1 };
   function usesNight(id) { return !!NIGHT_BEATS[id]; }
   function prepNight(N, times) {
     var W = N && N.window;
@@ -220,6 +249,8 @@
         return ambient(s);
       }
       if (i === I.pjangler) return ambient(s);
+      // The power company works all night; when a pool runs dry, the rest of the building does not notice.
+      if (i === I.gateway) return n === 'GATEWAY' ? 'working' : ambient(s);
       if (i === I.heyma) {
         if (n === 'HEYMA' || n === 'WAX' || n === 'VINYL' || n === 'PHONOGRAPH') return 'working';
         if (n === 'SHORTWAVE') return q > 0.62 ? 'working' : 'lit';
@@ -275,7 +306,7 @@
       case 'pm-krebs': t = ease(seg(q, 0, 0.34)); return { x: 0.2 * t, y: 0, s: Math.pow(9, 1 - t), o: seg(t, 0.15, 0.7) };
       case 'pms-talk': case 'skillex': return { x: 0.2, y: 0, s: 1, o: 1 };
       case 'staff': return { x: 0.2, y: lerp(-0.035, 0.025, q), s: 1, o: 1 };
-      case 'pjangler': case 'heyma': case 'flume': return { x: 0.2, y: 0.025, s: 1, o: 1 };
+      case 'pjangler': case 'gateway': case 'heyma': case 'flume': return { x: 0.2, y: 0.025, s: 1, o: 1 };
       case 'holocene-auto': return { x: 0.2, y: 0.025, s: 1, o: 0 };
       case 'hired-well': t = ease(seg(q, 0, 0.5)); return { x: 0.12, y: 0, s: lerp(1.7, 1, t), o: seg(t, 0, 0.6) };
       default: return { x: 0.12, y: 0, s: 1, o: 1 };
@@ -365,11 +396,12 @@
         h('h2', { className: 'statement-act statement-act--turn' }, b.title));
     }
     return h('div', { className: 'cap' }, eyebrow,
-      h(O.Caption, { beat: { kicker: b.kicker, title: b.title, body: b.body, tags: b.tags }, as: 'h2' }),
+      h(O.Caption, { beat: { kicker: kickerOf(M, b), title: b.title, body: b.body, tags: b.tags }, as: 'h2' }),
       b.id === 'org-chart' ? h('figure', { className: 'cap__quote' }, h('blockquote', null, copy.quote), h('figcaption', { className: 'eyebrow' }, copy.quoteSource)) : null,
       b.id === 'staff' ? h('p', { className: 'cap__aside' }, copy.more) : null,
       b.id === 'staff' ? h('p', { className: 'instrument cap__hint' }, copy.hoverHint) : null,
       b.id === 'holocene-auto' ? h('p', { className: 'cap__aside' }, copy.note) : null,
+      copy.aside ? h('p', { className: 'cap__aside' }, copy.aside) : null,
       b.id === 'ask' ? h(Ask, { id: 'ask-email', copy: copy, submitted: props.submitted, onSubmit: props.onSubmit }) : null);
   }
 
@@ -791,6 +823,21 @@
         return h('div', { key: n, className: 'check' + (n < done ? ' is-done' : '') }, h(O.Window, { state: n < done ? 'shipped' : 'dark' }), h('span', null, c));
       })), 'scard--list', 11));
     }
+    if (id === 'gateway') {
+      var gc = b.copy, dn = gc.decisions[decisionAt(q)];
+      over.push(card([
+        h('div', { key: 'h', className: 'gw__head' }, h('span', { className: 'instrument gw__name' }, gc.cardTitle), h('span', { className: 'caption-note' }, gc.cardNote))
+      ].concat(gc.pools.map(function (p, n) {
+        var st = poolAt(n, q, gc.states), mt = GW_METERS[n];
+        return h('div', { key: 'p' + n, className: 'gw__pool' + (st[0] === 'working' || st[0] === 'shipped' ? ' is-on' : st[0] === 'dark' ? ' is-out' : '') },
+          h('div', { className: 'gw__poolhead' }, h(O.Window, { state: st[0] }), h('span', { className: 'instrument gw__poolname' }, p.name), h('span', { className: 'gw__state' }, st[1])),
+          h('span', { className: 'gw__meter', 'aria-hidden': 'true' }, h('i', { style: { '--from': mt.from, '--to': mt.to, '--a': mt.a, '--b': mt.b } })));
+      })).concat([
+        h('div', { key: 'd' + decisionAt(q), className: 'gw__decision', role: 'status' }, h('span', { className: 'instrument-log gw__route' }, dn.route), h('span', null, dn.line)),
+        h('p', Object.assign({ key: 'punch' }, rv(GW_SWITCH + 0.03, 'call__said gw__punch')), gc.punch),
+        h('p', { key: 'stamp', className: 'caption-note gw__stamp' }, gc.stamp)
+      ]), 'scard--list gw', null));
+    }
     if (id === 'heyma') {
       var call = b.copy.call;
       over.push(card([
@@ -873,7 +920,7 @@
               h('div', { className: 'sp-wrap', ref: spRef }, sp))),
           h('div', { className: 'interlude', ref: interRef, 'aria-hidden': b.interlude ? null : 'true' },
             b.interlude ? h('div', { className: 'interlude__in' },
-              h('p', { className: 'eyebrow' }, b.interlude.kicker),
+              h('p', { className: 'eyebrow' }, fill(M, b.interlude.kicker)),
               h('p', { className: 'statement-act' }, b.interlude.line),
               b.interlude.sub ? h('p', { className: 'on-caption__kicker' }, b.interlude.sub) : null) : null),
           h('p', { className: 'crank' + (crank ? ' is-on' : ''), role: 'status' }, crank ? M.site.crank : ''))),
