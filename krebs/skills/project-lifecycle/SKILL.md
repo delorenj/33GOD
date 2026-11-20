@@ -250,8 +250,10 @@ changes. Keep batching bounded to the named project and task.
 
 ## Launch-mode triage (the board differs while `.launch.yaml` says `mode: launch`)
 
-Steady-state grooming is the rest of this skill. When the repo's committed
-`.launch.yaml` declares `mode: launch` (absent or `steady` = none of this applies),
+Steady-state grooming is the rest of this skill. The repo's committed `.launch.yaml` carries a
+lifecycle: `launch` (racing to a finish line) -> `live` (in production: people can buy it and are
+using it). `steady` stays valid for a project that is neither (pre-launch or internal). When the file
+declares `mode: launch` (absent, `live` or `steady` = none of this applies),
 the PM runs the board through the launch pass (`launch-pass.py`, interval-driver;
 wiring in `agent-fleet-operations` "Launch mode"). There is no Launch Director:
 the one PM decides and applies.
@@ -274,7 +276,18 @@ the one PM decides and applies.
   plain English. Owner-only steps (money, legal, passkey, product choices) are
   batched, each with a recommendation and a default.
 - **Exit.** When the finish line is met on evidence, file one ticket proposing
-  `mode: steady`. Never edit `.launch.yaml`; the owner does.
+  `mode: live` if the product is in production and sellable, or `mode: steady` if it is not.
+  Never edit `.launch.yaml`; the owner does.
+
+### Live: grooming a product people are using
+
+A `mode: live` repo has no finish line and no cut line: groom it like steady state, with the
+product's promises as standing work. The declaration keeps the launch history (`declared`,
+`finish_line`, `epic`) and adds `live_since` and a `live:` block (store URL, checkout, fulfilment,
+support, release feed) that the Holocene Live hub reads. Treat each promise in it as an obligation:
+a fulfilment `promise_hours` is an SLA, and work that serves it (the reminder, the issuer) is
+never parked. A paying user's bug outranks backlog polish; an owner-filed High or Urgent bug is
+still first in Todo. Ship fixes only through the product's deploy procedure. Never edit `.launch.yaml`.
 
 ## Completion and deployment
 
