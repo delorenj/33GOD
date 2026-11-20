@@ -38,6 +38,44 @@ Every listed emitted KDL was compared with its checked-in snapshot where applica
 
 The static KDL files are the checked-in source for bb, candystore, waybill and wax. For pj, `node scripts/export-usage.mjs` regenerates from its Commander table; for candybar, `uv run python scripts/export_usage.py` regenerates from its Typer table. px and skillex export live from their registered authority. Flume exports live from its registered Commander tree.
 
-## Publication and limits
+## Review repair — 2026-11-19
+
+The independent review correctly found lossy px positionals and location-dependent generated defaults. Those source gaps are repaired on child main; PATH installation is a separate, still-partial acceptance surface.
+
+### Corrections and current commits
+
+- **px:** dispatch authority now includes named positionals for every argument-bearing command; no help-text extraction or `arg1` fallback. The exporter preserves runtime cardinality, including optional variadic `NAME` for board create (`--name` alternative), optional title with a managed-only `--file` explanation, `idea --desired`, optional variadic move state, required epic refs, optional task status ref and operation-dependent run ref. Alias parity checks names, requiredness and variadic bits; mutations flip each and must fail. Runtime parsing, dispatch and zero-runtime-dependency policy are unchanged. https://github.com/delorenj/pilot/commit/0fd60dd87bb4b05c2278a8e6f594242afa292be3
+- **pj:** all 16 cwd-derived defaults normalize to `.` with explicit current-directory help, preserving literal defaults and real package-version drift. The snapshot is regenerated at **1.5.61**, including the release that advanced main during repair. A registered hermetic regression compares repo and unrelated cwd output; canonical/worktree source exports were also byte-compared. https://github.com/delorenj/pjangler/commit/0babafd2e0b93b0bbb7cd70fb89a848f471a6bea (initial adapter repair: https://github.com/delorenj/pjangler/commit/876d735be1948e362b5ddf695d473255a23446b4)
+- **Candybar:** the exported doctor policy default uses `<candybar-install>/deploy/scheduling-policy.json`, not an absolute worktree path. This is a documentation placeholder for the bundled resource, not a cwd-relative runtime change. The regression copies real source to two independent install roots and compares both rendered specs to the shipped snapshot, then runs the usage parser. No scheduling/policy runtime code changed. https://github.com/delorenj/candybar/commit/a7d53448fe20350cb89a277fc8f960528fb44bf5
+- **Flume:** no tracked change was needed. The stale local build first failed because its declared `@usage-spec/commander` dependency was not installed; `npm install --ignore-scripts --no-audit --no-fund` added 3 packages with no tracked manifest/lock diff, and `npm run build` refreshed dist. https://github.com/delorenj/flume/commit/fbc4204bda9a22cf21795025a1ce3b7e794d7efd
+
+### Executed checks
+
+| Command / surface | Actual result |
+| --- | --- |
+| Pilot `node --test test/usage.test.js` | 5 passed, 0 failed; real usage lint/JSON plus mode guards and argument mutations |
+| Pilot `npm test` rerun | 529 tests: **528 passed, 0 failed, 1 skipped**, exit 0, 10.14 s |
+| Pilot first full run | 527 passed, 1 failed, 1 skipped: randomized Trello 24-digit fixture interpreted as numeric ref (`no ticket TT-6.000006165573496e+23`); unchanged code passed rerun; not hidden as a clean first run |
+| PJangler `node --test tests/usage-portability.test.mjs` | 1 passed, 0 failed; run on worktree and canonical checkout |
+| PJangler `node scripts/check-hermetic-test-env.mjs` | PASS: 130 registered suites start from preamble, 0 exceptions |
+| PJangler `node scripts/export-usage.mjs --check` | `pj usage snapshot matches parser`, exit 0 on canonical and worktree at 1.5.61; command-mutation drift probe passed |
+| PJangler canonical/worktree `--stdout` exports + `cmp` | Byte-identical; all 16 cwd defaults portable |
+| PJangler isolated `npm run build`; `node dist/index.js --usage-spec` + `cmp pj.usage.kdl` | Build and exact emitted snapshot comparison passed |
+| Candybar `uv run python scripts/export_usage.py --check` | `candybar usage snapshot matches Typer commands`, exit 0 on canonical; explicit source-path invocation also passed in worktree |
+| Candybar `python -m pytest -q tests/test_usage_portability.py` | **1 passed** on both canonical and worktree; separate install roots and cwd, usage lint/JSON passed |
+| Flume `npm run build`; `mise exec -- node --test tests/usage-spec.test.mjs` | Build passed; **1 passed, 0 failed** |
+| Actual PATH `flume --usage-spec`, `px --usage-spec` | Native KDL emitted; usage lint and JSON generation exited 0 |
+| Skillex checkout `npm run build`; `mise exec -- node --test tests/node/usage.test.mjs`; `node dist/cli.js --usage-spec` | **2 passed, 0 failed**; actual Commander parity/mutation and terminator checks; emitted KDL lint/JSON passed |
+| Repaired pj and Candybar KDL | usage 7.4.0 lint + JSON generation exit 0; optional-help info messages are non-fatal |
+
+Bounded raw outputs and emitted KDL/JSON are in the existing scratch directory `33god-103/`, including `pilot-repair-full.log`, `pilot-repair-full-rerun.log`, `px-repaired.*`, `pj-final.json`, `pj-canonical.usage.kdl`, `pj-worktree.usage.kdl`, `pj-built-final.usage.kdl`, `candybar-repaired.*`, `flume-rebuilt.*` and `skillex-checkout.*`. Original four-exporter probes were not repeated. Full Flume/Candybar suites were deliberately not rerun.
+
+### Remaining installed-distribution limitation
+
+`skillex --usage-spec` on PATH still exits 2 with `E_USAGE: unknown option '--usage-spec'`. The installed package and `npm view @delorenj/skillex version` both report **0.4.10**. `cli-launchers.py upgrade skillex --dry-run --json` resolved the supported plan to `@delorenj/skillex@latest`, i.e. that same release; reinstalling it cannot supply the source-main feature. The checkout at https://github.com/delorenj/skillex/commit/4800fe51079d1d357f003fcc3e9b41150969a5a8 is verified, but installed-PATH acceptance is **not passed**. No npm publication, version/tag change, launcher hand-edit or distribution-policy change was authorized or performed. PJangler's npm PATH package is likewise not upgraded here: actual `pj --usage-spec` exits 1 with `error: unknown option '--usage-spec'`. Its canonical source and freshly built isolated dist are verified above; installed pj PATH acceptance is also not passed.
+
+Only pilot, pjangler and Candybar root gitlinks are advanced by this repair; Flume's pointer is unchanged. Unrelated root WIP and PJangler `src/project/boardQuery.ts`, `tests/pjan-87-board-read-regressions.mjs`, `tests/pjan-120-credential-parity.mjs` remain untouched. `git unpushed` was run once and saved to `unpushed-repair.log`; its other owners' work was not altered. Repair branches were pushed, merged to child main and their own worktrees removed. Board state, comments and assignments remain solely with the parent PM.
+
+## Initial publication and limits (historical; repair commits above supersede these refs)
 
 Feature commits and remote main ancestry were verified via `git ls-remote origin refs/heads/main`; main pointers at final verification were pilot `c52c64b94ba81387480cabb1fe81c67890e5ce5b`, skillex `9f60ff749bc3f56a58342daceadc711c3b15d686`, pjangler `5eef14090e68fac8035ad5702bd3a45cb505d9b2`, flume `fbc4204bda9a22cf21795025a1ce3b7e794d7efd`, candybar `4b48e570f1dbe94fbb4b965ac2f4d989ca71bfc3`, bloodbank `ed7c4b41e58a71a5e94976e99852b8b7136894da`, candystore `658e3742061fec2d6ad26ad2ffb68ddb688d3c3b`, wax `37cd0b74357c817136a339ffbfad696cd1901fca`. Existing dirty shared checkouts and unrelated worktree commits remain untouched; `git unpushed` reports those other owners' work, not a pending Story 7.2 commit. Parent pointers were committed only for this story's five newly advanced submodules (pilot was already pinned). The parent PM must independently review and decide ticket state.
