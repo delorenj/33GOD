@@ -134,3 +134,41 @@ test("runTick: the probe is not asked when the scope has no board-turn candidate
   await run();
   assert.equal(asked, 0);
 });
+
+test("back-to-back runs (krebs watch): the second run sees the first run's send through the journal while Candystore lags, and the turn's end frees the scope", async () => {
+  // Integrated: the real Candystore probe and the real journal, no stubbed verdicts. A second run starting the
+  // moment the first ends must not send a second board turn to the desk, whatever Candystore has ingested.
+  const journal = new MemoryJournal();
+  let events = []; // Candystore: nothing ingested yet
+  const client = { boardTurns: async () => events };
+  let clock = NOW_MS;
+  const now = () => new Date(clock);
+  const plane = new FakePlane({ [OTHER]: { issues: [todo(2), todo(3)] } });
+  const registry = registryFixture();
+  const { scopes, skipped } = scopesFromRegistry(registry, { activation: bbRegistry.bloodbankActivation, executionMode: () => "legacy", board: "OTH" });
+  const publish = fakePublisher();
+  const idle = async () => ({ live: false, why: "nothing since", lastEnd: null });
+  const run = () => runTick({ registry, scopes, skipped, plane, fleet, nats, publish, journal, now, timeZone: "America/New_York", liveness: idle, scopeBusy: candystoreScopeBusy({ client, now }) });
+
+  const first = await run();
+  assert.equal(publish.sent.length, 1, "first run: one triage");
+  const sentKey = first.scopes[0].triage.find((x) => x.result === "published").key;
+  const commandId = first.scopes[0].triage.find((x) => x.result === "published").commandId;
+
+  clock += 10_000;
+  const second = await run();
+  assert.equal(publish.sent.length, 1, "second run: the desk already has one, nothing sent");
+  assert.ok(second.scopes[0].triage.every((x) => x.result !== "published"));
+  assert.match(second.scopes[0].boardTurnBusy.why, /triage turn on OTH-\d is sent/);
+
+  events = [ev("queued", commandId, { key: sentKey, ago: -0.1 }), ev("started", commandId, { key: sentKey, ago: -0.1 })];
+  clock += 4 * 60_000;
+  await run();
+  assert.equal(publish.sent.length, 1, "running: still one");
+
+  events = [...events, ev("completed", commandId, { key: sentKey, ago: -4.5 })];
+  clock += 60_000;
+  const after = await run();
+  assert.equal(publish.sent.length, 2, "ended: the next ticket's triage goes");
+  assert.notEqual(after.scopes[0].triage.find((x) => x.result === "published").key, sentKey);
+});
