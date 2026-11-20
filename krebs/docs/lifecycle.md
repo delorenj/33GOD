@@ -74,7 +74,7 @@ stateDiagram-v2
 
 | Step | Owner |
 |---|---|
-| Triage | `krebs tick`, the only triage sender. A Todo ticket with no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, and unchanged for 10 minutes gets a triage turn to the scope's owner agent. The n8n Ticket Triage lane that used to send it on Todo entry was retired on 2026-11-18 ([ADR 0001](adr/0001-turn-queue-visibility.md)): with two senders, a ticket could get two triage turns at once, and Krebs could not see the lane's queued command. At most 1 per scope and 6 per tick, triage before review, oldest first: a desk takes its board-driver lease for each turn, so two triage turns sent to one desk at the same moment collide and the second gives up without finishing. The command id comes from board, ticket and `updated_at`, so one ticket version is triaged once; a turn that changes nothing does not loop. Krebs writes nothing to Plane for it. |
+| Triage | `krebs tick`, the only triage sender. A Todo ticket with no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, and unchanged for 10 minutes gets a triage turn to the scope's owner agent. The n8n Ticket Triage lane that used to send it on Todo entry was retired on 2026-11-18 ([ADR 0001](adr/0001-turn-queue-visibility.md)): with two senders, a ticket could get two triage turns at once, and Krebs could not see the lane's queued command. At most 1 per scope and 6 per tick, triage before review, oldest first: a desk takes its board-driver lease for each turn, so two triage turns sent to one desk at the same moment collide and the second gives up without finishing. The command id comes from board, ticket and `updated_at`, so one ticket version is triaged once. A version is not an attempt counter, though: the pickup chip rewrites it on every turn. A ticket gets at most 3 triage turns per stretch in Todo, 30 minutes apart, then Krebs parks it with `agent:failed` ([Loops](#loops)). Krebs writes nothing to Plane for it. |
 | Dispatch Todo → In Progress | `krebs tick`, on the Candybar `krebs-tick` schedule. Nothing else dispatches. |
 | Release an orphan (turn over, no handback) | `krebs tick`, when Candystore shows no live turn. See [Orphans](#orphans-the-resume-path). |
 | Handback | The implementation turn. It adds `lifecycle:review` and an evidence comment, or closes the ticket if the scope has no review step. |
@@ -132,7 +132,25 @@ The review turn tells the PM to judge each acceptance criterion against evidence
 | Sent back | `px release <ref> -m "returned: <criterion>"`. The ticket goes to Todo, keeps `lifecycle:triaged`, and waits for a slot. |
 | Needs a person | `px attention <ref> -m "<question>"` |
 
-Review turns share the scope's one board turn per tick with triage, and the tick-wide cap of 6. The scope alternates: after a triage turn its oldest review goes next, and after a review the oldest triage, so a backlog of old reviews never starves fresh triage (and the other way round). Across the tick, triage turns are picked before reviews. A verdict changes the ticket, so each ticket version is reviewed once. A turn that ends without a verdict is sent again after 3 hours, at most 3 times per version; after that the tick lists the ticket as waiting.
+Review turns share the scope's one board turn per tick with triage, and the tick-wide cap of 6. The scope alternates: after a triage turn its oldest review goes next, and after a review the oldest triage, so a backlog of old reviews never starves fresh triage (and the other way round). Across the tick, triage turns are picked before reviews. A turn that ends without a verdict is sent again after 3 hours, at most 3 times per handback; after that Krebs parks the ticket with `agent:failed` ([Loops](#loops)).
+
+## Loops
+
+A board turn can end with nothing to show: the model call was refused, the desk was rate limited, the PM wandered off. Nothing on the ticket then says "this turn failed", so the only thing Krebs can count is how often it has asked. Two tickets showed what happens when that count is wrong. `33GOD-33` got 50 review turns in 42 hours and `HEYMA-39` got 12 triage turns in 8 hours. Every one of those turns changed nothing on the ticket except the pickup chip's `agent:working` (added when the turn starts, removed when it ends), and that write gives the ticket a new `updated_at`. The old count was keyed on `updated_at`, so every send was "attempt 1" and the cap of 3 could never trip.
+
+The count is now per **episode**, read from the ticket's own activity log. An episode begins at the latest of:
+
+| Stage | An episode begins when |
+|---|---|
+| Review | `lifecycle:review` is added: the implementer's handback |
+| Triage | the ticket entered its current Todo state, was created in it, or lost `lifecycle:triaged` (an owner asking for a re-triage) |
+| Either | a hold label is removed (`agent:failed`, `lifecycle:needs-input`, `lifecycle:blocked`, `lifecycle:human`): whoever clears a park, or answers the question, starts a fresh count |
+
+The chip's `agent:working` pairs, comments and edits begin nothing. Within an episode a ticket gets at most 3 review turns (3 hours apart) or 3 triage turns (30 minutes apart). When the episode has used them all, Krebs parks the ticket: it adds `agent:failed` and writes one comment saying who was asked what, how many times, and how to resume. It does that only after re-reading the ticket and finding that Candystore shows no live turn on it, 12 parks per tick at most, and the journal records `loop.park`. Remove `agent:failed` once you have looked at the last turn, and Krebs starts again with a fresh 3.
+
+If the activity log cannot be read, Krebs neither sends the ticket a turn nor parks it, and warns. A ticket with no earlier board turn on record never reads the log.
+
+Krebs cannot tell a refused model call from a PM that decided to do nothing, and the gateway reports both as a completed turn. The cap is what makes either cheap: three wasted turns, then a visible, labelled hold. Look at why in the PM's session log (`~/.hermes/profiles/<pm>/logs`, and `sessions/request_dump_*` for a refused call).
 
 ## Watching the pipeline
 
@@ -143,7 +161,7 @@ Nothing moves between ticks, and the tick runs every 10 minutes, so a ticket you
 | Tick | every 10 min on the mark, Candybar `krebs-tick` |
 | Triage starts | the first tick after the ticket has been quiet 10 min (and has had no agent activity for 30 min: such a ticket is skipped as "turn live" and the next one takes the turn); 1 board turn per scope per tick (shared with review, alternating); 6 per tick overall; oldest first |
 | Dispatch | the first tick after `lifecycle:triaged` lands, if a WIP slot is free (2 by default); otherwise when one frees |
-| Review turn | quiet 30 min after `lifecycle:review`; same 1-per-scope-per-tick turn; resent after 3 h, max 3 |
+| Review turn | quiet 30 min after `lifecycle:review`; same 1-per-scope-per-tick turn; resent after 3 h, max 3 per handback, then parked |
 | Orphan release | In Progress, quiet 30 min, no live turn in Candystore |
 
 Worst case for N untriaged tickets dropped on one scope: the last one's triage starts 10N to 10N+10 minutes after the drop, and it can be dispatched one tick after that (10N+20 in all), if a slot is free. Eight tickets: about 90 minutes to triage them all. The serialization is deliberate (a desk handles one board turn at a time, and two at once collided on 2026-11-14); the way to go faster is to triage by hand (add `lifecycle:triaged` yourself once the criteria are real) and the ticket goes at the next tick.

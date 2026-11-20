@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { loadBloodbank, loadPlane, realPublisher } from "../tick/deps.mjs";
 import { scopesFromRegistry } from "../tick/registry.mjs";
 import { runTick } from "../tick/run.mjs";
-import { Journal, defaultJournalPath, lastBoardTurns, reviewAttempts, sentCommands, stateDir } from "../tick/journal.mjs";
+import { Journal, TURN_WINDOW_MS, boardTurnSends, defaultJournalPath, lastBoardTurns, sentCommands, stateDir } from "../tick/journal.mjs";
 import { acquireLock } from "../tick/lock.mjs";
 import { formatReport } from "../tick/format.mjs";
 import { candystoreClient, candystoreLiveness } from "../tick/liveness.mjs";
@@ -205,7 +205,7 @@ async function status(flags) {
     }
   }
 
-  const reviewsSent = reviewAttempts(journalEntries);
+  const reviewsSent = boardTurnSends(journalEntries, nowMs - TURN_WINDOW_MS).review;
   const result = buildStatus({
     busyByScope,
     inspected,

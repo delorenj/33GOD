@@ -179,9 +179,10 @@ export function triagedCommandIds(entries) {
 
 /**
  * Review turns already published per ticket version ("<ticket id>|<updated_at>"):
- * [{attempt, at, commandId}], oldest first. A review that ended without a
- * verdict leaves the version unchanged, so the tick sends it again after a
- * cool-down, up to a few attempts (each attempt is its own command id).
+ * [{attempt, at, commandId}], oldest first. Kept for the command-id bookkeeping and
+ * old callers; it is NOT the attempt counter: the pickup chip rewrites updated_at on
+ * every turn, so a version never lives long enough to be counted (33GOD-33, 2026-11-18
+ * to 11-20: 50 review turns, every one "attempt 1"). See boardTurnSends.
  */
 export function reviewAttempts(entries) {
   const out = new Map();
@@ -194,6 +195,32 @@ export function reviewAttempts(entries) {
   }
   for (const list of out.values()) list.sort((a, b) => a.attempt - b.attempt);
   return out;
+}
+
+/** The look-back of the per-ticket turn count; a send older than this is never counted. */
+export const TURN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Board turns (triage, review) published per TICKET since `sinceMs`, whatever version
+ * the ticket was at: Map(ticket id -> [{at, commandId, updatedAt}]) oldest first, one
+ * map per kind. This is what the attempt caps count. A ticket version is the wrong
+ * key: any write to the ticket, the turn's own pickup chip included, makes a new one.
+ */
+export function boardTurnSends(entries, sinceMs = Number.NEGATIVE_INFINITY) {
+  const review = new Map();
+  const triage = new Map();
+  for (const e of entries) {
+    if (e?.ok !== true || !e.ticket_id) continue;
+    const into = e.action === "review.publish" ? review : e.action === "triage.publish" ? triage : null;
+    if (!into) continue;
+    const at = Date.parse(e.ts ?? "");
+    if (!Number.isFinite(at) || at < sinceMs) continue;
+    const list = into.get(e.ticket_id) ?? [];
+    list.push({ at: e.ts, commandId: e.command_id, updatedAt: e.ticket_updated_at ?? null });
+    into.set(e.ticket_id, list);
+  }
+  for (const map of [review, triage]) for (const list of map.values()) list.sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+  return { review, triage };
 }
 
 /**

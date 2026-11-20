@@ -19,7 +19,7 @@ import {
   triageGuard,
 } from "./select.mjs";
 import { MAX_DETACHED_MS, MAX_OPEN_TRIAGE_MS, MAX_OPEN_TURN_MS, HISTORY_MS, mapLimit } from "./liveness.mjs";
-import { REVIEW_MAX_ATTEMPTS, REVIEW_RETRY_MS } from "./run.mjs";
+import { REVIEW_MAX_ATTEMPTS, REVIEW_RETRY_MS, TRIAGE_MAX_ATTEMPTS, TRIAGE_RETRY_MS } from "./run.mjs";
 
 export const STATUS_VERSION = 1;
 /** Candybar fires `krebs tick` on this period (krebs/.candybars/krebs-tick.candybar.toml, every 10 minutes). */
@@ -292,7 +292,7 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
       items.push({ ticket: t, kind: "review", eligibleMs: ms(t.updatedAt) + REVIEW_MIN_AGE_MS });
     } else if (reviewGuard(t, nowMs, Number.NEGATIVE_INFINITY) === null) {
       // a version whose last review turn is cooling down: eligible again REVIEW_RETRY_MS after the last send
-      const sent = journal.reviewsSent?.get(`${t.id}|${t.updatedAt ?? ""}`) ?? [];
+      const sent = journal.reviewsSent?.get(t.id) ?? [];
       const last = sent[sent.length - 1];
       if (sent.length < REVIEW_MAX_ATTEMPTS && last && ms(last.at) !== null) {
         items.push({ ticket: t, kind: "review", eligibleMs: Math.max(ms(t.updatedAt) + REVIEW_MIN_AGE_MS, ms(last.at) + REVIEW_RETRY_MS) });
@@ -391,7 +391,14 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
           eta(nextTickMs);
         }
       } else if (triageSeen.has(t.key)) {
-        set("triage-seen", "triage already sent", "a triage turn already ran on this exact version and did not triage it or hold it; krebs will not send it again until the ticket is edited (look at the last turn's comment)");
+        const heldWhy = (out.triageHeld ?? []).find((x) => x.key === t.key)?.why;
+        set(
+          "triage-seen",
+          "triage already sent",
+          heldWhy
+            ? `${heldWhy}; krebs asks again ${TRIAGE_RETRY_MS / 60000} min after the last turn, up to ${TRIAGE_MAX_ATTEMPTS} times per stretch in Todo, then parks it with agent:failed`
+            : "a triage turn already ran on this exact version and did not triage it or hold it; krebs will not send it again until the ticket is edited (look at the last turn's comment)",
+        );
       } else {
         const proj = projection.get(t.key);
         const eligibleMs = eligibleOf.get(t.key);
@@ -419,7 +426,7 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {},
         if (turn) set("review-inflight", "review in flight", `the PM's review turn is ${turn.state} (${fmtMin(nowMs - turn.since)})`);
         else if (!scope.review) set("review-noverdict", "in review (no verdict giver)", "lifecycle:review on a scope with plane.review off: nobody is asked to review it; look at it by hand");
         else if (working) set("review-working", "in review: agent:working", "a turn holds it (agent:working); review turns wait until that clears");
-        else if (reviewsSeen.has(t.key) && !proj) set("review-sent", "in review: turn already sent", `${reviewsSeen.get(t.key)}; it is asked again after 3 h, up to ${REVIEW_MAX_ATTEMPTS} times, then it needs you`);
+        else if (reviewsSeen.has(t.key) && !proj) set("review-sent", "in review: turn already sent", `${reviewsSeen.get(t.key)}; it is asked again ${REVIEW_RETRY_MS / 3600000} h after the last turn, up to ${REVIEW_MAX_ATTEMPTS} times per handback, then krebs parks it with agent:failed`);
         else if (proj) {
           const eligibleMs = eligibleOf.get(t.key);
           set("review-wait", eligibleMs !== undefined && nowMs <= eligibleMs ? "in review: waiting for quiet" : "in review: review turn queued", `handed back; the PM is asked for a verdict once it has been quiet 30 min (~${hhmm(eligibleMs)}Z), 1 board turn per scope per tick shared with triage`, { queuePosition: proj.order });

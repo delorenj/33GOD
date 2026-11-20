@@ -58,6 +58,8 @@ export class FakePlane {
       };
     }
     this.calls = [];
+    this.activity = {}; // issue id -> Plane activity rows (oldest first), read by activities()
+    this.failActivities = null; // () => Error | null
     this.failWrite = null; // (issueId) => Error | null
     this.writeSeq = 0;
   }
@@ -89,6 +91,13 @@ export class FakePlane {
     const found = this.board(board).issues.get(id);
     if (!found) throw Object.assign(new Error(`GET issue ${id} -> HTTP 404`), { status: 404 });
     return structuredClone(found);
+  }
+
+  async activities(id, ws, board) {
+    this.calls.push({ method: "activities", id, board });
+    const err = this.failActivities?.();
+    if (err) throw err;
+    return structuredClone(this.activity[id] ?? []);
   }
 
   async relations(id, ws, board) {

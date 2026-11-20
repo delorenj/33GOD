@@ -74,9 +74,9 @@ test("a handed-back ticket gets one review turn to its scope's PM: reason ticket
   assert.match(formatReport(report), /review: OTH-4 published/);
 });
 
-test("a review is sent once per ticket version, again after the cool-down, and at most REVIEW_MAX_ATTEMPTS times", async () => {
+test("a review is sent again after the cool-down, and at most REVIEW_MAX_ATTEMPTS times per episode, whatever the ticket version", async () => {
   const spec = { seq: 4, state: "ip", labels: ["lifecycle:review"], updated: OLD };
-  const at = (m, attempt) => ({ ts: minsAgo(m), action: "review.publish", ok: true, ticket_id: "i-4", ticket_updated_at: OLD, attempt, command_id: `c${attempt}` });
+  const at = (m, attempt, version = OLD) => ({ ts: minsAgo(m), action: "review.publish", ok: true, ticket_id: "i-4", ticket_updated_at: version, attempt, command_id: `c${attempt}` });
 
   const recent = await setup({ liveness: idle, journal: new MemoryJournal([at(30, 1)]), issues: [issue(spec)] }).run();
   assert.deepEqual(recent.scopes[0].reviews, []);
@@ -88,13 +88,18 @@ test("a review is sent once per ticket version, again after the cool-down, and a
   assert.notEqual(cooled.publish.sent[0].commandId, "c1");
 
   const spent = Array.from({ length: REVIEW_MAX_ATTEMPTS }, (_, i) => at(1000 + i, i + 1));
-  const done = await setup({ liveness: idle, journal: new MemoryJournal(spent), issues: [issue(spec)] }).run();
-  assert.deepEqual(done.scopes[0].reviews, []);
-  assert.match(done.scopes[0].reviewsSeen[0].why, /ended without a verdict/);
+  const done = setup({ liveness: idle, journal: new MemoryJournal(spent), issues: [issue(spec)] });
+  const doneReport = await done.run();
+  assert.deepEqual(doneReport.scopes[0].reviews, []);
+  assert.match(doneReport.scopes[0].reviewsSeen[0].why, /ended without a verdict/);
+  assert.deepEqual(doneReport.scopes[0].parks.map((p) => [p.key, p.result]), [["OTH-4", "parked"]], "the cap parks the ticket instead of asking again");
 
-  // a new version (the verdict changed the ticket, or someone edited it) starts over
-  const fresh = await setup({ liveness: idle, journal: new MemoryJournal(spent), issues: [issue({ ...spec, updated: minsAgo(60) })] }).run();
-  assert.deepEqual(fresh.scopes[0].reviews.map((r) => r.attempt), [1]);
+  // The pickup chip rewrites updated_at after every turn, so each send is at a different version.
+  // That must NOT reset the count (33GOD-33: 50 turns, every one "attempt 1").
+  const churned = Array.from({ length: REVIEW_MAX_ATTEMPTS }, (_, i) => at(1000 + i, 1, minsAgo(2000 - i * 100)));
+  const same = await setup({ liveness: idle, journal: new MemoryJournal(churned), issues: [issue({ ...spec, updated: minsAgo(60) })] }).run();
+  assert.deepEqual(same.scopes[0].reviews, []);
+  assert.deepEqual(same.scopes[0].parks.map((p) => p.result), ["parked"]);
   assert.equal(reviewAttempts(spent).get(`i-4|${OLD}`).length, REVIEW_MAX_ATTEMPTS);
 });
 

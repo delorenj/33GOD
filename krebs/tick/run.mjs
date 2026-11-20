@@ -27,8 +27,9 @@ import {
   triageCandidatesOf,
   triageGuard,
 } from "./select.mjs";
-import { PENDING_MAX_AGE_MS, lastBoardTurns, pendingPublishes, releaseCounts, reviewAttempts, sentCommands, triagedCommandIds } from "./journal.mjs";
+import { PENDING_MAX_AGE_MS, TURN_WINDOW_MS, boardTurnSends, lastBoardTurns, pendingPublishes, releaseCounts, sentCommands, triagedCommandIds } from "./journal.mjs";
 import { QUIET_MS, mapLimit } from "./liveness.mjs";
+import { judgeBoardTurn, parkComment } from "./turns.mjs";
 import { dispatchPrompt, reviewPrompt } from "./prompt.mjs";
 
 /** spec orphans: caps on what one tick does, so a backlog of orphans drains over a few ticks. */
@@ -73,9 +74,10 @@ export const TRIAGED_LABEL = LABEL.triaged;
 export const REVIEW_OPERATION = "reviewTicket";
 export const REVIEW_REASON = "ticket-review";
 export const REVIEW_PROVIDER_EVENT_TYPE = "krebs.catch_up.review";
-/** A review turn that ended without a verdict is sent again after this long, up to REVIEW_MAX_ATTEMPTS per ticket version. */
-export const REVIEW_RETRY_MS = 3 * 60 * 60 * 1000;
-export const REVIEW_MAX_ATTEMPTS = 3;
+/** Attempt caps per episode (tick/turns.mjs): a review or triage turn with no outcome is asked again, then the ticket is parked. */
+export { REVIEW_MAX_ATTEMPTS, REVIEW_RETRY_MS, TRIAGE_MAX_ATTEMPTS, TRIAGE_RETRY_MS } from "./turns.mjs";
+/** A tick parks at most this many looping tickets (a Plane write each); the rest wait for the next tick. */
+export const LOOP_PARK_TICK_CAP = 12;
 /** Liveness checks per scope per tick when picking its board turn (triage or review). */
 export const BOARD_TURN_PROBES = 3;
 
@@ -329,13 +331,15 @@ export async function runTick({
       }
     : null;
   const releasedBefore = releaseCounts(journalEntries, started.getTime() - ORPHAN_LOOP_WINDOW_MS);
-  const reviewsSent = reviewAttempts(journalEntries);
+  // Board turns Krebs sent per TICKET in the look-back window (not per version: the pickup chip rewrites the version every turn).
+  const turnSends = boardTurnSends(journalEntries, started.getTime() - TURN_WINDOW_MS);
   // The kind of the last board turn each scope was sent: when a scope has both kinds waiting,
   // it alternates, so a review backlog never starves triage (the flow's gate) and a triage
   // stream never starves reviews.
   const lastBoardTurn = lastBoardTurns(journalEntries);
   let releasesThisTick = 0;
   let unsticksThisTick = 0;
+  let parksThisTick = 0;
   const triagePlans = []; // board turns {kind, scope, snap, out, entry, ticket}: picked per scope, capped tick-wide after the loop
   const inspected = []; // per scope {scope, out, snap, tickets()}, handed to `inspect` (krebs status) when the plan is complete
   const boards = new Map(); // `${ws}:${board}` -> snapshot | {error}
@@ -426,6 +430,8 @@ export async function runTick({
       triage: [],
       triageCapped: [],
       triageSeen: [],
+      triageHeld: [],
+      parks: [],
       reviews: [],
       reviewsCapped: [],
       reviewsSeen: [],
@@ -662,20 +668,41 @@ export async function runTick({
       const nowMs = started.getTime();
       const candidates = triageCandidatesOf(mine, nowMs, triageMinAgeMs);
       const fresh = [];
+      const toPark = []; // {kind, t, attempts, lastAt}: the episode has used every attempt
       for (const t of candidates) {
         const ids = triageIds({ fleet, nats }, { boardId: board, ticketId: t.id, updatedAt: t.updatedAt, agentId: scope.agentId });
-        if (triaged.has(ids.commandId)) out.triageSeen.push(t.key);
-        else fresh.push({ t, ...ids });
+        if (triaged.has(ids.commandId)) {
+          out.triageSeen.push(t.key);
+          continue;
+        }
+        const v = await judgeBoardTurn({ plane, ws, board, ticket: t, stage: "triage", sends: turnSends.triage.get(t.id) ?? [], nowMs });
+        if (v.action === "send") fresh.push({ t, ...ids });
+        else if (v.action === "park") {
+          toPark.push({ kind: "triage", t, attempts: v.attempts, lastAt: v.lastAt });
+          out.triageSeen.push(t.key);
+          out.triageHeld.push({ key: t.key, why: `${v.attempts} triage turns ended without lifecycle:triaged` });
+        } else {
+          out.triageSeen.push(t.key);
+          out.triageHeld.push({ key: t.key, why: v.why });
+          if (v.action === "unreadable") out.warnings.push(`${t.key}: triage not sent, ${v.why}; left alone`);
+        }
       }
-      // Review turns: a version gets REVIEW_MAX_ATTEMPTS sends, REVIEW_RETRY_MS apart.
+      // Review turns: an episode (since the handback) gets REVIEW_MAX_ATTEMPTS sends, REVIEW_RETRY_MS apart, then it is parked.
       for (const t of reviewCandidatesOf(mine, nowMs, reviewMinAgeMs)) {
-        const sent = reviewsSent.get(`${t.id}|${t.updatedAt ?? ""}`) ?? [];
-        const last = sent[sent.length - 1];
-        const lastMs = last ? Date.parse(last.at ?? "") : NaN;
-        if (sent.length >= REVIEW_MAX_ATTEMPTS) out.reviewsSeen.push({ key: t.key, why: `${sent.length} review turns ended without a verdict` });
-        else if (Number.isFinite(lastMs) && nowMs - lastMs < REVIEW_RETRY_MS) out.reviewsSeen.push({ key: t.key, why: `review turn sent ${Math.round((nowMs - lastMs) / 60000)} min ago` });
-        else fresh.push({ t, kind: "review", attempt: sent.length + 1, ...reviewIds({ fleet, nats }, { boardId: board, ticketId: t.id, updatedAt: t.updatedAt, agentId: scope.agentId, attempt: sent.length + 1 }) });
+        const v = await judgeBoardTurn({ plane, ws, board, ticket: t, stage: "review", sends: turnSends.review.get(t.id) ?? [], nowMs });
+        if (v.action === "send") {
+          fresh.push({ t, kind: "review", attempt: v.attempt, ...reviewIds({ fleet, nats }, { boardId: board, ticketId: t.id, updatedAt: t.updatedAt, agentId: scope.agentId, attempt: v.attempt }) });
+        } else if (v.action === "park") {
+          toPark.push({ kind: "review", t, attempts: v.attempts, lastAt: v.lastAt });
+          out.reviewsSeen.push({ key: t.key, why: `${v.attempts} review turns ended without a verdict` });
+        } else if (v.action === "wait") {
+          out.reviewsSeen.push({ key: t.key, why: v.why });
+        } else {
+          out.reviewsSeen.push({ key: t.key, why: v.why });
+          out.warnings.push(`${t.key}: review not sent, ${v.why}; left alone`);
+        }
       }
+      for (const p of toPark) await parkLoop({ scope, snap, out, ...p });
       // One board turn per scope per tick (a desk serializes its board turns), oldest ticket first.
       // Liveness is asked HERE, before a candidate takes the scope's turn (ADR 0001): a ticket
       // with a turn already queued or running (an n8n triage, the implementer still at it) is
@@ -822,6 +849,77 @@ export async function runTick({
         out.errors.push(`${ticket.key}: written but publish failed (republished next tick): ${entry.error}`);
         record({ action: "dispatch.publish", dispatch_id: dispatchId, command_id: commandId, agent_id: route.agentId, key: ticket.key, ok: false, error: entry.error });
       }
+    }
+  }
+
+  /**
+   * A ticket whose episode has used every board-turn attempt: agent:failed plus one comment, so the
+   * loop stops and a person can see why. Re-reads the ticket live and applies the same guard the send
+   * would, and asks Candystore that no turn is live; anything uncertain leaves the ticket for the next tick.
+   */
+  async function parkLoop({ scope, snap, out, kind, t, attempts, lastAt }) {
+    const ws = scope.workspace;
+    const board = scope.boardId;
+    const entry = { ...ticketRef(t), kind, attempts };
+    out.parks.push(entry);
+    const failedId = snap.labelIdOf.get(LABEL.failed);
+    if (!failedId) {
+      entry.result = "skipped";
+      out.warnings.push(`${t.key}: would park with ${LABEL.failed} but the board has no such label`);
+      return;
+    }
+    if (parksThisTick >= LOOP_PARK_TICK_CAP) {
+      entry.result = "capped";
+      return;
+    }
+    const record2 = (ok, extra = {}) =>
+      record({ action: "loop.park", stage: kind, agent_id: scope.agentId, board_id: board, workspace: ws, key: t.key, ticket_id: t.id, attempts, ok, ...extra });
+    if (dryRun) {
+      entry.action = `+${LABEL.failed}`;
+      entry.result = "planned";
+      return;
+    }
+    let live;
+    try {
+      live = normalizeTicket(await plane.issue(t.id, ws, board), snap.ctx);
+    } catch (err) {
+      entry.result = "skipped";
+      entry.why = `live re-read failed: ${message(err)}`;
+      out.errors.push(`${t.key}: parking ${entry.why}`);
+      return;
+    }
+    const nowMs = started.getTime();
+    const why = (kind === "review" ? reviewGuard(live, nowMs, reviewMinAgeMs) : triageGuard(live, nowMs, triageMinAgeMs)) ?? (live.updatedAt !== t.updatedAt ? "changed since the listing (new version; next tick)" : null);
+    if (why) {
+      entry.result = "skipped";
+      entry.why = `changed since the listing: ${why}`;
+      return;
+    }
+    if (liveness) {
+      const v = await liveness({ boardId: board, ticketId: t.id, key: t.key, sent: sentByTicket.get(t.id) ?? [] });
+      if (v.unknown || v.live) {
+        entry.result = "skipped";
+        entry.why = v.unknown ? v.why : `turn live: ${v.why}`;
+        return;
+      }
+    }
+    parksThisTick++;
+    entry.action = `+${LABEL.failed}`;
+    try {
+      await plane.editIssue(t.id, { addLabels: [failedId] }, ws, board);
+      record2(true);
+      entry.result = "parked";
+    } catch (err) {
+      entry.result = "failed";
+      entry.error = message(err);
+      out.errors.push(`${t.key}: parking a looping ${kind} failed: ${entry.error}`);
+      record2(false, { error: entry.error });
+      return;
+    }
+    try {
+      await plane.comment(t.id, parkComment(kind, attempts, lastAt), ws, board);
+    } catch (err) {
+      out.warnings.push(`${t.key}: parked, but the comment failed: ${message(err)}`);
     }
   }
 

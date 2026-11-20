@@ -206,14 +206,14 @@ test("review: handed back, waits for 30 quiet minutes then a board turn; a versi
   assert.equal(hhmm(rows["SOLO-1"].eta), "11:50", "quiet until 11:50:00; the tick starts just after the mark; and the 11:40 board turn is SOLO-2's");
 });
 
-test("review turn already sent for this version: cooling down, with its retry time", async () => {
+test("review turn already sent for this ticket: cooling down, with its retry time", async () => {
   const issues = [issue({ seq: 2, state: "ip", labels: ["lifecycle:review"], updated: at("09:00:00") })];
   const journal = new MemoryJournal([
     { ts: at("11:20:06"), action: "review.publish", ok: true, ticket_id: "i-2", ticket_updated_at: at("09:00:00"), attempt: 1, command_id: "c1", agent_id: "solo-pm", board_id: SOLO },
   ]);
   const p = await plan({ issues, review: true, journal });
   const { scope, out, tickets } = p.inspected[0];
-  const reviewsSent = new Map([[`i-2|${at("09:00:00")}`, [{ attempt: 1, at: at("11:20:06"), commandId: "c1" }]]]);
+  const reviewsSent = new Map([["i-2", [{ at: at("11:20:06"), commandId: "c1", updatedAt: at("09:00:00") }]]]);
   const rows = byKey(classifyScope({ scope, out, tickets, nowMs: NOW.getTime(), turns: new Map(), journal: { reviewsSent } }));
   assert.equal(rows["SOLO-2"].stage, "review-wait");
   assert.equal(hhmm(rows["SOLO-2"].eta), "14:30", "last sent 11:20:06 + 3 h = 14:20:06, so the 14:20 tick is too early and 14:30 is the first that may resend");

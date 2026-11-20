@@ -49,7 +49,10 @@ export function formatReport(report, { verbose = false } = {}) {
         const more = s.triageCapped.length - shown.length;
         parts.push(`capped ${s.triageCapped.length}: ${list(shown, (c) => `${c.key} (${c.why})`)}${more ? `, +${more} more (see --json)` : ""}`);
       }
-      if (s.triageSeen.length) parts.push(`already triaged at this version: ${s.triageSeen.join(", ")}`);
+      const held = new Map((s.triageHeld ?? []).map((x) => [x.key, x.why]));
+      const seen = s.triageSeen.filter((k) => !held.has(k));
+      if (seen.length) parts.push(`already triaged at this version: ${seen.join(", ")}`);
+      if (held.size) parts.push(`not asked again: ${list([...held].map(([key, why]) => ({ key, why })), (x) => `${x.key} (${x.why})`)}`);
       lines.push(`  triage catch-up: ${parts.length ? parts.join("; ") : "none"}`);
     }
     {
@@ -61,6 +64,7 @@ export function formatReport(report, { verbose = false } = {}) {
       if (seen.length) parts.push(`already asked: ${list(seen, (r) => `${r.key} (${r.why})`)}`);
       if (parts.length) lines.push(`  review: ${parts.join("; ")}`);
     }
+    if ((s.parks ?? []).length) lines.push(`  parked (looping board turns): ${list(s.parks, (p) => `${p.key} ${p.kind} x${p.attempts} ${p.result ?? "?"}${p.why ? ` (${p.why})` : ""}${p.error ? ` (${p.error})` : ""}`)}`);
     if (s.waiting.length) lines.push(`  queued: ${s.waiting.join(", ")}`);
     if (s.blocked.length) lines.push(`  blocked: ${list(s.blocked, (b) => `${b.key} (${b.why})`)}`);
     if (s.excluded.length) lines.push(`  todo not dispatchable: ${list(s.excluded, (e) => `${e.key} (${e.why})`)}`);

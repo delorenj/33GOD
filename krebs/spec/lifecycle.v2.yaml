@@ -155,9 +155,32 @@ orphans:                     # 33GOD-93: turns that ended with no handback and n
   journal: orphan.release, orphan.unstick, orphan.fail
 
 catch_up:                    # krebs sends every board turn (triage, review) itself
-  triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for 10 minutes (one tick after the edit settles) and with no live turn (orphans.liveness), gets a triage turn (the Fleet node's groomTicket command; no Plane write); krebs is the only triage sender (the n8n Ticket Triage lane is retired, ADR 0001); the command id is derived from board + ticket + updated_at, so it fires once per ticket version; at most 1 per scope (a desk serializes board turns on its lease; two at once collide) and 6 per tick, triage before review across the tick, oldest first; a candidate with a live turn is skipped and the next oldest takes the scope's turn (at most 3 liveness checks per scope per tick; ADR 0001)
-  review: an In Progress ticket with lifecycle:review, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes and with no live turn (orphans.liveness), gets a review turn from its scope's PM (reason ticket-review, dispatcher krebs-tick; no Plane write; the chip sets agent:working while it runs); it shares the 1 board turn per scope per tick with triage (a scope alternates; after a triage turn its oldest review goes first, and the other way round, so neither backlog starves the other) and the 6 per tick; the command id is derived from board + ticket + updated_at + attempt; a version with no verdict is asked again after 3 hours, at most 3 times
+  triage: a Todo ticket with no lifecycle:triaged, no hold_label, no agent:working and no epic container label, unchanged for 10 minutes (one tick after the edit settles) and with no live turn (orphans.liveness), gets a triage turn (the Fleet node's groomTicket command; no Plane write); krebs is the only triage sender (the n8n Ticket Triage lane is retired, ADR 0001); the command id is derived from board + ticket + updated_at (a ticket version is sent at most once), and a ticket is capped per episode (catch_up_attempts); at most 1 per scope (a desk serializes board turns on its lease; two at once collide) and 6 per tick, triage before review across the tick, oldest first; a candidate with a live turn is skipped and the next oldest takes the scope's turn (at most 3 liveness checks per scope per tick; ADR 0001)
+  review: an In Progress ticket with lifecycle:review, no hold_label, no agent:working and no epic container label, unchanged for 30 minutes and with no live turn (orphans.liveness), gets a review turn from its scope's PM (reason ticket-review, dispatcher krebs-tick; no Plane write; the chip sets agent:working while it runs); it shares the 1 board turn per scope per tick with triage (a scope alternates; after a triage turn its oldest review goes first, and the other way round, so neither backlog starves the other) and the 6 per tick; the command id is derived from board + ticket + updated_at + attempt; a review with no verdict is asked again after 3 hours, at most 3 times per episode (catch_up_attempts)
   dispatch: a dispatch whose publish failed is republished with the same command id on the next tick
+
+catch_up_attempts:           # added 2026-11-20 (33GOD-33: 50 review turns in 42 hours, HEYMA-39: 12 triage turns in 8 hours)
+  why: >
+    A board turn that ends with no outcome (no verdict, no lifecycle:triaged, no hold label) is asked again a
+    bounded number of times, then the ticket is parked. The count cannot be keyed on the ticket version: the
+    pickup chip adds agent:working when a turn starts and removes it when it ends, so every turn, even one whose
+    model call was refused, leaves a new updated_at behind, and a version-keyed count read "attempt 1" for ever.
+  episode: >
+    The count is per episode, read from the ticket's own activity log. An episode begins at the latest of:
+    review: lifecycle:review added (the handback); triage: the ticket entered its current Todo state, was created
+    in it, or lost lifecycle:triaged (an owner's re-triage); either: a hold label removed (agent:failed,
+    needs-input, blocked, human), so whoever clears Krebs's park or answers the question restarts the count.
+    The chip's agent:working pairs, comments and edits never begin one. Attempts are the board turns Krebs
+    published for the ticket since then (journal review.publish / triage.publish, 7-day look-back).
+  review: {max_attempts: 3, min_gap: 3 hours}
+  triage: {max_attempts: 3, min_gap: 30 minutes}
+  at_the_cap: >
+    The ticket is parked: +agent:failed (the same hold the orphan loop guard uses; nothing else changes) and one
+    comment saying who was asked what, how many times, and how to resume. A ticket is parked only after a live
+    re-read passes the same guard the send would, and Candystore shows no live turn (unknown or live: left for
+    the next tick). At most 12 parks per tick. Journal: loop.park.
+  unreadable: if the activity log cannot be read, the ticket is neither sent a turn nor parked, and the tick warns
+  first_turn: a ticket with no prior board turn on record never reads the activity log
 
 clock: Candybar `krebs-tick` (exec runner). No private loop, no other dispatcher.
 writes: Pilot plane.js (delta label edits) for Krebs; px / px-apply for PM passes.

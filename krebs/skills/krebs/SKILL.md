@@ -95,7 +95,7 @@ reviewer is never the implementer, so have an independent worker check code. End
   `lifecycle:review` is cleared when it leaves In Progress.
 - **Needs a person:** `px attention <ref> -m "<question>"`.
 
-A review turn that ends with none of these is sent again after 3 hours (at most 3 times).
+A review turn that ends with none of these is sent again after 3 hours, at most 3 times per handback; then Krebs parks the ticket with `agent:failed` and one comment (the count is per ticket since `lifecycle:review` was added, not per ticket version, because the pickup chip rewrites the version every turn). Remove `agent:failed` to start a fresh count.
 
 The PM ranks, flags and judges. It does not dispatch. In launch mode (`.launch.yaml`
 `mode: launch`) the same PM gives the verdict through the launch pass's `--apply`: a reviewed ticket

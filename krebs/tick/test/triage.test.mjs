@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { loadBloodbank } from "../deps.mjs";
 import { scopesFromRegistry } from "../registry.mjs";
-import { COMMAND_TYPE, TRIAGE_REASON, runTick, triageIds } from "../run.mjs";
+import { COMMAND_TYPE, TRIAGE_REASON, TRIAGE_RETRY_MS, runTick, triageIds } from "../run.mjs";
 import { MemoryJournal, Journal, triagedCommandIds } from "../journal.mjs";
 import { laneModel } from "../lifecycle.mjs";
 import { normalizeTicket, triageCandidatesOf, triageGuard } from "../select.mjs";
@@ -117,9 +117,9 @@ test("once per ticket version: a second tick sends nothing; a new updated_at tri
   await third.run();
   assert.equal(triages(third.publish).length, 0);
 
-  // The ticket changed (a person edited it): a new version, a new command id.
+  // The ticket changed (a person edited it) and the retry gap has passed: a new version, a new command id.
   plane.boards[SOLO].issues.get("i-1").updated_at = "2026-11-14T14:10:00Z";
-  await run();
+  await run({ now: () => new Date(NOW.getTime() + TRIAGE_RETRY_MS + 60000) });
   assert.equal(triages(publish).length, 2);
   assert.notEqual(triages(publish)[0].commandId, triages(publish)[1].commandId);
 });
