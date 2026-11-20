@@ -195,3 +195,17 @@ export function reviewAttempts(entries) {
   for (const list of out.values()) list.sort((a, b) => a.attempt - b.attempt);
   return out;
 }
+
+/**
+ * The kind of the last board turn each scope was sent ("<agent>|<board>" -> "triage" | "review"):
+ * when a scope has both kinds waiting, the tick alternates, so a review backlog never starves
+ * triage and a triage stream never starves reviews.
+ */
+export function lastBoardTurns(entries) {
+  const out = new Map();
+  for (const e of entries) {
+    if (e?.ok !== true || (e.action !== "triage.publish" && e.action !== "review.publish")) continue;
+    out.set(`${e.agent_id}|${e.board_id}`, e.action === "review.publish" ? "review" : "triage");
+  }
+  return out;
+}

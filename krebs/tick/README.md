@@ -3,6 +3,7 @@
 The Krebs lifecycle v2 dispatcher ([spec](../spec/lifecycle.v2.yaml), [explainer](../docs/lifecycle.md)). It is the only thing that moves a ticket from Todo to In Progress. Candybar runs it every 10 minutes ([`../.candybars/krebs-tick.candybar.toml`](../.candybars/krebs-tick.candybar.toml)).
 
 ```bash
+node ~/code/33GOD/krebs/bin/krebs.mjs status --board PX         # what is happening, and when each ticket moves
 node ~/code/33GOD/krebs/bin/krebs.mjs tick --dry-run            # read-only plan, every scope
 node ~/code/33GOD/krebs/bin/krebs.mjs tick --dry-run --board TOLT --verbose
 node ~/code/33GOD/krebs/bin/krebs.mjs tick --json               # what Candybar runs (live)
@@ -48,3 +49,60 @@ Row knobs: `plane.wip` (non-negative integer, default 2) and `plane.review` (whe
 ## Journal
 
 `~/.local/state/krebs/tick-journal.jsonl`, relocated by `KREBS_STATE_DIR`, or `--journal`. Each action writes one line: `repair`, `orphan.release`, `orphan.unstick`, `orphan.fail`, `triage.publish`, `review.publish`, `dispatch.intent` (which carries the full command), `dispatch.write`, `dispatch.publish`, `dispatch.dropped`, plus one `tick` summary line. A failed write whose outcome is unknown (a timeout, a 5xx) is left pending without verification. The next tick publishes only if the write is actually on the ticket. `tick.lock` in the same directory keeps a hand-run tick from overlapping a scheduled one. A dry run never writes the journal.
+
+## Watching the pipeline
+
+`krebs status` answers "what is happening on my board, and when will each ticket move?". It is read-only: no Plane write, no publish, no `tick.lock`, no journal line. It runs the tick's own dry-run plan (`runTick` with `dryRun` and an `inspect` hook, so triage eligibility, dispatch order, slot math, blockers and orphans are the tick's decisions, not a copy) and adds Candystore's live turns and a projection of the next ticks.
+
+```bash
+krebs status                       # every scope; idle and fully parked scopes collapse to one line
+krebs status --board PX            # one board, every Todo / In Progress ticket
+krebs status --board PX --json     # the same data as a stable object
+krebs status --ticket PX-12        # one ticket, any lane: stage, why, ETA, turn history, journal trail
+```
+
+Per scope it prints: the header (board -> agent, WIP occupied/limit), the last tick and its result (the journal's last `tick` line), the next tick (an estimate); **in flight now** (turns Candystore says are queued or running, with how long); every ticket with a **stage**, the **reason** in plain English and an **ETA** for its next transition; the last 10 journal actions; and, when nothing is running, one **why nothing moved** line.
+
+Stages: `waiting: quiet window`, `next for triage`, `queued for triage #n`, `triage in flight`, `triage already sent` (a version the tick already triaged and that is still untriaged: edit it), `ready to dispatch`, `waiting for a WIP slot behind <slot holders>`, `blocked_by <ticket>`, `in progress (delegation running 12m)`, `in progress: no live turn` (orphan release ETA), `in review: waiting for quiet` / `review turn queued` / `turn already sent`, `held: <label>`, `epic: never dispatched`, `agent:working` with no live turn. `--ticket` also shows `backlog` and `done`.
+
+### Timing: what fires when
+
+| What | When | Notes |
+|---|---|---|
+| The tick | every 10 minutes on the mark (`:00 :10 :20 ...`), Candybar `krebs-tick` | everything below happens at a tick, never between two |
+| Triage eligibility | Todo, no `lifecycle:triaged`, no hold label, no `agent:working`, not an epic, `updated_at` older than 10 minutes | any edit (a comment, a label, a move into Todo) restarts the 10-minute clock |
+| Triage throughput | 1 board turn per scope per tick, 6 per tick across scopes, oldest `updated_at` first | the one turn is shared with review and alternates with it, so a review can take a triage turn's place |
+| Triage turn | starts at the tick, ends when the agent adds `lifecycle:triaged` (or `needs-input`) | minutes; the ticket cannot be dispatched until it ends |
+| Dispatch | the first tick after `lifecycle:triaged` lands, into free WIP slots (`plane.wip`, default 2), in Todo order | a full scope waits for a handback, a hold label or Done |
+| Review eligibility | In Progress + `lifecycle:review`, no hold, no `agent:working`, quiet 30 minutes | then 1 board turn per scope per tick as above; resent after 3 h, at most 3 times |
+| Orphan release | In Progress holding a slot (or any `agent:working`), quiet 30 minutes, no live turn in Candystore | back to Todo; a second release in 7 days becomes `agent:failed` |
+
+Worst-case latency for N untriaged tickets dropped into Todo at once on one scope, assuming idle agents: the first triage starts at the first tick more than 10 minutes after the drop (10 to 20 minutes), then one more every 10 minutes, so the last starts 10N to 10N+10 minutes after the drop. Each ticket is dispatchable one tick after its own triage ends, so the last is dispatched about 10N+20 minutes after the drop (when a slot is free). N = 8: about 90 minutes to finish triage and 100 to dispatch the last one. Already-triaged tickets skip the queue and go at the next tick while slots are free. The PX drop of 2026-11-20 (5 untriaged, 2 triaged): dispatch of the triaged pair at the next tick, triage of the five at +10 min steps, the last one ~72 minutes after the drop.
+
+### `--json` shape (version 1)
+
+```text
+{ version: 1, generatedAt, estimates,
+  tick: { everyMinutes: 10, last: {at, finishedAt, ok, scopes, dispatched, triaged, reviews, repaired, errors} | null,
+          overdue: bool, nextEstimate },
+  candystore: { ok, error, url },
+  registry, journal,
+  scopes: [ { board, boardId, agentId, scopeLabels, wip, occupied: [key], free, overLimit, reviewRequired,
+              idle: bool,                       // no Todo / In Progress ticket at all
+              inFlight: [ {key, title, kind, reason, state: running|queued|detached|sent, since, runningMinutes, invocationId} ],
+              idleReason: string | null,        // set when inFlight is empty
+              tickets: [ {key, title, lane, state, labels, updatedAt,
+                          stage, stageLabel, reason,
+                          eta: ISO | null, etaNote: string | null,    // an estimate; null = depends on something else
+                          queuePosition: n | null, blockedBy: string | null} ],
+              counts: { <stage>: n },
+              recent: [ {ts, ageMinutes, action, key, ok, detail} ],  // last 10 journal actions of this agent
+              warnings, errors } ],
+  ticket?: { ...row, scope, journal: [...], turns: [ {invocationId, reason, queuedAt, startedAt, endedAt, outcome, detachedAt} ] } }   // --ticket only
+```
+
+`stage` is one of: `ready`, `wait-slot`, `blocked-by`, `triage-next`, `triage-queued`, `quiet-window`, `triage-seen`, `triage-inflight`, `turn-inflight`, `working`, `in-progress`, `in-progress-idle`, `review-wait`, `review-inflight`, `review-sent`, `review-working`, `review-noverdict`, `held`, `epic`, `other-lane`, `backlog`, `done`, `cancelled`. Exit code 0; 2 for a usage error. Candystore unreachable is reported under `candystore` and in the text, never a crash; stages then say they cannot tell.
+
+### How accurate are the ETAs?
+
+They are projections, marked `~`. They assume every tick fires on the 10-minute mark, nobody edits a ticket meanwhile (an edit restarts its quiet window), turns end quickly, and the 6-per-tick cross-scope cap does not bite (on a busy tick a scope can lose its turn to older tickets elsewhere). A dispatch needing a slot has no ETA: it depends on when a running turn hands back. `blocked_by` is only read for tickets the dispatch walk reaches, so a ticket behind a full scope shows `waiting for a WIP slot` until a slot opens, then its blocker.

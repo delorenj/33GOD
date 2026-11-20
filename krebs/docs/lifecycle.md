@@ -134,6 +134,20 @@ The review turn tells the PM to judge each acceptance criterion against evidence
 
 Review turns share the scope's one board turn per tick with triage, and the tick-wide cap of 6. The scope alternates: after a triage turn its oldest review goes next, and after a review the oldest triage, so a backlog of old reviews never starves fresh triage (and the other way round). Across the tick, triage turns are picked before reviews. A verdict changes the ticket, so each ticket version is reviewed once. A turn that ends without a verdict is sent again after 3 hours, at most 3 times per version; after that the tick lists the ticket as waiting.
 
+## Watching the pipeline
+
+Nothing moves between ticks, and the tick runs every 10 minutes, so a ticket you drop into Todo does not "start" until the next mark and then waits its turn. `krebs status [--board KEY] [--ticket KEY] [--json]` shows where every ticket is and when it moves (read-only; [details and JSON shape](../tick/README.md#watching-the-pipeline)). Start there before wondering whether the board is stuck.
+
+| What | When |
+|---|---|
+| Tick | every 10 min on the mark, Candybar `krebs-tick` |
+| Triage starts | the first tick after the ticket has been quiet 10 min; 1 board turn per scope per tick (shared with review, alternating); 6 per tick overall; oldest first |
+| Dispatch | the first tick after `lifecycle:triaged` lands, if a WIP slot is free (2 by default); otherwise when one frees |
+| Review turn | quiet 30 min after `lifecycle:review`; same 1-per-scope-per-tick turn; resent after 3 h, max 3 |
+| Orphan release | In Progress, quiet 30 min, no live turn in Candystore |
+
+Worst case for N untriaged tickets dropped on one scope: the last one's triage starts 10N to 10N+10 minutes after the drop, and it can be dispatched one tick after that (10N+20 in all), if a slot is free. Eight tickets: about 90 minutes to triage them all. The serialization is deliberate (a desk handles one board turn at a time, and two at once collided on 2026-11-14); the way to go faster is to triage by hand (add `lifecycle:triaged` yourself once the criteria are real) and the ticket goes at the next tick.
+
 ## What it replaces
 
 | Before | Now |

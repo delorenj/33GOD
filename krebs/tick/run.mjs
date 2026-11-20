@@ -27,7 +27,7 @@ import {
   triageCandidatesOf,
   triageGuard,
 } from "./select.mjs";
-import { PENDING_MAX_AGE_MS, pendingPublishes, releaseCounts, reviewAttempts, sentCommands, triagedCommandIds } from "./journal.mjs";
+import { PENDING_MAX_AGE_MS, lastBoardTurns, pendingPublishes, releaseCounts, reviewAttempts, sentCommands, triagedCommandIds } from "./journal.mjs";
 import { QUIET_MS, mapLimit } from "./liveness.mjs";
 import { dispatchPrompt, reviewPrompt } from "./prompt.mjs";
 
@@ -307,6 +307,7 @@ export async function runTick({
   orphanReleaseScopeCap = ORPHAN_RELEASE_SCOPE_CAP,
   orphanReleaseTickCap = ORPHAN_RELEASE_TICK_CAP,
   orphanUnstickTickCap = ORPHAN_UNSTICK_TICK_CAP,
+  inspect = null,
 }) {
   const started = now();
   const tickId = `tick:${started.toISOString()}`;
@@ -329,17 +330,14 @@ export async function runTick({
     : null;
   const releasedBefore = releaseCounts(journalEntries, started.getTime() - ORPHAN_LOOP_WINDOW_MS);
   const reviewsSent = reviewAttempts(journalEntries);
-  // The kind of the last board turn each scope was sent ("<agent>|<board>" -> triage|review):
-  // when a scope has both kinds waiting, it alternates, so a review backlog never starves
-  // triage (the flow's gate) and a triage stream never starves reviews.
-  const lastBoardTurn = new Map();
-  for (const e of journalEntries) {
-    if (e?.ok !== true || (e.action !== "triage.publish" && e.action !== "review.publish")) continue;
-    lastBoardTurn.set(`${e.agent_id}|${e.board_id}`, e.action === "review.publish" ? "review" : "triage");
-  }
+  // The kind of the last board turn each scope was sent: when a scope has both kinds waiting,
+  // it alternates, so a review backlog never starves triage (the flow's gate) and a triage
+  // stream never starves reviews.
+  const lastBoardTurn = lastBoardTurns(journalEntries);
   let releasesThisTick = 0;
   let unsticksThisTick = 0;
   const triagePlans = []; // board turns {kind, scope, snap, out, entry, ticket}: picked per scope, capped tick-wide after the loop
+  const inspected = []; // per scope {scope, out, snap, tickets()}, handed to `inspect` (krebs status) when the plan is complete
   const boards = new Map(); // `${ws}:${board}` -> snapshot | {error}
   const statesCache = new Map();
 
@@ -451,6 +449,7 @@ export async function runTick({
     };
     let mine = snap.tickets.filter((t) => !t.archived && ownerOf(t) === scope.agentId);
     out.tickets = mine.length;
+    inspected.push({ scope, out, snap, tickets: () => mine });
 
     // 1. Owed publishes from earlier ticks (same command id, byte-identical command).
     for (const p of pending.filter((x) => x.agentId === scope.agentId && x.boardId === board)) {
@@ -957,6 +956,8 @@ export async function runTick({
   }
 
   report.ok = report.errors.length === 0 && report.scopes.every((s) => s.errors.length === 0);
+  // The finished plan, for read-only callers (`krebs status`). It changes nothing in the report.
+  if (inspect) inspect(inspected.map((i) => ({ scope: i.scope, out: i.out, snap: i.snap, tickets: i.tickets() })));
   record({
     action: "tick",
     ok: report.ok,

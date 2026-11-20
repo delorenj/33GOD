@@ -16,3 +16,19 @@ cmd tick help="Repair lifecycle invariants and dispatch triaged tickets into fre
     }
     flag "-h --help" help="Show usage"
 }
+cmd status help="Read-only: what is happening on each board and when each ticket moves (stage, reason, ETA, turns in flight, recent activity)" {
+    flag --board help="Limit to board key or id" {
+        arg <KEY>
+    }
+    flag --ticket help="Detail for one ticket (any lane)" {
+        arg <KEY>
+    }
+    flag --json help="Machine-readable status (shape in tick/README.md)"
+    flag --registry help="Agents registry path" {
+        arg <PATH>
+    }
+    flag --journal help="Journal path (read only)" {
+        arg <PATH>
+    }
+    flag "-h --help" help="Show usage"
+}

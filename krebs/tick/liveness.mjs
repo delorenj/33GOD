@@ -193,6 +193,14 @@ export function candystoreClient({ base, fetchImpl = globalThis.fetch, timeoutMs
   return {
     /** Every event on one correlation id since `fromIso`, newest first. */
     correlated: (correlationId, fromIso) => get({ correlationid: correlationId, from: fromIso, limit: "1000", tools: "1" }),
+    /** One ticket's invocation lifecycle events (queued/started/ended/detached) since `fromIso`, newest first. For `krebs status`. */
+    invocations: (correlationId, fromIso) =>
+      get({
+        correlationid: correlationId,
+        from: fromIso,
+        type: "bloodbank.agent.invocation.queued,bloodbank.agent.invocation.started,bloodbank.agent.invocation.completed,bloodbank.agent.invocation.failed,bloodbank.agent.invocation.detached",
+        limit: "300",
+      }),
     /** Recent events whose text mentions `key` (worker activity is filtered by the caller). */
     mentions: (key, fromIso) => get({ q: String(key).toLowerCase(), from: fromIso, limit: "200", tools: "1" }),
   };
