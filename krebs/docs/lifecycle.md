@@ -141,7 +141,7 @@ Nothing moves between ticks, and the tick runs every 10 minutes, so a ticket you
 | What | When |
 |---|---|
 | Tick | every 10 min on the mark, Candybar `krebs-tick` |
-| Triage starts | the first tick after the ticket has been quiet 10 min; 1 board turn per scope per tick (shared with review, alternating); 6 per tick overall; oldest first |
+| Triage starts | the first tick after the ticket has been quiet 10 min (and has had no agent activity for 30 min: such a ticket is skipped as "turn live" and the next one takes the turn); 1 board turn per scope per tick (shared with review, alternating); 6 per tick overall; oldest first |
 | Dispatch | the first tick after `lifecycle:triaged` lands, if a WIP slot is free (2 by default); otherwise when one frees |
 | Review turn | quiet 30 min after `lifecycle:review`; same 1-per-scope-per-tick turn; resent after 3 h, max 3 |
 | Orphan release | In Progress, quiet 30 min, no live turn in Candystore |

@@ -88,7 +88,8 @@ function cliOf(event) {
 /**
  * The verdict for one ticket, from its correlation-id events and the recent
  * events that mention its key. Pure: no I/O.
- * Returns {live: boolean, why: string, lastEnd: {type, at} | null}.
+ * Returns {live: boolean, why: string, lastEnd: {type, at} | null}; a verdict that is live only because of
+ * recent activity (rules 3 and 4) also carries busyUntil (ms): when that quiet window ends (for `krebs status`).
  */
 export function turnState({ correlated = [], mentions = [], sent = [], key, nowMs }) {
   const invocations = new Map(); // invocation id -> {queued, started, ended, detached, reason, sender}
@@ -160,7 +161,7 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
     }
   }
   if (lastActivity !== null && nowMs - lastActivity < QUIET_MS) {
-    return { live: true, why: `agent activity on the ticket ${ago(nowMs, lastActivity)}`, lastEnd: end };
+    return { live: true, why: `agent activity on the ticket ${ago(nowMs, lastActivity)}`, lastEnd: end, busyUntil: lastActivity + QUIET_MS };
   }
   const pattern = keyPattern(key);
   for (const e of mentions) {
@@ -168,7 +169,7 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
     if (t === null || nowMs - t >= QUIET_MS) continue;
     if (!cliOf(e)) continue;
     if (pattern.test(workdirOf(e))) {
-      return { live: true, why: `a ${cliOf(e)} worker in ${workdirOf(e)} was active ${ago(nowMs, t)}`, lastEnd: end };
+      return { live: true, why: `a ${cliOf(e)} worker in ${workdirOf(e)} was active ${ago(nowMs, t)}`, lastEnd: end, busyUntil: t + QUIET_MS };
     }
   }
   const why = end

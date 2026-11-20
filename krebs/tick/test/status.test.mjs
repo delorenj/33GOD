@@ -13,6 +13,7 @@ import {
   TICK_MS,
   buildStatus,
   classifyScope,
+  collectBusy,
   collectTurns,
   formatStatus,
   formatTicket,
@@ -21,8 +22,10 @@ import {
   openTurns,
   projectBoardTurns,
   recentActivity,
+  ticketsInPool,
   whyNothingMoved,
 } from "../status.mjs";
+import { QUIET_MS, turnState } from "../liveness.mjs";
 import { FakePlane, SOLO, fakePublisher, issue, registryFixture, tempDir } from "./helpers.mjs";
 
 const { fleet, nats, registry: bbRegistry } = loadBloodbank();
@@ -365,4 +368,52 @@ test("cli: status with no scopes prints an empty status and never creates the jo
   assert.deepEqual(out.scopes, []);
   assert.equal(existsSync(journal), false);
   assert.equal(existsSync(join(dir, "tick.lock")), false);
+});
+
+// ---- recent agent activity: the tick skips the ticket (turn live) without spending the scope's turn ----
+
+test("turnState: activity keeps a ticket live and says when that quiet window ends", () => {
+  const nowMs = Date.parse(at("11:37:00"));
+  const t = Date.parse(at("11:20:00"));
+  const v = turnState({ key: "X-1", nowMs, correlated: [{ type: "bloodbank.agent.tool.completed", time: new Date(t).toISOString(), domain: "agent", data: {} }] });
+  assert.equal(v.live, true);
+  assert.equal(v.busyUntil, t + QUIET_MS);
+});
+
+test("a ticket with recent agent activity waits out 30 quiet minutes, and the next ticket takes the turn meanwhile", async () => {
+  // SOLO-1 is the oldest untriaged ticket but a review turn on it ended at 11:35: the 11:40 and 11:50 ticks skip it
+  const issues = [issue({ seq: 1, updated: at("11:00:00") }), issue({ seq: 2, updated: at("11:05:00") })];
+  const p = await plan({ issues });
+  const busyUntil = new Map([["SOLO-1", Date.parse(at("11:35:00")) + QUIET_MS]]);
+  const rows = byKey(classify(p, { busyUntil }));
+  assert.equal(rows["SOLO-2"].stage, "triage-next");
+  assert.equal(hhmm(rows["SOLO-2"].eta), "11:40");
+  assert.equal(rows["SOLO-1"].stage, "quiet-window");
+  assert.match(rows["SOLO-1"].reason, /30 quiet minutes \(eligible ~12:05Z\)/);
+  assert.equal(hhmm(rows["SOLO-1"].eta), "12:10", "12:05 is past the 12:00 tick: the first tick after the window");
+});
+
+test("collectBusy keeps only live-by-activity verdicts that still run past now", async () => {
+  const nowMs = Date.parse(at("11:37:00"));
+  const mk = (key, seq) => ({ key, id: `i-${seq}`, updatedAt: at("11:00:00"), seq });
+  const verdicts = {
+    "SOLO-1": { live: true, why: "activity", busyUntil: nowMs + 60000 },
+    "SOLO-2": { live: false, why: "idle" },
+    "SOLO-3": { unknown: true, why: "down" },
+    "SOLO-4": { live: true, why: "turn running" },
+  };
+  const busy = await collectBusy({ liveness: async ({ key }) => verdicts[key], boardId: "b", tickets: [mk("SOLO-1", 1), mk("SOLO-2", 2), mk("SOLO-3", 3), mk("SOLO-4", 4)], sentByTicket: new Map(), nowMs });
+  assert.deepEqual([...busy.entries()], [["SOLO-1", nowMs + 60000]]);
+});
+
+test("ticketsInPool: untriaged Todo and handed-back In Progress tickets without a live turn", async () => {
+  const issues = [
+    issue({ seq: 1, updated: at("11:00:00") }),
+    issue({ seq: 2, labels: ["lifecycle:triaged"], updated: at("11:00:00") }),
+    issue({ seq: 3, updated: at("11:00:00") }),
+  ];
+  const p = await plan({ issues });
+  const { out, tickets } = p.inspected[0];
+  const turns = new Map([[tickets.find((t) => t.key === "SOLO-3").id, { turns: [{ kind: "triage" }], history: [] }]]);
+  assert.deepEqual(ticketsInPool(tickets, out, turns, NOW.getTime()).map((t) => t.key), ["SOLO-1"]);
 });

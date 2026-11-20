@@ -176,6 +176,34 @@ export function ticketsWorthAsking(tickets, sentByTicket, nowMs, focusKey = null
   );
 }
 
+/**
+ * The board-turn pool's tickets that Candystore may be holding back: untriaged Todo and handed-back In Progress
+ * tickets with no live turn, past the label checks. The tick skips one of these ("turn live") while any agent
+ * activity on it is less than 30 minutes old, and takes the next ticket instead.
+ */
+export function ticketsInPool(tickets, out, turns, nowMs) {
+  const triageSeen = new Set(out.triageSeen ?? []);
+  return tickets.filter(
+    (t) =>
+      !(turns?.get(t.id)?.turns ?? []).length &&
+      ((triageGuard(t, nowMs, Number.NEGATIVE_INFINITY) === null && !triageSeen.has(t.key)) || reviewGuard(t, nowMs, Number.NEGATIVE_INFINITY) === null),
+  );
+}
+
+/**
+ * Ask the liveness probe about each pool ticket (at most `limit` per scope, oldest first) and return
+ * Map(ticket key -> ms when its activity quiet window ends). Unknown or failing probes just leave the ticket out.
+ */
+export async function collectBusy({ liveness, boardId, tickets, sentByTicket, nowMs, limit = 12 }) {
+  const busy = new Map();
+  const pool = [...tickets].sort(compareTriage).slice(0, limit);
+  await mapLimit(pool, 4, async (t) => {
+    const v = await liveness({ boardId, ticketId: t.id, key: t.key, sent: sentByTicket.get(t.id) ?? [] });
+    if (v && !v.unknown && v.live && Number.isFinite(v.busyUntil) && v.busyUntil > nowMs) busy.set(t.key, v.busyUntil);
+  });
+  return busy;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Projection: when does each board turn happen?
 // ---------------------------------------------------------------------------------------------
@@ -237,10 +265,12 @@ function fmtMin(n) {
  *   nowMs    the clock
  *   turns    Map(ticketId -> {turns, history}) from Candystore, or null when Candystore is unreachable
  *   journal  {lastBoardTurn: "triage"|"review"|undefined, reviewsSent: Map("<ticket id>|<updated_at>" -> [{attempt, at}])}
+ *   busyUntil Map(ticket key -> ms): tickets with recent agent activity on them (Candystore's 30-minute quiet rule:
+ *            the tick skips them as "turn live" without spending the scope's board turn); null/absent when unknown
  *
  * Returns {rows: [...], inFlight: [...], projection} where rows cover every ticket (the caller filters).
  */
-export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {} }) {
+export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {}, busyUntil = null }) {
   const nextTickMs = nextTickAfter(nowMs);
   const plannedTriage = new Set(out.triage.filter((x) => x.result === "planned" || x.result === "published").map((x) => x.key));
   const triageSeen = new Set(out.triageSeen);
@@ -267,6 +297,16 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {} 
       if (sent.length < REVIEW_MAX_ATTEMPTS && last && ms(last.at) !== null) {
         items.push({ ticket: t, kind: "review", eligibleMs: Math.max(ms(t.updatedAt) + REVIEW_MIN_AGE_MS, ms(last.at) + REVIEW_RETRY_MS) });
       }
+    }
+  }
+  // A ticket with recent agent activity on it is skipped by the tick ("turn live") until 30 quiet minutes
+  // have passed since that activity, so its window ends at the later of the two.
+  const busyOf = new Map();
+  for (const i of items) {
+    const b = busyUntil?.get(i.ticket.key);
+    if (b !== undefined && b > i.eligibleMs) {
+      i.eligibleMs = b;
+      busyOf.set(i.ticket.key, b);
     }
   }
   const projection = projectBoardTurns({ items, nextTickMs, prefer: journal.lastBoardTurn === "triage" ? "review" : "triage" });
@@ -358,7 +398,9 @@ export function classifyScope({ scope, out, tickets, nowMs, turns, journal = {} 
         const inQuiet = eligibleMs !== undefined && nowMs <= eligibleMs;
         const position = triageOrder.indexOf(t.key) + 1 || null;
         if (proj) {
-          if (inQuiet) {
+          if (inQuiet && busyOf.has(t.key)) {
+            set("quiet-window", "waiting: agent activity", `an agent was active on it recently; krebs sends no board turn until the ticket has had 30 quiet minutes (eligible ~${hhmm(eligibleMs)}Z)${position > 1 ? `, then it is #${position} in the triage queue (1 turn per scope per tick)` : ""}`, { queuePosition: position });
+          } else if (inQuiet) {
             set("quiet-window", "waiting: quiet window", `edited ${fmtMin(quietFor)} ago; triage waits until a ticket has been quiet for 10 min (eligible ~${hhmm(eligibleMs)}Z)${position > 1 ? `, then it is #${position} in the triage queue (1 turn per scope per tick)` : ""}`, { queuePosition: position });
           } else if (position === 1) {
             set("triage-next", "next for triage", "past the quiet window and first in line: the next tick sends its triage turn", { queuePosition: 1 });
@@ -528,7 +570,7 @@ export function lastTickOf(entries) {
  *   turnsByScope  Map(boardId|agentId -> {ok, error, byTicket}) from collectTurns
  *   include       (row) => boolean, which rows to list (default: live work: not done/cancelled/backlog)
  */
-export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, candystore, lastBoardTurn, reviewsSent, include = defaultInclude, registryPath = null, journalPath = null }) {
+export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, candystore, lastBoardTurn, reviewsSent, busyByScope = new Map(), include = defaultInclude, registryPath = null, journalPath = null }) {
   const lastTick = lastTickOf(journalEntries);
   const nextTickMs = nextTickAfter(nowMs);
   const overdue = lastTick ? nowMs - Date.parse(lastTick.at) > 2.5 * TICK_MS : true;
@@ -543,6 +585,7 @@ export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, ca
       nowMs,
       turns: turns?.ok ? turns.byTicket : null,
       journal: { lastBoardTurn: lastBoardTurn.get(`${scope.agentId}|${scope.boardId}`), reviewsSent },
+      busyUntil: busyByScope.get(scopeKey) ?? null,
     });
     const listed = rows.filter(include).sort((a, b) => stageRank(a.stage) - stageRank(b.stage) || (a.eta ?? "~").localeCompare(b.eta ?? "~") || a.key.localeCompare(b.key, undefined, { numeric: true }));
     const active = rows.filter(defaultInclude);

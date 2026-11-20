@@ -22,7 +22,7 @@ import { acquireLock } from "../tick/lock.mjs";
 import { formatReport } from "../tick/format.mjs";
 import { candystoreClient, candystoreLiveness } from "../tick/liveness.mjs";
 import { SPEC_VERSION } from "../tick/lifecycle.mjs";
-import { buildStatus, collectTurns, formatStatus, formatTicket, recentActivity, ticketsWorthAsking, defaultInclude } from "../tick/status.mjs";
+import { buildStatus, collectBusy, collectTurns, formatStatus, formatTicket, recentActivity, ticketsInPool, ticketsWorthAsking, defaultInclude } from "../tick/status.mjs";
 
 const USAGE = `krebs: Krebs lifecycle v2 state manager (spec ${SPEC_VERSION})
 
@@ -194,8 +194,20 @@ async function status(flags) {
   }
   if (!candystore.ok) for (const i of inspected) if (!turnsByScope.get(`${i.scope.boardId}|${i.scope.agentId}`)?.ok) turnsByScope.set(`${i.scope.boardId}|${i.scope.agentId}`, { ok: false, error: candystore.error, byTicket: new Map() });
 
+  // Tickets the tick would skip as "turn live" (recent agent activity): when does that window end?
+  const liveness = candystoreLiveness({ client, fleet: bb.fleet, now: () => new Date(nowMs) });
+  const busyByScope = new Map();
+  if (candystore.ok) {
+    for (const i of inspected) {
+      const key = `${i.scope.boardId}|${i.scope.agentId}`;
+      const pool = ticketsInPool(i.tickets, i.out, turnsByScope.get(key)?.byTicket, nowMs);
+      busyByScope.set(key, await collectBusy({ liveness, boardId: i.scope.boardId, tickets: pool, sentByTicket, nowMs }));
+    }
+  }
+
   const reviewsSent = reviewAttempts(journalEntries);
   const result = buildStatus({
+    busyByScope,
     inspected,
     journalEntries,
     nowMs,
