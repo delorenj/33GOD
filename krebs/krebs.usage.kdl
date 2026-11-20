@@ -1,0 +1,18 @@
+name krebs
+bin krebs
+about "Krebs lifecycle v2 state manager"
+cmd tick help="Repair lifecycle invariants and dispatch triaged tickets into free slots" {
+    flag --board help="Limit to board key or id" {
+        arg <KEY>
+    }
+    flag --dry-run help="Read-only plan: no Plane write, publish, or journal"
+    flag --json help="Machine-readable report"
+    flag --verbose help="Show skipped registry rows"
+    flag --registry help="Agents registry path" {
+        arg <PATH>
+    }
+    flag --journal help="Journal path" {
+        arg <PATH>
+    }
+    flag "-h --help" help="Show usage"
+}

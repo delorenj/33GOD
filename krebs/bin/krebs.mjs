@@ -11,6 +11,7 @@
 
 import { parseArgs } from "node:util";
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
 
 import { loadBloodbank, loadPlane, realPublisher } from "../tick/deps.mjs";
 import { scopesFromRegistry } from "../tick/registry.mjs";
@@ -124,6 +125,10 @@ async function tick(flags) {
 
 async function main() {
   const argv = process.argv.slice(2);
+  if (argv.includes("--usage-spec") && !argv.slice(0, argv.indexOf("--usage-spec")).includes("--")) {
+    process.stdout.write(readFileSync(new URL("../krebs.usage.kdl", import.meta.url), "utf8"));
+    return 0;
+  }
   const json = argv.includes("--json");
   const [command, ...rest] = argv;
   if (!command || command === "help" || command === "--help" || command === "-h") {
