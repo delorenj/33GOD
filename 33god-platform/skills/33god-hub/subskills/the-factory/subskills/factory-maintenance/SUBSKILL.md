@@ -63,6 +63,14 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- `shoot.py`'s `visit-*` frames send a `parcel`: an asset that handles only `post` or `env` filters it out and those
+  frames show Idle. Check the cycle yourself: serve the temp dist with `vite preview` and call
+  `__factoryForge.visit('<id>', '<kind>')` from a /tmp Playwright script, then watch `?at=<id>` (hide the HUD with
+  shoot.py's `HIDE_HUD`) for the station's real traffic (2026-11-20, candybar).
+- A Driver gets no `stage` flag and the sim is paused on the forge's stage, so copying `AssetBody`'s speed rule makes
+  it play nothing there; use `STAGE_ID === id` for real time. A station with two kinds of traffic on one kind
+  (candybar: `tick fired` vs `chore due`, both `post`) can branch on `visit.tag` in a Driver and play a fifth clip
+  on a fourth socket; the forge cannot pose that clip, so film it on the floor (2026-11-20, candybar).
 - Show the Emit to the camera. The hero and situ cameras look at the open side; a `socket_out` slot facing away
   (toward the belt) hid the post-it leaving (2026-11-19, hook-hub, scored 7 for it).
 - Few big readable parts beat many small ones: 36 job cards read as texture at 20 m (2026-11-19, hook-hub r1).
