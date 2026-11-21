@@ -60,7 +60,7 @@ relations:
 - to: ntfy
   kind: calls
   via: ntfy-alert on probe state change
-  evidence: ~/.local/bin/infra-doctor:693
+  evidence: ~/.local/bin/infra-doctor:697
   anchor: '"$alert" --priority "$prio" --tags rotating_light \'
 - to: candybar-watchdog
   kind: reads

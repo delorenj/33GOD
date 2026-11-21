@@ -46,7 +46,7 @@ relations:
 - to: ntfy
   kind: calls
   via: POST https://ntfy.delo.sh (loud push, ticket button)
-  evidence: bloodbank/services/target-watch/target_watch/sink.py:679
+  evidence: bloodbank/services/target-watch/target_watch/sink.py:754
   anchor: status, answer = self.ntfy_http(url, headers, text.encode("utf-8"), NTFY_HTTP_TIMEOUT_S)
 - to: candystore
   kind: reads
@@ -56,7 +56,7 @@ relations:
 - to: onepassword
   kind: calls
   via: op read of ntfy token ref
-  evidence: bloodbank/services/target-watch/target_watch/sink.py:651
+  evidence: bloodbank/services/target-watch/target_watch/sink.py:726
   anchor: code, stdout, stderr = self.runner([self.op, "read", "--no-newline", ref], cwd=NOTIFY_CWD, timeout=OP_TIMEOUT_S)
 evidence:
 - bloodbank/services/target-watch/README.md

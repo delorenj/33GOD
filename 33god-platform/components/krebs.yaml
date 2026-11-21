@@ -46,12 +46,12 @@ relations:
 - to: agents-registry
   kind: reads
   via: loadHermesRegistry(~/.hermes/agents-registry.yaml)
-  evidence: krebs/bin/krebs.mjs:85
+  evidence: krebs/bin/krebs.mjs:103
   anchor: const registry = await bb.registry.loadHermesRegistry(registryPath);
 - to: pilot
   kind: calls
   via: import pilot/src/plane.js Plane + config.js homeBinding
-  evidence: krebs/tick/deps.mjs:60
+  evidence: krebs/tick/deps.mjs:75
   anchor: const { Plane } = await import(pathToFileURL(join(dir, "src", "plane.js")).href);
 - to: n8n-nodes-bb
   kind: calls

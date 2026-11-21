@@ -26,17 +26,17 @@ relations:
 - to: bb-nats
   kind: publishes-to
   via: core NATS bloodbank.evt.audio.memo.{uploaded,played,notified,failed}, audio.earshot.*
-  evidence: holocene/services/upload-proxy/upload_proxy.py:1033
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1047
   anchor: + (f" (peak {peak} dBFS, threshold {SILENCE_DBFS:g})" if peak is not None else ""))[:300],
 - to: bb-nats
   kind: consumes-from
   via: core SUB bloodbank.evt.audio.memo.> and agent.invocation.progressed
-  evidence: holocene/services/upload-proxy/upload_proxy.py:1334
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1331
   anchor: 'def work():'
 - to: minio
   kind: writes
   via: mc cp delo/holocene-auto/inbox/<agent>/... (upload proxy)
-  evidence: holocene/services/upload-proxy/upload_proxy.py:1444
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1490
   anchor: del self._ring[:-self._ring_max]
 - to: minio
   kind: reads

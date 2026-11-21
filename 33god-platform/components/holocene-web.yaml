@@ -28,7 +28,7 @@ relations:
 - to: candybar
   kind: renders
   via: /api/modules/candybar/list and /schedule
-  evidence: holocene/apps/web/app/candybar/candybar-app.tsx:367
+  evidence: holocene/apps/web/app/candybar/candybar-app.tsx:368
   anchor: const list = usePoll<CandybarPayload>("/api/modules/candybar/list", POLL_MS);
 - to: delonet-director
   kind: renders

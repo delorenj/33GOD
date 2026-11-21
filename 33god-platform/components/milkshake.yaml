@@ -36,7 +36,7 @@ relations:
 - to: bb-nats
   kind: consumes-from
   via: durable milkshake-mercury-hook on bloodbank.cmd.billing.transaction.receive
-  evidence: ~/code/Milkshake/src/milkshake/consumer/nats_bus.py:30
+  evidence: ~/code/Milkshake/src/milkshake/consumer/nats_bus.py:34
   anchor: 'HOOK_DURABLE: Final = "milkshake-mercury-hook"'
 - to: client-portal
   kind: calls
