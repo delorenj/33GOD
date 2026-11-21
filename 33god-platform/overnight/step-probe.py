@@ -24,7 +24,7 @@ SAMPLER = """
 window.__s = []; (function loop() {
   const st = document.querySelector('.stage'), c = document.querySelector('.next'), g = document.querySelector('.gauge');
   if (st) window.__s.push({ t: performance.now(), y: scrollY, motion: st.dataset.motion, station: +st.dataset.station, beat: st.dataset.beat,
-    ready: c ? c.dataset.ready : null, vis: c ? getComputedStyle(c).visibility : null, gauge: g ? +g.getAttribute('aria-valuenow') : null });
+    ready: c ? c.dataset.ready : null, vis: c ? getComputedStyle(c).opacity : null, gauge: g ? +g.getAttribute('aria-valuenow') : null });
   requestAnimationFrame(loop);
 })();
 """
@@ -86,7 +86,7 @@ def run(url, pace=1.0, width=1280, height=720, only_steps=False):
 
         def state():
             return pg.evaluate("""() => { const st = document.querySelector('.stage'), c = document.querySelector('.next'), g = document.querySelector('.gauge');
-              return { y: scrollY, motion: st.dataset.motion, station: +st.dataset.station, beat: st.dataset.beat, ready: c.dataset.ready, vis: getComputedStyle(c).visibility, gauge: +g.getAttribute('aria-valuenow'), text: g.getAttribute('aria-valuetext') }; }""")
+              return { y: scrollY, motion: st.dataset.motion, station: +st.dataset.station, beat: st.dataset.beat, ready: c.dataset.ready, vis: getComputedStyle(c).opacity, gauge: +g.getAttribute('aria-valuenow'), text: g.getAttribute('aria-valuetext') }; }""")
 
         def wait_move(timeout=60000):
             try:
@@ -124,7 +124,7 @@ def run(url, pace=1.0, width=1280, height=720, only_steps=False):
             check(f"press {n} rests on {ids[n-1]}'s body end", st["station"] == n and abs(st["y"] - stations[n]) <= 2 and st["beat"] == ids[n - 1], str(mv))
             check(f"press {n} never runs backwards", back == 0, str(mv))
             check(f"press {n} has no stall over {round(allowed)}ms", stall <= allowed, str(mv))
-            check(f"press {n}: caret hidden while moving", caret_moving == 0 and all(r["vis"] == "hidden" or r["ready"] == "false" for r in moving), str(mv))
+            check(f"press {n}: caret hidden while moving", caret_moving == 0 and all(float(r["vis"]) < 0.5 or r["ready"] == "false" for r in moving), str(mv))
             check(f"press {n}: caret " + ("ready at rest" if n < len(stations) - 1 else "hidden at the end"), (st["ready"] == "true") == (n < len(stations) - 1), str(mv))
         check("the film has one rest per major", len(report["moves"]) == len(ids) and len({m["station"] for m in report["moves"]}) == len(ids), f"{len(report['moves'])} rests, {len(ids)} majors")
         check("gauge is monotonic and ends at 100", gauges == sorted(gauges) and gauges[-1] == 100, str(gauges))
@@ -192,6 +192,26 @@ def run(url, pace=1.0, width=1280, height=720, only_steps=False):
                 check("a nav link cuts to the beat and rests there (not on a station)", st["beat"] == "staff" and st["motion"] == "rest" and st["ready"] == "false", str(st))
                 pg.keyboard.press("ArrowDown"); wait_move()
                 check("Down from a nav landing plays out that section", state()["beat"] == "staff" and state()["station"] == ids.index("staff") + 1, str(state()))
+
+            # --- the URL keeps your place: the hash names the beat you rest on, and a reload comes back to it
+            si = ids.index("staff") + 1
+            check("the hash names the beat the film rests on", pg.evaluate("location.hash") == "#staff", pg.evaluate("location.hash"))
+            pg.reload(); pg.wait_for_selector(".stage", state="attached"); pg.wait_for_timeout(1200)
+            st = state()
+            check("a reload comes back to the same station", st["station"] == si and abs(st["y"] - stations[si]) <= 2 and st["ready"] == "true", str(st))
+            ctx2 = b.new_context(viewport={"width": width, "height": height})
+            p2 = ctx2.new_page(); p2.goto(url + "?view=film&night=staged&pace=0.2#gateway"); p2.wait_for_selector(".stage", state="attached"); p2.wait_for_timeout(1200)
+            r2 = p2.evaluate("({b: document.querySelector('.stage').dataset.beat, y: scrollY})")
+            check("a deep link (#gateway) lands on that beat", r2["b"] == "gateway" and r2["y"] > 0, str(r2))
+            ctx2.close()
+
+            # --- keyboard users keep the caret: focus survives the move, a second Enter plays the next section
+            pg.keyboard.press("Home"); pg.wait_for_timeout(700)
+            pg.focus(".next"); n0 = state()["station"]
+            pg.keyboard.press("Enter"); wait_move()
+            check("the caret keeps focus through its own move", pg.evaluate("document.activeElement.className") == "next" and state()["station"] == n0 + 1, pg.evaluate("document.activeElement.tagName") + " " + str(state()))
+            pg.keyboard.press("Enter"); wait_move()
+            check("and a second Enter plays the next section", state()["station"] == n0 + 2, str(state()))
 
             # --- Home and End cut
             pg.keyboard.press("Home"); pg.wait_for_timeout(900)

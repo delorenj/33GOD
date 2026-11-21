@@ -519,7 +519,8 @@ class TestStepping(_Browser):
 
     def test_simulation_link_and_header(self, server, pw):
         M = manifest()["site"]
-        for w, h in self.VIEWPORTS:
+        # the link is the last thing the header drops: it stays from a 900px window up to wide, and no header wraps
+        for w, h in self.VIEWPORTS + [(1204, 800), (1210, 800), (1100, 800), (1024, 768), (820, 1180)]:
             pg = pw.new_page(viewport={"width": w, "height": h})
             pg.goto(server + "?view=film&night=staged")
             pg.wait_for_selector(".hud")
@@ -533,6 +534,50 @@ class TestStepping(_Browser):
             pg.wait_for_selector(".logview")
             assert pg.locator("a.hud__sim").is_visible()
             pg.close()
+
+    def test_phone_reaches_the_simulation_from_the_footer(self, server, pw):
+        M = manifest()["site"]
+        pg = pw.new_page(viewport={"width": 390, "height": 844})
+        pg.goto(server)
+        pg.wait_for_selector(".logview")
+        assert not pg.locator("a.hud__sim").is_visible() and pg.locator("a.foot__sim").is_visible()
+        assert pg.locator("a.foot__sim").get_attribute("href") == M["viewSimulationHref"]
+        assert pg.evaluate("document.documentElement.scrollWidth") <= 390, "the phone header overflowed"
+        pg.close()
+
+    def test_tablet_keeps_the_caret(self, server, pw):
+        """760 to 900px opens the film: no Down key on a tablet, so the caret must be there (the gauge may go)."""
+        pg = pw.new_page(viewport={"width": 820, "height": 1180}, has_touch=True)
+        pg.goto(server + "?view=film&night=staged&pace=0.2")
+        pg.wait_for_selector(".stage")
+        pg.wait_for_timeout(700)
+        assert pg.locator(".next").is_visible() and not pg.locator(".gauge").is_visible()
+        pg.tap(".next")
+        pg.wait_for_function("document.querySelector('.stage').dataset.station === '1' && document.querySelector('.stage').dataset.motion === 'rest'", timeout=20000)
+        pg.close()
+
+    def test_reload_and_deep_links_keep_the_place(self, server, pw):
+        pg = pw.new_page(viewport={"width": 1280, "height": 720})
+        pg.goto(server + "?view=film&night=staged&pace=0.1")
+        pg.wait_for_selector(".stage")
+        pg.wait_for_timeout(700)
+        for _ in range(3):
+            pg.keyboard.press("ArrowDown")
+            pg.wait_for_timeout(100)
+            pg.wait_for_function("document.querySelector('.stage').dataset.motion === 'rest'", timeout=20000)
+        assert pg.evaluate("location.hash") == "#numbers"
+        pg.reload()
+        pg.wait_for_selector(".stage")
+        pg.wait_for_timeout(1200)
+        st = pg.evaluate("({s: +document.querySelector('.stage').dataset.station, m: document.querySelector('.stage').dataset.motion, b: document.querySelector('.stage').dataset.beat})")
+        assert st == {"s": 3, "m": "rest", "b": "numbers"}, f"a reload lost the place: {st}"
+        pg.close()
+        pg = pw.new_page(viewport={"width": 1280, "height": 720})   # a fresh tab: the hash alone
+        pg.goto(server + "?view=film&night=staged#staff")
+        pg.wait_for_selector(".stage")
+        pg.wait_for_timeout(1200)
+        assert pg.evaluate("document.querySelector('.stage').dataset.beat") == "staff"
+        pg.close()
 
     def test_log_view_has_no_film_chrome(self, server, pw):
         for w, h in ((1280, 720), (390, 844)):
@@ -560,9 +605,10 @@ class TestStepping(_Browser):
         ctx.close()
 
     def test_caret_and_gauge_never_cover_copy(self, server, pw):
-        """At every station, at the two viewports that bind: the caret clears the captions, the cards and the nameplates."""
+        """At every station, at the viewports that bind (and a tablet, where the film still opens): the caret and the
+        Crank pill clear the captions, the cards and the nameplates; the gauge's ground sits on the ground line (48px above the stage bottom)."""
         problems = []
-        for w, h in ((1280, 720), (1440, 860)):
+        for w, h in ((1280, 720), (1440, 860), (820, 1180)):
             pg = pw.new_page(viewport={"width": w, "height": h})
             pg.goto(server + "?view=film&night=staged&pace=0.1")
             pg.wait_for_selector(".stage")
@@ -574,7 +620,8 @@ class TestStepping(_Browser):
                     pg.wait_for_function("document.querySelector('.stage').dataset.motion === 'rest'", timeout=30000)
                     pg.wait_for_timeout(500)
                 hits = pg.evaluate("""() => {
-                  const R = e => e.getBoundingClientRect(), caret = R(document.querySelector('.next')), gauge = R(document.querySelector('.gauge'));
+                  const pill = document.querySelector('.crank'); pill.textContent = 'Still there? Crank keeps things moving.'; pill.classList.add('is-on');
+                  const R = e => e.getBoundingClientRect(), caret = R(document.querySelector('.next')), gauge = R(document.querySelector('.gauge')), crank = R(pill);
                   const hit = (a, b) => !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
                   const out = [];
                   document.querySelectorAll('.cap, .scard, .plate, .roll, .org__grid, .directory, .car__screen, .car__list, .gate, .glass, .captions .on-caption, .cap__hint, .cap__actions').forEach(e => {
@@ -582,7 +629,13 @@ class TestStepping(_Browser):
                     if (e.closest('[style*="opacity: 0"]')) return;
                     if (hit(caret, r)) out.push('caret over ' + e.className);
                     if (hit(gauge, r)) out.push('gauge over ' + e.className);
+                    if (hit(crank, r)) out.push('crank pill over ' + e.className);
                   });
+                  if (gauge.width > 0) {
+                    // the world's ground line is 48px above the stage bottom (the camera moves the building, not that line's rest)
+                    const ground = R(document.querySelector('.stage')).bottom - 48, bar = R(document.querySelector('.gauge__ground')).bottom;
+                    if (Math.abs(ground - bar) > 2) out.push('gauge ground ' + bar + ' is not the ground line ' + ground);
+                  }
                   return out;
                 }""")
                 for hh in hits:

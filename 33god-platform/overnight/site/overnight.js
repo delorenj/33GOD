@@ -40,6 +40,19 @@
   };
   // The gateway beat's story beats are the score's gateway/router minor: pool 01 runs dry and the
   // router moves on (switch), the 04:37 scout lands (scout), the new pool settles (settled).
+  /* Where you are lives in the URL: the hash names the beat you last rested on (or jumped to), and a tab keeps the
+     exact station in sessionStorage, so a reload comes back to the same place. Both are conveniences: any of it may throw. */
+  var STATION_KEY = 'overnight.station';
+  function setHash(id) {
+    try { history.replaceState(null, '', location.pathname + location.search + (id ? '#' + id : '')); } catch (e) { /* no history */ }
+  }
+  function rememberStation(n, id) {
+    setHash(id);
+    try { sessionStorage.setItem(STATION_KEY, JSON.stringify({ n: n, id: id })); } catch (e) { /* private window */ }
+  }
+  function savedStation() {
+    try { return JSON.parse(sessionStorage.getItem(STATION_KEY)); } catch (e) { return null; }
+  }
   function gwBeat(q) { return SC.minor('gateway', 'router', q).beat; }   // -1 before the switch
   function gwAt(id) { return SC.beatQ('gateway', 'router', id); }
   // Each pool's meter, scrubbed by CSS off --q: remaining share runs from..to across q in [a, b].
@@ -394,7 +407,7 @@
         h(Mark, { size: 22 }), h('span', { className: 'hud__name' }, site.name), h('span', { className: 'hud__rule', 'aria-hidden': 'true' }), h('span', { className: 'hud__status' }, site.status)),
       h('nav', { className: 'hud__nav', 'aria-label': 'The night' },
         props.view === 'film' ? site.nav.map(function (n) {
-          return h('a', { key: n.beat, href: '#' + n.beat, onClick: function (e) { e.preventDefault(); props.jumpTo(n.beat); } }, n.label);
+          return h('a', { key: n.beat, className: 'hud__link', href: '#' + n.beat, onClick: function (e) { e.preventDefault(); props.jumpTo(n.beat); } }, n.label);
         }) : null,
         h('button', { type: 'button', className: 'btn btn--quiet', 'aria-pressed': props.view === 'log', onClick: props.toggleView },
           props.view === 'log' ? site.viewFilm : site.viewLog),
@@ -685,6 +698,7 @@
     var jump = useCallback(function (i, q) {   // q: the beat's body progress (its set piece's timeline)
       var top = trackRef.current ? trackRef.current.offsetTop : 0;
       var px = top + Math.ceil(q != null ? SC.qPx(i, q) : SC.landing(i));
+      setHash(i > 0 ? beats[i].id : '');
       if (dollyRef.current) dollyRef.current.jump(px); else window.scrollTo({ top: px, behavior: 'auto' });
     }, [beats]);
     var jumpTo = useCallback(function (id, q) { jump(I[id], q); }, [I, jump]);
@@ -773,6 +787,9 @@
     useEffect(function () {
       if (view !== 'film') { document.documentElement.setAttribute('data-theme', 'night'); last.current.theme = 'night'; return; }
       var idle = 0;
+      var want = ''; try { want = decodeURIComponent(location.hash.slice(1)); } catch (e) { want = ''; }
+      var restored = false;
+      try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) { /* ignore */ }
       last.current.clock = ''; last.current.precise = null; last.current.label = '';   // a fresh clock island: tell it everything
       measure();
       // The page's view of the stations: the elevator, the caret, and the crank (which waits for the film to come to rest).
@@ -784,7 +801,16 @@
           if (g.getAttribute('aria-valuenow') !== pct) g.setAttribute('aria-valuenow', pct);
           g.setAttribute('aria-valuetext', M.site.gaugeText.replace('{n}', s.section).replace('{total}', s.sections));
         }
-        if (c) c.setAttribute('data-ready', s.ready ? 'true' : 'false');
+        if (c) {
+          c.setAttribute('data-ready', s.ready ? 'true' : 'false');
+          // Not ready: out of the tab order and the reading order, but never yanked from a hand that holds focus
+          // (a keyboard user who pressed it keeps it through the move and can press again).
+          var held = document.activeElement === c;
+          c.tabIndex = s.ready || held ? 0 : -1;
+          if (s.ready || held) c.removeAttribute('aria-hidden'); else c.setAttribute('aria-hidden', 'true');
+          if (!s.hasNext && !s.moving && held) c.blur();
+        }
+        if (restored && s.at && !s.moving && s.station >= 0) rememberStation(s.station, s.station > 0 ? beats[s.station - 1].id : '');
         if (st) { st.dataset.station = s.station; st.dataset.motion = s.moving ? 'moving' : 'rest'; }
         // Scroll events fire every frame during a move, so the crank keys off rest, not off scroll.
         if (s.moving !== wasMoving) { wasMoving = s.moving; clearTimeout(idle); setCrank(false); if (!s.moving) idle = setTimeout(armCrank, 20000); }
@@ -794,17 +820,28 @@
       tellRef.current = tell;
       var dolly = window.Dolly.create({ onFrame: frame, seam: seam, move: move, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
       dollyRef.current = dolly;
+      // Once, after the first measure: come back to the place the URL names. The hash wins over a stale session;
+      // the same beat in this tab's session comes back to its exact station, else the beat's landing.
+      function restore() {
+        restored = true;
+        if (typeof I[want] !== 'number' || !trackRef.current) return;
+        var saved = savedStation(), top = trackRef.current.offsetTop;
+        if (saved && saved.id === want && saved.n > 0 && SC.stations[saved.n] != null) dolly.jump(top + Math.ceil(SC.stations[saved.n]));
+        else jump(I[want], null);
+        tell.force();
+      }
       function onResize() {
         var top = trackRef.current ? trackRef.current.offsetTop : 0;
         var f = SC.total ? clamp((window.scrollY - top) / SC.total, 0, 1) : 0;
         dolly.cancel();
         measure();
         dolly.rescale(f, function (fr) { return top + fr * SC.total; });
+        if (!restored) restore();
         tell.force();
       }
       idle = setTimeout(armCrank, 20000);
       window.addEventListener('resize', onResize);
-      var fonts = document.fonts && document.fonts.ready; if (fonts) fonts.then(onResize);
+      var fonts = document.fonts && document.fonts.ready; if (fonts) fonts.then(onResize); else onResize();
       return function () { dolly.destroy(); dollyRef.current = null; tellRef.current = null; window.removeEventListener('resize', onResize); clearTimeout(idle); };
     }, [view, frame, seam, move, measure, beats.length]);
     // Set pieces mount as beats change (a nav jump can land mid-night); give them their scrubbed styles at once.
@@ -998,6 +1035,7 @@
       h('div', { className: 'foot__in' },
         h('span', { className: 'foot__brand' }, h(Mark, { size: 20 }), h('span', { className: 'hud__name hud__name--sm' }, props.M.site.name), h('span', { className: 'hud__rule', 'aria-hidden': 'true' }),
           h('span', { className: 'hud__status' }, f.byline, ' · ', h('a', { href: f.link.href }, f.link.label))),
+        props.M.site.viewSimulationHref ? h('a', { className: 'foot__sim', href: props.M.site.viewSimulationHref, target: '_blank', rel: 'noopener' }, props.M.site.viewSimulation) : null,
         h('span', { className: 'instrument-log foot__colophon' }, f.colophon)));
   }
 
