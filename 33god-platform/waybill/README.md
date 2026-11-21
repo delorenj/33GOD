@@ -29,6 +29,7 @@ waybill record  [--cli claude|codex] [--profile full|public]
 waybill show    <file.waybill.json> [--width N] [--all] [--no-color]
 waybill publish <file.waybill.json[.gz]> [--full] [--name N] [--dry-run]
 waybill query   [--last 2h | --last-night | --since/--until | --from-url URL] [filters] -o X.waybill.json.gz [--publish]
+waybill audit   [--days N] [--only a,b | --skip a,b] [--json] [--strict] -o X.waybill.json.gz   # the event gap audit
 waybill list    [--cli claude|codex] [--limit N] [--json]     # pick a turn to capture
 waybill night   [--date YYYY-MM-DD] [--from 18:02] [--to 07:41] [--tz America/New_York] [-o DIR|FILE]
 ```
@@ -108,6 +109,25 @@ waybill query --correlation <session id>        # one session inside hook-hub re
   named; third-party desks are `desk-<n>`; unresolvable producers `producer-<n>`. `--publish` refuses a full one.
 - `waybill night` and `33god.night` stay; `--last-night` is the same window.
 - Commands (`bloodbank.cmd.>`) are not archived, so they are not in a query waybill.
+
+## Audit: did everything become an event?
+
+`waybill audit --days 1` is the event gap audit as a command (SPEC 2c). It reads the window's archive once
+(the query waybill), then compares every source that knows what happened with what Candystore holds:
+
+```bash
+waybill audit --days 1 -o /tmp/audit-1d.waybill.json.gz     # table + done-condition, then the waybill path
+waybill audit --days 1 --json                                # the audit block for machines
+waybill audit --only bus,hermes --days 0.25                  # some adapters, a shorter window
+```
+
+- One row per thing counted: `(thing, expected, archived, verdict, evidence, tickets)`, verdict
+  `covered | partial | silent | lost-in-transit | declared-never-seen`.
+- The bus is proved by id: every JetStream message in the window is archived, a duplicate, dead-lettered or
+  missing; only the missing ones are unexplained. Direct-get and STREAM.INFO only, no consumer.
+- An unreadable source is a `skipped` source with its reason, never a crash. Approved exceptions (AD-22) are
+  shown and left out of the done-condition.
+- On demand only: it is not scheduled anywhere.
 
 ## How the Factory plays it
 
@@ -195,6 +215,8 @@ waybill/assemble.py        merge, joins, rebase, gaps, findings, stats, profiles
 waybill/cli.py live.py show.py publish.py
 waybill/query.py           waybill query: archive reader, chapters, keep rules, batches, conservation
 waybill/registry.py        the one resolver: which component is this event
+waybill/audit.py           waybill audit: runner, merge into the query waybill, table, done-condition
+waybill/audit_sources.py   the audit's ground-truth adapters (bus by id, Candybar, hook-hub, gateway, ...)
 schema/waybill.v1.schema.json
 tests/                     python3 -m unittest discover -s tests
 ```

@@ -593,6 +593,55 @@ def cmd_query(a: argparse.Namespace, argv: list[str]) -> int:
     return _maybe_publish(a, str(path), P)
 
 
+def _audit_ids() -> list[str]:
+    from .audit_sources import ADAPTERS
+    return list(ADAPTERS)
+
+
+def cmd_audit(a: argparse.Namespace, argv: list[str]) -> int:
+    from . import audit as AU
+    from . import publish as P
+    from . import query as Q
+    split = lambda s: [x.strip() for x in (s or "").split(",") if x.strip()]  # noqa: E731
+    try:
+        spec = AU.AuditSpec(days=a.days, until=parse_when(a.until, a.tz) if a.until else None, settle_s=a.settle,
+                            only=split(a.only), skip=split(a.skip), profile=a.profile, tz=a.tz)
+        spec.adapters()
+        if a.days <= 0:
+            raise ValueError("--days must be positive")
+    except ValueError as exc:
+        _err(f"waybill audit: {exc}")
+        return 2
+    t_all = time.monotonic()
+    try:
+        wb, rows = AU.run(spec, progress=lambda s: print(s, file=sys.stderr))
+    except Exception as exc:
+        _err(f"waybill audit: {type(exc).__name__}: {exc}")
+        return 1
+    out = a.output or f"{wb['id']}.waybill.json.gz"
+    if Path(out).is_dir() or out.endswith(("/", "\\")) or not Path(out).suffix:
+        out = str(Path(out) / f"{wb['id']}.waybill.json.gz")
+    wb, _ = Q.fit_budget(wb, int(a.max_kb * 1024), out.endswith(".gz"))
+    path = write_waybill(wb, out, compact=True)
+    done = wb["audit"]["done"]
+    if a.json:
+        print(json.dumps({**wb["audit"], "waybill": str(path), "id": wb["id"]}, ensure_ascii=False, indent=1, default=str))
+    else:
+        print(wb["title"])
+        for line in AU.table(rows):
+            print(line)
+        st = wb["stats"]
+        print(f"query: {st['query_total']:,} events + {st['dead_letters']} dead letter(s) · {len(wb['findings'])} findings · "
+              f"{len(wb['gaps'])} gaps · {path.stat().st_size / 1024:.0f} KiB · {time.monotonic() - t_all:.1f} s wall")
+        for line in AU.done_lines(done):
+            print(line)
+        print(str(path))
+    if not done["conservation_ok"]:
+        return 3
+    rc = _maybe_publish(a, str(path), P)
+    return 4 if a.strict and done["silent"] and rc == 0 else rc
+
+
 def _maybe_publish(a: argparse.Namespace, path: str, P) -> int:
     if not a.publish:
         return 0
@@ -708,6 +757,27 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--name", help="artifact name for --publish")
     q.add_argument("--artifact-project", help="artifact project slug for --publish")
     q.set_defaults(func=cmd_query)
+
+    au = sub.add_parser("audit", help="the event gap audit: did everything that happened become an event? (on demand)",
+                        description="Compare every ground-truth source (the bus by id, Candybar, hook-hub, the gateway ledger, "
+                                    "transcripts, Hermes, systemd, git, Hindsight, schemas, dead letters) with Candystore and "
+                                    "write one query-mode waybill whose gaps and findings carry the audit (SPEC 2c).")
+    au.add_argument("--days", type=float, default=1.0, help="window length in days, ending now less --settle (default 1)")
+    au.add_argument("--until", help="ISO end of the window (default: the archive's now less --settle)")
+    au.add_argument("--settle", type=float, default=120.0, help="seconds left for late writers at the end (default 120)")
+    au.add_argument("--only", help="comma-separated adapters to run (default all): " + ",".join(_audit_ids()))
+    au.add_argument("--skip", help="comma-separated adapters to leave out")
+    au.add_argument("--json", action="store_true", help="print the audit block as JSON instead of the table")
+    au.add_argument("--tz", default="America/New_York", help="time zone for labels (default America/New_York)")
+    au.add_argument("--profile", choices=("public", "full"), default="public",
+                    help="public (default) names no third-party desk, private type or local path; full keeps them")
+    au.add_argument("--max-kb", type=float, default=4096, help="size limit of the written file in KiB (default 4096)")
+    au.add_argument("--strict", action="store_true", help="exit 4 while any non-exempt row is still silent")
+    au.add_argument("-o", "--output", help="output file or directory (default ./<id>.waybill.json.gz)")
+    au.add_argument("--publish", action="store_true", help="then publish to MinIO and print the Factory link")
+    au.add_argument("--name", help="artifact name for --publish")
+    au.add_argument("--artifact-project", help="artifact project slug for --publish")
+    au.set_defaults(func=cmd_audit)
 
     ls = sub.add_parser("list", help="recent prompt invocations to pick one to capture")
     ls.add_argument("--cli", choices=("claude", "codex"), help="only list prompts from this CLI")

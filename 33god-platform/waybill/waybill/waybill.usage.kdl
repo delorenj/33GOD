@@ -71,6 +71,22 @@ cmd query help="Replay any Candystore query as a waybill" {
     flag --name { arg <NAME> }
     flag --artifact-project { arg <PROJECT> }
 }
+cmd audit help="The event gap audit: did everything that happened become an event? (on demand)" {
+    flag --days { arg <DAYS> }
+    flag --until { arg <TIME> }
+    flag --settle { arg <SECONDS> }
+    flag --only { arg <ADAPTERS> }
+    flag --skip { arg <ADAPTERS> }
+    flag --json
+    flag --tz { arg <ZONE> }
+    flag --profile { arg <PROFILE> }
+    flag --max-kb { arg <KIB> }
+    flag --strict
+    flag "-o --output" { arg <PATH> }
+    flag --publish
+    flag --name { arg <NAME> }
+    flag --artifact-project { arg <PROJECT> }
+}
 cmd night help="Digest a wall-clock window into a night file" {
     flag --date { arg <DATE> }
     flag --from { arg <TIME> }

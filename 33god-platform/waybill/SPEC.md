@@ -256,6 +256,53 @@ typed `private` and are never kept or named; third-party Hermes desks become `he
 A single-session query (a lone `--correlation`) whose prompt is inside hook-hub's receipt retention is not a
 query: the CLI runs the capture path and says so (`--no-capture` opts out).
 
+### 2c. The audit (`waybill audit`), additive to 2b
+
+`waybill audit --days N` asks whether everything that happened in the window became an event. It is a query
+waybill (2b: `recorder.mode` 'query', `origin.surface` 'query', the window's archive read once, conservation
+checked) with the audit folded in, so the Factory plays it with the query director and its end card lists the
+audit's findings and gaps by component. Nothing new is required of a reader; everything below is additive.
+
+- `origin.query.label` starts `audit · `; `origin.query.audit = {days, adapters[]}`; `prompt.text` is
+  "You asked the archive: did everything that happened in the last day, HH:MM to HH:MM, become an event?";
+  the id is `waybill_id(since, query_id, "audit")`.
+- Top-level `audit` (v1 allows extra keys): `{version: 1, days, since, until, rows[], bus, done, skipped[]}`.
+  A row is `{source, thing, component, expected, archived, verdict, evidence, tickets[], bound, exempt, detail?}`;
+  `verdict` is `covered | partial | silent | lost-in-transit | declared-never-seen`; `bound` is "≥" when
+  `expected` is a lower bound; `exempt` names an approved exception (AD-22) that the done-condition skips.
+  `bus.subjects` is the per-subject proof: `{msgs, archived, dup, dead, missing, no_id, archive_only}` with
+  `msgs == archived + dup + dead + missing` for every subject.
+- Every row that is not `covered` is a finding (`broken` for lost-in-transit, `warn` for silent and partial,
+  `info` for declared-never-seen and exempt rows; evidence `["audit:<source>", ...tickets]`). Silent and
+  lost-in-transit rows are also gaps, and so is every adapter that was `skipped` or `error`.
+- One `sources[]` entry per adapter, id `audit:<adapter>`; an unreadable source is `skipped` with the reason,
+  never a crash.
+- Stats (numbers and booleans only): `audit_rows`, `audit_covered`, `audit_partial`, `audit_silent`,
+  `audit_lost`, `audit_declared_never_seen`, `audit_exempt`, `audit_skipped_sources`, `bus_proven`, `audit_done`.
+- Done-condition: no non-exempt row silent, none lost in transit, conservation ok, every bus message in the
+  window proved by id (`bus_proven`), no source skipped. The CLI prints it last; exit 3 when conservation
+  breaks, 4 under `--strict` while a silent row remains.
+
+The adapters (`waybill/audit_sources.py`), each read-only:
+
+| adapter | ground truth | compared with |
+|---|---|---|
+| bus | BLOODBANK_EVENTS by direct-get, every sequence in the window (binary search on timestamps); BLOODBANK_COMMANDS bounds + CONSUMER.LIST filters; GIB_EVENTS | Candystore ids, dead letters by event_id or raw bytes |
+| candybar | `invocations`, `candybars`, `skips`, `steward_tasks` | `cron.candybar.*` by `data.invocation_id`, `cron.tick.fired` per minute |
+| hookhub | receipts `invocations` / `executions` (clipped to retention) | `agent.hook.updated` invocation ids, published event ids |
+| gateway | the usage exporter's ledger selection; jev-litellm SpendLogs | `llm.usage.recorded` `data.usage_id`; any jev-litellm event |
+| transcripts | Claude Code / Codex transcripts started in the window | `session.started` `data.session_id`, else any event by correlation |
+| hermes | every profile's `state.db` sessions, tool calls, inbound messages | desk events by session id, `tool.requested`, inbound message events |
+| systemd | journal runs of native timers, failures, crash loops, OOM kills, gateway starts | unit-named system events |
+| git | `git log --all` and push reflogs under `~/code` | repo commit / push events |
+| hindsight | `hindsight audit stats` day buckets | `memory.*` events |
+| declared | Bloodbank schemas and the registry's producer surfaces | every type / producer ever archived (index skip-scans) |
+| deadletters | `dead_letter` in the window | `system.event.dead_lettered` |
+| crank | zcrank-send's send log | `crank.nudge.*` |
+
+No consumer is created anywhere (I-10.1), Postgres reads run inside their own containers with
+`default_transaction_read_only`, and the audit never schedules itself.
+
 ### Profiles
 
 - `full` (default for local files): prompt text, injected context, recall memories, tool inputs
