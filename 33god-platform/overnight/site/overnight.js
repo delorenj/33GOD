@@ -368,6 +368,25 @@
       st[0].count != null && props.counter ? h('span', { className: 'hud__count' }, props.counter.replace('{n}', Math.round(st[0].count).toLocaleString('en-US'))) : null);
   }
 
+  /* ---------- the elevator: a thin shaft on the left edge, a small car that goes from the top floor to the ground ----------
+     Floors are the stations (the top, then the end of each section); the four act openings get a longer tick.
+     Written by the page's watch (refs, never React state), so it costs nothing per frame. */
+  function Gauge(props) {
+    var n = props.count, ticks = [];
+    for (var k = 0; k < n; k++) ticks.push(h('i', { key: k, className: 'gauge__tick' + (props.acts.indexOf(k) >= 0 ? ' gauge__tick--act' : ''), style: { top: 'calc(7.5px + (100% - 17px) * ' + (k / (n - 1)).toFixed(5) + ')' } }));
+    return h('div', { className: 'gauge', ref: props.gaugeRef, role: 'progressbar', 'aria-label': props.label, 'aria-valuemin': 0, 'aria-valuemax': 100 },
+      h('span', { className: 'gauge__rail', 'aria-hidden': 'true' }), ticks,
+      h('span', { className: 'gauge__ground', 'aria-hidden': 'true' }),
+      h('span', { className: 'gauge__car', 'aria-hidden': 'true' }));
+  }
+  // The section is done and the reader is ready to go on: a thin chevron that bobs, only there and then.
+  function Caret(props) {
+    return h('button', { type: 'button', className: 'next', ref: props.caretRef, 'aria-label': props.label,
+      onMouseDown: function (e) { e.preventDefault(); },      // a click must not take the arrow keys' focus
+      onClick: props.onNext },
+      h('svg', { width: 20, height: 10, viewBox: '0 0 20 10', 'aria-hidden': 'true', focusable: 'false' }, h('path', { d: 'M1.5 1.5 10 8.5l8.5-7', fill: 'none', stroke: 'currentColor', strokeWidth: 1.25, strokeLinecap: 'round', strokeLinejoin: 'round' })));
+  }
+
   function Header(props) {
     var M = props.M, site = M.site;
     return h('header', { className: 'hud' },
@@ -379,6 +398,7 @@
         }) : null,
         h('button', { type: 'button', className: 'btn btn--quiet', 'aria-pressed': props.view === 'log', onClick: props.toggleView },
           props.view === 'log' ? site.viewFilm : site.viewLog),
+        site.viewSimulationHref ? h('a', { className: 'btn btn--quiet hud__sim', href: site.viewSimulationHref, target: '_blank', rel: 'noopener' }, site.viewSimulation) : null,
         props.view === 'film' ? h('a', { className: 'hud__cta', href: '#ask', onClick: function (e) { e.preventDefault(); props.jumpTo('ask', 0.5); } }, site.cta) : null),
       h('div', { className: 'hud__clock' }, props.clock));
   }
@@ -643,6 +663,7 @@
     var clockApi = useRef(null), last = useRef({ i: -1, step: -1, minute: -1, sig: '', clock: '', precise: null, label: '', theme: '' });
     var camNow = useRef({ x: 0, y: 0, s: 1, o: 1 });
     var dollyRef = useRef(null), playY = useRef(0);
+    var gaugeRef = useRef(null), caretRef = useRef(null), tellRef = useRef(null), infoRef = useRef(null);
     var sizeRef = useRef(size); sizeRef.current = size;
 
     var b = beats[pos.i];
@@ -669,10 +690,12 @@
     var jumpTo = useCallback(function (id, q) { jump(I[id], q); }, [I, jump]);
 
     /* the dolly: scroll position in, camera, clock and sky out */
-    var frame = useCallback(function (yAbs) {
+    var frame = useCallback(function (yAbs, info) {
       if (yAbs == null) yAbs = playY.current; else playY.current = yAbs;
+      if (info) infoRef.current = info;
       var stage = stageRef.current; if (!stage || !trackRef.current) return;
       if (!SC.total) return;
+      if (tellRef.current) tellRef.current(yAbs - trackRef.current.offsetTop, infoRef.current);   // the gauge, the caret, the crank
       var y = clamp(yAbs - trackRef.current.offsetTop, 0, SC.total - 1);
       var S = SC.at(y), Mj = S.major;
       var i = S.i, bt = beats[i], next = beats[i + 1];
@@ -741,35 +764,49 @@
       }
     }, [beats, times, I, props.colors, R, realLabel, M.site.stagedLabel, seats]);
 
-    // Seams and stops come from the score: a camera travel with its caption crossfade, an act's
-    // statement handing over to the beat's words, a set piece's story beats. Stop in one and the dolly
-    // finishes the move (see dolly.js); the keyboard steps from stop to stop.
+    // Seams and moves come from the score. A seam is a camera travel with its caption crossfade or an act's
+    // statement handing over: stop in one and the dolly finishes it. A move is what one press of Down makes:
+    // the whole of the next section, from where you are to where its content is done (see score.js, dolly.js).
     var seam = useCallback(function (t) { return SC.total ? SC.seam(t) : null; }, []);
-    var stop = useCallback(function (t, dir) { return SC.total ? SC.next(t, dir) : null; }, []);
+    var move = useCallback(function (t, dir, o) { return SC.total ? SC.move(t, dir, o) : null; }, []);
 
     useEffect(function () {
       if (view !== 'film') { document.documentElement.setAttribute('data-theme', 'night'); last.current.theme = 'night'; return; }
       var idle = 0;
       last.current.clock = ''; last.current.precise = null; last.current.label = '';   // a fresh clock island: tell it everything
       measure();
-      var dolly = window.Dolly.create({ onFrame: frame, seam: seam, stop: stop, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
+      // The page's view of the stations: the elevator, the caret, and the crank (which waits for the film to come to rest).
+      var tell = window.Score.watch(SC, function (s) {
+        var g = gaugeRef.current, c = caretRef.current, st = stageRef.current;
+        if (g) {
+          g.style.setProperty('--gauge', s.progress.toFixed(4));
+          var pct = String(Math.round(s.progress * 100));
+          if (g.getAttribute('aria-valuenow') !== pct) g.setAttribute('aria-valuenow', pct);
+          g.setAttribute('aria-valuetext', M.site.gaugeText.replace('{n}', s.section).replace('{total}', s.sections));
+        }
+        if (c) c.setAttribute('data-ready', s.ready ? 'true' : 'false');
+        if (st) { st.dataset.station = s.station; st.dataset.motion = s.moving ? 'moving' : 'rest'; }
+        // Scroll events fire every frame during a move, so the crank keys off rest, not off scroll.
+        if (s.moving !== wasMoving) { wasMoving = s.moving; clearTimeout(idle); setCrank(false); if (!s.moving) idle = setTimeout(armCrank, 20000); }
+      });
+      var wasMoving = false;
+      function armCrank() { if (last.current.i < beats.length - 1) setCrank(true); }
+      tellRef.current = tell;
+      var dolly = window.Dolly.create({ onFrame: frame, seam: seam, move: move, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
       dollyRef.current = dolly;
-      function onScroll() {
-        setCrank(false); clearTimeout(idle);
-        idle = setTimeout(function () { if (last.current.i < beats.length - 1) setCrank(true); }, 20000);
-      }
       function onResize() {
         var top = trackRef.current ? trackRef.current.offsetTop : 0;
         var f = SC.total ? clamp((window.scrollY - top) / SC.total, 0, 1) : 0;
+        dolly.cancel();
         measure();
         dolly.rescale(f, function (fr) { return top + fr * SC.total; });
+        tell.force();
       }
-      idle = setTimeout(function () { setCrank(true); }, 20000);
-      window.addEventListener('scroll', onScroll, { passive: true });
+      idle = setTimeout(armCrank, 20000);
       window.addEventListener('resize', onResize);
       var fonts = document.fonts && document.fonts.ready; if (fonts) fonts.then(onResize);
-      return function () { dolly.destroy(); dollyRef.current = null; window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); clearTimeout(idle); };
-    }, [view, frame, seam, stop, measure, beats.length]);
+      return function () { dolly.destroy(); dollyRef.current = null; tellRef.current = null; window.removeEventListener('resize', onResize); clearTimeout(idle); };
+    }, [view, frame, seam, move, measure, beats.length]);
     // Set pieces mount as beats change (a nav jump can land mid-night); give them their scrubbed styles at once.
     React.useLayoutEffect(function () { if (view === 'film') frame(); }, [size, view, frame, posSt[0].i]);
 
@@ -949,6 +986,8 @@
               h('p', { className: 'eyebrow' }, fill(M, b.interlude.kicker)),
               h('p', { className: 'statement-act' }, b.interlude.line),
               b.interlude.sub ? h('p', { className: 'on-caption__kicker' }, b.interlude.sub) : null) : null),
+          h(Gauge, { gaugeRef: gaugeRef, count: SC.stations.length, acts: beats.map(function (bb, n) { return bb.interlude ? n : -1; }), label: M.site.gauge }),
+          h(Caret, { caretRef: caretRef, label: M.site.next, onNext: function () { if (dollyRef.current) dollyRef.current.step(1); } }),
           h('p', { className: 'crank' + (crank ? ' is-on' : ''), role: 'status' }, crank ? M.site.crank : ''))),
       h(Footer, { M: M }));
   }
@@ -1042,7 +1081,9 @@
     // An act statement lives in the manifest (the words) and the score (its `in`): they must agree.
     spec.majors.forEach(function (m) { if (!!B[m.id].interlude !== !!(m['in'] && m['in'].len)) throw new Error('score.json: ' + m.id + (B[m.id].interlude ? ' opens an act in the manifest but has no "in" in the score' : ' has an "in" but no act statement in the manifest')); });
     var T = M.transcript;
-    var score = window.Score.compile(spec, { vars: {
+    // ?pace=0.25 plays every move four times faster (authoring and tests); anything else is the score's own pace.
+    var ps = parseFloat(new URLSearchParams(location.search).get('pace'));
+    var score = window.Score.compile(spec, { paceScale: ps > 0 ? ps : 1, vars: {
       staff: B.staff.copy.staff.length, loop: B['runs-on-itself'].copy.steps.length, checklist: B.pjangler.copy.checklist.length,
       pipeline: B.flume.copy.pipeline.length, standup: B['holocene-auto'].copy.standup.length,
       speakers: T.speakers.length, judgments: T.judgments.length, tickets: T.tickets.length

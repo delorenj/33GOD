@@ -26,8 +26,12 @@
     "cta": "Request a briefing",
     "viewLog": "View as log",
     "viewSimulation": "View as 3D simulation",
+    "viewSimulationHref": "https://manual.delo.sh/sandbox/?walk",
     "viewFilm": "Watch the night",
-    "scrollHint": "Scroll to run the clock",
+    "scrollHint": "Press the down arrow or scroll to run the clock",
+    "next": "Next section",
+    "gauge": "Progress through the night",
+    "gaugeText": "Section {n} of {total}",
     "crank": "Still there? Crank keeps things moving.",
     "logLead": "The same night, as the event stream. One line per beat, real event subjects, no camera.",
     "footer": {

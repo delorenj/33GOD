@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import socket
 import subprocess
 import sys
@@ -318,7 +319,64 @@ def test_template_tokens():
             continue
         assert s.count("{") == s.count("}"), f"{path}: unbalanced braces"
         for tok in re.findall(r"\{[^}]*\}", s):
-            assert re.fullmatch(r"\{(p:[^}]+|w:[^}]+|flagships|n|label)\}", tok), f"{path}: unknown token {tok}"
+            assert re.fullmatch(r"\{(p:[^}]+|w:[^}]+|flagships|n|total|label)\}", tok), f"{path}: unknown token {tok}"
+
+
+# ---------------------------------------------------------------- the pace: one press of Down is one section
+
+PACE_KEYS = {"back", "launch", "settle", "smooth", "rush", "reach", "min", "dwell"}
+
+
+def _share(v):
+    return float(v[:-1]) / 100 if isinstance(v, str) and v.endswith("%") else v
+
+
+def test_score_pace_shape():
+    S = score()
+    assert set(S.get("pace", {})) <= PACE_KEYS, f"unknown pace key(s) {set(S['pace']) - PACE_KEYS}"
+    for k, v in S.get("pace", {}).items():
+        assert isinstance(v, (int, float)) and v >= 0, f"pace.{k} must be a number of at least 0"
+    assert S["pace"]["rush"] >= 1 and 0 <= S["pace"]["dwell"] <= 1
+    d = S["defaults"]
+    for k, fields in (("body", {"ms", "perStep", "play"}), ("out", {"len", "curve", "ms", "timing"}), ("in", {"ms", "hold"})):
+        assert set(d.get(k, {})) <= fields, f"defaults.{k}: unknown field(s) {set(d.get(k, {})) - fields}"
+    for m in S["majors"]:
+        b = m.get("body")
+        assert b and isinstance(b.get("ms"), (int, float)) and b["ms"] > 0, f"{m['id']}: every section needs body.ms (its pace is design)"
+        play = b.get("play")
+        assert play and len(play) == 2, f"{m['id']}: body.play must be [from, to]"
+        a, z = _share(play[0]), _share(play[1])
+        assert 0 <= a < z <= 1, f"{m['id']}: body.play {play} must run forward inside the body"
+        assert set(b) <= {"ms", "play", "perStep"}, f"{m['id']}.body: unknown field(s)"
+        for key in ("out", "in"):
+            for f, v in (m.get(key) or {}).items():
+                if f in ("ms", "hold", "settleMs"):
+                    assert isinstance(v, (int, float)) and v >= 0, f"{m['id']}.{key}.{f} must be milliseconds"
+        for mi in m.get("minors", []):
+            assert "glide" not in mi, f"{m['id']}/{mi['id']}: `glide: false` is now `pace: false`"
+            if "dwell" in mi:
+                assert 0 <= mi["dwell"] <= 1, f"{m['id']}/{mi['id']}: dwell must be between 0 and 1"
+            assert mi.get("pace", True) in (True, False)
+
+
+def test_site_simulation_link():
+    s = manifest()["site"]
+    assert s["viewSimulationHref"].startswith("https://"), "the 3D simulation is a real link"
+    assert 0 < len(s["viewSimulation"]) <= 24, "a longer label wraps the header"
+    for k in ("next", "gauge", "gaugeText"):
+        assert isinstance(s.get(k), str) and s[k].strip(), f"site.{k} must be a non-empty string"
+    assert len(s["next"]) <= 40 and len(s["gauge"]) <= 60
+    assert "{n}" in s["gaugeText"] and "{total}" in s["gaugeText"]
+    assert len(s["scrollHint"]) <= 80, "the hero hint is one line under the buttons"
+
+
+NODE = shutil.which("node")
+
+
+@pytest.mark.skipif(not NODE, reason="node is not installed")
+def test_score_stations_node():
+    r = subprocess.run([NODE, str(Path(__file__).with_name("overnight_score_check.js"))], capture_output=True, text=True, env={**os.environ, "OVERNIGHT_SITE": str(SITE)})
+    assert r.returncode == 0, r.stderr or r.stdout
 
 
 # ---------------------------------------------------------------- optional: a real browser

@@ -38,6 +38,8 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .btn--primary { background: var(--stage-ink); color: var(--stage-ground); }
 .btn--quiet { height: var(--g33-control-md); padding: 0 12px; background: transparent; color: var(--stage-ink-2); border: 1px solid var(--stage-rule); font-weight: 400; }
 .btn--quiet:hover { color: var(--stage-ink); border-color: var(--g33-line-strong); }
+.hud__sim { text-decoration: none; }
+@media (max-width: 1100px) { .hud__sim { display: none; } }
 
 /* ---------- the stage ---------- */
 .track { position: relative; }
@@ -85,8 +87,26 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .interlude { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 0 var(--stage-gutter); text-align: center; pointer-events: none; background: color-mix(in srgb, var(--stage-ground) 95%, transparent); opacity: 0; }
 .interlude__in { display: flex; flex-direction: column; align-items: center; gap: 20px; max-width: 60rem; }
 
-.crank { position: absolute; z-index: 6; left: 50%; bottom: 18px; transform: translateX(-50%); margin: 0; padding: 6px 12px; background: var(--stage-ground); border: 1px solid var(--stage-rule); border-radius: var(--radius-bezel); font: 400 13px/20px var(--font-mono); color: var(--stage-ink-2); opacity: 0; transition: opacity var(--dur-window-on) var(--ease-settle); pointer-events: none; }
+.crank { position: absolute; z-index: 6; left: 50%; bottom: 56px; transform: translateX(-50%); margin: 0; padding: 6px 12px; background: var(--stage-ground); border: 1px solid var(--stage-rule); border-radius: var(--radius-bezel); font: 400 13px/20px var(--font-mono); color: var(--stage-ink-2); opacity: 0; transition: opacity var(--dur-window-on) var(--ease-settle); pointer-events: none; }
 .crank.is-on { opacity: 1; }
+
+/* ---------- the elevator: where we are in the night, 0% at the top floor to 100% at the ground ---------- */
+.gauge { position: absolute; z-index: 4; left: calc(var(--stage-gutter) / 2 - 6px); top: 96px; bottom: 28px; width: 12px; pointer-events: none; --gauge: 0; }
+.gauge__rail { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: var(--stage-rule); }
+.gauge__tick { position: absolute; left: 50%; width: 5px; height: 1px; margin-left: -2.5px; background: color-mix(in srgb, var(--stage-ink-3) 60%, transparent); }
+.gauge__tick--act { width: 9px; margin-left: -4.5px; }
+.gauge__ground { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--stage-ink-2); }
+.gauge__car { position: absolute; left: 50%; top: calc(var(--gauge) * (100% - 17px)); width: 11px; height: 15px; margin-left: -5.5px; box-sizing: border-box; border: 1px solid var(--stage-ink-2); background: var(--stage-ground); }
+.gauge__car::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--stage-ink-3); }
+
+/* ---------- the caret: the section is done, press down (or click) to go on ---------- */
+.next { position: absolute; z-index: 6; left: 50%; bottom: 8px; transform: translateX(-50%); width: 44px; height: 32px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 4px; background: transparent; color: var(--stage-ink-2); cursor: pointer;
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 120ms var(--ease-settle), visibility 0s linear 120ms; }
+.next[data-ready="true"] { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity 300ms var(--ease-settle), visibility 0s; }
+.next:hover { color: var(--stage-ink); }
+.next:focus-visible { outline: 1px solid var(--stage-ink-2); outline-offset: 1px; }
+.next svg { display: block; animation: nudge 1.8s ease-in-out infinite; }
+@keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
 
 /* ---------- scroll-scrubbed reveals: no easing of their own, they follow the dolly ---------- */
 .rv { --k: clamp(0, calc((var(--q) - var(--at, 0)) * var(--rate, 9)), 1); opacity: var(--k); transform: translateY(calc((1 - var(--k)) * 10px)); }
@@ -336,6 +356,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
   .hud__nav a { display: none; }
   .hud__status, .hud__rule { display: none; }
   .hud__clock { min-width: 0; }
+  .gauge, .next { display: none; }
   .logview .on-clock__staged { display: none; }
   .sky { -webkit-mask-image: none; mask-image: none; }
   .captions, .captions--hero { left: 0; right: 0; width: auto; top: auto; bottom: 0; height: 48%; padding: 16px var(--stage-gutter) 0; align-items: flex-start; overflow: hidden; background: var(--stage-ground); border-top: 1px solid var(--stage-rule); }
@@ -347,6 +368,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orbit { animation: none; }
+  .orbit, .next svg { animation: none; }
+  .next, .next[data-ready="true"] { transition: none; }
   .crank, .ticket, .judgment, .bus__does, .signal i { transition: none; }
 }
