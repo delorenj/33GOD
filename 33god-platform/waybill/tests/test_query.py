@@ -334,6 +334,122 @@ class TestPublicProfile(unittest.TestCase):
         self.assertNotIn("ghp_" + "a" * 36, json.dumps(wb))
 
 
+EMAIL_RE = Q._EMAIL
+LEAK_KEYS = ("tool_input", "transcript_text", "stderr_tail", "working_directory")
+
+
+def _walk_keys(o):
+    if isinstance(o, dict):
+        for k, v in o.items():
+            yield k
+            yield from _walk_keys(v)
+    elif isinstance(o, list):
+        for v in o:
+            yield from _walk_keys(v)
+
+
+class TestPublicAllowList(unittest.TestCase):
+    """The public profile is an allow-list: nothing a payload carries leaks by being forgotten in a deny-list."""
+
+    def leaky(self):
+        t = SINCE + 10 * 60_000.0
+        recs = [
+            ("hermes-agent:krebs-pm", "bloodbank.agent.tool.requested",
+             {"tool_name": "terminal", "tool_call_id": "c1", "cwd": "/home/x/code/acme-client",
+              "payload": {"tool_input": {"command": "px identity verify --key-ref op://DeLoSecrets/abc/credential"}},
+              "result": "ok from ~/code/acme-client", "outcome": "ok"}),
+            ("krebs", "bloodbank.audio.memo.transcribed", {"transcript_text": "Where'd we land with acme-client?", "status": "ok"}),
+            ("candybar", "bloodbank.cron.candybar.failed",
+             {"name": "crank-beat", "exit_code": 2, "stderr_tail": "mail jane.doe@example.com and bob@acme.io failed",
+              "error": {"message": "jane.doe@example.com bounced"}}),
+            ("krebs", "bloodbank.repo.task.created",
+             {"name": "Put the privacy policy link in the footer", "title": "ACME-161", "description": "client words",
+              "working_directory": "/srv/acme-client", "status": "todo"}),
+            ("hermes-agent:acme-client-pm", "bloodbank.conversation.turn.completed", {"status": "ok"}),
+        ]
+        rows, data = [], {}
+        for i, (prod, typ, d) in enumerate(recs):
+            r = row(t + i * 1000.0, prod, typ, failed=Q.is_failure(typ, d), worker=d.get("name") if "candybar" in typ else None)
+            rows.append(r)
+            data[r.id] = d
+
+        def fetch(ids):
+            by = {r.id: r for r in rows}
+            return {i: {"id": i, "received_at": M_iso(by[i].ra),
+                        "raw": {"id": i, "type": by[i].type, "producer": by[i].producer, "source": "urn:test",
+                                "time": M_iso(by[i].t), "extra_header": "secret header", "data": data[i]}}
+                    for i in ids if i in by}
+        return rows, fetch
+
+    def build_leaky(self, filters=None, profile="public"):
+        rows, fetch = self.leaky()
+        spec = Q.QuerySpec(since=SINCE, until=SINCE + HOUR, label="x", profile=profile, filters=filters or {})
+        return Q.Builder(spec, REG, manifests={}).build(rows, len(rows), [], fetch, None, SINCE + HOUR), rows
+
+    def test_no_payload_text_keys_or_mail_survive_public(self):
+        wb, _ = self.build_leaky()
+        text = json.dumps(wb, ensure_ascii=False)
+        for needle in ("acme", "op://", "privacy policy", "client words", "Where'd", "secret header", "ACME-161"):
+            self.assertNotIn(needle.lower(), text.lower(), needle)
+        self.assertIsNone(EMAIL_RE.search(text), EMAIL_RE.search(text))
+        keys = set(_walk_keys(wb))
+        for k in LEAK_KEYS:
+            self.assertNotIn(k, keys)
+            self.assertNotIn(f'"{k}"', text)
+        self.assertEqual(validate(wb, SCHEMA, SCHEMA)[:5], [])
+
+    def test_public_keeps_the_header_and_status_fields(self):
+        wb, _ = self.build_leaky()
+        arts = [a["json"] for a in wb["artifacts"].values() if isinstance(a.get("json"), dict)]
+        tool = next(a for a in arts if a.get("type") == "bloodbank.agent.tool.requested")
+        self.assertEqual(tool["data"]["tool_name"], "terminal")
+        self.assertEqual(tool["data"]["outcome"], "ok")
+        self.assertEqual(tool["data"]["tool_call_id"], "«dropped»")       # the key name stays, its value does not
+        self.assertEqual(tool["producer"], "hermes-agent:krebs-pm")
+        job = next(a for a in arts if a.get("type") == "bloodbank.cron.candybar.failed")
+        self.assertEqual(job["data"]["name"], "crank-beat")
+        self.assertEqual(job["data"]["exit_code"], 2)
+        task = next(a for a in arts if a.get("type") == "bloodbank.repo.task.created")
+        self.assertEqual(task["data"]["name"], "«dropped»")              # a sentence is not a slug
+
+    def test_full_profile_keeps_the_payload(self):
+        wb, _ = self.build_leaky(profile="full")
+        self.assertIn("tool_input", json.dumps(wb))
+
+    def test_filters_are_aliased_like_the_events(self):
+        rows, fetch = self.leaky()
+        for flt in ({"producer": "hermes-agent:acme-client-pm"}, {"project": "acme-client"}, {"q": "acme-client"},
+                    {"type": "bloodbank.messaging.sms.received"}):
+            spec = Q.QuerySpec(since=SINCE, until=SINCE + HOUR, label="x", filters=flt)
+            wb = Q.Builder(spec, REG, manifests={}).build(rows, len(rows), [], fetch, None, SINCE + HOUR)
+            text = json.dumps(wb)
+            self.assertNotIn("acme", text.lower(), flt)
+            self.assertNotIn("messaging", text, flt)
+        spec = Q.QuerySpec(since=SINCE, until=SINCE + HOUR, label="x", filters={"producer": "hermes-agent:acme-client-pm"})
+        wb = Q.Builder(spec, REG, manifests={}).build(rows, len(rows), [], fetch, None, SINCE + HOUR)
+        self.assertEqual(wb["origin"]["query"]["filters"]["producer"], "hermes-agent:desk-1")
+        self.assertIn("producer hermes-agent:desk-1", wb["prompt"]["text"])
+        self.assertIn("hermes-desk:desk-1", wb["components"])          # the filter and the events agree on the alias
+
+    def test_events_derived_from_private_ones_are_private(self):
+        rows = [row(SINCE + 1000, "target-watch", "bloodbank.watch.target.detected"),
+                Q.Row(uid(), SINCE + 2000, SINCE + 2005, "krebs", "bloodbank.krebs.digest.ready", None, False, None,
+                      "messaging.email.received")]
+        wb, _ = build(rows)
+        self.assertEqual(wb["stats"]["kept_events"], 0)
+        self.assertNotIn("watch.target", json.dumps(wb))
+        self.assertEqual(sum(s["attrs"]["count"] for s in wb["spans"] if s["kind"] == "batch" and s["name"] == "private"), 2)
+
+    def test_batches_carry_per_producer_counts(self):
+        rows = [row(SINCE + i * 1000.0, "claude-code" if i % 3 else "hook-hub", "bloodbank.agent.tool.requested") for i in range(450)]
+        wb, _ = build(rows, profile="full")
+        batches = [x for x in wb["spans"] if x["kind"] == "batch"]
+        self.assertTrue(batches)
+        for s in batches:
+            self.assertEqual(sum(s["attrs"]["producer_counts"].values()), s["attrs"]["count"])
+            self.assertEqual(list(s["attrs"]["producer_counts"]), s["attrs"]["producers"])
+
+
 class TestContract(unittest.TestCase):
     def setUp(self):
         self.wb, self.rows = build()
@@ -370,9 +486,11 @@ class TestContract(unittest.TestCase):
         b = Q.QuerySpec(SINCE, UNTIL, filters={"project": "flume"})
         self.assertEqual(a.query_id(), Q.QuerySpec(SINCE, UNTIL, label="other label").query_id())
         self.assertNotEqual(a.query_id(), b.query_id())
-        wb, _ = build(spec_kw={"filters": {"project": "flume"}})
+        wb, _ = build(spec_kw={"filters": {"project": "krebs"}})          # a first-party project keeps its name
+        self.assertEqual(wb["origin"]["project"], "krebs")
+        self.assertIn("project krebs", wb["prompt"]["text"])
+        wb, _ = build(spec_kw={"filters": {"project": "flume"}}, profile="full")
         self.assertEqual(wb["origin"]["project"], "flume")
-        self.assertIn("project flume", wb["prompt"]["text"])
 
     def test_spans_reference_real_parents_and_unique_ids(self):
         ids = [s["id"] for s in self.wb["spans"]]
@@ -505,6 +623,11 @@ class TestWindowsAndUrls(unittest.TestCase):
         self.assertEqual(Q.window_label("last-night", SINCE, UNTIL, "America/New_York")[1], "last night, 18:02 to 07:41")
         self.assertTrue(Q.window_label("last", UNTIL - 2 * HOUR, UNTIL, "America/New_York")[0].startswith("The last 2 hours"))
         self.assertIn("so far", Q.window_label("last-night", SINCE, UNTIL, "America/New_York", True)[0])
+        # a session that crosses midnight names its end date (13:32 on the 20th to 07:08 on the 21st, New York)
+        a = datetime(2026, 11, 20, 18, 32, tzinfo=timezone.utc).timestamp() * 1000.0
+        b = datetime(2026, 11, 21, 12, 8, tzinfo=timezone.utc).timestamp() * 1000.0
+        self.assertEqual(Q.window_label("session", a, b, "America/New_York", extra="c5f80064-aaaa")[0],
+                         "Session c5f80064, 20 Nov 13:32 to 21 Nov 07:08")
 
     def test_candystore_ui_urls(self):
         u = Q.parse_candystore_url("https://candystore.delo.sh/projects/flume?lens=errors&class=prompt&tools=0&from=2026-11-20T18:00&q=boom")

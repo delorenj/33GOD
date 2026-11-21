@@ -53,6 +53,10 @@ HERMES_PROFILES = Path("~/.hermes/profiles").expanduser()
 CLAUDE_PROJECTS = Path("~/.claude/projects").expanduser()
 CODEX_SESSIONS = Path("~/.codex/sessions").expanduser()
 CRANK_SENDS = Path("~/.local/state/zcrank/sends.jsonl").expanduser()
+OPENCODE_DB = Path("~/.local/share/opencode/opencode.db").expanduser()
+KREBS_JOURNAL = Path("~/.local/state/krebs/tick-journal.jsonl").expanduser()
+PLANE_CONTAINER = os.environ.get("WAYBILL_PLANE_CONTAINER", "plane-backend")
+ARTIFACTS_MC = os.environ.get("ARTIFACTS_MC_ALIAS", "delo") + "/projects"
 CODE_ROOT = Path("~/code").expanduser()
 CANDYBAR_CONTAINER = os.environ.get("WAYBILL_CANDYBAR_CONTAINER", "candybar")
 LEDGER_CONTAINER = os.environ.get("WAYBILL_LEDGER_CONTAINER", "aai-llm-observability")
@@ -108,6 +112,15 @@ def verdict(expected: int | None, archived: int | None, lost: bool = False, tole
 
 def is_private(t: str | None) -> bool:
     return bool(t) and str(t).startswith(PRIVATE_TYPES)
+
+
+def subject_type(subject: str) -> str:
+    """'bloodbank.evt.messaging.sms.received' / 'bloodbank.cmd.x.y' -> 'bloodbank.messaging.sms.received' / 'bloodbank.x.y'."""
+    return "bloodbank." + re.sub(r"^bloodbank\.(evt|cmd|rpy)\.", "", subject or "")
+
+
+def is_private_subject(subject: str) -> bool:
+    return is_private(subject_type(subject))
 
 
 def short(t: str) -> str:
@@ -241,6 +254,7 @@ class Ctx:
     _ids: set[str] | None = None
     _types: Counter | None = None
     _producers: Counter | None = None
+    _components: Counter | None = None
 
     @property
     def days(self) -> float:
@@ -263,6 +277,20 @@ class Ctx:
         if self._producers is None:
             self._producers = Counter(r.producer for r in self.rows)
         return self._producers
+
+    @property
+    def components(self) -> Counter:
+        """Window events per resolved component: the event's own id and, when another, the registry owner."""
+        if self._components is None:
+            by: Counter = Counter((r.producer, r.type, r.source) for r in self.rows)
+            out: Counter = Counter()
+            for (p, t, src), n in by.items():
+                res = self.registry.resolve(p, t, src)
+                out[res.id] += n
+                if res.owner and res.owner != res.id:
+                    out[res.owner] += n
+            self._components = out
+        return self._components
 
     def count_types(self, pred: Callable[[str], bool]) -> int:
         return sum(n for t, n in self.types.items() if pred(t))
@@ -578,7 +606,7 @@ def adapter_bus(ctx: Ctx, bus_factory: Callable[[], NatsBus] = NatsBus) -> list[
                 detail={"seq": [ev["s1"], ev["s2"]], "stream": [ev["first"], ev["last"]], "gets": got.get("gets", 0),
                         "subjects": subjects, "stream_subjects": ev["subjects"]})]
     for s, xs in sorted(miss.items(), key=lambda kv: -len(kv[1])):
-        name = "a private subject" if is_private("bloodbank." + s.split(".evt.", 1)[-1]) else s
+        name = "a private subject" if is_private_subject(s) else s
         c = per[s]
         rows.append(Row("bus", f"bus subject {name}", "bloodbank", c["msgs"] - c["dup"], c["archived"], "lost-in-transit",
                         f"{len(xs)} id(s) on the bus that neither Candystore nor a dead letter holds: {sample(xs)}"))
@@ -595,8 +623,9 @@ def adapter_bus(ctx: Ctx, bus_factory: Callable[[], NatsBus] = NatsBus) -> list[
                         tickets=["BB-48"], bound="≥" if exp else "", detail={"bounds": [lower, upper]}))
         for subj, n in sorted(cm["retained"].items(), key=lambda kv: -kv[1]):
             if not any(subject_match(f, subj) for f in cm["filters"]):
-                rows.append(Row("bus", f"stranded command {subj}", "bloodbank", int(n), 0, "lost-in-transit",
-                                f"{n} retained command(s) and no consumer filter matches {subj}; the workqueue expires them",
+                name = "a private command subject" if ctx.public and is_private_subject(subj) else subj
+                rows.append(Row("bus", f"stranded command {name}", "bloodbank", int(n), 0, "lost-in-transit",
+                                f"{n} retained command(s) and no consumer filter matches {name}; the workqueue expires them",
                                 tickets=["BB-49"] if "audio.task.start" in subj else []))
     elif got.get("commands_error"):
         rows.append(Row("bus", f"{COMMANDS_STREAM} commands", "bloodbank", None, None, "silent",
@@ -618,12 +647,17 @@ def _win(ctx: Ctx, col: str) -> str:
     return f"{col} >= {q(M.iso(ctx.since))}::timestamptz and {col} < {q(M.iso(ctx.until))}::timestamptz"
 
 
+STEWARD_PREFIX = "bloodbank.cron.steward_task."
+
+
 def classify_candybar(db: dict, invoked: set[str], finished: set[str], types: Counter, minutes: int) -> list[Row]:
     inv = db.get("inv") or []
     ids = {r[0] for r in inv}
     done = {r[0] for r in inv if r[2]}
     hit, fin = ids & invoked, done & finished
-    steward_t = sum(n for t, n in types.items() if ".steward." in t)
+    steward = {t: n for t, n in types.items() if t.startswith(STEWARD_PREFIX)}
+    # one queued event per task when the steward publishes it; otherwise any steward_task event counts
+    steward_t = steward.get(STEWARD_PREFIX + "queued", 0) or sum(steward.values())
     rows = [
         Row("candybar", "Candybar runs -> cron.candybar.invoked", "candybar", len(ids), len(hit), verdict(len(ids), len(hit)),
             f"{len(ids)} invocation rows in the window; {len(ids - hit)} without an invoked event"
@@ -642,8 +676,9 @@ def classify_candybar(db: dict, invoked: set[str], finished: set[str], types: Co
             " (overlap skips included)"),
     ]
     if db.get("steward"):
-        rows.append(Row("candybar", "steward tasks -> steward events", "candybar-steward", int(db["steward"]), steward_t,
-                        verdict(int(db["steward"]), steward_t), "steward_tasks.created_at in the window"))
+        rows.append(Row("candybar", "steward tasks -> cron.steward_task.*", "candybar-steward", int(db["steward"]), steward_t,
+                        verdict(int(db["steward"]), steward_t),
+                        f"steward_tasks.created_at in the window; archived {fmt_counts({short(t): n for t, n in steward.items()}, 4)}"))
     return rows
 
 
@@ -832,7 +867,28 @@ def correlations_with_events(ctx: Ctx, corrs: Iterable[str]) -> set[str]:
         f" where e.correlationid = c and e.time >= {lo}::timestamptz and e.time < {hi}::timestamptz);") or [])
 
 
-def adapter_transcripts(ctx: Ctx, claude_root: Path = CLAUDE_PROJECTS, codex_root: Path = CODEX_SESSIONS) -> list[Row]:
+OPENCODE_TICKETS = ["not yet ticketed"]
+HEADLESS_TICKETS = ["not yet ticketed"]
+
+
+def opencode_sessions(db: Path, since: float, until: float) -> list[dict] | None:
+    """opencode's own session table (opencode.db, mode=ro): {sid, t, kind top|subagent}. None when there is none."""
+    if not db.exists():
+        return None
+    try:
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=5)
+        try:
+            got = con.execute("select id, time_created, parent_id from session where time_created >= ? and time_created < ?",
+                              (int(since), int(until))).fetchall()
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return None
+    return [{"sid": str(i), "t": float(t), "kind": "subagent" if parent else "top"} for i, t, parent in got]
+
+
+def adapter_transcripts(ctx: Ctx, claude_root: Path = CLAUDE_PROJECTS, codex_root: Path = CODEX_SESSIONS,
+                        opencode_db: Path = OPENCODE_DB) -> list[Row]:
     cl = claude_sessions(claude_root, ctx.since, ctx.until)
     cx = codex_sessions(codex_root, ctx.since, ctx.until)
     if not cl and not cx and not claude_root.is_dir() and not codex_root.is_dir():
@@ -843,9 +899,17 @@ def adapter_transcripts(ctx: Ctx, claude_root: Path = CLAUDE_PROJECTS, codex_roo
     anyev = correlations_with_events(ctx, [CS.correlation_id(c, s) for c, s in miss])
     inter = [s for s in cl if s["entrypoint"] == "cli"]
     head = [s for s in cl if s["entrypoint"] != "cli"]
-    return [classify_sessions("Claude Code interactive sessions -> session.started", "claude-code", inter, started, anyev, []),
+    oc = opencode_sessions(opencode_db, ctx.since, ctx.until)
+    extra = []
+    if oc is not None:
+        oc_started = started | ctx.archive.keys(["bloodbank.agent.session.started"], "data->>'session_id'",
+                                                ctx.since - HOUR, ctx.until + HOUR, extra=" and producer = 'opencode'")
+        anyoc = correlations_with_events(ctx, [CS.correlation_id("opencode", s["sid"]) for s in oc if s["sid"] not in oc_started])
+        extra.append(classify_sessions("opencode sessions -> session.started", "opencode", oc, oc_started, anyoc,
+                                       OPENCODE_TICKETS, f" ({fmt_counts(Counter(s['kind'] for s in oc))})"))
+    return extra + [classify_sessions("Claude Code interactive sessions -> session.started", "claude-code", inter, started, anyev, []),
             classify_sessions("Claude Code headless sessions (-p, SDK) -> session.started", "claude-code", head, started, anyev,
-                              ["not yet ticketed"], f" ({fmt_counts(Counter(s['entrypoint'] for s in head))})"),
+                              HEADLESS_TICKETS, f" ({fmt_counts(Counter(s['entrypoint'] for s in head))})"),
             classify_sessions("Codex sessions -> session.started", "codex", cx, started, anyev, [],
                               f" ({fmt_counts(Counter(s['originator'] for s in cx))})")]
 
@@ -949,7 +1013,13 @@ TIMER_TICKETS = {"asm-sweep.timer": ["BB-51"], "infra-doctor.timer": ["INFR-155"
                  "hermes-gateway-watchdog.timer": ["INFR-155"]}
 CRASH_LOOP = 100
 CRASH_TICKETS = {"curator-serve.service": ["DOCS-2"], "delodocs-inbox-watchdog.service": ["DOCS-2"]}
-UNIT_EVENT_PREFIXES = ("bloodbank.system.service.", "bloodbank.system.timer.", "bloodbank.system.unit.", "bloodbank.systemd.")
+# the system events a unit's run, failure or restart may leave (keyed by data.unit / service / name / probe / timer)
+UNIT_EVENT_PREFIXES = ("bloodbank.system.service.", "bloodbank.system.timer.", "bloodbank.system.unit.", "bloodbank.systemd.",
+                       "bloodbank.system.probe.")
+# what else counts as a timer's own event (BB-51: the sweep's transitions; INFR-155: probe results)
+TIMER_EVENT_TYPES = {"asm-sweep.timer": ("bloodbank.agent.state.",)}
+GATEWAY_UNIT = "hermes-gateway"
+_AD = re.compile(r"\bAD-\d+\b")
 
 
 def parse_journal(lines: Iterable[str]) -> dict[str, Counter]:
@@ -990,6 +1060,7 @@ def read_timers() -> list[dict]:
 
 
 def read_policy(path: Path = POLICY_PATH) -> dict[str, dict]:
+    """Candybar's scheduling exceptions, keyed by timer unit ('asm-sweep.timer') or crontab id ('crontab:user:<digest>')."""
     try:
         d = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -999,6 +1070,67 @@ def read_policy(path: Path = POLICY_PATH) -> dict[str, dict]:
         i = str(e.get("id") or "")
         if i.startswith("systemd:user:"):
             out[i[len("systemd:user:"):]] = e
+        elif i.startswith("crontab:user:"):
+            out[i] = e
+    return out
+
+
+def policy_exempt(entry: dict | None) -> str | None:
+    """An owner-approved exception, read from structure: `approval: {record, owner[, schedule, component, event]}`.
+    A legacy entry that only names its decision record in `reason` (AD-<n>) still counts, any record, not just AD-22."""
+    if not entry:
+        return None
+    ap = entry.get("approval")
+    if isinstance(ap, dict) and ap.get("record") and ap.get("owner"):
+        return str(ap["record"])
+    m = _AD.search(str(entry.get("reason") or ""))
+    return m.group(0) if m else None
+
+
+def cron_digest(line: str) -> str:
+    """Candybar's id for a crontab line (scheduling_policy.cron_rows): sha256 of its whitespace-joined fields, 20 hex."""
+    import hashlib  # noqa: PLC0415
+    return hashlib.sha256(" ".join(line.split()).encode()).hexdigest()[:20]
+
+
+def cron_firings(schedule: list[str], minutes: int) -> int | None:
+    """How many times a five-field schedule fires in `minutes` (the common shapes; None when it cannot say)."""
+    if len(schedule) != 5:
+        return None
+    mi, hr, dom, mon, dow = schedule
+    if dom != "*" or mon != "*" or dow != "*":
+        return None
+    per_hour = 60 if mi == "*" else (60 // int(mi[2:]) if re.fullmatch(r"\*/\d+", mi) and int(mi[2:]) > 0 else
+                                     len(mi.split(",")) if re.fullmatch(r"\d+(,\d+)*", mi) else None)
+    if per_hour is None:
+        return None
+    if hr == "*":
+        return int(minutes / 60.0 * per_hour)
+    if re.fullmatch(r"\d+(,\d+)*", hr):
+        return int(minutes / 1440.0 * per_hour * len(hr.split(",")))
+    return None
+
+
+def read_crontab() -> list[dict]:
+    """The user crontab's schedule lines: {id, schedule, command (basename only: never the full command line)}."""
+    try:
+        p = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    out = []
+    for line in (p.stdout or "").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or re.match(r"[A-Za-z_]\w*\s*=", line):
+            continue
+        f = line.split()
+        if line.startswith("@"):
+            sched, cmd = [f[0]], f[1:2]
+        elif len(f) >= 6:
+            sched, cmd = f[:5], f[5:6]
+        else:
+            continue
+        base = re.sub(r"\.(py|sh|mjs|js|ts)$", "", os.path.basename(cmd[0])) if cmd else "?"
+        out.append({"id": f"crontab:user:{cron_digest(line)}", "schedule": sched, "command": base})
     return out
 
 
@@ -1024,13 +1156,23 @@ def unit_component(reg: Registry, unit: str) -> str | None:
 
 
 def classify_systemd(timers: list[dict], policy: dict[str, dict], journal: dict[str, Counter], unit_ev: Counter,
-                     reg: Registry, types: Counter, props: Callable[[str], dict] = unit_props) -> list[Row]:
+                     reg: Registry, types: Counter, props: Callable[[str], dict] = unit_props,
+                     comp_ev: Counter | None = None, unit_n: Counter | None = None, crontab: list[dict] | None = None,
+                     minutes: int = 1440) -> list[Row]:
+    """unit_ev: system events per unit; unit_n: the same, summing each event's data.count (a rate-limited restart
+    summary stands for many restarts); comp_ev: window events per resolved component (a timer's job may announce
+    itself under its component's own producer)."""
     rows: list[Row] = []
     vendor = 0
+    comp_ev = comp_ev or Counter()
+    unit_n = unit_n if unit_n is not None else unit_ev
+
+    def by_unit(c: Counter, unit: str) -> int:
+        base = re.sub(r"\.(service|timer)$", "", unit)
+        return sum(n for k, n in c.items() if re.sub(r"\.(service|timer)$", "", str(k)) == base)
 
     def ev(unit: str) -> int:
-        base = re.sub(r"\.(service|timer)$", "", unit)
-        return sum(n for k, n in unit_ev.items() if re.sub(r"\.(service|timer)$", "", str(k)) == base)
+        return by_unit(unit_ev, unit)
 
     for t in sorted(timers, key=lambda x: x.get("unit") or ""):
         unit, svc = t.get("unit") or "", t.get("activates") or ""
@@ -1040,12 +1182,32 @@ def classify_systemd(timers: list[dict], policy: dict[str, dict], journal: dict[
             continue
         j = journal.get(svc, Counter())
         runs = j["done"] + j["start_failed"]
-        exempt = "AD-22" if "AD-22" in str(pol.get("reason") or "") else None
-        rows.append(Row("systemd", f"native timer {unit} runs -> any event", unit_component(reg, svc) or "candybar", runs, ev(svc),
-                        verdict(runs, ev(svc)),
-                        f"{runs} run(s) of {svc} in the journal ({j['start_failed']} failed to start); a second clock outside Candybar"
-                        + (" (approved exception AD-22)" if exempt else ""),
+        exempt = policy_exempt(pol)
+        comp = unit_component(reg, svc)
+        own = comp_ev.get(comp, 0) if comp else 0
+        extra = sum(n for ty, n in types.items() if ty.startswith(TIMER_EVENT_TYPES.get(unit, ("\0",))))
+        arch = ev(svc) + max(own, extra)      # the sweep's own transitions may also resolve to its component
+        how = [f"{ev(svc)} unit event(s)"] + ([f"{own} from {comp}"] if comp else []) + (
+            [f"{extra} {'/'.join(short(x) + '*' for x in TIMER_EVENT_TYPES[unit])}"] if unit in TIMER_EVENT_TYPES else [])
+        rows.append(Row("systemd", f"native timer {unit} runs -> any event", comp or "candybar", runs, arch,
+                        verdict(runs, arch),
+                        f"{runs} run(s) of {svc} in the journal ({j['start_failed']} failed to start); archived {', '.join(how)};"
+                        " a second clock outside Candybar" + (f" (approved exception {exempt})" if exempt else ""),
                         tickets=[] if exempt else ["CAND-55", *TIMER_TICKETS.get(unit, [])], exempt=exempt))
+    for c in crontab or []:
+        pol = policy.get(c["id"]) or {}
+        if "OS/vendor" in str(pol.get("owner") or ""):
+            continue
+        n = cron_firings(c["schedule"], minutes)
+        comp = unit_component(reg, c["command"])
+        arch = by_unit(unit_ev, c["command"]) + (comp_ev.get(comp, 0) if comp else 0)
+        exempt = policy_exempt(pol)
+        rows.append(Row("systemd", f"crontab entry {c['command']} runs -> any event", comp or "candybar", n, arch,
+                        verdict(n, arch),
+                        f"user crontab {' '.join(c['schedule'])} ({c['id']}): {'?' if n is None else n} firing(s) in the window;"
+                        " a second clock outside Candybar" + (f" (approved exception {exempt})" if exempt else
+                                                               f"; policy says {pol.get('reason', 'nothing')!r}"[:160]),
+                        tickets=[] if exempt else ["CAND-55"], exempt=exempt))
     loops, fails = [], Counter()
     for u, c in journal.items():
         if c["restart"] >= CRASH_LOOP:
@@ -1055,12 +1217,14 @@ def classify_systemd(timers: list[dict], policy: dict[str, dict], journal: dict[
     for u in sorted(loops, key=lambda x: -journal[x]["restart"]):
         pr = props(u)
         n = journal[u]["restart"]
-        rows.append(Row("systemd", f"crash loop {u} -> any event", unit_component(reg, u) or "mon-alerts", n, ev(u), verdict(n, ev(u)),
-                        f"{n} restarts in the window; now {pr.get('ActiveState', '?')}/{pr.get('SubState', '?')}"
+        got = by_unit(unit_n, u)
+        rows.append(Row("systemd", f"crash loop {u} -> any event", unit_component(reg, u) or "mon-alerts", n, got, verdict(n, got),
+                        f"{n} restarts in the window; events for it account for {got} (a summary's data.count counts in full);"
+                        f" now {pr.get('ActiveState', '?')}/{pr.get('SubState', '?')}"
                         f" result {pr.get('Result', '?')}, NRestarts {pr.get('NRestarts', '?')}",
                         tickets=CRASH_TICKETS.get(u, ["MONI-3"])))
     if fails:
-        arch = sum(ev(u) for u in fails)
+        arch = sum(by_unit(unit_n, u) for u in fails)
         rows.append(Row("systemd", "unit failures -> any failure event", "mon-alerts", sum(fails.values()), arch,
                         verdict(sum(fails.values()), arch), f"{len(fails)} unit(s): {fmt_counts(fails, 3)}", tickets=["MONI-3"]))
     oom = sum(c["oom"] for c in journal.values())
@@ -1068,15 +1232,19 @@ def classify_systemd(timers: list[dict], policy: dict[str, dict], journal: dict[
         arch = sum(n for t, n in types.items() if "oom" in t)
         rows.append(Row("systemd", "OOM kills -> any event", "mon-alerts", oom, arch, verdict(oom, arch),
                         f"kernel / systemd-oomd kills in {sum(1 for c in journal.values() if c['oom'])} unit(s)",
-                        tickets=["not yet ticketed"]))
-    gw = journal.get("hermes-gateway.service", Counter())["done"]
-    arch = sum(n for t, n in types.items() if "gateway" in t and "restart" in t)
+                        tickets=list(OOM_TICKETS)))
+    gw = journal.get(f"{GATEWAY_UNIT}.service", Counter())["done"]
+    arch = by_unit(unit_ev, GATEWAY_UNIT)          # system.service.restart_requested / restarted for the unit (INFR-156)
     rows.append(Row("systemd", "hermes-gateway (re)starts -> any event", "hermes-gw", gw, arch, verdict(gw, arch),
-                    "journal starts of hermes-gateway.service", tickets=["INFR-156"]))
+                    f"journal starts of {GATEWAY_UNIT}.service; {arch} system event(s) with data.unit {GATEWAY_UNIT}",
+                    tickets=["INFR-156"]))
     for r in rows:
         if vendor and r.thing.startswith("native timer"):
             r.detail["os_vendor_timers_not_counted"] = vendor
     return rows
+
+
+OOM_TICKETS = ("MONI-3",)
 
 
 def adapter_systemd(ctx: Ctx) -> list[Row]:
@@ -1084,12 +1252,17 @@ def adapter_systemd(ctx: Ctx) -> list[Row]:
     journal = read_journal(ctx.since, ctx.until)
     types = [t for t in ctx.types if t.startswith(UNIT_EVENT_PREFIXES)]
     unit_ev: Counter = Counter()
+    unit_n: Counter = Counter()
     if types:
         got = ctx.archive.json(
-            "select coalesce(json_object_agg(k, n), '{}'::json) from (select coalesce(data->>'unit', data->>'service', data->>'name') k,"
-            f" count(*) n from events where type = any({text_array(types)}) and {_win(ctx, 'time')} group by 1) x where k is not null;") or {}
-        unit_ev = Counter({k: int(v) for k, v in got.items()})
-    return classify_systemd(timers, read_policy(), journal, unit_ev, ctx.registry, ctx.types)
+            "select coalesce(json_object_agg(k, json_build_array(n, s)), '{}'::json) from (select coalesce(data->>'unit',"
+            " data->>'service', data->>'name', data->>'probe', data->>'timer') k, count(*) n,"
+            " sum(case when data->>'count' ~ '^[0-9]{1,9}$' then (data->>'count')::int else 1 end) s"
+            f" from events where type = any({text_array(types)}) and {_win(ctx, 'time')} group by 1) x where k is not null;") or {}
+        unit_ev = Counter({k: int(v[0]) for k, v in got.items()})
+        unit_n = Counter({k: int(v[1]) for k, v in got.items()})
+    return classify_systemd(timers, read_policy(), journal, unit_ev, ctx.registry, ctx.types, comp_ev=ctx.components,
+                            unit_n=unit_n, crontab=read_crontab(), minutes=int(round(ctx.days * 1440)))
 
 
 # ---------------------------------------------------------------- 8. git commits and pushes under ~/code
@@ -1330,7 +1503,202 @@ def adapter_crank(ctx: Ctx, path: Path = CRANK_SENDS) -> list[Row]:
                 "zcrank-send's own send log", tickets=[NO_BOARD])]
 
 
+# ---------------------------------------------------------------- 13. artifact publishes (MinIO) vs project.artifact.published
+
+ARTIFACT_TYPE = "bloodbank.project.artifact.published"
+ARTIFACT_TICKETS = ["SKRILL-53"]
+
+
+def classify_artifacts(objs: list[dict], since: float, until: float, archived: int, public: bool = True) -> list[Row]:
+    """objs: `mc find --json` rows. One publish = one <project>/<date>/<name>/ folder touched in the window (a
+    republish to the same name in the window counts once; the date and project index pages are not artifacts)."""
+    pubs: dict[tuple[str, str, str], float] = {}
+    for o in objs:
+        parts = str(o.get("key") or "").split("/")
+        if len(parts) < 6 or parts[1] != "projects":
+            continue
+        t = parse_ts(o.get("lastModified"))
+        if t is None or not since <= t < until:
+            continue
+        k = (parts[2], parts[3], parts[4])
+        pubs[k] = max(pubs.get(k, 0.0), t)
+    by_proj = Counter(k[0] for k in pubs)
+    return [Row("artifacts", "artifact publishes (MinIO) -> project.artifact.published", "skillex", len(pubs), archived,
+                verdict(len(pubs), archived),
+                f"{len(pubs)} artifact folder(s) written in the window across {len(by_proj)} project(s)"
+                + (f" ({fmt_counts(by_proj, 3)})" if not public else "") + f"; {archived} {short(ARTIFACT_TYPE)} archived",
+                tickets=ARTIFACT_TICKETS)]
+
+
+def adapter_artifacts(ctx: Ctx) -> list[Row]:
+    mins = max(1, int((time.time() * 1000.0 - ctx.since) / 60_000.0) + 1)
+    try:
+        p = subprocess.run(["mc", "find", ARTIFACTS_MC, "--newer-than", f"{mins}m", "--json"],
+                           capture_output=True, text=True, timeout=180)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise Skip(f"mc find: {type(exc).__name__}") from exc
+    if p.returncode != 0 and not p.stdout:
+        raise Skip(f"mc find exit {p.returncode}: {(p.stderr or '').strip()[:160]}")
+    objs = []
+    for line in p.stdout.splitlines():
+        try:
+            o = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(o, dict) and o.get("status") == "success":
+            objs.append(o)
+    return classify_artifacts(objs, ctx.since, ctx.until, ctx.types.get(ARTIFACT_TYPE, 0), ctx.public)
+
+
+# ---------------------------------------------------------------- 14. Plane activity vs repo.task.*
+
+PLANE_TICKETS = ["not yet ticketed"]
+
+
+def classify_plane(act: dict, types: Counter) -> list[Row]:
+    rows = []
+    for thing, key, et in (("Plane state changes -> repo.task.transitioned", "state", "bloodbank.repo.task.transitioned"),
+                           ("Plane issues created -> repo.task.created", "created", "bloodbank.repo.task.created"),
+                           ("Plane issues deleted -> repo.task.deleted", "deleted", "bloodbank.repo.task.deleted")):
+        n, arch = int(act.get(key) or 0), types.get(et, 0)
+        rows.append(Row("plane", thing, "plane-hook", n, arch, verdict(n, arch, tolerance=0.02),
+                        f"Plane issue_activities in the window ({key}); {arch} {short(et)} archived",
+                        tickets=PLANE_TICKETS))
+    return rows
+
+
+def adapter_plane(ctx: Ctx) -> list[Row]:
+    w = _win(ctx, "created_at")
+    act = container_json(PLANE_CONTAINER, "DATABASE_URL",
+                         "select json_build_object("
+                         f"'state', (select count(*) from issue_activities where field = 'state' and verb = 'updated' and {w}),"
+                         f" 'created', (select count(*) from issue_activities where verb = 'created' and field is null and {w}),"
+                         f" 'deleted', (select count(*) from issue_activities where verb = 'deleted' and {w}))") or {}
+    return classify_plane(act, ctx.types)
+
+
+# ---------------------------------------------------------------- 15. Krebs tick journal vs krebs.* events
+
+KREBS_TICKETS = ["not yet ticketed"]
+
+
+def classify_krebs(entries: list[dict], types: Counter) -> list[Row]:
+    ticks = [e for e in entries if e.get("action") == "tick"]
+    acted = sum(int(e.get(k) or 0) for e in ticks for k in ("dispatched", "repaired", "republished", "triaged", "reviews"))
+    other = Counter(str(e.get("action")) for e in entries if e.get("action") != "tick")
+    kt = {t: n for t, n in types.items() if t.startswith("bloodbank.krebs.")}
+    tick_ev = sum(n for t, n in kt.items() if ".tick." in t)
+    dec_ev = sum(n for t, n in kt.items() if ".tick." not in t)
+    decisions = acted + sum(other.values())
+    return [Row("krebs", "Krebs ticks -> krebs.tick.*", "krebs", len(ticks), tick_ev, verdict(len(ticks), tick_ev),
+                f"{len(ticks)} tick(s) in the tick journal ({sum(1 for e in ticks if not e.get('ok'))} not ok); {tick_ev} tick event(s)",
+                tickets=KREBS_TICKETS),
+            Row("krebs", "Krebs decisions (dispatch, repair, orphan release, triage, review) -> krebs.* events", "krebs",
+                decisions, dec_ev, verdict(decisions, dec_ev),
+                f"{acted} action(s) the ticks report plus {fmt_counts(other, 4) if other else 'no'} journal decision(s);"
+                f" {dec_ev} other krebs.* event(s): {fmt_counts({short(t): n for t, n in kt.items() if '.tick.' not in t}, 3)}",
+                tickets=KREBS_TICKETS)]
+
+
+def adapter_krebs(ctx: Ctx, path: Path = KREBS_JOURNAL) -> list[Row]:
+    if not path.exists():
+        raise Skip("no Krebs tick journal on this machine")
+    out = []
+    with path.open(encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            t = parse_ts((e or {}).get("ts")) if isinstance(e, dict) else None
+            if t is not None and ctx.since <= t < ctx.until:
+                out.append(e)
+    return classify_krebs(out, ctx.types)
+
+
+# ---------------------------------------------------------------- 16. JetStream consumers: is anyone falling behind?
+
+CONSUMER_TICKETS = {"enricher-events": ["not yet ticketed"], "smoke-check": ["not yet ticketed"]}
+BACKLOG = 10
+
+
+def classify_consumers(consumers: list[dict], stream: str = EVENTS_STREAM) -> list[Row]:
+    rows = []
+    lag = []
+    for c in sorted(consumers, key=lambda x: str(x.get("name"))):
+        pend, ackp = int(c.get("num_pending") or 0), int(c.get("num_ack_pending") or 0)
+        if pend + ackp > BACKLOG:
+            lag.append((c, pend, ackp))
+    n = len(consumers)
+    rows.append(Row("consumers", f"{stream} durable consumers -> keeping up", "bloodbank", n, n - len(lag), verdict(n, n - len(lag)),
+                    f"{n} consumer(s); {len(lag)} with more than {BACKLOG} undelivered or unacked message(s)"))
+    for c, pend, ackp in lag:
+        name = str(c.get("name"))
+        last = ((c.get("delivered") or {}).get("last_active")) or ""
+        rows.append(Row("consumers", f"consumer {name} backlog -> drained", "bloodbank", pend + ackp, 0, "partial",
+                        f"{pend} pending, {ackp} awaiting ack; last delivery {last[:19] or 'never'}; filter "
+                        + ", ".join(consumer_filters([c])), tickets=CONSUMER_TICKETS.get(name, ["not yet ticketed"])))
+    return rows
+
+
+def adapter_consumers(ctx: Ctx, bus_factory: Callable[[], "NatsBus"] | None = None) -> list[Row]:
+    import asyncio  # noqa: PLC0415
+
+    async def read() -> list[dict]:
+        bus = await (bus_factory or NatsBus)().open()
+        try:
+            return await bus.consumers(EVENTS_STREAM)
+        finally:
+            await bus.close()
+    return classify_consumers(asyncio.run(read()))
+
+
+# ---------------------------------------------------------------- 17. the cast: every drawn component either measured or speaking
+
+CAST_TICKETS = {"vox": ["not yet ticketed"]}
+
+
+def classify_cast(reg: Registry, comp_ev: Counter, measured: set[str]) -> list[Row]:
+    """Every first-party registry component is accounted for: some adapter row measures it, or the window holds
+    events from it, or it is silent. A component that declares a producer surface and said nothing gets its own
+    silent row; one that declares none and nothing measures is unmeasured, which counts as silent too (one row)."""
+    rows: list[Row] = []
+    first = sorted(cid for cid, c in reg.components.items() if c.get("first_party"))
+    rec = reg.records
+    sources = {r.get("id") for r in reg.sources}
+    speaking = [c for c in first if comp_ev.get(c, 0)]
+    quiet, unmeasured = [], []
+    for c in first:
+        if comp_ev.get(c, 0) or c in measured:
+            continue
+        (quiet if rec.get(c, {}).get("producers") or c in sources else unmeasured).append(c)
+    rows.append(Row("cast", "first-party cast components -> measured or speaking", "event-contract", len(first),
+                    len(first) - len(quiet) - len(unmeasured), "covered" if not quiet and not unmeasured else "partial",
+                    f"{len(speaking)} published in the window, {len([c for c in first if c in measured and not comp_ev.get(c, 0)])}"
+                    f" more are measured by another row, {len(quiet)} declared emitter(s) said nothing, {len(unmeasured)} unmeasured",
+                    detail={"quiet": quiet, "unmeasured": unmeasured}))
+    for c in quiet:
+        rows.append(Row("cast", f"{c} (declares a producer) -> any event", c, None, 0, "silent",
+                        f"{reg.name_of(c)} declares {', '.join((rec.get(c, {}).get('producers') or ['a source rule'])[:3])}"
+                        " but published nothing in the window, and no other row measures it",
+                        tickets=CAST_TICKETS.get(c, ["not yet ticketed"])))
+    if unmeasured:
+        rows.append(Row("cast", "unmeasured cast components -> any event", "event-contract", len(unmeasured), 0, "silent",
+                        f"{len(unmeasured)} first-party component(s) published nothing, declare no producer and no adapter"
+                        f" measures them: {sample(unmeasured, 8)}; each needs a ground-truth row, a producer, or an approved exception",
+                        detail={"components": unmeasured}))
+    return rows
+
+
+def adapter_cast(ctx: Ctx) -> list[Row]:
+    """The per-component pass. Which components other rows measure is applied after every adapter ran (audit.run)."""
+    return classify_cast(ctx.registry, ctx.components, set())
+
+
 # ---------------------------------------------------------------- the table of adapters
+
+POST_ADAPTERS = {"cast"}   # run after the others: they need every other row
+
 
 ADAPTERS: dict[str, tuple[Callable[[Ctx], list[Row]], str, str, str]] = {
     # id: (adapter, kind, full locator, public locator)
@@ -1348,5 +1716,11 @@ ADAPTERS: dict[str, tuple[Callable[[Ctx], list[Row]], str, str, str]] = {
                  "Bloodbank schemas and the registry"),
     "deadletters": (adapter_deadletters, "postgres", "candystore dead_letter (read-only)", "Candystore dead letters"),
     "crank": (adapter_crank, "file", str(CRANK_SENDS), "crank send log"),
+    "artifacts": (adapter_artifacts, "s3", f"mc find {ARTIFACTS_MC} --newer-than (read-only)", "artifact store listing"),
+    "plane": (adapter_plane, "postgres", f"docker exec {PLANE_CONTAINER} psycopg issue_activities (read-only)",
+              "Plane activity log (read-only)"),
+    "krebs": (adapter_krebs, "file", str(KREBS_JOURNAL), "Krebs tick journal"),
+    "consumers": (adapter_consumers, "nats", f"{NATS_URL} CONSUMER.LIST (no consumers created)", "NATS JetStream consumer info"),
+    "cast": (adapter_cast, "registry", "cast.generated.json + the window's events by resolved component", "the Factory cast"),
 }
 TIMEOUTS = {"bus": 300.0}       # seconds, plus 240 s a day of window for the bus

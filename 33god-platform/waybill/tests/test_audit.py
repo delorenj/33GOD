@@ -217,7 +217,7 @@ class TestCandybar(unittest.TestCase):
     def test_runs_and_outcomes_by_invocation_id(self):
         db = {"inv": [["i1", "success", True], ["i2", "fail", True], ["i3", None, False]], "created": 1, "skips": 0, "steward": 2}
         types = Counter({"bloodbank.cron.tick.fired": 60, "bloodbank.cron.candybar.created": 1,
-                         "bloodbank.cron.candybar.skipped": 5, "bloodbank.cron.candybar.steward.task.completed": 1})
+                         "bloodbank.cron.candybar.skipped": 5, "bloodbank.cron.steward_task.completed": 1})
         rows = {r.thing: r for r in A.classify_candybar(db, {"i1", "i2"}, {"i1"}, types, 60)}
         inv = rows["Candybar runs -> cron.candybar.invoked"]
         self.assertEqual((inv.expected, inv.archived, inv.verdict), (3, 2, "partial"))
@@ -226,7 +226,7 @@ class TestCandybar(unittest.TestCase):
         self.assertEqual((fin.expected, fin.archived, fin.verdict), (2, 1, "partial"))
         self.assertEqual(rows["scheduler minutes -> cron.tick.fired"].verdict, "covered")
         self.assertEqual(rows["occurrence skips -> cron.candybar.skipped"].verdict, "covered")
-        self.assertEqual(rows["steward tasks -> steward events"].verdict, "partial")
+        self.assertEqual(rows["steward tasks -> cron.steward_task.*"].verdict, "partial")
 
     def test_unreachable_database_is_a_skip(self):
         orig = A.container_json
@@ -640,6 +640,25 @@ class TestMerge(unittest.TestCase):
         self.assertNotIn("subjects", wb["audit"]["rows"][-1].get("detail", {}))     # the per-subject table lives once
         self.assertEqual(wb["audit"]["skipped"], [{"source": "git", "status": "skipped", "reason": "no repos"}])
 
+    def test_public_audit_names_no_private_subject_anywhere_not_even_as_a_key(self):
+        f = {"msgs": 1, "archived": 1, "dup": 0, "dead": 0, "missing": 0, "no_id": 0, "archive_only": 0}
+        ad = fake_adapters(bus=lambda c: [A.Row("bus", f"{A.EVENTS_STREAM} messages -> Candystore ids", "bloodbank", 2, 2, "covered", "ok",
+                                                detail={"subjects": {"bloodbank.evt.x": dict(f),
+                                                                     "bloodbank.evt.messaging.sms.received": dict(f)}})])
+        wb, _ = AU.run(AU.AuditSpec(days=(UNTIL - SINCE) / A.DAY, settle_s=120), TeeFake([r for r in fixture_rows() if r.t >= SINCE]), REG,
+                       adapters=ad, archive=FakeArchive(), manifests={}, holocene=False)
+
+        def keys(o):
+            if isinstance(o, dict):
+                for k, v in o.items():
+                    yield str(k)
+                    yield from keys(v)
+            elif isinstance(o, list):
+                for v in o:
+                    yield from keys(v)
+        self.assertFalse([k for k in keys(wb) if "messaging" in k or "telephony" in k])
+        self.assertNotIn("messaging", json.dumps(wb))
+
     def test_table_and_done_lines(self):
         wb, rows = self.build()
         lines = AU.table(rows)
@@ -652,6 +671,76 @@ class TestMerge(unittest.TestCase):
         self.assertIn("bus proven by id", d)
         js = json.loads(json.dumps(wb["audit"], default=str))
         self.assertEqual(js["version"], 1)
+
+
+# ---------------------------------------------------------------- the added sources (artifacts, Plane, Krebs, consumers, cast)
+
+class TestMoreSources(unittest.TestCase):
+    def test_artifacts_count_folders_not_index_pages(self):
+        t = "2026-11-20T10:00:00Z"
+        objs = [{"key": "delo/projects/33god/2026-11-20/foo/index.html", "lastModified": t},
+                {"key": "delo/projects/33god/2026-11-20/foo/app.js", "lastModified": t},
+                {"key": "delo/projects/33god/2026-11-20/bar/index.html", "lastModified": t},
+                {"key": "delo/projects/33god/2026-11-20/index-x.html", "lastModified": t},
+                {"key": "delo/projects/other/2026-11-20/baz/index.html", "lastModified": "2020-01-01T00:00:00Z"}]
+        lo, hi = A.parse_ts("2026-11-20T00:00:00Z"), A.parse_ts("2026-11-21T00:00:00Z")
+        (row_,) = A.classify_artifacts(objs, lo, hi, 1)
+        self.assertEqual((row_.expected, row_.archived, row_.verdict, row_.tickets), (2, 1, "partial", ["SKRILL-53"]))
+
+    def test_plane_state_changes_against_repo_task_events(self):
+        rows = {r.thing: r for r in A.classify_plane({"state": 84, "created": 84, "deleted": 2},
+                                                     Counter({"bloodbank.repo.task.created": 84}))}
+        self.assertEqual(rows["Plane state changes -> repo.task.transitioned"].verdict, "silent")
+        self.assertEqual(rows["Plane issues created -> repo.task.created"].verdict, "covered")
+        self.assertEqual(rows["Plane issues deleted -> repo.task.deleted"].verdict, "silent")
+
+    def test_krebs_ticks_with_no_events_are_silent(self):
+        rows = A.classify_krebs([{"action": "tick", "ok": True, "dispatched": 2}, {"action": "tick", "ok": True},
+                                 {"action": "repair"}], Counter())
+        self.assertEqual([(r.expected, r.verdict) for r in rows], [(2, "silent"), (3, "silent")])
+
+    def test_a_consumer_with_a_backlog_is_its_own_partial_row(self):
+        got = A.classify_consumers([{"name": "ok-one", "num_pending": 0, "num_ack_pending": 0},
+                                    {"name": "enricher-events", "num_pending": 4000, "num_ack_pending": 3,
+                                     "config": {"filter_subject": "bloodbank.>"}}])
+        self.assertEqual(got[0].verdict, "partial")
+        self.assertEqual([r.verdict for r in got[1:]], ["partial"])
+        self.assertIn("enricher-events", got[1].thing)
+
+    def test_the_cast_pass_counts_an_unmeasured_component_as_silent(self):
+        reg = A.Registry.from_records({
+            "talker": {"name": "Talker", "first_party": True, "producers": ["talker"]},
+            "mute": {"name": "Mute", "first_party": True, "producers": ["mute"]},
+            "ghost": {"name": "Ghost", "first_party": True, "producers": []},
+            "measured": {"name": "Measured", "first_party": True, "producers": []},
+            "vendor": {"name": "Vendor", "first_party": False, "producers": []}})
+        rows = A.classify_cast(reg, Counter({"talker": 5}), {"measured"})
+        by = {r.thing: r for r in rows}
+        self.assertEqual(by["first-party cast components -> measured or speaking"].verdict, "partial")
+        self.assertEqual(by["mute (declares a producer) -> any event"].verdict, "silent")
+        self.assertEqual(by["unmeasured cast components -> any event"].detail["components"], ["ghost"])
+        self.assertEqual(len(rows), 3)
+
+
+class TestDoneAndPublicBus(unittest.TestCase):
+    def test_partial_rows_keep_the_audit_from_being_done(self):
+        bus = A.Row("bus", f"{A.EVENTS_STREAM} messages -> Candystore ids", "bloodbank", 1, 1, "covered", "",
+                    detail={"subjects": {"bloodbank.evt.x": {"missing": 0}}})
+        part = A.Row("x", "something", "c", 10, 9, "partial", "")
+        d = AU.done_condition([bus, part], {"conservation_ok": True}, [])
+        self.assertEqual((d["partial"], d["done"]), (1, False))
+        part.exempt = "AD-1"
+        self.assertTrue(AU.done_condition([bus, part], {"conservation_ok": True}, [])["done"])
+        self.assertIn("partial rows 0", AU.done_lines(AU.done_condition([bus], {"conservation_ok": True}, []))[0])
+
+    def test_private_subjects_fold_in_the_public_bus_table(self):
+        fields = {"msgs": 3, "archived": 3, "dup": 0, "dead": 0, "missing": 0, "no_id": 0, "archive_only": 0}
+        det = {"subjects": {"bloodbank.evt.x": dict(fields), "bloodbank.evt.messaging.sms.received": dict(fields),
+                            "bloodbank.evt.telephony.call.ended": dict(fields)}}
+        out = AU._public_bus(det, True)
+        self.assertEqual(sorted(out["subjects"]), ["bloodbank.evt.x", "private"])
+        self.assertEqual(out["subjects"]["private"]["msgs"], 6)
+        self.assertEqual(AU._public_bus(det, False), det)
 
 
 if __name__ == "__main__":

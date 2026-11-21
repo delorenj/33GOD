@@ -26,9 +26,13 @@ by Candystore's own `query._filters` inside its container, so `--lens errors` me
 Candystore UI means by it.
 
 The public profile follows the night digest's rules (night.py): message, call and payment types are
-counted but never named (they fold into a `private` batch and are never kept), third-party Hermes desks
-become `desk-<n>`, tenant slugs `tenant-<n>` and unresolvable producers `producer-<n>`; aliased producers
-carry no envelope payload.
+counted but never named (they fold into a `private` batch and are never kept), and so are events derived
+from them (watch.target.*, or data.source_type naming a private type). Third-party Hermes desks become
+`desk-<n>`, tenant slugs `tenant-<n>`, third-party projects `project-<n>` and unresolvable producers
+`producer-<n>`, in the events and in the filters the prompt repeats; aliased producers carry no envelope
+payload. Every other kept envelope is an allow-list: the header (id, type, source, producer, time, ids,
+domain, kind, service, schemaref), the data's key names, and values only for a few status-shaped scalars
+(PUBLIC_DATA). A last pass rewrites any aliased name (and its client stem) left anywhere in the file.
 """
 from __future__ import annotations
 
@@ -89,6 +93,22 @@ _FROM_URL = {"correlationid": "correlation", "provenance": "class"}
 # filters a dead letter can be matched against in Python (its raw envelope); the rest need Candystore's SQL
 _DEAD_MATCHABLE = {"type", "producer", "correlation", "scope", "domain"}
 
+# the public profile's envelope allow-list (SPEC 2b): header values, data key names, a few status-shaped scalars
+PUBLIC_HEADER = frozenset({"id", "type", "source", "producer", "time", "correlationid", "causationid", "domain", "kind",
+                           "service", "schemaref", "specversion", "subject", "datacontenttype", "dataschema"})
+PUBLIC_DATA = frozenset({"status", "outcome", "exit_code", "tool_name", "name", "latency_ms", "returned_model", "route",
+                         "runtime_ms", "reason"})
+# keys whose very name says what they carry (command lines, transcripts, paths, mail): left out, not just blanked
+WITHHELD_KEYS = frozenset({"tool_input", "tool_output", "tool_response", "transcript_text", "transcript", "stderr_tail",
+                           "stdout_tail", "stderr", "stdout", "cwd", "working_directory", "workdir", "description", "title",
+                           "body", "text", "content", "message", "messages", "prompt", "result", "payload", "arguments",
+                           "command", "args", "env", "environment", "email", "path", "file_path", "transcript_path"})
+DROPPED = "«dropped»"
+# events derived from a private one (target-watch copies a received email into watch.target.detected)
+PRIVATE_DERIVED = ("bloodbank.watch.target.",)
+_EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
+_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/+-]{0,95}$")
+
 _UUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 
@@ -140,6 +160,66 @@ def failure_severity(event_type: str) -> str:
     return "info" if event_type.startswith("bloodbank.agent.tool.") else "warn"
 
 
+def private_type(event_type: str | None, source_type: str | None = None) -> bool:
+    """Counted, never named: a private type, an event derived from one, or one whose data.source_type is private."""
+    if (event_type or "").startswith(PRIVATE_TYPES + PRIVATE_DERIVED):
+        return True
+    if source_type:
+        st = re.sub(r"^(bloodbank\.)?(evt\.)?", "", str(source_type))
+        return ("bloodbank." + st).startswith(PRIVATE_TYPES)
+    return False
+
+
+def public_text(v: Any, limit: int = 160) -> str | None:
+    """A free-text value the public profile still shows (a reason, an error's first line): one line, clipped, no mail."""
+    if v is None:
+        return None
+    s = str(v).split("input_value", 1)[0].strip().splitlines()
+    s = s[0].strip() if s else ""
+    s = _EMAIL.sub("«email»", s)
+    return s if len(s) <= limit else s[: limit - 1] + "…"
+
+
+def _public_scalar(k: str, v: Any) -> Any:
+    if v is None or isinstance(v, (bool, int, float)):
+        return v
+    if not isinstance(v, str) or _EMAIL.search(v):
+        return DROPPED
+    if k == "reason":
+        return public_text(v, 120)
+    return v if _SLUG.match(v) else DROPPED
+
+
+def public_envelope(env: dict) -> tuple[dict, int]:
+    """The public profile's envelope (SPEC 2b): an allow-list, not a deny-list. Header values; for data, the key
+    names and values only for PUBLIC_DATA scalars; WITHHELD_KEYS leave no trace but a count."""
+    out: dict[str, Any] = {}
+    withheld = 0
+    for k, v in env.items():
+        if k == "data":
+            continue
+        if str(k).lower() in WITHHELD_KEYS:
+            withheld += 1
+        elif k in PUBLIC_HEADER and (v is None or isinstance(v, (str, int, float, bool))):
+            out[k] = DROPPED if isinstance(v, str) and _EMAIL.search(v) else v
+        else:
+            out[k] = DROPPED
+    data = env.get("data")
+    if isinstance(data, dict):
+        d: dict[str, Any] = {}
+        for k, v in data.items():
+            if str(k).lower() in WITHHELD_KEYS:
+                withheld += 1
+            elif k in PUBLIC_DATA and not isinstance(v, (dict, list)):
+                d[k] = _public_scalar(k, v)
+            else:
+                d[k] = DROPPED
+        out["data"] = d
+    elif "data" in env:
+        out["data"] = DROPPED
+    return out, withheld
+
+
 _IN = ",".join(f"'{v}'" for v in FAIL_VALUES)
 FAILED_SQL = (
     "coalesce(type ~ '\\.(failed|exhausted|denied|breached)$'"
@@ -164,6 +244,7 @@ class Row:
     source: str | None
     failed: bool
     worker: str | None = None
+    stype: str | None = None        # data.source_type: an event derived from another one names it
 
 
 def _q(s: str) -> str:
@@ -221,11 +302,11 @@ class PsqlReader:
         key = f" and (time, id) > ({_q(after[0])}::timestamptz, {_q(after[1])}::uuid)" if after else ""
         return (
             "with p as (select id, time, received_at, producer, type, source,"
-            f" {FAILED_SQL} as failed, {WORKER_SQL} as worker from events"
+            f" {FAILED_SQL} as failed, {WORKER_SQL} as worker, data->>'source_type' as stype from events"
             f" where {self.window_sql(spec, as_of)} and ({where}){key} order by time, id limit {int(self.page)})"
             " select json_build_object('rows', coalesce((select json_agg(json_build_array(id::text,"
             " extract(epoch from time) * 1000, extract(epoch from received_at) * 1000, producer, type, source, failed,"
-            " worker) order by time, id) from p), '[]'::json),"
+            " worker, stype) order by time, id) from p), '[]'::json),"
             " 'last', (select json_build_array(time::text, id::text) from p order by time desc, id desc limit 1));"
         )
 
@@ -237,7 +318,7 @@ class PsqlReader:
             got = res.get("rows") or []
             for r in got:
                 yield Row(r[0], float(r[1]), float(r[2]) if r[2] is not None else None, r[3] or "", r[4] or "",
-                          r[5], bool(r[6]), r[7])
+                          r[5], bool(r[6]), r[7], r[8] if len(r) > 8 else None)
             if len(got) < self.page or not res.get("last"):
                 return
             after = tuple(res["last"])
@@ -331,9 +412,9 @@ def window_label(kind: str, since: float, until: float, tz: str, clamped: bool =
     if kind == "last":
         h = _human_duration(until - since)
         return f"The last {h}, {a} to {b}", f"in the last {h}, {a} to {b}"
-    if kind == "session":
-        return f"Session {extra[:8]}, {_dm(since, tz)} {a} to {b}", f"in session {extra[:8]}, {_dm(since, tz)} {a} to {b}"
     end = b if _dm(since, tz) == _dm(until, tz) else f"{_dm(until, tz)} {b}"
+    if kind == "session":
+        return f"Session {extra[:8]}, {_dm(since, tz)} {a} to {end}", f"in session {extra[:8]}, {_dm(since, tz)} {a} to {end}"
     return f"{_dm(since, tz)} {a} to {end}{so_far}", f"between {_dm(since, tz)} {a} and {end}{so_far}"
 
 
@@ -385,6 +466,7 @@ class Item:
     failed: bool
     worker: str | None = None
     dead: dict | None = None        # the dead_letter row (+ parsed env) for a dead letter
+    stype: str | None = None
     comp: str = M.Ids.PROMPT
     owner: str | None = None
     via: str = "unknown"
@@ -420,6 +502,7 @@ class Aliases:
         self.desk: dict[str, str] = {}
         self.tenant: dict[str, str] = {}
         self.producer: dict[str, str] = {}
+        self.project: dict[str, str] = {}
 
     def apply(self, it: Item, res) -> None:
         it.comp, it.owner, it.via = res.id, res.owner, res.via
@@ -427,7 +510,7 @@ class Aliases:
         it.shown_type = it.type
         if not self.public:
             return
-        if it.type.startswith(PRIVATE_TYPES):
+        if private_type(it.type, it.stype):
             it.private, it.shown_type = True, "private"
         if res.via == "desk" and res.key and res.key != "unknown" and res.id.startswith("hermes-desk:") \
                 and not _first_party_desk(res.key, self.records):
@@ -440,6 +523,89 @@ class Aliases:
         elif res.via == "unknown":
             alias = self.producer.setdefault(it.producer or "(none)", f"producer-{len(self.producer) + 1}")
             it.shown_producer, it.aliased = alias, True
+
+    # -- the filters a query repeats back (prompt text, origin.query.filters, the Factory's first stop)
+    def filter_value(self, key: str, value: str) -> str:
+        """A filter value as the public profile may print it: the same alias the events get, never the real name."""
+        if not self.public or not value:
+            return value
+        if key == "producer":
+            it = Item("", 0.0, 0.0, None, value, "", None, False)
+            self.apply(it, self.reg.resolve(value))
+            return it.shown_producer
+        if key == "project":
+            res = self.reg.resolve(value)
+            if res.via == "tenant" and res.key:
+                it = Item("", 0.0, 0.0, None, value, "", None, False)
+                self.apply(it, res)
+                return it.shown_producer
+            if _first_party_desk(value, self.records) or self.reg.is_registry(self.reg.canonical(value) or ""):
+                return value
+            return self.project.setdefault(value, f"project-{len(self.project) + 1}")
+        if key in ("type", "scope", "domain"):
+            vals = [v.strip() for v in value.split(",") if v.strip()]
+            shown = ["private" if private_type(v if v.startswith("bloodbank.") else "bloodbank." + v + ".") else v for v in vals]
+            return ",".join(dict.fromkeys(shown))
+        if key == "q":
+            return "«withheld»"
+        return value
+
+    # -- the last pass: any aliased name left anywhere in the file becomes its alias
+    _SUFFIX = re.compile(r"[-_](pm|momo|desk|bot)$")
+    _COMMON = frozenset({"agent", "hermes", "claude", "codex", "code", "test", "main", "desk", "tenant", "project", "local",
+                         "script", "none", "unknown", "producer", "private", "query", "batch", "chapter"})
+
+    def stems(self) -> dict[str, str]:
+        out: dict[str, str] = {}
+
+        def word_ok(w: str) -> bool:
+            w = w.lower()
+            return len(w) >= 4 and w not in self._COMMON and not any(
+                cid == w or cid.startswith(w + "-") or w.startswith(cid + "-") for cid in self.records)
+
+        def add(real: str, alias: str, loose: bool) -> None:
+            real = (real or "").strip()
+            if not real or real == "(none)" or real.lower() == alias.lower():
+                return
+            if loose or not real.isalpha() or len(real) >= 6:
+                out.setdefault(real.lower(), alias)
+            base = real.rsplit(":", 1)[-1]
+            if base != real and word_ok(base):
+                out.setdefault(base.lower(), alias)
+            stem = self._SUFFIX.sub("", base)
+            if stem != base and word_ok(stem):
+                out.setdefault(stem.lower(), alias)
+
+        for real, a in self.desk.items():
+            add(real, a, True)
+        for real, a in self.tenant.items():
+            add(real, a, True)
+        for real, a in self.project.items():
+            add(real, a, True)
+        for real, a in self.producer.items():
+            add(real, a, False)
+        return out
+
+    def scrub(self, obj: Any) -> Any:
+        """Rewrite every aliased name (keys and values). A backstop: the allow-list should leave nothing to rewrite."""
+        stems = self.stems() if self.public else {}
+        if not stems:
+            return obj
+        rx = re.compile(r"(?<![A-Za-z0-9])(" + "|".join(re.escape(s) for s in sorted(stems, key=len, reverse=True))
+                        + r")(?![A-Za-z0-9])", re.I)
+
+        def sub(x: str) -> str:
+            return rx.sub(lambda m: stems[m.group(1).lower()], x) if rx.search(x) else x
+
+        def walk(o: Any) -> Any:
+            if isinstance(o, str):
+                return sub(o)
+            if isinstance(o, list):
+                return [walk(v) for v in o]
+            if isinstance(o, dict):
+                return {(sub(k) if isinstance(k, str) else k): walk(v) for k, v in o.items()}
+            return o
+        return walk(obj)
 
 
 def chapter_bounds(since: float, until: float, budget_stops: int = CHAPTERS_MAX * STOPS_PER_CHAPTER) -> list[float]:
@@ -508,6 +674,9 @@ class Builder:
         self.reg = registry or load_cast()
         self.public = spec.profile == "public"
         self.alias = Aliases(self.reg, self.public)
+        # what the file may say the query was: in public, the same aliases the events get (filters first, so a
+        # `--producer hermes-agent:<client>-pm` query calls its own desk desk-1)
+        self.shown_filters = {k: self.alias.filter_value(k, spec.filters[k]) for k in FILTER_KEYS if spec.filters.get(k)}
         self.who = worker_resolver(self.reg.records, self.reg.owner, manifests or {}, HANDLER_OWNERS)
         self.progress = progress or (lambda s: None)
         self.frag = M.Fragment(source=M.Source(id=ARCHIVE, kind="postgres", locator=""))   # artifact store
@@ -547,7 +716,7 @@ class Builder:
                 continue
             seen.add(r.id)
             items.append(Item(r.id, (r.ra if spec.clock == "received_at" and r.ra is not None else r.t), r.t, r.ra,
-                              r.producer, r.type, r.source, r.failed, r.worker))
+                              r.producer, r.type, r.source, r.failed, r.worker, stype=getattr(r, "stype", None)))
         fetched = len(items)
         n_dead = 0
         for d in dead_rows:
@@ -558,9 +727,10 @@ class Builder:
             seen.add(eid)
             et, _subj = CS.normalize_type(env) if env else ("unknown", d.get("topic"))
             ra = M.ms(d.get("received_at"))
+            data = env.get("data") if isinstance(env.get("data"), dict) else {}
             items.append(Item(eid, ra or spec.since, M.ms(env.get("time")) or ra or spec.since, None,
                               env.get("producer") or env.get("source") or "", et, env.get("source"), True,
-                              dead={**d, "_env": env}))
+                              dead={**d, "_env": env}, stype=data.get("source_type") if isinstance(data.get("source_type"), str) else None))
             n_dead += 1
         items.sort(key=lambda it: (it.clock_t, it.id))
         for it in items:
@@ -715,6 +885,7 @@ class Builder:
             st = short_type(b.type)
             mins = math.ceil((bounds[b.chapter + 1] - bounds[b.chapter]) / 60_000.0)
             attrs = {"count": b.count, "type": b.type, "producers": [p for p, _ in b.producers.most_common()],
+                     "producer_counts": dict(b.producers.most_common()),
                      "chapter": b.chapter + 1, "per_minute": [b.minutes.get(m, 0) for m in range(max(1, mins))],
                      "exemplars": [] if b.type == "private" else _spread(b.ids), "failed": b.failed, "rank": rank[b.chapter]}
             if b.credit:
@@ -754,7 +925,7 @@ class Builder:
                 by_reason.setdefault((it.dead.get("reason") or "dead_letter", short_type(it.shown_type)), []).append(it)
             for (reason, st), g in sorted(by_reason.items(), key=lambda kv: -len(kv[1])):
                 ids = _spread([x.id for x in g])
-                err = (g[0].dead.get("error") or "")[:200]
+                err = (public_text(g[0].dead.get("error"), 200) if self.public else (g[0].dead.get("error") or "")[:200]) or ""
                 self.finding("broken", f"{len(g)} × {st} dead-lettered by Candystore ({reason})",
                              f"Candystore refused {len(g)} {st} event(s) from {', '.join(sorted({x.shown_producer for x in g})[:4])}"
                              f" ({reason}{': ' + err if err else ''}). They never reached the archive; they appear here as "
@@ -814,7 +985,7 @@ class Builder:
             stats[f"spans_{s['kind']}"] = stats.get(f"spans_{s['kind']}", 0) + 1
         qid = spec.query_id()
         origin_query = {"since": M.iso(spec.since), "until": M.iso(spec.until), "clock": spec.clock,
-                        "filters": {k: spec.filters[k] for k in FILTER_KEYS if spec.filters.get(k)},
+                        "filters": dict(self.shown_filters),
                         "total": total, "dead_letters": n_dead, "candystore": CANDYSTORE_URL, "label": label,
                         "tz": spec.tz, "as_of": M.iso(as_of) if as_of else None}
         wb = {
@@ -825,7 +996,7 @@ class Builder:
             "recorder": {"name": "waybill", "version": VERSION, "host": socket.gethostname(), "mode": MODE,
                          "profile": spec.profile},
             "origin": {"cli": "candystore", "surface": "query", "session_id": qid, "turn_id": None, "turn_index": None,
-                       "cwd": None, "project": spec.filters.get("project") or None, "model": None, "query": origin_query},
+                       "cwd": None, "project": self.shown_filters.get("project") or None, "model": None, "query": origin_query},
             "prompt": {"text": prompt_text, "chars": len(prompt_text), "sha256": M.sha256(prompt_text), "truncated": False},
             "clock": {"t0": M.iso(spec.since), "t_end": M.iso(spec.until), "duration_ms": round(spec.until - spec.since, 1),
                       "settle_ms": 0.0, "turn_end_ms": self.rel(spec.until)},
@@ -833,13 +1004,15 @@ class Builder:
             "artifacts": self.frag.artifacts, "gaps": self.gaps, "findings": self.findings,
             "sources": self.sources, "stats": stats,
         }
+        if self.public:
+            wb = self.alias.scrub(wb)
         return apply_profile(wb, spec.profile)
 
     # -- pieces
     def prompt_text(self) -> str:
         spec = self.spec
         when = spec.when or window_label("window", spec.since, spec.until, spec.tz)[1]
-        f = describe_filters(spec.filters)
+        f = describe_filters(self.shown_filters)
         return f"You asked the archive: {'every event matching ' + f if f else 'everything the company did'} {when}"
 
     def _group(self, cid: str) -> tuple[str, str]:
@@ -892,17 +1065,15 @@ class Builder:
                               "outcome": "collected", "t": self.rel(stored), "evidence": "observed", "span": None})
         payload = None
         if env and not (self.public and it.aliased):
-            shaped = dict(env)
-            if self.public and short_type(et).startswith("conversation.") and isinstance(shaped.get("data"), dict):
-                shaped["data"] = {k: "«dropped»" for k in shaped["data"]}
-            elif self.public and short_type(et).startswith("agent.tool.") and isinstance(shaped.get("data"), dict):
-                # a tool call's arguments are the agent's working notes (shell lines, file paths): names only
-                d = dict(shaped["data"])
-                if isinstance(d.get("arguments"), dict):
-                    d["arguments"] = {k: "«dropped»" for k in d["arguments"]}
-                shaped["data"] = d
-            payload = CS.envelope_artifact(self.frag, shaped, spec.profile,
-                                           "Candystore dead_letter.raw" if dead else None)
+            note = "Candystore dead_letter.raw" if dead else None
+            if self.public:
+                # an allow-list: a tool's input is a shell line, a memo its transcript, a failed job its stderr
+                shaped, withheld = public_envelope(env)
+                note = "; ".join(x for x in (note, "public profile: header and status fields only, other data values dropped"
+                                              + (f", {withheld} field(s) withheld" if withheld else "")) if x)
+            else:
+                shaped = dict(env)
+            payload = CS.envelope_artifact(self.frag, shaped, spec.profile, note)
         ev = {"id": it.id, "type": et, "subject": subject, "stream": stream or "BLOODBANK_EVENTS",
               "seq": int(seq) if isinstance(seq, (int, float)) else None, "t": self.rel(it.t),
               "stored": self.rel(stored), "archived": None if dead else self.rel(ra),
@@ -935,11 +1106,12 @@ class Builder:
         data = env.get("data") if isinstance(env.get("data"), dict) else {}
         who = it.shown_producer
         if it.dead:
-            err = (it.dead.get("error") or "")[:160]
+            err = (public_text(it.dead.get("error")) if self.public else (it.dead.get("error") or "")[:160]) or ""
             return f"{who} published {st}; Candystore dead-lettered it ({it.dead.get('reason') or 'dead_letter'}{': ' + err if err else ''})."
         if st.startswith("cron.candybar.") and data.get("name"):
             err = data.get("error") if isinstance(data.get("error"), dict) else {}
-            tail = f": {str(err.get('message'))[:160]}" if err.get("message") else (f" (exit {data.get('exit_code')})" if data.get("exit_code") not in (None, 0) else "")
+            msg = err.get("message") if not self.public else None     # stderr text: the full profile only
+            tail = f": {str(msg)[:160]}" if msg else (f" (exit {data.get('exit_code')})" if data.get("exit_code") not in (None, 0) else "")
             return f"Candybar job {data['name']} {st.rsplit('.', 1)[-1]}{tail}."
         if st.startswith("agent.tool.") and data.get("tool_name"):
             out = f", outcome {data['outcome']}" if data.get("outcome") else ""
@@ -1036,17 +1208,18 @@ class Builder:
                 if not isinstance(e, dict) or not e.get("handler_id"):
                     continue
                 hs = M.Ids.handler(inv, str(e["handler_id"]))
+                why = public_text(e.get("reason"), 120) if self.public else e.get("reason")
                 span = {"id": hs, "kind": "handler", "component": "hook-hub", "name": str(e["handler_id"]),
-                        "summary": f"{e['handler_id']} {e.get('status') or '?'}" + (f" ({e['reason']})" if e.get("reason") else "")
+                        "summary": f"{e['handler_id']} {e.get('status') or '?'}" + (f" ({why})" if why else "")
                                    + (f" in {e['duration_ms']} ms" if isinstance(e.get("duration_ms"), (int, float)) else "") + ".",
                         "phase": _HOOK_PHASE.get(str(iv.get("role") or ""), "async_after"),
                         "t0": self.rel(M.ms(e.get("started_at")) or M.ms(e.get("selected_at")) or t0),
                         "t1": self.rel(M.ms(e.get("finished_at"))), "status": _EXEC_STATUS.get(str(e.get("status")), "unknown"),
-                        "reason": e.get("reason"), "sync": e.get("mode") == "sync", "parent": hid,
+                        "reason": why, "sync": e.get("mode") == "sync", "parent": hid,
                         "refs": {"invocation_id": inv, "handler_id": e["handler_id"]},
                         "attrs": {"handler_id": e["handler_id"], "mode": e.get("mode"), "duration_ms": e.get("duration_ms")},
                         "evidence": [ARCHIVE]}
-                if e.get("reason") is None:
+                if why is None:
                     span.pop("reason")
                 if e.get("event_id"):
                     span["refs"]["event_id"] = e["event_id"]

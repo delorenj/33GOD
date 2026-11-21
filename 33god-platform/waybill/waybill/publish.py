@@ -55,8 +55,9 @@ def publish(path: str, full: bool = False, name: str | None = None, project: str
         raise ValueError(f"{path} is not a 33god.waybill document")
     rec = wb.get("recorder") or {}
     if rec.get("mode") == "query" and rec.get("profile") != "public" and not full:
-        # a query waybill is public by construction (aliased desks, no private names); cutting a full one
-        # afterwards cannot alias anything, so it would leak what the public profile exists to hide
+        # a public query waybill is built public (aliased desks and filters, allow-listed envelopes, private types
+        # counted never named); cutting a full one afterwards cannot alias anything, so it would leak what the
+        # public profile exists to hide
         raise ValueError("this is a full-profile query waybill; rebuild it with --profile public (the default) "
                          "or pass --full to publish it as is")
     wb = M.scrub_obj(wb) if full else to_public(wb)

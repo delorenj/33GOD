@@ -5,8 +5,8 @@ own read, SPEC 2b), runs the ground-truth adapters (audit_sources.py) next to it
 waybill whose `gaps[]` and `findings[]` carry the audit, plus a top-level `audit` block with every row
 (additive: v1 allows extra top-level keys). The terminal gets a table and a done-condition:
 
-    done when: no row is still 'silent' (approved exceptions aside), nothing is lost in transit, the
-    query's conservation holds, and every bus message in the window is proved by id.
+    done when: no row is still 'silent' or 'partial' (approved exceptions aside), nothing is lost in transit,
+    the query's conservation holds, and every bus message in the window is proved by id.
 
 On demand only: nothing here schedules itself.
 """
@@ -26,7 +26,7 @@ from .registry import Registry, load as load_cast
 
 AUDIT_VERSION = 1
 SEVERITY = {"lost-in-transit": "broken", "silent": "warn", "partial": "warn", "declared-never-seen": "info"}
-EXTRA_COMPONENTS = {"git-hooks": ("git hooks", "external")}
+EXTRA_COMPONENTS: dict[str, tuple[str, str]] = {}   # git-hooks is a registry component now (components/git-hooks.yaml)
 
 
 class TeeReader(Q.PsqlReader):
@@ -122,21 +122,40 @@ def run_adapters(ctx: A.Ctx, ids: list[str], progress: Callable[[str], None] | N
     return rows, [out[i][1] for i in ids]
 
 
+def _post_pass(ctx: A.Ctx, i: str, rows: list[A.Row], sources: list[dict], say, adapters: dict | None) -> tuple[list[A.Row], list[dict]]:
+    fn, kind, full, public = (adapters or A.ADAPTERS)[i]
+    t0 = time.monotonic()
+    try:
+        got = A.classify_cast(ctx.registry, ctx.components, {r.component for r in rows}) if i == "cast" else fn(ctx)
+        src = {"id": f"audit:{i}", "kind": kind, "locator": ctx.loc(full, public), "status": "ok" if got else "empty",
+               "items": len(got), "ms": 0.0, "error": None}
+    except A.Skip as exc:
+        got, src = [], {"id": f"audit:{i}", "kind": kind, "locator": ctx.loc(full, public), "status": "skipped", "items": 0,
+                        "ms": 0.0, "error": str(exc)}
+    except Exception as exc:  # noqa: BLE001
+        got, src = [], {"id": f"audit:{i}", "kind": kind, "locator": ctx.loc(full, public), "status": "error", "items": 0,
+                        "ms": 0.0, "error": f"{type(exc).__name__}: {str(exc)[:300]}"}
+    src["ms"] = round((time.monotonic() - t0) * 1000.0, 1)
+    say(f"  audit {i:<12} {src['status']:<8} {len(got):>3} row(s) {src['ms']:>9.0f} ms")
+    return [*rows, *got], [*sources, src]
+
+
 # ---------------------------------------------------------------- the done-condition
 
 def done_condition(rows: list[A.Row], wb_stats: dict, sources: list[dict]) -> dict[str, Any]:
     silent = [r for r in rows if r.verdict == "silent" and not r.exempt]
     lost = [r for r in rows if r.verdict == "lost-in-transit" and not r.exempt]
+    partial = [r for r in rows if r.verdict == "partial" and not r.exempt]
     bus = [r for r in rows if r.source == "bus" and r.thing.startswith(A.EVENTS_STREAM)]
     bus_missing = sum(int(((r.detail or {}).get("subjects") and sum(s["missing"] for s in r.detail["subjects"].values())) or 0)
                       for r in bus)
     skipped = [s for s in sources if s["status"] in ("skipped", "error")]
     cons = bool(wb_stats.get("conservation_ok"))
     proven = bool(bus) and bus_missing == 0
-    return {"silent": len(silent), "lost": len(lost), "skipped_sources": len(skipped), "conservation_ok": cons,
-            "bus_proven": proven, "bus_missing": bus_missing,
-            "done": not silent and not lost and cons and proven and not skipped,
-            "silent_rows": [r.thing for r in silent]}
+    return {"silent": len(silent), "lost": len(lost), "partial": len(partial), "skipped_sources": len(skipped),
+            "conservation_ok": cons, "bus_proven": proven, "bus_missing": bus_missing,
+            "done": not silent and not lost and not partial and cons and proven and not skipped,
+            "silent_rows": [r.thing for r in silent], "partial_rows": [r.thing for r in partial]}
 
 
 # ---------------------------------------------------------------- merge into the waybill
@@ -201,10 +220,29 @@ def merge(wb: dict, rows: list[A.Row], sources: list[dict], spec: AuditSpec, sin
     bus = next((r for r in rows if r.source == "bus" and r.thing.startswith(A.EVENTS_STREAM)), None)
     wb["audit"] = {"version": AUDIT_VERSION, "days": spec.days, "since": M.iso(since), "until": M.iso(until),
                    "rows": [r.as_dict() for r in rows if r.source != "bus" or r is not bus] + ([_bus_summary(bus)] if bus else []),
-                   "bus": (bus.detail if bus else {}), "done": done,
+                   "bus": _public_bus(bus.detail if bus else {}, spec.profile == "public"), "done": done,
                    "skipped": [{"source": s["id"].split(":", 1)[1], "status": s["status"], "reason": s["error"]}
                                for s in sources if s["status"] in ("skipped", "error")]}
     return wb
+
+
+def _public_bus(detail: dict, public: bool) -> dict:
+    """In the public profile the per-subject table is keyed by public subjects only: private ones (messaging,
+    telephony, billing, commands derived from them) fold into one 'private' entry that keeps the sums."""
+    subs = (detail or {}).get("subjects")
+    if not public or not isinstance(subs, dict):
+        return detail
+    out: dict[str, Any] = {}
+    priv: dict[str, Any] = {}
+    for k, v in subs.items():
+        if A.is_private_subject(k):
+            for f, n in (v or {}).items():
+                priv[f] = priv.get(f, 0) + n if isinstance(n, (int, float)) else n
+        else:
+            out[k] = v
+    if priv:
+        out["private"] = priv
+    return {**detail, "subjects": out}
 
 
 def _bus_summary(r: A.Row) -> dict:
@@ -235,7 +273,12 @@ def run(spec: AuditSpec, reader: TeeReader | None = None, registry: Registry | N
     wb = Q.run(qs, reader, reg, manifests=manifests, holocene=holocene, progress=say)
     ctx = A.Ctx(since=since, until=until, registry=reg, archive=archive or A.Archive(), rows=reader.got, dead=reader.dead,
                 public=spec.profile == "public")
-    rows, sources = run_adapters(ctx, ids, say, adapters)
+    post = [i for i in ids if i in A.POST_ADAPTERS]
+    rows, sources = run_adapters(ctx, [i for i in ids if i not in post], say, adapters)
+    for i in post:  # the cast pass needs every other row, to know which components something already measures
+        rows, sources = _post_pass(ctx, i, rows, sources, say, adapters)
+    ids_order = list(A.ADAPTERS)
+    sources.sort(key=lambda x: ids_order.index(x["id"].split(":", 1)[1]) if x["id"].split(":", 1)[1] in ids_order else 99)
     return merge(wb, rows, sources, spec, since, until, reg), rows
 
 
@@ -255,6 +298,6 @@ def table(rows: list[A.Row], width: int = 64) -> list[str]:
 
 def done_lines(done: dict) -> list[str]:
     s = "DONE" if done["done"] else "NOT DONE"
-    return [f"done-condition: {s} · silent rows {done['silent']} · lost in transit {done['lost']} · "
+    return [f"done-condition: {s} · silent rows {done['silent']} · partial rows {done.get('partial', 0)} · lost in transit {done['lost']} · "
             f"conservation {'ok' if done['conservation_ok'] else 'BROKEN'} · bus {'proven by id' if done['bus_proven'] else 'NOT proven'}"
             f" ({done['bus_missing']} unexplained) · skipped sources {done['skipped_sources']}"]

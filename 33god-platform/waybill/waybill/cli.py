@@ -553,7 +553,8 @@ def cmd_query(a: argparse.Namespace, argv: list[str]) -> int:
         if window is not None:
             print(f"single-session query inside hook-hub retention: upgraded to a capture of {window.cli} session "
                   f"{window.session_id} turn {window.turn_index or '?'} (--no-capture keeps the query waybill)", file=sys.stderr)
-            wb = run_pipeline(window, profile="public" if a.profile == "public" else "full", mode="capture", argv=["waybill", *argv],
+            wb = run_pipeline(window, profile="public" if a.profile == "public" else "full", mode="capture",
+                              argv=argv if argv[:1] == ["waybill"] else ["waybill", *argv],
                               progress=lambda s: print(s, file=sys.stderr))
             path = write_waybill(wb, a.output, compact=True)
             for line in summary_lines(wb):
