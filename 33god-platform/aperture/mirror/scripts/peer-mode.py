@@ -24,10 +24,16 @@ What "off" changes, and nothing else:
                             the links into the shared 33GOD folder become plain folders
   ~/.agents/skills and ~/code/*/.agents/skills
                             parks every 33GOD catalog skill (moved, never deleted)
-  ~/.gitconfig              drops core.hooksPath / core.excludesFile that point at the
-                            33GOD git guards
+  ~/.gitconfig              drops core.hooksPath when it points at the 33GOD git guards.
+                            core.excludesFile (a passive ignore list) stays: without it
+                            your own git-checkpoint hook would commit node_modules,
+                            worktrees and .env files
+  skillex                   turns off its Codex global sync, so a stray `skillex sync`
+                            cannot re-link the catalog while plain
 Your own entries (git-checkpoint hooks, lamp MCP, ChatGPT plugins, your commands and
-your own skills, trusted projects, your CLAUDE.md sections) are never touched.
+your own skills, trusted projects, your CLAUDE.md sections and your own
+<!-- name:start/end --> blocks) are never touched. Your own skills in the shared
+folder stay visible to Claude through links in ~/.claude/skills.
 
 Every switch copies each file it changes to
 ~/.config/33god/config-backups/<stamp>-33god-mode-before-<mode>/ first. What "off"
@@ -68,6 +74,12 @@ HOOK_RE = re.compile(E("PEER_HOOK_RE", r"bb-hook|/\.agents/hooks/|hindsight|cand
 SKILL_LINK_RE = re.compile(E("PEER_SKILL_LINK_RE", r"skillex/all-skills/|/\.local/share/ego/"))
 GATEWAY_RE = re.compile(r"automaticai|aai-gateway-token")
 BLOCK_RE = re.compile(r"\n*<!-- ([A-Za-z0-9_.:-]+):start -->\n.*?<!-- \1:end -->\n?", re.S)
+# Only blocks 33GOD owns are parked; a peer's own blocks (e.g. damian:breadth-first) stay.
+OWN_BLOCK_RE = re.compile(E("PEER_BLOCK_RE", r"^(agents:|delegate-to-|33god|hindsight|candybar|candystore|bloodbank|hermes)"))
+# App skill folders that do NOT read the shared ~/.agents/skills themselves (Codex does),
+# so the peer's own skills there are linked in while plain.
+MIRROR_SKILL_DIRS = [Path(p) for p in E("PEER_MIRROR_SKILL_DIRS", f"{H}/.claude/skills").split(":") if p]
+SKILLEX_TOML = Path(E("PEER_SKILLEX_TOML", H / ".config/skillex/skillex.toml"))
 CLAUDE_GW_ENV = {
     "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL",
     "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_HAIKU_MODEL",
@@ -79,7 +91,7 @@ CODEX_PLAIN_MODEL = E("PEER_CODEX_MODEL", "gpt-6.1-terra")
 # Tables 33GOD adds to config.toml. shell_environment_policy is 33GOD's only when its
 # .set carries the gateway (Codex Desktop imported it from the gateway Claude settings).
 CODEX_GW_TABLES_RE = re.compile(r"^(model_providers\.automaticai(\..*)?|profiles\.openai-direct)$")
-GIT_KEYS = ("core.hooksPath", "core.excludesFile")
+GIT_KEYS = ("core.hooksPath",)
 
 
 # ================================================================ helpers
@@ -335,11 +347,19 @@ def unpark_skills(parked):
 
 def app_skill_dirs_off(parked):
     rec = parked.setdefault("app_skill_dirs", {})
+    shared = AGENTS_HOME / "skills"
+    lock = locked_names()
     for p in APP_SKILL_DIRS:
-        if p.is_symlink() and os.path.realpath(p) == os.path.realpath(AGENTS_HOME / "skills"):
+        if p.is_symlink() and os.path.realpath(p) == os.path.realpath(shared):
             rec[str(p)] = os.readlink(p)
             p.unlink()
             p.mkdir()
+    # keep the peer's own shared skills visible to apps that only read their own folder
+    for p in MIRROR_SKILL_DIRS:
+        if str(p) in rec and p.is_dir() and not p.is_symlink() and shared.is_dir():
+            for e in sorted(shared.iterdir()):
+                if not e.name.startswith(".") and not is_33god_skill(e, lock, True) and not lexists(p / e.name):
+                    os.symlink(e, p / e.name)
     return list(rec)
 
 
@@ -348,7 +368,9 @@ def app_skill_dirs_on(parked, stamp):
     for path, target in parked.get("app_skill_dirs", {}).items():
         p = Path(path)
         if p.is_dir() and not p.is_symlink():
-            extra = [e for e in p.iterdir() if e.name != ".system"]
+            shared = os.path.realpath(AGENTS_HOME / "skills")
+            extra = [e for e in p.iterdir() if e.name != ".system"
+                     and not (e.is_symlink() and os.path.realpath(e).startswith(shared + os.sep))]
             if extra:
                 keep = p.with_name(p.name + f".plain-{stamp}")
                 shutil.move(str(p), keep)
@@ -369,10 +391,10 @@ def docs_off(parked):
         if not p.is_file():
             continue
         text = p.read_text()
-        blocks = [m.group(0) for m in BLOCK_RE.finditer(text)]
+        blocks = [m.group(0) for m in BLOCK_RE.finditer(text) if OWN_BLOCK_RE.search(m.group(1))]
         if not blocks:
             continue
-        left = BLOCK_RE.sub("\n", text).rstrip("\n") + "\n"
+        left = BLOCK_RE.sub(lambda m: "\n" if OWN_BLOCK_RE.search(m.group(1)) else m.group(0), text).rstrip("\n") + "\n"
         rec[str(p)] = {"full": text, "left": left, "blocks": blocks}
         atomic_write(p, left)
         out.append(str(p))
@@ -426,6 +448,57 @@ def git_on(parked):
     return out
 
 
+# ================================================================ skillex global sync
+SKX_RE = re.compile(r"^(\s*enabled\s*=\s*)(true|false)(.*)$")
+
+
+def skillex_codex(text, want):
+    """Flip [cli.codex] enabled; returns (new_text, old_value or None)."""
+    out, cur, old = [], None, None
+    for line in text.splitlines(keepends=True):
+        m = TABLE_RE.match(line)
+        if m and not line.lstrip().startswith("#"):
+            cur = m.group(1).strip()
+        elif cur == "cli.codex" and old is None and SKX_RE.match(line.rstrip("\n")):
+            mm = SKX_RE.match(line.rstrip("\n"))
+            old = mm.group(2)
+            line = f"{mm.group(1)}{want}{mm.group(3)}" + ("\n" if line.endswith("\n") else "")
+        out.append(line)
+    return "".join(out), old
+
+
+def skillex_off(parked):
+    if not SKILLEX_TOML.is_file():
+        return []
+    text = SKILLEX_TOML.read_text()
+    root = (tomllib.loads(text).get("cli", {}).get("codex", {}) or {})
+    if root.get("enabled") is not True or not os.path.realpath(os.path.expanduser(str(root.get("global_root", "")))).startswith(os.path.realpath(AGENTS_HOME)):
+        return []
+    new, old = skillex_codex(text, "false")
+    if old != "true":
+        return []
+    parked["skillex"] = {"path": str(SKILLEX_TOML), "full": text, "left": new}
+    atomic_write(SKILLEX_TOML, new)
+    return [str(SKILLEX_TOML)]
+
+
+def skillex_on(parked):
+    r = parked.get("skillex")
+    if not r or not Path(r["path"]).is_file():
+        return []
+    text = Path(r["path"]).read_text()
+    new = r["full"] if text == r["left"] else skillex_codex(text, "true")[0]
+    atomic_write(r["path"], new)
+    return [r["path"]]
+
+
+def skillex_state():
+    try:
+        return (tomllib.loads(SKILLEX_TOML.read_text()).get("cli", {}).get("codex", {}) or {}).get("enabled")
+    except (FileNotFoundError, tomllib.TOMLDecodeError):
+        return None
+
+
 # ================================================================ status
 def status():
     s = {}
@@ -453,8 +526,9 @@ def status():
     s["skills.33god_live"], s["skills.own"] = ours, mine
     s["skills.app_dirs_linked"] = [str(p) for p in APP_SKILL_DIRS
                                    if p.is_symlink() and os.path.realpath(p) == os.path.realpath(AGENTS_HOME / "skills")]
-    s["docs.33god_blocks"] = {str(p): [m.group(1) for m in BLOCK_RE.finditer(p.read_text())]
-                              for p in DOCS if p.is_file() and BLOCK_RE.search(p.read_text())}
+    s["docs.33god_blocks"] = {str(p): b for p in DOCS if p.is_file()
+                              for b in [[m.group(1) for m in BLOCK_RE.finditer(p.read_text()) if OWN_BLOCK_RE.search(m.group(1))]] if b}
+    s["skillex.codex_global_sync"] = skillex_state()
     s["git.guards"] = {k: v for k in GIT_KEYS for rc, v in [git("--get", k)]
                        if rc == 0 and os.path.realpath(os.path.expanduser(v)).startswith(os.path.realpath(AGENTS_HOME))}
     flags = [s["claude.gateway"], s["claude.33god_hooks"] > 0, s["codex.provider"] == "automaticai",
@@ -476,6 +550,8 @@ def show(s):
           f"app folders linked to the shared folder: {len(s['skills.app_dirs_linked'])}")
     print(f"  Instructions: 33GOD blocks in {len(s['docs.33god_blocks'])} file(s)")
     print(f"  Git guards  : {'on' if s['git.guards'] else 'off'}")
+    if s["skillex.codex_global_sync"] is not None:
+        print(f"  skillex     : Codex global sync {'on' if s['skillex.codex_global_sync'] else 'off'}")
     if s["last_switch"]:
         print(f"  Last switch : {s['last_switch'].get('mode')} at {s['last_switch'].get('at')}")
 
@@ -485,7 +561,7 @@ def backup(want, stamp):
     d = BACKUPS / f"{stamp}-33god-mode-before-{want}"
     d.mkdir(parents=True, exist_ok=True)
     os.chmod(d, 0o700)
-    files = [CLAUDE_SETTINGS, CODEX_CFG, CODEX_HOOKS, H / ".gitconfig", *DOCS]
+    files = [CLAUDE_SETTINGS, CODEX_CFG, CODEX_HOOKS, H / ".gitconfig", SKILLEX_TOML, *DOCS]
     for p in files:
         if p.is_file():
             shutil.copy2(p, d / re.sub(r"[^A-Za-z0-9._-]+", "_", str(p.relative_to(H))).strip("_"))
@@ -534,7 +610,7 @@ def go_off(parked):
             atomic_write(CODEX_HOOKS, dumpj(ch))
             did.append("codex hooks")
     for step, fn in (("instructions", docs_off), ("app skill folders", app_skill_dirs_off),
-                     ("skills", park_skills), ("git guards", git_off)):
+                     ("skills", park_skills), ("git guards", git_off), ("skillex sync", skillex_off)):
         r = fn(parked)
         atomic_write(PARKED, dumpj(parked), 0o600)
         if r:
@@ -566,7 +642,8 @@ def go_on(parked, stamp):
         atomic_write(CODEX_HOOKS, dumpj(ch))
         did.append("codex hooks")
     for step, r in (("instructions", docs_on(parked)), ("app skill folders", app_skill_dirs_on(parked, stamp)),
-                    ("skills", unpark_skills(parked)), ("git guards", git_on(parked))):
+                    ("skills", unpark_skills(parked)), ("git guards", git_on(parked)),
+                    ("skillex sync", skillex_on(parked))):
         if r:
             did.append(f"{step} ({r if isinstance(r, int) else len(r)})")
     return did

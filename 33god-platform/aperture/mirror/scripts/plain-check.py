@@ -12,14 +12,14 @@ account, the provider is not the gateway, and NOTHING about the turn reached the
 33GOD bus (Candystore has zero events for the session id).
 Never prints a secret value. Prints one JSON document; exit 1 if any FAIL.
 """
-import json, os, re, subprocess, sys, time
+import json, os, re, shlex, subprocess, sys, time
 
 HOME = os.path.expanduser("~")
 LIVE = "--live" in sys.argv
 OUT = []
 GW = re.compile(r"automaticai|aai-gateway-token")
 HOOK = re.compile(r"bb-hook|/\.agents/hooks/|hindsight|candystore|33god|hook-hub")
-CATALOG = re.compile(r"code/skillex/all-skills/")
+CATALOG = re.compile(r"code/skillex/all-skills/|/\.local/share/ego/")
 
 
 def add(client, req, ok, ev):
@@ -29,7 +29,7 @@ def add(client, req, ok, ev):
 def sh(cmd, timeout=60):
     e = dict(os.environ, PATH="/opt/homebrew/bin:/usr/local/bin:%s/.local/bin:" % HOME + os.environ.get("PATH", ""))
     try:
-        p = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, env=e)
+        p = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, env=e, stdin=subprocess.DEVNULL)
         return p.returncode, p.stdout + p.stderr
     except subprocess.TimeoutExpired:
         return 124, "timeout"
@@ -91,6 +91,22 @@ for d in (f"{HOME}/.claude/skills", f"{HOME}/.codex/skills", f"{HOME}/.agents/sk
         seen.setdefault(e, tgt)
 cat = sorted(e for e, t in seen.items() if CATALOG.search(t))
 add("skills", "no-33god-catalog-skills", not cat, "skills visible=%d: %s; 33GOD catalog ones=%s" % (len(seen), sorted(seen), cat))
+# the peer's own shared skills must stay visible to Claude (it reads only ~/.claude/skills)
+own = sorted(e for e in os.listdir(f"{HOME}/.agents/skills") if not e.startswith(".") and e != "synced"
+             and not CATALOG.search(os.path.realpath(f"{HOME}/.agents/skills/{e}"))) if os.path.isdir(f"{HOME}/.agents/skills") else []
+cl = set(os.listdir(f"{HOME}/.claude/skills")) if os.path.isdir(f"{HOME}/.claude/skills") else set()
+add("skills", "own-skills-visible-to-claude", all(e in cl for e in own), "own shared skills=%s, missing from ~/.claude/skills=%s" % (own, [e for e in own if e not in cl]))
+st = f"{HOME}/.config/skillex/skillex.toml"
+if os.path.exists(st):
+    en = (tomllib.load(open(st, "rb")).get("cli", {}).get("codex", {}) or {}).get("enabled")
+    add("skills", "skillex-global-sync-off", en is not True, "skillex [cli.codex] enabled=%s" % en)
+
+# ---- git: guards off, but the passive global ignore list stays (git-checkpoint runs `git add -A`)
+rc, hp = sh("git config --global --get core.hooksPath")
+add("git", "no-33god-git-guards", not hp.strip(), "core.hooksPath=%s" % (hp.strip() or "(unset)"))
+rc, ex = sh("git config --global --get core.excludesFile")
+xdg = os.path.exists(f"{HOME}/.config/git/ignore")
+add("git", "global-ignore-present", bool(ex.strip()) or xdg, "core.excludesFile=%s, ~/.config/git/ignore=%s" % (ex.strip() or "(unset)", xdg))
 
 # ---- live turns
 if LIVE:
@@ -101,7 +117,9 @@ if LIVE:
 
     d = "/tmp/plain-check"
     os.makedirs(d, exist_ok=True)
-    rc, out = sh("cd %s && timeout 170 claude -p 'Run pwd with the Bash tool then reply exactly PLAIN-OK-CLAUDE' --output-format stream-json --verbose" % d, timeout=200)
+    # run it the way the user does: an interactive terminal (zsh -i loads ~/.zshrc, where the login lives)
+    inner = "claude -p 'Run pwd with the Bash tool then reply exactly PLAIN-OK-CLAUDE' --output-format stream-json --verbose"
+    rc, out = sh("cd %s && timeout 170 zsh -ic %s </dev/null" % (d, shlex.quote(inner)), timeout=200)
     sid = src = None; models = []; txt = ""; err = True
     for line in out.splitlines():
         try:
