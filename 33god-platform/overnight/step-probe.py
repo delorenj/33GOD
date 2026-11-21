@@ -1,4 +1,4 @@
-"""Step probe for the Overnight page: one press of Down is one section.
+"""Step probe for the tour page: one press of Down is one section.
 
 Presses ArrowDown from the top until the end of the film and records, for every press, where the film
 comes to rest (it must be the major's body end), how long the move took, whether the film position
@@ -80,7 +80,7 @@ def run(url, pace=1.0, width=1280, height=720, only_steps=False):
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
-        q = f"?view=film&night=staged&pace={pace}"
+        q = f"?view=film&pace={pace}"
         pg.goto(url + q); pg.wait_for_selector(".stage", state="attached"); pg.wait_for_timeout(900)
         pg.evaluate(SAMPLER)
 
@@ -184,23 +184,23 @@ def run(url, pace=1.0, width=1280, height=720, only_steps=False):
             pg.keyboard.press("ArrowDown"); wait_move()
             check("the arrow keys still step after a caret click", state()["station"] == 2, str(state()))
 
-            # --- a nav link cuts to the beat, no travelling through the night
-            link = pg.locator(".hud__nav a", has_text="The staff")
+            # --- a nav link cuts to the beat, no travelling through the sections
+            link = pg.locator(".hud__nav a", has_text="The work")
             if link.count():
                 link.first.click(); pg.wait_for_timeout(700)
                 st = state()
-                check("a nav link cuts to the beat and rests there (not on a station)", st["beat"] == "staff" and st["motion"] == "rest" and st["ready"] == "false", str(st))
+                check("a nav link cuts to the beat and rests there (not on a station)", st["beat"] == "pjangler" and st["motion"] == "rest" and st["ready"] == "false", str(st))
                 pg.keyboard.press("ArrowDown"); wait_move()
-                check("Down from a nav landing plays out that section", state()["beat"] == "staff" and state()["station"] == ids.index("staff") + 1, str(state()))
+                check("Down from a nav landing plays out that section", state()["beat"] == "pjangler" and state()["station"] == ids.index("pjangler") + 1, str(state()))
 
             # --- the URL keeps your place: the hash names the beat you rest on, and a reload comes back to it
-            si = ids.index("staff") + 1
-            check("the hash names the beat the film rests on", pg.evaluate("location.hash") == "#staff", pg.evaluate("location.hash"))
+            si = ids.index("pjangler") + 1
+            check("the hash names the beat the film rests on", pg.evaluate("location.hash") == "#pjangler", pg.evaluate("location.hash"))
             pg.reload(); pg.wait_for_selector(".stage", state="attached"); pg.wait_for_timeout(1200)
             st = state()
             check("a reload comes back to the same station", st["station"] == si and abs(st["y"] - stations[si]) <= 2 and st["ready"] == "true", str(st))
             ctx2 = b.new_context(viewport={"width": width, "height": height})
-            p2 = ctx2.new_page(); p2.goto(url + "?view=film&night=staged&pace=0.2#gateway"); p2.wait_for_selector(".stage", state="attached"); p2.wait_for_timeout(1200)
+            p2 = ctx2.new_page(); p2.goto(url + "?view=film&pace=0.2#gateway"); p2.wait_for_selector(".stage", state="attached"); p2.wait_for_timeout(1200)
             r2 = p2.evaluate("({b: document.querySelector('.stage').dataset.beat, y: scrollY})")
             check("a deep link (#gateway) lands on that beat", r2["b"] == "gateway" and r2["y"] > 0, str(r2))
             ctx2.close()
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     ap.add_argument("url", nargs="?", default="http://127.0.0.1:47391/")
     ap.add_argument("--pace", type=float, default=1.0, help="multiplies every ms (0.2 = five times faster)")
     ap.add_argument("--size", default="1280x720")
-    ap.add_argument("--steps", action="store_true", help="only the 23 presses")
+    ap.add_argument("--steps", action="store_true", help="only the 22 presses")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
     w, h = (int(v) for v in a.size.split("x"))

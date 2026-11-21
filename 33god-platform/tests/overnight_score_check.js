@@ -25,7 +25,7 @@ const vars = {
 
 const fails = [];
 function check(ok, msg) { if (!ok) fails.push(msg); }
-const TOTAL_MS = 187000;   // documented in README "The pace": the whole night, 23 presses, at the default pace
+const TOTAL_MS = 177000;   // documented in README "The pace": the whole tour, 22 presses, at the default pace
 
 const table = {};
 [720, 860, 1080].forEach(vh => {
@@ -75,7 +75,7 @@ const table = {};
   check(holds.every(h => B[h.major].interlude), tag + 'only a major that opens an act may hold');
   check(holds.length === M.beats.filter(b => b.interlude).length, tag + 'every act holds once, got ' + holds.length);
   const sum = fwd.reduce((a, b) => a + b, 0);
-  check(Math.abs(sum / TOTAL_MS - 1) < 0.25, tag + 'the night takes ' + Math.round(sum / 1000) + 's, documented as ' + TOTAL_MS / 1000 + 's +-25%');
+  check(Math.abs(sum / TOTAL_MS - 1) < 0.25, tag + 'the tour takes ' + Math.round(sum / 1000) + 's, documented as ' + TOTAL_MS / 1000 + 's +-25%');
   table[vh] = { stations: st, forwardMs: fwd.map(Math.round), total: Math.round(sum) };
 
   // A move from the middle of a body plays the rest of it, starting at rest.
@@ -123,7 +123,7 @@ const table = {};
 {
   const S = Score.compile(spec, { vars: vars, paceScale: 0.2 }); S.layout(860);
   let sum = 0; for (let k = 0; k < S.stations.length - 1; k++) sum += S.move(S.stations[k], 1).ms;
-  check(sum > TOTAL_MS * 0.2 * 0.7 && sum < TOTAL_MS * 0.2 * 1.3, 'paceScale 0.2 gives ' + Math.round(sum) + 'ms for the night');
+  check(sum > TOTAL_MS * 0.2 * 0.7 && sum < TOTAL_MS * 0.2 * 1.3, 'paceScale 0.2 gives ' + Math.round(sum) + 'ms for the tour');
 }
 
 // Bad pace fields say which one.
@@ -135,8 +135,8 @@ function bad(mut, re) {
 bad(s => { s.pace.bogus = 1; }, /pace\.bogus/);
 bad(s => { s.majors[3].body.play = ['80%', '20%']; }, /org-chart\.body\.play/);
 bad(s => { s.majors[1].body.ms = -5; }, /thesis\.body\.ms/);
-bad(s => { s.majors[15].minors[0].dwell = 2; }, /staff\/roll\.dwell/);
+bad(s => { s.majors[20].minors[0].dwell = 2; }, /staff\/roll\.dwell/);
 
 if (process.argv.includes('--json')) { console.log(JSON.stringify(table)); process.exit(fails.length ? 1 : 0); }
 if (fails.length) { console.error(fails.slice(0, 40).join('\n')); process.exit(1); }
-console.log('ok: ' + Object.keys(table).length + ' viewports, ' + Object.values(table)[0].stations.length + ' stations, the night takes ' + Math.round(table[860].total / 1000) + 's');
+console.log('ok: ' + Object.keys(table).length + ' viewports, ' + Object.values(table)[0].stations.length + ' stations, the tour takes ' + Math.round(table[860].total / 1000) + 's');

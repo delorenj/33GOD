@@ -1,4 +1,4 @@
-"""Guard for the overnight marketing page (overnight/site, served live at 33god.delo.sh).
+"""Guard for the 33GOD component tour (overnight/site, served live at 33god.delo.sh).
 
 The page reads its words from manifest.json and its scroll geometry from score.json, with no build step,
 so a hand edit goes live the moment it is saved. These tests catch the three ways an edit breaks it:
@@ -80,13 +80,6 @@ def walk(x, path=""):
             yield from walk(v, f"{path}[{i}]")
 
 
-def mins(t: str) -> int:
-    """The page's mins(): HH:MM before 12:00 counts as the next day, so the night runs 18:02 -> 07:41."""
-    h, m = (int(p) for p in t.split(":"))
-    v = h * 60 + m
-    return v + 1440 if v < 720 else v
-
-
 # ---------------------------------------------------------------- 1. every JSON parses
 
 def test_every_json_parses():
@@ -96,14 +89,15 @@ def test_every_json_parses():
         load(f)
 
 
-def test_nights_digest():
-    for f in sorted((SITE / "nights").glob("*.json")):
-        N = load(f)
-        assert N.get("format") == "33god.night", f.name
-        assert N.get("version") == 1, f.name
-        W = N.get("window") or {}
-        assert isinstance(W.get("minutes"), int) and W["minutes"] > 0, f"{f.name}: window.minutes"
-        assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d", W.get("local_since", "")), f"{f.name}: window.local_since"
+def test_no_night_story_left():
+    """The page was a night story until 21 Nov 2026. No night file, no night code and no 'stealth' claim may come back."""
+    assert not (SITE / "nights").exists(), "site/nights/ is gone: the page tells no night story"
+    pat = re.compile(r"stealth|nights/|night=|33god\.night|waybill night", re.I)
+    for f in sorted(SITE.rglob("*")):
+        if f.is_file() and f.suffix in {".html", ".js", ".css", ".json"} and "vendor" not in f.parts:
+            for n, line in enumerate(f.read_text(encoding="utf-8", errors="ignore").split("\n"), 1):
+                m = pat.search(line)
+                assert not m, f"{f.relative_to(SITE)}:{n}: {m.group(0)!r} (the stage is 'In Development'; there is no night file)"
 
 
 # ---------------------------------------------------------------- 2. shape: what the JS dereferences
@@ -114,11 +108,10 @@ def test_manifest_shape():
         assert k in M, f"manifest.json: missing {k}"
     ids = [b["id"] for b in M["beats"]]
     assert len(ids) == len(set(ids)), "duplicate beat ids"
-    prev = -1
     for b in M["beats"]:
         i = b["id"]
         assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", i), f"{i}: id is not kebab-case"
-        assert re.fullmatch(r"\d\d:\d\d", b["time"]), f"{i}: time"
+        assert isinstance(b.get("where"), str) and b["where"], f"{i}: where (the header names the place)"
         assert b["act"] in M["acts"], f"{i}: act {b['act']!r} is not in acts"
         for k in ("kicker", "title", "body"):
             assert isinstance(b.get(k), str), f"{i}: {k} must be a string"
@@ -126,8 +119,6 @@ def test_manifest_shape():
         assert isinstance(b.get("log"), list) and b["log"], f"{i}: log needs at least one line (the log view shows only this)"
         for l in b["log"]:
             assert isinstance(l.get("subject"), str) and isinstance(l.get("note"), str), f"{i}: log line needs subject and note"
-        assert mins(b["time"]) >= prev, f"{i}: time {b['time']} runs backwards"
-        prev = mins(b["time"])
         if "interlude" in b:
             assert b["interlude"].get("kicker") and b["interlude"].get("line"), f"{i}: interlude needs kicker and line"
     for n in M["site"]["nav"]:
@@ -145,6 +136,25 @@ def test_manifest_shape():
         assert c(bid)[k], f"{bid}.copy.{k}"
     for k in ("speakers", "judgments", "tickets", "lines"):
         assert M["transcript"][k], f"transcript.{k}"
+    assert M["site"]["status"] == "In Development", "the stage is In Development"
+    for b in M["beats"]:
+        if b["setPiece"] == "department.card":
+            cc = b["copy"]
+            ex = cc["exhibit"]
+            assert ex["seats"] and ex["components"], f"{b['id']}: exhibit needs seats and components"
+            for m in cc["members"]:
+                assert m.get("name") and m.get("role") and m.get("line"), f"{b['id']}: member needs name, role, line: {m}"
+            for f in cc["figures"]:
+                assert f.get("n") and f.get("label") and f.get("detail"), f"{b['id']}: figure needs n, label, detail: {f}"
+            for e in cc["events"]:
+                assert e.get("type") and e.get("n"), f"{b['id']}: event needs type and n: {e}"
+            assert cc["stamp"] and cc["eventsTitle"]
+    # Every component the tour names is in the registry (components/<id>.yaml); "registry" is the registry itself.
+    reg = Path(__file__).resolve().parents[1] / "components"
+    for b in M["beats"]:
+        named = list(b.get("covers") or []) + list((b.get("copy", {}).get("exhibit") or {}).get("components", []))
+        for cid in named:
+            assert cid == "registry" or (reg / f"{cid}.yaml").exists(), f"{b['id']}: component {cid!r} has no record in components/"
     # Regression pin: the thesis beat sits between the hero and the numbers.
     assert ids.index("premise") + 1 == ids.index("thesis") == ids.index("numbers") - 1, "thesis must sit between premise and numbers"
 
@@ -203,9 +213,17 @@ BUDGETS = {
     "quoteSource": (80, None, "eyebrow, 2 lines at 80 chars"),
     "staff.line": (80, None, "nameplate is 240px wide; 90 chars leaves 11px above the viewport bottom at 1280x720, 120 runs off"),
     "detail": (280, None, "popover is cell width + 16px (about 220px); 280 chars is about 9 lines"),
-    "nav.label": (14, None, "6 nav labels wrap the header; each label <= 14 chars"),
+    "nav.label": (14, None, "5 nav labels share the header with the chip and the simulation link; each label <= 14 chars"),
+    "where": (24, None, "the header's place name sits left of the 'n of N' count"),
+    "dept.figure.n": (4, None, "department card numeral column is 62px at 26px type; '1.4M' fits, '12.4M' does not"),
+    "dept.figure.label": (64, None, "department card label is 2 lines in the 14px column beside the numeral"),
+    "dept.member.line": (80, None, "member row is clamped to 2 lines at 13px/18px"),
+    "dept.member.role": (24, None, "eyebrow beside the member name"),
+    "dept.event.type": (48, None, "mono 11px subject in the events list, one line"),
+    "dept.stamp": (90, None, "13px/18px under the card"),
+    "ask.watch.note": (200, None, "the line under the 'Open the 3D Factory' button"),
 }
-GENERIC_SKIP = {"premise", "org-chart", "hired-well", "numbers", "staff", "ask"}
+GENERIC_SKIP = {"premise", "org-chart", "numbers", "staff", "ask"}
 
 
 def _items(M):
@@ -239,6 +257,19 @@ def _items(M):
     out += [("quote", "org-chart.quote", oc["quote"]), ("quoteSource", "org-chart.quoteSource", oc["quoteSource"])]
     for s in beat(M, "staff")["copy"]["staff"]:
         out += [("staff.line", f"staff {s['name']}.line", s["line"]), ("entry.name", f"staff {s['name']}.name", s["name"])]
+    for b in M["beats"]:
+        out.append(("where", f"{b['id']}.where", b["where"]))
+        if b["setPiece"] == "department.card":
+            cc = b["copy"]
+            for k, f in enumerate(cc["figures"]):
+                out += [("dept.figure.n", f"{b['id']}.figures[{k}].n", f["n"]), ("dept.figure.label", f"{b['id']}.figures[{k}].label", f["label"])]
+            for m in cc["members"]:
+                out += [("dept.member.line", f"{b['id']}.{m['name']}.line", m["line"]), ("dept.member.role", f"{b['id']}.{m['name']}.role", m["role"]),
+                        ("entry.name", f"{b['id']}.{m['name']}.name", m["name"])]
+            for e in cc["events"]:
+                out.append(("dept.event.type", f"{b['id']}.{e['type']}", e["type"]))
+            out.append(("dept.stamp", f"{b['id']}.stamp", cc["stamp"]))
+    out.append(("ask.watch.note", "ask.watch.note", beat(M, "ask")["copy"]["watch"]["note"]))
     for path, text in _details(M):
         out.append(("detail", path, text))
     for k, nv in enumerate(M["site"]["nav"]):
@@ -272,7 +303,7 @@ def test_copy_budgets(slot, where, text):
 
 
 def test_nav_is_five_or_fewer():
-    assert len(manifest()["site"]["nav"]) <= 5, "a 6th nav label wraps the header to 95px"
+    assert len(manifest()["site"]["nav"]) <= 5, "a 6th nav label wraps the header"
 
 
 def test_detail_is_a_real_long_form():
@@ -319,7 +350,7 @@ def test_template_tokens():
             continue
         assert s.count("{") == s.count("}"), f"{path}: unbalanced braces"
         for tok in re.findall(r"\{[^}]*\}", s):
-            assert re.fullmatch(r"\{(p:[^}]+|w:[^}]+|flagships|n|total|label)\}", tok), f"{path}: unknown token {tok}"
+            assert re.fullmatch(r"\{(p:[^}]+|w:[^}]+|n|total|label|date|site\.viewSimulationHref)\}", tok), f"{path}: unknown token {tok}"
 
 
 # ---------------------------------------------------------------- the pace: one press of Down is one section
@@ -425,7 +456,7 @@ class TestLayout(_Browser):
             errs = []
             pg.on("pageerror", lambda e: errs.append(str(e)))
             pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
-            pg.goto(server + "?view=film&night=staged")
+            pg.goto(server + "?view=film")
             pg.wait_for_selector(".hud")
             for m in S["majors"]:
                 for f in (0.1, 0.5, 0.9):
@@ -435,7 +466,7 @@ class TestLayout(_Browser):
                     r = pg.evaluate("""() => {
                       const R = s => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(); return {top: r.top, bottom: r.bottom, left: r.left, right: r.right}; };
                       return { hud: R('.hud'), cap: R('.cap'), next: R('.next'), fail: !!document.querySelector('.fail'),
-                               dir: R('.directory'), you: R('.org__you'), grid: R('.org__grid') };
+                               dir: R('.directory'), you: R('.org__you'), grid: R('.org__grid'), dept: R('.scard--dept') };
                     }""")
                     tag = f"{m['id']}@{f} {w}x{h}"
                     if r["fail"]:
@@ -453,6 +484,8 @@ class TestLayout(_Browser):
                         problems.append(f"{tag}: the next-section caret {n} covers the caption {c}")
                     if m["id"] == "numbers" and r["dir"] and (r["dir"]["top"] < hb + 16 or r["dir"]["bottom"] > h - 16):
                         problems.append(f"{tag}: directory {r['dir']['top']:.0f}-{r['dir']['bottom']:.0f}")
+                    if m["id"] in ("clock-records", "agents-desk") and f < 0.9 and (not r["dept"] or r["dept"]["top"] < hb + 8 or r["dept"]["bottom"] > h - 16):
+                        problems.append(f"{tag}: department card {r['dept']}")
                     if m["id"] == "org-chart" and r["you"] and r["grid"] and (r["you"]["top"] < hb + 16 or r["grid"]["bottom"] > h - 16):
                         problems.append(f"{tag}: org chart {r['you']['top']:.0f}-{r['grid']['bottom']:.0f}")
             if errs:
@@ -465,9 +498,9 @@ class TestLayout(_Browser):
         problems = []
         for w, h in self.VIEWPORTS:
             pg = pw.new_page(viewport={"width": w, "height": h})
-            pg.goto(server + "?view=film&night=staged")
+            pg.goto(server + "?view=film")
             pg.wait_for_selector(".hud")
-            for bid in ("numbers", "org-chart"):
+            for bid in ("numbers", "org-chart", "clock-records", "agents-desk"):
                 m = next(x for x in S["majors"] if x["id"] == bid)
                 pg.evaluate(f"window.scrollTo(0,{(m['start'] + (m['end'] - m['start']) * 0.6) * S['scale'] * h / 100})")
                 pg.wait_for_timeout(900)
@@ -496,7 +529,7 @@ class TestLayout(_Browser):
 
 @pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium)")
 class TestStepping(_Browser):
-    """Presses the real page. ?pace=0.2 plays every move five times faster, so the whole night is about 40 seconds."""
+    """Presses the real page. ?pace=0.2 plays every move five times faster, so the whole tour is about 35 seconds."""
     PACE = 0.2
 
     def test_every_press_is_one_section(self, server):
@@ -522,7 +555,7 @@ class TestStepping(_Browser):
         # the link is the last thing the header drops: it stays from a 900px window up to wide, and no header wraps
         for w, h in self.VIEWPORTS + [(1204, 800), (1210, 800), (1100, 800), (1024, 768), (820, 1180)]:
             pg = pw.new_page(viewport={"width": w, "height": h})
-            pg.goto(server + "?view=film&night=staged")
+            pg.goto(server + "?view=film")
             pg.wait_for_selector(".hud")
             a = pg.locator("a.hud__sim")
             assert a.is_visible(), f"{w}: the 3D simulation link is hidden"
@@ -548,7 +581,7 @@ class TestStepping(_Browser):
     def test_tablet_keeps_the_caret(self, server, pw):
         """760 to 900px opens the film: no Down key on a tablet, so the caret must be there (the gauge may go)."""
         pg = pw.new_page(viewport={"width": 820, "height": 1180}, has_touch=True)
-        pg.goto(server + "?view=film&night=staged&pace=0.2")
+        pg.goto(server + "?view=film&pace=0.2")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(700)
         assert pg.locator(".next").is_visible() and not pg.locator(".gauge").is_visible()
@@ -558,7 +591,7 @@ class TestStepping(_Browser):
 
     def test_reload_and_deep_links_keep_the_place(self, server, pw):
         pg = pw.new_page(viewport={"width": 1280, "height": 720})
-        pg.goto(server + "?view=film&night=staged&pace=0.1")
+        pg.goto(server + "?view=film&pace=0.1")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(700)
         for _ in range(3):
@@ -573,7 +606,7 @@ class TestStepping(_Browser):
         assert st == {"s": 3, "m": "rest", "b": "numbers"}, f"a reload lost the place: {st}"
         pg.close()
         pg = pw.new_page(viewport={"width": 1280, "height": 720})   # a fresh tab: the hash alone
-        pg.goto(server + "?view=film&night=staged#staff")
+        pg.goto(server + "?view=film#staff")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(1200)
         assert pg.evaluate("document.querySelector('.stage').dataset.beat") == "staff"
@@ -595,7 +628,7 @@ class TestStepping(_Browser):
     def test_reduced_motion_cuts(self, server, pw):
         ctx = pw.new_context(viewport={"width": 1280, "height": 720}, reduced_motion="reduce")
         pg = ctx.new_page()
-        pg.goto(server + "?view=film&night=staged")
+        pg.goto(server + "?view=film")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(600)
         pg.keyboard.press("ArrowDown")
@@ -610,10 +643,10 @@ class TestStepping(_Browser):
         problems = []
         for w, h in ((1280, 720), (1440, 860), (820, 1180)):
             pg = pw.new_page(viewport={"width": w, "height": h})
-            pg.goto(server + "?view=film&night=staged&pace=0.1")
+            pg.goto(server + "?view=film&pace=0.1")
             pg.wait_for_selector(".stage")
             pg.wait_for_timeout(700)
-            for n in range(24):
+            for n in range(23):
                 if n:
                     pg.keyboard.press("ArrowDown")
                     pg.wait_for_timeout(100)

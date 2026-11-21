@@ -10,7 +10,7 @@ a:hover { color: var(--stage-ink); text-decoration-color: var(--stage-ink); }
 ::selection { background: var(--g33-ochre-soft); color: var(--stage-ink); }
 a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-shadow: var(--g33-focus-ring); border-radius: 2px; }
 
-/* Night tokens, restated so a night surface can sit inside the morning (the car screen). */
+/* The page is always on the night tokens. */
 [data-theme="night"] {
   --stage-ground: #141714; --stage-ink: #e3e8e3; --stage-ink-2: #b6bcb7; --stage-ink-3: #909590; --stage-rule: #282d29;
   --g33-line-strong: #676e68;
@@ -50,8 +50,6 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 /* ---------- the stage ---------- */
 .track { position: relative; }
 .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: flex; flex-direction: column; background: var(--stage-ground); --q: 0; --p: 0; }
-/* The sky fills behind the building and fades out before it reaches the words, which stay on stage-ground. */
-.sky { position: absolute; inset: 0; background: var(--sky, var(--stage-ground)); -webkit-mask-image: linear-gradient(90deg, transparent 26%, #000 50%); mask-image: linear-gradient(90deg, transparent 26%, #000 50%); }
 
 .hud { position: relative; z-index: 6; display: flex; align-items: center; gap: 12px 28px; padding: 16px var(--stage-gutter); border-bottom: 1px solid var(--stage-rule); }
 .hud__brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
@@ -61,12 +59,11 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .hud__status { font: 400 13px/18px var(--font-sans); color: var(--stage-ink-3); }
 .hud__nav { margin-left: auto; display: flex; align-items: center; gap: 8px 26px; font: 400 14px/20px var(--font-sans); }
 .hud__cta { color: var(--stage-ink); }
-.hud__clock { min-width: 108px; display: flex; justify-content: flex-end; }
-.hud__clock .on-clock { align-items: flex-end; }
-.hud__clockin { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.hud__count { font: 400 11px/14px var(--font-mono); color: var(--stage-ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.logview__real { padding-left: 12px; border-left: 2px solid var(--window-working); }
-.logline--real { border-left: 2px solid var(--window-working); padding-left: 10px; margin-left: -12px; }
+/* Where the tour is: the department on show over "n of N". */
+.hud__where { min-width: 108px; max-width: 168px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.hud__dept { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 14px/18px var(--font-display); color: var(--stage-ink); }
+.hud__n { color: var(--stage-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 600px) { .hud__where { display: none; } }
 .mark { flex: none; display: block; }
 .mark__ink { fill: var(--stage-ink); }
 .mark__you { fill: var(--window-you); }
@@ -78,25 +75,28 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 
 .cap { display: flex; flex-direction: column; gap: 20px; max-width: 34rem; }
 .cap--hero { max-width: none; gap: 28px; }
-.cap__eyebrow { display: flex; gap: 16px; }
-.cap__count { color: var(--stage-ink-2); }
+.cap__eyebrow { display: flex; align-items: center; gap: 16px; }
 .cap__lede { max-width: 34em; font: 400 clamp(17px, 1.35vw, 20px)/1.55 var(--font-sans); color: var(--stage-ink-2); text-wrap: pretty; }
 .cap__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; font: 400 16px/24px var(--font-sans); }
 .cap__actions a { color: var(--stage-ink); }
 .cap__hint { margin-top: 8px; }
 .cap__aside { font: italic 380 18px/26px var(--font-display); font-variation-settings: 'opsz' 20; color: var(--stage-ink-2); max-width: 30em; }
+.cap__badge { margin-left: auto; padding: 1px 8px; border: 1px solid var(--stage-rule); border-radius: 9999px; font: 500 11px/16px var(--font-mono); letter-spacing: 0.02em; text-transform: none; color: var(--stage-ink-3); white-space: nowrap; }
+.cap__badge--real { color: var(--stage-ink-2); border-color: var(--g33-line-strong); }
+.cap__watch { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.cap__briefing { font: 400 15px/22px var(--font-sans); color: var(--stage-ink-2); max-width: 30em; }
 .cap__quote { display: flex; flex-direction: column; gap: 8px; padding-left: 16px; border-left: 1px solid var(--g33-line-strong); }
 .cap__quote blockquote { font: italic 380 20px/28px var(--font-display); font-variation-settings: 'opsz' 20; color: var(--stage-ink-2); }
 .on-caption__body:empty { display: none; }
 
-/* An act's opening statement: the whole stage, one line. */
+/* A part's opening statement: the whole stage, one line. */
 .interlude { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 0 var(--stage-gutter); text-align: center; pointer-events: none; background: color-mix(in srgb, var(--stage-ground) 95%, transparent); opacity: 0; }
 .interlude__in { display: flex; flex-direction: column; align-items: center; gap: 20px; max-width: 60rem; }
 
 .crank { position: absolute; z-index: 6; left: calc(50% + 36px); bottom: 9px; margin: 0; padding: 6px 12px; background: var(--stage-ground); border: 1px solid var(--stage-rule); border-radius: var(--radius-bezel); font: 400 13px/20px var(--font-mono); color: var(--stage-ink-2); opacity: 0; transition: opacity var(--dur-window-on) var(--ease-settle); pointer-events: none; }
 .crank.is-on { opacity: 1; }
 
-/* ---------- the elevator: where we are in the night, 0% at the top floor to 100% at the ground ---------- */
+/* ---------- the elevator: where we are in the tour, 0% at the top floor to 100% at the ground ---------- */
 .gauge { position: absolute; z-index: 4; left: calc(var(--stage-gutter) / 2 - 6px); top: 96px; bottom: 48px; width: 12px; pointer-events: none; --gauge: 0; }
 .gauge__rail { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: var(--stage-rule); }
 .gauge__tick { position: absolute; left: 50%; width: 5px; height: 1px; margin-left: -2.5px; background: color-mix(in srgb, var(--stage-ink-3) 60%, transparent); }
@@ -119,10 +119,6 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .draw-x { --k: clamp(0, calc((var(--q) - var(--at, 0)) * 5), 1); transform: scaleX(var(--k)); transform-origin: 0 50%; }
 
 /* ---------- the building ---------- */
-.horizon { position: absolute; left: -30%; right: calc(var(--stage-gutter) * -1 - 12vw); bottom: 48px; height: 36%; opacity: 0;
-  background: linear-gradient(to top, var(--band, transparent) 0%, color-mix(in srgb, var(--band, transparent) 50%, transparent) 34%, transparent 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 18%, #000 58%); mask-image: linear-gradient(90deg, transparent 18%, #000 58%); }
-[data-theme="morning"] .sky, [data-theme="morning"] .horizon { display: none; }
 .world { position: absolute; inset: 0; will-change: transform, opacity; }
 .ground { position: absolute; left: -300%; right: -300%; bottom: 48px; height: 1px; background: var(--facade-edge); }
 .bldg { position: absolute; left: 50%; bottom: 48px; transform: translateX(-50%) scale(var(--bs, 1)); transform-origin: 50% 100%; line-height: 0; }
@@ -139,8 +135,6 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .plate__detail { max-width: 240px; margin-top: -1px; padding: 8px 12px; background: var(--stage-ground); border: 1px solid var(--stage-rule); border-top: 0; border-radius: 0 0 var(--radius-bezel) var(--radius-bezel); font: 400 12px/17px var(--font-sans); color: var(--stage-ink-3); }
 .plate--up .plate__detail { margin-top: 0; margin-bottom: -1px; border-top: 1px solid var(--stage-rule); border-bottom: 0; border-radius: var(--radius-bezel) var(--radius-bezel) 0 0; }
 .plate--up .plate__lead { top: auto; bottom: 18px; }
-.leave { position: absolute; transform: translateY(-50%); white-space: nowrap; padding: 2px 6px; background: var(--stage-ground);
-  opacity: calc(clamp(0, calc((var(--q) - 0.2) / 0.06), 1) * (1 - clamp(0, calc((var(--q) - 0.42) / 0.08), 1))); }
 .roll { position: absolute; color: var(--stage-ink-2); }
 .flyer { position: absolute; padding: 3px 8px; border-radius: 2px; background: var(--g33-lake-soft); color: var(--window-working); white-space: nowrap;
   --k: clamp(0, calc((var(--q) - var(--at)) * 4), 1);
@@ -194,6 +188,28 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 /* Hovering a window puts its nameplate where the beat's card stands; the card steps back meanwhile. */
 .scard { transition: opacity var(--dur-window-on) var(--ease-settle); }
 .overlay.is-hovering .scard { opacity: 0.12; }
+
+/* The generic department exhibit: a card built from the section's copy (members, figures, events, stamp). */
+.scard--dept { gap: 0; padding: 14px 16px; }
+.dept__members { display: flex; flex-direction: column; }
+.dept__member { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--stage-rule); }
+.dept__member:first-child { border-top: 0; padding-top: 0; }
+.dept__who { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.dept__name { color: var(--stage-ink); }
+.dept__role { white-space: nowrap; }
+.dept__line { font: 400 12px/16px var(--font-sans); color: var(--stage-ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dept__figures { display: flex; flex-direction: column; margin-top: 8px; border-top: 1px solid var(--stage-ink-3); }
+.dept__fig { position: relative; display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--stage-rule); }
+.dept__fig:first-child { border-top: 0; }
+.dept__n { font: 360 26px/1 var(--font-display); letter-spacing: -0.02em; font-variation-settings: 'opsz' 36; color: var(--stage-ink); font-variant-numeric: tabular-nums; }
+.dept__label { font: 400 12px/16px var(--font-sans); color: var(--stage-ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.dept__events { display: flex; flex-direction: column; gap: 1px; padding-top: 8px; border-top: 1px solid var(--stage-rule); }
+.dept__event { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; line-height: 16px; }
+.dept__type { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--stage-ink-2); font-size: 11px; line-height: 16px; }
+.dept__count { color: var(--stage-ink); font-size: 11px; line-height: 16px; font-variant-numeric: tabular-nums; }
+.dept__stamp { padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--stage-rule); font-size: 12px; line-height: 16px; }
+.scard--dept .detail { left: -8px; right: -8px; }
+@media (max-height: 800px) { .dept__events { display: none; } }
 
 /* ---------- set pieces ---------- */
 .sp-wrap { position: absolute; inset: 0; pointer-events: none; }
@@ -284,10 +300,8 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .tx-speaker { font: 600 11px/22px var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--stage-ink); }
 .tx-speaker:not(.is-named)::before { content: ""; display: block; width: 28px; height: 8px; margin-top: 7px; background: var(--g33-line-strong); }
 .tx-text { font: 400 15px/22px var(--font-sans); color: var(--stage-ink-2); text-wrap: pretty; }
-.tx-project, .tx-word { transition: color var(--dur-window-on) var(--ease-settle), text-shadow var(--dur-window-on) var(--ease-settle); }
+.tx-project { transition: color var(--dur-window-on) var(--ease-settle); }
 .tx-project.is-found { color: var(--window-working); border-bottom: 1px solid var(--window-working); }
-.tx-word.is-learned { color: var(--stage-ink); border-bottom: 1px dotted var(--stage-ink-3); }
-.tx-word.is-fresh { text-shadow: var(--glow-lit); }
 .glass__panel { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; border-left: 1px solid var(--stage-rule); }
 .judgment { display: flex; justify-content: space-between; gap: 12px; font: 400 12px/18px var(--font-mono); color: var(--stage-ink-2); opacity: 0; transition: opacity var(--dur-flicker) var(--ease-settle); }
 .judgment.is-in { opacity: 1; }
@@ -296,15 +310,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .voice__print { display: inline-flex; align-items: center; gap: 2px; height: 18px; }
 .voice__print i { width: 2px; background: var(--g33-line-strong); transition: background-color var(--dur-window-on) var(--ease-settle); }
 .voice.is-in .voice__print i { background: var(--stage-ink); }
-.dict-word { padding: 6px 0; border-top: 1px solid var(--stage-rule); font: 400 13px/20px var(--font-mono); color: var(--stage-ink); }
 .ticket { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--stage-ground); border-left: 2px solid var(--window-working); opacity: 0; transform: translateX(-28px); transition: opacity var(--dur-window-on) var(--ease-settle), transform var(--dur-window-on) var(--ease-settle); }
 .ticket.is-in { opacity: 1; transform: none; }
 .ticket__board { color: var(--window-working); }
 .ticket__title { font: 400 13px/18px var(--font-sans); color: var(--stage-ink); }
-.glass__foot { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--stage-rule); }
-.glass__dots { display: inline-flex; gap: 8px; }
-.glass__dots i { width: 8px; height: 8px; border-radius: 9999px; background: var(--g33-line-strong); }
-.glass__dots i.is-on { background: var(--stage-ink); }
 
 /* ---------- the car ---------- */
 .car { display: flex; flex-direction: column; justify-content: center; gap: 28px; }
@@ -345,6 +354,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .logview .hud { position: sticky; top: 0; background: var(--stage-ground); }
 .logview__main { max-width: 52rem; margin: 0 auto; padding: 64px var(--stage-gutter) 96px; display: flex; flex-direction: column; gap: 20px; }
 .logview__act { margin-top: 24px; }
+.logentry { display: flex; flex-direction: column; gap: 8px; padding: 20px 0 22px; border-top: 1px solid var(--stage-rule); }
+.logentry .eyebrow { display: flex; align-items: center; gap: 12px; }
+.logentry__title { font: 380 clamp(22px, 2.4vw, 30px)/1.15 var(--font-display); letter-spacing: -0.01em; color: var(--stage-ink); text-wrap: balance; }
+.logentry__body { max-width: 40em; font: 400 16px/1.55 var(--font-sans); color: var(--stage-ink-2); text-wrap: pretty; }
 .logview__detail { margin: 6px 0 14px; display: grid; gap: 10px; }
 .logview__detail dt { margin: 0; }
 .logview__detail dd { margin: 0; font: 400 13px/18px var(--font-sans); color: var(--stage-ink-2); }
@@ -361,10 +374,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 @media (max-width: 900px) {
   .hud__link, .hud__cta { display: none; }
   .hud .hud__status, .hud .hud__rule { display: none; }
-  .hud__clock { min-width: 0; }
   .gauge { display: none; }
-  .logview .on-clock__staged { display: none; }
-  .sky { -webkit-mask-image: none; mask-image: none; }
   .captions, .captions--hero { left: 0; right: 0; width: auto; top: auto; bottom: 0; height: 48%; padding: 16px var(--stage-gutter) 44px; align-items: flex-start; overflow: hidden; background: var(--stage-ground); border-top: 1px solid var(--stage-rule); }
   .scene { left: var(--stage-gutter); top: 8px; bottom: 48%; }
   .cap { gap: 12px; }
