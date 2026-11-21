@@ -4,6 +4,10 @@ Written 2026-11-17 for whoever operates this Mac next: Jarad, an agent, or Damia
 
 Host: `hellosubconscious@100.117.109.60` (tailnet `tuxedo-morpho.ts.net`), macOS 26.3, Apple silicon, 96 GB. Plan: [PLAN.md](PLAN.md). Acceptance record: [evidence/W10-3-acceptance-2026-11-17.md](evidence/W10-3-acceptance-2026-11-17.md).
 
+## 0. Current mode: PLAIN (33GOD off for the apps) since 2026-11-21
+
+`33god-mode` (`~/.local/bin/33god-mode`, source `scripts/peer-mode.py`) switches a peer's Claude Code and Codex (CLI and Desktop) between plain and 33GOD. Infra keeps running in both modes. Since 2026-11-21 17:02Z Damian's Mac is `off`: his apps use his own Anthropic and ChatGPT logins and fire no 33GOD hooks, skills or instructions. `33god-mode on` puts everything back from `~/.config/33god/mode/parked.json`. `codex-mode` hands off to it. `scripts/plain-check.py --live` is the acceptance for plain mode. While the Mac is off, `peer-check.sh` and `clients-check.py` rows for client hooks, provider and skills are expected to fail. Record: [evidence/plain-mode-2026-11-21.md](evidence/plain-mode-2026-11-21.md).
+
 ## 1. Check health in one command
 
 ```
