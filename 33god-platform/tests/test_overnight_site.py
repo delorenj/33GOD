@@ -390,8 +390,7 @@ def _free_port():
         return s.getsockname()[1]
 
 
-@pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium; about 1.5 minutes)")
-class TestLayout:
+class _Browser:
     VIEWPORTS = [(1280, 720), (1440, 860), (1920, 1080)]
 
     @pytest.fixture(scope="class")
@@ -414,6 +413,10 @@ class TestLayout:
             yield b
             b.close()
 
+
+@pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium; about 2.5 minutes)")
+class TestLayout(_Browser):
+
     def test_film_fits(self, server, pw):
         M, S = manifest(), score()
         problems = []
@@ -430,8 +433,8 @@ class TestLayout:
                     pg.evaluate(f"window.scrollTo(0,{y})")
                     pg.wait_for_timeout(700)
                     r = pg.evaluate("""() => {
-                      const R = s => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(); return {top: r.top, bottom: r.bottom}; };
-                      return { hud: R('.hud'), cap: R('.cap'), fail: !!document.querySelector('.fail'),
+                      const R = s => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(); return {top: r.top, bottom: r.bottom, left: r.left, right: r.right}; };
+                      return { hud: R('.hud'), cap: R('.cap'), next: R('.next'), fail: !!document.querySelector('.fail'),
                                dir: R('.directory'), you: R('.org__you'), grid: R('.org__grid') };
                     }""")
                     tag = f"{m['id']}@{f} {w}x{h}"
@@ -445,6 +448,9 @@ class TestLayout:
                         gap = 16 if m["id"] == "org-chart" else 24
                         if r["cap"]["top"] < hb + gap or r["cap"]["bottom"] > h - gap:
                             problems.append(f"{tag}: caption {r['cap']['top']:.0f}-{r['cap']['bottom']:.0f} outside {hb + gap:.0f}-{h - gap}")
+                    c, n = r["cap"], r["next"]
+                    if c and n and not (n["right"] <= c["left"] or n["left"] >= c["right"] or n["bottom"] <= c["top"] or n["top"] >= c["bottom"]):
+                        problems.append(f"{tag}: the next-section caret {n} covers the caption {c}")
                     if m["id"] == "numbers" and r["dir"] and (r["dir"]["top"] < hb + 16 or r["dir"]["bottom"] > h - 16):
                         problems.append(f"{tag}: directory {r['dir']['top']:.0f}-{r['dir']['bottom']:.0f}")
                     if m["id"] == "org-chart" and r["you"] and r["grid"] and (r["you"]["top"] < hb + 16 or r["grid"]["bottom"] > h - 16):
@@ -484,3 +490,103 @@ class TestLayout:
                     if isinstance(v, list) and any(isinstance(e, dict) and "detail" in e for e in v)})
         assert pg.locator("dl.logview__detail").count() >= want
         pg.close()
+
+
+# ---------------------------------------------------------------- one press of Down is one section
+
+@pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium)")
+class TestStepping(_Browser):
+    """Presses the real page. ?pace=0.2 plays every move five times faster, so the whole night is about 40 seconds."""
+    PACE = 0.2
+
+    def test_every_press_is_one_section(self, server):
+        probe = Path(__file__).resolve().parents[1] / "overnight" / "step-probe.py"
+        r = subprocess.run([sys.executable, str(probe), server, "--pace", str(self.PACE), "--json"], capture_output=True, text=True, timeout=400)
+        assert r.stdout.strip(), r.stderr
+        rep = json.loads(r.stdout)
+        assert not rep["failed"], "\n".join(rep["failed"][:20])
+        S = score()
+        assert len(rep["moves"]) == len(S["majors"]), "one rest per major"
+        # each move lasts what the score says (the node check prints the table for this viewport height)
+        if NODE:
+            t = subprocess.run([NODE, str(Path(__file__).with_name("overnight_score_check.js")), "--json"], capture_output=True, text=True, env={**os.environ, "OVERNIGHT_SITE": str(SITE)})
+            nominal = json.loads(t.stdout)["720"]["forwardMs"]
+            for mv, ms in zip(rep["moves"], nominal):
+                want = ms * self.PACE
+                assert 0.6 * want <= mv["ms"] <= 1.4 * want, f"{mv['major']}: moved for {mv['ms']}ms, the score says {want:.0f}ms"
+        staff = next(m for m in rep["moves"] if m["major"] == "staff")
+        assert staff["max_frame_gap_ms"] <= 150, f"the staff roll stuttered: a {staff['max_frame_gap_ms']}ms gap between frames"
+
+    def test_simulation_link_and_header(self, server, pw):
+        M = manifest()["site"]
+        for w, h in self.VIEWPORTS:
+            pg = pw.new_page(viewport={"width": w, "height": h})
+            pg.goto(server + "?view=film&night=staged")
+            pg.wait_for_selector(".hud")
+            a = pg.locator("a.hud__sim")
+            assert a.is_visible(), f"{w}: the 3D simulation link is hidden"
+            assert a.get_attribute("href") == M["viewSimulationHref"] and a.get_attribute("target") == "_blank" and "noopener" in a.get_attribute("rel")
+            assert a.inner_text() == M["viewSimulation"]
+            hh = pg.evaluate("document.querySelector('.hud').getBoundingClientRect().height")
+            assert hh <= 82, f"{w}: the header wrapped to {hh}px"
+            pg.click(".hud__nav button.btn")           # View as log: the link stays
+            pg.wait_for_selector(".logview")
+            assert pg.locator("a.hud__sim").is_visible()
+            pg.close()
+
+    def test_log_view_has_no_film_chrome(self, server, pw):
+        for w, h in ((1280, 720), (390, 844)):
+            pg = pw.new_page(viewport={"width": w, "height": h})
+            pg.goto(server + "?view=log")
+            pg.wait_for_selector(".logview")
+            assert pg.locator(".gauge").count() == 0 and pg.locator(".next").count() == 0, f"{w}: the log view shows film chrome"
+            pg.close()
+        pg = pw.new_page(viewport={"width": 390, "height": 844})   # narrow screens open in the log view
+        pg.goto(server)
+        pg.wait_for_selector(".logview")
+        assert pg.locator(".gauge").count() == 0
+        pg.close()
+
+    def test_reduced_motion_cuts(self, server, pw):
+        ctx = pw.new_context(viewport={"width": 1280, "height": 720}, reduced_motion="reduce")
+        pg = ctx.new_page()
+        pg.goto(server + "?view=film&night=staged")
+        pg.wait_for_selector(".stage")
+        pg.wait_for_timeout(600)
+        pg.keyboard.press("ArrowDown")
+        pg.wait_for_timeout(150)
+        st = pg.evaluate("({m: document.querySelector('.stage').dataset.motion, s: +document.querySelector('.stage').dataset.station, y: scrollY})")
+        assert st["m"] == "rest" and st["s"] == 1, f"a step under reduced motion must be a cut to the station: {st}"
+        ctx.close()
+
+    def test_caret_and_gauge_never_cover_copy(self, server, pw):
+        """At every station, at the two viewports that bind: the caret clears the captions, the cards and the nameplates."""
+        problems = []
+        for w, h in ((1280, 720), (1440, 860)):
+            pg = pw.new_page(viewport={"width": w, "height": h})
+            pg.goto(server + "?view=film&night=staged&pace=0.1")
+            pg.wait_for_selector(".stage")
+            pg.wait_for_timeout(700)
+            for n in range(24):
+                if n:
+                    pg.keyboard.press("ArrowDown")
+                    pg.wait_for_timeout(100)
+                    pg.wait_for_function("document.querySelector('.stage').dataset.motion === 'rest'", timeout=30000)
+                    pg.wait_for_timeout(500)
+                hits = pg.evaluate("""() => {
+                  const R = e => e.getBoundingClientRect(), caret = R(document.querySelector('.next')), gauge = R(document.querySelector('.gauge'));
+                  const hit = (a, b) => !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+                  const out = [];
+                  document.querySelectorAll('.cap, .scard, .plate, .roll, .org__grid, .directory, .car__screen, .car__list, .gate, .glass, .captions .on-caption, .cap__hint, .cap__actions').forEach(e => {
+                    const r = R(e); if (r.width < 2 || r.height < 2) return;
+                    if (e.closest('[style*="opacity: 0"]')) return;
+                    if (hit(caret, r)) out.push('caret over ' + e.className);
+                    if (hit(gauge, r)) out.push('gauge over ' + e.className);
+                  });
+                  return out;
+                }""")
+                for hh in hits:
+                    problems.append(f"{w}x{h} station {n}: {hh}")
+            pg.close()
+        assert not problems, "\n".join(problems[:20])
+

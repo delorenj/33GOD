@@ -9,7 +9,8 @@ the film comes to rest.
 
 Good: moving_frames close to active_frames (no slideshow), small max_film_step_per_frame,
 and every settle result resting with its caption up (cap 1) or on an act statement (interlude beats).
-Baseline before dolly.js: 60 moving frames out of 636.
+Baseline before the dolly's spring: 60 moving frames out of 636. Now: 405 of 407.
+This probe is free scrolling. The ArrowDown stepping (one press, one section) is step-probe.py.
 """
 import json, sys
 from playwright.sync_api import sync_playwright

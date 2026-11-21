@@ -39,7 +39,9 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .btn--quiet { height: var(--g33-control-md); padding: 0 12px; background: transparent; color: var(--stage-ink-2); border: 1px solid var(--stage-rule); font-weight: 400; }
 .btn--quiet:hover { color: var(--stage-ink); border-color: var(--g33-line-strong); }
 .hud__sim { text-decoration: none; }
-@media (max-width: 1100px) { .hud__sim { display: none; } }
+/* The simulation link needs the room the status line uses: below 1360px the header trades "In Development" for it, and below 1180px it goes. */
+@media (max-width: 1360px) { .hud__status, .hud__rule { display: none; } }
+@media (max-width: 1180px) { .hud__sim { display: none; } }
 
 /* ---------- the stage ---------- */
 .track { position: relative; }
