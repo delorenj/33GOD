@@ -129,18 +129,18 @@
   "producer": "kimi",
   "type": "bloodbank.agent.session.started",
   "source": "urn:33god:agent:kimi",
-  "id": "agent-hooks",
-  "owner": "agent-hooks",
-  "via": "producer",
+  "id": "ext:kimi",
+  "owner": null,
+  "via": "source",
   "key": null
  },
  {
   "producer": "gemini",
   "type": "bloodbank.agent.tool.requested",
   "source": "urn:33god:agent:gemini",
-  "id": "agent-hooks",
-  "owner": "agent-hooks",
-  "via": "producer",
+  "id": "ext:gemini",
+  "owner": null,
+  "via": "source",
   "key": null
  },
  {
@@ -156,9 +156,9 @@
   "producer": "antigravity-cli",
   "type": "bloodbank.agent.tool.completed",
   "source": "urn:33god:agent:antigravity-cli",
-  "id": "agent-hooks",
-  "owner": "agent-hooks",
-  "via": "producer",
+  "id": "ext:antigravity",
+  "owner": null,
+  "via": "source",
   "key": null
  },
  {
@@ -237,10 +237,10 @@
   "producer": "hermes-agent:.hermes",
   "type": "bloodbank.agent.tool.completed",
   "source": "urn:33god:agent:hermes",
-  "id": "hermes-desk:unknown",
-  "owner": "hermes-fleet",
+  "id": "hermes-gw",
+  "owner": "hermes-gw",
   "via": "desk",
-  "key": "unknown"
+  "key": ".hermes"
  },
  {
   "producer": "hermes-agent:runtime",
@@ -264,10 +264,10 @@
   "producer": "hermes-agent:claude-code",
   "type": "bloodbank.repo.decision.recorded",
   "source": "hermes://agent/claude-code",
-  "id": "hermes-desk:unknown",
-  "owner": "hermes-fleet",
+  "id": "hermes-gw",
+  "owner": "hermes-gw",
   "via": "desk",
-  "key": "unknown"
+  "key": "claude-code"
  },
  {
   "producer": "hermes-agent",
@@ -357,6 +357,60 @@
   "id": "crank",
   "owner": "crank",
   "via": "source",
+  "key": null
+ },
+ {
+  "producer": "claude-code",
+  "type": "bloodbank.agent.tool.requested",
+  "source": "urn:33god:agent:claude-code",
+  "id": "ext:claude-code",
+  "owner": null,
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "codex-cli",
+  "type": "bloodbank.agent.session.started",
+  "source": "urn:33god:agent:codex-cli",
+  "id": "ext:codex-cli",
+  "owner": null,
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "opencode",
+  "type": "bloodbank.conversation.turn.completed",
+  "source": "urn:33god:agent:opencode",
+  "id": "ext:opencode",
+  "owner": null,
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "claude-code",
+  "type": "bloodbank.agent.hook.updated",
+  "source": "urn:33god:agent:claude-code",
+  "id": "agent-hooks",
+  "owner": "agent-hooks",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "claude-code",
+  "type": "bloodbank.agent.tool.requested",
+  "source": null,
+  "id": "agent-hooks",
+  "owner": "agent-hooks",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "git-hooks",
+  "type": "bloodbank.repo.commit.created",
+  "source": null,
+  "id": "git-hooks",
+  "owner": "git-hooks",
+  "via": "producer",
   "key": null
  }
 ]

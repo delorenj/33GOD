@@ -56,5 +56,6 @@ surfaces:
 - producer:kimi
 - producer:gemini
 - repo:bloodbank/services/agent-hooks
+- source:urn:33god:agent:*#agent.hook.*
 factory:
   station: labeldesk

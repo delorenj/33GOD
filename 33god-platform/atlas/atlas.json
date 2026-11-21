@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "9f0a54998f7ece81607bd4afd544015aedcdaa40f965b95b595d6e299ec5c809",
+  "registry_digest": "6b32586adc4316f13075b870952795df15ea3702ccabd4cac3449ea111cd9e9a",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -825,6 +825,23 @@
         "cloudflare-workers"
       ],
       "runtime": "Cloudflare Worker",
+      "public_card": {}
+    },
+    {
+      "id": "git-hooks",
+      "name": "git hooks",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "agent-hooks",
+      "status": "live",
+      "summary": "Machine-wide pre-commit, pre-push and post-commit guards that every repo on the host runs.",
+      "role_in_system": "Blocks backups, runtime state and secrets from leaving the machine; a commit and a push are the moments the platform could hear about.",
+      "tech": [
+        "shell"
+      ],
+      "runtime": "core.hooksPath ~/.config/git/hooks (pre-commit, pre-push, post-commit)",
       "public_card": {}
     },
     {
@@ -3689,10 +3706,10 @@
     }
   ],
   "counts": {
-    "components": 99,
-    "first_party": 79,
+    "components": 100,
+    "first_party": 80,
     "external": 20,
-    "live": 87,
+    "live": 88,
     "edges": 300
   }
 }

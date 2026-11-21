@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "9f0a54998f7ece81607bd4afd544015aedcdaa40f965b95b595d6e299ec5c809",
+  "registry_digest": "6b32586adc4316f13075b870952795df15ea3702ccabd4cac3449ea111cd9e9a",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -732,6 +732,21 @@
       "summary": "Public web desk on Cloudflare where clients reach Genesis.",
       "tech": [
         "cloudflare-workers"
+      ],
+      "public_card": {}
+    },
+    {
+      "id": "git-hooks",
+      "name": "git hooks",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G3",
+      "level": "component",
+      "parent": "agent-hooks",
+      "status": "live",
+      "summary": "Machine-wide pre-commit, pre-push and post-commit guards that every repo on the host runs.",
+      "tech": [
+        "shell"
       ],
       "public_card": {}
     },

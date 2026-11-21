@@ -140,18 +140,20 @@ people:
 # Factory extras (Factory floor, manual/sandbox): ids a waybill or the old floor table can name that are NOT
 # registry components (vendor CLIs and the devices around them). Each stands at a `station` or in a kiosk `near`
 # one, exactly like a component's `factory:` block, and may list `aliases` (other ids for the same extra).
+# A bay may also claim `surfaces` (source:<ce-source-glob>[#<type-glob>] or producer:<glob>), like a component's own:
+# the vendor CLI's events stand at its bay while agent-hooks keeps the hook events (a typed source rule goes first).
 # Rendered into src/cast.generated.json by atlas.py.
 factory_extras:
-  ext:antigravity: {station: bays, name: Antigravity CLI, aliases: [antigravity-cli, ext:antigravity-cli]}
-  ext:claude-code: {station: bays, name: Claude Code}
+  ext:antigravity: {station: bays, name: Antigravity CLI, aliases: [antigravity-cli, ext:antigravity-cli], surfaces: ['source:urn:33god:agent:antigravity-cli']}
+  ext:claude-code: {station: bays, name: Claude Code, surfaces: ['source:urn:33god:agent:claude-code']}
   ext:codex: {station: bays, name: Codex}
-  ext:codex-cli: {station: bays, name: Codex CLI}
+  ext:codex-cli: {station: bays, name: Codex CLI, surfaces: ['source:urn:33god:agent:codex-cli']}
   ext:codex-desktop: {station: bays, name: Codex Desktop}
   ext:codex-exec: {station: bays, name: Codex exec (headless)}
-  ext:copilot: {station: bays, name: GitHub Copilot CLI, aliases: [copilot-cli, ext:copilot-cli]}
-  ext:gemini: {station: bays, name: Gemini CLI}
-  ext:kimi: {station: bays, name: Kimi CLI}
-  ext:opencode: {station: bays, name: opencode CLI}
+  ext:copilot: {station: bays, name: GitHub Copilot CLI, aliases: [copilot-cli, ext:copilot-cli], surfaces: ['source:urn:33god:agent:copilot*']}
+  ext:gemini: {station: bays, name: Gemini CLI, surfaces: ['source:urn:33god:agent:gemini']}
+  ext:kimi: {station: bays, name: Kimi CLI, surfaces: ['source:urn:33god:agent:kimi']}
+  ext:opencode: {station: bays, name: opencode CLI, surfaces: ['source:urn:33god:agent:opencode']}
   ext:unknown: {station: bays, name: Unknown agent CLI}
   ext:codex-mcp-helper-reaper: {near: bays, name: codex-mcp-helper-reaper}
   ext:hook-command: {near: bays, name: Other hook command}
@@ -192,9 +194,13 @@ factory_desks:
     name: Hermes desk
     instance: "^[a-z0-9][a-z0-9-]*$"
     # Spelled like a profile, but no Hermes profile carries the name (a misread HERMES_HOME or a relayed CLI).
-    malformed: [runtime, claude-code]
+    malformed: [runtime]
     routes:
       "*-momo": momo
+      # The default profile (HERMES_HOME at the standalone root) and a Claude Code relay spelled like a profile:
+      # both are the one gateway process speaking, not a desk of their own.
+      ".hermes": hermes-gw
+      "claude-code": hermes-gw
 
 # Surfaces the drift audit (`atlas.py audit --live`) sees on the host that are NOT
 # 33GOD components: the desktop session, household services, and the client and

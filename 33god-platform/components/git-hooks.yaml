@@ -1,0 +1,31 @@
+# Atlas record (I-12), added 2026-11-21 (I-10.2 audit finding): the machine-wide git hooks are a drawn component that never emits.
+id: git-hooks
+name: git hooks
+role: guard
+repo: ../../.config/git/hooks
+description: Machine-wide pre-commit, pre-push and post-commit guards that every repo on the host runs.
+changelog:
+  topics:
+  - g3
+  - guard
+kind: service
+first_party: true
+domain: G3
+c4:
+  level: component
+  parent: agent-hooks
+status: live
+summary: Machine-wide pre-commit, pre-push and post-commit guards that every repo on the host runs.
+role_in_system: Blocks backups, runtime state and secrets from leaving the machine; a commit and a push are the moments the platform could hear about.
+tech:
+- shell
+runtime: core.hooksPath ~/.config/git/hooks (pre-commit, pre-push, post-commit)
+relations: []
+evidence:
+- ~/.config/git/hooks/_guard.sh
+confidence: medium
+notes: "Declared as an emitter, never seen on the bus (waybill audit: git commits and pushes have no repo commit or push events). Ticketed in I-10.2."
+surfaces:
+- producer:git-hooks
+factory:
+  near: dock

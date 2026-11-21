@@ -1,7 +1,7 @@
 {
   "format": "33god.factory-cast",
   "version": 1,
-  "digest": "cf5f4a74961e943fa723b278eed44e2f75e8f2ea56138abca66b97860cab4a94",
+  "digest": "54d7fea04a3244523366a3c2232fd170b119ad1204edc3bf34c2685aff480db4",
   "components": {
     "aai-gateway": {
       "name": "AutomaticAI LLM gateway",
@@ -378,6 +378,15 @@
       "first_party": true,
       "station": null,
       "near": "entrance",
+      "aliases": []
+    },
+    "git-hooks": {
+      "name": "git hooks",
+      "summary": "Machine-wide pre-commit, pre-push and post-commit guards that every repo on the host runs.",
+      "domain": "G3",
+      "first_party": true,
+      "station": null,
+      "near": "dock",
       "aliases": []
     },
     "heartbeat-tick": {
@@ -1084,6 +1093,11 @@
         "id": "earshot"
       },
       {
+        "source": "urn:33god:agent:*",
+        "type": "agent.hook.*",
+        "id": "agent-hooks"
+      },
+      {
         "source": "urn:33god:service:n8n-*",
         "type": "messaging.*",
         "id": "delosip"
@@ -1097,6 +1111,41 @@
         "source": "*",
         "type": "crank.*",
         "id": "crank"
+      },
+      {
+        "source": "urn:33god:agent:antigravity-cli",
+        "type": null,
+        "id": "ext:antigravity"
+      },
+      {
+        "source": "urn:33god:agent:claude-code",
+        "type": null,
+        "id": "ext:claude-code"
+      },
+      {
+        "source": "urn:33god:agent:codex-cli",
+        "type": null,
+        "id": "ext:codex-cli"
+      },
+      {
+        "source": "urn:33god:agent:copilot*",
+        "type": null,
+        "id": "ext:copilot"
+      },
+      {
+        "source": "urn:33god:agent:opencode",
+        "type": null,
+        "id": "ext:opencode"
+      },
+      {
+        "source": "urn:33god:agent:gemini",
+        "type": null,
+        "id": "ext:gemini"
+      },
+      {
+        "source": "urn:33god:agent:kimi",
+        "type": null,
+        "id": "ext:kimi"
       }
     ],
     "tenants": {
@@ -1128,10 +1177,17 @@
         "name": "Hermes desk",
         "instance": "^[a-z0-9][a-z0-9-]*$",
         "malformed": [
-          "claude-code",
           "runtime"
         ],
         "routes": [
+          {
+            "instance": "claude-code",
+            "id": "hermes-gw"
+          },
+          {
+            "instance": ".hermes",
+            "id": "hermes-gw"
+          },
           {
             "instance": "*-momo",
             "id": "momo"
@@ -1195,6 +1251,10 @@
       {
         "producer": "genesis",
         "id": "genesis"
+      },
+      {
+        "producer": "git-hooks",
+        "id": "git-hooks"
       },
       {
         "producer": "hermes-agent",

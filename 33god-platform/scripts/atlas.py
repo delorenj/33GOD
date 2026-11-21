@@ -184,8 +184,11 @@ def factory_errors(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[s
         if not str(block.get("name", "")).strip():
             errors.append(f"{where}: name is empty")
         for key in block:
-            if key not in ("station", "near", "name", "aliases"):
-                errors.append(f"{where}: {key} is not a known key (station, near, name, aliases)")
+            if key not in ("station", "near", "name", "aliases", "surfaces"):
+                errors.append(f"{where}: {key} is not a known key (station, near, name, aliases, surfaces)")
+        for srf in block.get("surfaces") or []:
+            if not isinstance(srf, str) or srf.partition(":")[0] not in ("source", "producer"):
+                errors.append(f"{where}: surface {srf!r} must be source:<glob>[#<type-glob>] or producer:<glob>")
         aliases = block.get("aliases") or []
         if not isinstance(aliases, list) or not all(isinstance(a, str) and a for a in aliases):
             errors.append(f"{where}: aliases must be a list of ids")
@@ -207,12 +210,16 @@ def is_glob(pattern: str) -> bool:
     return any(ch in pattern for ch in "*?")
 
 
-def surface_rules(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """(source rules, producer rules) from every record's `source:` and `producer:` surfaces, in match order."""
+def surface_rules(records: list[dict[str, Any]], extras: dict[str, Any] | None = None
+                  ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """(source rules, producer rules) from every record's `source:` and `producer:` surfaces, in match order.
+    A factory extra (a vendor CLI's bay) may claim surfaces too, so its events stand at its own bay."""
     sources: list[dict[str, Any]] = []
     producers: list[dict[str, Any]] = []
-    for r in records:
-        for s in r["surfaces"]:
+    owners = [(r["id"], r["surfaces"]) for r in records] + [(eid, (b or {}).get("surfaces") or []) for eid, b in sorted((extras or {}).items())]
+    for rid, surfaces in owners:
+        r = {"id": rid}
+        for s in surfaces:
             if not isinstance(s, str):
                 continue
             kind, _, rest = s.partition(":")
@@ -250,7 +257,7 @@ def desk_families(cfg: dict[str, Any]) -> dict[str, Any]:
 def resolve_document(cfg: dict[str, Any], records: list[dict[str, Any]]) -> dict[str, Any]:
     """The one producer + source resolution map. components.yaml documents the order; registry.py and resolve.ts
     are its only readers."""
-    sources, producers = surface_rules(records)
+    sources, producers = surface_rules(records, cfg.get("factory_extras"))
     return {
         "order": ["source", "tenant", "desk", "producer", "id"],
         "unknown": "unknown",
@@ -282,7 +289,7 @@ def resolve_errors(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[s
                                   "(globs use * and ? only)")
                 if typ.startswith("bloodbank."):
                     errors.append(f"component {r['id']}: surface {s!r}: write the type without its bloodbank. prefix")
-    sources, producers = surface_rules(records)
+    sources, producers = surface_rules(records, extras)
     seen: dict[str, str] = {}
     for p in producers:
         if p["producer"] in seen and seen[p["producer"]] != p["id"]:
