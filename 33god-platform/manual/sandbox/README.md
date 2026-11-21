@@ -77,6 +77,21 @@ Self-check for the pure parts, no framework: `node --import ./tools/waybill/regi
 
 `public/waybills/fixture-claude-prompt.waybill.json` is hand-written, public-profile and has no personal text. Its ids and timings follow a real 2026-11-16 capture; the prompt, tools and model calls are illustrative.
 
+## Play a query (a whole night)
+
+A waybill whose `recorder.mode` is `"query"` is not one prompt but a window of the Candystore archive (the file contract is additive to SPEC section 2: `origin.query`, and the span kinds `chapter` and `batch`). `fixture-query.waybill.json` is a hand-made night: 12 chapters, about 190 pallets (batches), 144 kept notes including 9 dead letters. Open it with `?waybill=waybills/fixture-query.waybill.json`.
+
+The director (`src/waybill/query.ts`) walks it in order, at most 60 stops and 5 per chapter:
+
+- **Prompt** at the archive: "You asked the archive: <label>".
+- Per chapter: an **overview** (a pallet per station that posted, with its count), then up to four stops: the **returned mail** (dead letters, with their reasons), every **failure** (a red flag; the smaller ones fold into the last failure stop), the biggest **pallets** (a stacked pallet at the component's station, a `×count` badge and a per-minute sparkline on the card) and the **rare notes** on the belt.
+- **End**: "What did not happen", with the conservation sum `kept + batched = matched + returned`; a night that does not add up says "What did not add up".
+- The dock gets a **hub-health lamp** from `system.hook.updated` (green, red when some failed, grey when a chapter is silent). Dead letters go to a **returned-mail tray** by the archive.
+- The waterfall is bucketed: a lane per component and type (one SVG path of posts per minute), failures stay as rows, rare notes fold.
+- Every producer is placed through the one resolver (`resolve.ts`): one crew-hall desk per Hermes profile, one shared tenant annex, momo desks at the momo kiosk. No new 3D assets: pallets, flags and the tray are primitives.
+
+`direct()` is cheap on a night: `tools/waybill/selfcheck.ts` asserts under 400 ms on the folded 100k-event fixture (`fixture-query-100k.waybill.json.gz`, not in the picker; regenerate both with `node --import ./tools/waybill/register.mjs --experimental-strip-types tools/waybill/query-fixture.ts`) and on a 33k-span capture. The capture director's hot spots (client-hook matching, round lookup, the null-`publisher_span` search) went from quadratic to a binary search or a map; the capture output is byte-identical.
+
 ## Stack, and where it deliberately departs from the "edge stack" brief
 
 - **React Three Fiber 9, drei 10, three r187, zustand 5, @react-three/postprocessing 3, Vite 8.**

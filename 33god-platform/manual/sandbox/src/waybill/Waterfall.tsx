@@ -4,11 +4,14 @@
 // a big turn has hundreds of spans, but only the ~30 on screen ever reach the DOM.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useWb, wb, wbClock } from './state'
-import { fmtMs, timeRange, type Waybill } from './types'
+import { queryType } from './query'
+import { fmtInt, fmtMs, timeRange, type Waybill } from './types'
 
-interface Row { id: string; sel: string; label: string; t0: number; t1: number; sync: boolean; status: string; kind: string; event?: boolean; ticks?: number[] }
+/** `lane` is a query-mode row: every batch of one type at one component, as posts per minute in segments (one per chapter). */
+interface Lane { segs: { t0: number; v: number[]; bad: boolean }[]; count: number }
+interface Row { id: string; sel: string; label: string; t0: number; t1: number; sync: boolean; status: string; kind: string; event?: boolean; ticks?: number[]; lane?: Lane; ids?: string[] }
 /** `folded` holds the routine rows (a model call's usage / allowance notes that were only filed and collected): one summary row, open on demand. */
-interface Group { id: string; name: string; rows: Row[]; folded: Row[]; t0: number }
+interface Group { id: string; name: string; rows: Row[]; folded: Row[]; t0: number; /** the number on the header (events, in query mode) */ count?: number; foldLabel?: string }
 
 /** A usage / allowance note nobody did anything with except file it: 2 of them per model call is noise by default. */
 function routineUsage(e: Waybill['events'][number]): boolean {
@@ -16,7 +19,90 @@ function routineUsage(e: Waybill['events'][number]): boolean {
   return e.consumers.every((c) => c.evidence !== 'observed' || (/^(candystore|holocene)/.test(c.component) && (c.outcome === 'archived' || c.outcome === 'collected')))
 }
 
+const MINUTE = 60000
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+
+/** Query mode: a 'Chapters' group, then one group per component, busiest first. A component's batches are lanes (one row per
+ *  type: posts per minute, drawn as one SVG path, not a node per note); its failures stay as rows; its rare kept notes fold. */
+function buildQueryRows(w: Waybill): Group[] {
+  const by = new Map<string, Group>()
+  const g = (id: string) => by.get(id) ?? by.set(id, { id, name: w.components[id]?.name ?? id, rows: [], folded: [], t0: Infinity, count: 0 }).get(id)!
+  const chapters: Group = { id: '·chapters', name: 'Chapters', rows: [], folded: [], t0: -1, count: 0 }
+  const lanes = new Map<string, Row>()
+  const chStart = new Map<string, number>()
+  for (const s of w.spans) if (s.kind === 'chapter') chStart.set(s.id, s.t0)
+  const pubOf = new Map<string, string>()
+  for (const s of w.spans) if (s.kind === 'publish' && typeof s.refs?.event_id === 'string') pubOf.set(s.refs.event_id, s.component)
+  for (const s of w.spans) {
+    if (s.kind === 'chapter') {
+      chapters.rows.push({ id: s.id, sel: s.id, label: s.name, t0: s.t0, t1: s.t1 ?? s.t0, sync: false, status: s.status, kind: 'chapter' })
+      chapters.count!++
+    } else if (s.kind === 'batch') {
+      const a = s.attrs ?? {}
+      const pm = Array.isArray(a.per_minute) ? a.per_minute.map(num) : []
+      const type = queryType(String(a.type ?? s.name))
+      const key = `${s.component}|${type}`
+      const gr = g(s.component)
+      let lane = lanes.get(key)
+      if (!lane) {
+        lane = { id: `lane:${key}`, sel: s.id, label: type, t0: s.t0, t1: s.t1 ?? s.t0, sync: false, status: 'ok', kind: 'batch', lane: { segs: [], count: 0 }, ids: [] }
+        lanes.set(key, lane)
+        gr.rows.push(lane)
+      }
+      // per_minute[0] is the chapter's first minute; the chapter span's t0 anchors it
+      lane.lane!.segs.push({ t0: (s.parent ? chStart.get(s.parent) : undefined) ?? s.t0, v: pm, bad: num(a.failed) > 0 })
+      lane.lane!.count += num(a.count)
+      lane.ids!.push(s.id)
+      lane.t0 = Math.min(lane.t0, s.t0); lane.t1 = Math.max(lane.t1, s.t1 ?? s.t0)
+      if (num(a.failed) > 0) lane.status = 'failed'
+      gr.count! += num(a.count)
+    } else if (s.kind !== 'publish' && s.kind !== 'prompt' && s.kind !== 'turn') {
+      g(s.component).rows.push({ id: s.id, sel: s.id, label: s.name, t0: s.t0, t1: s.t1 ?? s.t0, sync: !!s.sync, status: s.status, kind: s.kind })
+    }
+  }
+  for (const lane of lanes.values()) lane.label = `${lane.label} · ${fmtInt(lane.lane!.count)}`
+  for (const e of w.events) {
+    const dead = e.consumers.some((c) => c.outcome === 'dropped' && /candystore/.test(c.name))
+    const comp = pubOf.get(e.id) ?? 'unknown'
+    const failed = dead || /(failed|exhausted|denied|breached)/.test(e.type)
+    const gr = g(dead ? 'candystore' : comp)
+    gr.count!++
+    const row: Row = { id: `evt:${e.id}`, sel: `evt:${e.id}`, label: queryType(e.type) + (dead ? ' · returned' : ''), t0: e.t, t1: e.t, sync: false, status: failed ? 'failed' : 'ok', kind: 'event', event: true, ticks: [] }
+    ;(failed ? gr.rows : gr.folded).push(row)
+    gr.t0 = Math.min(gr.t0, e.t)
+  }
+  const out = [...by.values()].filter((x) => x.rows.length || x.folded.length)
+  out.forEach((x) => { x.foldLabel = `${fmtInt(x.folded.length)} rare notes kept as themselves`; x.folded.sort((a, b) => a.t0 - b.t0); x.rows.sort((a, b) => (b.lane?.count ?? -1) - (a.lane?.count ?? -1) || a.t0 - b.t0) })
+  out.sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || a.name.localeCompare(b.name))
+  return chapters.rows.length ? [chapters, ...out] : out
+}
+
+/** One lane as an SVG path over the axis: posts per minute, bucketed to ~400 cells, tallest bucket fills the lane. */
+function lanePaths(lane: Lane, x: (t: number) => number): { ok: string; bad: string } {
+  const NB = 400
+  const ok = new Float32Array(NB), bad = new Float32Array(NB)
+  for (const seg of lane.segs) {
+    const arr = seg.bad ? bad : ok
+    for (let i = 0; i < seg.v.length; i++) {
+      const v = seg.v[i]
+      if (!v) continue
+      const p = x(seg.t0 + i * MINUTE)
+      if (p < 0 || p > 1) continue
+      arr[Math.min(NB - 1, Math.floor(p * NB))] += v
+    }
+  }
+  let peak = 1
+  for (let k = 0; k < NB; k++) peak = Math.max(peak, ok[k] + bad[k])
+  const path = (arr: Float32Array) => {
+    let d = ''
+    for (let k = 0; k < NB; k++) if (arr[k]) { const h = Math.max(1.5, (arr[k] / peak) * 18); d += `M${(k * 1000) / NB} 20v${-h.toFixed(1)}h${(1000 / NB).toFixed(2)}v${h.toFixed(1)}z` }
+    return d
+  }
+  return { ok: path(ok), bad: path(bad) }
+}
+
 export function buildRows(w: Waybill): Group[] {
+  if (w.recorder.mode === 'query') return buildQueryRows(w)
   const by = new Map<string, Group>()
   const g = (id: string) => by.get(id) ?? by.set(id, { id, name: w.components[id]?.name ?? id, rows: [], folded: [], t0: Infinity }).get(id)!
   const put = (id: string, r: Row, fold = false) => { const x = g(id); (fold ? x.folded : x.rows).push(r); x.t0 = Math.min(x.t0, r.t0) }
@@ -203,7 +289,7 @@ export function Waterfall({ compact }: { compact: boolean }) {
                   <button className="wf-ghead" onClick={() => setShut((p) => { const n = new Set(p); n.has(gr.id) ? n.delete(gr.id) : n.add(gr.id); return n })} aria-expanded={!closed}>
                     <span className="wf-caret">{closed ? '▸' : '▾'}</span>
                     <b>{gr.name}</b>
-                    <em>{gr.rows.length}</em>
+                    <em>{gr.count !== undefined ? fmtInt(gr.count) : gr.rows.length}</em>
                   </button>
                 </div>
               )
@@ -214,18 +300,18 @@ export function Waterfall({ compact }: { compact: boolean }) {
                 <div key={it.key} className="wf-slot" style={{ top }}>
                   <button className="wf-fold" onClick={() => setUnfold((p) => { const n = new Set(p); n.has(gr.id) ? n.delete(gr.id) : n.add(gr.id); return n })} aria-expanded={it.open}>
                     <span className="wf-caret">{it.open ? '▾' : '▸'}</span>
-                    {gr.folded.length} routine usage notes (filed and collected only) {it.open ? '· hide' : '· show'}
+                    {gr.foldLabel ?? `${gr.folded.length} routine usage notes (filed and collected only)`} {it.open ? '· hide' : '· show'}
                   </button>
                 </div>
               )
             }
             const r = it.row
-            const act = inStop.has(r.id) || inStopEv.has(r.id)
+            const act = inStop.has(r.id) || inStopEv.has(r.id) || !!r.ids?.some((id) => inStop.has(id))
             return (
               <div key={it.key} className={`wf-row wf-slot${act ? ' on' : ''}${sel === r.sel ? ' sel' : ''}`} style={{ top }} onClick={() => wb.jump(r.sel)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') wb.jump(r.sel) }}>
                 <div className="wf-lab" title={r.label}>{r.label}</div>
                 <div className="wf-track">
-                  {r.event ? (
+                  {r.lane ? <LaneSvg lane={r.lane} x={axis.x} title={r.label} /> : r.event ? (
                     <>
                       <i className="wf-ev" style={{ left: `${clamp(axis.x(r.t0)) * 100}%` }} />
                       {r.ticks?.slice(0, 40).map((t, i) => <i key={i} className="wf-tick" style={{ left: `${clamp(axis.x(t)) * 100}%` }} />)}
@@ -245,16 +331,26 @@ export function Waterfall({ compact }: { compact: boolean }) {
     <div className={`wf${compact ? ' compact' : ''}`}>
       <div className="wf-bar-top">
         <b>Waterfall</b>
-        <span className="wf-leg"><i className="lg sync" />waited on</span>
-        <span className="wf-leg"><i className="lg async" />alongside</span>
+        {dir.query ? <span className="wf-leg"><i className="lg async" />posts per minute</span> : <span className="wf-leg"><i className="lg sync" />waited on</span>}
+        {!dir.query && <span className="wf-leg"><i className="lg async" />alongside</span>}
         <span className="wf-leg"><i className="lg bad" />failed</span>
         <span className="wf-sp" />
-        {(['fit', 'stop', 'log'] as const).map((z) => (
-          <button key={z} className={`wf-z${zoom === z ? ' on' : ''}`} onClick={() => useWb.setState({ zoom: z })}>{z === 'fit' ? 'linear' : z === 'stop' ? 'fit stop' : 'log'}</button>
+        {(dir.query ? (['fit', 'stop'] as const) : (['fit', 'stop', 'log'] as const)).map((z) => (
+          <button key={z} className={`wf-z${zoom === z ? ' on' : ''}`} onClick={() => useWb.setState({ zoom: z })}>{z === 'fit' ? (dir.query ? 'whole window' : 'linear') : z === 'stop' ? 'fit stop' : 'log'}</button>
         ))}
       </div>
       {body}
     </div>
+  )
+}
+
+function LaneSvg({ lane, x, title }: { lane: Lane; x: (t: number) => number; title: string }) {
+  const p = useMemo(() => lanePaths(lane, x), [lane, x])
+  return (
+    <svg className="wbq-lane" viewBox="0 0 1000 20" preserveAspectRatio="none" role="img" aria-label={title}>
+      <title>{title}</title>
+      <path d={p.ok} />{p.bad && <path className="bad" d={p.bad} />}
+    </svg>
   )
 }
 
@@ -265,7 +361,7 @@ export function MiniStrip({ onOpen }: { onOpen: () => void }) {
   const si = useWb((s) => s.stop)
   const groups = useMemo(() => buildRows(w), [w])
   const { min: lo, max: hi } = useMemo(() => timeRange(w), [w])
-  const axis = useMemo(() => axisFor('log', lo, hi, undefined), [lo, hi])
+  const axis = useMemo(() => axisFor(dir.query ? 'fit' : 'log', lo, hi, undefined), [lo, hi, dir.query])
   const x = (t: number) => clamp(axis.x(t))
   const lanes = useMemo(() => {
     const BUCKETS = 240
@@ -301,7 +397,7 @@ export function MiniStrip({ onOpen }: { onOpen: () => void }) {
         {stop && stop.kind !== 'end' && <div className="wf-band" style={{ left: `${x(stop.t0) * 100}%`, width: `max(1%, ${(x(stop.t1) - x(stop.t0)) * 100}%)` }} />}
         <div className="wf-head" ref={head} />
       </div>
-      <span className="wf-mini-hint">waterfall ▴ (log scale)</span>
+      <span className="wf-mini-hint">{dir.query ? 'waterfall ▴ (whole window)' : 'waterfall ▴ (log scale)'}</span>
     </button>
   )
 }

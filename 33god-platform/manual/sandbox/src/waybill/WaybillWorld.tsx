@@ -16,7 +16,7 @@ import type { HeroForm, Stop } from './director'
 import { placeName, spotOf, type Kiosk, type Placement } from './stations'
 import { narr } from './narrator'
 import { stopHold, useWb, wb, wbClock } from './state'
-import { fmtMs, fmtRel, fmtT, type Waybill } from './types'
+import { fmtInt, fmtMs, fmtRel, fmtT, type Waybill } from './types'
 
 const BELT_LOAD: Vec3 = [0, 1.25, 0.82]
 const smooth = (x: number) => { const k = Math.max(0, Math.min(1, x)); return k * k * (3 - 2 * k) }
@@ -69,8 +69,36 @@ const atWords = (verb: string, t: number | null | undefined) => (t == null ? ver
 
 // ---------- the hero object ----------
 
-function HeroMesh({ form }: { form: HeroForm }) {
+/** A stacked pallet: a wooden base and layers of post-it stacks, taller the more notes (log scale); the top layers go red when some failed. */
+function PalletMesh({ count, failed }: { count: number; failed: number }) {
+  const layers = Math.max(1, Math.min(6, Math.round(Math.log10(Math.max(2, count)) * 1.5)))
+  const red = failed > 0 ? Math.max(1, Math.min(layers - 1, Math.ceil((failed / Math.max(1, count)) * layers))) : 0
+  return (
+    <group>
+      <mesh position={[0, 0.06, 0]} castShadow><boxGeometry args={[1.0, 0.12, 0.76]} /><meshStandardMaterial color="#8B5E34" roughness={0.9} /></mesh>
+      {Array.from({ length: layers }, (_, i) => {
+        const bad = i >= layers - red && red > 0
+        return (
+          <mesh key={i} position={[((i % 2) - 0.5) * 0.04, 0.2 + i * 0.17, 0]} castShadow>
+            <boxGeometry args={[0.84, 0.15, 0.62]} />
+            <meshStandardMaterial color={bad ? '#DC2626' : C.post} emissive={bad ? '#DC2626' : '#000000'} emissiveIntensity={bad ? 0.25 : 0} roughness={0.8} />
+          </mesh>
+        )
+      })}
+    </group>
+  )
+}
+
+function HeroMesh({ form, stop }: { form: HeroForm; stop?: Stop }) {
   switch (form) {
+    case 'pallet': return <group scale={1.25} position={[0, -0.35, 0]}><PalletMesh count={stop?.batch?.count ?? 100} failed={stop?.batch?.failed ?? 0} /></group>
+    case 'flag':
+      return (
+        <group scale={1.5}>
+          <mesh position={[0, 0, 0]} castShadow><cylinderGeometry args={[0.025, 0.025, 0.9, 8]} /><meshStandardMaterial color="#374151" /></mesh>
+          <mesh position={[0.2, 0.3, 0]} castShadow><boxGeometry args={[0.4, 0.28, 0.03]} /><meshStandardMaterial color="#DC2626" emissive="#DC2626" emissiveIntensity={0.4} /></mesh>
+        </group>
+      )
     case 'parcel': return <mesh castShadow><boxGeometry args={[0.5, 0.38, 0.44]} /><meshStandardMaterial color={C.parcel} roughness={0.9} /></mesh>
     case 'postit': return <mesh castShadow><boxGeometry args={[0.5, 0.5, 0.06]} /><meshStandardMaterial color={C.post} /></mesh>
     case 'envelope': return <mesh castShadow><boxGeometry args={[0.58, 0.4, 0.03]} /><meshStandardMaterial color="#D8B07A" /></mesh>
@@ -133,10 +161,10 @@ function Hero({ stop, prev, pl }: { stop: Stop; prev: Stop | null; pl: Placement
   return (
     <group ref={g}>
       <group ref={b}>
-        <HeroMesh form={stop.hero} />
+        <HeroMesh form={stop.hero} stop={stop} />
         {travel && stop.heroLabel && <Tag position={[0, 1.15, 0]}><div className="wbtag blue"><HeroLine h={stop.heroLabel} /></div></Tag>}
       </group>
-      {pv && !same && <group ref={a}><HeroMesh form={pv.hero} /></group>}
+      {pv && !same && <group ref={a}><HeroMesh form={pv.hero} stop={pv} /></group>}
     </group>
   )
 }
@@ -412,6 +440,64 @@ function KioskProp({ k, active, always }: { k: Kiosk; active: boolean; always: b
   )
 }
 
+// ---------- query mode: pallets, the returned-mail tray, the hub lamp ----------
+
+/** A chapter overview: one pallet on the floor at each station that posted, with its count. The biggest few are named. */
+function Pallets({ stop, pl }: { stop: Stop; pl: Placement }) {
+  const ps = stop.pallets ?? []
+  const named = isPortrait() ? 3 : 6
+  return (
+    <group>
+      {ps.map((p, i) => {
+        const at = spotOf(p.set, pl)
+        const x = at[0], z = at[2] + 1.4
+        return (
+          <group key={p.set} position={[x, 0, z]}>
+            <group scale={1.7}><PalletMesh count={p.count} failed={p.failed} /></group>
+            {i < named && <Tag position={[0, (0.5 + Math.min(6, Math.round(Math.log10(Math.max(2, p.count)) * 1.5)) * 0.17) * 1.7 + 0.3, 0]}><Label real={p.name} tone={p.failed ? 'red' : undefined} place={`${fmtInt(p.count)}${p.failed ? ` · ${fmtInt(p.failed)} failed` : ''}`} /></Tag>}
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+const TRAY_AT: Vec3 = [7.6, 0, 7.6]
+/** The returned-mail tray by the archive: notes Candystore refused. It stands on every query floor that has dead letters. */
+function ReturnedTray({ n, active }: { n: number; active: boolean }) {
+  const lamp = useRef<THREE.MeshStandardMaterial>(null)
+  useFrame(({ clock }) => { if (lamp.current) lamp.current.emissiveIntensity = active ? 1 + Math.sin(clock.getElapsedTime() * 6) * 0.4 : 0.25 })
+  const piled = Math.min(8, n)
+  return (
+    <group position={TRAY_AT}>
+      <mesh position={[0, 0.45, 0]} castShadow><boxGeometry args={[1.3, 0.9, 0.9]} /><meshStandardMaterial color="#6B7280" roughness={0.8} /></mesh>
+      <mesh position={[0, 0.92, 0]}><boxGeometry args={[1.14, 0.06, 0.74]} /><meshStandardMaterial color="#374151" /></mesh>
+      {Array.from({ length: piled }, (_, i) => (
+        <mesh key={i} position={[((i % 4) - 1.5) * 0.26, 1.0 + Math.floor(i / 4) * 0.05, ((i * 7) % 3 - 1) * 0.12]} rotation={[0, ((i * 37) % 50) / 100 - 0.25, 0]} castShadow>
+          <boxGeometry args={[0.42, 0.04, 0.3]} /><meshStandardMaterial color="#D8B07A" />
+        </mesh>
+      ))}
+      <mesh position={[0.5, 1.12, 0.3]}><sphereGeometry args={[0.07, 12, 8]} /><meshStandardMaterial ref={lamp} color="#DC2626" emissive="#DC2626" emissiveIntensity={0.25} /></mesh>
+      <Tag position={[0, 1.7, 0]}><Label real="returned mail" tone="red" place={`${fmtInt(n)} refused`} /></Tag>
+    </group>
+  )
+}
+
+const HUB_AT: Vec3 = [-9.5, 4.4, 0]
+/** The hook-hub health lamp over the dock: green while it posts system.hook.updated heartbeats, red when some failed, grey when it went quiet. */
+function HubLamp({ hub }: { hub: NonNullable<Stop['hub']> }) {
+  const mat = useRef<THREE.MeshStandardMaterial>(null)
+  const silent = hub.count === 0
+  const col = silent ? '#9CA3AF' : hub.failed > 0 ? '#DC2626' : '#16A34A'
+  useFrame(({ clock }) => { if (mat.current) mat.current.emissiveIntensity = silent ? 0.05 : 0.8 + Math.sin(clock.getElapsedTime() * 3) * 0.3 })
+  return (
+    <group position={HUB_AT}>
+      <mesh><sphereGeometry args={[0.28, 18, 14]} /><meshStandardMaterial ref={mat} color={col} emissive={col} emissiveIntensity={0.8} /></mesh>
+      <Tag position={[0, 0.55, 0]}><Label real="hook-hub heartbeat" tone={silent ? 'dim' : hub.failed ? 'red' : undefined} place={silent ? 'silent this chapter' : `${fmtInt(hub.count)} beats${hub.failed ? `, ${fmtInt(hub.failed)} failed` : ''}`} /></Tag>
+    </group>
+  )
+}
+
 // ---------- the layer ----------
 
 function StopLayer({ stop, prev, pl }: { stop: Stop; prev: Stop | null; pl: Placement }) {
@@ -425,6 +511,8 @@ function StopLayer({ stop, prev, pl }: { stop: Stop; prev: Stop | null; pl: Plac
   const fanSets = useMemo(() => new Set(stop.kind === 'end' ? [] : fanTargets(stop, pl, wbk).map((t) => t.set)), [stop, pl, wbk])
   // station tags: one per station, one name per tag (the others become '+n'), the hero's line merged into its own station's tag
   const tags = useMemo(() => {
+    // a chapter overview names its stations on the pallets instead
+    if (stop.kind === 'chapter') return [] as [string, string[]][]
     const by = new Map<string, string[]>()
     for (const c of stop.components) {
       const s = pl.setOf[c]
@@ -441,13 +529,29 @@ function StopLayer({ stop, prev, pl }: { stop: Stop; prev: Stop | null; pl: Plac
     return all.slice(0, phone ? 2 : 6)
   }, [stop, pl, wbk, fanSets, hero, heroSet, phone])
   const cardSpans = new Set(stop.cards?.map((c) => c.span))
-  const problems = stop.kind === 'end' ? [] : stop.problems.filter((p) => !cardSpans.has(p))
+  const problemsAll = stop.kind === 'end' || stop.kind === 'chapter' ? [] : stop.problems.filter((p) => !cardSpans.has(p))
+  // a failure stop can hold dozens: four markers and a count, the rest are in the waterfall
+  // dead letters and failures share one finding: name it once
+  const problemsUniq = useMemo(() => {
+    const seen = new Set<string>(), out: string[] = []
+    for (const p of problemsAll) {
+      const f = wbk.findings.find((x) => x.evidence.includes(p) || x.evidence.includes(p.replace(/^evt:/, '')))
+      const k = f ? `f:${f.title}` : p
+      if (seen.has(k)) continue
+      seen.add(k); out.push(p)
+    }
+    return out
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stop, wbk])
+  const problems = problemsUniq.slice(0, 4)
+  const moreProblems = problemsUniq.length - problems.length
   const spanBy = useMemo(() => new Map(wbk.spans.map((s) => [s.id, s])), [wbk])
   return (
     <>
       <Hero stop={stop} prev={prev} pl={pl} />
       {stop.cards && <JobCards stop={stop} />}
-      {stop.fanout && stop.fanout.some((f) => f.consumers.length) && <FanOut stop={stop} pl={pl} />}
+      {stop.pallets && <Pallets stop={stop} pl={pl} />}
+      {stop.fanout && stop.kind !== 'returned' && stop.fanout.some((f) => f.consumers.length) && <FanOut stop={stop} pl={pl} />}
       {stop.waited && stop.waitedMs > 0 && (
         <>
           <WaitRing at={bayAt} ms={stop.waitedMs} ticking />
@@ -468,13 +572,15 @@ function StopLayer({ stop, prev, pl }: { stop: Stop; prev: Stop | null; pl: Plac
         )
       })}
       {problems.map((p, i) => {
-        const sp = spanBy.get(p.replace(/^evt:/, ''))
+        const key = p.replace(/^evt:/, '')
+        const sp = spanBy.get(key) ?? spanBy.get(`publish:${key}`)
         const f = wbk.findings.find((x) => x.evidence.includes(p) || x.evidence.includes(p.replace(/^evt:/, '')))
         const comp = f?.component ?? sp?.component ?? stop.components[0]
         const at = add(spotOf(pl.setOf[comp] ?? stop.set, pl), [i * 0.8 - 0.4, 2.3 + i * 0.5, 1])
         const text = f ? (f.title.length > 44 ? f.title.slice(0, 42) + '…' : f.title) : (sp?.name ?? 'problem')
         return <Marker key={p} at={at} text={text} sub={f ? f.severity : sp ? (sp.reason ?? sp.status) : undefined} info={f?.severity === 'info'} amber={f?.severity === 'warn'} />
       })}
+      {moreProblems > 0 && <Tag position={add(heroAt, [0, 3.4, 1])}><div className="wbtag dim"><b>+{fmtInt(moreProblems)} more</b><i>all of them are in the waterfall</i></div></Tag>}
       {stop.kind === 'end' && <EndMarkers pl={pl} />}
     </>
   )
@@ -521,7 +627,9 @@ export function WaybillWorld() {
   return (
     <>
       <Driver />
-      {pl.kiosks.map((k) => <KioskProp key={k.id} k={k} always={always} active={!!stop && stop.components.some((c) => pl.setOf[c] === `kiosk:${k.id}`)} />)}
+      {pl.kiosks.map((k) => <KioskProp key={k.id} k={k} always={always} active={!!stop && stop.kind !== 'chapter' && stop.components.some((c) => pl.setOf[c] === `kiosk:${k.id}`)} />)}
+      {dir.query && dir.query.conservation.dead > 0 && <ReturnedTray n={dir.query.conservation.dead} active={stop?.kind === 'returned'} />}
+      {stop?.hub && <HubLamp hub={stop.hub} />}
       {stop && <StopLayer key={stop.id} stop={stop} prev={prev} pl={pl} />}
     </>
   )

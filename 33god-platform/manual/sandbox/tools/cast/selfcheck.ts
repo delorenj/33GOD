@@ -15,6 +15,10 @@ const REGISTRY = '../../../../components'
 const registryIds = readdirSync(new URL(`${REGISTRY}/`, import.meta.url)).filter((f) => f.endsWith('.yaml')).map((f) => f.slice(0, -5)).sort()
 ok(registryIds.length > 0, `registry read (${registryIds.length} components)`)
 
+type BoxT = [number, number, number, number]
+function slotBoxOf(at: [number, number, number]): BoxT { return [at[0] - 0.7, at[2] - 0.65, at[0] + 0.7, at[2] + 0.65] }
+function overlapBox(a: BoxT, b: BoxT) { return a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1] }
+
 // 1. every registry component is placed: a station or a kiosk, never neither
 const cast = castPlacement()
 const unplaced = registryIds.filter((id) => !standOf(id) || (!stationOf(id) && !cast.kioskById[id]))
@@ -31,7 +35,9 @@ const EMITTED = [
   // ids that are not registry components: vendor CLIs, devices, and the recorder's own meta ids
   'ext:claude-code', 'ext:codex-cli', 'ext:codex-exec', 'ext:codex-desktop', 'ext:nanoleaf', 'ext:orca', 'ext:codex-mcp-helper-reaper', 'ext:hook-command', 'ext:unknown', 'ext:antigravity', 'copilot-cli', 'antigravity-cli', 'tenant-annex', 'zellij-sentinel',
   // keyed families the resolver mints: Hermes desks and tenants
-  'hermes-desk:tolt-pm', 'hermes-desk:unknown', 'tenant:tiller', 'tenant:gruvato',
+  'hermes-desk:tolt-pm', 'hermes-desk:unknown', 'hermes-desk:33god-pm', 'hermes-desk:gruvato-pm', 'hermes-desk:launch-director', 'tenant:tiller', 'tenant:gruvato', 'tenant:gib',
+  // query mode (Candystore night waybills): the components the resolver names for every producer a night holds
+  'momo', 'candybar-steward', 'crank', 'earshot', 'delosip', 'plane-hook', 'aai-gateway', 'aai-llm-observability',
   'unknown', 'waybill',
 ]
 const lost = EMITTED.filter((id) => !standOf(id))
@@ -80,8 +86,8 @@ const PROPS: Record<string, Box> = {
   library: [7.6, 10.5, 12.9, 12.1], staffing: [11.5, -7.2, 14.5, -5.4], entranceFrame: [-17.0, 10.1, -11.9, 10.9], entranceMat: [-16.3, 10.2, -12.7, 14.4],
   voiceBooth: [15.0, -12.5, 19.3, -9.4], soundWing: [18.3, -5.5, 22.9, -3.7],
 }
-const slotBox = (at: [number, number, number]): Box => [at[0] - 0.7, at[2] - 0.65, at[0] + 0.7, at[2] + 0.65]
-const overlap = (a: Box, b: Box) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1]
+const slotBox = slotBoxOf
+const overlap = overlapBox
 const nearPath = (b: Box) => {
   for (let v = 0; v < BAY_Z.length; v++) {
     const p = courierPath(v)
@@ -109,6 +115,25 @@ ok(bad.length === 0, `no kiosk slot collides with a prop, the courier lanes or t
 const clash: string[] = []
 cast.kiosks.forEach((a, i) => cast.kiosks.slice(i + 1).forEach((b) => { if (overlap(slotBox(a.at), slotBox(b.at))) clash.push(`${a.id} / ${b.id}`) }))
 ok(clash.length === 0, `no two kiosk slots overlap${clash.length ? ' (' + clash.join(', ') + ')' : ''}`)
+// a whole night: 40 Hermes desks and several tenants all stand on open floor, each on its own slot (the momo desk goes to the momo kiosk)
+const night = { origin: demo.origin, components: Object.fromEntries([...Array.from({ length: 40 }, (_, i) => `hermes-desk:pm-${i}`), 'hermes-desk:unknown', 'tenant:tiller', 'tenant:gruvato', 'tenant:gib', 'momo', 'ext:antigravity'].map((id) => [id, { id, name: id, kind: 'service', registry: false }])) } as Parameters<typeof place>[0]
+const pn = place(night)
+const deskKiosks = pn.kiosks.filter((k) => k.id.startsWith('hermes-desk:'))
+ok(deskKiosks.length === 41 && deskKiosks.every((k) => k.near === 'crew'), 'forty-one Hermes desks each get a kiosk by the crew hall')
+ok(pn.setOf['tenant:gib'] === 'kiosk:tenant-annex' && pn.kiosks.filter((k) => k.id === 'tenant-annex').length === 1, 'every tenant shares one annex, however many a night holds')
+ok(pn.setOf['momo'] !== undefined && !pn.setOf['momo'].startsWith('kiosk:hermes-desk'), 'momo desks go to the momo kiosk, not a desk')
+ok(pn.setOf['ext:antigravity'] === 'bays', 'antigravity stands at the vendor bays')
+const nightBad: string[] = []
+for (const k of pn.kiosks) {
+  const b = slotBoxOf(k.at)
+  const hit = Object.entries(PROPS).filter(([, p]) => overlapBox(b, p)).map(([n]) => n)
+  if (Math.abs(k.at[0]) > 43 || Math.abs(k.at[2]) > 33) hit.push('off the floor')
+  if (hit.length) nightBad.push(`${k.id} at ${k.at[0].toFixed(1)},${k.at[2].toFixed(1)} hits ${hit.join(', ')}`)
+}
+const nightClash: string[] = []
+pn.kiosks.forEach((a, i) => pn.kiosks.slice(i + 1).forEach((b2) => { if (overlapBox(slotBoxOf(a.at), slotBoxOf(b2.at))) nightClash.push(`${a.id} / ${b2.id}`) }))
+ok(nightBad.length === 0, `a night's kiosks (${pn.kiosks.length}) stand clear of props and the floor edge${nightBad.length ? '\n  ' + nightBad.slice(0, 6).join('\n  ') : ''}`)
+ok(nightClash.length === 0, `no two of a night's kiosks overlap${nightClash.length ? ' (' + nightClash.slice(0, 6).join(', ') + ')' : ''}`)
 const perSet: Record<string, number> = {}
 for (const k of cast.kiosks) perSet[k.near] = (perSet[k.near] ?? 0) + 1
 console.log('kiosks per station:', Object.entries(perSet).sort().map(([s, n]) => `${s} ${n}`).join(', '))

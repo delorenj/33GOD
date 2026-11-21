@@ -18,6 +18,7 @@ export function speakable(s: string): string {
     .replace(/\b(claude|gpt|gemini|kimi|glm)-([a-z]+)-(\d+)-(\d+)\b/gi, (_, a: string, b: string, x: string, y: string) => `${cap(a)} ${cap(b)} ${x} point ${y}`)
     .replace(/(\d+(?:\.\d+)?)k\b/g, '$1 thousand')
     .replace(/(\d+) m (\d+) s\b/g, '$1 minutes $2 seconds')
+    .replace(/\b(\d+) h\b/g, (_, n: string) => `${n} ${n === '1' ? 'hour' : 'hours'}`)
     .replace(/(\d+(?:\.\d+)?) ms\b/g, '$1 milliseconds')
     .replace(/(\d+(?:\.\d+)?) s\b/g, (_, n: string) => `${n} ${n === '1' ? 'second' : 'seconds'}`)
     .replace(/(?<=[a-z])\.(?=[a-z])/g, ' ') // agent.tool.completed -> agent tool completed; sentence ends keep their space

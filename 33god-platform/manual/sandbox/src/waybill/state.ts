@@ -47,7 +47,8 @@ export function stopHold(s: Stop): number {
   let ms = 2800 + Math.min(2600, real * 0.35)
   ms += (s.cards?.length ?? 0) * 320
   // readers are grouped by component, so a post-it with 30 inferred readers still holds for a few seconds, not a minute
-  ms += (s.readers ? s.readers.length : s.fanout?.length ?? 0) * 380
+  // a failure stop can carry dozens of kept notes; only the first few readers fly, so only they add time
+  ms += Math.min(s.readers ? s.readers.length : s.fanout?.length ?? 0, s.chapter ? 6 : 99) * 380
   ms += Math.min(8, s.tools?.reduce((n, t) => n + t.count, 0) ?? 0) * 450
   return Math.min(11000, ms)
 }
@@ -107,7 +108,8 @@ export const wb = {
     wbClock.t = dir.stops[first]?.t0 ?? 0
     useWb.setState({
       // the axis follows the active stop (padded), so every stop's bars are readable; 'log' and 'linear' stay as overviews
-      zoom: 'stop',
+      // a query's lanes are bucketed over the whole window: fit it
+      zoom: dir.query ? 'fit' : 'stop',
       waybill: w, dir, warnings, source, stop: first, playing: true, sel: null, ended: false, picker: false, load: { state: 'idle' }, needsTap: false,
       prevPaused: was.mode === 'waybill' ? useWb.getState().prevPaused : was.paused,
     })

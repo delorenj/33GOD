@@ -5,6 +5,8 @@
 export type SpanKind =
   | 'prompt' | 'hook' | 'handler' | 'context' | 'memory' | 'publish' | 'consume'
   | 'state' | 'notify' | 'llm' | 'tool' | 'file' | 'turn'
+  // query mode (recorder.mode 'query'): a slice of the window, and a folded pile of one type at one component
+  | 'chapter' | 'batch'
   | (string & {})
 
 export type Phase = 'prompt_submit' | 'model_call' | 'pre_tool' | 'tool' | 'post_tool' | 'turn_end' | 'async_after' | 'session_start' | 'session_end' | (string & {})
@@ -91,13 +93,31 @@ export interface Finding { severity: Severity; title: string; detail: string; co
 
 export interface Source { id: string; kind: string; locator: string; status: 'ok' | 'empty' | 'error' | 'skipped'; items: number; ms: number; error?: string | null }
 
+/** origin.query: the Candystore query a query-mode waybill answers (additive to SPEC section 2). */
+export interface QueryInfo {
+  since: string
+  until: string
+  /** which Candystore clock the window is cut on */
+  clock: 'received_at' | 'time' | (string & {})
+  filters: { type?: string; producer?: string; project?: string; correlation?: string; scope?: string; lens?: string; q?: string; [k: string]: unknown }
+  /** events Candystore matched (the events table) */
+  total: number
+  /** dead letters Candystore refused in the window */
+  dead_letters: number
+  candystore: string
+  /** human words for the window: 'Last night, 18:02 to 07:41' */
+  label: string
+}
+
+export type RecorderMode = 'record' | 'capture' | 'query'
+
 export interface Waybill {
   format: '33god.waybill'
   version: 1
   id: string
   title: string
   recorded_at: string
-  recorder: { name: 'waybill'; version: string; host: string; mode: 'record' | 'capture'; profile: 'full' | 'public'; argv?: string[] }
+  recorder: { name: 'waybill'; version: string; host: string; mode: RecorderMode; profile: 'full' | 'public'; argv?: string[] }
   origin: {
     cli: 'claude' | 'codex' | (string & {})
     surface: 'claude-code' | 'claude-code-headless' | 'codex-cli' | 'codex-exec' | 'codex-desktop' | (string & {})
@@ -107,6 +127,7 @@ export interface Waybill {
     cwd: string | null
     project: string | null
     model: { requested: string | null; served: string | null } | null
+    query?: QueryInfo | null
   }
   prompt: { text: string | null; chars: number; sha256: string; truncated: boolean }
   clock: { t0: string; t_end: string; duration_ms: number; settle_ms: number }
@@ -122,7 +143,7 @@ export interface Waybill {
 }
 
 /** The span kinds the player draws specially. Anything else is drawn as a generic kiosk moment. */
-export const KNOWN_KINDS = ['prompt', 'hook', 'handler', 'context', 'memory', 'publish', 'consume', 'state', 'notify', 'llm', 'tool', 'file', 'turn'] as const
+export const KNOWN_KINDS = ['prompt', 'hook', 'handler', 'context', 'memory', 'publish', 'consume', 'state', 'notify', 'llm', 'tool', 'file', 'turn', 'chapter', 'batch'] as const
 export type KnownKind = (typeof KNOWN_KINDS)[number] | 'generic'
 export const kindOf = (s: { kind: string }): KnownKind => ((KNOWN_KINDS as readonly string[]).includes(s.kind) ? (s.kind as KnownKind) : 'generic')
 
@@ -282,7 +303,10 @@ export function normalize(raw: unknown): Parsed {
   const p = isObj(raw.prompt) ? raw.prompt : {}
   const c = isObj(raw.clock) ? raw.clock : {}
   const r = isObj(raw.recorder) ? raw.recorder : {}
-  const lastT = Math.max(0, ...spans.map((s) => s.t1 ?? s.t0), ...events.map((e) => Math.max(e.t, e.archived ?? 0)))
+  // a loop, not Math.max(...spread): a big file would blow the argument stack
+  let lastT = 0
+  for (const s of spans) { const t = s.t1 ?? s.t0; if (t > lastT) lastT = t }
+  for (const e of events) { const t = Math.max(e.t, e.archived ?? 0); if (t > lastT) lastT = t }
 
   if (!spans.length && !events.length) warnings.push('this waybill has no spans and no events')
 
@@ -294,7 +318,8 @@ export function normalize(raw: unknown): Parsed {
     recorded_at: str(raw.recorded_at),
     recorder: {
       name: 'waybill', version: str(r.version, '?'), host: str(r.host, '?'),
-      mode: r.mode === 'record' ? 'record' : 'capture', profile: r.profile === 'full' ? 'full' : 'public',
+      // an unknown mode plays as a capture (SPEC: readers ignore what they do not know)
+      mode: r.mode === 'record' ? 'record' : r.mode === 'query' ? 'query' : 'capture', profile: r.profile === 'full' ? 'full' : 'public',
       argv: Array.isArray(r.argv) ? r.argv.map((x) => str(x)) : undefined,
     },
     origin: {
@@ -306,6 +331,7 @@ export function normalize(raw: unknown): Parsed {
       cwd: strOrNull(o.cwd),
       project: strOrNull(o.project),
       model,
+      query: readQuery(o.query),
     },
     prompt: { text: typeof p.text === 'string' ? p.text : null, chars: num(p.chars, typeof p.text === 'string' ? p.text.length : 0), sha256: str(p.sha256), truncated: p.truncated === true },
     clock: { t0: str(c.t0), t_end: str(c.t_end), duration_ms: num(c.duration_ms, lastT), settle_ms: num(c.settle_ms, 0) },
@@ -313,6 +339,20 @@ export function normalize(raw: unknown): Parsed {
   }
   return { ok: true, waybill, warnings }
 }
+
+function readQuery(v: unknown): QueryInfo | null {
+  if (!isObj(v)) return null
+  const f = isObj(v.filters) ? v.filters : {}
+  const filters: QueryInfo['filters'] = {}
+  for (const [k, x] of Object.entries(f)) if (x !== null && x !== undefined && x !== '') filters[k] = x
+  return {
+    since: str(v.since), until: str(v.until), clock: str(v.clock, 'received_at') || 'received_at', filters,
+    total: num(v.total, 0), dead_letters: num(v.dead_letters, 0), candystore: str(v.candystore), label: str(v.label),
+  }
+}
+
+/** A query-mode waybill: a Candystore query folded into chapters and batches, not one prompt. */
+export const isQuery = (w: Pick<Waybill, 'recorder'>) => w.recorder.mode === 'query'
 
 /** Parse text (a dropped file, a fetch body) into a waybill. */
 export function parseWaybill(text: string): Parsed {
@@ -340,6 +380,8 @@ export function fmtMs(ms: number | null | undefined): string {
   if (a < 10) return `${ms.toFixed(1)} ms`
   if (a < 1000) return `${Math.round(ms)} ms`
   if (a < 60000) return `${(ms / 1000).toFixed(a < 10000 ? 2 : 1)} s`
+  // an archive window is hours long: '13 h 39 min', not '819 min 0 s'
+  if (a >= 3600000) { const h = Math.floor(a / 3600000), mm = Math.round((a % 3600000) / 60000); return `${ms < 0 ? '-' : ''}${mm === 60 ? h + 1 : h} h${mm && mm !== 60 ? ` ${mm} min` : ''}` }
   const m = Math.floor(a / 60000)
   return `${ms < 0 ? '-' : ''}${m} min ${Math.round((a % 60000) / 1000)} s`
 }

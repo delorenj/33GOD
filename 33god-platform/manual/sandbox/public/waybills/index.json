@@ -32,6 +32,15 @@
       "surface": "claude-code",
       "duration_ms": 37400,
       "recorded_at": "2026-11-16T04:02:11Z"
+    },
+    {
+      "file": "fixture-query.waybill.json",
+      "title": "Query: everything the company did last night, 18:02 to 07:41 \u00b7 hand-made fixture",
+      "fixture": true,
+      "cli": "candystore",
+      "surface": "query",
+      "duration_ms": 49140000,
+      "recorded_at": "2026-11-21T12:46:00Z"
     }
   ]
 }

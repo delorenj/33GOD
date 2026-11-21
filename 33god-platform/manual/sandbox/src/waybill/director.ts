@@ -17,11 +17,19 @@
 //
 // Captions lead with plain words (what happened, where, how long the prompt waited); `detail` carries the
 // recorder's own summary sentence with real ids and numbers, shown smaller.
+import { directQuery, type QueryDirection } from './query'
 import { place, type Placement } from './stations'
-import { spanDur, fmtMs, fmtInt, fmtT, type BusEvent, type Consumer, type Span, type Waybill } from './types'
+import { isQuery, spanDur, fmtMs, fmtInt, fmtT, type BusEvent, type Consumer, type Span, type Waybill } from './types'
 
-export type HeroForm = 'parcel' | 'postit' | 'envelope' | 'card' | 'phone' | 'slip' | 'toolbox' | 'lamp' | 'none'
+export type HeroForm = 'parcel' | 'postit' | 'envelope' | 'card' | 'phone' | 'slip' | 'toolbox' | 'lamp' | 'pallet' | 'flag' | 'none'
+/** query mode adds chapter (an overview of one slice of the window), batch (one stacked pallet), failure and returned (dead letters) */
 export type StopKind = 'prompt' | 'courier' | 'dock' | 'briefing' | 'publish' | 'belt' | 'llm' | 'memory' | 'loop' | 'crew' | 'kiosk' | 'reader' | 'end'
+  | 'chapter' | 'batch' | 'failure' | 'returned'
+
+/** One pallet on the floor: a component's pile of post-its in a chapter (query mode). */
+export interface Pallet { component: string; set: string; name: string; count: number; failed: number; type: string }
+/** A folded batch: what the stop card draws as a sparkline. `perMinute[i]` counts minute i from `t0` (the chapter start). */
+export interface BatchInfo { span: string; count: number; type: string; perMinute: number[]; t0: number; failed: number; producers: string[]; exemplars: string[] }
 
 export interface JobCard { span: string; handler: string; mode: 'sync' | 'async'; status: Span['status']; reason: string | null; t0: number; t1: number; order: number }
 export interface ToolCount { name: string; count: number; ms: number }
@@ -77,15 +85,31 @@ export interface Stop {
   modelCalls?: number
   /** the model route a model-call stop is waiting on, for the thinking indicator */
   model?: string
+  /** query mode: the chapter this stop belongs to */
+  chapter?: { n: number; of: number; name: string }
+  /** query mode: a batch stop's pile, for the sparkline and the pallet's height */
+  batch?: BatchInfo
+  /** query mode: the pallets a chapter overview stands on the floor (one per station or kiosk) */
+  pallets?: Pallet[]
+  /** query mode: dead letters in the returned-mail tray at the archive */
+  returned?: { count: number; reasons: { reason: string; count: number }[] }
+  /** hook-hub's heartbeat (system.hook.updated) for the lamp over the dock: how many beats, how many said it was unwell */
+  hub?: { count: number; failed: number }
 }
 
-export interface Direction { stops: Stop[]; placement: Placement; stopOfSpan: Record<string, number>; stopOfEvent: Record<string, number> }
+export interface Direction {
+  stops: Stop[]; placement: Placement; stopOfSpan: Record<string, number>; stopOfEvent: Record<string, number>
+  /** set for a query-mode waybill: chapters, the conservation recount, the hub heartbeat */
+  query?: QueryDirection
+}
 
 /** 'bloodbank.conversation.turn.started' -> 'turn.started' (the real short type). */
 export const shortType = (t: string) => t.replace(/^bloodbank\./, '').replace(/^(conversation|agent)\./, '')
 /** The post-it headline: past tense words, no dots ('turn started'). */
 const headline = (t: string) => shortType(t).replace(/[._]/g, ' ')
 const isMirror = (e: BusEvent) => /(^|\.)agent\.hook\.updated$/.test(e.type)
+/** hook-hub's own heartbeat: a status lamp over the dock, never a receipt */
+export const isHubBeat = (type: string) => /(^|\.)system\.hook\.updated$/.test(type)
 const isUsage = (e: BusEvent) => /\.llm\.usage\./.test(e.type) || /\.llm\.allowance\./.test(e.type)
 const isCommand = (e: BusEvent) => /(^|\.)cmd\./.test(e.subject ?? '') || /\.cmd\./.test(e.type)
 const BAD = new Set(['failed', 'timeout', 'dropped'])
@@ -157,13 +181,15 @@ export function direct(wb: Waybill, placement?: Placement): Direction {
     const hit = memo.get(wb)
     if (hit) return hit
   }
-  const d = directUncached(wb, placement ?? place(wb))
+  const pl = placement ?? place(wb)
+  const d = isQuery(wb) ? directQuery(wb, pl) : directUncached(wb, pl)
   if (!placement) memo.set(wb, d)
   return d
 }
 
 function directUncached(wb: Waybill, placement: Placement): Direction {
   const byId = new Map(wb.spans.map((s) => [s.id, s]))
+  const fileIdx = new Map(wb.spans.map((s, i) => [s.id, i]))
   const evById = new Map(wb.events.map((e) => [e.id, e]))
   const cname = (id: string) => wb.components[id]?.name ?? id
   const promptSpan = byId.get('prompt') ?? wb.spans.find((s) => s.kind === 'prompt')
@@ -183,6 +209,27 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
   for (const g of wb.gaps) if (g.span) flagged.add(g.span)
 
   const native = (s: Span) => String(s.attrs?.native ?? s.name)
+  // hub hooks sorted by time, once: a client-side hook finds its nearest hub by binary search, not a scan of every span
+  let hubIndex: { all: Span[]; byNative: Map<string, Span[]> } | null = null
+  const hubs = () => {
+    if (hubIndex) return hubIndex
+    const all = wb.spans.filter((x) => x.kind === 'hook' && x.id.startsWith('hook:')).sort((a, b) => a.t0 - b.t0)
+    const byNative = new Map<string, Span[]>()
+    for (const h of all) (byNative.get(native(h)) ?? byNative.set(native(h), []).get(native(h))!).push(h)
+    return (hubIndex = { all, byNative })
+  }
+  /** The span in a t0-sorted list nearest to t. Ties go to the first in file order, exactly as the stable sort it replaces. */
+  const nearestByT = (xs: Span[] | undefined, t: number): Span | undefined => {
+    if (!xs || !xs.length) return undefined
+    let lo = 0, hi = xs.length
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (xs[mid].t0 < t) lo = mid + 1; else hi = mid }
+    // the nearest distance is at xs[lo - 1] or xs[lo]; every span at that distance is a candidate
+    const d = Math.min(lo > 0 ? t - xs[lo - 1].t0 : Infinity, lo < xs.length ? xs[lo].t0 - t : Infinity)
+    let best: Span | undefined
+    for (let i = lo - 1; i >= 0 && t - xs[i].t0 === d; i--) if (!best || fileIdx.get(xs[i].id)! < fileIdx.get(best.id)!) best = xs[i]
+    for (let i = lo; i < xs.length && xs[i].t0 - t === d; i++) if (!best || fileIdx.get(xs[i].id)! < fileIdx.get(best.id)!) best = xs[i]
+    return best
+  }
   const isToolHook = (s: Span) => s.kind === 'hook' && (s.phase === 'pre_tool' || s.phase === 'post_tool' || /^(Pre|Post)ToolUse/.test(native(s)))
 
   // ---- subagents: everything under a SubagentStart hook belongs to that launcher's crew ----
@@ -250,9 +297,8 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
           if (parent) { g = up(); break }
           if (inLoop(s.t0)) { g = 'loop'; break }
           const nat = s.name.split(' ')[0]
-          const hubs = wb.spans.filter((x) => x.kind === 'hook' && x.id.startsWith('hook:'))
-          const near = (xs: Span[]) => xs.sort((a, b) => Math.abs(a.t0 - s.t0) - Math.abs(b.t0 - s.t0))[0]
-          const hub = near(hubs.filter((x) => native(x) === nat)) ?? near(hubs)
+          const hi = hubs()
+          const hub = nearestByT(hi.byNative.get(nat), s.t0) ?? nearestByT(hi.all, s.t0)
           g = hub ? groupOf(hub, depth + 1) : 'prompt'
           break
         }
@@ -362,7 +408,8 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
         n++
         prevEnd = Math.max(prevEnd, t.t1 ?? t.t0)
       }
-      const roundAt = (t: number) => { let k = 0; while (k < starts.length && starts[k] <= t) k++; return k }
+      // the number of round starts at or before t: a binary search (starts is sorted), not a scan per span
+      const roundAt = (t: number) => { let lo = 0, hi = starts.length; while (lo < hi) { const mid = (lo + hi) >> 1; if (starts[mid] <= t) lo = mid + 1; else hi = mid } return lo }
       const toolAbove = (sp: Span): Span | undefined => { let c: Span | undefined = sp; for (let i = 0; c && i < 8; i++) { if (c.kind === 'tool') return c; c = c.parent ? byId.get(c.parent) : undefined } return undefined }
       const spanRound = new Map<string, number>()
       const parts: Group[] = Array.from({ length: starts.length + 1 }, (_, k) => ({ key: `loop#${k}`, spans: [], events: [] }))
@@ -396,6 +443,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
     return parts.join(' ')
   }
 
+  const loopParts = [...groups.keys()].filter((k) => k.startsWith('loop#')).length
   for (const g of groups.values()) {
     const spans = g.spans.sort((a, b) => a.t0 - b.t0)
     const keyId = g.key.slice(g.key.indexOf(':') + 1)
@@ -479,7 +527,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
     }
     if (g.key === 'loop' || g.key.startsWith('loop#') || g.key.startsWith('crew:')) {
       const crew = g.key.startsWith('crew:')
-      const part = g.key.startsWith('loop#') ? { n: Number(g.key.slice(5)) + 1, of: [...groups.keys()].filter((k) => k.startsWith('loop#')).length } : undefined
+      const part = g.key.startsWith('loop#') ? { n: Number(g.key.slice(5)) + 1, of: loopParts } : undefined
       const tools = spans.filter((s) => s.kind === 'tool')
       const counts = new Map<string, ToolCount>()
       for (const t of tools) { const c = counts.get(t.name) ?? { name: t.name, count: 0, ms: 0 }; c.count++; c.ms += spanDur(t); counts.set(t.name, c) }
@@ -591,11 +639,22 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
   const keyOfStop = (s: Stop) => (s.spanIds.length ? gm.get(s.spanIds[0]) : gm.get(`evt:${s.eventIds[0]}`)) ?? null
   const stopByKey = new Map<string, Stop>()
   for (const s of stops) { const k = keyOfStop(s); if (k) stopByKey.set(k, s) }
+  // the span that published an event, from the links already indexed by target: the first such span in file order
+  // (what wb.spans.find did, without scanning every span per belt stop)
+  const publisherOf = (id: string): Span | undefined => {
+    let best: Span | undefined
+    for (const l of linksTo.get(`evt:${id}`) ?? []) {
+      if (l.kind !== 'publishes') continue
+      const s = byId.get(l.from)
+      if (s && (!best || fileIdx.get(s.id)! < fileIdx.get(best.id)!)) best = s
+    }
+    return best
+  }
   const causeKey = (key: string): string | null => {
     const id = key.slice(key.indexOf(':') + 1)
     if (key.startsWith('belt:')) {
       const e = evById.get(id)
-      const pub = e?.publisher_span ? byId.get(e.publisher_span) : wb.spans.find((s) => (linksFrom.get(s.id) ?? []).some((l) => l.kind === 'publishes' && l.to === `evt:${id}`))
+      const pub = e?.publisher_span ? byId.get(e.publisher_span) : publisherOf(id)
       if (pub?.kind === 'consume') return groupOf(pub)
       const h = pub?.parent ? byId.get(pub.parent) : undefined
       return h && h.kind === 'handler' ? groupOf(h) : null
@@ -617,7 +676,7 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
     sortMemo.set(s, v)
     return v
   }
-  const rank: Record<StopKind, number> = { prompt: 0, courier: 1, dock: 2, briefing: 3, llm: 4, loop: 4, crew: 5, memory: 5, publish: 6, kiosk: 6, belt: 7, reader: 8, end: 99 }
+  const rank: Record<StopKind, number> = { prompt: 0, courier: 1, dock: 2, briefing: 3, llm: 4, loop: 4, crew: 5, memory: 5, publish: 6, kiosk: 6, belt: 7, reader: 8, chapter: 1, batch: 6, failure: 6, returned: 6, end: 99 }
   stops.sort((a, b) => (a.kind === 'prompt' ? -1 : b.kind === 'prompt' ? 1 : sortT(a) - sortT(b) || rank[a.kind] - rank[b.kind]))
 
   // merge neighbours that are one moment at one place (e.g. two ASM edges back to back)
@@ -666,6 +725,13 @@ function directUncached(wb: Waybill, placement: Placement): Direction {
     hero: 'none', waited: false, waitedMs: 0, side: false, afterReply: true, inferred: false,
     problems: wb.findings.flatMap((f) => f.evidence),
   })
+
+  // hook-hub's heartbeat lights the lamp over the dock on the stop that carries it
+  for (const s of stops) {
+    let count = 0
+    for (const id of s.eventIds) if (isHubBeat(evById.get(id)?.type ?? '')) count++
+    if (count) s.hub = { count, failed: 0 }
+  }
 
   stops.forEach((s, i) => { s.id = `s${i + 1}-${s.kind}` })
   const stopOfSpan: Record<string, number> = {}

@@ -11,6 +11,7 @@ import { useWb, wb } from './state'
 import { MiniStrip, Waterfall } from './Waterfall'
 import { fmtInt, fmtMs, fmtT, short } from './types'
 import type { Stop } from './director'
+import { ConservationSum, PalletBars, Reasons, Sparkline, wallSpan } from './QueryViews'
 
 const RATES = [0.5, 1, 2, 4]
 
@@ -27,6 +28,12 @@ function Header() {
   const warn = w.findings.filter((f) => f.severity === 'warn').length
   const tin = w.stats.tokens_in, tout = w.stats.tokens_out
   const o = w.origin
+  const q = dir.query
+  const chip = q && (
+    <span className={`wbq-chip${q.conservation.ok ? '' : ' bad'}`} title={q.conservation.ok ? 'kept + batched = matched + returned: every event is accounted for' : 'the counts do not add up'}>
+      {q.conservation.ok ? "✓ all accounted for" : "✗ counts do not add up"}
+    </span>
+  )
   const finds = (
     <button className={`wb-find${broken ? ' bad' : warn ? ' warn' : ''}`} onClick={() => wb.go(dir.stops.length - 1)} title="What did not happen">
       {broken ? `${broken} broken` : warn ? `${warn} warning${warn > 1 ? 's' : ''}` : `${w.findings.length} finding${w.findings.length === 1 ? '' : 's'}`}
@@ -44,7 +51,7 @@ function Header() {
         </div>
         {menu && (
           <div className="wb-menu-pop">
-            <div className="wb-menu-info">{[o.cli, o.surface, o.project].filter(Boolean).join(' · ')} · {fmtMs(w.clock.duration_ms)}{tin !== undefined ? ` · ${fmtInt(tin)} in / ${fmtInt(tout ?? 0)} out` : ''}</div>
+            <div className="wb-menu-info">{q ? `${fmtInt(q.conservation.total)} events · ${fmtInt(q.conservation.batches)} pallets · ${fmtInt(q.conservation.kept)} kept` : ''}{q ? '' : [o.cli, o.surface, o.project].filter(Boolean).join(' · ')} · {fmtMs(w.clock.duration_ms)}{tin !== undefined ? ` · ${fmtInt(tin)} in / ${fmtInt(tout ?? 0)} out` : ''}</div>
             {warnings.length > 0 && <div className="wb-menu-info">{warnings.length} note{warnings.length > 1 ? 's' : ''} on the file</div>}
             <PlayWaybillButton className="wb-ghost" />
           </div>
@@ -59,7 +66,10 @@ function Header() {
         <span>{[o.cli, o.surface, o.project, short(o.session_id)].filter(Boolean).join(' · ')}</span>
       </div>
       <div className="wb-meta">
-        <span title="From Enter to the last thing we saw">{fmtMs(w.clock.duration_ms)}</span>
+        {q ? <span title="The window the question covers">{fmtMs(w.clock.duration_ms)}</span> : <span title="From Enter to the last thing we saw">{fmtMs(w.clock.duration_ms)}</span>}
+        {q && <span title="Events Candystore matched"><b>{fmtInt(q.conservation.total)}</b> events</span>}
+        {q && <span title="Kept as themselves / folded into pallets"><b>{fmtInt(q.conservation.kept)}</b> kept · <b>{fmtInt(q.conservation.batches)}</b> pallets</span>}
+        {chip}
         {tin !== undefined && <span title="Tokens in / out, all model calls">{fmtInt(tin)} in · {fmtInt(tout ?? 0)} out</span>}
         {finds}
         {warnings.length > 0 && <span className="wb-warn" title={warnings.join('\n')}>{warnings.length} note{warnings.length > 1 ? 's' : ''} on the file</span>}
@@ -76,18 +86,24 @@ function StopCard({ stop, prev, n, total }: { stop: Stop; prev: Stop | null; n: 
   const [more, setMore] = useState(false)
   useEffect(() => setMore(false), [stop.id])
   const names = stop.components.map((c) => w.components[c]?.name ?? c)
+  const q = !!dir.query
   return (
     <div className="wb-stop card" key={stop.id}>
       <div className="wb-stop-top">
         <span className="chip">stop {n} of {total}</span>
+        {stop.chapter && <span className="chip wbq-ch" title={stop.chapter.name}>chapter {stop.chapter.n} of {stop.chapter.of}</span>}
         {(stop.spanIds.length + stop.eventIds.length > 0) && (
           <button className="wb-open wb-open-top" onClick={() => wb.select(stop.spanIds[0] ?? `evt:${stop.eventIds[0]}`)} title="Open everything the recorder saw for this stop">Inspect ›</button>
         )}
-        {stop.kind !== 'end' && <span className="wb-time" title="Time on the recording's clock: 0 is the moment you pressed Enter">{fmtT(stop.t0)}{stop.t1 > stop.t0 ? ` → ${fmtT(stop.t1)} · ${fmtMs(stop.t1 - stop.t0)}` : ''}{stop.t0 < 0 ? ' (before Enter)' : ''}</span>}
+        {stop.kind !== 'end' && !q && <span className="wb-time" title="Time on the recording's clock: 0 is the moment you pressed Enter">{fmtT(stop.t0)}{stop.t1 > stop.t0 ? ` → ${fmtT(stop.t1)} · ${fmtMs(stop.t1 - stop.t0)}` : ''}{stop.t0 < 0 ? ' (before Enter)' : ''}</span>}
+        {stop.kind !== 'end' && q && stop.kind !== 'prompt' && <span className="wb-time" title="Wall-clock time of the window">{wallSpan(w, stop)}{stop.t1 > stop.t0 + 59000 ? ` · ${fmtMs(stop.t1 - stop.t0)}` : ''}</span>}
       </div>
-      {prev && prev.kind !== 'end' && stop.t0 < prev.t0 - 1 && <div className="wb-back">↩ Back in time: this began {fmtMs(prev.t0 - stop.t0)} before the stop you just saw.</div>}
+      {!q && prev && prev.kind !== 'end' && stop.t0 < prev.t0 - 1 && <div className="wb-back">↩ Back in time: this began {fmtMs(prev.t0 - stop.t0)} before the stop you just saw.</div>}
       <h3>{stop.title}</h3>
       <p>{stop.caption}</p>
+      {stop.kind === 'batch' && <Sparkline stop={stop} w={w} />}
+      {stop.kind === 'chapter' && <PalletBars stop={stop} />}
+      {stop.kind === 'returned' && <Reasons stop={stop} />}
       {(stop.detail || stop.tag) && (
         <div className="wb-real">
           {stop.detail && <div className="wb-detail">{stop.detail}</div>}
@@ -123,9 +139,10 @@ function EndCard() {
   return (
     <div className="wb-end">
       <div className="wb-end-card">
-        <div className="eyebrow">The end of the waybill</div>
+        <div className="eyebrow">{dir.query ? 'The end of the query' : 'The end of the waybill'}</div>
         <h2>{stop.title}</h2>
         <p className="muted">{stop.caption}</p>
+        {dir.query && <ConservationSum c={dir.query.conservation} />}
         {finds.length > 0 && <h4>Findings</h4>}
         <ul className="wb-fl">
           {finds.map(({ f, i }) => {
