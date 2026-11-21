@@ -3,7 +3,7 @@
   "countedOn": "15 Nov 2026",
   "site": {
     "name": "33GOD",
-    "status": "In stealth",
+    "status": "In Development",
     "stagedLabel": "A night, staged",
     "nav": [
       {
@@ -25,6 +25,7 @@
     ],
     "cta": "Request a briefing",
     "viewLog": "View as log",
+    "viewSimulation": "View as 3D simulation",
     "viewFilm": "Watch the night",
     "scrollHint": "Scroll to run the clock",
     "crank": "Still there? Crank keeps things moving.",
@@ -35,7 +36,7 @@
         "label": "delorenj.com",
         "href": "https://delorenj.com"
       },
-      "colophon": "© 2026 · The oldest names come from songs."
+      "colophon": "© 2026 · Architecture inspired by a hundred years of companies."
     },
     "night": {
       "_readme": "The real night the page replays: a 33god.night digest from `waybill night`. Working windows (outside the set pieces), the clock's event counter and the log view's marked lines are real. Story beats stay staged.",
@@ -62,20 +63,20 @@
       "spectacle": 2,
       "camera": "hold",
       "setPiece": "building.wake",
-      "kicker": "Codename 33GOD · Year four of stealth",
+      "kicker": "Codename 33GOD · Year three of stealth",
       "title": "You go home.",
-      "titleTurn": "The company doesn't.",
-      "body": "For four years, one engineer has been quietly building an entire company out of agents. They are hired, seated and reviewed. They have directors and managers, a mailroom, a clock on the wall and a records room that forgets nothing. And the company has been at work the whole time.",
+      "titleTurn": "Your company doesn't.",
+      "body": "For years now, people have been busy racing to find optimal strategies for working with agents. The solution is so simple - so obvious - that most people refuse to accept it. Anyone Who can see through the silicon and Tech jargon And recognize That instead of trying to Wrap your head around a new Concept You can accept that we're just dealing with Virtual Employees. And I don't mean A close representation. I mean a direct one to one mapping. Any solution? to a human problem in the corporate Setting Maps. perfectly on top. Of the same problem applied to agents. We have a hundred years of Data. To draw from. These agents have Memory. They have skills. They can cooperate. They can make mistakes. They can be incentivized. With the right. Guidance. A small group Of inexperienced agents. can create Enterprise level Products. and a large team of genius agents can be managed into the ground I am impatient Smug. Director. This is anthropomorphism as a principle. In 33GOD Agents are hired, seated and reviewed. They have directors and managers, a mailroom, a clock on the wall and a records room that forgets nothing. They have a morning stand up Where cross collaboration happens. And they have post Kaizen meetings. When things go wrong. They are all bound by a single mission statement and the company has been at work the whole time. And they work for you. ",
       "tags": [],
       "staged": true,
       "copy": {
-        "secondary": "Watch one meeting go through it",
+        "secondary": "Watch the activity after you leave your desk for the night.",
         "youLeave": "18:02 · you leave"
       },
       "log": [
         {
           "subject": "bloodbank.cli.session.ended",
-          "note": "You go home. The company doesn't."
+          "note": "You go home. Your team's just getting started."
         }
       ]
     },
@@ -95,11 +96,11 @@
         "figures": [
           {
             "n": "72",
-            "label": "first-party components, built to one set of rules"
+            "label": "domain-driven components, strategically architected to be tech-agnostic, purpose built to a spec that's guided by the underlying principles of AI development"
           },
           {
             "n": "12",
-            "label": "departments on the org chart"
+            "label": "departments on the org chart and counting"
           },
           {
             "n": "214",
@@ -136,14 +137,12 @@
       },
       "kicker": "Article one",
       "title": "Every agent is an employee.",
-      "body": "Stop asking how to orchestrate a swarm. Ask how a company would handle it. Companies already solved delegation, escalation, onboarding, record-keeping and who to call when something breaks. Map every problem to the workplace and the ceiling goes away.",
-      "tags": [
-        "FLUME"
-      ],
+      "body": "Stop trying to 'orchestrate a swarm'. You're just pretending we're doing something novel. Companies already solved delegation, escalation, onboarding, and self-improvement. When something breaks, there's a playbook to follow. A good manager Throw his hands up, Jump to blame. one or more team members. That's not productive. Employees make mistakes All the time. What separates a successful company from a failed one Is how they Manage mistakes. How do you harness and leverage the data to learn from it. That's how a company evolves and grows. And that rests entirely on the human. not on the prompt or the model, but the moment to moment decisions that Guide the path. There's no ceiling in this garden.",
+      "tags": ["FLUME"],
       "staged": false,
       "copy": {
-        "quote": "“Anthropomorphism as protocol: employees, titles, desks, records. Never ‘fleet’.”",
-        "quoteSource": "From the charter of FLUME, the workforce",
+        "quote": "“Anthropomorphism as protocol",
+        "quoteSource": "One of a small set of Pillars, used to guide architectural decisions",
         "you": {
           "label": "You",
           "line": "The only human on the chart."
@@ -152,7 +151,7 @@
           {
             "dept": "Human resources",
             "name": "FLUME",
-            "line": "The whole HR department. Hires directors, managers and PMs, then onboards and reviews them."
+            "line": "If the fleet of agents is the staff, then Flume is the org chart"
           },
           {
             "dept": "Operations",
@@ -162,52 +161,52 @@
           {
             "dept": "Internal comms",
             "name": "BLOODBANK",
-            "line": "Every memo in the building travels on one bus."
+            "line": "Every service, agent, and component announces their actions and gets their tasks from a single bus that carries messages adhering to a strict schema"
           },
           {
             "dept": "Records",
             "name": "CANDYSTORE",
-            "line": "Every event ever sent, kept and searchable."
+            "line": "Every event ever sent, stored, indexed, embedded and semantically searchable. This data becomes a source for a variety of synthesized roll-ups across various dimensions."
           },
           {
-            "dept": "The clock on the wall",
+            "dept": "The Company Clock",
             "name": "CANDYBAR",
-            "line": "One clock fires every recurring job. There is no second clock."
+            "line": "A decentralized abstraction over Cron that manages the company schedule."
           },
           {
             "dept": "Training",
             "name": "SKILLEX",
-            "line": "One catalog of skills, taught to every agent."
+            "line": "A declarative node-based hierarchical skill framework with self-balancing self-organizing properties"
           },
           {
             "dept": "Front desk",
             "name": "GENESIS",
-            "line": "The agent clients talk to about their projects."
+            "line": "A specially-trained subset of agent that can be sent out as a contractor-for-hire. External clients can harness the full set of my team's capabilities by talking to a Genesis contactor agent. They act as a black box, routing requests and delegating tasks to the right teams, packaging and delivering the results to the client. The client pays for the bot's time that is metered and tracked on an individual basis."
           },
           {
             "dept": "Accounting",
             "name": "MILKSHAKE",
-            "line": "Turns usage and cost into client billing."
+            "line": "Integrates directly with Mercury API and manages all the infra costs, invoicing, payments, tax, and finanace communications."
           },
           {
             "dept": "Mailroom",
             "name": "CURATOR",
-            "line": "Sorts and files whatever arrives."
+            "line": "Sorts and organizes files by forming a hierarchical network, inspired by the Mixture-of-Experts models"
           },
           {
             "dept": "Your assistant",
             "name": "CRANK",
-            "line": "Keeps work moving while you are out of the office."
+            "line": "Keeps work moving while you are out of the office. Trained to answer questions and make hard decisions on your behalf with the goal of unblocking tickets. Follows the Pillar of 'No Idle Agents'"
           },
           {
             "dept": "Facilities",
             "name": "INFRA-DOCTOR",
-            "line": "Walks the building and flags what is broken."
+            "line": "Walks the building and puts out fires. Ensures everything on the server is running smoothly and efficiently. When resources are maxxed out and tasks are starved, he has the authority to kill a greedy GPU hog, set up a queue, or coordinate cross-department as a mediator to come to a solution so everyone can share."
           },
           {
             "dept": "Control room",
             "name": "HOLOCENE",
-            "line": "Where you look. Who is working, what is stuck, what needs you."
+            "line": "This is the operating surface. It includes the Web dash, Holocene Auto, the Telegram mini-app, artifact gallery, launch tracker, and live app monitoring."
           }
         ]
       },
@@ -228,9 +227,7 @@
       "kicker": "Article two",
       "title": "Nothing calls. Everything announces.",
       "body": "No component knows who is listening. Every hook, decision, ticket and spoken sentence becomes an event on one bus, and whoever cares picks it up. Hire a new department and nobody else has to change their job.",
-      "tags": [
-        "BLOODBANK"
-      ],
+      "tags": ["BLOODBANK"],
       "staged": false,
       "copy": {
         "event": "bloodbank.task.ticket.created",
@@ -376,10 +373,7 @@
       "kicker": "Everybody has this. It is where most people stop.",
       "title": "Your transcript is waiting when you leave the room.",
       "body": "Long recordings like this one go to Wax, HeyMa's long-form transcriber. It is done before you have found your next meeting.",
-      "tags": [
-        "HEYMA",
-        "WAX"
-      ],
+      "tags": ["HEYMA", "WAX"],
       "staged": true,
       "log": [
         {
@@ -403,9 +397,7 @@
       "kicker": "Fine. Keep going.",
       "title": "Then it reads itself.",
       "body": "Enrichment passes comb the transcript and find every project it touched. The calls are made by Jev, Typesafe's System One model, built for one job: quick, typed, yes-or-no judgments.",
-      "tags": [
-        "JEV"
-      ],
+      "tags": ["JEV"],
       "staged": true,
       "log": [
         {
@@ -425,9 +417,7 @@
       "kicker": "Four people, one desk, one microphone.",
       "title": "No Zoom? No problem. Speakers still get labeled.",
       "body": "All diarization is backed by a custom-built voice-fingerprint service, so people are told apart by their voices, not by which laptop they dialed in from. The room is the meeting.",
-      "tags": [
-        "HEYMA"
-      ],
+      "tags": ["HEYMA"],
       "staged": true,
       "log": [
         {
@@ -447,10 +437,7 @@
       "kicker": "There is no “teach it a word” button. There does not need to be.",
       "title": "It learns your vocabulary. Nobody asked it to.",
       "body": "Project names, people and jargon join a self-evolving dictionary as they are spoken, and Jev decides what earns a place. Nothing is configured. It works because everything is connected.",
-      "tags": [
-        "HEYMA",
-        "JEV"
-      ],
+      "tags": ["HEYMA", "JEV"],
       "staged": true,
       "log": [
         {
@@ -470,9 +457,7 @@
       "kicker": "Action items do not go into a doc to die.",
       "title": "When the meeting ends, the harvest begins.",
       "body": "Decisions and commitments become tickets through Pilot, a custom ticket-provider abstraction over Plane, Linear and Trello. Each ticket already knows which board it belongs to.",
-      "tags": [
-        "PILOT"
-      ],
+      "tags": ["PILOT"],
       "staged": true,
       "log": [
         {
@@ -492,9 +477,7 @@
       "kicker": "Every project has one.",
       "title": "Each ticket walks itself to its project manager.",
       "body": "The PM owns the ticket's whole life. It plans the work, picks the next move, hands it to the right employee and closes the loop. Underneath, Krebs runs that lifecycle the same way on every board.",
-      "tags": [
-        "KREBS"
-      ],
+      "tags": ["KREBS"],
       "staged": true,
       "log": [
         {
@@ -514,9 +497,7 @@
       "kicker": "This is the part that sounds made up.",
       "title": "Then the managers talk to each other.",
       "body": "When one PM finds a fix another project could use, it takes the liberty of telling that project's manager. Across projects, unprompted.",
-      "tags": [
-        "PM TO PM, OVER BLOODBANK"
-      ],
+      "tags": ["PM TO PM, OVER BLOODBANK"],
       "staged": true,
       "copy": {
         "message": "PM → PM · a fix you can use"
@@ -539,9 +520,7 @@
       "kicker": "Of course there is.",
       "title": "No skill framework was strong enough. So there is a new one.",
       "body": "Skills are declared in manifests and compose like parts. One catalog fans out to every agent CLI, so a new skill reaches every employee at once.",
-      "tags": [
-        "SKILLEX"
-      ],
+      "tags": ["SKILLEX"],
       "staged": true,
       "log": [
         {
@@ -689,9 +668,7 @@
       "kicker": "Day one of every project",
       "title": "PJangler. The project factory.",
       "body": "A project registry and bootstrapper. Every project is built from a vetted pipeline template, so on day one it already has a ticket board, a git repo, its own project manager and its own Open Notebook. A mobile app gets one more hire: a Launch Director, who works with Google and Apple to see it through a smooth launch.",
-      "tags": [
-        "PJANGLER"
-      ],
+      "tags": ["PJANGLER"],
       "staged": true,
       "copy": {
         "cardTitle": "A new project, day one",
@@ -728,9 +705,7 @@
       "kicker": "The power company. Tokens in, work out.",
       "title": "The Gateway. Every model, under one name.",
       "body": "A provider-agnostic, multi-tenant LLM gateway with a multi-tiered, role-based router. Employees ask for a role, never a model, and never have to care which provider answers. The router paces every subscription against its own usage windows, reset times, burn rate and cooldowns. When a pool runs out, the chain knows where to go next: subscriptions, then metered, then free, held to 90% of each daily cap.",
-      "tags": [
-        "GATEWAY"
-      ],
+      "tags": ["GATEWAY"],
       "staged": true,
       "copy": {
         "aside": "Cache tokens from every provider are counted one way, in one ledger. A thread stays with its model while its cache pays off. When it has to move, its whole history moves with it, and the next model picks up the task.",
@@ -795,9 +770,7 @@
       "kicker": "The audio department",
       "title": "HeyMa. Transcription, translation and telephony, on any stack.",
       "body": "A full-featured audio pipeline that runs on any platform, next to whatever you already use. On its own, it is the most flexible, full-featured audio pipeline you can run today. Inside 33GOD it fits so well that you forget it is there. It just works.",
-      "tags": [
-        "HEYMA"
-      ],
+      "tags": ["HEYMA"],
       "staged": true,
       "copy": {
         "parts": [
@@ -849,9 +822,7 @@
       "kicker": "Human resources",
       "title": "Flume. A whole HR department, for agents.",
       "body": "Open a role and Flume fills it: directors, managers, project managers. It onboards each hire, gives them a desk and a title, and tells you honestly how they are doing.",
-      "tags": [
-        "FLUME"
-      ],
+      "tags": ["FLUME"],
       "staged": true,
       "copy": {
         "rolesTitle": "Roles Flume hires for",
@@ -869,12 +840,7 @@
             "line": "Runs one project, start to finish."
           }
         ],
-        "pipeline": [
-          "hired",
-          "onboarded",
-          "seated",
-          "reviewed"
-        ],
+        "pipeline": ["hired", "onboarded", "seated", "reviewed"],
         "hire": {
           "name": "NEW HIRE",
           "line": "Project manager. A window that has never been lit."
@@ -899,9 +865,7 @@
       "kicker": "On the road",
       "title": "Holocene Auto. Your department heads, over the car speakers.",
       "body": "An Android Auto app that keeps your finger on the pulse on the go: a direct, two-way, hands-free line between you and every department head.",
-      "tags": [
-        "HOLOCENE AUTO"
-      ],
+      "tags": ["HOLOCENE AUTO"],
       "staged": true,
       "copy": {
         "standupTitle": "Every morning, the directors' standup",
@@ -976,12 +940,7 @@
   "transcript": {
     "_readme": "Staged words for Act III. Marked spans: {p:…} a project Jev finds, {w:…} a word the dictionary learns. 'ticket' is the index of the ticket a line becomes.",
     "room": "Conference room · one microphone",
-    "speakers": [
-      "Priya",
-      "Marcus",
-      "Elena",
-      "Tom"
-    ],
+    "speakers": ["Priya", "Marcus", "Elena", "Tom"],
     "lines": [
       {
         "s": 0,
