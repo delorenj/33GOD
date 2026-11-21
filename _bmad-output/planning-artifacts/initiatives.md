@@ -781,6 +781,9 @@ related_initiatives: [I-10, I-8]
 - **(a)** `waybill night` and the `33god.night` file stay for now, because the
   overnight marketing page still reads them. `waybill query --last-night` is the
   convenience path.
+  Superseded 2026-11-21: the page became a component tour and `waybill night` and
+  `night.py` were retired. `waybill night` now prints a pointer to
+  `waybill query --last-night` and exits 2.
 - **(b)** `33god.waybill` stays v1. Changes are additive only: the
   `recorder.mode: query` enum value, the `origin.query` object, and `chapter`
   and `batch` span kinds. Older players map an unknown mode to capture.
@@ -851,7 +854,7 @@ The lane column is the lane at filing. Live status comes from the boards
 | infra | INFR-155 | infra-doctor, the deadman and the gateway watchdog publish state changes and ntfy alerts as events | Backlog |
 | infra | INFR-156 | `hermes-gateway-restart` publishes `restart_requested` and `restarted` | Backlog |
 | skillex | SKRILL-53 | artifacts `publish.py` emits `project.artifact.published` after a verified receipt (75 silent publishes) | Backlog |
-| delodocs | DOCS-2 | curator-serve (NRestarts 144,934) and delodocs-inbox-watchdog (25,099) point at the removed `DeLoDocs/_vault`. Copies of the scripts are in `~/code/obsops/scripts` | Backlog |
+| delodocs | DOCS-2 | curator-serve (NRestarts 144,934) and delodocs-inbox-watchdog (25,099) point at the removed `DeLoDocs/_vault`. Copies of the scripts are in `~/code/obsops/scripts`. 2026-11-21: Jarad disabled curator-serve (`systemctl --user disable --now`, about 16.6k restarts a day on the missing `curator.py`); the inbox watchdog still loops (26,261 restarts) | Backlog |
 | infra | INFR-157 | Hindsight `memory.*` events through Hindsight's webhook (7,419 silent operations in 3 days). The server is `~/docker/stacks/ai/hindsight` (DeLoContainers; the DELO board was archived 2026-10-18) and the hooks are `~/.agents/hooks/hindsight` (delorenj/agents, no `.project.json`), so it is homed on the infra board | Backlog |
 | infra | INFR-158 | jev-litellm: a success callback that publishes `llm.usage.recorded` (12,525 calls bypassing the gateway in 3 days). Lives in `~/docker/stacks/ai/jev-litellm/compose.yml` (DELO board archived), homed on the infra board | Backlog |
 | infra | INFR-159 | Global git hooks: `post-commit`/`pre-push` publish `repo.commit.recorded`/`repo.push.completed` (2,297 commits and 1,059 pushes in 3 days). Lives in `~/.agents/git/hooks`, the target of `~/.config/git/hooks` (delorenj/agents, no board), homed on the infra board | Backlog |
