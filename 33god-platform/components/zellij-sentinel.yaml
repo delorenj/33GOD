@@ -1,0 +1,47 @@
+# Atlas record (I-12), added 2026-11-21 (I-10.2 resolver pass): it was hidden by the zellij-* host-tooling
+# ignore, but it is a durable BLOODBANK_COMMANDS consumer and publishes system.multiplexer.*. Edit freely; then
+# `mise run platform:atlas`.
+id: zellij-sentinel
+name: Zellij sentinel
+role: service
+repo: ../../infra
+description: Keeps the agent workspace alive and re-drives its agent panes after the terminal server crashes.
+changelog:
+  topics:
+  - g10
+  - service
+kind: service
+first_party: true
+domain: G10
+c4:
+  level: container
+  parent: ''
+status: live
+summary: Keeps the agent workspace alive and re-drives its agent panes after the terminal server crashes.
+role_in_system: Without it a terminal-server crash leaves every agent pane dead until someone notices.
+tech:
+- python
+- zellij
+- systemd
+runtime: systemd user unit zellij-workspace.service (ExecStart ~/code/infra/scripts/zellij-sentinel --sessions Workspace),
+  event-driven (pidfd + a durable JetStream pull consumer), no poll loop
+relations:
+- to: bb-nats
+  kind: publishes-to
+  via: bb-emit bloodbank.evt.system.multiplexer.failed / resumed
+  evidence: ~/code/infra/scripts/zellij-sentinel:612
+  anchor: argv = [BB_EMIT, "--type", type_, "--data", json.dumps(data, separators=(",", ":")),
+- to: bb-nats
+  kind: consumes-from
+  via: durable zellij-sentinel on BLOODBANK_COMMANDS bloodbank.cmd.system.multiplexer.resume
+  evidence: ~/code/infra/scripts/zellij-sentinel:150
+  anchor: CONSUMER_CONFIG = {
+evidence:
+- ~/code/infra/scripts/zellij-sentinel
+- systemctl --user cat zellij-workspace.service
+confidence: high
+surfaces:
+- producer:zellij-sentinel
+- systemd:zellij-workspace.service
+factory:
+  near: bays

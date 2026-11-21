@@ -46,6 +46,7 @@ evidence:
 confidence: high
 surfaces:
 - repo:holocene
+- producer:holocene-auto:*
 - systemd:holocene-whisper.service
 factory:
   station: control

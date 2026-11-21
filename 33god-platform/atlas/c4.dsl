@@ -158,6 +158,8 @@ workspace "33GOD" "One map of every component (I-12)" {
         }
         c_wingman = container "Wingman" "Voice relay that types the operator's dictated words into agent sessions." "" {
         }
+        c_zellij_sentinel = container "Zellij sentinel" "Keeps the agent workspace alive and re-drives its agent panes after the terminal server crashes." "python, zellij, systemd" {
+        }
       }
       group "Client Surface" {
         c_client_portal = container "Client portal" "The automaticai.io website and the internal operator portal for services, accounts, statements and invoices." "typescript" {
@@ -496,6 +498,8 @@ workspace "33GOD" "One map of every component (I-12)" {
     c_wingman -> c_vox "calls" "POST vox.delo.sh /synthesize and /sink/{key}/say"
     c_wingman -> c_transcribe "calls" "POST 127.0.0.1:8766/v1/audio/transcriptions"
     c_wingman -> c_aai_gateway "routes-llm-via" "llm_base_url api.automaticai.io/v1 (pydantic-ai)"
+    c_zellij_sentinel -> c_bb_nats "publishes-to" "bb-emit bloodbank.evt.system.multiplexer.failed / resumed"
+    c_zellij_sentinel -> c_bb_nats "consumes-from" "durable zellij-sentinel on BLOODBANK_COMMANDS bloodbank.cmd.system.multiplexer.resume"
   }
   views {
     systemContext god "context" { include * autoLayout }

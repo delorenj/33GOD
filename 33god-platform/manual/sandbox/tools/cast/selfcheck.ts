@@ -4,7 +4,9 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { ANNEX, CAST_DIGEST, STATION_OF, castPlacement, place, standOf, stationOf, type SetId } from '../../src/waybill/stations'
 import { parseWaybill } from '../../src/waybill/types'
-import { courierPath } from '../../src/sim/layout'
+import { BAY_Z, courierPath } from '../../src/sim/layout'
+import { VENDORS } from '../../src/content'
+import { familyOf, resolveProducer } from '../../src/waybill/resolve'
 
 let failed = 0
 const ok = (cond: boolean, msg: string) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${msg}`); if (!cond) failed++ }
@@ -27,7 +29,9 @@ const EMITTED = [
   'candybar', 'candystore', 'cost-bridge', 'curator', 'deckard', 'enricher', 'farm-command-bridge', 'hermes-bloodbank-plugin', 'hermes-gw', 'hindsight',
   'holocene', 'hook-hub', 'jev-litellm', 'milkshake', 'n8n', 'ntfy-router', 'pilot', 'redis', 'target-watch', 'turn-enricher',
   // ids that are not registry components: vendor CLIs, devices, and the recorder's own meta ids
-  'ext:claude-code', 'ext:codex-cli', 'ext:codex-exec', 'ext:codex-desktop', 'ext:nanoleaf', 'ext:orca', 'ext:codex-mcp-helper-reaper', 'ext:hook-command', 'ext:unknown',
+  'ext:claude-code', 'ext:codex-cli', 'ext:codex-exec', 'ext:codex-desktop', 'ext:nanoleaf', 'ext:orca', 'ext:codex-mcp-helper-reaper', 'ext:hook-command', 'ext:unknown', 'ext:antigravity', 'copilot-cli', 'antigravity-cli', 'tenant-annex', 'zellij-sentinel',
+  // keyed families the resolver mints: Hermes desks and tenants
+  'hermes-desk:tolt-pm', 'hermes-desk:unknown', 'tenant:tiller', 'tenant:gruvato',
   'unknown', 'waybill',
 ]
 const lost = EMITTED.filter((id) => !standOf(id))
@@ -44,9 +48,23 @@ ok(stationOf('hermes-gateway') === 'crew' && stationOf('hermes-gw') === 'crew', 
 ok(stationOf('claude-code') === 'bays' && stationOf('ext:claude-code') === 'bays', 'vendor CLIs stand at the bays, with or without the ext: prefix')
 ok(stationOf('ext:hook-hub') === 'dock', 'an ext: prefix on a registry id still resolves')
 ok(Object.keys(STATION_OF).length > 0, 'STATION_OF is built from the cast')
+ok(VENDORS.length === BAY_Z.length, `one vendor per bay (${VENDORS.length} vendors, ${BAY_Z.length} bays)`)
+ok(stationOf('copilot-cli') === 'bays' && stationOf('antigravity-cli') === 'bays' && standOf('copilot-cli')?.id === 'ext:copilot', 'extra aliases resolve to their extra at the bays')
+
+// 2b. the one resolver: every shared case (tools/cast/resolve.cases.json, also run by waybill/tests/test_registry.py)
+const cases = JSON.parse(readFileSync(new URL('./resolve.cases.json', import.meta.url), 'utf8')) as { producer: string; type: string | null; source: string | null; id: string; owner: string | null; via: string; key: string | null }[]
+const drift = cases.filter((c) => { const r = resolveProducer(c.producer, c.type, c.source); return r.id !== c.id || r.owner !== c.owner || r.via !== c.via || r.key !== c.key })
+ok(cases.length > 0 && drift.length === 0, `resolver parity with Python on ${cases.length} cases${drift.length ? ' (drift: ' + drift.map((c) => `${c.producer}|${c.type}|${c.source}`).join(', ') + ')' : ''}`)
+ok(familyOf('hermes-desk:tolt-pm')?.kind === 'desk' && familyOf('tenant:tiller')?.kind === 'tenant' && familyOf('crank') === null, 'familyOf names desks and tenants only')
 
 // 3. a waybill's kiosk is the same component in the same slot as the permanent floor
 const demo = { origin: { cli: 'claude', surface: 'claude-code' }, components: Object.fromEntries(['hermes-gateway', 'asm', 'redis', 'ext:nanoleaf', 'ext:gemini', 'weird-new-consumer'].map((id) => [id, { id, name: id, kind: id === 'weird-new-consumer' ? 'service' : 'cli', registry: false }])) } as Parameters<typeof place>[0]
+const demoFam = { origin: demo.origin, components: Object.fromEntries(['hermes-desk:tolt-pm', 'hermes-desk:unknown', 'tenant:tiller', 'tenant:gruvato', 'copilot-cli'].map((id) => [id, { id, name: id, kind: 'service', registry: false }])) } as Parameters<typeof place>[0]
+const pf = place(demoFam)
+ok(pf.setOf['hermes-desk:tolt-pm']?.startsWith('kiosk:') && pf.kioskById['hermes-desk:tolt-pm']?.near === 'crew' && pf.kioskById['hermes-desk:unknown']?.near === 'crew', 'each Hermes desk gets its own kiosk by the crew hall')
+ok(pf.kioskById['hermes-desk:tolt-pm']?.id !== pf.kioskById['hermes-desk:unknown']?.id, 'two desks, two kiosks')
+ok(pf.setOf['tenant:tiller'] === 'kiosk:tenant-annex' && pf.setOf['tenant:gruvato'] === 'kiosk:tenant-annex' && pf.kiosks.filter((k) => k.id === 'tenant-annex').length === 1, 'every tenant shares the one tenant-annex kiosk')
+ok(pf.setOf['copilot-cli'] === 'bays', 'a copilot-cli waybill id stands at the bays')
 const pl = place(demo)
 ok(JSON.stringify(place(demo)) === JSON.stringify(pl), 'place() is deterministic')
 ok(pl.kioskById.asm.at.join() === cast.kioskById.asm.at.join() && pl.kioskById.redis.at.join() === cast.kioskById.redis.at.join(), 'a waybill kiosk keeps its permanent slot')
@@ -65,7 +83,7 @@ const PROPS: Record<string, Box> = {
 const slotBox = (at: [number, number, number]): Box => [at[0] - 0.7, at[2] - 0.65, at[0] + 0.7, at[2] + 0.65]
 const overlap = (a: Box, b: Box) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1]
 const nearPath = (b: Box) => {
-  for (let v = 0; v < 6; v++) {
+  for (let v = 0; v < BAY_Z.length; v++) {
     const p = courierPath(v)
     for (let i = 1; i < p.length; i++) {
       const n = Math.ceil(Math.hypot(p[i][0] - p[i - 1][0], p[i][2] - p[i - 1][2]) / 0.1)

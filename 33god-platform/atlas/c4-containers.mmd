@@ -62,6 +62,7 @@ flowchart LR
     c_orca["Orca"]
     c_shortwave["Shortwave relay"]
     c_wingman["Wingman"]
+    c_zellij_sentinel["Zellij sentinel"]
   end
   subgraph G11["Client Surface"]
     c_client_portal["Client portal"]
@@ -292,3 +293,5 @@ flowchart LR
   c_wingman -->|reads| c_candystore
   c_wingman -->|calls| c_heyma
   c_wingman -->|routes-llm-via| c_aai_gateway
+  c_zellij_sentinel -->|publishes-to| c_bloodbank
+  c_zellij_sentinel -->|consumes-from| c_bloodbank

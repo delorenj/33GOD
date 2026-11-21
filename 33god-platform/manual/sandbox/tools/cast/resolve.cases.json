@@ -1,0 +1,362 @@
+[
+ {
+  "producer": "pjangler",
+  "type": "bloodbank.crank.binding.created",
+  "source": "urn:33god:service:crank",
+  "id": "crank",
+  "owner": "crank",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "wingman",
+  "type": "bloodbank.crank.alert.raised",
+  "source": "urn:33god:service:wingman",
+  "id": "crank",
+  "owner": "crank",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "wingman",
+  "type": "bloodbank.voice.relay.typed",
+  "source": "urn:33god:service:wingman",
+  "id": "wingman",
+  "owner": "wingman",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "agent-pad-upload",
+  "type": "bloodbank.audio.earshot.detected",
+  "source": "urn:33god:service:agent-pad-upload",
+  "id": "earshot",
+  "owner": "earshot",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "agent-pad-upload",
+  "type": "bloodbank.audio.memo.uploaded",
+  "source": "urn:33god:service:agent-pad-upload",
+  "id": "agent-pad",
+  "owner": "agent-pad",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "n8n",
+  "type": "bloodbank.telephony.call.started",
+  "source": "urn:33god:service:n8n-bloodbank-node",
+  "id": "delosip",
+  "owner": "delosip",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "n8n",
+  "type": "bloodbank.telephony.message.received",
+  "source": "urn:33god:service:n8n-inbox-transcribe",
+  "id": "delosip",
+  "owner": "delosip",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "n8n",
+  "type": "bloodbank.messaging.sms.received",
+  "source": "urn:33god:service:n8n-bloodbank-node",
+  "id": "delosip",
+  "owner": "delosip",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "n8n",
+  "type": "bloodbank.audio.file.received",
+  "source": "urn:33god:service:n8n-bloodbank-node",
+  "id": "n8n",
+  "owner": "n8n",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "target-watch",
+  "type": "bloodbank.messaging.email.received",
+  "source": "urn:33god:service:target-watch",
+  "id": "target-watch",
+  "owner": "target-watch",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "candybar",
+  "type": "bloodbank.cron.steward_task.completed",
+  "source": "urn:33god:service:candybar",
+  "id": "candybar-steward",
+  "owner": "candybar-steward",
+  "via": "source",
+  "key": null
+ },
+ {
+  "producer": "candybar",
+  "type": "bloodbank.cron.candybar.invoked",
+  "source": "urn:33god:service:candybar",
+  "id": "candybar",
+  "owner": "candybar",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "n8n-plane-webhook",
+  "type": "bloodbank.repo.task.updated",
+  "source": "urn:33god:integration:n8n:plane-webhook",
+  "id": "plane-hook",
+  "owner": "plane-hook",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "enricher",
+  "type": "bloodbank.agent.session.annotated",
+  "source": "urn:33god:service:enricher",
+  "id": "enricher",
+  "owner": "enricher",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "kimi",
+  "type": "bloodbank.agent.session.started",
+  "source": "urn:33god:agent:kimi",
+  "id": "agent-hooks",
+  "owner": "agent-hooks",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "gemini",
+  "type": "bloodbank.agent.tool.requested",
+  "source": "urn:33god:agent:gemini",
+  "id": "agent-hooks",
+  "owner": "agent-hooks",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "copilot-cli",
+  "type": "bloodbank.agent.tool.requested",
+  "source": "urn:33god:integration:copilot-cli",
+  "id": "agent-hooks",
+  "owner": "agent-hooks",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "antigravity-cli",
+  "type": "bloodbank.agent.tool.completed",
+  "source": "urn:33god:agent:antigravity-cli",
+  "id": "agent-hooks",
+  "owner": "agent-hooks",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "zellij-sentinel",
+  "type": "bloodbank.system.multiplexer.failed",
+  "source": "urn:33god:service:zellij-sentinel",
+  "id": "zellij-sentinel",
+  "owner": "zellij-sentinel",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "tiller",
+  "type": "bloodbank.finance.sync.started",
+  "source": "urn:33god:service:tiller",
+  "id": "tenant:tiller",
+  "owner": null,
+  "via": "tenant",
+  "key": "tiller"
+ },
+ {
+  "producer": "local-script:gruvato",
+  "type": "bloodbank.project.deployment.completed",
+  "source": "repo://gruvato/scripts/install-site-service.sh",
+  "id": "tenant:gruvato",
+  "owner": null,
+  "via": "tenant",
+  "key": "gruvato"
+ },
+ {
+  "producer": "gib-api",
+  "type": "bloodbank.gib.order.placed",
+  "source": null,
+  "id": "tenant:gib",
+  "owner": null,
+  "via": "tenant",
+  "key": "gib"
+ },
+ {
+  "producer": "hermes-agent:tolt-pm",
+  "type": "bloodbank.agent.tool.requested",
+  "source": "urn:33god:agent:hermes",
+  "id": "hermes-desk:tolt-pm",
+  "owner": "hermes-fleet",
+  "via": "desk",
+  "key": "tolt-pm"
+ },
+ {
+  "producer": "hermes-agent:33god-pm",
+  "type": "bloodbank.conversation.turn.started",
+  "source": "urn:33god:service:bloodbank-hermes-gateway",
+  "id": "hermes-desk:33god-pm",
+  "owner": "hermes-fleet",
+  "via": "desk",
+  "key": "33god-pm"
+ },
+ {
+  "producer": "hermes-agent:TOLT-momo",
+  "type": "bloodbank.agent.tool.requested",
+  "source": "urn:33god:agent:hermes",
+  "id": "momo",
+  "owner": "momo",
+  "via": "desk",
+  "key": "TOLT-momo"
+ },
+ {
+  "producer": "hermes-agent:genesis-momo",
+  "type": "bloodbank.agent.tool.requested",
+  "source": "urn:33god:agent:hermes",
+  "id": "momo",
+  "owner": "momo",
+  "via": "desk",
+  "key": "genesis-momo"
+ },
+ {
+  "producer": "hermes-agent:.hermes",
+  "type": "bloodbank.agent.tool.completed",
+  "source": "urn:33god:agent:hermes",
+  "id": "hermes-desk:unknown",
+  "owner": "hermes-fleet",
+  "via": "desk",
+  "key": "unknown"
+ },
+ {
+  "producer": "hermes-agent:runtime",
+  "type": "bloodbank.agent.session.started",
+  "source": "urn:33god:agent:hermes",
+  "id": "hermes-desk:unknown",
+  "owner": "hermes-fleet",
+  "via": "desk",
+  "key": "unknown"
+ },
+ {
+  "producer": "hermes-agent:v_hermes_home",
+  "type": "bloodbank.conversation.turn.completed",
+  "source": "urn:33god:agent:hermes",
+  "id": "hermes-desk:unknown",
+  "owner": "hermes-fleet",
+  "via": "desk",
+  "key": "unknown"
+ },
+ {
+  "producer": "hermes-agent:claude-code",
+  "type": "bloodbank.repo.decision.recorded",
+  "source": "hermes://agent/claude-code",
+  "id": "hermes-desk:unknown",
+  "owner": "hermes-fleet",
+  "via": "desk",
+  "key": "unknown"
+ },
+ {
+  "producer": "hermes-agent",
+  "type": "bloodbank.agent.tool.requested",
+  "source": "urn:33god:agent:hermes",
+  "id": "hermes-desk:unknown",
+  "owner": "hermes-fleet",
+  "via": "desk",
+  "key": "unknown"
+ },
+ {
+  "producer": "hook-hub",
+  "type": "bloodbank.system.hook.updated",
+  "source": "urn:33god:service:hook-hub:21e27018",
+  "id": "hook-hub",
+  "owner": "hook-hub",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "automaticai-usage-exporter",
+  "type": "bloodbank.llm.usage.recorded",
+  "source": "urn:33god:service:automaticai-gateway",
+  "id": "aai-llm-observability",
+  "owner": "aai-llm-observability",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "holocene-auto:reply-packer",
+  "type": "bloodbank.agent.invocation.completed",
+  "source": "urn:33god:app:holocene-auto",
+  "id": "holocene",
+  "owner": "holocene",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "mobile-deploy-hub-catchup",
+  "type": "bloodbank.project.deployment.completed",
+  "source": "urn:33god:service:mobile-deploy-hub",
+  "id": "mobile-deploy-hub",
+  "owner": "mobile-deploy-hub",
+  "via": "producer",
+  "key": null
+ },
+ {
+  "producer": "hermes-gateway",
+  "type": "bloodbank.agent.invocation.started",
+  "source": null,
+  "id": "hermes-gw",
+  "owner": "hermes-gw",
+  "via": "id",
+  "key": null
+ },
+ {
+  "producer": "zellij-notify",
+  "type": "bloodbank.x.y",
+  "source": null,
+  "id": "zellij-notify",
+  "owner": null,
+  "via": "id",
+  "key": null
+ },
+ {
+  "producer": "manual-test",
+  "type": "bloodbank.agent.session.ended",
+  "source": null,
+  "id": "unknown",
+  "owner": null,
+  "via": "unknown",
+  "key": null
+ },
+ {
+  "producer": "",
+  "type": "bloodbank.agent.session.ended",
+  "source": null,
+  "id": "unknown",
+  "owner": null,
+  "via": "unknown",
+  "key": null
+ },
+ {
+  "producer": null,
+  "type": "bloodbank.crank.duty.started",
+  "source": null,
+  "id": "crank",
+  "owner": "crank",
+  "via": "source",
+  "key": null
+ }
+]

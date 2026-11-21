@@ -9,9 +9,11 @@ Read-only: one aggregate query against Candystore's Postgres (read-only transact
 never leaves the container). No payloads leave the database, only producer, type and time, so the
 public profile is safe to commit and serve.
 
-Producers resolve to registry components through each component's `surfaces: producer:<name>`
-entries (globs allowed, e.g. `producer:hermes-agent:*`). Two producers do work on behalf of
-others, so their events are credited to whoever the work was for:
+Events resolve to registry components through the one resolver (waybill/registry.py, the map atlas.py
+renders into the Factory cast): relay claims on the CloudEvent source and type first (`source:` surfaces,
+so pj crank's crank.* events light Crank), then `producer:` surfaces (globs allowed). A component's
+`events` are what resolved to it. Two producers do work on behalf of others, so their events are
+credited to whoever the work was for:
   - Candybar's invoked/completed/failed events carry the job name; the job resolves to its component
     (producer surface, registry id, longest registry-id prefix, or the repo its `.candybars/` manifest
     lives in). Client-project jobs stay with Candybar.
@@ -31,138 +33,27 @@ hour folds onto itself) or one empty hour (spring forward).
 """
 from __future__ import annotations
 
-import fnmatch
 import json
 import re
 import subprocess
 from datetime import date, datetime, time, timedelta, timezone
-from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+# The resolver lives in registry.py (one map, rendered by atlas.py into the Factory cast); night re-exports it.
+from .registry import (CANDYBAR_ROOTS, FIRST_PARTY_ROOT, HANDLER_OWNERS, NO_CREDIT, Registry,  # noqa: F401
+                       _as_registry, candybar_manifests, load, load_registry, resolver, worker_resolver)
+
 FORMAT = "33god.night"
 VERSION = 1
-REGISTRY_DIR = Path(__file__).resolve().parents[2] / "components"
 PG_CONTAINER = "candystore-postgres"
 PSQL_ARGV = ["docker", "exec", "-i", PG_CONTAINER, "sh", "-c",
              'psql -X -q -A -t -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}" -f -']
 RARE = 12          # an event type seen at most this often in the window is a "moment" worth naming
 MOMENTS_MAX = 400
 
-# Hook handlers whose id does not start with their owner's registry id.
-HANDLER_OWNERS = {
-    "bloodbank-publisher": "agent-hooks", "hub-selftest": "hook-hub", "native-clock-guard": "hook-hub",
-    "nanoleaf": "hook-hub", "skill-reminder": "skillex", "skill-lint": "skillex",
-    "project-notebook-start": "open-notebook", "project-notebook-end": "open-notebook",
-}
-# Hook-hub's own plumbing: its handlers run on every hook, so crediting them would only re-light hook-hub.
-NO_CREDIT = {"bloodbank-publisher", "hub-selftest", "nanoleaf", "native-clock-guard"}
 # Public profile: types about other people's messages, calls and money are counted, never named.
 PRIVATE_TYPES = ("bloodbank.messaging.", "bloodbank.telephony.", "bloodbank.billing.transaction.")
-FIRST_PARTY_ROOT = Path("~/code/33GOD").expanduser()
-CANDYBAR_ROOTS = ["~/code", "~/code/33GOD", "~/code/33GOD/bloodbank/services", "~/docker", "~/.config", "~/.agents", "~/HeyMa"]
-
-
-# ---------------------------------------------------------------- registry
-
-def load_registry(root: Path = REGISTRY_DIR) -> dict[str, dict]:
-    """id -> {name, summary, first_party, producers:[globs]} from components/*.yaml (no yaml dependency:
-    the fields are flat; a folded summary continues on indented lines)."""
-    out: dict[str, dict] = {}
-    for p in sorted(root.glob("*.yaml")):
-        rec = {"name": p.stem, "summary": "", "first_party": False, "producers": []}
-        in_summary = False
-        for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
-            if in_summary and line.startswith("  ") and not line.lstrip().startswith("- "):
-                rec["summary"] += " " + line.strip()
-                continue
-            in_summary = False
-            m = re.match(r"^summary:\s*(.*?)\s*$", line)
-            if m:
-                rec["summary"], in_summary = m.group(1).strip("'\""), True
-            m = re.match(r"^name:\s*(.+?)\s*$", line)
-            if m:
-                rec["name"] = m.group(1).strip("'\"")
-            m = re.match(r"^first_party:\s*(\w+)", line)
-            if m:
-                rec["first_party"] = m.group(1).lower() == "true"
-            m = re.match(r"^\s*-\s*producer:(\S+)\s*$", line)
-            if m:
-                rec["producers"].append(m.group(1))
-        out[p.stem] = rec
-    return out
-
-
-def resolver(registry: dict[str, dict]):
-    """producer -> component id. Exact surfaces win over globs; longer globs win over shorter ones."""
-    exact: dict[str, str] = {}
-    globs: list[tuple[str, str]] = []
-    for cid, rec in registry.items():
-        for g in rec["producers"]:
-            if any(ch in g for ch in "*?["):
-                globs.append((g, cid))
-            else:
-                exact.setdefault(g, cid)
-    globs.sort(key=lambda gc: -len(gc[0]))
-
-    def resolve(producer: str) -> str | None:
-        if producer in exact:
-            return exact[producer]
-        for g, cid in globs:
-            if fnmatch.fnmatchcase(producer, g):
-                return cid
-        if producer in registry:          # a producer named exactly like its component
-            return producer
-        return None
-    return resolve
-
-
-def candybar_manifests(roots: list[str] = CANDYBAR_ROOTS) -> dict[str, str]:
-    """job name -> path of the repo whose .candybars/ holds its manifest (worktrees skipped)."""
-    out: dict[str, str] = {}
-    for r in roots:
-        base = Path(r).expanduser()
-        for d in [base / ".candybars", *base.glob("*/.candybars")]:
-            if ".worktrees" in d.parts or not d.is_dir():
-                continue
-            for f in d.glob("*.candybar.toml"):
-                out.setdefault(f.name[: -len(".candybar.toml")], str(d.parent))
-    return out
-
-
-def worker_resolver(registry: dict[str, dict], resolve, manifests: dict[str, str], owners: dict[str, str]):
-    """A job or handler name -> the component it works for, or None (it stays with Candybar / hook-hub).
-
-    Order: explicit owner, producer surface or exact id, the repo its manifest lives in, then the
-    longest registry-id prefix (first-party ids before third-party ones, so `hindsight-turn` lights
-    Hindsight but `bloodbank-x` never lands on a service named `bloodbank`-something else). A manifest
-    in a repo that is neither a registry component nor under ~/code/33GOD is a client job, and no name
-    prefix can claim it."""
-    ids = (sorted((c for c in registry if registry[c]["first_party"]), key=len, reverse=True)
-           + sorted((c for c in registry if not registry[c]["first_party"]), key=len, reverse=True))
-
-    def who(name: str) -> str | None:
-        if not name:
-            return None
-        if name in owners and owners[name] in registry:
-            return owners[name]
-        cid = resolve(name)
-        if cid:
-            return cid
-        repo = manifests.get(name)
-        if repo:
-            base = Path(repo).name
-            for cand in (base, base.lower()):
-                if cand in registry:
-                    return cand
-            rp = Path(repo).expanduser()
-            if rp.is_absolute() and rp != FIRST_PARTY_ROOT and FIRST_PARTY_ROOT not in rp.parents:
-                return None     # a client project's job
-        for i in ids:
-            if name.startswith(i + "-"):
-                return i
-        return None
-    return who
 
 
 # ---------------------------------------------------------------- window
@@ -185,9 +76,10 @@ def wall_minutes(lo: datetime, hi: datetime, tz: str) -> int:
 
 
 def build_sql(lo: datetime, hi: datetime, tz: str = "America/New_York") -> str:
-    """Rows of {producer, type, m, n, worker}. m: local wall-clock minutes since the window's local
-    start. worker: the Candybar job name, else null. Hook handler successes come back as extra rows
-    with producer 'hook-handler', type 'hook.handler.succeeded'."""
+    """Rows of {producer, type, source, m, n, worker}. m: local wall-clock minutes since the window's local
+    start. source: the CloudEvent source (the resolver's relay rules read it). worker: the Candybar job
+    name, else null. Hook handler successes come back as extra rows with producer 'hook-handler', type
+    'hook.handler.succeeded'."""
     if not re.fullmatch(r"[A-Za-z0-9_+/-]+", tz):
         raise ValueError(f"bad time zone: {tz!r}")
     lo_s, hi_s = lo.strftime("%Y-%m-%dT%H:%M:%SZ"), hi.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -196,14 +88,14 @@ def build_sql(lo: datetime, hi: datetime, tz: str = "America/New_York") -> str:
     minute = f"floor(extract(epoch from ((time at time zone '{tz}') - '{local_lo}'::timestamp)) / 60)::int"
     return (
         "select coalesce(json_agg(r), '[]'::json) from ("
-        f" select coalesce(producer, '') as producer, type, {minute} as m, count(*)::int as n,"
+        f" select coalesce(producer, '') as producer, type, source, {minute} as m, count(*)::int as n,"
         " case when type like 'bloodbank.cron.candybar.%' then raw->'data'->>'name' end as worker"
-        f" from events where {win} group by 1, 2, 3, 5"
+        f" from events where {win} group by 1, 2, 3, 4, 6"
         " union all"
-        f" select 'hook-handler', 'hook.handler.succeeded', {minute}, count(*)::int, e->>'handler_id'"
+        f" select 'hook-handler', 'hook.handler.succeeded', null, {minute}, count(*)::int, e->>'handler_id'"
         " from events, jsonb_array_elements(case when jsonb_typeof(raw->'data'->'invocation'->'executions') = 'array'"
         " then raw->'data'->'invocation'->'executions' else '[]'::jsonb end) e"
-        f" where type = 'bloodbank.agent.hook.updated' and e->>'status' = 'succeeded' and {win} group by 1, 2, 3, 5"
+        f" where type = 'bloodbank.agent.hook.updated' and e->>'status' = 'succeeded' and {win} group by 1, 2, 3, 4, 6"
         ") r;"
     )
 
@@ -224,9 +116,11 @@ def _first_party_desk(desk: str, registry: dict[str, dict]) -> bool:
                                            for cid, rec in registry.items())
 
 
-def fold(rows: list[dict], lo: datetime, hi: datetime, registry: dict[str, dict], tz: str,
+def fold(rows: list[dict], lo: datetime, hi: datetime, registry: "Registry | dict[str, dict]", tz: str,
          profile: str = "public", label: str | None = None, manifests: dict[str, str] | None = None) -> dict[str, Any]:
-    resolve = resolver(registry)
+    reg = _as_registry(registry)
+    registry = reg.records
+    resolve = reg.owner
     who = worker_resolver(registry, resolve, manifests or {}, HANDLER_OWNERS)
     minutes_total = wall_minutes(lo, hi, tz)
     comps: dict[str, dict] = {}
@@ -252,7 +146,8 @@ def fold(rows: list[dict], lo: datetime, hi: datetime, registry: dict[str, dict]
         cid = (who(worker) or None) if (handler or worker) else None
         if handler and (not cid or cid == "hook-hub"):
             continue            # an unowned handler: its hook-hub envelope already lit hook-hub
-        cid = cid or resolve(producer)
+        res = None if handler else reg.resolve(producer, et, r.get("source"))
+        cid = cid or (res.owner if res else None)
         if not cid:
             unmapped[producer or "(none)"] = unmapped.get(producer or "(none)", 0) + n
             continue
@@ -264,8 +159,8 @@ def fold(rows: list[dict], lo: datetime, hi: datetime, registry: dict[str, dict]
         c["last"] = max(c["last"], m)
         s = series.setdefault(cid, {})
         s[m] = s.get(m, 0) + n
-        if producer.startswith("hermes-agent:"):
-            desk = producer.split(":", 1)[1]
+        if res is not None and res.via == "desk" and res.key:
+            desk = res.key
             if profile == "public" and not _first_party_desk(desk, registry):
                 desk = desk_alias.setdefault(desk, f"desk-{len(desk_alias) + 1}")
             d = desks.setdefault(desk, {})
@@ -304,7 +199,7 @@ def fold(rows: list[dict], lo: datetime, hi: datetime, registry: dict[str, dict]
             "minutes": minutes_total,
             "label": label or _label(ls, le),
         },
-        "source": "candystore events (Bloodbank archive), producer + type + time only",
+        "source": "candystore events (Bloodbank archive), producer + type + source + time only",
         "totals": {"events": total, "components": len(comps), "desks": len(desks), "unmapped_events": sum(unmapped.values())},
         "events_by_minute": by_minute,
         "components": sorted(comps.values(), key=lambda c: (-c["events"], -c["credited"], c["id"])),
@@ -330,4 +225,4 @@ def _label(ls: datetime, le: datetime) -> str:
 def build(day: date, start: str = "18:02", end: str = "07:41", tz: str = "America/New_York",
           profile: str = "public", label: str | None = None) -> dict[str, Any]:
     lo, hi = night_window(day, start, end, tz)
-    return fold(query(build_sql(lo, hi, tz)), lo, hi, load_registry(), tz, profile, label, candybar_manifests())
+    return fold(query(build_sql(lo, hi, tz)), lo, hi, load(), tz, profile, label, candybar_manifests())

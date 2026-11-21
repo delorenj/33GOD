@@ -40,5 +40,8 @@ confidence: high
 notes: LAN only (paired Wi-Fi ADB). Wax/Bloodbank persistence happens in the n8n workflow, not the bridge.
 surfaces:
 - systemd:delosip-ring-bridge.service
+# The n8n telephony workflow publishes the calls and texts DeLoSIP handles (types counted, never named in public).
+- source:*#telephony.*
+- source:urn:33god:service:n8n-*#messaging.*
 factory:
   near: soundwing

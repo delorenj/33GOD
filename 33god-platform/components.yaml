@@ -139,14 +139,16 @@ people:
 
 # Factory extras (Factory floor, manual/sandbox): ids a waybill or the old floor table can name that are NOT
 # registry components (vendor CLIs and the devices around them). Each stands at a `station` or in a kiosk `near`
-# one, exactly like a component's `factory:` block. Rendered into src/cast.generated.json by atlas.py.
+# one, exactly like a component's `factory:` block, and may list `aliases` (other ids for the same extra).
+# Rendered into src/cast.generated.json by atlas.py.
 factory_extras:
+  ext:antigravity: {station: bays, name: Antigravity CLI, aliases: [antigravity-cli, ext:antigravity-cli]}
   ext:claude-code: {station: bays, name: Claude Code}
   ext:codex: {station: bays, name: Codex}
   ext:codex-cli: {station: bays, name: Codex CLI}
   ext:codex-desktop: {station: bays, name: Codex Desktop}
   ext:codex-exec: {station: bays, name: Codex exec (headless)}
-  ext:copilot: {station: bays, name: GitHub Copilot CLI}
+  ext:copilot: {station: bays, name: GitHub Copilot CLI, aliases: [copilot-cli, ext:copilot-cli]}
   ext:gemini: {station: bays, name: Gemini CLI}
   ext:kimi: {station: bays, name: Kimi CLI}
   ext:opencode: {station: bays, name: opencode CLI}
@@ -157,8 +159,42 @@ factory_extras:
   ext:stream-deck: {near: bays, name: Stream Deck}
   ext:zellij: {near: bays, name: Zellij}
   zellij-notify: {near: bays, name: zellij-notify}
+  # Decision I-10.2 (c): product and client projects that publish on the bus are tenants, not components.
+  # Every tenant stands at this one annex, keyed by project slug (`tenant:<slug>`); the slugs come from the
+  # `tenant:` field of their atlas_ignore producer rows below.
+  tenant-annex: {near: entrance, name: Tenant annex}
   unknown: {near: belt, name: Unattributed span}
   waybill: {near: belt, name: Waybill recorder}
+
+# Which component is this event? One resolver, rendered by atlas.py into src/cast.generated.json (`resolve`)
+# and read by both waybill/waybill/registry.py and src/waybill/resolve.ts. First match wins:
+#   1. source:   a component's `source:<ce-source-glob>[#<type-glob>]` surfaces. A relay claim: the event
+#                belongs to the claimant whoever published it. <ce-source-glob> matches the CloudEvent `source`
+#                attribute (`*` = any publisher); <type-glob> matches the event type without its `bloodbank.`
+#                prefix. Rules with a type part go first, then longer patterns.
+#   2. tenant:   an atlas_ignore producer row with `tenant:` -> `tenant:<slug>` at the tenant annex.
+#   3. desk:     a factory_desks family (one desk per instance; see below).
+#   4. producer: a component's `producer:<name or glob>` surfaces; exact names before globs, longer globs first.
+#   5. id:       a producer spelled like a registry id, an alias or an extra.
+#   6. `unknown` (never dropped: a waybill lists it in a finding).
+# Globs use `*` and `?` only, so Python's fnmatch and the player's matcher agree.
+
+# Desk families: a producer prefix whose rest names one instance. Each well-formed instance stands at its own
+# desk (`<family>:<instance>`, a kiosk `near` its station); `routes` send matching instances to a registry
+# component instead; bare producers, `malformed` names and names that fail `instance` go to `<family>:unknown`.
+# `owner` is the registry component that answers for every desk (what the night digest credits).
+factory_desks:
+  hermes-desk:
+    owner: hermes-fleet
+    producer: "hermes-agent:"
+    bare: [hermes-agent]
+    near: crew
+    name: Hermes desk
+    instance: "^[a-z0-9][a-z0-9-]*$"
+    # Spelled like a profile, but no Hermes profile carries the name (a misread HERMES_HOME or a relayed CLI).
+    malformed: [runtime, claude-code]
+    routes:
+      "*-momo": momo
 
 # Surfaces the drift audit (`atlas.py audit --live`) sees on the host that are NOT
 # 33GOD components: the desktop session, household services, and the client and
@@ -191,7 +227,10 @@ atlas_ignore:
   - {kind: systemd, pattern: "codex-update-manager.service", reason: CLI updater}
   - {kind: systemd, pattern: "syncthing*", reason: file sync (household)}
   - {kind: systemd, pattern: "ssh-audio.service", reason: household audio}
-  - {kind: systemd, pattern: "zellij-*", reason: terminal multiplexer that hosts agent panes (host tooling)}
+  - {kind: systemd, pattern: "zellij-ark*", reason: terminal multiplexer that hosts agent panes (host tooling)}
+  - {kind: systemd, pattern: "zellij-server-ark.service", reason: terminal multiplexer that hosts agent panes (host tooling)}
+  - {kind: systemd, pattern: "zellij-web.service", reason: terminal multiplexer web client (host tooling)}
+  - {kind: systemd, pattern: "zellij-driver.service", reason: terminal multiplexer pane driver (host tooling)}
   - {kind: systemd, pattern: "delohome.service", reason: home automation (household)}
   - {kind: systemd, pattern: "gruvato-*", reason: client/product project (Gruvato)}
   - {kind: systemd, pattern: "intelliforia-*", reason: client project (Intelliforia)}
@@ -252,7 +291,11 @@ atlas_ignore:
   - {kind: container, pattern: "delodrive", reason: household file sharing}
   - {kind: container, pattern: "clipcascade", reason: household clipboard sync}
   - {kind: container, pattern: "comfyui*", reason: image generation workstation}
-  - {kind: producer, pattern: "tiller", reason: product project}
+  # Product and client projects that publish on the bus: not components (the registry graph ignores them), but
+  # tenants on the Factory floor (`tenant:` = the slug; `*` = whatever the pattern's `*` matched).
+  - {kind: producer, pattern: "tiller", reason: product project, tenant: tiller}
+  - {kind: producer, pattern: "gib*", reason: product project (Green in Between), tenant: gib}
+  - {kind: producer, pattern: "local-script:*", reason: client and product project deploy scripts, tenant: "*"}
   - {kind: container, pattern: "cait-web", reason: "client update site (Intelliforia); written by hand, not by a 33GOD component"}
   - {kind: container, pattern: "qdrant", reason: "shared persistence stack; its consumer is a product project (IdealScenario), no 33GOD component uses it"}
   - {kind: container, pattern: "persistence-neo4j-*", reason: "shared persistence stack; no 33GOD component connects to it"}

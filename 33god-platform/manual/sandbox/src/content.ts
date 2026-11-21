@@ -35,7 +35,7 @@ export const overview = () => (isPortrait() ? OVERVIEW_PORTRAIT : OVERVIEW)
 
 export const STATIONS: Station[] = [
   {
-    id: 'bays', name: 'Agent CLIs', place: 'Vendor bays', real: 'the AI coding tools you run: Claude Code, Codex, Kimi, Copilot, Gemini and opencode', domain: 'agents',
+    id: 'bays', name: 'Agent CLIs', place: 'Vendor bays', real: 'the AI coding tools you run: Claude Code, Codex, Kimi, Copilot, Gemini, opencode and Antigravity', domain: 'agents',
     does: [
       'These are the AI coding tools you use, such as Claude Code and Codex. Each one reports what it is doing in its own format. On the floor, each tool is a vendor with its own bay.',
       'When something happens, such as you pressing Enter, the tool sends out a report about it. On the floor, that raw report is a parcel, exactly as the vendor packed it.',
@@ -256,4 +256,5 @@ export const VENDORS = [
   { name: 'Copilot', word: 'userPromptSubmitted', color: '#10B981' },
   { name: 'Gemini', word: 'BeforeAgent', color: '#F59E0B' },
   { name: 'opencode', word: 'chat.message', color: '#EC4899' },
+  { name: 'Antigravity', word: 'PreInvocation', color: '#06B6D4' },
 ]

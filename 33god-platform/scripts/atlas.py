@@ -76,8 +76,12 @@ SCRUB = re.compile(r"(?i)([a-z0-9-]+\.(?:delo\.sh|ts\.net|automaticai\.io|intern
                    r"\b\d{1,3}(?:\.\d{1,3}){3}\b|(?<![\w-]):\d{4,5}\b|localhost|/home/|~/|op://|"
                    r"\bbig-chungus\b|\bdelorenj\b|\bjarad\b|\b[\w-]+\.(?:py|ya?ml|json|toml|env|sh|mjs|ts)\b|"
                    r"\b(?:bloodbank|candybar)\.(?:evt|cmd|rpy)\.)")
-SURFACE_KINDS = ("repo", "systemd", "container", "producer")
+SURFACE_KINDS = ("repo", "systemd", "container", "producer", "source")
 LIVE_KINDS = {"systemd", "container", "producer"}
+# Resolver globs: `*` and `?` only, so Python's fnmatch and the player's matcher (src/waybill/resolve.ts) agree.
+RESOLVE_GLOB = re.compile(r"^[^\[\]\s]+$")
+TENANT_PREFIX = "tenant:"
+TENANT_ANNEX = "tenant-annex"
 PUBLIC_FIELDS = ("id", "name", "kind", "first_party", "domain", "level", "parent", "status",
                  "summary", "role_in_system", "tech", "runtime", "public_card")
 
@@ -175,8 +179,152 @@ def factory_errors(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[s
         if eid in ids:
             errors.append(f"{where}: collides with a registry id; list it as an alias instead")
         errors += placement_errors(where, block, sets)
-        if isinstance(block, dict) and not str(block.get("name", "")).strip():
+        if not isinstance(block, dict):
+            continue
+        if not str(block.get("name", "")).strip():
             errors.append(f"{where}: name is empty")
+        for key in block:
+            if key not in ("station", "near", "name", "aliases"):
+                errors.append(f"{where}: {key} is not a known key (station, near, name, aliases)")
+        aliases = block.get("aliases") or []
+        if not isinstance(aliases, list) or not all(isinstance(a, str) and a for a in aliases):
+            errors.append(f"{where}: aliases must be a list of ids")
+            continue
+        for a in aliases:
+            if a in ids:
+                errors.append(f"{where}: alias {a!r} is a registry id")
+            elif a in extras:
+                errors.append(f"{where}: alias {a!r} collides with a factory_extras id")
+            elif a in claimed:
+                errors.append(f"{where}: alias {a!r} is already an alias of {claimed[a]}")
+            claimed.setdefault(a, eid)
+    return errors
+
+
+# --- Resolver: which component is this event? (rendered into the cast as `resolve`) -----------------------
+
+def is_glob(pattern: str) -> bool:
+    return any(ch in pattern for ch in "*?")
+
+
+def surface_rules(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """(source rules, producer rules) from every record's `source:` and `producer:` surfaces, in match order."""
+    sources: list[dict[str, Any]] = []
+    producers: list[dict[str, Any]] = []
+    for r in records:
+        for s in r["surfaces"]:
+            if not isinstance(s, str):
+                continue
+            kind, _, rest = s.partition(":")
+            if kind == "source":
+                src, _, typ = rest.partition("#")
+                sources.append({"source": src, "type": typ or None, "id": r["id"]})
+            elif kind == "producer":
+                producers.append({"producer": rest, "id": r["id"]})
+    # A rule that names a type is narrower than one that does not; then the longer pattern wins.
+    sources.sort(key=lambda x: (x["type"] is None, -len(x["type"] or ""), -len(x["source"]),
+                                x["source"], x["type"] or "", x["id"]))
+    producers.sort(key=lambda x: (is_glob(x["producer"]), -len(x["producer"]) if is_glob(x["producer"]) else 0,
+                                  x["producer"], x["id"]))
+    return sources, producers
+
+
+def tenant_rules(cfg: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = [{"producer": str(i["pattern"]), "slug": str(i["tenant"])} for i in cfg.get("atlas_ignore") or []
+            if isinstance(i, dict) and i.get("kind") == "producer" and i.get("tenant")]
+    rows.sort(key=lambda x: (is_glob(x["producer"]), -len(x["producer"]), x["producer"]))
+    return rows
+
+
+def desk_families(cfg: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for fam, d in sorted((cfg.get("factory_desks") or {}).items()):
+        routes = [{"instance": str(g), "id": str(cid)} for g, cid in (d.get("routes") or {}).items()]
+        routes.sort(key=lambda x: (-len(x["instance"]), x["instance"]))
+        out[fam] = {"owner": d.get("owner"), "producer": str(d.get("producer") or ""), "bare": sorted(d.get("bare") or []),
+                    "near": d.get("near"), "name": str(d.get("name") or fam), "instance": str(d.get("instance") or ".+"),
+                    "malformed": sorted(d.get("malformed") or []), "routes": routes}
+    return out
+
+
+def resolve_document(cfg: dict[str, Any], records: list[dict[str, Any]]) -> dict[str, Any]:
+    """The one producer + source resolution map. components.yaml documents the order; registry.py and resolve.ts
+    are its only readers."""
+    sources, producers = surface_rules(records)
+    return {
+        "order": ["source", "tenant", "desk", "producer", "id"],
+        "unknown": "unknown",
+        "type_prefix": "bloodbank.",
+        "sources": sources,
+        "tenants": {"prefix": TENANT_PREFIX, "annex": TENANT_ANNEX, "rules": tenant_rules(cfg)},
+        "desks": desk_families(cfg),
+        "producers": producers,
+    }
+
+
+def resolve_errors(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[str]:
+    errors: list[str] = []
+    ids = {r["id"] for r in records}
+    extras = cfg.get("factory_extras") or {}
+    sets = set_ids()
+    for r in records:
+        for s in r["surfaces"]:
+            if not isinstance(s, str):
+                continue
+            kind, _, rest = s.partition(":")
+            if kind == "producer" and not RESOLVE_GLOB.match(rest):
+                errors.append(f"component {r['id']}: surface {s!r}: producer globs use * and ? only, no spaces")
+            if kind == "source":
+                src, hash_, typ = rest.partition("#")
+                if not src or not RESOLVE_GLOB.match(src) or (hash_ and (not typ or not RESOLVE_GLOB.match(typ))) \
+                        or "#" in typ:
+                    errors.append(f"component {r['id']}: surface {s!r} must be source:<ce-source-glob>[#<type-glob>] "
+                                  "(globs use * and ? only)")
+                if typ.startswith("bloodbank."):
+                    errors.append(f"component {r['id']}: surface {s!r}: write the type without its bloodbank. prefix")
+    sources, producers = surface_rules(records)
+    seen: dict[str, str] = {}
+    for p in producers:
+        if p["producer"] in seen and seen[p["producer"]] != p["id"]:
+            errors.append(f"producer:{p['producer']} is claimed by both {seen[p['producer']]} and {p['id']}")
+        seen.setdefault(p["producer"], p["id"])
+    seen_src: dict[tuple[str, str | None], str] = {}
+    for s in sources:
+        key = (s["source"], s["type"])
+        if key in seen_src and seen_src[key] != s["id"]:
+            errors.append(f"source:{s['source']}#{s['type']} is claimed by both {seen_src[key]} and {s['id']}")
+        seen_src.setdefault(key, s["id"])
+    tenants = tenant_rules(cfg)
+    for t in tenants:
+        if not RESOLVE_GLOB.match(t["producer"]) or not t["slug"].strip():
+            errors.append(f"atlas_ignore producer {t['producer']!r}: tenant rows need a * / ? glob and a slug (or '*')")
+    if tenants and TENANT_ANNEX not in extras:
+        errors.append(f"components.yaml: tenant rows in atlas_ignore need the {TENANT_ANNEX!r} factory extra")
+    for fam, d in (cfg.get("factory_desks") or {}).items():
+        where = f"factory_desks {fam}"
+        if not isinstance(d, dict):
+            errors.append(f"{where}: must be a mapping")
+            continue
+        if d.get("owner") not in ids:
+            errors.append(f"{where}: owner {d.get('owner')!r} is not a registry id")
+        if not str(d.get("producer") or "").strip():
+            errors.append(f"{where}: producer prefix is empty")
+        if d.get("near") not in sets:
+            errors.append(f"{where}: near {d.get('near')!r} is not a Factory set")
+        if fam in ids or fam in extras or fam.startswith(TENANT_PREFIX.rstrip(":")):
+            errors.append(f"{where}: the family name collides with a registry id, an extra or the tenant prefix")
+        try:
+            re.compile(str(d.get("instance") or ".+"))
+        except re.error as exc:
+            errors.append(f"{where}: instance is not a regex ({exc})")
+        for g, cid in (d.get("routes") or {}).items():
+            if cid not in ids and cid not in extras:
+                errors.append(f"{where}: route {g!r} -> {cid!r} names no registry id or extra")
+            if not RESOLVE_GLOB.match(str(g)):
+                errors.append(f"{where}: route {g!r}: globs use * and ? only")
+        for key in d:
+            if key not in ("owner", "producer", "bare", "near", "name", "instance", "malformed", "routes"):
+                errors.append(f"{where}: {key} is not a known key")
     return errors
 
 
@@ -235,6 +383,7 @@ def validate(cfg: dict[str, Any], records: list[dict[str, Any]]) -> list[str]:
             errors.append(f"domain {d['id']}: collides with a component id")
     del people
     errors += factory_errors(cfg, records)
+    errors += resolve_errors(cfg, records)
     return errors
 
 
@@ -268,7 +417,8 @@ def atlas_document(cfg: dict[str, Any], records: list[dict[str, Any]]) -> dict[s
 
 
 def cast_document(cfg: dict[str, Any], records: list[dict[str, Any]]) -> dict[str, Any]:
-    """Where every component stands on the Factory floor. Sorted and deterministic."""
+    """Where every component stands on the Factory floor, and which component an event belongs to (`resolve`).
+    Sorted and deterministic."""
     components: dict[str, Any] = {}
     aliases: dict[str, str] = {}
     for r in records:
@@ -280,9 +430,14 @@ def cast_document(cfg: dict[str, Any], records: list[dict[str, Any]]) -> dict[st
         }
         for a in f.get("aliases") or []:
             aliases[a] = r["id"]
+    raw_extras = cfg.get("factory_extras") or {}
     extras = {eid: {"station": b.get("station") or None, "near": b.get("near") or None, "name": str(b["name"])}
-              for eid, b in sorted((cfg.get("factory_extras") or {}).items())}
-    body = {"components": components, "aliases": dict(sorted(aliases.items())), "extras": extras}
+              for eid, b in sorted(raw_extras.items())}
+    for eid, b in raw_extras.items():  # an extra's aliases share the one alias map (alias -> registry id or extra)
+        for a in b.get("aliases") or []:
+            aliases[a] = eid
+    body = {"components": components, "aliases": dict(sorted(aliases.items())), "extras": extras,
+            "resolve": resolve_document(cfg, records)}
     return {"format": CAST_FORMAT, "version": 1,
             "digest": hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest(), **body}
 
@@ -295,6 +450,11 @@ def cast_scrub_findings(cast: dict[str, Any]) -> list[str]:
                          for m in SCRUB.finditer(str(c[k]))]
     for eid, e in cast["extras"].items():
         findings += [f"cast.extras[{eid}].name: internal detail {m.group(0)!r}" for m in SCRUB.finditer(e["name"])]
+    res = cast.get("resolve") or {}
+    patterns = [s["source"] for s in res.get("sources", [])] + [p["producer"] for p in res.get("producers", [])] \
+        + [t["producer"] for t in (res.get("tenants") or {}).get("rules", [])]
+    for p in patterns:
+        findings += [f"cast.resolve: pattern {p!r} carries internal detail {m.group(0)!r}" for m in SCRUB.finditer(p)]
     return findings
 
 

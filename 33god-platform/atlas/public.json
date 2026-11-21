@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "01dd20b7184cb4efa3d4ffee6a113831a83f9d08dc1b65ba12b041914707a2ac",
+  "registry_digest": "9f0a54998f7ece81607bd4afd544015aedcdaa40f965b95b595d6e299ec5c809",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -1657,6 +1657,23 @@
       "summary": "Voice relay that types the operator's dictated words into agent sessions.",
       "tech": [],
       "public_card": {}
+    },
+    {
+      "id": "zellij-sentinel",
+      "name": "Zellij sentinel",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Keeps the agent workspace alive and re-drives its agent panes after the terminal server crashes.",
+      "tech": [
+        "python",
+        "zellij",
+        "systemd"
+      ],
+      "public_card": {}
     }
   ],
   "edges": [
@@ -3149,6 +3166,16 @@
       "from": "wingman",
       "to": "aai-gateway",
       "kind": "routes-llm-via"
+    },
+    {
+      "from": "zellij-sentinel",
+      "to": "bb-nats",
+      "kind": "publishes-to"
+    },
+    {
+      "from": "zellij-sentinel",
+      "to": "bb-nats",
+      "kind": "consumes-from"
     }
   ]
 }

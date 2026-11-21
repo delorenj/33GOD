@@ -85,7 +85,7 @@ export interface Direction { stops: Stop[]; placement: Placement; stopOfSpan: Re
 export const shortType = (t: string) => t.replace(/^bloodbank\./, '').replace(/^(conversation|agent)\./, '')
 /** The post-it headline: past tense words, no dots ('turn started'). */
 const headline = (t: string) => shortType(t).replace(/[._]/g, ' ')
-const isMirror = (e: BusEvent) => /\.hook\.updated$/.test(e.type)
+const isMirror = (e: BusEvent) => /(^|\.)agent\.hook\.updated$/.test(e.type)
 const isUsage = (e: BusEvent) => /\.llm\.usage\./.test(e.type) || /\.llm\.allowance\./.test(e.type)
 const isCommand = (e: BusEvent) => /(^|\.)cmd\./.test(e.subject ?? '') || /\.cmd\./.test(e.type)
 const BAD = new Set(['failed', 'timeout', 'dropped'])

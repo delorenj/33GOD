@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "01dd20b7184cb4efa3d4ffee6a113831a83f9d08dc1b65ba12b041914707a2ac",
+  "registry_digest": "9f0a54998f7ece81607bd4afd544015aedcdaa40f965b95b595d6e299ec5c809",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -1865,6 +1865,25 @@
       "tech": [],
       "runtime": "operator desktop",
       "public_card": {}
+    },
+    {
+      "id": "zellij-sentinel",
+      "name": "Zellij sentinel",
+      "kind": "service",
+      "first_party": true,
+      "domain": "G10",
+      "level": "container",
+      "parent": "",
+      "status": "live",
+      "summary": "Keeps the agent workspace alive and re-drives its agent panes after the terminal server crashes.",
+      "role_in_system": "Without it a terminal-server crash leaves every agent pane dead until someone notices.",
+      "tech": [
+        "python",
+        "zellij",
+        "systemd"
+      ],
+      "runtime": "systemd user unit zellij-workspace.service (ExecStart ~/code/infra/scripts/zellij-sentinel --sessions Workspace), event-driven (pidfd + a durable JetStream pull consumer), no poll loop",
+      "public_card": {}
     }
   ],
   "edges": [
@@ -3655,13 +3674,25 @@
       "to": "aai-gateway",
       "kind": "routes-llm-via",
       "via": "llm_base_url api.automaticai.io/v1 (pydantic-ai)"
+    },
+    {
+      "from": "zellij-sentinel",
+      "to": "bb-nats",
+      "kind": "publishes-to",
+      "via": "bb-emit bloodbank.evt.system.multiplexer.failed / resumed"
+    },
+    {
+      "from": "zellij-sentinel",
+      "to": "bb-nats",
+      "kind": "consumes-from",
+      "via": "durable zellij-sentinel on BLOODBANK_COMMANDS bloodbank.cmd.system.multiplexer.resume"
     }
   ],
   "counts": {
-    "components": 98,
-    "first_party": 78,
+    "components": 99,
+    "first_party": 79,
     "external": 20,
-    "live": 86,
-    "edges": 298
+    "live": 87,
+    "edges": 300
   }
 }

@@ -49,6 +49,7 @@ confidence: high
 surfaces:
 - container:bloodbank-turn-enricher
 - producer:turn-enricher
+- producer:turn-enricher-verify
 - repo:bloodbank/services/turn-enricher
 factory:
   station: cataloguer

@@ -53,6 +53,8 @@ surfaces:
 - producer:opencode
 - producer:antigravity-cli
 - producer:copilot*
+- producer:kimi
+- producer:gemini
 - repo:bloodbank/services/agent-hooks
 factory:
   station: labeldesk

@@ -18,6 +18,9 @@ REG = {
     "genesis": {"name": "Genesis", "first_party": True, "producers": []},
     "plane-hook": {"name": "Plane hook", "first_party": True, "producers": ["plane-ingress-reconcile"]},
 }
+HERMES_DESKS = {"hermes-desk": {"owner": "hermes-fleet", "producer": "hermes-agent:", "bare": ["hermes-agent"], "near": "crew",
+                                "name": "Hermes desk", "instance": "^[a-z0-9][a-z0-9-]*$", "malformed": ["runtime"],
+                                "routes": []}}
 LO = datetime(2026, 11, 16, 23, 2, tzinfo=timezone.utc)
 HI = datetime(2026, 11, 17, 12, 41, tzinfo=timezone.utc)
 
@@ -83,8 +86,27 @@ class DstTest(unittest.TestCase):
 
 
 class FoldTest(unittest.TestCase):
+    reg = None
+
     def doc(self, rows, profile="public"):
-        return N.fold(rows, LO, HI, REG, "America/New_York", profile, None, {})
+        return N.fold(rows, LO, HI, self.reg or REG, "America/New_York", profile, None, {})
+
+    def test_relayed_events_land_on_their_real_owner(self):
+        reg = dict(REG, crank={"name": "Crank", "first_party": True, "producers": [], "sources": ["*#crank.*"]},
+                   pjangler={"name": "PJangler", "first_party": True, "producers": ["pjangler"]})
+        rows = [dict(row("pjangler", "bloodbank.crank.binding.created", 4, 2), source="urn:33god:service:crank"),
+                row("pjangler", "bloodbank.project.registered", 5)]
+        d = N.fold(rows, LO, HI, reg, "America/New_York", "public", None, {})
+        self.assertEqual(d["minutes"]["crank"], [[4, 2]])
+        self.assertEqual(d["minutes"]["pjangler"], [[5, 1]])
+
+    def test_malformed_desks_fold_into_one_unknown_desk_and_still_credit_the_fleet(self):
+        self.reg = N.Registry.from_records(REG, desks=HERMES_DESKS)
+        d = self.doc([row("hermes-agent:runtime", "bloodbank.agent.session.started", 1),
+                      row("hermes-agent:.hermes", "bloodbank.agent.session.started", 2),
+                      row("hermes-agent", "bloodbank.agent.tool.requested", 3)], "full")
+        self.assertEqual(sorted(d["desks"]), ["unknown"])
+        self.assertEqual(d["minutes"]["hermes-fleet"], [[1, 1], [2, 1], [3, 1]])
 
     def test_candybar_jobs_are_credited_to_their_component(self):
         d = self.doc([
@@ -139,13 +161,16 @@ class FoldTest(unittest.TestCase):
     def test_components_carry_their_registry_summary(self):
         reg = N.load_registry()
         self.assertTrue(reg["wax"]["summary"].startswith("Processes voice recordings"))
-        self.assertTrue(reg["plane-hook"]["summary"].endswith("to ticket changes."))
-        self.assertIn("producer:plane-ingress-reconcile".split(":", 1)[1], reg["plane-hook"]["producers"])
+        self.assertTrue(reg["plane-hook"]["summary"].startswith("n8n workflows"))
+        self.assertIn("plane-ingress-reconcile", reg["plane-hook"]["producers"])
+        self.assertIn("n8n-plane-webhook", reg["plane-hook"]["producers"])     # moved off n8n (I-10.2)
+        self.assertNotIn("n8n-plane-webhook", reg["n8n"]["producers"])
 
     def test_public_profile_aliases_third_party_desks(self):
         rows = [row("hermes-agent:33god-pm", "bloodbank.agent.tool.completed", 1),
                 row("hermes-agent:gruvato-pm", "bloodbank.agent.tool.completed", 2),
                 row("mystery", "bloodbank.x.y", 3)]
+        self.reg = N.Registry.from_records(REG, desks=HERMES_DESKS)
         pub = self.doc(rows)
         self.assertEqual(sorted(pub["desks"]), ["33god-pm", "desk-1"])
         self.assertNotIn("gruvato", str(pub))

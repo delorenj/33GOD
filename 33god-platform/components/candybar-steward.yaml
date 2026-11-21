@@ -58,5 +58,6 @@ confidence: medium
 notes: Executor listens on 0.0.0.0:8701 (candybar daemon --roles executor, pid 5234).
 surfaces:
 - systemd:candybar-steward.service
+- source:*#cron.steward_task.*
 factory:
   near: clock

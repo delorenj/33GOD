@@ -23,6 +23,7 @@ tech:
 - n8n
 runtime: n8n workflows
 surfaces:
+- producer:n8n-plane-webhook
 - producer:plane-ingress-reconcile
 - producer:ticket-pickup-chip-sweep
 relations:

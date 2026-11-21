@@ -3,11 +3,14 @@
 //    the `factory_extras` in components.yaml are rendered into cast.generated.json by atlas.py. Nothing is kept here.
 // 2. A component with a `station` IS that station. Every other component gets a KIOSK: a deterministic slot in an annex
 //    row beside the station it is `near`, labelled with its REAL id. Adding a component never needs 3D work.
-// 3. An id the cast does not know (a vendor CLI nobody listed, a new consumer name) still gets a kiosk, by kind.
+// 3. Keyed families stand by rule (resolve.ts): every Hermes desk `hermes-desk:<profile>` gets its own kiosk by the
+//    crew hall; every tenant `tenant:<slug>` stands at the one tenant annex.
+// 4. An id the cast does not know (a vendor CLI nobody listed, a new consumer name) still gets a kiosk, by kind.
 import cast from '../cast.generated.json' with { type: 'json' }
 import { VENDORS, type Vec3 } from '../content'
 import { BAY_X, BAY_Z, CATALOGUER, CREW, READERS } from '../sim/layout'
 import { setFor, type TourSet } from '../tour/sets'
+import { familyOf } from './resolve'
 import type { Component, Waybill } from './types'
 
 // atlas.py reads this union to validate `station:` / `near:`: keep it one literal type.
@@ -28,20 +31,29 @@ if (CAST.format !== '33god.factory-cast' || CAST.version !== 1) throw new Error(
 
 export const CAST_DIGEST = CAST.digest
 
-/** Where a component stands: its station, or the station its kiosk stands beside. `id` is the canonical id (a registry id or an extra). */
-export interface Stand { id: string; name: string; registry: boolean; station: SetId | null; near: SetId | null }
+/** Where a component stands: its station, or the station its kiosk stands beside. `id` is the canonical id (a registry id,
+ *  an extra, or a desk family member); `key` is the desk profile or tenant slug of a family member. */
+export interface Stand { id: string; name: string; registry: boolean; station: SetId | null; near: SetId | null; key?: string }
 
 const standCache = new Map<string, Stand | null>()
-/** Resolve any id a waybill or an older table uses: a registry id, an alias, an `ext:` id, or a registry extra. */
+/** Resolve any id a waybill or an older table uses: a registry id, an alias, an `ext:` id, a registry extra, or a keyed
+ *  family member (`hermes-desk:<profile>`, `tenant:<slug>`). */
 export function standOf(id: string): Stand | null {
   if (standCache.has(id)) return standCache.get(id)!
   const direct = (k: string): Stand | null => {
     const c = CAST.components[k] ?? CAST.components[CAST.aliases[k]]
     if (c) { const rid = CAST.components[k] ? k : CAST.aliases[k]; return { id: rid, name: c.name, registry: true, station: c.station, near: c.near } }
-    const e = CAST.extras[k]
-    return e ? { id: k, name: e.name, registry: false, station: e.station, near: e.near } : null
+    const eid = CAST.extras[k] ? k : CAST.extras[CAST.aliases[k]] ? CAST.aliases[k] : null
+    const e = eid ? CAST.extras[eid] : null
+    return e && eid ? { id: eid, name: e.name, registry: false, station: e.station, near: e.near } : null
   }
-  const s = direct(id) ?? (id.startsWith('ext:') ? direct(id.slice(4)) : direct(`ext:${id}`))
+  const family = (k: string): Stand | null => {
+    const f = familyOf(k)
+    if (!f) return null
+    if (f.kind === 'tenant') { const annex = f.annex ? direct(f.annex) : null; return annex ? { ...annex, key: f.key } : null }
+    return { id: k, name: f.name, registry: false, station: null, near: (f.near as SetId | null) ?? null, key: f.key }
+  }
+  const s = direct(id) ?? (id.startsWith('ext:') ? direct(id.slice(4)) : direct(`ext:${id}`)) ?? family(id)
   standCache.set(id, s)
   return s
 }
@@ -156,13 +168,15 @@ export function place(wb: Pick<Waybill, 'components' | 'origin'>): Placement {
   for (const id of Object.keys(wb.components).sort()) {
     const s = standOf(id)
     if (s?.station) { setOf[id] = s.station; continue }
-    const k = s && kioskFor(s.id, wb.components[s.id]?.name ?? wb.components[id]?.name ?? s.name)
+    // a tenant shares the annex's kiosk, so the kiosk keeps the annex's own name, not the first tenant's
+    const k = s && kioskFor(s.id, (s.key && s.id !== id ? s.name : null) ?? wb.components[s.id]?.name ?? wb.components[id]?.name ?? s.name)
     if (k) {
       setOf[id] = `kiosk:${k.id}`
       if (!seen.has(k.id)) { seen.add(k.id); kiosks.push(k) }
       continue
     }
-    const near = NEAR_BY_KIND[wb.components[id].kind] ?? 'dock'
+    // a desk family member has no permanent slot but knows its station; anything else stands by kind
+    const near = s?.near ?? NEAR_BY_KIND[wb.components[id].kind] ?? 'dock'
     ;(unknown[near] ??= []).push(id)
     setOf[id] = `kiosk:${id}`
   }

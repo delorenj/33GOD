@@ -50,6 +50,7 @@ evidence:
 confidence: high
 notes: Backlog 0 pending at check.
 surfaces:
+- producer:enricher
 - container:enricher
 - container:enricher-daprd
 factory:

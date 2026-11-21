@@ -14,7 +14,7 @@ export const BELT_TOP = BELT.baseY + BELT.frontDays * BELT.mPerDay
 export const COLS = [-1.72, -1.03, -0.34, 0.34, 1.03, 1.72]
 
 export const BAY_X = -24
-export const BAY_Z = [-7.5, -4.5, -1.5, 1.5, 4.5, 7.5]
+export const BAY_Z = [-7.5, -5, -2.5, 0, 2.5, 5, 7.5] // one bay per VENDORS row (selfcheck asserts it)
 
 export const DOCK = { center: [-9.5, 0, 0] as Vec3, door: [-11.5, 0, 0] as Vec3, out: [-7.6, 1.5, 0] as Vec3 }
 export const LABEL_DESK: Vec3 = [-9.5, 0, 3]

@@ -17,7 +17,7 @@ The floor is a **running simulation of the canon**, not an animation. Every beha
 
 | What you see | The rule it plays | Real thing |
 |---|---|---|
-| Couriers walk parcels from six vendor bays. Each parcel is tagged in its vendor's own hook word. | One raw hook per parcel, in the vendor's dialect | `bb-hook`, `hooks.master.json` |
+| Couriers walk parcels from seven vendor bays. Each parcel is tagged in its vendor's own hook word. | One raw hook per parcel, in the vendor's dialect | `bb-hook`, `hooks.master.json` |
 | Parcels go into the dock and one house post-it comes out, "turn started", with the vendor in the "from" corner. | Normalization | hook-hub |
 | Post-its climb the front of the belt, and envelopes climb the back. | Height is age. The front is scraped at 7 days, the back at 1 day. | `BLOODBANK_EVENTS` / `BLOODBANK_COMMANDS` |
 | Translucent copies fly from notes to the archive, the control room and the rules cabinet, and the original stays put. | Fan-out. Readers come to the belt. | durable and ephemeral consumers |

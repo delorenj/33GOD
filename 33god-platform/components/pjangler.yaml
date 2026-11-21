@@ -72,6 +72,7 @@ evidence:
   Candybar job candystore-project-sync, currently failed) copying the registry into Candystore tables'
 confidence: medium
 surfaces:
+- producer:pjangler
 - repo:pjangler
 - systemd:pjangler-journal-notebook.service
 - systemd:pjangler-project-registry.service

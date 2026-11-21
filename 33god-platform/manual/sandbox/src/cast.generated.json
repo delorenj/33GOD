@@ -1,7 +1,7 @@
 {
   "format": "33god.factory-cast",
   "version": 1,
-  "digest": "d964b86b1237628a655629aff91a2891a7ecc308447f3548656128a17e023b1c",
+  "digest": "cf5f4a74961e943fa723b278eed44e2f75e8f2ea56138abca66b97860cab4a94",
   "components": {
     "aai-gateway": {
       "name": "AutomaticAI LLM gateway",
@@ -922,15 +922,28 @@
       "station": null,
       "near": "soundwing",
       "aliases": []
+    },
+    "zellij-sentinel": {
+      "name": "Zellij sentinel",
+      "summary": "Keeps the agent workspace alive and re-drives its agent panes after the terminal server crashes.",
+      "domain": "G10",
+      "first_party": true,
+      "station": null,
+      "near": "bays",
+      "aliases": []
     }
   },
   "aliases": {
+    "antigravity-cli": "ext:antigravity",
     "asm-orcapaint": "asm",
     "asm-tabpaint": "asm",
     "automaticai-gateway": "aai-gateway",
     "candystore-daprd": "bb-dapr",
+    "copilot-cli": "ext:copilot",
     "crank-engine": "crank",
     "enricher-daprd": "bb-dapr",
+    "ext:antigravity-cli": "ext:antigravity",
+    "ext:copilot-cli": "ext:copilot",
     "ext:jev": "jev-litellm",
     "ext:ntfy": "ntfy",
     "ext:orca": "orca",
@@ -948,6 +961,11 @@
     "waxd": "wax"
   },
   "extras": {
+    "ext:antigravity": {
+      "station": "bays",
+      "near": null,
+      "name": "Antigravity CLI"
+    },
     "ext:claude-code": {
       "station": "bays",
       "near": null,
@@ -1023,6 +1041,11 @@
       "near": "bays",
       "name": "Zellij"
     },
+    "tenant-annex": {
+      "station": null,
+      "near": "entrance",
+      "name": "Tenant annex"
+    },
     "unknown": {
       "station": null,
       "near": "belt",
@@ -1038,5 +1061,245 @@
       "near": "bays",
       "name": "zellij-notify"
     }
+  },
+  "resolve": {
+    "order": [
+      "source",
+      "tenant",
+      "desk",
+      "producer",
+      "id"
+    ],
+    "unknown": "unknown",
+    "type_prefix": "bloodbank.",
+    "sources": [
+      {
+        "source": "*",
+        "type": "cron.steward_task.*",
+        "id": "candybar-steward"
+      },
+      {
+        "source": "*",
+        "type": "audio.earshot.*",
+        "id": "earshot"
+      },
+      {
+        "source": "urn:33god:service:n8n-*",
+        "type": "messaging.*",
+        "id": "delosip"
+      },
+      {
+        "source": "*",
+        "type": "telephony.*",
+        "id": "delosip"
+      },
+      {
+        "source": "*",
+        "type": "crank.*",
+        "id": "crank"
+      }
+    ],
+    "tenants": {
+      "prefix": "tenant:",
+      "annex": "tenant-annex",
+      "rules": [
+        {
+          "producer": "tiller",
+          "slug": "tiller"
+        },
+        {
+          "producer": "local-script:*",
+          "slug": "*"
+        },
+        {
+          "producer": "gib*",
+          "slug": "gib"
+        }
+      ]
+    },
+    "desks": {
+      "hermes-desk": {
+        "owner": "hermes-fleet",
+        "producer": "hermes-agent:",
+        "bare": [
+          "hermes-agent"
+        ],
+        "near": "crew",
+        "name": "Hermes desk",
+        "instance": "^[a-z0-9][a-z0-9-]*$",
+        "malformed": [
+          "claude-code",
+          "runtime"
+        ],
+        "routes": [
+          {
+            "instance": "*-momo",
+            "id": "momo"
+          }
+        ]
+      }
+    },
+    "producers": [
+      {
+        "producer": "activity-report",
+        "id": "activity-report"
+      },
+      {
+        "producer": "agent-pad-upload",
+        "id": "agent-pad"
+      },
+      {
+        "producer": "antigravity-cli",
+        "id": "agent-hooks"
+      },
+      {
+        "producer": "artifact-sidecar",
+        "id": "artifact-sidecar"
+      },
+      {
+        "producer": "automaticai-usage-exporter",
+        "id": "aai-llm-observability"
+      },
+      {
+        "producer": "candybar",
+        "id": "candybar"
+      },
+      {
+        "producer": "claude-code",
+        "id": "agent-hooks"
+      },
+      {
+        "producer": "codex-cli",
+        "id": "agent-hooks"
+      },
+      {
+        "producer": "delonet-daily-report",
+        "id": "daily-report"
+      },
+      {
+        "producer": "docker-health-monitor",
+        "id": "mon-alerts"
+      },
+      {
+        "producer": "enricher",
+        "id": "enricher"
+      },
+      {
+        "producer": "free-scout",
+        "id": "aai-gateway"
+      },
+      {
+        "producer": "gemini",
+        "id": "agent-hooks"
+      },
+      {
+        "producer": "genesis",
+        "id": "genesis"
+      },
+      {
+        "producer": "hermes-agent",
+        "id": "hermes-fleet"
+      },
+      {
+        "producer": "hindsight-memory-analyzer",
+        "id": "hindsight"
+      },
+      {
+        "producer": "hook-hub",
+        "id": "hook-hub"
+      },
+      {
+        "producer": "inbox-watcher",
+        "id": "inbox-watcher"
+      },
+      {
+        "producer": "kimi",
+        "id": "agent-hooks"
+      },
+      {
+        "producer": "milkshake",
+        "id": "milkshake"
+      },
+      {
+        "producer": "mobile-deploy-hub",
+        "id": "mobile-deploy-hub"
+      },
+      {
+        "producer": "mobile-deploy-hub-catchup",
+        "id": "mobile-deploy-hub"
+      },
+      {
+        "producer": "n8n",
+        "id": "n8n"
+      },
+      {
+        "producer": "n8n-plane-webhook",
+        "id": "plane-hook"
+      },
+      {
+        "producer": "opencode",
+        "id": "agent-hooks"
+      },
+      {
+        "producer": "pilot",
+        "id": "pilot"
+      },
+      {
+        "producer": "pjangler",
+        "id": "pjangler"
+      },
+      {
+        "producer": "plane-ingress-reconcile",
+        "id": "plane-hook"
+      },
+      {
+        "producer": "pr-crusher",
+        "id": "pr-crusher"
+      },
+      {
+        "producer": "project-cost-collector",
+        "id": "client-portal"
+      },
+      {
+        "producer": "target-watch",
+        "id": "target-watch"
+      },
+      {
+        "producer": "ticket-pickup-chip-sweep",
+        "id": "plane-hook"
+      },
+      {
+        "producer": "turn-enricher",
+        "id": "turn-enricher"
+      },
+      {
+        "producer": "turn-enricher-verify",
+        "id": "turn-enricher"
+      },
+      {
+        "producer": "wax",
+        "id": "wax"
+      },
+      {
+        "producer": "wingman",
+        "id": "wingman"
+      },
+      {
+        "producer": "zellij-sentinel",
+        "id": "zellij-sentinel"
+      },
+      {
+        "producer": "holocene-auto:*",
+        "id": "holocene"
+      },
+      {
+        "producer": "hermes-agent:*",
+        "id": "hermes-fleet"
+      },
+      {
+        "producer": "copilot*",
+        "id": "agent-hooks"
+      }
+    ]
   }
 }

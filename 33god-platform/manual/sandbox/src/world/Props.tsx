@@ -134,11 +134,11 @@ function Bays() {
       {BAY_Z.map((z, i) => (
         <group key={i} position={[BAY_X - 1.65, 0, z]}>
           <mesh position={[0, 1.4, 0]}>
-            <boxGeometry args={[0.12, 2.8, 2.3]} />
+            <boxGeometry args={[0.12, 2.8, 2.2]} />
             <meshStandardMaterial color={VENDORS[i].color} roughness={0.6} />
           </mesh>
           <mesh position={[0.07, 1.3, 0]}>
-            <boxGeometry args={[0.04, 2.5, 2.0]} />
+            <boxGeometry args={[0.04, 2.5, 1.9]} />
             <meshStandardMaterial color="#3A3A3A" roughness={1} />
           </mesh>
           {/* the vendor's stack of parcels, each packed its own way */}
