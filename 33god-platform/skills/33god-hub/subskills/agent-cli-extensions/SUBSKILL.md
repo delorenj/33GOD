@@ -58,5 +58,5 @@ Read exactly one row, then come back.
 | Invocation | `/identity [employee]` | `/33god:identity [employee]` (or `$33god:identity`) | `/identity [employee]` (also ctrl+p) |
 | Output without a model turn | yes (`isTextDisplayOnly`, drawn in the transcript) | no: a skill, so the model runs the command and echoes it | yes (a TUI-local slash command opening a dialog) |
 | Menus, panes, pickers from an extension | yes: panes with Buttons/Select, the band above the prompt, desktop right-click rows | no: only built-in pickers | yes: `dialog.select` menus (chained = submenus), dialogs, routes, panels |
-| `/identity` with no argument shows | the PM in full plus the other agents (markdown) | same as Claude | a menu of the project's agents labelled `id v1 5/6`; a pick opens that agent |
+| `/identity` with no argument shows | a pane with a `Select` menu of the project's agents labelled `id v1 5/6`; a pick shows that agent's points (markdown printout under `claude -p`) | the PM in full plus the other agents (markdown) | a menu of the project's agents labelled `id v1 5/6`; a pick opens that agent |
 | Edits reach a session by | `/reload-plugins` (folder marketplace, read in place) | `codex plugin add 33god@33god` again (copied to cache), then a new session | a new TUI session (symlinked folder, read in place) |

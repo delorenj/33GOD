@@ -28,7 +28,7 @@ owning CLI. Never call it from an adapter.
 
 | CLI | Where | What |
 |---|---|---|
-| Claude Code | `agent-cli/claude/33god/hooks/register.ts` | `$.command.register` + a `command.run` hook that runs the CLI and returns `{ text, isTextDisplayOnly: true }`; a test in `hooks/*.test.ts` ([claude-code.md](claude-code.md)) |
+| Claude Code | `agent-cli/claude/33god/hooks/register.tsx` | `$.command.register` + a `command.run` hook that runs the CLI and returns `{ text, isTextDisplayOnly: true }`; a no-argument form may open a pane with a `Select` menu built from the CLI's `--json`, falling back to the printout where no pane is placed; a test in `hooks/*.test.tsx` ([claude-code.md](claude-code.md)) |
 | Codex | `agent-cli/codex/33god/skills/<cmd>/SKILL.md` + `agents/openai.yaml` | a skill that runs the CLI and echoes stdout verbatim; explicit-only ([codex.md](codex.md)) |
 | OpenCode | `agent-cli/opencode/33god/tui.js` | another entry in the `ctx.keymap.layer` commands list whose `run` calls the CLI and shows a dialog; a no-argument form may offer a `dialog.select` menu built from the CLI's `--json` ([opencode.md](opencode.md)) |
 
