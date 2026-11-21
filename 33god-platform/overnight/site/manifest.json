@@ -66,17 +66,36 @@
       "kicker": "Codename 33GOD · Year three of stealth",
       "title": "You go home.",
       "titleTurn": "Your company doesn't.",
-      "body": "For years now, people have been busy racing to find optimal strategies for working with agents. The solution is so simple - so obvious - that most people refuse to accept it. Anyone Who can see through the silicon and Tech jargon And recognize That instead of trying to Wrap your head around a new Concept You can accept that we're just dealing with Virtual Employees. And I don't mean A close representation. I mean a direct one to one mapping. Any solution? to a human problem in the corporate Setting Maps. perfectly on top. Of the same problem applied to agents. We have a hundred years of Data. To draw from. These agents have Memory. They have skills. They can cooperate. They can make mistakes. They can be incentivized. With the right. Guidance. A small group Of inexperienced agents. can create Enterprise level Products. and a large team of genius agents can be managed into the ground I am impatient Smug. Director. This is anthropomorphism as a principle. In 33GOD Agents are hired, seated and reviewed. They have directors and managers, a mailroom, a clock on the wall and a records room that forgets nothing. They have a morning stand up Where cross collaboration happens. And they have post Kaizen meetings. When things go wrong. They are all bound by a single mission statement and the company has been at work the whole time. And they work for you. ",
+      "body": "In 33GOD, agents are hired, seated and reviewed. They have directors and managers, a mailroom, a clock on the wall and a records room that forgets nothing. The company has been at work the whole time. And it works for you.",
       "tags": [],
       "staged": true,
       "copy": {
-        "secondary": "Watch the activity after you leave your desk for the night.",
+        "secondary": "Watch what happens after you leave your desk.",
         "youLeave": "18:02 · you leave"
       },
       "log": [
         {
           "subject": "bloodbank.cli.session.ended",
-          "note": "You go home. Your team's just getting started."
+          "note": "You go home. Your team is just getting started."
+        }
+      ]
+    },
+    {
+      "id": "thesis",
+      "time": "18:03",
+      "act": "I",
+      "spectacle": 2,
+      "camera": "hold",
+      "setPiece": "building.hold",
+      "kicker": "The thesis",
+      "title": "Not like employees. Employees.",
+      "body": "Everyone hunts for the best way to work with agents. The answer is plainer. Every problem a company has with people maps one to one onto agents, so a hundred years of practice applies. Agents have memory and skills, cooperate, make mistakes and respond to incentives. A small team of green agents can ship enterprise work. A team of geniuses can be managed into the ground. Hold the standup. Run the kaizen when things break.",
+      "tags": [],
+      "staged": false,
+      "log": [
+        {
+          "subject": "bloodbank.agent.session.started",
+          "note": "Agents are not like employees. They are employees. A hundred years of company practice applies."
         }
       ]
     },
@@ -96,11 +115,12 @@
         "figures": [
           {
             "n": "72",
-            "label": "domain-driven components, strategically architected to be tech-agnostic, purpose built to a spec that's guided by the underlying principles of AI development"
+            "label": "domain-driven components, each tech-agnostic",
+            "detail": "Strategically architected and purpose-built to a spec guided by the principles of AI development."
           },
           {
             "n": "12",
-            "label": "departments on the org chart and counting"
+            "label": "departments on the org chart, and counting"
           },
           {
             "n": "214",
@@ -137,12 +157,12 @@
       },
       "kicker": "Article one",
       "title": "Every agent is an employee.",
-      "body": "Stop trying to 'orchestrate a swarm'. You're just pretending we're doing something novel. Companies already solved delegation, escalation, onboarding, and self-improvement. When something breaks, there's a playbook to follow. A good manager Throw his hands up, Jump to blame. one or more team members. That's not productive. Employees make mistakes All the time. What separates a successful company from a failed one Is how they Manage mistakes. How do you harness and leverage the data to learn from it. That's how a company evolves and grows. And that rests entirely on the human. not on the prompt or the model, but the moment to moment decisions that Guide the path. There's no ceiling in this garden.",
+      "body": "Stop trying to orchestrate a swarm. Companies already solved delegation, escalation, onboarding and self-improvement. A good manager does not throw up his hands and blame someone. What separates a company that grows is how it manages mistakes and what it learns. That rests on the human's moment-to-moment decisions, not the prompt or the model. There is no ceiling.",
       "tags": ["FLUME"],
       "staged": false,
       "copy": {
-        "quote": "“Anthropomorphism as protocol",
-        "quoteSource": "One of a small set of Pillars, used to guide architectural decisions",
+        "quote": "“Anthropomorphism as protocol.”",
+        "quoteSource": "One of the few pillars that guide every architectural decision.",
         "you": {
           "label": "You",
           "line": "The only human on the chart."
@@ -151,62 +171,74 @@
           {
             "dept": "Human resources",
             "name": "FLUME",
-            "line": "If the fleet of agents is the staff, then Flume is the org chart"
+            "line": "The org chart, and the HR department behind it.",
+            "detail": "Hires directors, managers and project managers, then onboards, seats and reviews them. If the agents are the staff, Flume is the org chart."
           },
           {
             "dept": "Operations",
             "name": "KREBS",
-            "line": "Runs every ticket's lifecycle, from filed to closed, on any board."
+            "line": "Runs every ticket's lifecycle, from filed to closed, on any board.",
+            "detail": "One lifecycle for every ticket, identical on every board. Whatever ticket provider sits underneath, work moves from filed to closed the same way."
           },
           {
             "dept": "Internal comms",
             "name": "BLOODBANK",
-            "line": "Every service, agent, and component announces their actions and gets their tasks from a single bus that carries messages adhering to a strict schema"
+            "line": "Every memo in the building travels on one bus.",
+            "detail": "Every service, agent and component announces what it did and picks up its work from one bus. Every message follows a strict schema, so a new department plugs in without anyone else changing."
           },
           {
             "dept": "Records",
             "name": "CANDYSTORE",
-            "line": "Every event ever sent, stored, indexed, embedded and semantically searchable. This data becomes a source for a variety of synthesized roll-ups across various dimensions."
+            "line": "Every event ever sent, kept and searchable.",
+            "detail": "Stored, indexed, embedded and searchable by meaning. The record also feeds synthesized roll-ups across many dimensions, like the daily report."
           },
           {
-            "dept": "The Company Clock",
+            "dept": "The company clock",
             "name": "CANDYBAR",
-            "line": "A decentralized abstraction over Cron that manages the company schedule."
+            "line": "One clock fires every recurring job. There is no second clock.",
+            "detail": "Cron, rebuilt on the bus. One heartbeat ticks every minute and everything scheduled is a consumer of it. No crontab, no private timers."
           },
           {
             "dept": "Training",
             "name": "SKILLEX",
-            "line": "A declarative node-based hierarchical skill framework with self-balancing self-organizing properties"
+            "line": "One catalog of skills, taught to every agent.",
+            "detail": "Skills are declared in manifests and composed by reference, then exposed to every agent CLI. A new skill reaches every employee at once."
           },
           {
             "dept": "Front desk",
             "name": "GENESIS",
-            "line": "A specially-trained subset of agent that can be sent out as a contractor-for-hire. External clients can harness the full set of my team's capabilities by talking to a Genesis contactor agent. They act as a black box, routing requests and delegating tasks to the right teams, packaging and delivering the results to the client. The client pays for the bot's time that is metered and tracked on an individual basis."
+            "line": "The agent clients talk to. Sent out as a contractor for hire.",
+            "detail": "Clients reach the company's whole team by talking to one Genesis agent. It routes requests to the right departments and hands back the result. Each bot's time is metered and tracked on its own."
           },
           {
             "dept": "Accounting",
             "name": "MILKSHAKE",
-            "line": "Integrates directly with Mercury API and manages all the infra costs, invoicing, payments, tax, and finanace communications."
+            "line": "Turns usage and cost into client billing.",
+            "detail": "Reads vendor costs, applies the billing rules, issues the statements and reconciles against Mercury. Every cent is tracked, every change goes through a command."
           },
           {
             "dept": "Mailroom",
             "name": "CURATOR",
-            "line": "Sorts and organizes files by forming a hierarchical network, inspired by the Mixture-of-Experts models"
+            "line": "Sorts and files whatever arrives.",
+            "detail": "A hierarchy of small agents, each the expert on one folder. Each sees only its own territory; work that crosses branches goes up to the nearest common ancestor."
           },
           {
             "dept": "Your assistant",
             "name": "CRANK",
-            "line": "Keeps work moving while you are out of the office. Trained to answer questions and make hard decisions on your behalf with the goal of unblocking tickets. Follows the Pillar of 'No Idle Agents'"
+            "line": "Keeps work moving while you are out of the office.",
+            "detail": "Answers questions and makes the hard calls for you, with one goal: unblocked tickets. Works from the pillar of no idle agents."
           },
           {
             "dept": "Facilities",
             "name": "INFRA-DOCTOR",
-            "line": "Walks the building and puts out fires. Ensures everything on the server is running smoothly and efficiently. When resources are maxxed out and tasks are starved, he has the authority to kill a greedy GPU hog, set up a queue, or coordinate cross-department as a mediator to come to a solution so everyone can share."
+            "line": "Walks the building and puts out fires.",
+            "detail": "Keeps the server running smoothly. When resources run out and tasks starve, it can kill a greedy GPU hog, set up a queue, or mediate between departments so everyone shares."
           },
           {
             "dept": "Control room",
             "name": "HOLOCENE",
-            "line": "This is the operating surface. It includes the Web dash, Holocene Auto, the Telegram mini-app, artifact gallery, launch tracker, and live app monitoring."
+            "line": "Where you look. Who is working, what is stuck, what needs you.",
+            "detail": "The operating surface: the web dashboard, Holocene Auto, the Telegram mini-app, the artifact gallery, the launch tracker and live app monitoring."
           }
         ]
       },

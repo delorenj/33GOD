@@ -84,6 +84,21 @@
     if (rate) style['--rate'] = rate;
     return { className: 'rv' + (cls ? ' ' + cls : ''), style: style };
   }
+  // The optional long form of any list entry: `line` / `label` stay short, `detail` is the rest.
+  // Shown as a popover on hover/focus (and in full in the log view), never in the flow, so it cannot move the layout.
+  function detailOf(x) { return x && typeof x.detail === 'string' ? x.detail : ''; }
+  function withDetail(entry, id, i, n) {
+    return detailOf(entry) ? { className: ' has-detail', tabIndex: 0, 'aria-describedby': id } : null;
+  }
+  function Detail(id, text, up) { return h('span', { key: 'detail', id: id, role: 'tooltip', className: 'detail' + (up ? ' detail--up' : '') }, text); }
+  // An rv() row that may also carry a detail popover: merges className/props, lower half of a list opens upward.
+  function rowProps(at, cls, entry, id, i, n, key) {
+    var base = rv(at, cls), d = withDetail(entry, id, i, n);
+    var o = { key: key, className: base.className + (d ? d.className : ''), style: base.style };
+    if (d) { o.tabIndex = d.tabIndex; o['aria-describedby'] = d['aria-describedby']; }
+    return o;
+  }
+  function detailKid(entry, id, i, n) { return detailOf(entry) ? Detail(id, detailOf(entry), i >= n / 2) : null; }
   // Flagships are numbered by page order (a beat with flagship: true), so adding one never renumbers by hand.
   function pad2(n) { return n < 10 ? '0' + n : '' + n; }
   function flagshipsOf(M) { return M.beats.filter(function (x) { return x.flagship; }); }
@@ -104,7 +119,7 @@
   function deskOf(name) { return name && name.indexOf('PM · ') === 0 ? name.slice(5).toLowerCase() + '-pm' : null; }
   // Per-key prefix sums over the night's minutes, so "how much in [a, b]" is one subtraction.
   // Beats whose windows follow the real night (the rest of the film is staged, and says so).
-  var NIGHT_BEATS = { premise: 1, numbers: 1, staff: 1, pjangler: 1, gateway: 1, heyma: 1, flume: 1 };
+  var NIGHT_BEATS = { premise: 1, thesis: 1, numbers: 1, staff: 1, pjangler: 1, gateway: 1, heyma: 1, flume: 1 };
   function usesNight(id) { return !!NIGHT_BEATS[id]; }
   function prepNight(N, times) {
     var W = N && N.window;
@@ -141,18 +156,26 @@
   function buildSeats(M, R) {
     var byKey = {}, list = [];
     function put(f, c, seat) { seat.f = f; seat.c = c; seat.h = hash(f, c); byKey[f + ':' + c] = seat; list.push(seat); return seat; }
-    var lines = {};
+    var lines = {}, details = {};
     var beat = {};
     M.beats.forEach(function (b) { beat[b.id] = b; });
     beat['org-chart'].copy.departments.forEach(function (d) { lines[d.name] = d.line; });
     beat.staff.copy.staff.forEach(function (s) { lines[s.name] = s.line; });
     beat.heyma.copy.parts.forEach(function (p) { lines[p.name] = p.line; });
+    // Any named entry in any beat's copy lists may carry a long-form `detail`; the hover plate shows it.
+    M.beats.forEach(function (b) {
+      Object.keys(b.copy || {}).forEach(function (k) {
+        var a = b.copy[k];
+        if (Array.isArray(a)) a.forEach(function (e) { if (e && typeof e === 'object' && e.name && detailOf(e)) details[e.name] = detailOf(e); });
+      });
+    });
+    function detailFor(name) { return name ? (details[name] || details[name.split(' · ')[0]] || '') : ''; }
     Object.keys(M.nameplates || {}).forEach(function (k) { lines[k] = M.nameplates[k]; });
 
     put(YOU.f, YOU.c, { kind: 'you' });
     put(HIRE.f, HIRE.c, { kind: 'hire' });
     Object.keys(PLACED).forEach(function (name) {
-      put(PLACED[name][0], PLACED[name][1], { kind: 'comp', name: name, line: lines[name] || lines[name.split(' · ')[0]] || '' });
+      put(PLACED[name][0], PLACED[name][1], { kind: 'comp', name: name, line: lines[name] || lines[name.split(' · ')[0]] || '', detail: detailFor(name) });
     });
     var free = [];
     for (var f = 0; f < FLOORS; f++) for (var c = 0; c < PER; c++) if (!byKey[f + ':' + c]) free.push({ f: f, c: c, h: hash(f, c) });
@@ -168,7 +191,7 @@
     var staffSeats = staff.map(function (s, i) {
       var pick = climb[Math.floor(i * climb.length / staff.length)];
       taken[pick.f + ':' + pick.c] = true;
-      return put(pick.f, pick.c, { kind: 'comp', name: s.name, line: s.line, staff: i });
+      return put(pick.f, pick.c, { kind: 'comp', name: s.name, line: s.line, detail: detailOf(s), staff: i });
     });
     var rest = comps.filter(function (s) { return !taken[s.f + ':' + s.c]; });
     var others = beat['org-chart'].copy.departments.map(function (d) { return d.name; })
@@ -188,7 +211,7 @@
     rest.forEach(function (s, i) {
       var name = others[i] || null, line = name ? (lines[name] || '') : '';
       if (!name && extra.length) { var c = extra.shift(); name = c.plate || c.id.toUpperCase(); line = c.summary || c.name; }
-      put(s.f, s.c, { kind: 'comp', name: name, line: line, overtime: !R && i === others.length + 2 });
+      put(s.f, s.c, { kind: 'comp', name: name, line: line, detail: detailFor(name), overtime: !R && i === others.length + 2 });
     });
     var named = {};
     list.forEach(function (s) { if (s.name) { named[s.name] = s; s.cid = cidOf(s.name); s.desk = deskOf(s.name); } });
@@ -214,6 +237,7 @@
     function comp(s) {
       var n = s.name;
       if (i === I.premise) return seg(q, 0.5, 0.95) > (s.f + s.h * 0.9) / 12.6 ? (R ? real(s) : 'lit') : 'dark';
+      if (i === I.thesis) return R ? real(s) : 'lit';   // the building is held, fully lit, as in the hero
       if (i === I.numbers) return R ? real(s) : 'lit';
       if (i < I.transcript) return 'lit';     // Act III: the building is offstage, and staged
       if (i === I.transcript) return n === 'WAX' ? 'working' : (seg(q, 0.04, 0.3) > s.h * 0.98 ? 'dark' : 'lit');
@@ -305,7 +329,7 @@
   function cam(id, q) {
     var t;
     switch (id) {
-      case 'premise': return { x: 0.2, y: 0, s: 1, o: 1 };
+      case 'premise': case 'thesis': return { x: 0.2, y: 0, s: 1, o: 1 };
       case 'numbers': return { x: 0.3, y: 0, s: 0.9, o: 1 };
       case 'org-chart': case 'bus': case 'layers': case 'runs-on-itself': return { x: 0.36, y: 0, s: 0.86, o: 0 };
       case 'transcript': t = SC.minor('transcript', 'push-in', q).t; return { x: 0, y: 0, s: Math.pow(9, t), o: 1 - seg(t, 0.2, 0.7) };
@@ -416,8 +440,9 @@
     var copy = props.beat.copy;
     return h('div', { className: 'sp directory', style: { width: props.width } },
       copy.figures.map(function (fig, i) {
-        return h('div', Object.assign({ key: i }, rv(0.06 + i * 0.1, 'directory__row')),
-          h('span', { className: 'directory__n' }, fig.n), h('span', { className: 'directory__label' }, fig.label));
+        var id = 'fig-detail-' + i, n = copy.figures.length;
+        return h('div', rowProps(0.06 + i * 0.1, 'directory__row', fig, id, i, n, i),
+          h('span', { className: 'directory__n' }, fig.n), h('span', { className: 'directory__label' }, fig.label), detailKid(fig, id, i, n));
       }),
       h('p', rv(0.62, 'caption-note'), copy.stamp));
   }
@@ -431,10 +456,12 @@
         h('span', { className: 'org__line' }, copy.you.line)),
       h('div', { className: 'org__trunk draw-x', style: { '--at': 0.06 } }),
       h('div', { className: 'org__grid' }, copy.departments.map(function (d, i) {
-        return h('div', Object.assign({ key: d.name }, rv(0.12 + i * 0.055, 'org__cell')),
+        var id = 'dept-detail-' + i, n = copy.departments.length;
+        return h('div', rowProps(0.12 + i * 0.055, 'org__cell', d, id, i, n, d.name),
           h('span', { className: 'eyebrow' }, d.dept),
           h('span', { className: 'instrument org__name' }, d.name),
-          h('span', { className: 'org__line' }, d.line));
+          h('span', { className: 'org__line' }, d.line),
+          detailKid(d, id, i, n));
       })));
   }
 
@@ -603,7 +630,8 @@
     var prefersLog = useMemo(function () {
       return window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(max-width: 760px)').matches;
     }, []);
-    var viewSt = useState(prefersLog ? 'log' : 'film'); var view = viewSt[0], setView = viewSt[1];
+    var wantView = useMemo(function () { var v = new URLSearchParams(location.search).get('view'); return v === 'log' || v === 'film' ? v : null; }, []);
+    var viewSt = useState(wantView || (prefersLog ? 'log' : 'film')); var view = viewSt[0], setView = viewSt[1];
     var posSt = useState({ i: 0, step: 0, q: 0, minute: -1 }); var pos = posSt[0], setPos = posSt[1];
     var sizeSt = useState({ w: 760, h: 640, bs: 1 }); var size = sizeSt[0], setSize = sizeSt[1];
     var subSt = useState(false); var submitted = subSt[0], setSubmitted = subSt[1];
@@ -764,10 +792,14 @@
     var room = Math.max(150, bLeft + K0.x * size.w - 36);   // free width to the left of the building
     var waxAt = at(PLACED.WAX[0], PLACED.WAX[1]);
 
-    function plate(seat, state, key) {
-      var p = at(seat.f, seat.c);
-      return h('div', { key: key || 'plate', className: 'plate' + (p.y > size.h - 170 ? ' plate--up' : ''), style: { top: p.y, right: size.w - bLeft + 22, maxWidth: room } },
-        h(O.Nameplate, { name: seat.name, line: seat.line, state: state }),
+    // withMore: the hover plate also shows the seat's long-form `detail`; it opens upward from the lower half so it
+    // always stays between the header and the bottom of the screen. The auto-advancing staff roll never does.
+    function plate(seat, state, key, withMore) {
+      var p = at(seat.f, seat.c), more = withMore && seat.detail ? seat.detail : '';
+      var up = p.y > size.h - 170 || (more && p.y > size.h / 2);
+      return h('div', { key: key || 'plate', className: 'plate' + (up ? ' plate--up' : ''), style: more ? { top: p.y, right: size.w - bLeft + 22, width: Math.min(room, 240) } : { top: p.y, right: size.w - bLeft + 22, maxWidth: room } },
+        more ? h('div', { className: 'plate__col' }, h(O.Nameplate, { name: seat.name, line: seat.line, state: state }), h('div', { className: 'plate__detail' }, more))
+             : h(O.Nameplate, { name: seat.name, line: seat.line, state: state }),
         h('span', { className: 'plate__lead', 'aria-hidden': 'true', style: { width: p.x - bLeft + 22 - WIN_W / 2 * size.bs - 4 } }));
     }
     function card(children, cls, topF) {
@@ -868,7 +900,7 @@
       var hs = seats.byKey[hover];
       if (hs && (hs.name || hs.kind === 'you')) {
         var hidx = (floors - 1 - hs.f) * PER + hs.c;
-        over.push(plate(hs.kind === 'you' ? { f: hs.f, c: hs.c, name: 'You', line: M.beats[I['org-chart']].copy.you.line } : hs, hs.kind === 'you' ? (wst.youLit ? 'you' : 'dark') : wst.states[hidx], 'hover'));
+        over.push(plate(hs.kind === 'you' ? { f: hs.f, c: hs.c, name: 'You', line: M.beats[I['org-chart']].copy.you.line } : hs, hs.kind === 'you' ? (wst.youLit ? 'you' : 'dark') : wst.states[hidx], 'hover', true));
       }
     }
 
@@ -949,6 +981,23 @@
       return h('div', { key: bt.id + 'real' + k, className: 'logline--real' }, h(O.LogLine, { time: fmt(R.start + x.m), subject: x.type, note: note }));
     });
   }
+  // The long form of a beat's list entries, in full: the log view has no hover, so this is also the accessible path to them.
+  // Any list in the beat's copy whose items are objects and at least one carries a `detail` is listed, entry by entry.
+  function detailRows(bt) {
+    var copy = bt.copy || {}, out = [];
+    Object.keys(copy).forEach(function (k) {
+      var a = copy[k];
+      if (!Array.isArray(a) || !a.length || !a.some(function (e) { return e && typeof e === 'object' && detailOf(e); })) return;
+      out.push(h('dl', { key: bt.id + ':' + k, className: 'logview__detail', 'aria-label': bt.kicker || bt.title },
+        a.map(function (e, n) {
+          if (!e || typeof e !== 'object') return null;
+          return h(React.Fragment, { key: n },
+            h('dt', { className: 'instrument' }, e.name || e.n),
+            h('dd', null, e.line || e.label, detailOf(e) ? h('span', { className: 'logview__more' }, detailOf(e)) : null));
+        })));
+    });
+    return out;
+  }
   function LogView(props) {
     var M = props.M, first = M.beats[0], ask = M.beats[props.I.ask];
     var acts = Object.keys(M.acts);
@@ -964,7 +1013,7 @@
             h('h2', { className: 'instrument' }, 'Act ' + a + ' · ' + M.acts[a]),
             M.beats.filter(function (bt) { return bt.act === a; }).map(function (bt) {
               var staged = (bt.log || []).map(function (l, n) { return h(O.LogLine, { key: bt.id + n, time: bt.time, subject: l.subject, note: l.note }); });
-              return staged.concat(realLines(props.night, M, bt));
+              return staged.concat(detailRows(bt), realLines(props.night, M, bt));
             }));
         }),
         h('section', { className: 'logview__ask' },
@@ -979,12 +1028,16 @@
     var colors = { sky1802: cssVar('--sky-1802'), sky2200: cssVar('--sky-2200'), sky0200: cssVar('--sky-0200'), sky0500: cssVar('--sky-0500'), sky0630: cssVar('--sky-0630'), sky0730: cssVar('--sky-0730') };
     var root = document.getElementById('root');
     root.textContent = '';
-    ReactDOM.createRoot(root).render(h(App, { M: M, colors: colors, night: R }));
+    ReactDOM.createRoot(root).render(h(Boundary, null, h(App, { M: M, colors: colors, night: R })));
   }
   // The score's majors are the manifest's beats, in order; counts the minors step through live in the copy.
   function scoreFor(M, spec) {
     var ids = spec.majors.map(function (m) { return m.id; }).join(','), want = M.beats.map(function (b) { return b.id; }).join(',');
-    if (ids !== want) throw new Error('score.json majors (' + ids + ') do not match the manifest beats (' + want + ')');
+    if (ids !== want) {
+      var a = spec.majors.map(function (m) { return m.id; }), b = M.beats.map(function (x) { return x.id; });
+      var k = 0; while (k < a.length && k < b.length && a[k] === b[k]) k++;
+      throw new Error('score.json majors do not match the manifest beats: beat ' + (k + 1) + ' is ' + (b[k] || '(none)') + ' in the manifest but ' + (a[k] || '(none)') + ' in score.json. Majors: ' + ids + '. Beats: ' + want + '.');
+    }
     var B = {}; M.beats.forEach(function (b) { B[b.id] = b; });
     // An act statement lives in the manifest (the words) and the score (its `in`): they must agree.
     spec.majors.forEach(function (m) { if (!!B[m.id].interlude !== !!(m['in'] && m['in'].len)) throw new Error('score.json: ' + m.id + (B[m.id].interlude ? ' opens an act in the manifest but has no "in" in the score' : ' has an "in" but no act statement in the manifest')); });
@@ -997,7 +1050,59 @@
     score.layout(window.innerHeight);   // set pieces read minors on their first render, before the film measures
     return score;
   }
-  function getJSON(src) { return fetch(src, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(src + ': ' + r.status); return r.json(); }); }
+  /* ---------- the guard: a manifest that does not read says why, where, and how to fix it ---------- */
+  // A JSON parse failure with the file, the message, the line and column, and the offending lines with a caret.
+  function parseFailure(src, text, e) {
+    var msg = String(e && e.message || e), line = null, col = null, m;
+    if ((m = /\(line (\d+) column (\d+)\)/.exec(msg)) || (m = /line (\d+) column (\d+)/.exec(msg))) { line = +m[1]; col = +m[2]; }
+    else if ((m = /position (\d+)/.exec(msg))) {
+      var before = text.slice(0, +m[1]).split('\n'); line = before.length; col = before[before.length - 1].length + 1;
+    }
+    var excerpt = '';
+    if (line) {
+      var rows = text.split('\n'), from = Math.max(1, line - 1), to = Math.min(rows.length, line + 1), w = String(to).length;
+      for (var n = from; n <= to; n++) {
+        var row = rows[n - 1]; if (row.length > 160) row = row.slice(Math.max(0, col - 60), col + 90);
+        excerpt += ('      ' + n).slice(-w) + ' | ' + row + '\n';
+        if (n === line) excerpt += new Array(w + 3 + (rows[n - 1].length > 160 ? Math.min(col, 60) : col)).join(' ') + '^\n';
+      }
+    }
+    var hint = /escape/i.test(msg) ? 'A backslash in a string must be \\\\, \\", \\n, \\t or \\uXXXX. A stray \\. or \\\' is what blanked the page once already.' :
+      /Unexpected token|Expected/i.test(msg) ? 'Look just before the caret for a missing comma, a stray quote or an unclosed bracket.' : '';
+    msg = msg.replace(/\s*\(line \d+ column \d+\)/, '').replace(/ at position \d+/, '');
+    var err = new Error(src + ' does not parse: ' + msg);
+    err.panel = { file: src, title: src + ' does not parse', message: msg, line: line, col: col, excerpt: excerpt, hint: hint };
+    return err;
+  }
+  function FailPanel(props) {
+    var err = props.err || {}, P = err.panel || { title: 'The scene does not match', message: String(err.message || err), excerpt: '', hint: '' };
+    return h('main', { className: 'fail', role: 'alert' },
+      h('p', { className: 'eyebrow' }, 'The page could not read its words'),
+      h('h1', null, P.title),
+      h('p', null, P.message + (P.line ? ' (line ' + P.line + (P.col ? ', column ' + P.col : '') + ')' : '')),
+      P.excerpt ? h('pre', { className: 'fail__src' }, P.excerpt) : null,
+      P.hint ? h('p', null, P.hint) : null,
+      h('p', { className: 'caption-note' }, 'Fix the file and refresh. Saving it publishes it; the page re-reads it every time.'));
+  }
+  // A manifest that parses but has the wrong shape throws while rendering: show the panel, not a blank page.
+  function Boundary(p) { React.Component.call(this, p); this.state = { err: null }; }
+  Boundary.prototype = Object.create(React.Component.prototype);
+  Boundary.prototype.constructor = Boundary;
+  Boundary.getDerivedStateFromError = function (e) { return { err: e }; };
+  Boundary.prototype.componentDidCatch = function (e) { console.error('Overnight:', e); };
+  Boundary.prototype.render = function () { return this.state.err ? h(FailPanel, { err: this.state.err }) : this.props.children; };
+  function renderFail(err) {
+    var root = document.getElementById('root');
+    console.error('Overnight:', err);
+    root.textContent = '';
+    try { ReactDOM.createRoot(root).render(h(FailPanel, { err: err })); }
+    catch (e) { var p = document.createElement('p'); p.className = 'noscript'; p.textContent = 'The scene manifest did not load (' + err.message + ').'; root.appendChild(p); }
+  }
+  function getJSON(src) {
+    return fetch(src, { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error(src + ': ' + r.status); return r.text(); })
+      .then(function (text) { try { return JSON.parse(text); } catch (e) { throw parseFailure(src, text, e); } });
+  }
   Promise.all([getJSON('manifest.json'), getJSON('score.json')])
     .then(function (both) {
       var M = both[0];
@@ -1014,10 +1119,5 @@
         })
         .catch(function (err) { console.warn('Overnight: no real night, staging instead.', err); boot(M, null); });
     })
-    .catch(function (err) {
-      var root = document.getElementById('root');
-      root.textContent = '';
-      var p = document.createElement('p'); p.className = 'noscript'; p.textContent = 'The scene manifest did not load (' + err.message + ').';
-      root.appendChild(p);
-    });
+    .catch(renderFail);
 })();

@@ -5,7 +5,7 @@ One night at the company, told by the clock. You leave at 18:02, the company wor
 **Live (preview, noindex):** https://33god.delo.sh
 
 - Design system: [33GOD Overnight](https://claude.ai/artifact/3fX6X9vkEHw6tTG9z3DTQN), which extends [33GOD](https://claude.ai/artifact/BujKg4bcBTeuW1b1qwHDRA)
-- Experience bible (laws, the original 21 beats, camera, open decisions; the page now has 22, see "Flagships" below): [Overnight: Experience Bible](https://claude.ai/artifact/THg8wjmCVLk5WMFUqGepXu)
+- Experience bible (laws, the original 21 beats, camera, open decisions; the page now has 23, see "Flagships" below): [Overnight: Experience Bible](https://claude.ai/artifact/THg8wjmCVLk5WMFUqGepXu)
 - Copy source: [33GOD Landing Page](https://claude.ai/artifact/Liw6BUy95RR77TxhammtPo), `Main`
 
 This is the first full pass: every beat is staged so the whole vision can be judged end to end. The content underneath is not final.
@@ -30,6 +30,39 @@ This is the first full pass: every beat is staged so the whole vision can be jud
 Edit `site/manifest.json` and refresh. The page fetches it with `no-cache`, and nginx serves the folder from a live bind mount, so there is no build and no deploy step.
 
 Each beat carries design fields (`id`, `time`, `act`, `spectacle`, `camera`, `setPiece`) and content fields (`kicker`, `title`, `body`, `tags`, `staged`, `log`, and the per-beat extras under `copy`). Rewriting copy never moves a scene. Where a beat sits on the scroll is `site/score.json` (below).
+
+### Copy budgets
+
+Copy that does not fit its slot pushes the layout under the fixed header (this is how the page broke after the long hand edit). Each budget below was measured in a browser at 1280x720, the binding viewport (stage body is the viewport minus the 81px header). `tests/test_overnight_site.py` enforces them and its failure message names the slot, the count and the measurement.
+
+| Slot | Budget (target) | Why |
+|---|---|---|
+| `premise.body` (hero lede) | 540 chars, 90 words (aim 60) | the hero column is 561px of 591 at 90 words |
+| `premise.title` / `titleTurn` | 14 / 24 chars | keeps the h1 to two lines |
+| `premise.kicker` / `copy.secondary` | 80 / 60 chars | one line each |
+| caption `body` (every other beat, `thesis` included) | 430 chars, 75 words (aim 55) | 60px clear of the header with a 3-line title |
+| `org-chart.body` (shares its column with the quote) | 380 chars, 65 words | quote + source take 120px |
+| caption `body` + `aside` | 622 chars | the gateway is the tightest caption shipped |
+| caption `kicker` / `title` | 64 / 62 chars | one line / three lines at most |
+| `figures[].label` / `n` / `numbers.stamp` | 90 (aim 64) / 3 / 90 chars | the directory column is 187px wide |
+| `departments[].line` and `staff[].line` | 80 chars (aim 64) | the cell is 204px, the nameplate 240px; CSS clamps a line to 3 lines |
+| `dept` label / entry `name` | 24 / 20 chars | one line |
+| `copy.quote` / `quoteSource` | 110 / 80 chars | two lines. Open and close it with curly quotes. |
+| `detail` (any entry) | 280 chars (aim 220) | the popover is about 220px wide |
+| `site.nav` | 5 labels, 14 chars each | a 6th wraps the header |
+
+House rules the test also pins: no string says "fleet" (the FLUME charter bans it; only `copy.quote` may), no leading or trailing space, no double space, no duplicate JSON key.
+
+### The optional `detail` field
+
+Any entry in any list in a beat's `copy` (`departments`, `staff`, `figures`, `parts`, `roles` and any list added later) may carry `detail`: the long form of its short `line` (or `label`). The short text stays on the card; `detail` opens as a popover on hover or keyboard focus (out of flow, so a card never changes size, and it opens upward from the lower half of a list), appears under the nameplate when you hover that component's window in the building, and is listed in full in the log view. Nothing renders unless the field is there, and nothing in `overnight.js` is keyed to a particular list.
+
+### The guard
+
+- A manifest or score that does not parse now shows a readable panel (file, message, line and column, the offending lines with a caret) instead of a blank page. A manifest that parses but has the wrong shape shows a panel too. Saving the fix publishes it.
+- `cd 33god-platform && python3 -m pytest tests/test_overnight_site.py` parses every JSON file (duplicate keys fail), checks the manifest's shape, that the score's majors match the beats in order, the budgets above and the house rules. It takes under a second. `OVERNIGHT_LAYOUT=1` also drives the film at three viewports (needs playwright and chromium; about 1.5 minutes). `OVERNIGHT_SITE=<dir>` points it at a copy.
+- `?view=log` and `?view=film` choose the view (width under 760px and reduced motion still default to the log).
+- `site.viewSimulation` ("View as 3D simulation") is a placeholder: there is no 3D simulation yet and nothing renders it.
 
 ## The score: scroll offset markers
 
@@ -69,8 +102,8 @@ A beat with `"flagship": true` is a flagship. Flagships are numbered `F-01`, `F-
 
 The page replays a real night of the company: **16–17 Nov 2026, 18:02 to 07:41 EST, 57,875 Bloodbank events from 30 components.** The clock time is the real time, so at 03:12 on the page you are looking at what the company did at 03:12 that night.
 
-- **Working windows are real** in seven beats: the opening building once its windows have come on, the numbers beat, and the ambient building in Act IV (staff, pjangler, gateway, heyma, flume, outside each beat's own set piece). A window is working when its component published on the bus in the last three minutes; Hook-hub handler work lights the component it was for. Seats left over after the named ones go to components that worked that night and have no seat of their own (hover shows the registry summary); a first-party Hermes PM desk that worked and has no PM seat gets one (`PM · 33GOD`); seats with no component stay dark. Hover works where the building is at full size (staff, pjangler, gateway, heyma, flume), not in the zoomed-out numbers beat. The film re-renders on a real minute only when that minute flips a window. Act III and every set piece stay staged. The list is `NIGHT_BEATS` in `overnight.js`.
-- **The clock's label follows suit**: "Real night · 16–17 Nov 2026" over those seven beats, "A night, staged" everywhere else.
+- **Working windows are real** in eight beats: the opening building once its windows have come on, the thesis beat (the held building), the numbers beat, and the ambient building in Act IV (staff, pjangler, gateway, heyma, flume, outside each beat's own set piece). A window is working when its component published on the bus in the last three minutes; Hook-hub handler work lights the component it was for. Seats left over after the named ones go to components that worked that night and have no seat of their own (hover shows the registry summary); a first-party Hermes PM desk that worked and has no PM seat gets one (`PM · 33GOD`); seats with no component stay dark. Hover works where the building is at full size (staff, pjangler, gateway, heyma, flume), not in the zoomed-out numbers beat. The film re-renders on a real minute only when that minute flips a window. Act III and every set piece stay staged. The list is `NIGHT_BEATS` in `overnight.js`.
+- **The clock's label follows suit**: "Real night · 16–17 Nov 2026" over those eight beats, "A night, staged" everywhere else.
 - **The counter under the clock is real** on every beat: events archived before that minute of the real night.
 - **The log view** interleaves real lines (blue rule) with the staged beats: per beat, up to three real moments between that beat's time and the next, rare events first.
 - **Still staged**: every set piece (the bus, the conference-room transcript, the tickets, the checklists, the car), and the window states those set pieces drive.
@@ -86,7 +119,7 @@ The digest holds producer, event type and local wall-clock minute only, never pa
 | Component names and their one-liners | Real, from the landing page copy |
 | The five counts (72, 12, 214, 299, 1) | Real, stamped 15 Nov 2026 |
 | Event subjects | Real, from the Bloodbank contract. Which subject sits on which beat is a first guess and needs a content pass. |
-| Clock times, window activity | Real in the seven night beats when a night file loads (see above). Beat times themselves are staged. |
+| Clock times, window activity | Real in the eight night beats when a night file loads (see above). Beat times themselves are staged. |
 | Event counter under the clock | Real, from the night file |
 | Transcript words, speaker names, the translated call | Staged, written for this pass |
 | The briefing form | Lights your window and stores nothing. It says so under the field. |

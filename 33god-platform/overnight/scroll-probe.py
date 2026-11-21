@@ -1,7 +1,7 @@
 """Scroll-feel probe for the Overnight page.
 
 Plays 60 real mouse-wheel notches (100px, 90ms apart, browser smooth scrolling off) and reads the
-film position every animation frame, then stops dead inside four camera travels and reports where
+film position every animation frame, then stops dead inside four camera travels (numbers, bus, jev, pms-talk) and reports where
 the film comes to rest.
 
   cd site && python3 -m http.server 47391 --bind 127.0.0.1 &
@@ -37,7 +37,7 @@ with sync_playwright() as pw:
     biggest = max(abs(x) for x in d)
     # settle test: stop dead in the middle of each of 4 travels, check where the film comes to rest
     results = []
-    for bi in [1, 3, 7, 12]:
+    for bi in [beats.index(i) for i in ('numbers', 'bus', 'jev', 'pms-talk')]:   # by id, so adding a beat does not change what is probed
         # Use the page's own layout: scroll to 85% through beat bi (inside the travel), no wheel
         y = pg.evaluate("""(bi) => { const vh=innerHeight; return fetch('score.json').then(r=>r.json()).then(s=>{ const m=s.majors[bi], k=(s.scale||1)*vh/100; return (m.start + (m.end-m.start)*0.85)*k; }); }""", bi)
         pg.evaluate(f"window.scrollTo(0, {y})"); pg.wait_for_timeout(60)

@@ -108,6 +108,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .plate { position: absolute; display: flex; transform: translateY(-18px); }
 .plate__lead { position: absolute; left: 100%; top: 18px; height: 1px; background: var(--stage-ink-3); }
 .plate--up { transform: translateY(calc(-100% + 18px)); }
+.plate__col { display: flex; flex-direction: column; }
+.plate--up .plate__col { flex-direction: column-reverse; }
+.plate__detail { max-width: 240px; margin-top: -1px; padding: 8px 12px; background: var(--stage-ground); border: 1px solid var(--stage-rule); border-top: 0; border-radius: 0 0 var(--radius-bezel) var(--radius-bezel); font: 400 12px/17px var(--font-sans); color: var(--stage-ink-3); }
+.plate--up .plate__detail { margin-top: 0; margin-bottom: -1px; border-top: 1px solid var(--stage-rule); border-bottom: 0; border-radius: var(--radius-bezel) var(--radius-bezel) 0 0; }
 .plate--up .plate__lead { top: auto; bottom: 18px; }
 .leave { position: absolute; transform: translateY(-50%); white-space: nowrap; padding: 2px 6px; background: var(--stage-ground);
   opacity: calc(clamp(0, calc((var(--q) - 0.2) / 0.06), 1) * (1 - clamp(0, calc((var(--q) - 0.42) / 0.08), 1))); }
@@ -172,7 +176,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .directory { inset: auto auto auto 0; top: 50%; transform: translateY(-54%); display: flex; flex-direction: column; }
 .directory__row { display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: baseline; gap: 16px; padding: 12px 0; border-top: 1px solid var(--stage-rule); }
 .directory__n { font: 360 52px/1 var(--font-display); letter-spacing: -0.02em; font-variation-settings: 'opsz' 60; color: var(--stage-ink); font-variant-numeric: tabular-nums; }
-.directory__label { font: 400 15px/22px var(--font-sans); color: var(--stage-ink-2); }
+.directory__label { font: 400 15px/22px var(--font-sans); color: var(--stage-ink-2); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .directory .caption-note { padding-top: 12px; border-top: 1px solid var(--stage-rule); }
 
 .org { display: flex; flex-direction: column; justify-content: center; }
@@ -184,7 +188,17 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .org__cell::before { content: ""; position: absolute; left: 0; top: 0; width: 1px; height: 8px; background: var(--stage-ink-3); }
 .org__cell .eyebrow { padding-left: 8px; }
 .org__name { color: var(--stage-ink); }
-.org__line { font: 400 13px/18px var(--font-sans); color: var(--stage-ink-2); }
+.org__line { font: 400 13px/18px var(--font-sans); color: var(--stage-ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* The optional long form of any list entry (`detail`): out of flow, so a card never changes height. Over budget text clips
+   above; the full text is always in this popover and in the log view. */
+.has-detail { position: relative; pointer-events: auto; cursor: default; }
+.has-detail:hover, .has-detail:focus, .has-detail:focus-within { z-index: 5; }
+.has-detail:focus-visible { outline: none; box-shadow: var(--g33-focus-ring); border-radius: 2px; }
+.detail { display: none; position: absolute; left: -8px; right: -8px; top: 100%; margin-top: -4px; padding: 10px 12px; background: var(--stage-ground); border: 1px solid var(--g33-line-strong); border-radius: var(--radius-bezel); font: 400 13px/18px var(--font-sans); color: var(--stage-ink-2); text-transform: none; letter-spacing: 0; z-index: 6; }
+.detail--up { top: auto; bottom: 100%; margin-top: 0; margin-bottom: -4px; }
+.has-detail:hover > .detail, .has-detail:focus > .detail, .has-detail:focus-within > .detail { display: block; }
+.directory__row.has-detail .detail { left: 100px; right: 0; }
 
 .bus { display: flex; flex-direction: column; justify-content: center; gap: 26px; }
 .bus__lane { position: relative; height: 66px; --e: clamp(0, calc((var(--q) - 0.06) * 1.2), 1); }
@@ -305,6 +319,13 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .logview .hud { position: sticky; top: 0; background: var(--stage-ground); }
 .logview__main { max-width: 52rem; margin: 0 auto; padding: 64px var(--stage-gutter) 96px; display: flex; flex-direction: column; gap: 20px; }
 .logview__act { margin-top: 24px; }
+.logview__detail { margin: 6px 0 14px; display: grid; gap: 10px; }
+.logview__detail dt { margin: 0; }
+.logview__detail dd { margin: 0; font: 400 13px/18px var(--font-sans); color: var(--stage-ink-2); }
+.logview__more { display: block; margin-top: 2px; color: var(--stage-ink-3); }
+.fail { max-width: 44rem; margin: 12vh auto 0; padding: 0 var(--stage-gutter); display: flex; flex-direction: column; gap: 16px; color: var(--stage-ink-2); font: 400 16px/24px var(--font-sans); }
+.fail h1 { font: 360 clamp(28px, 4vw, 44px)/1.05 var(--font-display); color: var(--stage-ink); }
+.fail__src { margin: 0; padding: 12px 14px; overflow: auto; background: var(--stage-rule); border: 1px solid var(--stage-rule); border-radius: var(--radius-bezel); font: 400 13px/20px var(--font-mono); color: var(--stage-ink); }
 .logview__act h2 { margin: 0 0 10px; }
 .logview__act .on-log:last-child { border-bottom: 1px solid var(--stage-rule); }
 .logview__ask { display: flex; flex-direction: column; gap: 16px; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--stage-rule); }
