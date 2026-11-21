@@ -75,6 +75,29 @@
    "failed": [
     "manifest-height"
    ]
+  },
+  {
+   "run": "2026-11-21T01:40-0500",
+   "id": "candybar",
+   "mode": "build",
+   "outcome": "shipped",
+   "score": 8.0,
+   "commit": "09fa0dd",
+   "tokens": {
+    "input": 193,
+    "output": 120903,
+    "cache_creation": 380224,
+    "cache_read": 14644494,
+    "total": 121096,
+    "cost_usd": 18.65240649999999,
+    "turns": 109,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built the candybar clock station in two rounds, and the full `factory_forge.py verify` passes (10,542 tris, 266 KB, 5.79 m). It is a red Triggers-zone clock tower that shows the three parts the record describes. The heartbeat is a bell, hammer, pendulum and cuckoo house; on a `tick fired` visit a Driver-only Strike clip rings the bell and stands the tick post-it on the perch. The registry is a c"
+   },
+   "showcase_url": "https://s3.delo.sh/projects/33god/2026-11-21/factory-forge-candybar/index.html",
+   "duration_s": 1956.0,
+   "note": "lessons landed (1 path(s))"
   }
  ]
 }
