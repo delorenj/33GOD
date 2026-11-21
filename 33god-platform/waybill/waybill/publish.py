@@ -1,6 +1,7 @@
 """waybill publish: public profile, MinIO via the artifacts skill, the Factory deep link."""
 from __future__ import annotations
 
+import gzip
 import json
 import os
 import subprocess
@@ -47,19 +48,30 @@ def publish(path: str, full: bool = False, name: str | None = None, project: str
     runner is the subprocess.run stand-in (tests mock it); the real call is
     python3 publish.py <dir> --name <name> --entry <id>.waybill.json [--project P] [--dry-run].
     """
-    with open(path, encoding="utf-8") as fh:
-        wb = json.load(fh)
+    raw = Path(path).read_bytes()
+    gz = raw[:2] == b"\x1f\x8b"
+    wb = json.loads((gzip.decompress(raw) if gz else raw).decode("utf-8"))
     if wb.get("format") != "33god.waybill":
         raise ValueError(f"{path} is not a 33god.waybill document")
+    rec = wb.get("recorder") or {}
+    if rec.get("mode") == "query" and rec.get("profile") != "public" and not full:
+        # a query waybill is public by construction (aliased desks, no private names); cutting a full one
+        # afterwards cannot alias anything, so it would leak what the public profile exists to hide
+        raise ValueError("this is a full-profile query waybill; rebuild it with --profile public (the default) "
+                         "or pass --full to publish it as is")
     wb = M.scrub_obj(wb) if full else to_public(wb)
     wid = wb.get("id") or Path(path).name.split(".")[0]
     name = name or ("waybill-" + wid.lower().replace("_", "-"))
-    fname = f"{wid}.waybill.json"
+    fname = f"{wid}.waybill.json" + (".gz" if gz else "")
     run = runner or subprocess.run
     with tempfile.TemporaryDirectory(prefix="waybill-publish-") as tmp:
         d = Path(tmp) / name
         d.mkdir(parents=True)
-        (d / fname).write_text(json.dumps(wb, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        if gz:    # a query waybill ships compact and gzipped; the Factory sniffs the magic bytes
+            body = (json.dumps(wb, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+            (d / fname).write_bytes(gzip.compress(body, compresslevel=9, mtime=0))
+        else:
+            (d / fname).write_text(json.dumps(wb, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         cmd = [sys.executable, str(PUBLISH_SCRIPT), str(d), "--name", name, "--entry", fname]
         if project:
             cmd += ["--project", project]

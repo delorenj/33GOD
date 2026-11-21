@@ -43,6 +43,34 @@ cmd publish help="Publish a public profile and print the Factory link" {
     flag --project { arg <PROJECT> }
     flag --dry-run
 }
+cmd query help="Replay any Candystore query as a waybill" {
+    flag --since { arg <TIME> }
+    flag --until { arg <TIME> }
+    flag --last { arg <DURATION> }
+    flag --last-night
+    flag --from-url { arg <URL> }
+    flag --type { arg <TYPES> }
+    flag --producer { arg <PRODUCER> }
+    flag --project { arg <PROJECT> }
+    flag --correlation { arg <ID> }
+    flag --scope { arg <SCOPES> }
+    flag --lens { arg <LENS> }
+    flag --q { arg <TEXT> }
+    flag --class { arg <CLASS> }
+    flag --clock { arg <CLOCK> }
+    flag --tz { arg <ZONE> }
+    flag --label { arg <LABEL> }
+    flag --budget-stops { arg <STOPS> }
+    flag --max-kb { arg <KIB> }
+    flag --profile { arg <PROFILE> }
+    flag --include-dead-letters
+    flag --no-include-dead-letters
+    flag --no-capture
+    flag "-o --output" { arg <PATH> }
+    flag --publish
+    flag --name { arg <NAME> }
+    flag --artifact-project { arg <PROJECT> }
+}
 cmd night help="Digest a wall-clock window into a night file" {
     flag --date { arg <DATE> }
     flag --from { arg <TIME> }

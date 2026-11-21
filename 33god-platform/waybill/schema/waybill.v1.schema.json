@@ -25,7 +25,7 @@
     "gaps": {"type": "array", "items": {"$ref": "#/$defs/Gap"}},
     "findings": {"type": "array", "items": {"$ref": "#/$defs/Finding"}},
     "sources": {"type": "array", "items": {"$ref": "#/$defs/Source"}},
-    "stats": {"type": "object", "additionalProperties": {"type": "number"}}
+    "stats": {"type": "object", "additionalProperties": {"type": ["number", "boolean"]}}
   },
   "$defs": {
     "Recorder": {
@@ -36,7 +36,7 @@
         "name": {"const": "waybill"},
         "version": {"type": "string"},
         "host": {"type": "string"},
-        "mode": {"enum": ["record", "capture"]},
+        "mode": {"enum": ["record", "capture", "query"]},
         "profile": {"enum": ["full", "public"]},
         "argv": {"type": "array", "items": {"type": "string"}}
       }
@@ -53,6 +53,22 @@
         "turn_index": {"type": ["integer", "null"]},
         "cwd": {"type": ["string", "null"]},
         "project": {"type": ["string", "null"]},
+        "query": {
+          "type": "object",
+          "description": "recorder.mode 'query' only: the Candystore query this waybill replays (SPEC 2b)",
+          "additionalProperties": true,
+          "required": ["since", "until", "clock", "filters", "total", "dead_letters", "candystore", "label"],
+          "properties": {
+            "since": {"type": "string"},
+            "until": {"type": "string"},
+            "clock": {"enum": ["received_at", "time"]},
+            "filters": {"type": "object", "additionalProperties": {"type": "string"}},
+            "total": {"type": "integer"},
+            "dead_letters": {"type": "integer"},
+            "candystore": {"type": "string"},
+            "label": {"type": "string"}
+          }
+        },
         "model": {
           "type": ["object", "null"],
           "additionalProperties": true,
@@ -103,7 +119,7 @@
       "required": ["id", "kind", "component", "name", "summary", "phase", "t0", "t1", "status", "evidence"],
       "properties": {
         "id": {"type": "string"},
-        "kind": {"type": "string", "description": "prompt | hook | handler | context | memory | publish | consume | state | notify | llm | tool | file | turn | string"},
+        "kind": {"type": "string", "description": "prompt | hook | handler | context | memory | publish | consume | state | notify | llm | tool | file | turn | chapter | batch | string"},
         "component": {"type": "string"},
         "name": {"type": "string"},
         "summary": {"type": "string"},

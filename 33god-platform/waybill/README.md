@@ -21,13 +21,14 @@ waybill --help
 
 Or run `bin/waybill` in place. `mise run test` runs the unit tests (no live systems touched).
 
-## The four commands
+## The commands
 
 ```bash
 waybill capture --session <sid> [--turn N | --latest | --at <ISO>] [--cli claude|codex] [--profile full|public]
 waybill record  [--cli claude|codex] [--profile full|public]
 waybill show    <file.waybill.json> [--width N] [--all] [--no-color]
-waybill publish <file.waybill.json> [--full] [--name N] [--dry-run]
+waybill publish <file.waybill.json[.gz]> [--full] [--name N] [--dry-run]
+waybill query   [--last 2h | --last-night | --since/--until | --from-url URL] [filters] -o X.waybill.json.gz [--publish]
 waybill list    [--cli claude|codex] [--limit N] [--json]     # pick a turn to capture
 waybill night   [--date YYYY-MM-DD] [--from 18:02] [--to 07:41] [--tz America/New_York] [-o DIR|FILE]
 ```
@@ -82,6 +83,31 @@ Glyphs: `✓` ok, `·` skipped, `✗` failed, `⏱` timeout, `…` pending, `⊘
 (`https://s3.delo.sh/projects/<project>/<date>/<name>/`), reads it back anonymously, then prints the JSON
 URL and the Factory link. `--dry-run` runs the publish script without uploading. `--full` publishes the
 full profile as is (only the credential scrubber still runs).
+
+## Query: the archive as a waybill
+
+`waybill query` replays any Candystore query (SPEC 2b) as one waybill the Factory plays like any other:
+chapters for the shape of the window, individual events for the rare, the failed and the dead-lettered, and
+per-minute batches for the rest.
+
+```bash
+waybill query --last 2h -o /tmp/last-2h.waybill.json.gz
+waybill query --last-night -o /tmp/last-night.waybill.json.gz --publish     # 18:02 to 07:41 America/New_York
+waybill query --since 2026-11-20 --until 2026-11-21 --project flume --lens errors -o flume-errors.waybill.json.gz
+waybill query --from-url 'https://candystore.delo.sh/projects/flume?lens=errors&from=2026-11-20T18:00'
+waybill query --correlation <session id>        # one session inside hook-hub retention: runs the capture path
+```
+
+- Read-only: a read-only Postgres transaction, bounded by the time window (the `time` column, `idx_events_time`),
+  keyset-paged by `(time, id)`, with an `as_of` fence on `received_at` so the count and the pages agree.
+  Candystore's own `query._filters` renders the filters, so `--lens` and `--q` mean what the UI means.
+  The read is one class (`PsqlReader`) so it can switch to `GET /export` (CANDYS-78) without touching the fold.
+- Conservation is checked every time: kept events + batched events == Candystore's count + dead letters.
+  `stats.conservation_ok` says so; the command exits 3 and does not publish when it fails.
+- `--profile public` (default) follows the night digest: message, call and payment types are counted, never
+  named; third-party desks are `desk-<n>`; unresolvable producers `producer-<n>`. `--publish` refuses a full one.
+- `waybill night` and `33god.night` stay; `--last-night` is the same window.
+- Commands (`bloodbank.cmd.>`) are not archived, so they are not in a query waybill.
 
 ## How the Factory plays it
 
@@ -167,6 +193,8 @@ waybill/collectors/        one module per source; REGISTRY in __init__.py
 waybill/window.py          turn window resolver
 waybill/assemble.py        merge, joins, rebase, gaps, findings, stats, profiles
 waybill/cli.py live.py show.py publish.py
+waybill/query.py           waybill query: archive reader, chapters, keep rules, batches, conservation
+waybill/registry.py        the one resolver: which component is this event
 schema/waybill.v1.schema.json
 tests/                     python3 -m unittest discover -s tests
 ```

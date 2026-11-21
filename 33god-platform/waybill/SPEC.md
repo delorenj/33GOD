@@ -53,7 +53,7 @@ interface Waybill {
   id: string                     // 'wb_' + 26-char sortable id (time-based)
   title: string                  // human, e.g. 'claude · "Read the candystore README…" · 41 s'
   recorded_at: string            // ISO
-  recorder: { name: 'waybill', version: string, host: string, mode: 'record' | 'capture', profile: 'full' | 'public', argv?: string[] }
+  recorder: { name: 'waybill', version: string, host: string, mode: 'record' | 'capture' | 'query', profile: 'full' | 'public', argv?: string[] }
   origin: {
     cli: 'claude' | 'codex' | string
     surface: 'claude-code' | 'claude-code-headless' | 'codex-cli' | 'codex-exec' | 'codex-desktop' | string
@@ -63,6 +63,7 @@ interface Waybill {
     cwd: string | null
     project: string | null       // repo / bank name
     model: { requested: string | null, served: string | null } | null
+    query?: QueryOrigin           // mode 'query' only, see 2b
   }
   prompt: { text: string | null, chars: number, sha256: string, truncated: boolean }
   clock: { t0: string, t_end: string, duration_ms: number, settle_ms: number }   // t0 = the submit instant
@@ -183,6 +184,77 @@ interface Source {
   error?: string | null
 }
 ```
+
+### 2b. Query mode (`recorder.mode: 'query'`), additive to v1
+
+`waybill query` writes any Candystore query (last night, the last two hours, one project's errors, one
+session) as a waybill. A capture follows one prompt; a query is the wide shot. It is the same format: a
+reader that does not know the mode plays it as a capture, and unknown span kinds fall to kiosks.
+Filename `<id>.waybill.json.gz` (compact JSON, gzipped; readers sniff the gzip magic bytes). Target under
+2 MB gzipped for a 14-hour night; `--max-kb` is the hard limit.
+
+```ts
+origin: { cli: 'candystore', surface: 'query', session_id: 'q_<sha12>', turn_id: null, turn_index: null, cwd: null,
+          project: string | null, model: null,
+          query: { since: ISO, until: ISO, clock: 'received_at' | 'time',
+                   filters: { type?, producer?, project?, correlation?, scope?, lens?, q?, class?, domain?, service?, cli? },
+                   total: number,          // Candystore's own count for the query
+                   dead_letters: number,   // dead letters shown (not in total)
+                   candystore: string,     // base url
+                   label: string,          // 'Last night, 18:02 to 07:41'
+                   tz?: string, as_of?: ISO } }   // as_of: the read fence on received_at (a query is reproducible)
+prompt: { text: 'You asked the archive: everything the company did last night, 18:02 to 07:41', chars, sha256, truncated: false }
+clock:  { t0: since, t_end: until, ... }          // every t is ms relative to t0
+```
+
+`q_<sha12>` is the hash of the normalized query (since, until, clock, filters), so a query has one id.
+The `prompt` and `turn` spans sit at `candystore`.
+
+**Chapters.** At most 12 (`min(12, budget_stops / 5, ceil(minutes / 5))`), cut at whole minutes of equal
+length. Span kind `chapter`, id `chapter:<n>` (n from 1), `t0` / `t1` the chapter's slice of the window, name
+`"<hh:mm>-<hh:mm> · <dominant components>"` (local time; a component is dominant when its share in the
+chapter is high relative to its share in the whole window), `attrs {index, events, kept, batches, failed}`.
+
+**Keep rules.** Individual events (a BusEvent plus a `publish:<id>` span at its resolved component, phase
+`async_after`, parent its chapter, `attrs.keep` the reason) are:
+
+1. dead letters: a BusEvent whose `candystore-events` consumer outcome is `dropped`, plus a `broken` gap;
+2. anything a finding names (up to 3 exemplars per finding);
+3. rare ones: 12 or fewer of that producer + type in the window;
+4. failures: the type ends in failed / exhausted / denied / breached, `data.outcome` or `data.status` says
+   so, or an `agent.hook.updated` invocation or execution failed or timed out.
+
+Cap 400, with a `warn` gap when rules overflow it (failures and rare events share what is left, failures
+round-robin across (component, type) groups). A query that already fits under 400 keeps everything.
+
+**Batches.** Everything else folds per (component, type, chapter): span kind `batch`, id
+`batch:<component>:<short type>:<n>`, name the short type, summary `"<count> × <short type>"`, `t0` / `t1` the
+first and last event in the chapter, status `failed` when any member failed, parent `chapter:<n>`,
+`attrs {count, type, producers[], chapter, per_minute: int[] (one per minute of the chapter), exemplars: id[<=3], failed, rank}`
+(`credit` adds the Candybar worker owners). `component` is the resolved id (registry.py, the one resolver).
+
+**Synthesized spans** from kept events: `tool:<tool_use_id>` (requested/completed), `llm:<request_id>`
+(from `llm.usage.recorded`, joined by `data.request_id`; a non-numeric id is a background call),
+`hook:<inv>` + `handler:<inv>:<handler>` (from `agent.hook.updated`, not `system.hook.updated`).
+
+**Stats and conservation.**
+
+```ts
+stats: { query_total, kept_events, batched_events, batches, chapters, dead_letters,
+         conservation_ok: boolean, unresolved_producers: number, ... }
+```
+
+`kept_events + sum(batch counts) == query_total + dead_letters`. If not, `conservation_ok` is false and a
+`broken` gap (and finding) says by how much. A producer no rule resolves goes to the `unknown` component and
+is listed in a finding; it is never dropped. Commands (`bloodbank.cmd.>`) are not archived and so are not
+here (an info gap says so).
+
+**Public profile** matches `night.py`: message, call and payment types (`PRIVATE_TYPES`) fold into a batch
+typed `private` and are never kept or named; third-party Hermes desks become `hermes-desk:desk-<n>`, tenants
+`tenant:tenant-<n>`, unresolvable producers `producer-<n>`, and their payloads are withheld.
+
+A single-session query (a lone `--correlation`) whose prompt is inside hook-hub's receipt retention is not a
+query: the CLI runs the capture path and says so (`--no-capture` opts out).
 
 ### Profiles
 

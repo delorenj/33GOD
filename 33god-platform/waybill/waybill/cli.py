@@ -1,4 +1,4 @@
-"""waybill command line: capture | record | show | publish | list (SPEC section 4)."""
+"""waybill command line: capture | record | show | publish | query | night | list (SPEC section 4)."""
 from __future__ import annotations
 
 import argparse
@@ -242,6 +242,11 @@ def write_waybill(wb: dict, out: str | None, compact: bool = False) -> Path:
         path = path / f"{wb['id']}.waybill.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
+    if path.suffix == ".gz":
+        from . import query as Q
+        tmp.write_bytes(Q.encode(wb, True))
+        tmp.replace(path)
+        return path
     tmp.write_text((json.dumps(wb, ensure_ascii=False, separators=(",", ":"), default=str) if compact
                     else json.dumps(wb, ensure_ascii=False, indent=1, default=str)) + "\n")
     tmp.replace(path)
@@ -306,8 +311,11 @@ def cmd_record(a: argparse.Namespace, argv: list[str]) -> int:
 
 
 def load_waybill(path: str) -> dict:
-    with open(path, encoding="utf-8") as fh:
-        wb = json.load(fh)
+    raw = Path(path).read_bytes()
+    if raw[:2] == b"\x1f\x8b":        # .waybill.json.gz (a query waybill)
+        import gzip
+        raw = gzip.decompress(raw)
+    wb = json.loads(raw.decode("utf-8"))
     if not isinstance(wb, dict) or wb.get("format") != "33god.waybill":
         raise ValueError(f"{path} is not a 33god.waybill document")
     if int(wb.get("version") or 0) != 1:
@@ -422,6 +430,182 @@ def cmd_night(a: argparse.Namespace, argv: list[str]) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- query
+
+def parse_when(text: str, tz: str) -> float:
+    """ISO 8601 (a naive time or a bare date is read in tz) -> epoch ms."""
+    from datetime import datetime as _dt
+    from zoneinfo import ZoneInfo
+    t = (text or "").strip()
+    try:
+        d = _dt.fromisoformat(t.replace("Z", "+00:00"))
+    except ValueError:
+        raise ValueError(f"cannot read the time {text!r} (use ISO 8601, e.g. 2026-11-20T18:02 or 2026-11-20)") from None
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=ZoneInfo(tz))
+    return d.timestamp() * 1000.0
+
+
+def find_session(correlation: str) -> tuple[str, str | None] | None:
+    """(session_id, cli) of the hook-hub session a Candystore correlation id names, or None."""
+    from .collectors import candystore as CS
+    try:
+        direct = receipts_query("select session_id, cli from invocations where session_id=? limit 1", (correlation,))
+        if direct:
+            return direct[0][0], direct[0][1]
+        for sid, cli in receipts_query("select distinct session_id, cli from invocations where session_id != '' and cli='codex'"):
+            if CS.correlation_id(cli, sid) == correlation:
+                return sid, cli
+    except sqlite3.Error:
+        return None
+    return None
+
+
+def session_upgrade(correlation: str, since: float, until: float) -> tuple[M.TurnWindow | None, list[str]]:
+    """A single-session query inside hook-hub's receipt retention is a capture: (window, notes).
+    window is None when the session is not in the receipts, started before them, or holds several prompts
+    in the window; notes then lists the --at values a capture would take."""
+    found = find_session(correlation)
+    if not found:
+        return None, []
+    sid, cli = found
+    try:
+        rows = receipts_query("select received_at from invocations where session_id=? and native='UserPromptSubmit' "
+                              "order by received_at", (sid,))
+        oldest = receipts_query("select min(received_at) from invocations")[0][0]
+    except sqlite3.Error:
+        return None, []
+    inside = [r[0] for r in rows if since - 1000 <= (M.ms(r[0]) or 0) <= until + 1000]
+    if not rows or (oldest and (M.ms(oldest) or 0) > since):
+        return None, []             # the receipts do not reach back to the start of the query
+    if len(inside) != 1:
+        return None, [f"waybill capture --session {sid} --at {r}" for r in inside[:10]]
+    window, _note = resolve_window(sid, cli, None, False, inside[0])
+    return window, []
+
+
+def cmd_query(a: argparse.Namespace, argv: list[str]) -> int:
+    from . import query as Q
+    from . import publish as P
+    tz = a.tz
+    reader = Q.PsqlReader()
+    try:
+        now = reader.now_ms()
+        filters = {k: v for k, v in {"type": a.type, "producer": a.producer, "project": a.project, "correlation": a.correlation,
+                                     "scope": a.scope, "lens": a.lens, "q": a.q, "class": a.cls}.items() if v}
+        since = until = None
+        event = None
+        kind, extra = "window", ""
+        if a.from_url:
+            u = Q.parse_candystore_url(a.from_url)
+            filters = {**u["filters"], **filters}
+            event = u["event"]
+            if u["from"]:
+                since = parse_when(u["from"], tz)
+            if u["to"]:
+                until = parse_when(u["to"], tz)
+        if a.last_night:
+            since, until = Q.last_night(now, tz)
+            kind = "last-night"
+        elif a.last:
+            until = now if not a.until else parse_when(a.until, tz)
+            since = until - Q.parse_duration(a.last)
+            kind = "last"
+        else:
+            if a.since:
+                since = parse_when(a.since, tz)
+            if a.until:
+                until = parse_when(a.until, tz)
+        if event and since is None:
+            t = reader.event_time(event)
+            if t is None:
+                _err(f"waybill query: event {event} is not in the archive")
+                return 2
+            since, until = t - 60_000.0, t + 60_000.0
+        if since is None and filters.get("correlation"):
+            span = reader.session_span(filters["correlation"])
+            if span:
+                since, until = span[0], span[1] + 1000.0
+                kind, extra = "session", filters["correlation"]
+        if since is None:
+            until = now if until is None else until
+            since = until - 24 * 3600 * 1000.0         # Candystore's own default window
+        elif until is None:
+            until = now
+        if until <= since:
+            _err("waybill query: the window is empty (--until is not after --since)")
+            return 2
+        clamped = until > now - 2000.0 and kind == "last-night"
+        label = a.label or Q.window_label(kind, since, min(until, now - 2000.0) if clamped else until, tz, clamped, extra)[0]
+        when = Q.window_label(kind, since, min(until, now - 2000.0) if clamped else until, tz, clamped, extra)[1]
+        if clamped:
+            until = min(until, now - 2000.0)
+    except (ValueError, RuntimeError) as exc:
+        _err(f"waybill query: {exc}")
+        return 2
+    spec = Q.QuerySpec(since=since, until=until, clock=a.clock, filters=filters, label=label, when=when, tz=tz,
+                       profile=a.profile, budget_stops=a.budget_stops, include_dead_letters=a.include_dead_letters)
+
+    # a single session inside hook-hub's retention is a capture: richer, and it says so
+    only_session = set(k for k, v in filters.items() if v) == {"correlation"}
+    if only_session and not a.no_capture:
+        window, ats = session_upgrade(filters["correlation"], since, until)
+        if window is not None:
+            print(f"single-session query inside hook-hub retention: upgraded to a capture of {window.cli} session "
+                  f"{window.session_id} turn {window.turn_index or '?'} (--no-capture keeps the query waybill)", file=sys.stderr)
+            wb = run_pipeline(window, profile="public" if a.profile == "public" else "full", mode="capture", argv=["waybill", *argv],
+                              progress=lambda s: print(s, file=sys.stderr))
+            path = write_waybill(wb, a.output, compact=True)
+            for line in summary_lines(wb):
+                print(line)
+            print(str(path))
+            return _maybe_publish(a, str(path), P)
+        if ats:
+            print("this session has several prompts in the window; capture one turn with:\n  " + "\n  ".join(ats), file=sys.stderr)
+
+    t_all = time.monotonic()
+    try:
+        wb = Q.run(spec, reader, progress=lambda s: print(s, file=sys.stderr))
+    except Exception as exc:
+        _err(f"waybill query: {type(exc).__name__}: {exc}")
+        return 1
+    out = a.output or f"{wb['id']}.waybill.json.gz"
+    if Path(out).is_dir() or out.endswith(("/", "\\")) or not Path(out).suffix:
+        out = str(Path(out) / f"{wb['id']}.waybill.json.gz")
+    gz = out.endswith(".gz")
+    wb, size = Q.fit_budget(wb, int(a.max_kb * 1024), gz)
+    path = write_waybill(wb, out, compact=True)
+    size = path.stat().st_size
+    st = wb["stats"]
+    wall = time.monotonic() - t_all
+    print(wb["title"])
+    print(f"  {st['query_total']:,} events matched + {st['dead_letters']} dead letter(s): {st['kept_events']} kept, "
+          f"{st['batched_events']:,} in {st['batches']} batches over {st['chapters']} chapters")
+    print(f"  conservation: {'ok' if st['conservation_ok'] else 'BROKEN'} "
+          f"({st['kept_events']} + {st['batched_events']} = {st['kept_events'] + st['batched_events']} of "
+          f"{st['query_total'] + st['dead_letters']}) · unresolved producers: {st['unresolved_producers']} · "
+          f"{st['spans']} spans · {st['events']} events · {len(wb.get('findings') or [])} findings · "
+          f"{len(wb.get('gaps') or [])} gaps")
+    print(f"  {size / 1024:.0f} KiB{' gz' if gz else ''} (limit {a.max_kb:g}) · {wall:.1f} s wall")
+    print(str(path))
+    if not st["conservation_ok"]:
+        return 3
+    return _maybe_publish(a, str(path), P)
+
+
+def _maybe_publish(a: argparse.Namespace, path: str, P) -> int:
+    if not a.publish:
+        return 0
+    try:
+        res = P.publish(path, full=False, name=a.name, project=a.artifact_project)
+    except Exception as exc:
+        _err(f"waybill query --publish: {exc}")
+        return 1
+    print(res["json_url"])
+    print(res["factory_url"])
+    return 0
+
+
 # ---------------------------------------------------------------- argparse
 
 def build_parser() -> argparse.ArgumentParser:
@@ -488,6 +672,42 @@ def build_parser() -> argparse.ArgumentParser:
     nt.add_argument("--label", help="human label for the window (default: e.g. '16–17 Nov 2026')")
     nt.add_argument("-o", "--output", help="output file or directory (default ./night-<date>.json)")
     nt.set_defaults(func=cmd_night)
+
+    q = sub.add_parser("query", help="replay any Candystore query (last night, last 2h, one project's errors) as a waybill",
+                       description="Any window of the Bloodbank archive as a replayable waybill: rare events, failures and "
+                                   "dead letters stay individual, the rest folds into per-minute batches under at most 12 chapters.")
+    w = q.add_argument_group("window (default: the last 24 hours, Candystore's own)")
+    w.add_argument("--since", help="ISO time or date, read in --tz when it has no offset")
+    w.add_argument("--until", help="ISO time (default now)")
+    w.add_argument("--last", metavar="DUR", help="the last DUR up to now, e.g. 30m, 2h, 1d")
+    w.add_argument("--last-night", action="store_true", help="last night, 18:02 to 07:41 in --tz (what `waybill night` digests)")
+    w.add_argument("--from-url", metavar="URL", help="a Candystore UI link: its filters and from/to; /sessions/<id> and /events/<id> work")
+    f = q.add_argument_group("filters (Candystore's own, so --lens errors means what the UI means)")
+    f.add_argument("--type", help="event type(s), comma-separated")
+    f.add_argument("--producer", help="exact producer")
+    f.add_argument("--project", help="project slug")
+    f.add_argument("--correlation", help="correlation id (a session id): one session inside hook-hub retention upgrades to a capture")
+    f.add_argument("--scope", help="type scope(s), e.g. agent.hook")
+    f.add_argument("--lens", help="a Candystore lens (errors, decisions, ...)")
+    f.add_argument("--q", help="free text (a UUID matches an event or correlation id exactly)")
+    f.add_argument("--class", dest="cls", help="provenance class")
+    q.add_argument("--clock", choices=("time", "received_at"), default="time",
+                   help="time (default, indexed) or received_at (when Candystore archived it)")
+    q.add_argument("--tz", default="America/New_York", help="time zone for --last-night, chapter titles and bare times (default America/New_York)")
+    q.add_argument("--label", help="window label (default: derived, e.g. 'Last night, 18:02 to 07:41')")
+    q.add_argument("--budget-stops", type=int, default=60, help="stops a playback should have; chapters = stops/5, at most 12 (default 60)")
+    q.add_argument("--max-kb", type=float, default=4096, help="size limit of the written file in KiB (default 4096)")
+    q.add_argument("--profile", choices=("public", "full"), default="public",
+                   help="public (default): message/call/payment types counted never named, third-party desks aliased, "
+                        "unknown producers numbered, text cut; full keeps names and payloads (local use only)")
+    q.add_argument("--include-dead-letters", action=argparse.BooleanOptionalAction, default=True,
+                   help="show Candystore's dead letters as dropped events (default on)")
+    q.add_argument("--no-capture", action="store_true", help="never upgrade a single-session query to a capture")
+    q.add_argument("-o", "--output", help="output file (.waybill.json.gz is gzipped) or directory (default ./<id>.waybill.json.gz)")
+    q.add_argument("--publish", action="store_true", help="then publish to MinIO and print the Factory link")
+    q.add_argument("--name", help="artifact name for --publish")
+    q.add_argument("--artifact-project", help="artifact project slug for --publish")
+    q.set_defaults(func=cmd_query)
 
     ls = sub.add_parser("list", help="recent prompt invocations to pick one to capture")
     ls.add_argument("--cli", choices=("claude", "codex"), help="only list prompts from this CLI")
