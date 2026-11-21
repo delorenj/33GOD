@@ -26,7 +26,7 @@
     "cta": "Request a briefing",
     "viewLog": "View as log",
     "viewSimulation": "View as 3D simulation",
-    "viewSimulationHref": "https://manual.delo.sh/sandbox/?walk",
+    "viewSimulationHref": "https://manual.delo.sh/sandbox/?waybill=https%3A%2F%2Fs3.delo.sh%2Fprojects%2F33god%2F2026-11-21%2Fwaybill-wb-01m7xk3zj0fkdb7frge9ds2r4r%2Fwb_01M7XK3ZJ0FKDB7FRGE9DS2R4R.waybill.json.gz",
     "viewFilm": "Watch the night",
     "scrollHint": "Press the down arrow or scroll to run the clock",
     "next": "Next section",
