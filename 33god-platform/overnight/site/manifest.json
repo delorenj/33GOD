@@ -44,6 +44,7 @@
       "label": "Real night · {label}",
       "counter": "{n} events so far",
       "deskLine": "Hermes project manager desk.",
+    "displayNames": { "Hermes Fleet": "Hermes" },
       "firstOf": "first of {n} tonight",
       "logNote": "Lines marked in blue are real: what the company actually published on the bus on the night of {label}, at the time it happened. The rest is the staged story."
     }
@@ -66,7 +67,7 @@
       "kicker": "Codename 33GOD · Year three of stealth",
       "title": "You go home.",
       "titleTurn": "Your company doesn't.",
-      "body": "In 33GOD, agents are hired, seated and reviewed. They have directors and managers, a mailroom, a clock on the wall and a records room that forgets nothing. The company has been at work the whole time. And it works for you.",
+      "body": "In 33GOD, agents are hired, seated and reviewed. They have directors and managers, a mailroom, a clock on the wall and a records room that forgets nothing. All of it answers to one mission statement. The company has been at work the whole time. And it works for you.",
       "tags": [],
       "staged": true,
       "copy": {
@@ -89,13 +90,13 @@
       "setPiece": "building.hold",
       "kicker": "The thesis",
       "title": "Not like employees. Employees.",
-      "body": "Everyone hunts for the best way to work with agents. The answer is plainer. Every problem a company has with people maps one to one onto agents, so a hundred years of practice applies. Agents have memory and skills, cooperate, make mistakes and respond to incentives. A small team of green agents can ship enterprise work. A team of geniuses can be managed into the ground. Hold the standup. Run the kaizen when things break.",
+      "body": "Everyone hunts for the best way to work with agents. The answer is plainer. Every problem a company has with people maps one to one onto agents, so a hundred years of practice applies. Agents have memory and skills, cooperate, make mistakes and respond to incentives. With the right guidance, a small team of green agents ships enterprise work. A team of geniuses can be managed into the ground. Hold the standup. Run the kaizen.",
       "tags": [],
       "staged": false,
       "log": [
         {
-          "subject": "bloodbank.agent.session.started",
-          "note": "Agents are not like employees. They are employees. A hundred years of company practice applies."
+          "subject": "bloodbank.cmd.agent.invocation.start",
+          "note": "Not like employees. Employees."
         }
       ]
     },
@@ -115,8 +116,8 @@
         "figures": [
           {
             "n": "72",
-            "label": "domain-driven components, each tech-agnostic",
-            "detail": "Strategically architected and purpose-built to a spec guided by the principles of AI development."
+            "label": "domain-driven components, built to one set of rules",
+            "detail": "Each component owns one domain and talks to the rest only over the bus, to a spec set by the pillars the system is built on."
           },
           {
             "n": "12",
@@ -135,7 +136,7 @@
             "label": "human"
           }
         ],
-        "stamp": "Counted from the 33GOD component registry, 15 Nov 2026."
+        "stamp": "From the component registry, 15 Nov 2026."
       },
       "log": [
         {
@@ -157,12 +158,12 @@
       },
       "kicker": "Article one",
       "title": "Every agent is an employee.",
-      "body": "Stop trying to orchestrate a swarm. Companies already solved delegation, escalation, onboarding and self-improvement. A good manager does not throw up his hands and blame someone. What separates a company that grows is how it manages mistakes and what it learns. That rests on the human's moment-to-moment decisions, not the prompt or the model. There is no ceiling.",
+      "body": "Stop orchestrating a swarm. Staff a company. A good manager does not throw up his hands and blame someone. What separates a company that grows is how it manages mistakes and what it learns. That rests on the human's moment-to-moment decisions, not the prompt or the model. There is no ceiling.",
       "tags": ["FLUME"],
       "staged": false,
       "copy": {
         "quote": "“Anthropomorphism as protocol.”",
-        "quoteSource": "One of the few pillars that guide every architectural decision.",
+        "quoteSource": "One of the pillars that guide how 33GOD is built.",
         "you": {
           "label": "You",
           "line": "The only human on the chart."
@@ -207,8 +208,8 @@
           {
             "dept": "Front desk",
             "name": "GENESIS",
-            "line": "The agent clients talk to. Sent out as a contractor for hire.",
-            "detail": "Clients reach the company's whole team by talking to one Genesis agent. It routes requests to the right departments and hands back the result. Each bot's time is metered and tracked on its own."
+            "line": "The agent clients talk to. A contractor for hire.",
+            "detail": "A client talks to one Genesis agent and never sees the building. It takes the request, brings in the right departments and hands back the result."
           },
           {
             "dept": "Accounting",
@@ -226,13 +227,13 @@
             "dept": "Your assistant",
             "name": "CRANK",
             "line": "Keeps work moving while you are out of the office.",
-            "detail": "Answers questions and makes the hard calls for you, with one goal: unblocked tickets. Works from the pillar of no idle agents."
+            "detail": "Answers questions and makes the hard calls for you, with one goal: unblocked tickets."
           },
           {
             "dept": "Facilities",
             "name": "INFRA-DOCTOR",
             "line": "Walks the building and puts out fires.",
-            "detail": "Keeps the server running smoothly. When resources run out and tasks starve, it can kill a greedy GPU hog, set up a queue, or mediate between departments so everyone shares."
+            "detail": "Probes the homelab every minute and repairs what it is allowed to: a stuck service restarts, a stalled stack gets recovered, and every repair is capped and cooled down. Anything bigger comes to you."
           },
           {
             "dept": "Control room",
@@ -367,7 +368,7 @@
       "setPiece": "section.loop",
       "kicker": "Article four",
       "title": "The company runs on itself.",
-      "body": "For its whole life, 33GOD has run every project its builder touches, itself included. Every rough edge becomes a ticket. The ticket finds the manager who owns the fix. The fix ships back into the thing that found it. Four years of that, every day.",
+      "body": "For its whole life, 33GOD has run every project its builder touches, itself included. Every rough edge becomes a ticket. The ticket finds the manager who owns the fix. The fix ships back into the thing that found it. Three years of that, every day.",
       "tags": [],
       "staged": false,
       "copy": {
@@ -379,7 +380,7 @@
           "The fix lands",
           "The cycle is reviewed"
         ],
-        "count": "4",
+        "count": "3",
         "countLabel": "years around this loop"
       },
       "log": [
@@ -740,7 +741,7 @@
       "tags": ["GATEWAY"],
       "staged": true,
       "copy": {
-        "aside": "Cache tokens from every provider are counted one way, in one ledger. A thread stays with its model while its cache pays off. When it has to move, its whole history moves with it, and the next model picks up the task.",
+        "aside": "Cache tokens from every provider are counted one way, in one ledger. A thread stays with its model while its cache pays off. When it moves, its whole history goes with it.",
         "cardTitle": "api.automaticai.io",
         "cardNote": "Three roles: orchestrator, subagent, fast. Seven rungs. Every tenant gets the same roles, and each person's own subscriptions are walled off and spent first.",
         "pools": [

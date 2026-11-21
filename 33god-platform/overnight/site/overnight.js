@@ -969,7 +969,7 @@
     var NC = M.site.night || {};
     var n = M.beats.indexOf(bt), next = M.beats[n + 1];
     var a = nightMinute(R, mins(bt.time)), b = next ? nightMinute(R, mins(next.time)) : R.len;
-    var names = {}; R.N.components.forEach(function (c) { names[c.id] = c.name; });
+    var names = {}; R.N.components.forEach(function (c) { names[c.id] = (NC.displayNames && NC.displayNames[c.name]) || c.name; });
     // Prefer what was rare tonight, then the first appearance of something routine; the night's first
     // minute catches every routine stream starting at once, so those only fill in when nothing else did.
     var picked = R.N.moments.filter(function (x) { return x.m >= a && x.m < Math.max(b, a + 1); })
