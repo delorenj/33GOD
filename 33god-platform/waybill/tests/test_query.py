@@ -611,6 +611,16 @@ class TestWindowsAndUrls(unittest.TestCase):
         self.assertEqual(lo, SINCE)
         self.assertEqual(hi, UNTIL)
 
+    def test_night_window_crosses_midnight_in_local_time(self):
+        from datetime import date
+        lo, hi = Q.night_window(date(2026, 11, 16))
+        self.assertEqual((lo, hi), (datetime(2026, 11, 16, 23, 2, tzinfo=timezone.utc), datetime(2026, 11, 17, 12, 41, tzinfo=timezone.utc)))
+
+    def test_night_window_on_a_fall_back_night_is_one_hour_longer_in_utc(self):
+        from datetime import date
+        lo, hi = Q.night_window(date(2026, 10, 31))           # clocks fall back 1 Nov 2026, 02:00
+        self.assertEqual(int((hi - lo).total_seconds() // 60), 879)
+
     def test_parse_duration(self):
         self.assertEqual(Q.parse_duration("2h"), 7_200_000.0)
         self.assertEqual(Q.parse_duration("30m"), 1_800_000.0)

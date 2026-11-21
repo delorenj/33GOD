@@ -38,8 +38,7 @@ from typing import Any, Callable, Iterable
 
 from . import model as M
 from .collectors import candystore as CS
-from .night import PRIVATE_TYPES
-from .registry import FIRST_PARTY_ROOT, Registry
+from .registry import FIRST_PARTY_ROOT, PRIVATE_TYPES, Registry
 
 VERDICTS = ("covered", "partial", "silent", "lost-in-transit", "declared-never-seen")
 HOUR = 3600_000.0

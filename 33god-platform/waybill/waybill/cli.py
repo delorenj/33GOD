@@ -1,4 +1,4 @@
-"""waybill command line: capture | record | show | publish | query | night | list (SPEC section 4)."""
+"""waybill command line: capture | record | show | publish | query | list (SPEC section 4)."""
 from __future__ import annotations
 
 import argparse
@@ -415,19 +415,10 @@ def cmd_list(a: argparse.Namespace, argv: list[str]) -> int:
 # ---------------------------------------------------------------- night
 
 def cmd_night(a: argparse.Namespace, argv: list[str]) -> int:
-    from datetime import date as _date, datetime as _dt, timedelta as _td
-    from zoneinfo import ZoneInfo
-    from . import night
-    day = _date.fromisoformat(a.date) if a.date else (_dt.now(ZoneInfo(a.tz)).date() - _td(days=1))
-    doc = night.build(day, a.start, a.end, a.tz, a.profile, a.label)
-    out = Path(a.output) if a.output else Path(f"night-{day.isoformat()}.json")
-    if out.is_dir():
-        out = out / f"{day.isoformat()}.json"
-    out.write_text(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n", encoding="utf-8")
-    t = doc["totals"]
-    print(f"{out}  {doc['window']['label']}  {t['events']:,} events  {t['components']} components  "
-          f"{t['desks']} desks  {t['unmapped_events']:,} unmapped  {out.stat().st_size / 1024:.0f} KiB")
-    return 0
+    """Retired: `waybill night` and the 33god.night file are replaced by `waybill query --last-night`."""
+    print("waybill night is retired: use `waybill query --last-night -o FILE.waybill.json.gz` (same 18:02 to 07:41 window)",
+          file=sys.stderr)
+    return 2
 
 
 # ---------------------------------------------------------------- query
@@ -712,15 +703,7 @@ def build_parser() -> argparse.ArgumentParser:
     pb.add_argument("--dry-run", action="store_true", help="show the publish plan, upload nothing")
     pb.set_defaults(func=cmd_publish)
 
-    nt = sub.add_parser("night", help="digest a window of wall-clock time (default: last night 18:02-07:41) into a 33god.night file")
-    nt.add_argument("--date", help="the evening the night starts on, YYYY-MM-DD (default: yesterday in --tz)")
-    nt.add_argument("--from", dest="start", default="18:02", help="local start time (default 18:02)")
-    nt.add_argument("--to", dest="end", default="07:41", help="local end time; at or before --from means the next day (default 07:41)")
-    nt.add_argument("--tz", default="America/New_York", help="time zone of --date/--from/--to (default America/New_York)")
-    nt.add_argument("--profile", choices=("full", "public"), default="public",
-                    help="public (default) aliases third-party Hermes desks and drops unmapped producer names")
-    nt.add_argument("--label", help="human label for the window (default: e.g. '16–17 Nov 2026')")
-    nt.add_argument("-o", "--output", help="output file or directory (default ./night-<date>.json)")
+    nt = sub.add_parser("night", help="retired: use `waybill query --last-night` (main() answers before parsing)", add_help=False)
     nt.set_defaults(func=cmd_night)
 
     q = sub.add_parser("query", help="replay any Candystore query (last night, last 2h, one project's errors) as a waybill",
@@ -730,7 +713,7 @@ def build_parser() -> argparse.ArgumentParser:
     w.add_argument("--since", help="ISO time or date, read in --tz when it has no offset")
     w.add_argument("--until", help="ISO time (default now)")
     w.add_argument("--last", metavar="DUR", help="the last DUR up to now, e.g. 30m, 2h, 1d")
-    w.add_argument("--last-night", action="store_true", help="last night, 18:02 to 07:41 in --tz (what `waybill night` digests)")
+    w.add_argument("--last-night", action="store_true", help="last night, 18:02 to 07:41 in --tz (yesterday 18:02 to today 07:41)")
     w.add_argument("--from-url", metavar="URL", help="a Candystore UI link: its filters and from/to; /sessions/<id> and /events/<id> work")
     f = q.add_argument_group("filters (Candystore's own, so --lens errors means what the UI means)")
     f.add_argument("--type", help="event type(s), comma-separated")
@@ -793,6 +776,8 @@ def main(argv: list[str] | None = None) -> int:
     if "--usage-spec" in argv and "--" not in argv[:argv.index("--usage-spec")]:
         sys.stdout.write(Path(__file__).with_name("waybill.usage.kdl").read_text())
         return 0
+    if argv[:1] == ["night"]:       # retired: whatever flags it carried, answer with the pointer and nothing else
+        return cmd_night(argparse.Namespace(), argv)
     a = build_parser().parse_args(argv)
     try:
         return int(a.func(a, ["waybill", *argv]) or 0)

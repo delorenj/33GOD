@@ -250,6 +250,16 @@ class TestList(unittest.TestCase):
         self.assertGreater(w.t_end, w.t0)
 
 
+class TestNightRetired(unittest.TestCase):
+    def test_night_points_at_query_last_night_and_exits_2(self) -> None:
+        for argv in (["night"], ["night", "--date", "2026-11-16", "-o", "x"], ["night", "--help"]):
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                self.assertEqual(cli.main(argv), 2, argv)
+            self.assertIn("waybill query --last-night", err.getvalue())
+            self.assertEqual(len(err.getvalue().strip().splitlines()), 1)
+
+
 class TestLiveAsmContract(unittest.TestCase):
     def test_snapshot_entry_is_readable_by_the_asm_collector(self) -> None:
         from waybill import live

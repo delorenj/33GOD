@@ -42,6 +42,9 @@ HANDLER_OWNERS = {
 # Hook-hub's own plumbing: its handlers run on every hook, so crediting them would only re-light hook-hub.
 NO_CREDIT = {"bloodbank-publisher", "hub-selftest", "nanoleaf", "native-clock-guard"}
 FIRST_PARTY_ROOT = Path("~/code/33GOD").expanduser()
+
+# Public profile: types about other people's messages, calls and money are counted, never named.
+PRIVATE_TYPES = ("bloodbank.messaging.", "bloodbank.telephony.", "bloodbank.billing.transaction.")
 CANDYBAR_ROOTS = ["~/code", "~/code/33GOD", "~/code/33GOD/bloodbank/services", "~/docker", "~/.config", "~/.agents", "~/HeyMa"]
 
 
@@ -289,3 +292,9 @@ def worker_resolver(registry: dict[str, dict], resolve, manifests: dict[str, str
                 return i
         return None
     return who
+
+
+def first_party_desk(desk: str, registry: dict[str, dict]) -> bool:
+    """A Hermes desk keeps its name in the public profile when it starts with a first-party registry id or `33god`."""
+    return desk.startswith("33god") or any((desk == cid or desk.startswith(cid + "-")) and rec["first_party"]
+                                           for cid, rec in registry.items())

@@ -87,15 +87,7 @@ cmd audit help="The event gap audit: did everything that happened become an even
     flag --name { arg <NAME> }
     flag --artifact-project { arg <PROJECT> }
 }
-cmd night help="Digest a wall-clock window into a night file" {
-    flag --date { arg <DATE> }
-    flag --from { arg <TIME> }
-    flag --to { arg <TIME> }
-    flag --tz { arg <ZONE> }
-    flag --profile { arg <PROFILE> }
-    flag --label { arg <LABEL> }
-    flag "-o --output" { arg <PATH> }
-}
+cmd night help="Retired: prints a pointer to `waybill query --last-night` and exits 2"
 cmd list help="List recent prompt invocations" {
     flag --cli { arg <CLI> }
     flag --limit { arg <COUNT> }

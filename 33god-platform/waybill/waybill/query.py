@@ -25,7 +25,7 @@ idx_events_time, an as_of fence on received_at so the count and the pages agree.
 by Candystore's own `query._filters` inside its container, so `--lens errors` means exactly what the
 Candystore UI means by it.
 
-The public profile follows the night digest's rules (night.py): message, call and payment types are
+The public profile: message, call and payment types are
 counted but never named (they fold into a `private` batch and are never kept), and so are events derived
 from them (watch.target.*, or data.source_type naming a private type). Third-party Hermes desks become
 `desk-<n>`, tenant slugs `tenant-<n>`, third-party projects `project-<n>` and unresolvable producers
@@ -50,7 +50,7 @@ import time
 import urllib.parse
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time as dtime, timedelta, timezone
 from typing import Any, Callable, Iterable, Iterator
 from zoneinfo import ZoneInfo
 
@@ -58,8 +58,8 @@ from . import VERSION
 from . import model as M
 from .assemble import FORMAT, SCHEMA_VERSION, apply_profile, component_record, fmt_duration, waybill_id
 from .collectors import candystore as CS
-from .night import PRIVATE_TYPES, _first_party_desk, night_window
-from .registry import HANDLER_OWNERS, Registry, load as load_cast, short_type, worker_resolver
+from .registry import (HANDLER_OWNERS, PRIVATE_TYPES, Registry, first_party_desk as _first_party_desk, load as load_cast,
+                       short_type, worker_resolver)
 
 MODE = "query"
 DEFAULT_TZ = "America/New_York"
@@ -396,8 +396,18 @@ def _dm(epoch_ms: float, tz: str) -> str:
     return f"{d.day} {d.strftime('%b')}"
 
 
+def night_window(day: date, start: str = NIGHT_FROM, end: str = NIGHT_TO, tz: str = DEFAULT_TZ) -> tuple[datetime, datetime]:
+    """[day start, next-day end) in tz, returned as aware UTC datetimes. end <= start means the next day."""
+    z = ZoneInfo(tz)
+    s = datetime.combine(day, dtime.fromisoformat(start), z)
+    e = datetime.combine(day, dtime.fromisoformat(end), z)
+    if e <= s:
+        e += timedelta(days=1)
+    return s.astimezone(timezone.utc), e.astimezone(timezone.utc)
+
+
 def last_night(now_ms: float, tz: str = DEFAULT_TZ, start: str = NIGHT_FROM, end: str = NIGHT_TO) -> tuple[float, float]:
-    """Yesterday's 18:02 to today's 07:41 in tz (night.py's convention), as epoch ms."""
+    """Yesterday's 18:02 to today's 07:41 in tz (the page's convention), as epoch ms."""
     day = datetime.fromtimestamp(now_ms / 1000.0, ZoneInfo(tz)).date() - timedelta(days=1)
     lo, hi = night_window(day, start, end, tz)
     return lo.timestamp() * 1000.0, hi.timestamp() * 1000.0
@@ -494,7 +504,7 @@ class Batch:
 
 
 class Aliases:
-    """Public-profile names for things that are not ours to name (night.py's rules)."""
+    """Public-profile names for things that are not ours to name."""
 
     def __init__(self, registry: Registry, public: bool):
         self.reg, self.public = registry, public

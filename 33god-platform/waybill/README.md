@@ -31,20 +31,7 @@ waybill publish <file.waybill.json[.gz]> [--full] [--name N] [--dry-run]
 waybill query   [--last 2h | --last-night | --since/--until | --from-url URL] [filters] -o X.waybill.json.gz [--publish]
 waybill audit   [--days N] [--only a,b | --skip a,b] [--json] [--strict] -o X.waybill.json.gz   # the event gap audit
 waybill list    [--cli claude|codex] [--limit N] [--json]     # pick a turn to capture
-waybill night   [--date YYYY-MM-DD] [--from 18:02] [--to 07:41] [--tz America/New_York] [-o DIR|FILE]
 ```
-
-**night** is the wide shot: instead of one prompt, every event Candystore archived in a window of
-wall-clock time, folded into per-minute activity per registry component (`33god.night` v1). Candybar
-jobs are credited to the component the work was for (producer surface or registry id, then the repo
-holding the job's `.candybars/` manifest, then the longest registry-id prefix, first-party ids first); a
-job whose manifest lives in a client repo stays with Candybar. Hook-hub handler successes light their
-owner (`minutes`, `credited`) without adding to `events`, so `sum(components[].events) ==
-totals.events - totals.unmapped_events`. Minutes are local wall-clock minutes, so a DST night lines up
-with a wall clock. Each component carries its registry `summary`; `idle` lists the first-party
-components that published nothing. The public profile aliases third-party Hermes desks and counts
-message, call and payment event types without naming them. One read-only aggregate query; producer,
-type and minute only. The Overnight launch page (`overnight/site/nights/`) replays it.
 
 **capture** rebuilds a past turn from what every source still holds. It resolves the turn window
 (from the transcript, falling back to the hook-hub receipts), runs all collectors in parallel, each with
@@ -105,9 +92,9 @@ waybill query --correlation <session id>        # one session inside hook-hub re
   The read is one class (`PsqlReader`) so it can switch to `GET /export` (CANDYS-78) without touching the fold.
 - Conservation is checked every time: kept events + batched events == Candystore's count + dead letters.
   `stats.conservation_ok` says so; the command exits 3 and does not publish when it fails.
-- `--profile public` (default) follows the night digest: message, call and payment types are counted, never
+- `--profile public` (default): message, call and payment types are counted, never
   named; third-party desks are `desk-<n>`; unresolvable producers `producer-<n>`. `--publish` refuses a full one.
-- `waybill night` and `33god.night` stay; `--last-night` is the same window.
+- `waybill night` and the `33god.night` file are retired (2026-11-21). `waybill night` prints a pointer to `waybill query --last-night` and exits 2; `--last-night` is the same 18:02 to 07:41 window, played by the Factory.
 - Commands (`bloodbank.cmd.>`) are not archived, so they are not in a query waybill.
 
 ## Audit: did everything become an event?

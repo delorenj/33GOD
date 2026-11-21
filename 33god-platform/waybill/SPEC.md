@@ -249,7 +249,7 @@ stats: { query_total, kept_events, batched_events, batches, chapters, dead_lette
 is listed in a finding; it is never dropped. Commands (`bloodbank.cmd.>`) are not archived and so are not
 here (an info gap says so).
 
-**Public profile** matches `night.py`: message, call and payment types (`PRIVATE_TYPES`) fold into a batch
+**Public profile**: message, call and payment types (`PRIVATE_TYPES`) fold into a batch
 typed `private` and are never kept or named; third-party Hermes desks become `hermes-desk:desk-<n>`, tenants
 `tenant:tenant-<n>`, unresolvable producers `producer-<n>`, and their payloads are withheld.
 

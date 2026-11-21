@@ -140,3 +140,62 @@ class Precedence(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+NIGHT_REG = {
+    "candybar": {"name": "Candybar", "first_party": True, "producers": ["candybar"]},
+    "hermes-fleet": {"name": "Hermes Fleet", "first_party": True, "producers": ["hermes-agent", "hermes-agent:*"]},
+    "agent-hooks": {"name": "Agent Hooks", "first_party": True, "producers": ["claude-code"]},
+    "krebs": {"name": "Krebs", "first_party": True, "producers": []},
+    "hindsight": {"name": "Hindsight", "first_party": True, "producers": []},
+    "genesis": {"name": "Genesis", "first_party": True, "producers": []},
+    "plane-hook": {"name": "Plane hook", "first_party": True, "producers": ["plane-ingress-reconcile"]},
+}
+
+
+class WorkerResolveTest(unittest.TestCase):
+    """Moved from the retired night.py tests: the resolver and the Candybar-job / hook-handler credit."""
+
+    def test_exact_beats_glob_and_glob_matches_desks(self):
+        r = R.resolver(NIGHT_REG)
+        self.assertEqual(r("hermes-agent"), "hermes-fleet")
+        self.assertEqual(r("hermes-agent:gruvato-pm"), "hermes-fleet")
+        self.assertIsNone(r("someone-else"))
+
+    def test_workers_resolve_by_owner_prefix_and_manifest(self):
+        who = R.worker_resolver(NIGHT_REG, R.resolver(NIGHT_REG), {"nightly-sweep": "genesis"}, {"bloodbank-publisher": "agent-hooks"})
+        self.assertEqual(who("krebs-tick"), "krebs")
+        self.assertEqual(who("hindsight-turn"), "hindsight")
+        self.assertEqual(who("bloodbank-publisher"), "agent-hooks")
+        self.assertEqual(who("nightly-sweep"), "genesis")
+        self.assertIsNone(who("someone-px-dedupe-sweep"))
+
+    def test_first_party_prefix_beats_third_party_and_client_manifests_beat_both(self):
+        reg = dict(NIGHT_REG, **{"hindsight": {"name": "Hindsight", "first_party": False, "producers": []},
+                                 "hindsight-ui": {"name": "Hindsight UI", "first_party": True, "producers": []}})
+        who = R.worker_resolver(reg, R.resolver(reg), {"hindsight-client-sync": "/home/x/code/clientco"}, {})
+        self.assertEqual(who("hindsight-turn"), "hindsight")              # a third-party service still gets its own work
+        self.assertEqual(who("hindsight-ui-build"), "hindsight-ui")
+        self.assertIsNone(who("hindsight-client-sync"))                   # a client repo's job: no prefix claims it
+
+    def test_manifest_repo_beats_prefix_and_client_jobs_stay_put(self):
+        who = R.worker_resolver(NIGHT_REG, R.resolver(NIGHT_REG), {
+            "krebs-nightly-report": "/home/x/code/clientco",          # a client repo: never claimed by the krebs- prefix
+            "genesis-rollup": "/home/x/code/33GOD/genesis",
+        }, {})
+        self.assertEqual(who("plane-ingress-reconcile"), "plane-hook")
+        self.assertIsNone(who("krebs-nightly-report"))
+        self.assertEqual(who("genesis-rollup"), "genesis")
+
+
+class PublicProfileRulesTest(unittest.TestCase):
+    def test_first_party_desk_keeps_its_name_others_alias(self):
+        self.assertTrue(R.first_party_desk("33god-pm", NIGHT_REG))
+        self.assertTrue(R.first_party_desk("krebs-pm", NIGHT_REG))
+        self.assertFalse(R.first_party_desk("clientco-pm", NIGHT_REG))
+        self.assertFalse(R.first_party_desk("krebsish", NIGHT_REG))
+
+    def test_private_types_cover_messages_calls_and_money(self):
+        for t in ("bloodbank.messaging.x", "bloodbank.telephony.y", "bloodbank.billing.transaction.z"):
+            self.assertTrue(t.startswith(R.PRIVATE_TYPES), t)
+        self.assertFalse("bloodbank.repo.task.created".startswith(R.PRIVATE_TYPES))
