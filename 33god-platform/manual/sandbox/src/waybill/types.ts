@@ -107,6 +107,8 @@ export interface QueryInfo {
   candystore: string
   /** human words for the window: 'Last night, 18:02 to 07:41' */
   label: string
+  /** the IANA zone the label's wall-clock times are in (the builder's, e.g. 'America/New_York') */
+  tz?: string
 }
 
 export type RecorderMode = 'record' | 'capture' | 'query'

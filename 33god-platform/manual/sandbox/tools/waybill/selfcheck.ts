@@ -1,8 +1,12 @@
 // Self-check for the pure parts (types, stations, director). No test framework:
 //   node --import ./tools/waybill/register.mjs --experimental-strip-types tools/waybill/selfcheck.ts [file.waybill.json ...]
-// With no file it checks every sample listed in public/waybills/index.json. Add --captions to print copy.
-import { readFileSync } from 'node:fs'
+// With no file it checks every sample listed in public/waybills/index.json, and the real-shaped night kept next to
+// this script (tools/waybill/real-last-night.waybill.json.gz: a public-profile build of a real 81,003-event night, so the
+// director is held to data that has failures in every chapter, hundreds of pallets and tool, model and hook spans).
+// Every file is also validated against waybill/schema/waybill.v1.schema.json. Add --captions to print copy.
+import { existsSync, readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
+import Ajv2020 from 'ajv/dist/2020.js'
 import { direct, readerGroups } from '../../src/waybill/director'
 import { lineId, narrationFor, speakable } from '../../src/waybill/narration'
 import { place, stationOf } from '../../src/waybill/stations'
@@ -17,7 +21,10 @@ let files = args.filter((a) => !a.startsWith('--'))
 if (!files.length) {
   const idx = JSON.parse(readFileSync('public/waybills/index.json', 'utf8')) as { samples: { file: string }[] }
   files = idx.samples.map((s) => `public/waybills/${s.file}`)
+  if (existsSync('tools/waybill/real-last-night.waybill.json.gz')) files.push('tools/waybill/real-last-night.waybill.json.gz')
 }
+const ajv = new Ajv2020({ strict: false, allErrors: false, validateFormats: false })
+const validateWaybill = ajv.compile(JSON.parse(readFileSync('../../waybill/schema/waybill.v1.schema.json', 'utf8')))
 
 // the tolerant reader
 ok(!normalize({ format: '33god.waybill', version: 2 }).ok, 'rejects an unknown major version')
@@ -47,12 +54,15 @@ for (const file of files) {
   const tParse = performance.now() - t0
   ok(r.ok, `parses ${file}`)
   if (!r.ok) { console.log(r.error); continue }
+  const okSchema = validateWaybill(JSON.parse(text))
+  ok(okSchema, `${file} validates against waybill.v1.schema.json${okSchema ? '' : ': ' + ajv.errorsText(validateWaybill.errors?.slice(0, 3))}`)
   const w = r.waybill
 
   const a = JSON.stringify(place(w)), b = JSON.stringify(place(w))
   ok(a === b, 'place() is deterministic')
   const pl = place(w)
-  ok(pl.setOf['hook-hub'] === 'dock' && (pl.setOf['bb-hook'] ?? 'courier') === 'courier' && pl.setOf['candystore'] === 'archive', 'registry stations map')
+  // a file that never names hook-hub (a query of one component, a night without agents) has no dock to check
+  ok((!('hook-hub' in w.components) || pl.setOf['hook-hub'] === 'dock') && (pl.setOf['bb-hook'] ?? 'courier') === 'courier' && (!('candystore' in w.components) || pl.setOf['candystore'] === 'archive'), 'registry stations map')
   const unplaced = Object.keys(w.components).filter((id) => !stationOf(id) && !pl.kioskById[id])
   ok(unplaced.length === 0, `every unmapped component has a kiosk${unplaced.length ? ' (missing: ' + unplaced.join(', ') + ')' : ''}`)
 
@@ -133,7 +143,21 @@ function queryChecks(w: Waybill, d: ReturnType<typeof direct>) {
   ok(c.batched === batched && c.kept === w.events.length && c.ok === (c.kept + batched === c.total + c.dead) && c.ok === (c.fileOk ?? c.ok), `conservation recount: ${c.kept} kept + ${batched} batched = ${c.total} matched + ${c.dead} dead (${c.ok ? 'balanced' : 'OFF'})`)
   const bstops = d.stops.filter((s) => s.kind === 'batch')
   ok(bstops.every((s) => s.hero === 'pallet' && s.batch && s.batch.perMinute.length > 0 && /^×/.test(s.heroLabel?.real ?? '')), `a batch stop stands a pallet at its component with a count badge and a sparkline (${bstops.length})`)
-  ok(d.stops.filter((s) => s.kind === 'chapter').every((s) => (s.pallets?.length ?? 0) > 0 && (s.pallets?.length ?? 0) <= 10), 'every chapter overview stands its pallets (at most 10)')
+  const busyCh = new Set(qd.chapters.filter((ch) => ch.events > 0).map((ch) => ch.n))
+  ok(d.stops.filter((s) => s.kind === 'chapter').every((s) => (s.pallets?.length ?? 0) <= 10 && ((s.pallets?.length ?? 0) > 0 || !busyCh.has(s.chapter?.n ?? -1))), 'every chapter overview that has events stands its pallets (at most 10)')
+  // the tour is not all failures: every kind of stop the file can fill appears at least once
+  const failPer = new Map<number, number>()
+  for (const s of d.stops) if (s.kind === 'failure' && s.chapter) failPer.set(s.chapter.n, (failPer.get(s.chapter.n) ?? 0) + 1)
+  ok([...failPer.values()].every((n) => n <= 2), 'at most two failure stops per chapter (the rest fold into them)')
+  const failedEv = (e: Waybill['events'][number]) => /(failed|exhausted|denied|breached)/.test(e.type) || w.spans.some((s) => s.id === e.publisher_span && s.status === 'failed')
+  const rareEv = w.events.filter((e) => !isDeadLetter(e) && !failedEv(e))
+  const calm = w.spans.filter((s) => s.kind === 'batch' && Number((s.attrs ?? {}).failed ?? 0) === 0 && s.status !== 'failed')
+  const has = (k: string) => d.stops.some((s) => s.kind === k)
+  ok(!calm.length || has('batch'), `at least one pallet stop when the file has calm pallets (${calm.length})`)
+  ok(!rareEv.length || has('belt'), `at least one belt stop when the file has rare notes (${rareEv.length})`)
+  ok(!w.spans.some((s) => s.kind === 'tool') || d.stops.some((s) => s.kind === 'loop' && s.hero === 'toolbox' && (s.tools?.length ?? 0) > 0), 'tool calls get a toolbox stop with a count per tool')
+  ok(!w.spans.some((s) => s.kind === 'llm') || d.stops.some((s) => s.kind === 'llm' && s.hero === 'phone' && !!s.model), 'model calls get a phone stop at the gateway')
+  ok(!w.spans.some((s) => s.kind === 'hook') || d.stops.some((s) => s.kind === 'dock' && s.hero === 'parcel'), 'hooks get a parcel stop at the dock')
   ok(!qd.hubSeen || d.stops.every((s) => !!s.hub), 'the hub lamp has a reading at every stop')
   const silent = qd.chapters.filter((ch) => ch.hub.count === 0)
   ok(!qd.hubSeen || silent.length === 0 || d.stops.filter((s) => s.chapter && silent.some((x) => x.n === s.chapter!.n)).every((s) => s.hub?.count === 0), `a chapter with no heartbeat shows a silent lamp (${silent.length})`)

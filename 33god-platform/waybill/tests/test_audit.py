@@ -315,7 +315,7 @@ class TestGateway(unittest.TestCase):
         self.assertEqual((g.expected, g.archived, g.verdict), (3, 2, "partial"))
         self.assertIn("newapi-log:2", g.evidence)
         lite = rows[1]
-        self.assertEqual((lite.expected, lite.archived, lite.verdict, lite.tickets), (7, 0, "silent", ["no board"]))
+        self.assertEqual((lite.expected, lite.archived, lite.verdict, lite.tickets), (7, 0, "silent", ["INFR-158"]))
 
 
 # ---------------------------------------------------------------- transcripts, Hermes
@@ -448,7 +448,7 @@ class TestGit(unittest.TestCase):
             self.assertEqual(len(A.reflog_pushes(Path(next(iter(repos))), SINCE, UNTIL)), 1)
             rows = A.adapter_git(ctx(), root=root)
         self.assertEqual((rows[0].expected, rows[0].archived, rows[0].verdict), (2, 0, "silent"))
-        self.assertEqual((rows[1].expected, rows[1].tickets), (1, ["no board"]))
+        self.assertEqual((rows[1].expected, rows[1].tickets), (1, ["INFR-159"]))
 
 
 class TestHindsight(unittest.TestCase):

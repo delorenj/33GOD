@@ -852,22 +852,23 @@ The lane column is the lane at filing. Live status comes from the boards
 | infra | INFR-156 | `hermes-gateway-restart` publishes `restart_requested` and `restarted` | Backlog |
 | skillex | SKRILL-53 | artifacts `publish.py` emits `project.artifact.published` after a verified receipt (75 silent publishes) | Backlog |
 | delodocs | DOCS-2 | curator-serve (NRestarts 144,934) and delodocs-inbox-watchdog (25,099) point at the removed `DeLoDocs/_vault`. Copies of the scripts are in `~/code/obsops/scripts` | Backlog |
-| hindsight | no board | `memory.*` events through Hindsight's webhook (7,419 silent operations in 3 days). The server is `~/docker/stacks/ai/hindsight` (DeLoContainers; the DELO board was archived 2026-10-18) and the hooks are `~/.agents/hooks/hindsight` (delorenj/agents, no `.project.json`) | not filed |
-| jev-litellm | no board | A success callback that publishes `llm.usage.recorded` (12,525 calls bypassing the gateway in 3 days). Lives in `~/docker/stacks/ai/jev-litellm/compose.yml` (DELO board archived) | not filed |
-| global git hooks | no board | `post-commit`/`pre-push` publish `repo.commit.recorded`/`repo.push.completed` (2,297 commits and 1,059 pushes in 3 days). Lives in `~/.agents/git/hooks`, the target of `~/.config/git/hooks` (delorenj/agents) | not filed |
-| crank (zcrank-send) | no board | `crank.nudge.sent`/`refused` (259 sent and 38 refused in 3 days). Lives in `~/.agents/tools/jev-clairic/bin/zcrank-send` (delorenj/agents). The crank repo is still pending under I-8 | not filed |
+| infra | INFR-157 | Hindsight `memory.*` events through Hindsight's webhook (7,419 silent operations in 3 days). The server is `~/docker/stacks/ai/hindsight` (DeLoContainers; the DELO board was archived 2026-10-18) and the hooks are `~/.agents/hooks/hindsight` (delorenj/agents, no `.project.json`), so it is homed on the infra board | Backlog |
+| infra | INFR-158 | jev-litellm: a success callback that publishes `llm.usage.recorded` (12,525 calls bypassing the gateway in 3 days). Lives in `~/docker/stacks/ai/jev-litellm/compose.yml` (DELO board archived), homed on the infra board | Backlog |
+| infra | INFR-159 | Global git hooks: `post-commit`/`pre-push` publish `repo.commit.recorded`/`repo.push.completed` (2,297 commits and 1,059 pushes in 3 days). Lives in `~/.agents/git/hooks`, the target of `~/.config/git/hooks` (delorenj/agents, no board), homed on the infra board | Backlog |
+| infra | INFR-160 | zcrank-send: `crank.nudge.sent`/`refused` (259 sent and 38 refused in 3 days). Lives in `~/.agents/tools/jev-clairic/bin/zcrank-send` (delorenj/agents). The crank repo is still pending under I-8, so it is homed on the infra board | Backlog |
+| bloodbank | BB-54 | Krebs tick, dispatch, repair and orphan-release decisions emit no events (krebs has no board) | Backlog |
+| bloodbank | BB-55 | plane-hook (`delonet-n8n-workflows`): publish `repo.task.transitioned` and `deleted`; only created is published | Backlog |
+| bloodbank | BB-56 | 2 of 61 headless `claude -p` children of Hermes PMs fire no hooks (hermes-fleet) | Backlog |
+| bloodbank | BB-57 | opencode: prove `session.started` for every session in `opencode.db` (nearly silent 2026-11-13 to 11-19) | Backlog |
+| bloodbank | BB-58 | JetStream consumers `enricher-events` (83 pending) and `smoke-check` (orphaned, 45 pending) are not draining | Backlog |
+| bloodbank | BB-59 | Cast components that declare a producer and published nothing, or that nothing measures: emit, measure or exempt each | Backlog |
+| voxxy | VOXXY-3 | vox has emitted zero events, ever: `audio.speech.synthesized` and `failed` | Backlog |
+| monitoring | MONI-4 | OOM kills (kernel and systemd-oomd) emit no event: `system.service.oom_killed` | Backlog |
+| skillex | SKRILL-54 | artifacts `publish.py` serves `.json.gz` as `application/json`; use `application/gzip` | Backlog |
 
-**Not yet ticketed** (audit rows outside this pass):
-
-- Krebs tick, orphan and repair decisions are silent. krebs has no
-  `.project.json`.
-- `repo.task.transitioned` and `deleted` are never published (plane-hook, in
-  `delonet-n8n-workflows`).
-- 2 of 61 `claude -p` children of Hermes PMs fire no hooks (hermes-fleet).
-- opencode was nearly silent from 2026-11-13 to 11-19.
-- `enricher-events` has 83 pending, and a `smoke-check` consumer looks orphaned
-  (45 pending).
-- vox has emitted zero events, ever.
+Comments were also posted on CAND-55, BB-50, DOCS-2 and MONI-3 with the
+findings of the second audit pass (marker `I-10.2`). Every audit row with no
+live event now names one of the tickets above.
 
 **Seam acceptance criteria**
 

@@ -72,7 +72,7 @@ function buildQueryRows(w: Waybill): Group[] {
     gr.t0 = Math.min(gr.t0, e.t)
   }
   const out = [...by.values()].filter((x) => x.rows.length || x.folded.length)
-  out.forEach((x) => { x.foldLabel = `${fmtInt(x.folded.length)} rare notes kept as themselves`; x.folded.sort((a, b) => a.t0 - b.t0); x.rows.sort((a, b) => (b.lane?.count ?? -1) - (a.lane?.count ?? -1) || a.t0 - b.t0) })
+  out.forEach((x) => { x.foldLabel = `${fmtInt(x.folded.length)} rare ${x.folded.length === 1 ? 'note' : 'notes'} kept as ${x.folded.length === 1 ? 'itself' : 'themselves'}`; x.folded.sort((a, b) => a.t0 - b.t0); x.rows.sort((a, b) => (b.lane?.count ?? -1) - (a.lane?.count ?? -1) || a.t0 - b.t0) })
   out.sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || a.name.localeCompare(b.name))
   return chapters.rows.length ? [chapters, ...out] : out
 }

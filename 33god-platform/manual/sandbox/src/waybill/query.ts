@@ -5,13 +5,16 @@
 // each with a `publish:<id>` span at its resolved component.
 //
 // The tour opens at the archive with the question, walks the chapters in order (at most 5 stops each, 60 in all:
-// the chapter's overview with a pallet per station, then the returned mail, every failure, the biggest pallets and the
-// rare notes), and ends on what did not happen, with the conservation recount: kept + batched == matched + dead letters.
+// the chapter's overview with a pallet per station, then the returned mail, the loudest failure (a second one only when
+// there is room; the rest fold into the first), the biggest pallet, the rare notes and one stop of agent activity: the
+// tool calls, model calls or hooks the builder synthesized, folded per kind into one stop with a count), and ends on
+// what did not happen, with the conservation recount: kept + batched == matched + dead letters. Every kind of stop the
+// file can fill (pallet, rare note, tools, model calls, hooks) appears at least once in the tour.
 // Pure and deterministic, like the capture director; one pass over spans and events, so a 100k-event night is cheap.
-import type { BatchInfo, Direction, Pallet, Stop } from './director'
+import type { BatchInfo, Direction, JobCard, Pallet, Stop, ToolCount } from './director'
 import { resolveEvent } from './resolve'
 import type { Placement } from './stations'
-import { fmtInt, fmtMs, short, type BusEvent, type Span, type Waybill } from './types'
+import { fmtInt, fmtMs, short, spanDur, type BusEvent, type Span, type Waybill } from './types'
 
 export const MAX_STOPS = 60
 export const PER_CHAPTER = 5
@@ -66,6 +69,10 @@ const isHubBeat = (t: string) => /(^|\.)system\.hook\.updated$/.test(t)
 /** A dead letter: a note Candystore refused (its archive consumer dropped it). */
 export const isDeadLetter = (e: BusEvent) => e.consumers.some((c) => c.outcome === 'dropped' && (/candystore/.test(c.name) || c.component === 'candystore'))
 
+/** The agent-activity spans the builder synthesizes (tool, llm, hook and its handlers), folded per kind into one stop. */
+type ActKind = 'loop' | 'llm' | 'dock'
+const ACT_KINDS: ActKind[] = ['loop', 'llm', 'dock']
+const actKind = (s: Span): ActKind | null => (s.kind === 'tool' ? 'loop' : s.kind === 'llm' ? 'llm' : s.kind === 'hook' || s.kind === 'handler' ? 'dock' : null)
 interface Ch extends ChapterInfo {
   spans: Span[]
   batchSpans: Span[]
@@ -73,9 +80,15 @@ interface Ch extends ChapterInfo {
   failedEv: BusEvent[]
   deadEv: BusEvent[]
   other: Span[]
+  act: Record<ActKind, Span[]>
 }
-type CandKind = 'returned' | 'failure' | 'batch' | 'rare'
-interface Cand { kind: CandKind; ch: Ch; comp: string; weight: number; first: boolean; batches: Span[]; events: BusEvent[] }
+type CandKind = 'returned' | 'failure' | 'batch' | 'rare' | ActKind
+interface Cand { kind: CandKind; ch: Ch; comp: string; weight: number; first: boolean; batches: Span[]; events: BusEvent[]; spans: Span[] }
+const tally = <T>(xs: T[], key: (x: T) => string): [string, number][] => {
+  const m = new Map<string, number>()
+  for (const x of xs) { const k = key(x); m.set(k, (m.get(k) ?? 0) + 1) }
+  return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+}
 
 export function directQuery(wb: Waybill, placement: Placement): Direction {
   const q = wb.origin.query ?? null
@@ -105,7 +118,7 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
   const chSpans = wb.spans.filter((s) => s.kind === 'chapter').sort((a, b) => chIndex(a) - chIndex(b) || a.t0 - b.t0)
   const blank = (n: number, name: string, t0: number, t1: number, span: string | null, spans: Span[]): Ch => ({
     n, name, t0, t1, span, spans, events: 0, kept: 0, batches: 0, failed: 0, dead: 0, hub: { count: 0, failed: 0 },
-    batchSpans: [], rare: [], failedEv: [], deadEv: [], other: [],
+    batchSpans: [], rare: [], failedEv: [], deadEv: [], other: [], act: { loop: [], llm: [], dock: [] },
   })
   let chapters: Ch[]
   if (!chSpans.length) chapters = [blank(1, q?.label || wb.title, 0, duration, null, [])]
@@ -138,7 +151,9 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
     if (s.kind === 'prompt' || s.kind === 'turn') { promptSpans.push(s); continue }
     if (s.kind === 'publish' && pubOfSpan(s)) continue
     const c = chOfSpan(s)
+    const ak = actKind(s)
     if (s.kind === 'batch') c.batchSpans.push(s)
+    else if (ak) c.act[ak].push(s)
     else c.other.push(s)
   }
   function pubOfSpan(s: Span): boolean { const id = typeof s.refs?.event_id === 'string' ? s.refs.event_id : s.id.startsWith('publish:') ? s.id.slice(8) : ''; return pubOf.get(id) === s }
@@ -170,10 +185,10 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
       c.events += b.count; c.batches++; c.failed += b.failed; batched += b.count; batchCount++
       if (isHubBeat(b.type)) { c.hub.count += b.count; c.hub.failed += b.failed; hubSeen = true }
     }
-    c.kept = c.rare.length + c.failedEv.length
+    c.dead = c.deadEv.length
+    c.kept = c.rare.length + c.failedEv.length + c.dead   // a returned note is kept as itself too (conservation counts it)
     c.events += c.kept
     c.failed += c.failedEv.length
-    c.dead = c.deadEv.length
     for (const e of [...c.rare, ...c.failedEv]) if (isHubBeat(queryType(e.type))) { c.hub.count++; if (failedEvent(e)) c.hub.failed++; hubSeen = true }
   }
   const deadAll = chapters.reduce((n, c) => n + c.dead, 0)
@@ -190,52 +205,76 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
     missing: total + dead - kept - batched, unresolved: stat('unresolved_producers') ?? unresolvedIds.size,
   }
 
-  // ---- per chapter, the stops worth making: returned mail, every failure, the biggest pallets, the rare notes ----
+  // ---- per chapter, the stops worth making ----
+  // Slots (PER_CHAPTER - 1 after the overview) are filled in this order: returned mail, the loudest failure, the biggest
+  // pallet, the rare notes, one stop of agent activity, a second failure, the next pallets. A failure stop that finds no
+  // slot folds into the first one, so every failure is still in some stop's problems.
+  const SLOTS = PER_CHAPTER - 1
+  const mk = (kind: CandKind, c: Ch, comp: string, weight: number, first: boolean, extra: Partial<Cand> = {}): Cand => ({ kind, ch: c, comp, weight, first, batches: [], events: [], spans: [], ...extra })
+  const fold = (into: Cand, from: Cand) => { into.events.push(...from.events); into.batches.push(...from.batches); into.weight += from.weight }
+  const failChapters = new Map<string, Set<number>>()
+  const shown = new Set<ActKind>()
+  const pools: Cand[][] = []
   const cands: Cand[][] = chapters.map((c) => {
-    const out: Cand[] = []
-    if (c.deadEv.length) out.push({ kind: 'returned', ch: c, comp: 'candystore', weight: c.deadEv.length, first: true, batches: [], events: c.deadEv })
+    const returned = c.deadEv.length ? mk('returned', c, 'candystore', c.deadEv.length, true, { events: c.deadEv }) : null
     const fail = new Map<string, Cand>()
-    const failCand = (comp: string) => fail.get(comp) ?? fail.set(comp, { kind: 'failure', ch: c, comp, weight: 0, first: true, batches: [], events: [] }).get(comp)!
+    const failCand = (comp: string) => fail.get(comp) ?? fail.set(comp, mk('failure', c, comp, 0, true)).get(comp)!
     for (const e of c.failedEv) { const f = failCand(compOf(e)); f.events.push(e); f.weight++ }
     for (const s of c.batchSpans) if (batchFailed(s)) { const f = failCand(s.component); f.batches.push(s); f.weight += Math.max(1, bi(s).failed) }
     const fails = [...fail.values()].sort((a, b) => b.weight - a.weight || a.comp.localeCompare(b.comp))
-    // every failure gets a stop: past the chapter's slots, the smaller ones ride with the last failure stop
-    const room = PER_CHAPTER - 1 - out.length
-    if (fails.length > room) {
-      const keep = fails.slice(0, Math.max(1, room))
-      const last = keep[keep.length - 1]
-      for (const f of fails.slice(keep.length)) { last.events.push(...f.events); last.batches.push(...f.batches); last.weight += f.weight }
-      fails.length = 0
-      fails.push(...keep)
-    }
-    out.push(...fails)
+    for (const f of fails) (failChapters.get(f.comp) ?? failChapters.set(f.comp, new Set()).get(f.comp)!).add(c.n)
+    const f1 = fails[0] ?? null
+    let f2: Cand | null = null
+    if (fails.length > 1) { f2 = mk('failure', c, fails[1].comp, 0, false); for (const f of fails.slice(1)) fold(f2, f) }
     const big = c.batchSpans.filter((s) => !batchFailed(s)).sort((a, b) => bi(b).count - bi(a).count || a.id.localeCompare(b.id))
-    const rest: Cand[] = big.map((s, i) => ({ kind: 'batch', ch: c, comp: s.component, weight: bi(s).count, first: i === 0, batches: [s], events: [] }))
-    const rare: Cand | null = c.rare.length ? { kind: 'rare', ch: c, comp: 'bb-nats', weight: c.rare.length, first: true, batches: [], events: c.rare } : null
-    // the order slots are filled in: the biggest pallet, the rare notes, then the next biggest pallets
-    const fill = [...rest.slice(0, 1), ...(rare ? [rare] : []), ...rest.slice(1)]
-    for (const x of fill) { if (out.length >= PER_CHAPTER - 1) break; out.push(x) }
+    const batches = big.map((s, i) => mk('batch', c, s.component, bi(s).count, i === 0, { batches: [s] }))
+    const rare = c.rare.length ? mk('rare', c, 'bb-nats', c.rare.length, true, { events: c.rare }) : null
+    const acts = ACT_KINDS.filter((k) => c.act[k].length).map((k) => mk(k, c, tally(c.act[k], (s) => s.component)[0][0], c.act[k].length, true, { spans: c.act[k] }))
+    // the kind this tour has not shown yet goes first; else the busiest
+    acts.sort((a, b) => Number(shown.has(a.kind as ActKind)) - Number(shown.has(b.kind as ActKind)) || b.weight - a.weight || a.kind.localeCompare(b.kind))
+    const fill = [returned, f1, batches[0] ?? null, rare, acts[0] ?? null, f2, ...batches.slice(1), ...acts.slice(1)].filter((x): x is Cand => !!x)
+    const out = fill.slice(0, SLOTS)
+    pools.push(fill.slice(SLOTS))
+    if (f2 && f1 && !out.includes(f2)) { fold(f1, f2); pools[pools.length - 1] = pools[pools.length - 1].filter((x) => x !== f2) }
+    for (const x of out) if (x.kind === 'loop' || x.kind === 'llm' || x.kind === 'dock') shown.add(x.kind)
     return out
   })
-
-  // ---- the whole tour fits in 60 stops: drop the least interesting stops first, never a failure or returned mail ----
-  const removable = (x: Cand) => x.kind === 'batch' || x.kind === 'rare'
-  const cls = (x: Cand) => (x.kind === 'batch' && !x.first ? 0 : x.kind === 'rare' ? 1 : 2)
-  let count = 2 + chapters.length + cands.reduce((n, xs) => n + xs.length, 0)
-  while (count > MAX_STOPS) {
-    let worst: Cand | null = null
-    for (const xs of cands) for (const x of xs) {
-      if (!removable(x)) continue
-      if (!worst || cls(x) < cls(worst) || (cls(x) === cls(worst) && (x.weight < worst.weight || (x.weight === worst.weight && x.ch.n > worst.ch.n)))) worst = x
+  const kindCount = (k: CandKind) => cands.reduce((n, xs) => n + xs.filter((x) => x.kind === k).length, 0)
+  const dropCand = (x: Cand) => {
+    const xs = cands[x.ch.n - 1]
+    xs.splice(xs.indexOf(x), 1)
+    if (x.kind === 'failure' && !x.first) { const f1 = xs.find((y) => y.kind === 'failure' && y.first); if (f1) fold(f1, x) }
+  }
+  // every kind of stop the file can fill appears at least once: put the heaviest unplaced one in, in place of something
+  // that is not the last of its kind (a second failure folds, an extra pallet goes, then a doubled kind)
+  const OPTIONAL: CandKind[] = ['batch', 'rare', 'loop', 'llm', 'dock']
+  for (const kind of OPTIONAL) {
+    if (kindCount(kind)) continue
+    const spare = pools.flat().filter((x) => x.kind === kind).sort((a, b) => b.weight - a.weight || a.ch.n - b.ch.n)
+    for (const sp of spare) {
+      const xs = cands[sp.ch.n - 1]
+      if (xs.length < SLOTS) { xs.push(sp); break }
+      const victim = xs.find((y) => y.kind === 'failure' && !y.first) ?? xs.find((y) => y.kind === 'batch' && !y.first)
+        ?? [...xs].reverse().find((y) => OPTIONAL.includes(y.kind) && y.kind !== kind && kindCount(y.kind) > 1)
+      if (!victim) continue
+      dropCand(victim)
+      xs.push(sp)
+      break
     }
-    if (worst) { const xs = cands[worst.ch.n - 1]; xs.splice(xs.indexOf(worst), 1); count--; continue }
-    // only failures and returned mail left: fold two failure stops of the busiest chapter into one
-    const busy = cands.filter((xs) => xs.filter((x) => x.kind === 'failure').length > 1).sort((a, b) => b.length - a.length)[0]
-    if (!busy) break
-    const fs = busy.filter((x) => x.kind === 'failure')
-    const a = fs[fs.length - 2], b = fs[fs.length - 1]
-    a.events.push(...b.events); a.batches.push(...b.batches); a.weight += b.weight
-    busy.splice(busy.indexOf(b), 1)
+  }
+
+  // ---- the whole tour fits in 60 stops: the least interesting go first, never a failure, returned mail or the last of a kind ----
+  let count = 2 + chapters.length + cands.reduce((n, xs) => n + xs.length, 0)
+  const lightest = (xs: Cand[]) => xs.sort((a, b) => a.weight - b.weight || b.ch.n - a.ch.n)[0]
+  while (count > MAX_STOPS) {
+    const all = cands.flat()
+    let victim: Cand | undefined = lightest(all.filter((x) => x.kind === 'batch' && !x.first)) ?? lightest(all.filter((x) => x.kind === 'failure' && !x.first))
+    if (!victim) {
+      const kind = OPTIONAL.filter((k) => kindCount(k) > 1).sort((a, b) => kindCount(b) - kindCount(a))[0]
+      if (kind) victim = lightest(all.filter((x) => x.kind === kind))
+    }
+    if (!victim) break
+    dropCand(victim)
     count--
   }
 
@@ -255,7 +294,7 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
   const keptLive = kept - deadAll
   {
     const b = base(null)
-    const caption = `The archive answers with ${pl1(total, 'event')}${dead ? `, and ${pl1(dead, 'note')} it refused as dead letters` : ''}. They are folded into ${pl1(batchCount, 'pallet')} over ${pl1(of, 'chapter')}; ${pl1(keptLive, 'rare note or failure', 'rare notes and failures')} stay as themselves. The tour walks the chapters in order: the biggest piles, every failure and every returned note.`
+    const caption = `The archive answers with ${pl1(total, 'event')}${dead ? `, and ${pl1(dead, 'note')} it refused as dead letters` : ''}. They are folded into ${pl1(batchCount, 'pallet')} over ${pl1(of, 'chapter')}; ${pl1(keptLive, 'rare note or failure', 'rare notes and failures')} ${keptLive === 1 ? 'stays as itself' : 'stay as themselves'}. The tour walks the chapters in order: the biggest piles, every failure and every returned note.`
     b.notes.push(filters.length ? `Filters: ${filters.map(([k, v]) => `${k} = ${v}`).join(', ')}.` : 'No filters: everything in the window.')
     if (q?.since) b.notes.push(`Window: ${q.since} to ${q.until}, on Candystore's ${q.clock === 'time' ? 'event time' : 'archived-at'} clock.`)
     if (q?.candystore) b.notes.push(`Asked of ${q.candystore}.`)
@@ -271,6 +310,7 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
   }
 
   const eventStop = new Map<string, Stop>()
+  const placedSpans = new Set<string>()
   for (const c of chapters) {
     const xs = cands[c.n - 1]
     const inStop = new Set<string>()
@@ -348,11 +388,13 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
         const comps2 = [...new Set([x.comp, ...x.events.map(compOf), ...x.batches.map((s) => s.component)])]
         x.events.slice(0, 8).forEach((e) => b.notes.push(`${words(e.type)} from ${e.producer ?? cname(compOf(e))} · ${short(e.id)}`))
         if (x.events.length > 8) b.notes.push(`… and ${fmtInt(x.events.length - 8)} more, every one in the waterfall.`)
+        const chronic = failChapters.get(x.comp)?.size ?? 0
+        if (chronic >= 3) b.notes.push(`${cname(x.comp)} fails in ${fmtInt(chronic)} of ${pl1(of, 'chapter')}: a standing problem, not a blip.`)
         details.push({
           ...b, kind: 'failure', set: setOf(x.comp), components: comps2, spanIds: x.batches.map((s) => s.id), eventIds: x.events.map((e) => e.id),
           ...tOf([...x.events.map((e) => e.t), ...x.batches.flatMap((s) => [s.t0, s.t1 ?? s.t0])], c.t0),
           title: `${cname(x.comp)}: ${pl1(n, 'failure')}${comps2.length > 1 ? `, with ${comps2.length - 1} more` : ''}`,
-          caption: `${listAnd(ts.slice(0, 3).map(([t, k]) => `${fmtInt(k)} “${words(t)}”`))}${ts.length > 3 ? `, and ${ts.length - 3} more kinds` : ''} in this chapter. ${x.events.length ? (x.events.length === n ? (n === 1 ? 'It is kept as itself, so you can open it.' : 'All of them are kept as themselves, so you can open each one.') : `${fmtInt(x.events.length)} of them are kept as themselves, so you can open each one.`) : ''}${folded ? ` ${fmtInt(folded)} more were folded into a pallet after the file's cap on kept notes.` : ''}`.trim(),
+          caption: `${listAnd(ts.slice(0, 3).map(([t, k]) => `${fmtInt(k)} “${words(t)}”`))}${ts.length > 3 ? `, and ${ts.length - 3} more kinds` : ''} in this chapter. ${x.events.length ? (x.events.length === n ? (n === 1 ? 'It is kept as itself, so you can open it.' : 'All of them are kept as themselves, so you can open each one.') : `${fmtInt(x.events.length)} of them ${x.events.length === 1 ? 'is' : 'are'} kept as themselves, so you can open ${x.events.length === 1 ? 'it' : 'each one'}.`) : ''}${folded ? ` ${fmtInt(folded)} more were folded into a pallet after the file's cap on kept notes.` : ''}`.trim(),
           detail: ts.map(([t, k]) => `${k} × ${t}`).join(' · '), tag: `${x.comp} · ${pl1(n, 'failure')}`,
           hero: 'flag', heroLabel: { real: `${fmtInt(n)} failed`, sub: words(ts[0]?.[0] ?? 'failed') },
           problems: [...x.events.map((e) => `evt:${e.id}`), ...x.batches.map((s) => s.id)], fanout: fanout(x.events),
@@ -371,6 +413,65 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
           caption: `Over ${fmtMs(dur || 60000)} of this chapter, ${cname(s.component)} stuck ${pl1(info.count, 'post-it')} of this kind on the belt, about ${fmtInt(Math.max(1, Math.round(info.count / mins)))} a minute${peak ? `, at most ${fmtInt(peak)} in one minute` : ''}. Too many to walk one by one, so they are stacked here as one pallet; the archive filed every one.${posted}`,
           detail: s.summary || `${info.count} × ${info.type}`, tag: `${s.id} · ${info.type}`,
           hero: 'pallet', heroLabel: { real: `×${fmtInt(info.count)}`, sub: words(info.type) }, batch: info,
+        })
+      } else if (x.kind === 'loop') {
+        const sp = [...x.spans].sort((a, b2) => a.t0 - b2.t0 || a.id.localeCompare(b2.id))
+        const byName = new Map<string, ToolCount>()
+        for (const t of sp) { const nm = String(t.attrs?.tool ?? t.name); const g = byName.get(nm) ?? byName.set(nm, { name: nm, count: 0, ms: 0 }).get(nm)!; g.count++; g.ms += spanDur(t) }
+        const tc = [...byName.values()].sort((a, b2) => b2.count - a.count || a.name.localeCompare(b2.name))
+        const where = tally(sp, (t) => t.component)
+        const bad = sp.filter((t) => BAD.has(t.status))
+        const ms = sp.reduce((n, t) => n + spanDur(t), 0)
+        const top3 = tc.slice(0, 3).map((t) => `${t.name} ×${fmtInt(t.count)}`).join(' · ')
+        where.slice(0, 5).forEach(([comp, k]) => b.notes.push(`${cname(comp)}: ${pl1(k, 'tool call')}.`))
+        details.push({
+          ...b, kind: 'loop', set: setOf(where[0][0]), components: [...new Set([where[0][0], ...sp.map((t) => t.component)])].slice(0, 8),
+          spanIds: sp.map((t) => t.id), eventIds: [], ...tOf(sp.flatMap((t) => [t.t0, t.t1 ?? t.t0]), c.t0),
+          title: `${pl1(sp.length, 'tool call')} in this chapter: ${top3}${tc.length > 3 ? ' …' : ''}`,
+          caption: `Agents ran ${pl1(sp.length, 'tool call')} in this slice of the window, mostly at ${listAnd(where.slice(0, 3).map(([comp, k]) => `${cname(comp)} (${fmtInt(k)})`))}. Too many to follow one by one, so they sit in one toolbox${bad.length ? `; ${fmtInt(bad.length)} of them ended in an error` : ''}.`,
+          detail: `${pl1(sp.length, 'tool span')} · ${fmtMs(ms)} of tool time`, tag: `${pl1(sp.length, 'tool call')} · ${pl1(where.length, 'place')}`,
+          hero: 'toolbox', tools: tc, toolRuns: sp.slice(0, 120).map((t) => ({ name: String(t.attrs?.tool ?? t.name), t0: t.t0, t1: t.t1 ?? t.t0 })),
+          heroLabel: { real: top3 + (tc.length > 3 ? ' …' : ''), sub: `${pl1(sp.length, 'tool call')} · ${fmtMs(ms)}` },
+          problems: bad.map((t) => t.id),
+        })
+      } else if (x.kind === 'llm') {
+        const sp = [...x.spans].sort((a, b2) => a.t0 - b2.t0 || a.id.localeCompare(b2.id))
+        const models = tally(sp, (t) => t.name)
+        const bad = sp.filter((t) => BAD.has(t.status))
+        const usage = (t: Span, k: string) => num((t.attrs?.usage as Record<string, unknown> | undefined)?.[k], 0)
+        const tin = sp.reduce((n, t) => n + usage(t, 'input_tokens'), 0), tout = sp.reduce((n, t) => n + usage(t, 'output_tokens'), 0)
+        models.slice(0, 5).forEach(([m, k]) => b.notes.push(`${m}: ${pl1(k, 'model call')}.`))
+        details.push({
+          ...b, kind: 'llm', set: setOf(x.comp), components: [...new Set(sp.map((t) => t.component))], spanIds: sp.map((t) => t.id), eventIds: [],
+          ...tOf(sp.flatMap((t) => [t.t0, t.t1 ?? t.t0]), c.t0),
+          title: `${pl1(sp.length, 'model call')} through the gateway: ${listAnd(models.slice(0, 2).map(([m]) => m))}${models.length > 2 ? ` and ${models.length - 2} more` : ''}`,
+          caption: `${pl1(sp.length, 'call')} went to the staffing desk, the AutomaticAI gateway, in this slice: ${listAnd(models.slice(0, 3).map(([m, k]) => `${fmtInt(k)} to ${m}`))}.${bad.length ? ` ${fmtInt(bad.length)} of them failed.` : ''}${tin + tout ? ` The models read ${fmtInt(tin)} tokens and wrote ${fmtInt(tout)}.` : ''}`,
+          detail: `${pl1(sp.length, 'llm span')}`, tag: `${x.comp} · ${pl1(sp.length, 'model call')}`,
+          hero: 'phone', model: models[0][0], modelCalls: sp.length, heroLabel: { real: models[0][0], sub: `${pl1(sp.length, 'model call')}${bad.length ? ` · ${fmtInt(bad.length)} failed` : ''}` },
+          problems: bad.map((t) => t.id),
+        })
+      } else if (x.kind === 'dock') {
+        const sp = [...x.spans].sort((a, b2) => a.t0 - b2.t0 || a.id.localeCompare(b2.id))
+        const hooks = sp.filter((t) => t.kind === 'hook'), handlers = sp.filter((t) => t.kind === 'handler')
+        const natives = tally(hooks.length ? hooks : handlers, (t) => String(t.attrs?.native ?? t.name))
+        const bad = sp.filter((t) => BAD.has(t.status))
+        const byHandler = new Map<string, Span[]>()
+        for (const h of handlers) (byHandler.get(h.name) ?? byHandler.set(h.name, []).get(h.name)!).push(h)
+        const cards: JobCard[] = [...byHandler.entries()].sort((a, b2) => b2[1].length - a[1].length || a[0].localeCompare(b2[0])).slice(0, 8).map(([name, ss], i) => ({
+          span: ss[0].id, handler: name, mode: ss.every((t) => t.sync) ? 'sync' : 'async',
+          status: (ss.some((t) => BAD.has(t.status)) ? 'failed' : ss.some((t) => t.status === 'skipped') ? 'skipped' : 'ok') as Span['status'],
+          reason: ss.find((t) => t.reason)?.reason ?? null, t0: Math.min(...ss.map((t) => t.t0)), t1: Math.max(...ss.map((t) => t.t1 ?? t.t0)), order: i,
+        }))
+        natives.slice(0, 5).forEach(([nm, k]) => b.notes.push(`${nm}: ${pl1(k, 'hook')}.`))
+        const nHook = hooks.length || handlers.length
+        details.push({
+          ...b, kind: 'dock', set: 'dock', components: [...new Set(sp.map((t) => t.component))], spanIds: sp.map((t) => t.id), eventIds: [],
+          ...tOf(sp.flatMap((t) => [t.t0, t.t1 ?? t.t0]), c.t0),
+          title: `The dock handles ${pl1(nHook, hooks.length ? 'hook' : 'handler job')}: ${listAnd(natives.slice(0, 3).map(([nm, k]) => `${nm} ×${fmtInt(k)}`))}`,
+          caption: `hook-hub took ${pl1(hooks.length, 'hook')} from the agents in this slice${handlers.length ? ` and ran ${pl1(handlers.length, 'handler job')} for them` : ''}${bad.length ? `; ${fmtInt(bad.length)} failed or were skipped with a fault` : ''}. They are stacked as one parcel at the dock.`,
+          detail: `${pl1(hooks.length, 'hook span')}, ${pl1(handlers.length, 'handler span')}`, tag: `hook-hub · ${pl1(hooks.length, 'hook')}`,
+          hero: 'parcel', cards, heroLabel: { real: `${fmtInt(nHook)} ${hooks.length ? 'hook' : 'handler'} ${nHook === 1 ? 'parcel' : 'parcels'}`, sub: natives[0] ? natives[0][0] : undefined },
+          problems: bad.map((t) => t.id),
         })
       } else {
         const groups = new Map<string, { type: string; comp: string; n: number }>()
@@ -396,6 +497,8 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
     // the chapter's other spans (tool / llm / hook spans the builder synthesized): with their event, else with a stop
     // about their component, else in the overview
     const chapterStop = stops[stops.length - 1 - details.length]
+    for (const k of ACT_KINDS) if (!xs.some((x) => x.kind === k)) c.other.push(...c.act[k])
+    for (const k of ACT_KINDS) for (const x of xs) if (x.kind === k) x.spans.forEach((t) => placedSpans.add(t.id))
     for (const s of c.other) {
       const evId = typeof s.refs?.event_id === 'string' ? s.refs.event_id : null
       const home = (evId ? eventStop.get(evId) : undefined) ?? details.find((d) => d.components.includes(s.component)) ?? chapterStop
@@ -404,7 +507,7 @@ export function directQuery(wb: Waybill, placement: Placement): Direction {
     }
   }
   // each kept event's publish span rides with its event
-  for (const [id, s] of pubOf) { const st = eventStop.get(id); if (st) st.spanIds.push(s.id) }
+  for (const [id, s] of pubOf) { const st = eventStop.get(id); if (st && !placedSpans.has(s.id)) st.spanIds.push(s.id) }
 
   // ---- the end card: what did not happen, and whether every event is accounted for ----
   const sev = (k: string) => wb.findings.filter((f) => f.severity === k).length

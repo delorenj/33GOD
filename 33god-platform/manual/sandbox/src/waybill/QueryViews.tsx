@@ -4,11 +4,20 @@ import type { Conservation } from './query'
 import type { Stop } from './director'
 import { fmtInt, type Waybill } from './types'
 
-/** The label's clock is the owner's (the file says 'last night, 18:02 to 07:41'): the sandbox shows it on the same one. */
-const QUERY_TZ = 'America/New_York'
-const hm = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: QUERY_TZ })
+/** The label's clock is the one the file names (origin.query.tz); a file that names none is on the owner's. */
+const DEFAULT_TZ = 'America/New_York'
+const hmByTz = new Map<string, Intl.DateTimeFormat>()
+const hmFor = (tz: string) => {
+  let f = hmByTz.get(tz)
+  if (!f) {
+    try { f = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: tz }) }
+    catch { f = hmByTz.get(DEFAULT_TZ) ?? new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: DEFAULT_TZ }) }
+    hmByTz.set(tz, f)
+  }
+  return f
+}
 /** The wall-clock time of `ms` into a query window: '19:10'. */
-export const wallAt = (w: Waybill, ms: number) => hm.format(new Date(Date.parse(w.clock.t0) + ms))
+export const wallAt = (w: Waybill, ms: number) => hmFor(typeof w.origin.query?.tz === 'string' && w.origin.query.tz ? w.origin.query.tz : DEFAULT_TZ).format(new Date(Date.parse(w.clock.t0) + ms))
 export const wallSpan = (w: Waybill, s: Stop) => (s.t1 > s.t0 + 59000 ? `${wallAt(w, s.t0)} to ${wallAt(w, s.t1)}` : wallAt(w, s.t0))
 
 /** A pallet's posts per minute across its chapter, one bar per minute, with the busiest minute named. */

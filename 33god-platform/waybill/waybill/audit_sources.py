@@ -65,7 +65,6 @@ LITELLM_PG = os.environ.get("WAYBILL_LITELLM_PG", "jev-litellm-postgres")
 LEDGER_PREDICATE = ("type IN (2,5) AND (model_name LIKE 'automaticai/%' OR model_name LIKE 'aai/%' OR "
                     "(other LIKE '%\"automaticai_route\"%' AND other LIKE '%\"automaticai_account\"%') OR "
                     "(type = 2 AND channel_id > 0))")
-NO_BOARD = "no board"
 
 
 # ---------------------------------------------------------------- the row
@@ -780,10 +779,10 @@ def adapter_gateway(ctx: Ctx) -> list[Row]:
                                f"{q(iso_z(ctx.since)[:-1].replace('T', ' '))} and \"startTime\" < {q(iso_z(ctx.until)[:-1].replace('T', ' '))};") or 0)
         arch = sum(c for p, c in ctx.producers.items() if "jev-litellm" in p)
         rows.append(Row("gateway", "jev-litellm spend logs -> any event", "jev-litellm", n, arch, verdict(n, arch),
-                        "LiteLLM_SpendLogs rows in the window; the proxy publishes nothing to Bloodbank", tickets=[NO_BOARD]))
+                        "LiteLLM_SpendLogs rows in the window; the proxy publishes nothing to Bloodbank", tickets=["INFR-158"]))
     except Skip as exc:
         rows.append(Row("gateway", "jev-litellm spend logs", "jev-litellm", None, None, "silent", f"unreadable: {exc}",
-                        tickets=[NO_BOARD]))
+                        tickets=["INFR-158"]))
     return rows
 
 
@@ -867,8 +866,8 @@ def correlations_with_events(ctx: Ctx, corrs: Iterable[str]) -> set[str]:
         f" where e.correlationid = c and e.time >= {lo}::timestamptz and e.time < {hi}::timestamptz);") or [])
 
 
-OPENCODE_TICKETS = ["not yet ticketed"]
-HEADLESS_TICKETS = ["not yet ticketed"]
+OPENCODE_TICKETS = ["BB-57"]
+HEADLESS_TICKETS = ["BB-56"]
 
 
 def opencode_sessions(db: Path, since: float, until: float) -> list[dict] | None:
@@ -1244,7 +1243,7 @@ def classify_systemd(timers: list[dict], policy: dict[str, dict], journal: dict[
     return rows
 
 
-OOM_TICKETS = ("MONI-3",)
+OOM_TICKETS = ("MONI-4",)
 
 
 def adapter_systemd(ctx: Ctx) -> list[Row]:
@@ -1352,9 +1351,9 @@ def adapter_git(ctx: Ctx, root: Path = CODE_ROOT) -> list[Row]:
     push_ev = ctx.count_types(lambda t: bool(re.match(r"^bloodbank\.(repo|git|vcs)\.", t)) and "push" in t)
     ev = f"{len(repos)} repositories (worktrees and submodules folded by git common dir)"
     return [Row("git", "git commits -> repo commit events", "git-hooks", len(shas), commit_ev, verdict(len(shas), commit_ev),
-                f"{ev}; distinct shas by committer date", tickets=[NO_BOARD]),
+                f"{ev}; distinct shas by committer date", tickets=["INFR-159"]),
             Row("git", "git pushes -> repo push events", "git-hooks", pushes, push_ev, verdict(pushes, push_ev),
-                "remote-tracking reflog entries 'update by push' in the window", tickets=[NO_BOARD])]
+                "remote-tracking reflog entries 'update by push' in the window", tickets=["INFR-159"])]
 
 
 # ---------------------------------------------------------------- 9. Hindsight's own audit log
@@ -1393,7 +1392,7 @@ def adapter_hindsight(ctx: Ctx, run: Callable[[list[str]], str] | None = None) -
     arch = ctx.count_types(lambda t: t.startswith(("bloodbank.memory.", "bloodbank.hindsight.")))
     return [Row("hindsight", "Hindsight operations -> memory events", "hindsight", n, arch, verdict(n, arch),
                 f"{len(banks)} banks{f' ({err} unreadable)' if err else ''}, day buckets overlapping the window (the audit API"
-                f" buckets by day at the finest): {fmt_counts(tot, 4)}", tickets=[NO_BOARD])]
+                f" buckets by day at the finest): {fmt_counts(tot, 4)}", tickets=["INFR-157"])]
 
 
 # ---------------------------------------------------------------- 10. declared but never seen (schemas, registry surfaces)
@@ -1500,7 +1499,7 @@ def adapter_crank(ctx: Ctx, path: Path = CRANK_SENDS) -> list[Row]:
                 n += 1
     arch = ctx.count_types(lambda t: t.startswith("bloodbank.crank.nudge"))
     return [Row("crank", "crank pane sends -> crank.nudge events", "crank", n, arch, verdict(n, arch),
-                "zcrank-send's own send log", tickets=[NO_BOARD])]
+                "zcrank-send's own send log", tickets=["INFR-160"])]
 
 
 # ---------------------------------------------------------------- 13. artifact publishes (MinIO) vs project.artifact.published
@@ -1552,7 +1551,7 @@ def adapter_artifacts(ctx: Ctx) -> list[Row]:
 
 # ---------------------------------------------------------------- 14. Plane activity vs repo.task.*
 
-PLANE_TICKETS = ["not yet ticketed"]
+PLANE_TICKETS = ["BB-55"]
 
 
 def classify_plane(act: dict, types: Counter) -> list[Row]:
@@ -1579,7 +1578,7 @@ def adapter_plane(ctx: Ctx) -> list[Row]:
 
 # ---------------------------------------------------------------- 15. Krebs tick journal vs krebs.* events
 
-KREBS_TICKETS = ["not yet ticketed"]
+KREBS_TICKETS = ["BB-54"]
 
 
 def classify_krebs(entries: list[dict], types: Counter) -> list[Row]:
@@ -1618,7 +1617,7 @@ def adapter_krebs(ctx: Ctx, path: Path = KREBS_JOURNAL) -> list[Row]:
 
 # ---------------------------------------------------------------- 16. JetStream consumers: is anyone falling behind?
 
-CONSUMER_TICKETS = {"enricher-events": ["not yet ticketed"], "smoke-check": ["not yet ticketed"]}
+CONSUMER_TICKETS = {"enricher-events": ["BB-58"], "smoke-check": ["BB-58"]}
 BACKLOG = 10
 
 
@@ -1637,7 +1636,7 @@ def classify_consumers(consumers: list[dict], stream: str = EVENTS_STREAM) -> li
         last = ((c.get("delivered") or {}).get("last_active")) or ""
         rows.append(Row("consumers", f"consumer {name} backlog -> drained", "bloodbank", pend + ackp, 0, "partial",
                         f"{pend} pending, {ackp} awaiting ack; last delivery {last[:19] or 'never'}; filter "
-                        + ", ".join(consumer_filters([c])), tickets=CONSUMER_TICKETS.get(name, ["not yet ticketed"])))
+                        + ", ".join(consumer_filters([c])), tickets=CONSUMER_TICKETS.get(name, ["BB-59"])))
     return rows
 
 
@@ -1655,7 +1654,7 @@ def adapter_consumers(ctx: Ctx, bus_factory: Callable[[], "NatsBus"] | None = No
 
 # ---------------------------------------------------------------- 17. the cast: every drawn component either measured or speaking
 
-CAST_TICKETS = {"vox": ["not yet ticketed"]}
+CAST_TICKETS = {"vox": ["VOXXY-3"]}
 
 
 def classify_cast(reg: Registry, comp_ev: Counter, measured: set[str]) -> list[Row]:
@@ -1681,7 +1680,7 @@ def classify_cast(reg: Registry, comp_ev: Counter, measured: set[str]) -> list[R
         rows.append(Row("cast", f"{c} (declares a producer) -> any event", c, None, 0, "silent",
                         f"{reg.name_of(c)} declares {', '.join((rec.get(c, {}).get('producers') or ['a source rule'])[:3])}"
                         " but published nothing in the window, and no other row measures it",
-                        tickets=CAST_TICKETS.get(c, ["not yet ticketed"])))
+                        tickets=CAST_TICKETS.get(c, ["BB-59"])))
     if unmeasured:
         rows.append(Row("cast", "unmeasured cast components -> any event", "event-contract", len(unmeasured), 0, "silent",
                         f"{len(unmeasured)} first-party component(s) published nothing, declare no producer and no adapter"

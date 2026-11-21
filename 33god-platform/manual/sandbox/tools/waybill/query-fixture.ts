@@ -3,6 +3,7 @@
 //   node --import ./tools/waybill/register.mjs --experimental-strip-types tools/waybill/query-fixture.ts
 // writes public/waybills/fixture-query.waybill.json            (12 chapters, ~200 batches, ~150 kept notes)
 //        public/waybills/fixture-query-100k.waybill.json.gz    (the same night at 100k events, folded: perf only, not in index.json)
+import { createHash } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 import { resolveProducer } from '../../src/waybill/resolve'
@@ -257,14 +258,17 @@ export function buildQuery(opts: FixtureOpts = {}): Record<string, unknown> {
 
   const sha12 = (big ? 'a1b2c3d4e5f6' : '9f3c71d2ab04')
   const label = 'everything the company did last night, 18:02 to 07:41'
+  const promptText = `You asked the archive: ${label}`
+  const sha = (t: string) => createHash('sha256').update(t).digest('hex')
   return {
-    format: '33god.waybill', version: 1, id: `wb_q_${sha12}`, title: `Query · ${label}`, recorded_at: '2026-11-21T12:46:00Z',
+    // a real waybill id is wb_ + 26 base-62 characters; the fixture's is derived, so it stays the same on every run
+    format: '33god.waybill', version: 1, id: `wb_${sha(`fixture-query:${sha12}`).slice(0, 26).toUpperCase()}`, title: `Query · ${label}`, recorded_at: '2026-11-21T12:46:00Z',
     recorder: { name: 'waybill', version: '0.2.0', host: 'big-chungus', mode: 'query', profile: 'public', argv: [big ? 'hand-made fixture: the same night folded at 100k events (perf)' : 'hand-made fixture to the query-mode contract'] },
     origin: {
       cli: 'candystore', surface: 'query', session_id: `q_${sha12}`, turn_id: null, turn_index: null, cwd: null, project: null, model: null,
       query: { since: new Date(SINCE).toISOString(), until: new Date(UNTIL).toISOString(), clock: 'received_at', filters: {}, total: query_total, dead_letters: deadN, candystore: 'http://candystore.delo.sh', label },
     },
-    prompt: { text: `You asked the archive: ${label}`, chars: 0, sha256: '', truncated: false },
+    prompt: { text: promptText, chars: promptText.length, sha256: sha(promptText), truncated: false },
     clock: { t0: new Date(SINCE).toISOString(), t_end: new Date(UNTIL).toISOString(), duration_ms: DURATION, settle_ms: 0 },
     components, spans: [...chSpans, ...batchSpans, ...spans], events, links: [], artifacts: {}, gaps, findings,
     sources: [{ id: 'candystore', kind: 'http', locator: 'http://candystore.delo.sh/events', status: 'ok', items: query_total, ms: 4100 }],
