@@ -67,7 +67,7 @@
       "kicker": "Codename 33GOD · In Development",
       "title": "A company,",
       "titleTurn": "staffed by agents.",
-      "body": "33GOD is a building with one window per component. Scroll down it and each one lights up with what it does and a few numbers from this week. Agents are hired, seated and reviewed. One human runs the place.",
+      "body": "33GOD is a building with one window per component. Scroll down it and each one lights up with what it does and, where it can be counted, a number from this week. Agents are hired, seated and reviewed. One human runs the place.",
       "tags": [],
       "staged": false,
       "copy": {
@@ -76,7 +76,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.agent.session.started",
+          "subject": "bloodbank.evt.agent.session.started",
           "note": "33GOD, a company staffed by agents. In development."
         }
       ]
@@ -94,7 +94,7 @@
       "copy": {},
       "log": [
         {
-          "subject": "bloodbank.agent.invocation.started",
+          "subject": "bloodbank.evt.agent.invocation.started",
           "note": "Not like employees. Employees."
         }
       ]
@@ -108,7 +108,7 @@
         "registry"
       ],
       "kicker": "The lobby directory",
-      "title": "Agents are employees. The pipeline is the company.",
+      "title": "The building, counted.",
       "body": "",
       "tags": [],
       "staged": false,
@@ -116,23 +116,23 @@
         "figures": [
           {
             "n": "80",
-            "label": "first-party components, built to one set of rules",
-            "detail": "Counted from the registry on 21 Nov 2026: 100 component records, 80 first-party, 88 marked live. Each component owns one domain and talks to the others over the bus."
+            "label": "first-party components",
+            "detail": "Counted from the component registry on 21 Nov 2026: 100 component records, 80 first-party, 88 marked live. Each component owns one domain and talks to the others over the bus."
           },
           {
             "n": "13",
             "label": "domains on the platform map, from the bus to the front door",
-            "detail": "The domains in atlas/atlas.json: bus, integration, agent runtime, observability, project tooling, voice, enrichment, orchestration, scheduling, operator desktop, client surface, shared infra, marketing."
+            "detail": "Counted from the platform map on 21 Nov 2026: bus, integration, agent runtime, observability, project tooling, voice, enrichment, orchestration, scheduling, operator desktop, client surface, shared infra and marketing."
           },
           {
             "n": "226",
             "label": "event schemas in a single rulebook",
-            "detail": "JSON schema files under bloodbank/schemas/bloodbank, counted 21 Nov 2026. The registry card still says 214 (15 Nov)."
+            "detail": "Counted from the schema tree on 21 Nov 2026."
           },
           {
             "n": "300",
             "label": "wired connections between components",
-            "detail": "Relations declared across components/*.yaml, 21 Nov 2026. Each names the evidence file that proves it."
+            "detail": "Connections declared between components in the registry, 21 Nov 2026. Each names the file that proves it."
           },
           {
             "n": "1",
@@ -143,7 +143,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.cron.tick.fired",
+          "subject": "bloodbank.evt.cron.tick.fired",
           "note": "80 first-party components, 13 domains, 226 event schemas, 300 connections, 1 human."
         }
       ]
@@ -157,12 +157,12 @@
         "flume"
       ],
       "interlude": {
-        "kicker": "Articles of incorporation · § I–IV",
+        "kicker": "The bylaws · § I–IV",
         "line": "Four bylaws. Everything else follows from them."
       },
       "kicker": "Article one",
       "title": "Every agent is an employee.",
-      "body": "Stop orchestrating a swarm. Staff a company. Every agent has a title, a desk and a record, and the org chart is the registry of them. A good manager does not blame someone. What separates a company that grows is how it handles mistakes and what it learns.",
+      "body": "Every agent has a title, a desk and a record, and the org chart is the registry of them. A good manager does not blame someone. What separates a company that grows is how it handles mistakes and what it learns.",
       "tags": [
         "FLUME"
       ],
@@ -184,8 +184,8 @@
           {
             "dept": "Operations",
             "name": "KREBS",
-            "line": "Runs every ticket's lifecycle, from filed to closed, on any board.",
-            "detail": "One lifecycle for every ticket, identical on every board: five lanes and a few labels. Krebs is the only dispatcher, and it ticks every 10 minutes."
+            "line": "Runs every project ticket's lifecycle, from filed to closed.",
+            "detail": "One lifecycle for every project board: five lanes and a few labels. Krebs is the only dispatcher. It runs within a minute of a board change, with a 10-minute backstop."
           },
           {
             "dept": "Internal comms",
@@ -202,8 +202,8 @@
           {
             "dept": "The company clock",
             "name": "CANDYBAR",
-            "line": "One clock fires every recurring job.",
-            "detail": "Cron, rebuilt on the bus. One heartbeat ticks every minute and every scheduled job is a consumer of it. No crontab, no private timers."
+            "line": "The single clock for recurring work.",
+            "detail": "Cron, rebuilt on the bus. One heartbeat ticks every minute and scheduled jobs consume it. Jobs register with Candybar instead of keeping a crontab or a private timer."
           },
           {
             "dept": "Training",
@@ -251,7 +251,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.agent.session.started",
+          "subject": "bloodbank.evt.agent.session.started",
           "note": "Every agent is an employee. Twelve departments, one human."
         }
       ]
@@ -322,7 +322,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.conversation.turn.completed",
+          "subject": "bloodbank.evt.conversation.turn.completed",
           "note": "Nothing calls. Everything announces. One event, four listeners."
         }
       ]
@@ -333,8 +333,8 @@
       "where": "The layers",
       "setPiece": "section.layers",
       "kicker": "Article three",
-      "title": "Built from scratch, on purpose.",
-      "body": "80 of the 100 components in the registry are first-party, built to one strict set of rules: layered abstraction, one owner for every building block, extension over rewrites, reuse over copies. A new component plugs in instead of rewiring the rest.",
+      "title": "Every block has one owner.",
+      "body": "80 of the 100 components in the registry are first-party. Each fact has one owner at the right layer. Surfaces consume what lower parts publish and keep no second copy of the state. A new component plugs in instead of rewiring the rest.",
       "tags": [],
       "staged": false,
       "copy": {
@@ -360,13 +360,13 @@
             "names": "NATS · POSTGRES · REDIS · TRAEFIK"
           }
         ],
-        "punch": "Calls only travel downhill.",
-        "note": "The rule: lower layers never call higher ones. Every block has one owner."
+        "punch": "One owner for every fact.",
+        "note": "Surfaces read what lower layers publish. They keep no second copy."
       },
       "log": [
         {
-          "subject": "bloodbank.agent.tool.completed",
-          "note": "Built from scratch, on purpose. Five layers; calls only travel downhill."
+          "subject": "bloodbank.evt.agent.tool.completed",
+          "note": "Every block has one owner. Five layers; surfaces keep no second copy."
         }
       ]
     },
@@ -398,7 +398,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.repo.task.created",
+          "subject": "bloodbank.evt.repo.task.created",
           "note": "The company runs on itself. The loop closes on its own board."
         }
       ]
@@ -418,7 +418,7 @@
       },
       "kicker": "The clock and the records room",
       "title": "One clock. One archive.",
-      "body": "Candybar is the single clock. It ticks every minute on the bus and every recurring job is a consumer of that tick. Candystore keeps a permanent copy of every event, so history can be searched later. No crontab. No second clock.",
+      "body": "Candybar is the single clock for recurring work. It ticks every minute on the bus, and jobs register with it instead of keeping their own timer. Candystore keeps a permanent copy of every event, so history can be searched later. The one timer outside Candybar watches Candybar.",
       "tags": [
         "CANDYBAR",
         "CANDYSTORE"
@@ -440,7 +440,7 @@
           {
             "name": "CANDYBAR",
             "role": "The company clock",
-            "line": "One clock fires every recurring job."
+            "line": "The single clock for recurring work."
           },
           {
             "name": "CANDYSTORE",
@@ -493,11 +493,11 @@
       },
       "log": [
         {
-          "subject": "bloodbank.cron.tick.fired",
+          "subject": "bloodbank.evt.cron.tick.fired",
           "note": "The clock ticks once a minute."
         },
         {
-          "subject": "bloodbank.cron.candybar.completed",
+          "subject": "bloodbank.evt.cron.candybar.completed",
           "note": "A scheduled job finishes."
         }
       ]
@@ -515,7 +515,7 @@
       ],
       "kicker": "The agents' desk",
       "title": "Where the agents work.",
-      "body": "Hermes is one long-running gateway that hosts every agent and its chat bots. Hook-hub catches every hook from eight agent CLIs and fans it out. Hindsight remembers across sessions. ASM shows what each agent process is doing right now.",
+      "body": "Hermes is one long-running gateway that hosts every agent and its chat bots. Hook-hub takes hooks from eight agent CLIs and fans them out. Hindsight remembers across sessions. ASM shows what each agent process is doing right now.",
       "tags": [
         "HERMES",
         "HOOK-HUB",
@@ -548,7 +548,7 @@
           {
             "name": "HOOK-HUB",
             "role": "The mail slot",
-            "line": "Takes every agent hook and fans it out to handlers."
+            "line": "Takes agent hooks and fans them out to handlers."
           },
           {
             "name": "HINDSIGHT",
@@ -565,7 +565,7 @@
           {
             "n": "51",
             "label": "agents on the roster, 32 of them project managers",
-            "detail": "Counted from ~/.hermes/agents-registry.yaml on 21 Nov 2026."
+            "detail": "Counted from the agent roster on 21 Nov 2026."
           },
           {
             "n": "121k",
@@ -580,10 +580,10 @@
           {
             "n": "233",
             "label": "memory banks, one per repo or agent",
-            "detail": "hindsight bank list on 21 Nov 2026: 233 banks, one of them a health check."
+            "detail": "233 memory banks on 21 Nov 2026, one of them a health check."
           }
         ],
-        "eventsTitle": "They emit",
+        "eventsTitle": "Agent CLIs emit",
         "events": [
           {
             "type": "bloodbank.evt.agent.hook.updated",
@@ -606,7 +606,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.agent.hook.updated",
+          "subject": "bloodbank.evt.agent.hook.updated",
           "note": "A hook fires in an agent CLI and hook-hub fans it out."
         }
       ]
@@ -645,7 +645,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.repo.board.created",
+          "subject": "bloodbank.evt.repo.board.created",
           "note": "A new project. The building grows a floor."
         }
       ]
@@ -695,7 +695,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.agent.session.started",
+          "subject": "bloodbank.evt.agent.session.started",
           "note": "Flume fills a role. A window that has never been lit turns on."
         }
       ]
@@ -709,8 +709,8 @@
         "krebs"
       ],
       "kicker": "Operations",
-      "title": "Krebs. One ticket lifecycle, on every board.",
-      "body": "Every board uses five lanes and a few labels. A ticket entering Todo is triaged. Krebs is the only thing that moves it to In Progress, two slots per project. When the work comes back, the project manager gives the verdict. The same rules on every board.",
+      "title": "Krebs. One ticket lifecycle, on every project board.",
+      "body": "Every project board uses five lanes and a few labels. A ticket entering Todo is triaged. Krebs is the only thing that moves it to In Progress, two slots per project. When the work comes back, the project manager gives the verdict. The same rules on every project board.",
       "tags": [
         "KREBS"
       ],
@@ -720,7 +720,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.agent.invocation.queued",
+          "subject": "bloodbank.evt.agent.invocation.queued",
           "note": "Each ticket walks itself to its project manager."
         }
       ]
@@ -743,7 +743,7 @@
       "copy": {},
       "log": [
         {
-          "subject": "bloodbank.audio.harvest.completed",
+          "subject": "bloodbank.evt.audio.harvest.completed",
           "note": "A transcript becomes tickets on each project's own board."
         }
       ]
@@ -764,11 +764,11 @@
       ],
       "staged": true,
       "copy": {
-        "aside": "The catalog holds 476 skills (all-skills/, counted 21 Nov 2026)."
+        "aside": "The catalog holds 476 skills, counted 21 Nov 2026."
       },
       "log": [
         {
-          "subject": "bloodbank.agent.session.started",
+          "subject": "bloodbank.evt.agent.session.started",
           "note": "A session starts and finds the catalog already on its desk."
         }
       ]
@@ -783,7 +783,7 @@
       ],
       "kicker": "The power company. Tokens in, work out.",
       "title": "The Gateway. Every model, under one name.",
-      "body": "A provider-agnostic, multi-tenant LLM gateway with a role-based router. Employees ask for a role, never a model. The router paces each subscription against its usage windows and reset times. When a pool runs out, it moves to the next: subscriptions, then metered, then free, with free pools held to 90% of each daily cap.",
+      "body": "A provider-agnostic, multi-tenant LLM gateway with a role-based router. Employees ask for a role, never a model. The router paces each subscription against its usage windows and reset times. When every subscription pool is spent, metered routes cover orchestration and free models cover the rest, with free pools held to 90% of each daily cap.",
       "tags": [
         "GATEWAY"
       ],
@@ -791,7 +791,7 @@
       "copy": {
         "aside": "Cache tokens from every provider are counted one way, in one ledger. A thread stays with its model while its cache pays off. When it moves, its whole history goes with it.",
         "cardTitle": "api.automaticai.io",
-        "cardNote": "Three roles: orchestrator, subagent, fast. Seven rungs. Every tenant gets the same roles, and each person's own subscriptions are walled off and spent first.",
+        "cardNote": "Three roles: orchestrator, subagent, fast. Seven rungs. The subscription router serves the operator's own tokens. Each client family gets its own tiers on its own key.",
         "pools": [
           {
             "name": "01 · Subscription"
@@ -818,7 +818,7 @@
         "decisions": [
           {
             "route": "orchestrator → pool 01 · resets first",
-            "line": "01 resets soonest, so it spends first. Nothing expires unused."
+            "line": "It resets soonest, so it spends first. Little expires unused."
           },
           {
             "route": "orchestrator → pool 02 · most room",
@@ -832,11 +832,11 @@
       },
       "log": [
         {
-          "subject": "bloodbank.llm.allowance.observed",
+          "subject": "bloodbank.evt.llm.allowance.observed",
           "note": "A pool's usage window is read. When it runs low, the work moves to the next one."
         },
         {
-          "subject": "bloodbank.llm.usage.recorded",
+          "subject": "bloodbank.evt.llm.usage.recorded",
           "note": "Every request is recorded once, in one ledger."
         }
       ]
@@ -894,7 +894,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.audio.task.completed",
+          "subject": "bloodbank.evt.audio.task.completed",
           "note": "A recording is processed. Sound goes in, work comes out."
         }
       ]
@@ -918,7 +918,7 @@
       "copy": {},
       "log": [
         {
-          "subject": "bloodbank.audio.transcription.completed",
+          "subject": "bloodbank.evt.audio.transcription.completed",
           "note": "Your transcript is waiting when you leave the room."
         }
       ]
@@ -932,7 +932,7 @@
         "wax"
       ],
       "kicker": "One microphone, four people",
-      "title": "No Zoom? No problem. Speakers still get labeled.",
+      "title": "One microphone. Speakers still get names.",
       "body": "Diarization splits the recording by speaker. Then voice-id fingerprints each voice, matches it against a registry of voices and renames Speaker 1 to a name. A voice it has never heard is registered, and you are told.",
       "tags": [
         "WAX",
@@ -942,8 +942,8 @@
       "copy": {},
       "log": [
         {
-          "subject": "bloodbank.audio.transcription.completed",
-          "note": "Speakers get labeled by voice, not by laptop."
+          "subject": "bloodbank.evt.audio.transcription.completed",
+          "note": "Speakers get names from their voices."
         }
       ]
     },
@@ -957,8 +957,8 @@
         "turn-enricher"
       ],
       "kicker": "Jev",
-      "title": "It reads itself. Jev makes the calls.",
-      "body": "Jev is a small model service for typed yes-or-no judgments. Wax asks it which projects a transcript touches, what kind of document it is and whether a respelled word fits its context. Turn-enricher asks it about every finished agent turn.",
+      "title": "Jev makes the small calls.",
+      "body": "Jev is a small model service for typed yes-or-no judgments. Wax asks it which projects a transcript touches, what kind of document it is and whether a respelled word fits its context. Turn-enricher asks it about finished agent turns.",
       "tags": [
         "JEV"
       ],
@@ -966,7 +966,7 @@
       "copy": {},
       "log": [
         {
-          "subject": "bloodbank.conversation.turn.annotated",
+          "subject": "bloodbank.evt.conversation.turn.annotated",
           "note": "Jev answers yes or no, in a typed shape."
         }
       ]
@@ -988,12 +988,13 @@
       ],
       "staged": true,
       "copy": {
-        "aside": "Agent Pad, underneath it, answered 87 voice memos in the 7 days to 21 Nov 2026.",
-        "standupTitle": "What the car does",
+        "aside": "The memo pipeline under it replied to 87 voice memos in the 7 days to 21 Nov 2026.",
+        "standupTitle": "What the car is built to do",
         "standup": [
           "Record a memo.",
           "An agent picks it up and answers.",
-          "The reply is voiced and plays back."
+          "The reply is voiced and plays back.",
+          "The first real drive test is still ahead."
         ],
         "screen": {
           "product": "Holocene Auto",
@@ -1001,12 +1002,11 @@
           "line": "Two things need you.",
           "count": "2",
           "sub": "Everything else is spoken."
-        },
-        "note": "While you drive, the screen says one sentence. Everything else is spoken."
+        }
       },
       "log": [
         {
-          "subject": "bloodbank.audio.memo.replied",
+          "subject": "bloodbank.evt.audio.memo.replied",
           "note": "A memo is answered and voiced back. The screen says one sentence."
         }
       ]
@@ -1017,19 +1017,19 @@
       "where": "The staff",
       "setPiece": "building.staff",
       "kicker": "The rest of the staff",
-      "title": "A few more of the staff you would pass in the hall.",
+      "title": "More of the staff you would pass in the hall.",
       "body": "",
       "tags": [],
       "staged": false,
       "copy": {
         "staff": [
           {
-            "name": "TURN-ENRICHER",
-            "line": "Reads each finished agent turn and tags its action, artifacts and blocker."
+            "name": "CLIENT-PORTAL",
+            "line": "The automaticai.io website and the operator portal for services and billing."
           },
           {
-            "name": "ENRICHER",
-            "line": "Adds search embeddings to events so they can be found by meaning."
+            "name": "HERMES-DASHBOARD",
+            "line": "A web dashboard for the whole Hermes agent runtime."
           },
           {
             "name": "ARTIFACT-SIDECAR",
@@ -1053,11 +1053,11 @@
           },
           {
             "name": "TARGET-WATCH",
-            "line": "A watched person writes on any channel and a ticket appears."
+            "line": "Alerts you when a person you follow writes on any channel, and files a ticket."
           },
           {
             "name": "OP-TOKEN-GUARD",
-            "line": "Notices when its own credentials drift, and heals them."
+            "line": "Heals drift in the one credential every service reads."
           },
           {
             "name": "DAILY-REPORT",
@@ -1084,8 +1084,8 @@
             "line": "Sends the events that matter to your phone."
           },
           {
-            "name": "AGENT-PAD",
-            "line": "A screen for talking to, and watching, one agent at a time."
+            "name": "GIT-HOOKS",
+            "line": "Machine-wide pre-commit, pre-push and post-commit guards that every repo runs."
           },
           {
             "name": "MOBILE-DEPLOY-HUB",
@@ -1113,7 +1113,7 @@
       },
       "log": [
         {
-          "subject": "bloodbank.reporting.report.completed",
+          "subject": "bloodbank.evt.reporting.report.completed",
           "note": "The rest of the staff: twenty-one more names, and more where those came from."
         }
       ]
@@ -1125,7 +1125,7 @@
       "setPiece": "building.you",
       "kicker": "In Development",
       "title": "Watch it work.",
-      "body": "The Factory is a 3D warehouse of the company. It plays the real archive: the night of 20 November 2026, 81,003 events from 41 components, condensed into a few hundred boxes.",
+      "body": "The Factory is a 3D warehouse of the company. It plays the real archive of 20 November 2026: 81,003 events from 41 components, shown as 400 single events and 508 batches.",
       "tags": [],
       "staged": false,
       "copy": {
@@ -1138,12 +1138,12 @@
         "label": "Work email",
         "placeholder": "you@company.com",
         "button": "Request a briefing",
-        "done": "You are on the list. You will hear first.",
-        "previewNote": "Preview build: the form lights your window and stores nothing yet."
+        "done": "Thanks. Sign-ups are not open yet, so nothing was saved. The 3D Factory is the way in.",
+        "previewNote": "Sign-ups are not open yet. Nothing typed here is saved."
       },
       "log": [
         {
-          "subject": "bloodbank.agent.session.started",
+          "subject": "bloodbank.evt.agent.session.started",
           "note": "Watch it work in the 3D Factory, or request a briefing."
         }
       ]
@@ -1234,7 +1234,7 @@
     "PILOT": "The ticket command line. Plane and Trello, one interface.",
     "PM · HOLOCENE": "Runs one project, start to finish.",
     "PM · HEYMA": "Runs one project, start to finish.",
-    "ENRICHER": "Makes every event findable by meaning.",
+    "ENRICHER": "Adds search embeddings to events so they can be found by meaning.",
     "PJANGLER": "The project factory. A registry and bootstrapper.",
     "HEYMA": "The voice system: dictate, transcribe, hear replies.",
     "GATEWAY": "Every model behind one front door. Picks the provider so nobody else has to."

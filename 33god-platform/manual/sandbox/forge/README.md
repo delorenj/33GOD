@@ -24,7 +24,7 @@ showcases it.
 1. Candidates are registry components with no `src/assets/<id>/asset.json`. A component whose last two forge
    runs failed steps back for a night ("cooling off"); an explicit `--component` ignores that.
 2. A component with a factory **station** comes before one that only gets a kiosk.
-3. Then the busiest in the newest night digest (`overnight/site/nights/*.json`, `events + credited`).
+3. Then the busiest in last night's waybill (`factory_forge.py traffic --refresh` records `waybill query --last-night` into the forge state dir; events per component, kept plus batched). With no waybill `pick --explain` prints a WARNING and the order falls to alphabetical.
 4. Then first-party before vendor, then id.
 
 When every component has an asset the forge **polishes**: lowest `forge.score` first, ties to the oldest

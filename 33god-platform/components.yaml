@@ -184,7 +184,7 @@ factory_extras:
 # Desk families: a producer prefix whose rest names one instance. Each well-formed instance stands at its own
 # desk (`<family>:<instance>`, a kiosk `near` its station); `routes` send matching instances to a registry
 # component instead; bare producers, `malformed` names and names that fail `instance` go to `<family>:unknown`.
-# `owner` is the registry component that answers for every desk (what the night digest credits).
+# `owner` is the registry component that answers for every desk (what a waybill credits).
 factory_desks:
   hermes-desk:
     owner: hermes-fleet

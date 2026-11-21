@@ -85,6 +85,8 @@ exec 9>"$STATE/lock"
 flock -n 9 || done_ok "another forge run holds the lock; nothing to do"
 
 # ---- 1. pick -----------------------------------------------------------------------------------------
+# last night's waybill is what "busiest first" ranks on; a failed refresh is loud but does not stop the pick
+"$PY" "$FORGE" traffic --refresh || echo "factory-forge: WARNING: no fresh traffic (pick ranks on the last waybill it has, or alphabetically)" >&2
 pick_args=(pick --json); [ -n "$COMPONENT" ] && pick_args+=(--component "$COMPONENT")
 PICK="$("$PY" "$FORGE" "${pick_args[@]}")" || done_fail "pick failed"
 ID="$("$PY" -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<<"$PICK")"

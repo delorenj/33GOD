@@ -100,6 +100,30 @@ def test_no_night_story_left():
                 assert not m, f"{f.relative_to(SITE)}:{n}: {m.group(0)!r} (the stage is 'In Development'; there is no night file)"
 
 
+def test_log_subjects_are_real_bus_subjects():
+    """The bus section's tape and every card show `bloodbank.evt.<domain>...`; the list view must spell them the same way."""
+    for b in manifest()["beats"]:
+        for l in b["log"]:
+            assert l["subject"].startswith("bloodbank.evt."), f"{b['id']}: log subject {l['subject']!r} is not the real bus subject"
+
+
+def test_no_internal_bookkeeping_in_copy():
+    """Visitors read hover popovers and the list view: no file paths, CLI names or 'the card still says' notes."""
+    pat = re.compile(r"~/|\.yaml|\.json|atlas/|schemas/|all-skills|hindsight bank|still says|\bregistry card\b", re.I)
+    def walk(x, path):
+        if isinstance(x, str):
+            m = pat.search(x)
+            assert not m, f"{path}: {m.group(0)!r} is bookkeeping, not copy: {x[:80]!r}"
+        elif isinstance(x, list):
+            for i, v in enumerate(x):
+                walk(v, f"{path}[{i}]")
+        elif isinstance(x, dict):
+            for k, v in x.items():
+                if k not in ("viewSimulationHref", "href", "_readme"):
+                    walk(v, f"{path}.{k}")
+    walk({k: v for k, v in manifest().items() if k != "transcript"}, "manifest")
+
+
 # ---------------------------------------------------------------- 2. shape: what the JS dereferences
 
 def test_manifest_shape():
@@ -240,7 +264,7 @@ def _items(M):
         if i == "org-chart":
             out.append(("org-chart.body", f"{i}.body", b["body"]))
         if i not in GENERIC_SKIP and b["body"]:
-            extra = c.get("aside", "") + (c.get("note", "") if i == "holocene-auto" else "")
+            extra = c.get("aside", "")
             out.append(("caption.body+aside", f"{i}.body+aside", b["body"] + extra))
         if i != "premise":
             if b["kicker"]:
@@ -610,6 +634,68 @@ class TestStepping(_Browser):
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(1200)
         assert pg.evaluate("document.querySelector('.stage').dataset.beat") == "staff"
+        pg.close()
+
+    def test_tablet_card_and_loop_label_fit(self, server, pw):
+        """1024x768: the department card is only as wide as the gap by the building. Nothing may run past it or be cut mid-sentence."""
+        S = score()
+        pg = pw.new_page(viewport={"width": 1024, "height": 768})
+        pg.goto(server + "?view=film")
+        pg.wait_for_selector(".hud")
+        bad = []
+        for mid in ("clock-records", "agents-desk", "runs-on-itself"):
+            m = next(x for x in S["majors"] if x["id"] == mid)
+            y = (m["start"] + (m["end"] - m["start"]) * 0.6) * S["scale"] * 768 / 100
+            pg.evaluate(f"window.scrollTo(0,{y})")
+            pg.wait_for_timeout(1500)
+            bad += pg.evaluate("""(mid) => {
+              const out = [], inside = (e, box) => { const r = e.getBoundingClientRect(); return r.right <= box.right + 0.5 && r.left >= box.left - 0.5; };
+              if (mid === 'runs-on-itself') {
+                const ring = document.querySelector('.loop__ring').getBoundingClientRect(), lab = document.querySelector('.loop__core .eyebrow').getBoundingClientRect();
+                const cx = ring.left + ring.width / 2, cy = ring.top + ring.height / 2, rad = ring.width / 2;
+                for (const [x, y] of [[lab.left, lab.top], [lab.right, lab.top], [lab.left, lab.bottom], [lab.right, lab.bottom]])
+                  if (Math.hypot(x - cx, y - cy) > rad - 4) out.push('loop label corner outside the ring');
+                return out;
+              }
+              const card = document.querySelector('.scard--dept'); if (!card) return ['no department card'];
+              const box = card.getBoundingClientRect();
+              card.querySelectorAll('.dept__name,.dept__role,.dept__n,.dept__label,.dept__stamp').forEach(e => {
+                if (!inside(e, box)) out.push(e.className + ' runs past the card: ' + e.textContent.slice(0, 30));
+              });
+              card.querySelectorAll('.dept__label').forEach(e => { if (e.scrollHeight > e.clientHeight + 1) out.push('label cut: ' + e.textContent.slice(0, 30)); });
+              return out;
+            }""", mid)
+        pg.close()
+        assert not bad, "\n".join(bad)
+
+    def test_header_does_not_jitter(self, server, pw):
+        S = score()
+        pg = pw.new_page(viewport={"width": 1280, "height": 720})
+        pg.goto(server + "?view=film")
+        pg.wait_for_selector(".hud")
+        xs = {}
+        for m in S["majors"][2:]:
+            y = (m["start"] + (m["end"] - m["start"]) * 0.5) * S["scale"] * 720 / 100
+            pg.evaluate(f"window.scrollTo(0,{y})")
+            pg.wait_for_timeout(450)
+            xs[m["id"]] = round(pg.evaluate("document.querySelector('.hud__nav').getBoundingClientRect().left"))
+        pg.close()
+        assert len(set(xs.values())) == 1, f"the header nav moves with the place name: {xs}"
+
+    def test_log_view_deep_link_scrolls_to_the_entry(self, server, pw):
+        pg = pw.new_page(viewport={"width": 390, "height": 844})
+        pg.goto(server + "?view=log#flume")
+        pg.wait_for_selector("#log-flume")
+        pg.wait_for_timeout(500)
+        top = pg.evaluate("document.getElementById('log-flume').getBoundingClientRect().top")
+        assert pg.evaluate("window.scrollY") > 500 and 0 <= top < 200, f"#flume did not land on its entry (top {top})"
+        pg.close()
+
+    def test_log_view_has_no_empty_window_before_the_close(self, server, pw):
+        pg = pw.new_page(viewport={"width": 390, "height": 844})
+        pg.goto(server + "?view=log")
+        pg.wait_for_selector(".logview__ask")
+        assert pg.locator(".logview__you").count() == 0, "an unlit window with no label sits above the close"
         pg.close()
 
     def test_log_view_has_no_film_chrome(self, server, pw):

@@ -3,6 +3,7 @@
 
 The nightly `factory-forge` candybar runs scripts/factory-forge.sh, which drives these subcommands:
 
+    factory_forge.py traffic [--refresh]                            last night's waybill, which `pick` ranks busiest-first on
     factory_forge.py pick [--component ID] [--explain] [--json]   which component tonight, and why
     factory_forge.py prompt ID                                      the agent's brief for that component
     factory_forge.py snapshot --out FILE                            dirty-tree fingerprint, taken before the agent runs
@@ -49,8 +50,9 @@ STEP_TIMEOUT = 900
 class Paths:
     """Every location the forge touches, derived from one platform root so tests can point it at a fixture."""
 
-    def __init__(self, root: Path = PLATFORM):
+    def __init__(self, root: Path = PLATFORM, state: Path | None = None):
         self.root = Path(root)
+        self._state = Path(state) if state else None
 
     @property
     def registry(self): return self.root / "components"
@@ -67,7 +69,12 @@ class Paths:
     @property
     def ledger(self): return self.forge / "ledger.json"
     @property
-    def nights(self): return self.root / "overnight" / "site" / "nights"
+    def state(self):
+        return self._state or Path(os.environ.get("FACTORY_FORGE_STATE") or Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "factory-forge")
+    @property
+    def traffic(self): return self.state / "traffic"
+    @property
+    def waybill_bin(self): return self.root / "waybill" / "bin" / "waybill"
     @property
     def public_glb(self): return self.sandbox / "public" / "assets"
     @property
@@ -145,17 +152,62 @@ def load_cast(p: Paths, registry: dict[str, dict]) -> tuple[dict[str, dict], str
     return out, src
 
 
+TRAFFIC_FILE = "last-night.waybill.json.gz"
+
+
+def _read_waybill(f: Path) -> dict:
+    import gzip
+    op = gzip.open if f.suffix == ".gz" else open
+    with op(f, "rt", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _desk_owners(p: Paths) -> dict[str, str]:
+    """`factory_desks` in components.yaml: desk family (the part before ':') -> the registry component that answers for it."""
+    try:
+        d = yaml.safe_load((p.root / "components.yaml").read_text()) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+    return {k: v["owner"] for k, v in (d.get("factory_desks") or {}).items() if isinstance(v, dict) and v.get("owner")}
+
+
 def latest_traffic(p: Paths) -> tuple[dict[str, int], str]:
-    """Events (plus credited work) per registry id in the newest night digest."""
-    files = sorted(p.nights.glob("*.json")) if p.nights.exists() else []
+    """Events per component in the newest waybill of last night (`waybill query --last-night`): one event per
+    kept `publish` span plus the count of every `batch` span. Returns ({}, "none") when there is no usable waybill;
+    `pick` then says so loudly instead of ranking on silence."""
+    files = sorted(p.traffic.glob("*.waybill.json*"), key=lambda f: (f.stat().st_mtime_ns, f.name)) if p.traffic.exists() else []
     for f in reversed(files):
         try:
-            d = json.loads(f.read_text())
-        except (OSError, ValueError):
+            d = _read_waybill(f)
+        except (OSError, ValueError, EOFError):
             continue
-        rows = d.get("components") or []
-        return {r["id"]: int(r.get("events", 0)) + int(r.get("credited", 0)) for r in rows if "id" in r}, f.stem
+        out: dict[str, int] = {}
+        owners = _desk_owners(p)
+        for sp in d.get("spans") or []:
+            cid = sp.get("component")
+            if not cid:
+                continue
+            cid = owners.get(cid.split(":", 1)[0], cid) if ":" in cid else cid   # a desk's work is credited to its owner
+            if sp.get("kind") == "batch":
+                out[cid] = out.get(cid, 0) + int((sp.get("attrs") or {}).get("count", 0))
+            elif sp.get("kind") == "publish":
+                out[cid] = out.get(cid, 0) + 1
+        return out, f.name.split(".")[0]
     return {}, "none"
+
+
+def refresh_traffic(p: Paths) -> tuple[bool, str]:
+    """Record last night's waybill into the forge's state dir (read-only against Candystore). Best effort: the caller
+    still picks if this fails, and `pick` reports the missing source."""
+    p.traffic.mkdir(parents=True, exist_ok=True)
+    out = p.traffic / TRAFFIC_FILE
+    tmp = out.with_name("tmp-" + out.name)
+    r = subprocess.run([str(p.waybill_bin), "query", "--last-night", "-o", str(tmp)], capture_output=True, text=True, timeout=300)
+    if r.returncode != 0 or not tmp.exists():
+        tmp.unlink(missing_ok=True)
+        return False, (r.stderr or r.stdout).strip()[-300:]
+    tmp.replace(out)
+    return True, str(out)
 
 
 def read_asset(p: Paths, cid: str) -> dict | None:
@@ -181,7 +233,7 @@ def assets_present(p: Paths) -> dict[str, dict]:
 def pick(p: Paths, component: str | None = None) -> dict:
     reg = load_registry(p)
     cast, cast_src = load_cast(p, reg)
-    traffic, night = latest_traffic(p)
+    traffic, source = latest_traffic(p)
     have = assets_present(p)
 
     def station_of(cid):
@@ -195,7 +247,7 @@ def pick(p: Paths, component: str | None = None) -> dict:
         elif (cast.get(cid) or {}).get("near"):
             r.append(f"kiosk near {(cast.get(cid) or {})['near']}")
         t = traffic.get(cid, 0)
-        r.append(f"{t} events in night {night}" if t else f"no traffic in night {night}")
+        r.append(f"{t} events in {source}" if t else f"no traffic in {source}")
         if reg[cid].get("first_party"):
             r.append("first-party")
         if cooling(cid):
@@ -249,14 +301,17 @@ def pick(p: Paths, component: str | None = None) -> dict:
                          "reasons": [f"forge.score {f.get('score', 'unscored')}", f"last forged {f.get('run', 'never')}"]})
         rows[0]["reasons"].insert(0, "every component has an asset: polish the weakest")
     return {"id": chosen, "mode": mode, "candidates": len(candidates), "assets": len(have),
-            "registry": len(reg), "cast_source": cast_src, "night": night, "ranked": rows}
+            "registry": len(reg), "cast_source": cast_src, "traffic_source": source, "ranked": rows}
 
 
 def explain(res: dict) -> str:
     lines = [f"factory-forge pick: {res['id']} ({res['mode']} mode)",
              f"  registry {res['registry']} components, {res['assets']} assets, {res['candidates']} without one; "
-             f"stations from {res['cast_source']}; traffic from night {res['night']}",
+             f"stations from {res['cast_source']}; traffic from {res['traffic_source']}",
              "  rank  id                         reasons"]
+    if res["traffic_source"] == "none":
+        lines.insert(2, "  WARNING: no traffic source (no waybill in the forge state dir): 'busiest first' is off and the pick falls to alphabetical. "
+                        "Run `factory_forge.py traffic --refresh`.")
     for r in res["ranked"]:
         lines.append(f"  {r['rank']:>4}  {r['id']:<26} {'; '.join(r['reasons'])}")
     return "\n".join(lines)
@@ -754,6 +809,7 @@ def main(argv=None) -> int:
     ap.add_argument("--root", type=Path, default=PLATFORM, help=argparse.SUPPRESS)
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("pick"); s.add_argument("--component"); s.add_argument("--explain", action="store_true"); s.add_argument("--json", action="store_true")
+    s = sub.add_parser("traffic", help="the traffic source `pick` ranks on: last night's waybill"); s.add_argument("--refresh", action="store_true")
     s = sub.add_parser("prompt"); s.add_argument("id"); s.add_argument("--mode", choices=["build", "polish"])
     s = sub.add_parser("snapshot"); s.add_argument("--out", type=Path, required=True)
     s = sub.add_parser("verify"); s.add_argument("id"); s.add_argument("--baseline", type=Path); s.add_argument("--dist", type=Path)
@@ -777,6 +833,15 @@ def main(argv=None) -> int:
         res = pick(p, a.component)
         print(json.dumps(res, indent=1) if a.json else (explain(res) if a.explain else f"{res['id']} {res['mode']}"))
         return 0
+    if a.cmd == "traffic":
+        if a.refresh:
+            ok, msg = refresh_traffic(p)
+            print(("traffic refreshed: " if ok else "traffic refresh FAILED: ") + msg)
+            if not ok:
+                return 1
+        t, src = latest_traffic(p)
+        print(f"traffic source {src}: {len(t)} components, {sum(t.values())} events")
+        return 0 if t else 1
     if a.cmd == "prompt":
         sys.stdout.write(render_prompt(p, a.id, a.mode))
         return 0

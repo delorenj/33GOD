@@ -80,7 +80,7 @@ component's **body** (its 3D asset) lives in `manual/sandbox/src/assets/<id>/`, 
 - A component that shares a station with another stays a primitive; `verify` refuses a second body for a station
   (`station-free`) → `factory-maintenance`.
 - The tour-set stations (entrance, voxxy, library, staffing, soundwing) ignore `replaces` today (2026-11-19).
-- The overnight replay page (`overnight/`) is a different site; it shares only the night digests.
+- The overnight tour page (`overnight/`) is a different site and shares no data with the forge. The forge ranks on last night's waybill (`factory_forge.py traffic`).
 
 ## Evolve this skill
 

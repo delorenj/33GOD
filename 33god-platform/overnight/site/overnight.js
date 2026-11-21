@@ -956,8 +956,19 @@
     var M = props.M, first = M.beats[0], ask = M.beats[M.beats.length - 1];
     var parts = Object.keys(M.acts), total = M.beats.length;
     var badgeOf = function (bt) { var c = bt.copy || {}; return bt.staged ? M.site.stagedLabel : (c.figures || c.stamp) && bt.id !== 'bus' ? fmtTemplate(M.site.realLabel, { date: M.site.countedOn }) : ''; };
+    // A #section link (the nav's, or a shared one) lands on that section's entry in the list.
+    useEffect(function () {
+      function toHash() {
+        var want = ''; try { want = decodeURIComponent(location.hash.slice(1)); } catch (e) { want = ''; }
+        var el = want ? document.getElementById('log-' + want) : null;
+        if (el) el.scrollIntoView();
+      }
+      toHash();
+      window.addEventListener('hashchange', toHash);
+      return function () { window.removeEventListener('hashchange', toHash); };
+    }, []);
     return h('div', { className: 'logview' },
-      h(Header, { M: M, view: 'log', jump: function () { window.scrollTo(0, 0); }, jumpTo: function () {}, toggleView: props.toggleView, where: { label: '', n: fmtTemplate(M.site.whereList, { total: total }) } }),
+      h(Header, { M: M, view: 'log', jump: function () { window.scrollTo(0, 0); }, jumpTo: function (id) { location.hash = id; }, toggleView: props.toggleView, where: { label: '', n: fmtTemplate(M.site.whereList, { total: total }) } }),
       h('main', { id: 'log', className: 'logview__main' },
         h('p', { className: 'eyebrow' }, first.kicker),
         h('h1', { className: 'statement-act' }, first.title + ' ', h('span', { className: 'statement-hero__turn' }, first.titleTurn)),
@@ -980,8 +991,8 @@
                 listRows(bt));
             }));
         }),
-        h('section', { className: 'logview__ask' },
-          h('div', { className: 'logview__you' }, h(O.Window, { state: props.submitted ? 'you' : 'dark', size: 'lg', label: props.submitted ? 'Your window, lit' : 'Your window, dark' })),
+        h('section', { id: 'log-' + ask.id, className: 'logview__ask' },
+          props.submitted ? h('div', { className: 'logview__you' }, h(O.Window, { state: 'you', size: 'lg', label: 'Your window, lit' })) : null,
           h(O.Caption, { beat: { kicker: ask.kicker, title: ask.title, body: ask.body }, as: 'h2' }),
           h(Watch, { M: M, copy: ask.copy }),
           h('p', { className: 'cap__briefing' }, ask.copy.briefing),

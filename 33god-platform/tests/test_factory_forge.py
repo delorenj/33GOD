@@ -79,13 +79,13 @@ def manifest(cid="a", placement="station", score=8, **kw):
 
 
 class Tree(unittest.TestCase):
-    """A throwaway platform tree with a registry, a night digest and a cast."""
+    """A throwaway platform tree with a registry, last night's waybill (traffic) and a cast."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name) / "plat"
-        self.p = ff.Paths(self.root)
-        for d in (self.p.registry, self.p.nights, self.p.assets, self.p.forge, self.p.tools):
+        self.p = ff.Paths(self.root, state=Path(self.tmp.name) / 'state')
+        for d in (self.p.registry, self.p.traffic, self.p.assets, self.p.forge, self.p.tools):
             d.mkdir(parents=True)
         (self.p.forge / "PROMPT.md").write_text("# brief\n")
         (self.p.forge / "CONTRACT.md").write_text("# contract\n")
@@ -101,7 +101,11 @@ class Tree(unittest.TestCase):
         (self.p.registry / f"{cid}.yaml").write_text(yaml.safe_dump(rec))
 
     def night(self, name="2026-11-16", **events):
-        (self.p.nights / f"{name}.json").write_text(json.dumps({"components": [{"id": k, "events": v, "credited": 0} for k, v in events.items()]}))
+        """Last night's waybill as `waybill query --last-night` writes it: one batch span per component with its event count."""
+        import gzip
+        spans = [{"id": f"batch:{k}", "kind": "batch", "component": k, "attrs": {"count": v}} for k, v in events.items()]
+        with gzip.open(self.p.traffic / f"{name}.waybill.json.gz", "wt") as fh:
+            json.dump({"format": "33god.waybill", "spans": spans}, fh)
 
     def cast(self, **stations):
         comps = {k: {"station": v, "near": None if v else "dock", "aliases": []} for k, v in stations.items()}
@@ -150,11 +154,38 @@ class PickTest(Tree):
         self.night("2026-11-15", a=900, b=1); self.night("2026-11-16", a=1, b=900)
         self.assertEqual(ff.pick(self.p)["id"], "b")
 
-    def test_credited_work_counts_as_traffic(self):
+    def test_publish_spans_and_batches_both_count_as_traffic(self):
+        import gzip
         self.comp("a"); self.comp("b"); self.cast(a="dock", b="dock")
-        (self.p.nights / "2026-11-16.json").write_text(json.dumps({"components": [
-            {"id": "a", "events": 10, "credited": 0}, {"id": "b", "events": 2, "credited": 50}]}))
+        spans = [{"kind": "batch", "component": "a", "attrs": {"count": 10}},
+                 {"kind": "batch", "component": "b", "attrs": {"count": 2}}] + [{"kind": "publish", "component": "b"}] * 50
+        with gzip.open(self.p.traffic / "2026-11-16.waybill.json.gz", "wt") as fh:
+            json.dump({"spans": spans}, fh)
         self.assertEqual(ff.pick(self.p)["id"], "b")
+
+    def test_desk_work_is_credited_to_its_owner(self):
+        (self.root / "components.yaml").write_text("factory_desks:\n  hermes-desk:\n    owner: b\n")
+        self.comp("a"); self.comp("b"); self.cast(a="dock", b="dock")
+        self.night(**{"a": 10, "hermes-desk:x": 500})
+        self.assertEqual(ff.latest_traffic(self.p)[0].get("b"), 500)
+        self.assertEqual(ff.pick(self.p)["id"], "b")
+
+    def test_missing_traffic_source_is_loud(self):
+        """The nights/ directory vanished once and rule 3 went quiet for days: no waybill must say so, not rank on silence."""
+        self.comp("a"); self.cast(a="dock")
+        res = ff.pick(self.p)
+        self.assertEqual(res["traffic_source"], "none")
+        self.assertIn("WARNING: no traffic source", ff.explain(res))
+        self.assertEqual(ff.latest_traffic(self.p), ({}, "none"))
+
+    def test_the_forge_reads_no_deleted_night_digest(self):
+        src = Path(ff.__file__).read_text()
+        self.assertNotIn("site/nights", src)
+        self.assertFalse(hasattr(self.p, "nights"))
+
+    def test_the_wrapper_refreshes_traffic_before_it_picks(self):
+        sh = (Path(ff.__file__).parent / "factory-forge.sh").read_text()
+        self.assertLess(sh.index('traffic --refresh'), sh.index('pick_args=(pick --json)'))
 
     def test_no_night_digest_falls_back_to_first_party_then_id(self):
         self.comp("b", first_party=False); self.comp("a", first_party=False); self.comp("c", first_party=True)
@@ -208,7 +239,7 @@ class PickTest(Tree):
         self.comp("a"); self.cast(a="dock"); self.night(a=7)
         text = ff.explain(ff.pick(self.p))
         self.assertIn("factory-forge pick: a (build mode)", text)
-        self.assertIn("7 events in night 2026-11-16", text)
+        self.assertIn("7 events in 2026-11-16", text)
 
 
 class GitTree(Tree):

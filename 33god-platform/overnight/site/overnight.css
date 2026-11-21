@@ -57,10 +57,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .hud__name--sm { font-size: 16px; }
 .hud__rule { width: 1px; height: 18px; background: var(--stage-rule); }
 .hud__status { font: 400 13px/18px var(--font-sans); color: var(--stage-ink-3); }
-.hud__nav { margin-left: auto; display: flex; align-items: center; gap: 8px 26px; font: 400 14px/20px var(--font-sans); }
+.hud__nav { margin-left: auto; white-space: nowrap; display: flex; align-items: center; gap: 8px 26px; font: 400 14px/20px var(--font-sans); }
 .hud__cta { color: var(--stage-ink); }
 /* Where the tour is: the department on show over "n of N". */
-.hud__where { min-width: 108px; max-width: 168px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.hud__where { flex: 0 0 124px; width: 124px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
 .hud__dept { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 14px/18px var(--font-display); color: var(--stage-ink); }
 .hud__n { color: var(--stage-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 @media (max-width: 600px) { .hud__where { display: none; } }
@@ -210,6 +210,15 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .dept__stamp { padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--stage-rule); font-size: 12px; line-height: 16px; }
 .scard--dept .detail { left: -8px; right: -8px; }
 @media (max-height: 800px) { .dept__events { display: none; } }
+/* On a narrow stage the card is only as wide as the gap beside the building: the member lines go (the section text says
+   the same), the role wraps under the name and the figure's label sits under its numeral and is never cut. */
+@media (max-width: 1100px) {
+  .dept__who { flex-wrap: wrap; gap: 0 10px; }
+  .dept__name { white-space: nowrap; }
+  .dept__line { display: none; }
+  .dept__fig { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .dept__label { display: block; -webkit-line-clamp: unset; overflow: visible; }
+}
 
 /* ---------- set pieces ---------- */
 .sp-wrap { position: absolute; inset: 0; pointer-events: none; }
@@ -286,6 +295,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .loop__step[data-side="top"] .loop__text { left: 0; bottom: 14px; transform: translateX(-50%); }
 .loop__step[data-side="bottom"] .loop__text { left: 0; top: 14px; transform: translateX(-50%); }
 .loop__core { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+.loop__core .eyebrow { max-width: 64%; white-space: normal; text-wrap: balance; line-height: 1.45; }
 .loop__count { font: 360 76px/1 var(--font-display); letter-spacing: -0.02em; font-variation-settings: 'opsz' 72; color: var(--stage-ink); }
 
 /* ---------- the conference-room glass ---------- */
@@ -367,6 +377,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .fail__src { margin: 0; padding: 12px 14px; overflow: auto; background: var(--stage-rule); border: 1px solid var(--stage-rule); border-radius: var(--radius-bezel); font: 400 13px/20px var(--font-mono); color: var(--stage-ink); }
 .logview__act h2 { margin: 0 0 10px; }
 .logview__act .on-log:last-child { border-bottom: 1px solid var(--stage-rule); }
+.logentry, .logview__ask { scroll-margin-top: 84px; }
 .logview__ask { display: flex; flex-direction: column; gap: 16px; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--stage-rule); }
 .logview__you { line-height: 0; }
 
