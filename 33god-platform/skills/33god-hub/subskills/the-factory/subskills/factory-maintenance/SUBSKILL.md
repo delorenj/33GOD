@@ -23,7 +23,10 @@ third only for a rubric line below target.
 `relations` with `via`/`evidence`), then `src/world/Props.tsx` (palette `C`, the primitive you replace and its
 neighbours) and `src/domains.ts` (domain colour), `src/sim/layout.ts` + `src/world/Scene.tsx` (what stands around
 the station). Then `tools/assets/blender_run.py`, the Blender harness, and the best existing asset in
-`src/assets/*/` as an exemplar.
+`src/assets/*/` as an exemplar. Work out which face each camera sees: the station's `view` in `src/content.ts` and
+`OVERVIEW`, turned into model space through the anchor's `rotY` (candybar: the station camera sees the right side,
+the overview the front), and put the record's main beat on a face a camera sees. A re-forge starts from the last
+failed run: read `~/.local/state/factory-forge/runs/<id>-<stamp>/verdict.json` and `asset-failed/` first.
 
 **B. Write `NOTES.md` first**, before geometry: *What it is in the warehouse*; *The four clips* (what is on screen,
 which real behaviour, cited to the record, what the item does at each socket); *Where it stands* (placement,
@@ -41,10 +44,15 @@ Animation craft:
 - Accept visibly catches the item: anticipation, action, settle. Move `socket_in` → `socket_hold` along the path.
 - Work is loopable and shows the real job (stamp, sort, copy, ring, file, gate). Ease in and out; offset parts.
 - Emit sends the result out of `socket_out` and returns to the Idle pose.
+- Anything that must run on through clip changes (a pendulum, a clock's hands) is not keyed: every clip restarts at
+  t 0, so a keyed swing snaps on each crossfade. Drive it from a `Driver.tsx` on the floor's time.
+- When the record's job varies by kind (runner, route, rule), bake one Work variant per kind (`Work`, `Work_X`, ...)
+  and let a Driver pick per visit; one variant forever says "only this kind ever runs".
 
-**D. Build and measure.** `mise run assets`, then
+**D. Build and measure.** `mise run assets -- --only <id>`, then
 `python3 tools/forge/glbcheck.py public/assets/<id>/model.glb --asset src/assets/<id>/asset.json` (the verifier's own
-budget, clip, seam, socket and footprint checks).
+budget, clip, seam, socket and footprint checks). glbcheck does **not** check the manifest caps: `height` must be
+<= 6 m (`manifest-height`); design to 5.8 from the first sketch.
 
 **E. Look.** `python3 tools/forge/shoot.py <id> --out /tmp/forge-<id>-r1` (builds a temp site, drives a browser).
 Read `contact-sheet.png`, then `turn-*`, the clip frames, `visit-*` and `situ.png`; `console.json` must be empty.
@@ -55,7 +63,9 @@ re-shoot into `-r2`. At most 3 rounds.
 **G. Finish.** `asset.json` per the contract (`forge.run` = the run stamp, `forge.rounds` = rounds really done,
 `forge.score` honest, 7 to ship; `placement` agrees with the cast). Update the rubric lines in NOTES.md.
 `mise run assets` and `npx tsc --noEmit` clean one last time. Optional `Driver.tsx` only when the generic
-Accept → Work → Emit cannot show the real behaviour (contract §5).
+Accept → Work → Emit cannot show the real behaviour (contract §5). Then run the verifier itself, from
+`33god-platform/`: `python3 scripts/factory_forge.py verify <id>` (~3 min; builds and shoots in /tmp, writes nothing
+in the tree) and read `pass`/`failed`. It is the judge; glbcheck is only part of it.
 
 **H. Feed back** (self-evolving, see the parent hub's "Evolve this skill"). Before your final reply, fold what
 this run taught you into this file: fix the step that misled you or add one dated line under *Lessons*. Only
@@ -63,6 +73,14 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- A 6.9 m tower that self-scored 8 failed verify on `manifest-height` alone; every glbcheck line was green. Steps D
+  and G now say so (2026-11-21, candybar).
+- `AssetBody` freezes Idle on pause (time scale 0) behind an `isRunning()` guard, which is false at time scale 0, so
+  Idle never thaws until a visit ends. A Driver must remember that it froze Idle (candybar's `froze` ref); a forge
+  pose also stops Idle at 0 and must not be revived (2026-11-21, candybar).
+- A /tmp Playwright script can import shoot.py's `Server`, `HIDE_HUD` and `contact_sheet`; run it with plain
+  `python3` (`-I` drops the user site and Playwright with it). `HIDE_HUD` leaves the floor's drei labels on
+  (2026-11-21, candybar).
 - `shoot.py`'s `visit-*` frames send a `parcel`: an asset that handles only `post` or `env` filters it out and those
   frames show Idle. Check the cycle yourself: serve the temp dist with `vite preview` and call
   `__factoryForge.visit('<id>', '<kind>')` from a /tmp Playwright script, then watch `?at=<id>` (hide the HUD with
