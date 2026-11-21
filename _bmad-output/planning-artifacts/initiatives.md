@@ -739,6 +739,151 @@ related_initiatives: [I-12]
 - Not yet ticketed: a per-handler stdout tee in hook-hub, so waybills can show
   what each handler injected.
 
+### I-10.2 Query waybills and event completeness
+
+**Outcome.** Any Candystore query, not only one prompt, becomes a replayable
+`33god.waybill` that the Factory plays. "Everything the company did last night"
+is one command and one file. On top of that, two things hold, and a command
+anyone can re-run proves them:
+
+- Every archived event is pictured accurately in the simulation. Missing
+  components get modelled.
+- Everything that actually happens shows up as an event.
+
+This replaces a nightly pipeline. Jarad asked for it on 2026-11-21. Neighbouring
+level (`belsky-doctrine`): any query becomes a waybill, and the gap audit becomes
+a command.
+
+**Owner:** `33god`. The parent-side code is in `33god-platform/` (not a
+submodule):
+
+- `waybill/` holds the query builder and the audit.
+- `scripts/atlas.py` and `components/` hold the resolver.
+- `manual/sandbox/` holds the Factory query mode.
+
+Everything inside a child (Candystore export, Bloodbank emitters, timers, unit
+failures) is delegated below as tickets on the child's own board. Evidence for
+every ticket comes from the read-only research run of 2026-11-21: the coverage
+census, the emission gap audit and the critic pass.
+
+```yaml
+owner_project: 33god
+project_home: 33god-platform/waybill
+spec: 33god-platform/waybill/SPEC.md   # §2, additive: recorder.mode query, origin.query, batch/chapter spans
+dogfood_target: [Jarad, Damian]
+delegations: [CANDYS-55, CANDYS-78, CANDYS-79, CANDYS-80, BB-46, BB-47, BB-48, BB-49, BB-50, BB-51, BB-52, BB-53, CAND-55, MONI-3, INFR-155, INFR-156, SKRILL-53, DOCS-2]
+depends_on: [I-10.1]
+related_initiatives: [I-10, I-8]
+```
+
+**Decisions (Jarad, 2026-11-21)**
+
+- **(a)** `waybill night` and the `33god.night` file stay for now, because the
+  overnight marketing page still reads them. `waybill query --last-night` is the
+  convenience path.
+- **(b)** `33god.waybill` stays v1. Changes are additive only: the
+  `recorder.mode: query` enum value, the `origin.query` object, and `chapter`
+  and `batch` span kinds. Older players map an unknown mode to capture.
+- **(c)** Product projects (tiller, `gib-*`, `local-script:*`) become one
+  "tenant annex" station keyed by project slug, added as a factory extra. Their
+  `atlas_ignore` stays for the registry graph.
+- **(d)** Archiving commands is a Bloodbank design ticket (BB-48). It must never
+  be a mirror or consumer on the `BLOODBANK_COMMANDS` workqueue.
+
+**Parent-side work (built here)**
+
+1. **Registry resolver.** `atlas.py render` emits one producer and source map
+   into `src/cast.generated.json`. `waybill/registry.py` (moved out of
+   `night.py`) and the player both read it, so the two cannot drift. The work
+   also covers:
+   - a `source:` surface kind, so relayed events land on their real owner;
+   - the registry fixes: `n8n-plane-webhook` moves to plane-hook; producers for
+     enricher, kimi and gemini; a `copilot-cli` alias; an `ext:antigravity` bay;
+     zellij-sentinel taken off the ignore list;
+   - the tenant annex extra;
+   - the `isMirror` fix: `system.hook.updated` no longer counts as a hook
+     receipt.
+2. **`waybill query`** (`collectors/candystore_query.py`). It reads a query
+   (`--since/--until`, `--last`, `--last-night` or `--from-url`, plus filters).
+   - It synthesizes `publish:<id>`, `tool:<tool_use_id>`, `llm:<request_id>`
+     (joined by `data.request_id`, never by `correlationid`) and `hook:<inv>`
+     spans.
+   - It keeps rare events and failures, up to 400.
+   - It folds everything else into at most 12 chapters of `batch` spans, with
+     counts, per-minute sparklines and exemplars.
+   - It writes gzipped compact JSON: under 2 MB gz for a 14-hour night.
+   - It runs a conservation check: kept events plus batch counts equals the
+     Candystore total plus dead letters handled.
+3. **Factory query mode** (`manual/sandbox`):
+   - the "You asked the archive…" prompt, chapter pacing, batch pallets and a
+     bucketed waterfall;
+   - fixes for the `director.ts` hot spots, with `direct()` under 400 ms on a
+     folded 100k-event fixture;
+   - one crew-hall desk per Hermes profile, and the tenant annex;
+   - kiosks for each new emitter as its delegation lands.
+4. **`waybill audit --days N`.** It compares stream sequence ranges with
+   Candystore ids using direct-get or `subjects_filter`, never a JetStream
+   consumer (I-10.1 rule), and has one adapter per ground-truth source. Its
+   `gaps[]` and `findings[]` feed the Factory end card. It runs on demand; if
+   it ever needs to recur, it gets a Candybar manifest.
+
+**Delegations (filed 2026-11-21, idempotent markers `I-10.2:<slug>`)**
+
+The lane column is the lane at filing. Live status comes from the boards
+(`px show <ref>`) and is never typed here.
+
+| Child | Ticket | Ask | Lane at filing |
+|---|---|---|---|
+| candystore | CANDYS-55 (existing, commented) | `idx_events_received_at`. Its migration is now `011` (006 is taken). It blocks CANDYS-78 | Backlog |
+| candystore | CANDYS-78 | `GET /export`: NDJSON with a keyset cursor (`received_at`, `id`), `include=dead_letter`, a 24 h default and 7 d cap, counts from `/summary/timeline`. Relates to CANDYS-60, 74 and 75 | Backlog |
+| candystore | CANDYS-79 | Emit `system.event.dead_lettered` on every drop (9,033 silent drops) | Backlog |
+| candystore | CANDYS-80 | Decide and wire `gib.evt.>` ingestion for the tenant annex (GIB_EVENTS: 394 messages, 0 consumers) | Backlog |
+| bloodbank | BB-46 | Hermes `repo.decision.recorded`: fill service, domain and kind (2.7% dead-lettered) | Backlog |
+| bloodbank | BB-47 | Dual-publish Deckard attention as `bloodbank.evt.agent.attention.raised` (0 of about 105 a day archived) | Backlog |
+| bloodbank | BB-48 | Command archive design, per decision (d): about 17k commands a day, 0 archived | Backlog |
+| bloodbank | BB-49 | A consumer for `cmd.audio.task.start`, or stop publishing it (72 stranded) | Backlog |
+| bloodbank | BB-50 | Hermes: `session.started` for subagent, oneshot and cron; `messaging.telegram.*`; the +22% `tool.requested` over-count | Backlog |
+| bloodbank | BB-51 | ASM transition events, with the sweep publishing only its changes. Relates to BB-33 | Backlog |
+| bloodbank | BB-52 | hook-hub `missing_pane_context` skip (14 Hermes approval requests dropped) | Backlog |
+| bloodbank | BB-53 | Schemas: wax `audio.*`, `memory.*`, `repo.commit`/`push`, `crank.nudge.*`, `system.service.*`, `system.event.dead_lettered`, `project.artifact.published`, `agent.attention.raised` | Backlog |
+| candybar | CAND-55 | Five native timers: asm-sweep, infra-doctor, the deadman, hermes-gateway-watchdog and op-token-guard. Migrate each, or keep it native under an exception Jarad approves that names its event. All five already have blanket "canonical exclusion" entries in `deploy/scheduling-policy.json` | Backlog |
+| monitoring | MONI-3 | A shared `OnFailure=` publisher, `system.service.failed`, rate-limited for crash loops (33,637 failures in 3 days) | Backlog |
+| infra | INFR-155 | infra-doctor, the deadman and the gateway watchdog publish state changes and ntfy alerts as events | Backlog |
+| infra | INFR-156 | `hermes-gateway-restart` publishes `restart_requested` and `restarted` | Backlog |
+| skillex | SKRILL-53 | artifacts `publish.py` emits `project.artifact.published` after a verified receipt (75 silent publishes) | Backlog |
+| delodocs | DOCS-2 | curator-serve (NRestarts 144,934) and delodocs-inbox-watchdog (25,099) point at the removed `DeLoDocs/_vault`. Copies of the scripts are in `~/code/obsops/scripts` | Backlog |
+| hindsight | no board | `memory.*` events through Hindsight's webhook (7,419 silent operations in 3 days). The server is `~/docker/stacks/ai/hindsight` (DeLoContainers; the DELO board was archived 2026-10-18) and the hooks are `~/.agents/hooks/hindsight` (delorenj/agents, no `.project.json`) | not filed |
+| jev-litellm | no board | A success callback that publishes `llm.usage.recorded` (12,525 calls bypassing the gateway in 3 days). Lives in `~/docker/stacks/ai/jev-litellm/compose.yml` (DELO board archived) | not filed |
+| global git hooks | no board | `post-commit`/`pre-push` publish `repo.commit.recorded`/`repo.push.completed` (2,297 commits and 1,059 pushes in 3 days). Lives in `~/.agents/git/hooks`, the target of `~/.config/git/hooks` (delorenj/agents) | not filed |
+| crank (zcrank-send) | no board | `crank.nudge.sent`/`refused` (259 sent and 38 refused in 3 days). Lives in `~/.agents/tools/jev-clairic/bin/zcrank-send` (delorenj/agents). The crank repo is still pending under I-8 | not filed |
+
+**Not yet ticketed** (audit rows outside this pass):
+
+- Krebs tick, orphan and repair decisions are silent. krebs has no
+  `.project.json`.
+- `repo.task.transitioned` and `deleted` are never published (plane-hook, in
+  `delonet-n8n-workflows`).
+- 2 of 61 `claude -p` children of Hermes PMs fire no hooks (hermes-fleet).
+- opencode was nearly silent from 2026-11-13 to 11-19.
+- `enricher-events` has 83 pending, and a `smoke-check` consumer looks orphaned
+  (45 pending).
+- vox has emitted zero events, ever.
+
+**Seam acceptance criteria**
+
+- `waybill query --last-night` writes a v1 waybill that plays in the Factory in
+  60 stops or fewer and under 2 MB gz, with `stats.conservation_ok: true`.
+  Players older than this change still load it.
+- Every producer resolves, through the one map in `cast.generated.json`, to one
+  of: a registry component, an extra, the tenant annex, or `unknown` named in a
+  finding. Nothing is dropped, and Python and the player never disagree
+  (selfcheck).
+- `waybill audit --days 3` has no row marked "silent", and no row marked
+  "lost-in-transit" without an open delegation above. The recorder creates no
+  JetStream consumers and does no publishing.
+- Before closing, each delegation shows that its PM picked it up: triaged and
+  moved off Backlog on its own board.
+
 ## I-11 Agent ownership and impact awareness
 
 **Outcome.** A new request produces an accountable-owner brief separately from
