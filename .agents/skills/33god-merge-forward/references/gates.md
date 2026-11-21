@@ -66,9 +66,11 @@ Select checks that demonstrate the slice's actual behavior:
   checks; its normal build output is a live deploy, not an authorized
   validation step in an asset-only run.
 - Scroll/playhead changes: exercise small wheel and keyboard inputs separated
-  by pauses in both directions across a transition, including stopping midway.
-  Verify progress is not repeatedly snapped back to the starting boundary;
-  frame-motion counts or a fast continuous scroll alone miss this failure.
+  by pauses in both directions across a transition, including stopping midway,
+  plus a held key's auto-repeat. Verify progress is not snapped back to the
+  starting boundary and a held key cannot outrun the playhead; frame-motion
+  counts or one fast continuous scroll miss these failures. Check layout at
+  small-laptop and tablet viewports, not only one desktop size.
 - Event-derived replay changes (select affected paths): reconcile totals with
   source events, separating activity credited to another component from counted
   events. Check attribution precedence with representative jobs and handlers.
