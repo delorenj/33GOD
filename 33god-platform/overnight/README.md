@@ -9,7 +9,7 @@ A building with one window per component. Scroll down it, one section at a time,
 - Design system: [33GOD Overnight](https://claude.ai/artifact/3fX6X9vkEHw6tTG9z3DTQN), which extends [33GOD](https://claude.ai/artifact/BujKg4bcBTeuW1b1qwHDRA)
 - Copy source for the first pass: [33GOD Landing Page](https://claude.ai/artifact/Liw6BUy95RR77TxhammtPo), `Main`. The tour's own copy is `site/manifest.json`; every number in it is counted and dated 21 Nov 2026.
 
-The tour has 22 sections in six parts: Arrival (building, thesis, lobby), The bylaws (org chart, bus, layers, the loop), The platform (clock and records, the agents' desk), The work (PJangler, Flume, Krebs, Pilot, Skillex, the Gateway), The voice (HeyMa, Wax, Voice-ID, Jev, Holocene Auto) and The staff (the roll, and "Watch it work").
+The tour has 21 sections in six parts: Arrival (building, thesis, lobby), The bylaws (org chart, bus, the loop), The platform (clock and records, the agents' desk), The work (PJangler, Flume, Krebs, Pilot, Skillex, the Gateway), The voice (HeyMa, Wax, Voice-ID, Jev, Holocene Auto) and The staff (the roll, and "Watch it work").
 
 ## What lives where
 
@@ -61,7 +61,7 @@ House rules the test also pins: no string, file or comment says “stealth” an
 
 ### The department card
 
-`department.card` is the generic exhibit: any component or group of components gets a section by adding a manifest record and a score major, with no change to `overnight.js`. The record's `copy` holds `exhibit {seats, components, live}` (the window names that work during the section, the registry ids, and whether the figures are counted), `members` (name, role, line), `figures` (n, label, detail), `eventsTitle`, `events` (type, n) and `stamp`. Every other window in the building is dark in an exhibit section; the building leans toward the focus floor. Clock and records and the agents' desk use it today. Bespoke exhibits (the directory, org chart, bus, layers, loop, checklist, pipeline, gateway card, glass) are the same shape one level down: data in `copy`, staging in `overnight.js`.
+`department.card` is the generic exhibit: any component or group of components gets a section by adding a manifest record and a score major, with no change to `overnight.js`. The record's `copy` holds `exhibit {seats, components, live}` (the window names that work during the section, the registry ids, and whether the figures are counted), `members` (name, role, line), `figures` (n, label, detail), `eventsTitle`, `events` (type, n) and `stamp`. Every other window in the building is dark in an exhibit section; the building leans toward the focus floor. Clock and records and the agents' desk use it today. Bespoke exhibits (the directory, org chart, bus, loop, checklist, pipeline, gateway card, glass) are the same shape one level down: data in `copy`, staging in `overnight.js`.
 
 ### The optional `detail` field
 
@@ -84,7 +84,7 @@ Any entry in any list in a beat's `copy` (`departments`, `staff`, `figures`, `pa
 
 ## How the tour runs
 
-- **Press Down.** One press of Down (also Space, Page Down, or a click on the caret) plays one section: the camera travel out of the one you are in, the act statement if the next one opens an act, and the whole of the next section's exhibit, as one continuous move. When that section's content is done it stops, the caret appears, and nothing happens until you press again. 22 sections, 22 presses, about three minutes. Up, Page Up and Shift+Space go back one section, a little faster. Home and End cut. Nav links cut to a beat's landing; Down then plays the rest of that section.
+- **Press Down.** One press of Down (also Space, Page Down, or a click on the caret) plays one section: the camera travel out of the one you are in, the act statement if the next one opens an act, and the whole of the next section's exhibit, as one continuous move. When that section's content is done it stops, the caret appears, and nothing happens until you press again. 21 sections, 21 presses, about two and a half minutes. Up, Page Up and Shift+Space go back one section, a little faster. Home and End cut. Nav links cut to a beat's landing; Down then plays the rest of that section.
 - **The camera and every exhibit are read off one playhead** (`site/dolly.js`). A move drives the playhead and the scroll position together, so the scrollbar travels with the film. When you scroll instead, a critically damped spring pulls the playhead toward the scroll position, so wheel notches, trackpad flicks and the scrollbar all play as one continuous move that eases in and out. `scroll-probe.py` measures that: 60 notches give 405 moving frames of 407 (it was 60 of 636 before the spring).
 - **Scrolling stays free.** Wheel, touch and the scrollbar scrub the film like a video. Stop mid-section and it stays where you stopped: no automatic glide, so no tiny stops. Stop inside a camera travel or an act statement's handover (a half-dissolved state) and the dolly finishes it the way you were going: forward to the next section's landing, or back to the station behind. That is the only automatic move, takes about half a second, and is a rest, not a station: no caret. Any wheel, touch or scrollbar input mid-move hands control straight back at the playhead.
 - **A held key plays one section.** Every auto-repeat is swallowed: release and press again. The same key again mid-move fast-forwards what is left once (4x); more presses are ignored, so nothing queues the next section. The other direction mid-move turns around to the station behind. Focus in the briefing form keeps its keys, and Space on a focused button is its click.
@@ -99,7 +99,7 @@ Any entry in any list in a beat's `copy` (`departments`, `staff`, `figures`, `pa
 
 ## The pace
 
-A **station** is a resting place. There is exactly one per major, where its content is done (the end of its body, before its camera travel out), plus the very top: 23 stations, 22 moves. Nothing is derived by hand; `site/score.json` only says how long a section takes and where nothing happens. A **move** is one press: from the station you are on to the next. `score.move` samples the timeline of that stretch, smooths its speed, ramps it up from rest and down to rest (so every move starts and ends at zero speed, even one that starts mid-section), and hands the dolly one ease. The minors are the speed profile inside it: between two story beats the tween eases (`dwell`), so it slows toward a beat, lingers, and moves on, never stopping.
+A **station** is a resting place. There is exactly one per major, where its content is done (the end of its body, before its camera travel out), plus the very top: 22 stations, 21 moves. Nothing is derived by hand; `site/score.json` only says how long a section takes and where nothing happens. A **move** is one press: from the station you are on to the next. `score.move` samples the timeline of that stretch, smooths its speed, ramps it up from rest and down to rest (so every move starts and ends at zero speed, even one that starts mid-section), and hands the dolly one ease. The minors are the speed profile inside it: between two story beats the tween eases (`dwell`), so it slows toward a beat, lingers, and moves on, never stopping.
 
 Every field is optional; units are milliseconds unless it says a share. A field on a major overrides the same one under `defaults`.
 
@@ -120,7 +120,7 @@ Every field is optional; units are milliseconds unless it says a share. A field 
 | `pace.reach` | Share of the viewport height within which you count as being on a station. | 0.03 |
 | `pace.min` | No move is shorter than this. | 450 |
 
-`?pace=0.25` multiplies every time by 0.25 (the tests use 0.2; try 0.8 if the tour feels slow). Per section the defaults come to 2.6 to 16.4 seconds (the staff roll is longest, at 0.68s a person; the part statements stand for 2.7s); the whole tour is about 178 seconds. `node tests/overnight_score_check.js --json` prints the table for any edit.
+`?pace=0.25` multiplies every time by 0.25 (the tests use 0.2; try 0.8 if the tour feels slow). Per section the defaults come to 2.6 to 16.4 seconds (the staff roll is longest, at 0.68s a person; the part statements stand for 2.7s); the whole tour is about 158 seconds. `node tests/overnight_score_check.js --json` prints the table for any edit.
 
 ## Real versus illustrated
 
@@ -151,3 +151,7 @@ cd site && python3 -m http.server 8765   # then open http://localhost:8765
 ## Hosting
 
 `33god-web` is `nginx:alpine` with this `site/` folder bind-mounted read-only, routed by Traefik at `33god.delo.sh`. The stack is `~/docker/stacks/websites/33god/compose.yml`, the same shape as `manual.delo.sh`. The router adds `X-Robots-Tag: noindex, nofollow` while 33GOD is In Development.
+
+## The briefing form
+
+"Request a briefing" is a real sign-up. `site/forms.js` posts it to `/_forms/briefing` on the page's own origin; Traefik sends `/_forms/*` on every `*.delo.sh` host to the one `form-intake` service (`33god-platform/form-intake`, README there), which stores the address in SQLite and then publishes `bloodbank.messaging.webform.received` (the ntfy router pushes it). Read the sign-ups with `python3 33god-platform/form-intake/form_intake.py list --form briefing`. Any other page gets a form the same way: load `forms.js` and call `G33Forms.submit('<form>', {email: ...})`.

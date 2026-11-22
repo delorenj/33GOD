@@ -25,7 +25,7 @@ const vars = {
 
 const fails = [];
 function check(ok, msg) { if (!ok) fails.push(msg); }
-const TOTAL_MS = 177000;   // documented in README "The pace": the whole tour, 22 presses, at the default pace
+const TOTAL_MS = 158000;   // documented in README "The pace": the whole tour, 21 presses, at the default pace
 
 const table = {};
 [720, 860, 1080].forEach(vh => {
@@ -135,7 +135,7 @@ function bad(mut, re) {
 bad(s => { s.pace.bogus = 1; }, /pace\.bogus/);
 bad(s => { s.majors[3].body.play = ['80%', '20%']; }, /org-chart\.body\.play/);
 bad(s => { s.majors[1].body.ms = -5; }, /thesis\.body\.ms/);
-bad(s => { s.majors[20].minors[0].dwell = 2; }, /staff\/roll\.dwell/);
+bad(s => { s.majors.find(m => m.id === 'staff').minors[0].dwell = 2; }, /staff\/roll\.dwell/);
 
 if (process.argv.includes('--json')) { console.log(JSON.stringify(table)); process.exit(fails.length ? 1 : 0); }
 if (fails.length) { console.error(fails.slice(0, 40).join('\n')); process.exit(1); }

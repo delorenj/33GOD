@@ -328,49 +328,6 @@
       ]
     },
     {
-      "id": "layers",
-      "act": "II",
-      "where": "The layers",
-      "setPiece": "section.layers",
-      "kicker": "Article three",
-      "title": "Every block has one owner.",
-      "body": "80 of the 100 components in the registry are first-party. Each fact has one owner at the right layer. Surfaces consume what lower parts publish and keep no second copy of the state. A new component plugs in instead of rewiring the rest.",
-      "tags": [],
-      "staged": false,
-      "copy": {
-        "layers": [
-          {
-            "role": "Where you look",
-            "names": "HOLOCENE · DECKARD · GENESIS"
-          },
-          {
-            "role": "Who decides",
-            "names": "KREBS · FLUME"
-          },
-          {
-            "role": "Who works",
-            "names": "HERMES · HOOK-HUB · HINDSIGHT"
-          },
-          {
-            "role": "How word travels",
-            "names": "BLOODBANK · CANDYSTORE · CANDYBAR"
-          },
-          {
-            "role": "What it stands on",
-            "names": "NATS · POSTGRES · REDIS · TRAEFIK"
-          }
-        ],
-        "punch": "One owner for every fact.",
-        "note": "Surfaces read what lower layers publish. They keep no second copy."
-      },
-      "log": [
-        {
-          "subject": "bloodbank.evt.agent.tool.completed",
-          "note": "Every block has one owner. Five layers; surfaces keep no second copy."
-        }
-      ]
-    },
-    {
       "id": "runs-on-itself",
       "act": "II",
       "where": "The loop",
@@ -379,7 +336,7 @@
         "krebs",
         "pilot"
       ],
-      "kicker": "Article four",
+      "kicker": "Article three",
       "title": "The company runs on itself.",
       "body": "33GOD runs the projects its builder touches, itself included. Every rough edge becomes a ticket. The ticket finds the manager who owns the fix. The fix ships back into the thing that found it.",
       "tags": [],
@@ -1138,8 +1095,10 @@
         "label": "Work email",
         "placeholder": "you@company.com",
         "button": "Request a briefing",
-        "done": "Thanks. Sign-ups are not open yet, so nothing was saved. The 3D Factory is the way in.",
-        "previewNote": "Sign-ups are not open yet. Nothing typed here is saved."
+        "done": "Thanks. You are on the list, and you will hear from us when briefings open. Until then, the 3D Factory is the way in.",
+        "previewNote": "We use this address for one thing: telling you when briefings open.",
+        "sending": "Sending",
+        "error": "That did not go through. Try again in a minute."
       },
       "log": [
         {

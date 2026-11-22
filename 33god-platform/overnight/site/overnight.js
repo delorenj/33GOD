@@ -261,7 +261,7 @@
     switch (id) {
       case 'premise': case 'thesis': return { x: 0.2, y: 0, s: 1, o: 1 };
       case 'numbers': return { x: 0.3, y: 0, s: 0.9, o: 1 };
-      case 'org-chart': case 'bus': case 'layers': case 'runs-on-itself': return { x: 0.36, y: 0, s: 0.86, o: 0 };
+      case 'org-chart': case 'bus': case 'runs-on-itself': return { x: 0.36, y: 0, s: 0.86, o: 0 };
       case 'wax': t = SC.minor('wax', 'push-in', q).t; return { x: 0, y: 0, s: Math.pow(9, t), o: 1 - seg(t, 0.2, 0.7) };
       case 'speakers': case 'jev': return { x: 0, y: 0, s: 9, o: 0 };
       case 'harvest': return { x: 0.2, y: 0, s: 1, o: 1 - SC.minor('harvest', 'glass', q).p };
@@ -333,18 +333,34 @@
   function Ask(props) {
     var copy = props.copy;
     var st = useState('');
+    var sendSt = useState({ busy: false, error: '' }); var send = sendSt[0], setSend = sendSt[1];
     if (props.submitted) {
       return h('div', { className: 'gate gate--done', role: 'status' },
         h('span', { className: 'gate__glyph', 'aria-hidden': 'true' }),
         h('p', { className: 'gate__done' }, copy.done),
         h('p', { className: 'gate__note' }, copy.previewNote));
     }
-    return h('form', { className: 'gate', onSubmit: function (e) { e.preventDefault(); if (st[0].trim()) props.onSubmit(); } },
+    function onSubmit(e) {
+      e.preventDefault();
+      var email = st[0].trim();
+      if (!email || send.busy) return;
+      setSend({ busy: true, error: '' });
+      var hp = e.target.elements && e.target.elements._hp ? e.target.elements._hp.value : '';
+      var post = window.G33Forms ? window.G33Forms.submit('briefing', { email: email, _hp: hp })
+        : Promise.resolve({ ok: false, error: copy.error });
+      post.then(function (r) {
+        if (r.ok) { setSend({ busy: false, error: '' }); props.onSubmit(); }
+        else setSend({ busy: false, error: r.error || copy.error });
+      });
+    }
+    return h('form', { className: 'gate', onSubmit: onSubmit, 'aria-busy': send.busy ? 'true' : 'false' },
       h('span', { className: 'gate__glyph', 'aria-hidden': 'true' }),
       h('label', { className: 'eyebrow', htmlFor: props.id }, copy.label),
       h('div', { className: 'gate__row' },
-        h('input', { id: props.id, type: 'email', name: 'email', autoComplete: 'email', required: true, placeholder: copy.placeholder, value: st[0], onChange: function (e) { st[1](e.target.value); } }),
-        h('button', { type: 'submit', className: 'btn btn--primary' }, copy.button)),
+        h('input', { id: props.id, type: 'email', name: 'email', autoComplete: 'email', required: true, placeholder: copy.placeholder, value: st[0], disabled: send.busy, onChange: function (e) { st[1](e.target.value); } }),
+        h('input', { type: 'text', name: '_hp', tabIndex: -1, autoComplete: 'off', 'aria-hidden': 'true', className: 'gate__hp' }),
+        h('button', { type: 'submit', className: 'btn btn--primary', disabled: send.busy }, send.busy ? (copy.sending || copy.button) : copy.button)),
+      send.error ? h('p', { className: 'gate__error', role: 'alert' }, send.error) : null,
       h('p', { className: 'gate__note' }, copy.previewNote));
   }
 
@@ -435,19 +451,6 @@
         h('div', { className: 'tape__row tape__row--a' }, copy.tapeA.concat(copy.tapeA).map(function (t, i) { return h('span', { key: i }, t); })),
         h('div', { className: 'tape__row tape__row--b' }, copy.tapeB.concat(copy.tapeB).map(function (t, i) { return h('span', { key: i }, t); }))),
       h('p', { className: 'caption-note' }, copy.tapeNote));
-  }
-
-  function Layers(props) {
-    var copy = props.beat.copy;
-    return h('div', { className: 'sp layers' },
-      h('div', { className: 'layers__stack' }, copy.layers.map(function (l, i) {
-        return h('div', Object.assign({ key: l.role }, rv(0.05 + i * 0.13, 'layers__row')),
-          h('span', { className: 'eyebrow' }, l.role),
-          h('span', { className: 'instrument layers__names' }, l.names),
-          i < copy.layers.length - 1 ? h('span', { className: 'layers__down', 'aria-hidden': 'true' }) : null);
-      })),
-      h('p', rv(0.74, 'punch'), copy.punch),
-      h('p', rv(0.8, 'caption-note'), copy.note));
   }
 
   function Loop(props) {
@@ -884,7 +887,6 @@
     if (id === 'numbers') sp = h(Directory, { beat: b, width: Math.min(room, 400) });
     else if (id === 'org-chart') sp = h(OrgChart, { beat: b });
     else if (id === 'bus') sp = h(Bus, { beat: b, q: q });
-    else if (id === 'layers') sp = h(Layers, { beat: b });
     else if (id === 'runs-on-itself') sp = h(Loop, { beat: b, q: q });
     else if (id === 'holocene-auto') sp = h(Car, { beat: b, q: q, M: M });
 
