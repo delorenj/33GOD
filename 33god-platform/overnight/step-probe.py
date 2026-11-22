@@ -1,4 +1,4 @@
-"""Step probe for the tour page: one press of Down is one section.
+"""Step probe for the tour page (site/tour.html; the front page is index.html): one press of Down is one section.
 
 Presses ArrowDown from the top until the end of the film and records, for every press, where the film
 comes to rest (it must be the major's body end), how long the move took, whether the film position
@@ -7,14 +7,14 @@ whether the caret showed while moving, and the elevator's reading. Then the arbi
 a double press, ArrowUp, a wheel notch mid-move, the caret, a nav link, Home and End.
 
   cd site && python3 -m http.server 47391 --bind 127.0.0.1 &
-  python3 step-probe.py http://127.0.0.1:47391/            # real pace: about 3 minutes
+  python3 step-probe.py http://127.0.0.1:47391/            # (the tour is tour.html; pass the site folder URL)  real pace: about 3 minutes
   python3 step-probe.py http://127.0.0.1:47391/ --pace 0.2  # five times faster, about 40 seconds
   python3 step-probe.py http://127.0.0.1:47391/ --pace 0.2 --json
 
 Exits 1 if any check fails. The rests must equal the number of majors (one per section) and land at each
 major's body end; no stall may last longer than 250ms outside an act statement's hold (`in.hold` x pace).
 """
-import json, math, sys, argparse, pathlib
+import json, math, re, sys, argparse, pathlib
 from playwright.sync_api import sync_playwright
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -67,6 +67,8 @@ def runs_of_stall(samples, thresh=0.3):
 
 def run(url, pace=1.0, width=1280, height=720, only_steps=False):
     stations, ids, holds = geometry(height)
+    url = re.sub(r"tour\.html.*$", "", url)  # the probe appends tour.html itself; accept either the folder URL or the tour URL
+    if not url.endswith("/"): url += "/"
     report = {"url": url, "pace": pace, "viewport": [width, height], "moves": [], "checks": [], "failed": []}
 
     def check(name, ok, detail=""):
@@ -81,7 +83,7 @@ def run(url, pace=1.0, width=1280, height=720, only_steps=False):
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
         q = f"?view=film&pace={pace}"
-        pg.goto(url + q); pg.wait_for_selector(".stage", state="attached"); pg.wait_for_timeout(900)
+        pg.goto(url + "tour.html" + q); pg.wait_for_selector(".stage", state="attached"); pg.wait_for_timeout(900)
         pg.evaluate(SAMPLER)
 
         def state():
@@ -200,7 +202,7 @@ def run(url, pace=1.0, width=1280, height=720, only_steps=False):
             st = state()
             check("a reload comes back to the same station", st["station"] == si and abs(st["y"] - stations[si]) <= 2 and st["ready"] == "true", str(st))
             ctx2 = b.new_context(viewport={"width": width, "height": height})
-            p2 = ctx2.new_page(); p2.goto(url + "?view=film&pace=0.2#gateway"); p2.wait_for_selector(".stage", state="attached"); p2.wait_for_timeout(1200)
+            p2 = ctx2.new_page(); p2.goto(url + "tour.html?view=film&pace=0.2#gateway"); p2.wait_for_selector(".stage", state="attached"); p2.wait_for_timeout(1200)
             r2 = p2.evaluate("({b: document.querySelector('.stage').dataset.beat, y: scrollY})")
             check("a deep link (#gateway) lands on that beat", r2["b"] == "gateway" and r2["y"] > 0, str(r2))
             ctx2.close()
@@ -232,7 +234,7 @@ if __name__ == "__main__":
     ap.add_argument("url", nargs="?", default="http://127.0.0.1:47391/")
     ap.add_argument("--pace", type=float, default=1.0, help="multiplies every ms (0.2 = five times faster)")
     ap.add_argument("--size", default="1280x720")
-    ap.add_argument("--steps", action="store_true", help="only the 22 presses")
+    ap.add_argument("--steps", action="store_true", help="only the presses, one per section")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
     w, h = (int(v) for v in a.size.split("x"))

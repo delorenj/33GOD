@@ -50,6 +50,458 @@
     "whereOf": "{n} of {total}",
     "whereList": "{total} sections"
   },
+  "front": {
+    "_readme": "The front page (index.html). Every word on it is here; the tour's own copy is beats[] above. Slots are budgeted in tests/test_overnight_site.py at 360x780, the binding viewport (a phone). Figures are counted and dated 21 Nov 2026; staged pieces say so. Tokens {site.x} and {total} are filled in by front.js. Icon names are sprite ids in index.html.",
+    "title": "33GOD · A company, staffed by agents",
+    "aria": {
+      "flagships": "The five flagships",
+      "progress": "Progress through the flagships",
+      "skip": "Skip to the flagships",
+      "home": "33GOD, top of page",
+      "counts": "The building, counted",
+      "org": "The org chart, as icons",
+      "more": "More from 33GOD"
+    },
+    "stagedLabel": "Illustration",
+    "ctaShort": "Briefing",
+    "next": "Next: {name}",
+    "hero": {
+      "kicker": "Codename 33GOD · In Development",
+      "title": "A company built",
+      "titleTurn": "out of agents.",
+      "line": "Agents are hired, seated and reviewed like staff. Here are five of its twelve departments, up close.",
+      "primary": "See the flagships",
+      "tour": "{site.viewFilm}",
+      "tourNote": "The whole building, in {total} sections.",
+      "statsStamp": "Counted 21 Nov 2026"
+    },
+    "stats": [
+      {
+        "icon": "cube",
+        "n": "80",
+        "short": "components",
+        "label": "first-party components",
+        "hero": true
+      },
+      {
+        "icon": "org",
+        "n": "13",
+        "short": "domains",
+        "label": "domains on the platform map",
+        "hero": true
+      },
+      {
+        "icon": "schema",
+        "n": "226",
+        "short": "event schemas",
+        "label": "event schemas in one rulebook",
+        "hero": true
+      },
+      {
+        "icon": "link",
+        "n": "300",
+        "short": "connections",
+        "label": "wired connections",
+        "hero": true
+      },
+      {
+        "icon": "user",
+        "n": "1",
+        "short": "human",
+        "label": "human",
+        "you": true
+      }
+    ],
+    "flagships": [
+      {
+        "id": "pjangler",
+        "num": "F-01",
+        "name": "PJangler",
+        "short": "PJangler",
+        "icon": "factory",
+        "tag": "The project factory",
+        "kicker": "Day one of every project",
+        "headline": "PJangler.",
+        "headlineTurn": "The project factory.",
+        "line": "One command builds a project from a shared template: board, repo and project manager, ready on day one.",
+        "chips": [
+          {
+            "icon": "board",
+            "text": "Ticket board, created and bound"
+          },
+          {
+            "icon": "user",
+            "text": "A project manager, via Flume"
+          },
+          {
+            "icon": "rocket",
+            "text": "Launch mode for mobile apps"
+          }
+        ],
+        "next": {
+          "label": "Gateway",
+          "to": "f-gateway"
+        },
+        "piece": {
+          "title": "A new project, day one",
+          "note": "from the CommonProject template",
+          "floor": "13F",
+          "floorNote": "The building grows a floor.",
+          "steps": [
+            {
+              "icon": "template",
+              "text": "Template rendered"
+            },
+            {
+              "icon": "board",
+              "text": "Ticket board created and bound"
+            },
+            {
+              "icon": "branch",
+              "text": "Git repository, first commit"
+            },
+            {
+              "icon": "user",
+              "text": "Project manager hired, via Flume"
+            },
+            {
+              "icon": "book",
+              "text": "Open Notebook created"
+            },
+            {
+              "icon": "rocket",
+              "text": "Launch mode ready · mobile apps"
+            }
+          ],
+          "aria": "A twelve-floor building. A crane lowers a thirteenth floor onto it while a new project's checklist ticks off."
+        }
+      },
+      {
+        "id": "gateway",
+        "num": "F-02",
+        "name": "Gateway",
+        "short": "Gateway",
+        "icon": "bolt",
+        "tag": "Every model, one name",
+        "kicker": "The power company",
+        "headline": "The Gateway.",
+        "headlineTurn": "Every model, under one name.",
+        "line": "Employees ask for a role, never a model. The router decides which provider answers.",
+        "chips": [
+          {
+            "icon": "tag",
+            "text": "Three roles, seven rungs"
+          },
+          {
+            "icon": "gauge",
+            "text": "Paces every subscription"
+          },
+          {
+            "icon": "radar",
+            "text": "Scouts for new free providers"
+          }
+        ],
+        "next": {
+          "label": "HeyMa",
+          "to": "f-heyma"
+        },
+        "piece": {
+          "bar": "api.automaticai.io",
+          "ask": {
+            "label": "Asks for",
+            "value": "orchestrator"
+          },
+          "pools": [
+            "Subscription",
+            "Subscription",
+            "Metered",
+            "Free",
+            "Free"
+          ],
+          "states": {
+            "drawing": "Drawing",
+            "spent": "Spent",
+            "waiting": "Waiting",
+            "backstop": "Backstop",
+            "scouting": "Scouting",
+            "grown": "+1 pool"
+          },
+          "chain": [
+            "Subscription",
+            "Metered",
+            "Free"
+          ],
+          "chainNote": "free pools held to 90% of each daily cap",
+          "say": [
+            {
+              "route": "orchestrator → pool 01 · resets first",
+              "line": "It resets soonest, so it spends first. Little expires unused."
+            },
+            {
+              "route": "orchestrator → pool 02 · most room",
+              "line": "01 is out until it resets. 02 is furthest ahead of schedule, so it takes the work."
+            },
+            {
+              "route": "scout · scheduled → automaticai/free",
+              "line": "A scout looks for one more free provider, tests it and deploys it."
+            }
+          ],
+          "stats": [
+            {
+              "n": "112",
+              "label": "routes"
+            },
+            {
+              "n": "43",
+              "label": "free models"
+            },
+            {
+              "n": "13",
+              "label": "free pools"
+            },
+            {
+              "n": "7",
+              "label": "rungs, 3 roles"
+            }
+          ],
+          "stamp": "Counted from the route catalog, 21 Nov 2026. The dry pool and the new pool are an illustration.",
+          "aria": "The router moves work from a spent subscription pool to the next one, then a scout adds a free pool."
+        }
+      },
+      {
+        "id": "heyma",
+        "num": "F-03",
+        "name": "HeyMa",
+        "short": "HeyMa",
+        "icon": "wave",
+        "tag": "The audio department",
+        "kicker": "The audio department",
+        "headline": "HeyMa.",
+        "headlineTurn": "Transcription, translation and dictation.",
+        "line": "The voice system: sound goes in, work comes out.",
+        "chips": [
+          {
+            "icon": "wave",
+            "text": "Long-form and live transcripts"
+          },
+          {
+            "icon": "globe",
+            "text": "Live meeting translation"
+          },
+          {
+            "icon": "radio",
+            "text": "Phone dictation into a terminal"
+          }
+        ],
+        "next": {
+          "label": "Flume",
+          "to": "f-flume"
+        },
+        "piece": {
+          "parts": [
+            {
+              "id": "wax",
+              "icon": "wax",
+              "name": "WAX",
+              "line": "Long recordings, cleaned and titled."
+            },
+            {
+              "id": "vinyl",
+              "icon": "vinyl",
+              "name": "VINYL",
+              "line": "Live dictation: speech to text as you talk."
+            },
+            {
+              "id": "phono",
+              "icon": "phono",
+              "name": "PHONOGRAPH",
+              "line": "Live meeting translation, in a browser."
+            },
+            {
+              "id": "short",
+              "icon": "short",
+              "name": "SHORTWAVE",
+              "line": "Phone dictation, typed into a terminal."
+            }
+          ],
+          "note": "Each part is named for a way sound used to travel.",
+          "call": {
+            "label": "A meeting in another time zone",
+            "heardLabel": "Heard",
+            "heard": "Bom dia. Podemos adiantar a entrega para sexta?",
+            "translatedLabel": "Translated",
+            "translated": "Good morning. Can we move the delivery up to Friday?",
+            "replyLabel": "You dictate",
+            "reply": "Tell the PM Friday works."
+          },
+          "stamp": "Wax finished 108 transcriptions in the 7 days to 21 Nov 2026. The call is an illustration."
+        }
+      },
+      {
+        "id": "flume",
+        "num": "F-04",
+        "name": "Flume",
+        "short": "Flume",
+        "icon": "hire",
+        "tag": "HR for agents",
+        "kicker": "Human resources",
+        "headline": "Flume.",
+        "headlineTurn": "A whole HR department, for agents.",
+        "line": "Open a role and Flume fills it, then tells you honestly how the hire is doing.",
+        "chips": [
+          {
+            "icon": "hire",
+            "text": "Hires directors, managers, PMs"
+          },
+          {
+            "icon": "desk",
+            "text": "A desk and a title for each"
+          },
+          {
+            "icon": "review",
+            "text": "Reviews with three verdicts"
+          }
+        ],
+        "next": {
+          "label": "Holocene Auto",
+          "to": "f-holocene-auto"
+        },
+        "piece": {
+          "roles": [
+            {
+              "icon": "org",
+              "name": "Director",
+              "line": "A pure orchestrator. It only delegates."
+            },
+            {
+              "icon": "user",
+              "name": "Manager",
+              "line": "Delegates, and does the work too."
+            },
+            {
+              "icon": "user",
+              "name": "Project manager",
+              "line": "Runs one project, start to finish."
+            }
+          ],
+          "hire": {
+            "icon": "hire",
+            "name": "New hire",
+            "line": "Project manager. A window that has never been lit."
+          },
+          "pipeline": [
+            {
+              "icon": "hire",
+              "text": "Hired"
+            },
+            {
+              "icon": "book",
+              "text": "Onboarded"
+            },
+            {
+              "icon": "desk",
+              "text": "Seated"
+            },
+            {
+              "icon": "review",
+              "text": "Reviewed"
+            }
+          ],
+          "stamp": "On the roster today: 51 agents, 32 of them project managers (21 Nov 2026). The hire is an illustration."
+        }
+      },
+      {
+        "id": "holocene-auto",
+        "num": "F-05",
+        "name": "Holocene Auto",
+        "short": "Auto",
+        "icon": "car",
+        "tag": "Your control room, in the car",
+        "kicker": "The control room, in the car",
+        "headline": "Holocene Auto.",
+        "headlineTurn": "One sentence on screen, the rest spoken.",
+        "line": "An Android Automotive app, now in internal testing: who is working, what is stuck, what needs you.",
+        "chips": [
+          {
+            "icon": "car",
+            "text": "Android Automotive head unit"
+          },
+          {
+            "icon": "screen",
+            "text": "One sentence and a count"
+          },
+          {
+            "icon": "speaker",
+            "text": "Everything else is spoken"
+          }
+        ],
+        "next": {
+          "label": "The org chart",
+          "to": "org-band"
+        },
+        "piece": {
+          "screen": {
+            "product": "Holocene Auto",
+            "signal": "Needs you",
+            "line": "Two things need you.",
+            "count": "2",
+            "sub": "Everything else is spoken."
+          },
+          "standupTitle": "What the car is built to do",
+          "standup": [
+            "Record a memo.",
+            "An agent picks it up and answers.",
+            "The reply is voiced and plays back.",
+            "The first real drive test is still ahead."
+          ],
+          "stamp": "The memo pipeline under it replied to 87 voice memos in the 7 days to 21 Nov 2026. The car screen is an illustration.",
+          "aria": "A car windshield at sunrise over a dashboard screen that reads: two things need you."
+        }
+      }
+    ],
+    "org": {
+      "kicker": "Article one",
+      "title": "Every agent is an employee.",
+      "line": "Every agent has a title, a desk and a record, and the org chart is the registry of them.",
+      "icons": {
+        "FLUME": "hire",
+        "KREBS": "lanes",
+        "BLOODBANK": "bus",
+        "CANDYSTORE": "archive",
+        "CANDYBAR": "clock",
+        "SKILLEX": "book",
+        "GENESIS": "bell",
+        "MILKSHAKE": "coin",
+        "INTAKE": "mail",
+        "CRANK": "crank",
+        "INFRA-DOCTOR": "wrench",
+        "HOLOCENE": "monitor"
+      }
+    },
+    "well": {
+      "kicker": "Counted 21 Nov 2026",
+      "title": "The building, counted.",
+      "stamp": "From the component registry and schema tree, 21 Nov 2026."
+    },
+    "ask": {
+      "kicker": "In Development",
+      "title": "33GOD is in development.",
+      "line": "Leave an address and you will hear first.",
+      "label": "Work email",
+      "placeholder": "you@company.com",
+      "button": "Request a briefing",
+      "note": "We use this address for one thing: telling you when briefings open.",
+      "done": "Thanks. You are on the list, and you will hear from us when briefings open. Until then, the 3D Factory is the way in.",
+      "watch": "Watch it work in the 3D Factory",
+      "sending": "Sending",
+      "error": "That did not go through. Try again in a minute.",
+      "watchHref": "{site.viewSimulationHref}"
+    },
+    "footer": {
+      "tour": "{site.viewFilm}",
+      "simulation": "{site.viewSimulation}"
+    }
+  },
   "acts": {
     "I": "Arrival",
     "II": "The bylaws",

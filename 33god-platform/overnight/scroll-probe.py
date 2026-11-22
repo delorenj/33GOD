@@ -1,11 +1,11 @@
-"""Scroll-feel probe for the tour page.
+"""Scroll-feel probe for the tour page (site/tour.html).
 
 Plays 60 real mouse-wheel notches (100px, 90ms apart, browser smooth scrolling off) and reads the
 film position every animation frame, then stops dead inside four camera travels (numbers, bus, jev, heyma) and reports where
 the film comes to rest.
 
   cd site && python3 -m http.server 47391 --bind 127.0.0.1 &
-  python3 scroll-probe.py http://127.0.0.1:47391/ after
+  python3 scroll-probe.py http://127.0.0.1:47391/tour.html after
 
 Good: moving_frames close to active_frames (no slideshow), small max_film_step_per_frame,
 and every settle result resting with its caption up (cap 1) or on an act statement (interlude beats).
@@ -14,7 +14,7 @@ This probe is free scrolling. The ArrowDown stepping (one press, one section) is
 """
 import json, sys
 from playwright.sync_api import sync_playwright
-URL = sys.argv[1] if len(sys.argv) > 1 else 'https://33god.delo.sh/'
+URL = sys.argv[1] if len(sys.argv) > 1 else 'https://33god.delo.sh/tour.html'
 label = sys.argv[2] if len(sys.argv) > 2 else 'run'
 SAMPLER = """
 window.__s = []; (function loop(){ const st=document.querySelector('.stage'), c=document.querySelector('.captions'), w=document.querySelector('.world');

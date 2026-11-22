@@ -1,17 +1,80 @@
-# Overnight: the 33GOD component tour
+# Overnight: the 33GOD front page and component tour
 
 A building with one window per component. Scroll down it, one section at a time, and each department lights up with what it does and a few numbers counted from the real system. The stage is In Development; the page says so and is noindex.
 
 (The folder is still called `overnight/`. It used to tell one night as a story; on 21 Nov 2026 it became a tour, because the story read as a brag reel. Nothing night-shaped is left, and a test keeps it that way.)
 
-**Live (preview, noindex):** https://33god.delo.sh
+**Live (preview, noindex):** https://33god.delo.sh (the front page). The 21-section tour is at https://33god.delo.sh/tour.html.
 
 - Design system: [33GOD Overnight](https://claude.ai/artifact/3fX6X9vkEHw6tTG9z3DTQN), which extends [33GOD](https://claude.ai/artifact/BujKg4bcBTeuW1b1qwHDRA)
 - Copy source for the first pass: [33GOD Landing Page](https://claude.ai/artifact/Liw6BUy95RR77TxhammtPo), `Main`. The tour's own copy is `site/manifest.json`; every number in it is counted and dated 21 Nov 2026.
 
 The tour has 21 sections in six parts: Arrival (building, thesis, lobby), The bylaws (org chart, bus, the loop), The platform (clock and records, the agents' desk), The work (PJangler, Flume, Krebs, Pilot, Skillex, the Gateway), The voice (HeyMa, Wax, Voice-ID, Jev, Holocene Auto) and The staff (the roll, and "Watch it work").
 
+## The front page ("Flagships")
+
+`site/index.html` is the front page; the tour that used to be the front page is `site/tour.html` (same scripts, unchanged). The front page picks five flagships and gives each one a set piece: **PJangler** (a crane lifts a building; the 13th floor is the one that gets dropped), **the Gateway** (one door, a pool of subscriptions, metered and free routes), **HeyMa** (transcription, translation and dictation, with a phone frame for the call), **Flume** (the workforce: hire, onboard, review) and **Holocene Auto** (an Android Automotive app in internal testing, in front of a sunrise). Then one band of icon tiles for the org chart, the counts, and the briefing form.
+
+Order on the page: header (mark, flagship nav, one CTA, a five-segment progress strip), hero, five exhibits, the org band, "The building, counted." (five counts, dated 21 Nov 2026), the ask, the footer. The hero and the footer link to the tour ("Take the tour", `site.viewFilm`). Old tour links keep working: `index.html?view=` or `?pace=` redirects at once (an inline script), and `index.html#<beat-id>` redirects once the manifest is loaded, both to `tour.html` with the same query and hash. Front anchors are `top`, `flagships`, `f-<id>`, `org-band`, `counts` and `briefing`; a test keeps them from ever equalling a tour beat id.
+
+**Every word is in `manifest.json`'s top-level `front` record**, plus the org band's department names and lines, which it reads from the tour's `org-chart` beat so the two cannot drift. `front.js` fetches the manifest and renders everything from it; there is no copy in `index.html`, `front.js` or `front.css`, except the `<noscript>` line. The five flagship accents are `:root` tokens at the top of `front.css` (a dark and a morning variant each); they go upstream into the design system's `tokens.json`, and then out of `front.css`. No raw colours anywhere else.
+
+What was borrowed from the two other directions (and what was not):
+
+| Graft | Became |
+|---|---|
+| Tour link | "Take the tour" in the hero (a text link beside the one button) and in the footer |
+| Night-lite illustration | the PJangler crane and 13th floor, the sunrise behind the Holocene Auto screen, a skyline-and-stars strip along the foot of each dark stage (in flow, never behind text), a phone frame for the HeyMa call |
+| Showroom stats row | four registry counts with icons in the hero (components, domains, event schemas, connections); the closing band shows all five, with "1 human" |
+| Showroom "Next F-0n" | a "Next: name" link with three step markers on every exhibit |
+| Org chart icons | one band of 12 department tiles in one neutral family colour, with one ochre "You" row, between Holocene Auto and the counts |
+| Not borrowed | hover-only content, six department colours, the bento grid |
+
+### The phone is the binding viewport
+
+The page is designed at 360x780 first (the design range is 360 to 430). Rules, each tested in `TestFront`:
+
+- **Pin only if it fits.** An exhibit is pinned (sticky, three beats driven by scroll) only when its whole stage fits the small-viewport height minus the header, measured in JS (`measure()`, re-run on resize, on fonts loading and on rotation). Otherwise it flows, and its three beats advance off where the piece sits in the viewport. Nothing pins on a phone; at 820x1180, 1280x720, 1440x900 and 1920x1080 the exhibits that fit pin; HeyMa flows at 1024x768 (it needs 835px of 704).
+- **Header:** the mark, a horizontally scrollable icon-only flagship nav (the active item scrolls into view), a 40px mail-icon CTA, and the progress strip. The wordmark appears from 400px, the CTA label ("Briefing") from 600px, short nav names from 900px, full names from 1180px.
+- **Hero:** one column; the flagship index is a 2-column grid of tiles (Holocene Auto spans both), never five across below 760px; one primary button per screen, the tour as a text link.
+- **Set pieces adapt to their own width**, not the viewport's (`@container piece`), so a pinned panel and a flowing panel use the same layout rules.
+- **A 14px floor below 760px.** Nothing a person reads is under 14px on a phone (`--fs-s` in the phone block at the end of `front.css`); tap targets are 44px (Next links, footer links, the brand). Only the step bars and star dots are smaller. On a phone each exhibit reads badge, headline, line, the piece, the three bullets, Next; the gateway stats are 2x2, the HeyMa part cards are compact, the org tiles are 2 up (3 from 500px), and the closing band shows only "1 human" (the four registry counts are in the hero already).
+- No horizontal scroll, nothing under the fixed header, nothing cut off; `prefers-reduced-motion` never pins and shows each piece's final state; a reload restores the scroll position.
+
+### The briefing form on the front page
+
+It is the same sign-up as the tour's: `forms.js` posts `briefing` to `/_forms/briefing` (see "The briefing form" below), with the honeypot. The words under and after it (`note`, `done`, `sending`, `error`) are tested to equal the tour's `ask` copy, so the two forms promise the same thing.
+
+### Front copy budgets (measured at 360x780)
+
+`tests/test_overnight_site.py` has one budget per front slot (`FRONT_BUDGETS`, with the reason beside each). The ones that bind:
+
+| Slot | Budget | Why |
+|---|---|---|
+| `hero.title` / `titleTurn` | 16 chars each | the h1 is 41px, one line each in 328px |
+| `hero.line` | 160 chars | 4 lines; 5 pushes the tiles off the first screen |
+| `hero.primary` / `hero.tour` | 22 / 18 chars | one line each |
+| `stat.short` / `stat.n` | 14 / 3 chars | the 2-up fact cell is about 100px |
+| `flagship.name` / `tag` | 14 / 34 chars | the tile is about 130px wide |
+| `flagship.headline` / `headlineTurn` / `line` | 16 / 44 / 110 chars | 33px h2, 17px lede |
+| `chip.text` | 34 chars | one line beside a 36px icon |
+| `next.name` | 14 chars | "Next: name" beside the three markers |
+| `gw.say`, `hm.part.line`, `fl.role.line` | 90 / 44 / 56 chars | the panel cells at their narrowest |
+| `org.name` / `org.dept` | 14 / 24 chars | the tile is 104px wide |
+| `well.title` / `ask.title` | 28 chars | two lines |
+
+Tests: `test_front_record_has_every_slot` (the record has every slot the page reads), `test_front_house_rules` and `test_front_has_no_night_clock` (no "stealth", no "fleet", no night-shaped words, figures dated, staged pieces labelled), `test_front_files_and_links`, and `TestFront` (browser, `OVERNIGHT_LAYOUT=1`).
+
 ## What lives where
+
+The tour and the front page share the manifest, the tokens and the design-system bundle. Front-only files:
+
+| Path | What it holds | Who edits it |
+|---|---|---|
+| `site/index.html` | The front page shell: head, the tour redirect, the icon sprite, `#front`. | Design |
+| `site/front.js` | Renders the front page from `manifest.json`'s `front` record; the drawn art, the pin-if-it-fits measuring, the scroll drivers. Plain JS, no libraries. | Design |
+| `site/front.css` | Front page styles and the flagship accent tokens. | Design |
+| `site/tour.html` | The 21-section tour (the old front page). | Design |
 
 | Path | What it holds | Who edits it |
 |---|---|---|
@@ -20,7 +83,7 @@ The tour has 21 sections in six parts: Arrival (building, thesis, lobby), The by
 | `site/overnight.js` | Staging: the camera, the seating plan, which window is in which state, the set pieces, and the page's own chrome (the elevator gauge, the next-section caret). No copy, no scroll geometry. | Design |
 | `site/score.js` | Scroll offset markers: compiles a score, samples it, and says where the stations are, what one move between two of them looks like (`move`), where you are in the tour (`where`, `Score.watch`) and where a half-dissolved state should finish (`seam`). Page-agnostic. | Design |
 | `site/dolly.js` | The scroll playhead: spring smoothing, the timed move a keypress plays (one tween drives playhead and scroll), settle glides, cuts for nav jumps. Page-agnostic. | Design |
-| `step-probe.py` | Presses Down through the whole tour in a real browser and checks the rests, the timing, the stalls, the caret, the gauge and the arbitration rules. | Tooling |
+| `step-probe.py` | Presses Down through the whole tour (`tour.html`) in a real browser and checks the rests, the timing, the stalls, the caret, the gauge and the arbitration rules. | Tooling |
 | `site/overnight.css` | Page layout and set-piece styles. Tokens only, no raw colours. | Design |
 | `site/ds/tokens.css` | The Overnight tokens, written out from the design system's `tokens.json`, plus the few base 33GOD values the page uses. | Design system first, then here |
 | `site/ds/bundle.js`, `site/ds/bundle.css` | The design system's six components (`window.Overnight`), copied unchanged. | Design system only |
@@ -140,7 +203,7 @@ Counting rule: a number that is not in the repo or a dated query does not go on 
 
 ## Not built yet
 
-Sound, and a designed phone layout (phones get the list view for now).
+Sound. The tour (`tour.html`) still has no designed phone layout (phones get its list view); the front page is phone-first. Keyboard stepping per flagship (Down jumps a beat) is not built on the front page.
 
 ## Preview locally
 

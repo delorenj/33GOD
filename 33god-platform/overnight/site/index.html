@@ -2,36 +2,86 @@
 <html lang="en" data-theme="night">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>33GOD · A company, staffed by agents</title>
-<meta name="description" content="33GOD is a building with one window per component. Scroll down it for a tour of the company: the agents, the bus, the clock, the voice. In development.">
+<meta name="description" content="33GOD is a company staffed by agents. Five of its departments are big enough to stand on their own. In development.">
 <!-- Preview build: keep it out of search until launch. -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#141714">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23141714'/%3E%3Cpath fill='%23e3e8e3' d='M11 1.5A5.25 5.25 0 0 0 11 12ZM11 12a5.25 5.25 0 0 0 0 10.5ZM13 1.5A5.25 5.25 0 0 1 13 12Z'/%3E%3Cpath fill='%23d8b36e' d='M13 12a5.25 5.25 0 0 1 0 10.5Z'/%3E%3C/svg%3E">
+<script>
+/* Old tour links keep working: a tour query (?view, ?pace) goes to tour.html at once. A #beat hash is checked
+   against the manifest in front.js, before anything is drawn. */
+(function () {
+  if (/[?&](view|pace)=/.test(location.search)) location.replace('tour.html' + location.search + location.hash);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,200..800;1,200..800&family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap">
 <link rel="stylesheet" href="ds/tokens.css">
-<link rel="stylesheet" href="ds/bundle.css">
-<link rel="stylesheet" href="overnight.css">
+<link rel="stylesheet" href="front.css">
 </head>
 <body>
-<a class="skip" href="#log">Read the tour as a list</a>
-<div id="root">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="mark" viewBox="0 0 24 24"><path class="mark__ink" d="M11 1.5A5.25 5.25 0 0 0 11 12ZM11 12a5.25 5.25 0 0 0 0 10.5ZM13 1.5A5.25 5.25 0 0 1 13 12Z"/><path class="mark__you" d="M13 12a5.25 5.25 0 0 1 0 10.5Z"/></symbol>
+  <symbol id="i-factory" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="11" rx="1"/><path d="M8 13.5h2M14 13.5h2M8 17h2M14 17h2"/><path d="M12 2.5v5M9.5 5h5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 2.5 5 13.5h6.5l-1 8 8.5-11h-6.5z"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12h1.5M7 8.5v7M10.5 5v14M14 9v6M17.5 6.5v11M21 12h0"/></symbol>
+  <symbol id="i-hire" viewBox="0 0 24 24"><circle cx="9.5" cy="8" r="3.8"/><path d="M2.5 20.5c0-3.9 3.1-6 7-6s7 2.1 7 6"/><path d="M19 7.5v6M16 10.5h6"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 11l1.6-4.1A2 2 0 0 1 8.5 5.6h7a2 2 0 0 1 1.9 1.3L19 11"/><rect x="3" y="11" width="18" height="6.5" rx="2"/><path d="M6 17.5v2M18 17.5v2"/><circle cx="7.2" cy="14.2" r="1"/><circle cx="16.8" cy="14.2" r="1"/></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16M5.5 8h1.5M11.3 8h1.4M11.3 11.5h1.4M17 8h1.5"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="7" r="2"/><path d="M6 7v10M18 9c0 4-5 4-11 8.5"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 2.5c3 2.2 4.8 5.8 4.8 9.8L15 16H9l-1.8-3.7c0-4 1.8-7.6 4.8-9.8z"/><circle cx="12" cy="10" r="1.8"/><path d="M9 16l-2.2 4 3.2-1.2M15 16l2.2 4-3.2-1.2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M3.5 5h6a2.5 2.5 0 0 1 2.5 2.5V20a2 2 0 0 0-2-2H3.5zM20.5 5h-6A2.5 2.5 0 0 0 12 7.5V20a2 2 0 0 1 2-2h6.5z"/></symbol>
+  <symbol id="i-template" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 11.5V4a1 1 0 0 1 1-1h7.5L21 12.5 12.5 21z"/><circle cx="7.5" cy="7.5" r="1.5"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.5 18a8.5 8.5 0 1 1 17 0"/><path d="M12 18l4.2-6"/><path d="M6.5 13l1 .6M12 9.5v1.2M17.5 13l-1 .6"/></symbol>
+  <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l6-6"/><circle cx="15.5" cy="9.5" r=".6"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="15" rx="2"/><path d="M14 7V2M10 11h4M10 14h4"/><circle cx="12" cy="18" r="1"/></symbol>
+  <symbol id="i-desk" viewBox="0 0 24 24"><path d="M2.5 11h19M5 11v9M19 11v9"/><rect x="8" y="4" width="8" height="5" rx="1"/><path d="M12 9v2"/></symbol>
+  <symbol id="i-review" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.5h6V4M9 13l2 2 4-4.5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.7v9.6L12 21.5l-8.5-4.7V7.2z"/><path d="M3.5 7.2 12 12l8.5-4.8M12 12v9.5"/></symbol>
+  <symbol id="i-org" viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="5" rx="1"/><rect x="2.5" y="16.5" width="6" height="5" rx="1"/><rect x="15.5" y="16.5" width="6" height="5" rx="1"/><path d="M12 7.5V12M5.5 16.5V12h13v4.5"/></symbol>
+  <symbol id="i-schema" viewBox="0 0 24 24"><path d="M8 3.5H6.5a2 2 0 0 0-2 2V9l-2 3 2 3v3.5a2 2 0 0 0 2 2H8M16 3.5h1.5a2 2 0 0 1 2 2V9l2 3-2 3v3.5a2 2 0 0 1-2 2H16"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></symbol>
+  <symbol id="i-cube3" viewBox="0 0 24 24"><path d="M3 7l9-4.5L21 7v10l-9 4.5L3 17z"/><path d="M3 7l9 4.5L21 7M12 11.5v10"/><path d="M7.5 4.8l9 4.5"/></symbol>
+  <!-- HeyMa's parts, each a way sound used to travel -->
+  <symbol id="p-wax" viewBox="0 0 48 48"><ellipse cx="24" cy="10" rx="12" ry="4.5"/><path d="M12 10v26c0 2.5 5.4 4.5 12 4.5s12-2 12-4.5V10"/><path d="M12 18.5c0 2.5 5.4 4.5 12 4.5s12-2 12-4.5M12 27c0 2.5 5.4 4.5 12 4.5s12-2 12-4.5"/><path d="M20 10h8"/></symbol>
+  <symbol id="p-vinyl" viewBox="0 0 48 48"><circle cx="22" cy="25" r="17"/><circle cx="22" cy="25" r="11" opacity=".6"/><circle cx="22" cy="25" r="5"/><circle cx="22" cy="25" r="1"/><path d="M42 5v15l-9 7"/><circle cx="42" cy="5" r="1.6"/></symbol>
+  <symbol id="p-phono" viewBox="0 0 48 48"><rect x="6" y="36" width="20" height="7" rx="1.5"/><path d="M16 36v-6l6-6"/><path d="M22 24 38 6c4 7 2 18-6 24z"/><path d="M27.5 23.5l5.5 4"/></symbol>
+  <symbol id="p-short" viewBox="0 0 48 48"><rect x="5" y="16" width="38" height="25" rx="3"/><path d="M12 16 34 5"/><circle cx="32" cy="28.5" r="6.5"/><path d="M32 28.5l3-3"/><path d="M11 23h10M11 28.5h10M11 34h10"/></symbol>
+  <symbol id="i-screen" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12.5" rx="2"/><path d="M8 21h8M12 17v4M7 9.5h6M7 12.5h3"/></symbol>
+  <symbol id="i-lanes" viewBox="0 0 24 24"><rect x="3" y="4" width="4.5" height="16" rx="1.2"/><rect x="9.75" y="4" width="4.5" height="10" rx="1.2"/><rect x="16.5" y="4" width="4.5" height="13" rx="1.2"/></symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24"><path d="M3 12h18M3 7h18M3 17h18"/><circle cx="8" cy="7" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="11" cy="17" r="1.6"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.2"/><path d="M4.5 9v10a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M3 17.5h18M5 17.5a7 7 0 0 1 14 0M12 8.5V6M10 6h4"/><path d="M8 20.5h8"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.6-1-1.6-1.5-2.9-1.5-1.6 0-2.7.8-2.7 2 0 3 5.8 1.2 5.8 4.3 0 1.3-1.2 2.2-3 2.2-1.4 0-2.6-.6-3.2-1.7M12 6v1.7M12 16.3V18"/></symbol>
+  <symbol id="i-crank" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 3.5v4.5H16"/><circle cx="12" cy="12" r="1.6"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.5 6.2a4 4 0 0 0 4.8 4.8l-9.3 9.3a2.1 2.1 0 0 1-3-3l9.3-9.3a4 4 0 0 0-1.8-1.8z" transform="translate(-1 -1)"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M6 13l3-3 3 2 4-4.5M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+</svg>
+<div id="front">
   <noscript>
     <div class="noscript">
       <h1>A company, staffed by agents.</h1>
-      <p>33GOD is a building with one window per component, and this page is a tour of it. The tour needs JavaScript to run.</p>
+      <p>33GOD is in development. This page needs JavaScript.</p>
     </div>
   </noscript>
 </div>
-<script src="vendor/react.production.min.js"></script>
-<script src="vendor/react-dom.production.min.js"></script>
-<script src="ds/bundle.js"></script>
-<script src="score.js"></script>
-<script src="dolly.js"></script>
 <script src="forms.js"></script>
-<script src="overnight.js"></script>
+<script src="front.js"></script>
 </body>
 </html>

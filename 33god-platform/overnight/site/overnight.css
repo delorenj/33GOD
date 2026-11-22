@@ -364,8 +364,8 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .logentry .eyebrow { display: flex; align-items: center; gap: 12px; }
 .logentry__title { font: 380 clamp(22px, 2.4vw, 30px)/1.15 var(--font-display); letter-spacing: -0.01em; color: var(--stage-ink); text-wrap: balance; }
 .logentry__body { max-width: 40em; font: 400 16px/1.55 var(--font-sans); color: var(--stage-ink-2); text-wrap: pretty; }
-.logview__detail { margin: 6px 0 14px; display: grid; gap: 10px; }
-.logview__detail dt { margin: 0; }
+.logview__detail { margin: 6px 0 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.logview__detail dt { margin: 0; overflow-wrap: anywhere; }
 .logview__detail dd { margin: 0; font: 400 13px/18px var(--font-sans); color: var(--stage-ink-2); }
 .logview__more { display: block; margin-top: 2px; color: var(--stage-ink-3); }
 .fail { max-width: 44rem; margin: 12vh auto 0; padding: 0 var(--stage-gutter); display: flex; flex-direction: column; gap: 16px; color: var(--stage-ink-2); font: 400 16px/24px var(--font-sans); }

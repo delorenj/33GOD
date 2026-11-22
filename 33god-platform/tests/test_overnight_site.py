@@ -374,7 +374,286 @@ def test_template_tokens():
             continue
         assert s.count("{") == s.count("}"), f"{path}: unbalanced braces"
         for tok in re.findall(r"\{[^}]*\}", s):
-            assert re.fullmatch(r"\{(p:[^}]+|w:[^}]+|n|total|label|date|site\.viewSimulationHref)\}", tok), f"{path}: unknown token {tok}"
+            assert re.fullmatch(r"\{(p:[^}]+|w:[^}]+|n|total|label|date|name|site\.(viewSimulationHref|viewFilm|viewSimulation))\}", tok), f"{path}: unknown token {tok}"
+
+
+# ---------------------------------------------------------------- the front page (index.html)
+
+FRONT_FILES = ("index.html", "front.js", "front.css", "tour.html")
+
+# Budgets for the front record, measured at 360x780: the binding viewport now, because the phone is a first-class target.
+# slot: (max chars, why). 328px is the text column at 360 (16px gutters); the measurements are in the README.
+FRONT_BUDGETS = {
+    "hero.kicker": (34, "mono 12px uppercase, .14em: about 9.6px a character, one line in 328px"),
+    "hero.title": (16, "h1 is 41px at 360; 'A company built' (15) is 270px, 18 chars would wrap"),
+    "hero.titleTurn": (16, "same line length as the title"),
+    "hero.line": (160, "17px/25px, about 38 chars a line: 4 lines at 138, 5 at 190 pushes the tiles off the first screen"),
+    "hero.primary": (22, "the one primary button: its label plus the chevron stays on one line"),
+    "hero.tour": (18, "text link beside the button"),
+    "hero.statsStamp": (28, "mono 12px, one line under the counts"),
+    "stat.n": (3, "hero fact numeral: 24px display, 4 digits crowds its label"),
+    "stat.short": (14, "hero fact label, 12.5px in a 2-up grid cell (about 100px)"),
+    "stat.label": (36, "closing band cell is 150px wide: 3 lines at 36 chars"),
+    "flagship.name": (14, "tile name, 20px display, 130px wide at 360: 'Holocene Auto' fits one line"),
+    "flagship.short": (10, "the icon strip's label from 900px up"),
+    "flagship.tag": (34, "tile tag, 13.5px, two lines in a 130px tile"),
+    "flagship.kicker": (28, "mono 12px, .1em: one line beside the 56px badge"),
+    "flagship.headline": (16, "h2 is 33px at 360"),
+    "flagship.headlineTurn": (44, "italic turn: 3 lines at 41 chars"),
+    "flagship.line": (110, "17px lede, 3 lines at 105 chars"),
+    "chip.text": (34, "15px beside a 36px icon: one line in 280px"),
+    "next.name": (14, "'Next: ' + name in mono 12px beside the three step markers: 20 chars is 312px of 328"),
+    "pj.title": (28, "21px display h3 with the Illustration pill wrapping under it"),
+    "pj.note": (34, "mono 11.5px uppercase under the title, one line"),
+    "pj.step": (40, "15px in about 220px: two lines at 40 chars"),
+    "pj.floor": (4, "the pill by the building"),
+    "pj.floorNote": (32, "13px caption under the building"),
+    "gw.bar": (22, "mono 13px beside the pill"),
+    "gw.ask": (16, "mono 14px bold, right of the 'Asks for' label"),
+    "gw.pool": (14, "pool kind, 13px"),
+    "gw.state": (10, "mono 11px uppercase, right of the pool row"),
+    "gw.chain": (14, "chip in the 'Subscription > Metered > Free' row"),
+    "gw.chainNote": (48, "mono 12px, a line of its own: two lines at 48"),
+    "gw.route": (40, "mono bold 11.5px: one line at 34, two at 40"),
+    "gw.say": (90, "15px in 272px: 3 lines at 90 chars (the three decisions share one box, so the tallest sets it)"),
+    "gw.stat.n": (3, "26px display numeral in a 75px cell"),
+    "gw.stat.label": (16, "12px, two lines in a 75px cell"),
+    "hm.part.name": (10, "mono 12px bold, .08em: 'PHONOGRAPH' is 86px of 110"),
+    "hm.part.line": (44, "13px in a 110px tile: 4 lines at 44"),
+    "hm.note": (52, "italic 15px: two lines"),
+    "hm.call.label": (32, "mono 11.5px uppercase beside the pill: three lines at 32"),
+    "hm.call.line": (56, "the phone is 300px: 15px, three lines at 56"),
+    "hm.call.tag": (14, "mono 10.5px caps label over each line"),
+    "fl.role.name": (16, "mono 12px bold caps"),
+    "fl.role.line": (56, "13px beside the 22px icon: three lines at 56"),
+    "fl.pipe": (10, "mono 12px caps in a 2-up cell: 'ONBOARDED' is 82px of 140"),
+    "ha.screen.product": (16, "13px beside the mark and the signal"),
+    "ha.screen.signal": (12, "13px, right of the product"),
+    "ha.screen.line": (28, "28px display on the car screen: two lines"),
+    "ha.screen.sub": (30, "13px beside the count"),
+    "ha.standupTitle": (30, "mono 12px caps beside the pill: two lines"),
+    "ha.standup": (44, "15px list row: two lines"),
+    "stamp": (130, "12px under a piece, 3 lines in 296px"),
+    "org.kicker": (24, "mono 12px caps"),
+    "org.title": (32, "h2 is 31px at 360: two lines"),
+    "org.line": (100, "17px, 3 lines"),
+    "org.name": (14, "mono 11px caps in a 104px tile: 'INFRA-DOCTOR' (12) wraps at the hyphen, 16 would not fit"),
+    "org.dept": (24, "12px under the name, two lines in a 104px tile"),
+    "org.you": (40, "14px beside the 'You' label"),
+    "well.kicker": (28, "mono 12px caps, centred"),
+    "well.title": (28, "italic 36px display: one line at 22 chars, two at 28"),
+    "well.stamp": (70, "mono 12px, two lines"),
+    "ask.kicker": (24, "mono 12px caps"),
+    "ask.title": (28, "h2 is 32px: two lines"),
+    "ask.line": (60, "18px: two lines"),
+    "ask.placeholder": (24, "16px in a 296px input"),
+    "ask.button": (22, "full-width button"),
+    "ask.note": (70, "mono 12px: two lines"),
+    "ask.done": (120, "replaces the form: 15px, 4 lines"),
+    "ask.sending": (12, "the button label while the post is in flight"),
+    "ask.error": (60, "14px under the form: two lines"),
+    "ask.watch": (36, "15px text link, one line in 328px"),
+    "cta.short": (10, "label on the header button from 600px up"),
+    "staged": (14, "the pill on every piece"),
+}
+
+
+def _front_items(M):
+    F = M["front"]
+    out = []
+
+    def add(slot, where, text):
+        out.append((slot, where, text))
+
+    h = F["hero"]
+    for k in ("kicker", "title", "titleTurn", "line", "primary", "statsStamp"):
+        add(f"hero.{k}", f"front.hero.{k}", h[k])
+    add("hero.tour", "front.hero.tour (the resolved label)", M["site"]["viewFilm"] if h["tour"] == "{site.viewFilm}" else h["tour"])
+    for i, x in enumerate(F["stats"]):
+        add("stat.n", f"front.stats[{i}].n", x["n"])
+        add("stat.short", f"front.stats[{i}].short", x["short"])
+        add("stat.label", f"front.stats[{i}].label", x["label"])
+    add("cta.short", "front.ctaShort", F["ctaShort"])
+    add("staged", "front.stagedLabel", F["stagedLabel"])
+    for f in F["flagships"]:
+        i = f["id"]
+        for k, slot in (("name", "flagship.name"), ("short", "flagship.short"), ("tag", "flagship.tag"), ("kicker", "flagship.kicker"),
+                        ("headline", "flagship.headline"), ("headlineTurn", "flagship.headlineTurn"), ("line", "flagship.line")):
+            add(slot, f"front.{i}.{k}", f[k])
+        for j, c in enumerate(f["chips"]):
+            add("chip.text", f"front.{i}.chips[{j}]", c["text"])
+        add("next.name", f"front.{i}.next.label", f["next"]["label"])
+        p = f["piece"]
+        if "stamp" in p:
+            add("stamp", f"front.{i}.piece.stamp", p["stamp"])
+        if i == "pjangler":
+            add("pj.title", f"{i}.title", p["title"]); add("pj.note", f"{i}.note", p["note"])
+            add("pj.floor", f"{i}.floor", p["floor"]); add("pj.floorNote", f"{i}.floorNote", p["floorNote"])
+            for j, st in enumerate(p["steps"]):
+                add("pj.step", f"{i}.steps[{j}]", st["text"])
+        elif i == "gateway":
+            add("gw.bar", f"{i}.bar", p["bar"]); add("gw.ask", f"{i}.ask.value", p["ask"]["value"])
+            for j, k in enumerate(p["pools"]):
+                add("gw.pool", f"{i}.pools[{j}]", k)
+            for k, v in p["states"].items():
+                add("gw.state", f"{i}.states.{k}", v)
+            for j, c in enumerate(p["chain"]):
+                add("gw.chain", f"{i}.chain[{j}]", c)
+            add("gw.chainNote", f"{i}.chainNote", p["chainNote"])
+            for j, d in enumerate(p["say"]):
+                add("gw.route", f"{i}.say[{j}].route", d["route"]); add("gw.say", f"{i}.say[{j}].line", d["line"])
+            for j, d in enumerate(p["stats"]):
+                add("gw.stat.n", f"{i}.stats[{j}].n", d["n"]); add("gw.stat.label", f"{i}.stats[{j}].label", d["label"])
+        elif i == "heyma":
+            for j, d in enumerate(p["parts"]):
+                add("hm.part.name", f"{i}.parts[{j}].name", d["name"]); add("hm.part.line", f"{i}.parts[{j}].line", d["line"])
+            add("hm.note", f"{i}.note", p["note"])
+            c = p["call"]
+            add("hm.call.label", f"{i}.call.label", c["label"])
+            for k in ("heard", "translated", "reply"):
+                add("hm.call.line", f"{i}.call.{k}", c[k])
+            for k in ("heardLabel", "translatedLabel", "replyLabel"):
+                add("hm.call.tag", f"{i}.call.{k}", c[k])
+        elif i == "flume":
+            for j, r in enumerate(p["roles"] + [p["hire"]]):
+                add("fl.role.name", f"{i}.roles[{j}].name", r["name"]); add("fl.role.line", f"{i}.roles[{j}].line", r["line"])
+            for j, d in enumerate(p["pipeline"]):
+                add("fl.pipe", f"{i}.pipeline[{j}]", d["text"])
+        elif i == "holocene-auto":
+            sc = p["screen"]
+            add("ha.screen.product", f"{i}.screen.product", sc["product"]); add("ha.screen.signal", f"{i}.screen.signal", sc["signal"])
+            add("ha.screen.line", f"{i}.screen.line", sc["line"]); add("ha.screen.sub", f"{i}.screen.sub", sc["sub"])
+            add("ha.standupTitle", f"{i}.standupTitle", p["standupTitle"])
+            for j, d in enumerate(p["standup"]):
+                add("ha.standup", f"{i}.standup[{j}]", d)
+    o = F["org"]
+    for k in ("kicker", "title", "line"):
+        add(f"org.{k}", f"front.org.{k}", o[k])
+    oc = beat(M, "org-chart")["copy"]
+    for d in oc["departments"]:
+        add("org.name", f"org band {d['name']}", d["name"]); add("org.dept", f"org band {d['name']}.dept", d["dept"])
+    add("org.you", "org band you", oc["you"]["line"])
+    for k in ("kicker", "title", "stamp"):
+        add(f"well.{k}", f"front.well.{k}", F["well"][k])
+    for k in ("kicker", "title", "line", "placeholder", "button", "note", "done", "watch", "sending", "error"):
+        add(f"ask.{k}", f"front.ask.{k}", F["ask"][k])
+    return out
+
+
+def _front_params():
+    try:
+        M = manifest()
+        return [pytest.param(sl, w, t, id=w) for sl, w, t in _front_items(M)]
+    except (AssertionError, KeyError):
+        return []  # test_front_record_has_every_slot carries the real failure
+
+
+@pytest.mark.parametrize("slot,where,text", _front_params())
+def test_front_copy_budgets(slot, where, text):
+    chars, why = FRONT_BUDGETS[slot]
+    assert len(text) <= chars, f"{where}: {len(text)} chars > {chars} (measured at 360x780: {why})"
+
+
+def test_front_record_has_every_slot():
+    F = manifest().get("front")
+    assert isinstance(F, dict), "manifest.json: missing the top-level `front` record (the front page's words)"
+    for k in ("title", "aria", "stagedLabel", "ctaShort", "next", "hero", "stats", "flagships", "org", "well", "ask", "footer"):
+        assert k in F, f"front.{k} is missing"
+    for k in ("flagships", "progress", "skip", "home", "counts", "org", "more"):
+        assert F["aria"].get(k), f"front.aria.{k}"
+    for k in ("kicker", "title", "titleTurn", "line", "primary", "tour", "tourNote", "statsStamp"):
+        assert F["hero"].get(k), f"front.hero.{k}"
+    assert "{name}" in F["next"]
+    assert 4 <= len(F["stats"]) <= 5 and any(x.get("hero") for x in F["stats"]), "the hero row shows the registry counts"
+    for x in F["stats"]:
+        for k in ("icon", "n", "short", "label"):
+            assert x.get(k), f"front.stats: {x}: missing {k}"
+    assert [f["id"] for f in F["flagships"]] == ["pjangler", "gateway", "heyma", "flume", "holocene-auto"], "five flagships, in this order"
+    ids = [f["id"] for f in F["flagships"]]
+    for n, f in enumerate(F["flagships"]):
+        for k in ("num", "name", "short", "icon", "tag", "kicker", "headline", "headlineTurn", "line", "chips", "next", "piece"):
+            assert f.get(k), f"front.{f['id']}.{k}"
+        assert f["num"] == f"F-0{n + 1}"
+        assert len(f["chips"]) == 3 and all(c.get("icon") and c.get("text") for c in f["chips"]), f"{f['id']}: three chips, each with icon and text"
+        assert f["next"].get("label") and f["next"].get("to")
+    pj, gw, hm, fl, ha = (f["piece"] for f in F["flagships"])
+    assert len(pj["steps"]) == 6 and pj["title"] and pj["note"] and pj["floor"] and pj["floorNote"] and pj["aria"]
+    assert len(gw["pools"]) == 5 and len(gw["say"]) == 3 and len(gw["stats"]) == 4 and gw["states"] and gw["chain"] and gw["stamp"] and gw["aria"]
+    for k in ("drawing", "spent", "waiting", "backstop", "scouting", "grown"):
+        assert gw["states"].get(k), f"gateway.states.{k}"
+    assert len(hm["parts"]) == 4 and hm["note"] and hm["stamp"]
+    for k in ("label", "heardLabel", "heard", "translatedLabel", "translated", "replyLabel", "reply"):
+        assert hm["call"].get(k), f"heyma.call.{k}"
+    assert len(fl["roles"]) == 3 and fl["hire"] and len(fl["pipeline"]) == 4 and fl["stamp"]
+    assert ha["screen"] and len(ha["standup"]) == 4 and ha["standupTitle"] and ha["stamp"] and ha["aria"]
+    oc = beat(manifest(), "org-chart")["copy"]
+    for d in oc["departments"]:
+        assert F["org"]["icons"].get(d["name"]), f"front.org.icons has no icon for {d['name']} (the org band shows every department)"
+    for k in ("kicker", "title", "stamp"):
+        assert F["well"].get(k)
+    for k in ("kicker", "title", "line", "label", "placeholder", "button", "note", "done", "watch", "watchHref", "sending", "error"):
+        assert F["ask"].get(k), f"front.ask.{k}"
+    # the front form is the tour's sign-up (forms.js -> form-intake), so what it promises is what the tour promises
+    tour_ask = beat(manifest(), "ask")["copy"]
+    for k, tk in (("note", "previewNote"), ("done", "done"), ("sending", "sending"), ("error", "error"), ("label", "label"), ("placeholder", "placeholder"), ("button", "button")):
+        assert F["ask"][k] == tour_ask[tk], f"front.ask.{k} drifted from the tour's ask.{tk}"
+    assert F["footer"].get("tour") and F["footer"].get("simulation")
+    del ids
+
+
+def test_front_house_rules():
+    """The front page keeps the tour's honesty rules."""
+    M = manifest()
+    F = M["front"]
+    text = {p: s for p, s in walk(F) if not p.endswith("_readme")}
+    assert F["hero"]["kicker"].endswith("In Development"), "the stage is In Development"
+    for p, s in text.items():
+        assert not re.search(r"stealth|\bfleets?\b", s, re.I), f"front.{p}: no 'stealth', no 'fleet'"
+    # every figure on the page is dated 21 Nov 2026 (the counted-on date), and staged pieces say so
+    assert M["site"]["countedOn"] == "21 Nov 2026"
+    assert "21 Nov 2026" in F["hero"]["statsStamp"] and "21 Nov 2026" in F["well"]["kicker"] and "21 Nov 2026" in F["well"]["stamp"]
+    assert "21 Nov 2026" in F["flagships"][1]["piece"]["stamp"], "the gateway's counts are dated"
+    assert "illustration" in F["flagships"][1]["piece"]["stamp"].lower()
+    for f in F["flagships"][2:]:
+        assert "illustration" in f["piece"]["stamp"].lower(), f"{f['id']}: the staged piece says so"
+    assert F["stagedLabel"] == M["site"]["stagedLabel"]
+    assert "forms.js" in (SITE / "index.html").read_text(encoding="utf-8"), "the front sign-up posts through forms.js"
+    assert "G33Forms.submit('briefing'" in (SITE / "front.js").read_text(encoding="utf-8")
+
+
+def test_front_has_no_night_clock():
+    """No night-shaped copy on the front page (the tour's rule): no clock times, no 'tonight', no moon."""
+    F = manifest()["front"]
+    for p, s in walk(F):
+        if p.endswith("_readme"):
+            continue
+        assert not re.search(r"\btonight\b|\bmoon\b|\bnightly\b|\bovernight\b|\bevery night\b|\b\d{1,2}:\d{2}\b", s, re.I), f"front.{p}: {s!r} is night-shaped"
+
+
+def test_front_files_and_links():
+    for f in FRONT_FILES:
+        assert (SITE / f).exists(), f"site/{f} is missing"
+    idx = (SITE / "index.html").read_text(encoding="utf-8")
+    assert 'name="robots" content="noindex, nofollow"' in idx
+    for src in re.findall(r'<script[^>]+src="([^"]+)"', idx):
+        assert not src.startswith("http"), f"index.html loads an external script: {src}"
+    assert 'href="front.css"' in idx and 'src="front.js"' in idx
+    tour = (SITE / "tour.html").read_text(encoding="utf-8")
+    for src in ("score.js", "dolly.js", "overnight.js", "ds/bundle.js"):
+        assert f'src="{src}"' in tour, f"tour.html lost {src}"
+    # a front anchor must never be a tour beat id, or an old tour link could not be told from it
+    M = manifest()
+    beat_ids = {b["id"] for b in M["beats"]}
+    anchors = {"top", "flagships", "org-band", "counts", "briefing"} | {f"f-{f['id']}" for f in M["front"]["flagships"]}
+    assert not (anchors & beat_ids), f"front anchors collide with tour beats: {anchors & beat_ids}"
+    for f in M["front"]["flagships"]:
+        assert f["next"]["to"] in anchors, f"{f['id']}: next points at {f['next']['to']!r}, not a front anchor"
+    css = (SITE / "front.css").read_text(encoding="utf-8")
+    # raw colours live only in the token blocks at the top of front.css
+    body = css.split("/* ---------- base ---------- */", 1)[1]
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(", body), "front.css: a raw colour outside the token blocks"
+    js = (SITE / "front.js").read_text(encoding="utf-8")
+    assert not re.search(r"#[0-9a-fA-F]{6}\b", js), "front.js: a raw colour (use tokens)"
 
 
 # ---------------------------------------------------------------- the pace: one press of Down is one section
@@ -480,7 +759,7 @@ class TestLayout(_Browser):
             errs = []
             pg.on("pageerror", lambda e: errs.append(str(e)))
             pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
-            pg.goto(server + "?view=film")
+            pg.goto(server + "tour.html?view=film")
             pg.wait_for_selector(".hud")
             for m in S["majors"]:
                 for f in (0.1, 0.5, 0.9):
@@ -522,7 +801,7 @@ class TestLayout(_Browser):
         problems = []
         for w, h in self.VIEWPORTS:
             pg = pw.new_page(viewport={"width": w, "height": h})
-            pg.goto(server + "?view=film")
+            pg.goto(server + "tour.html?view=film")
             pg.wait_for_selector(".hud")
             for bid in ("numbers", "org-chart", "clock-records", "agents-desk"):
                 m = next(x for x in S["majors"] if x["id"] == bid)
@@ -541,12 +820,157 @@ class TestLayout(_Browser):
     def test_log_view_lists_details(self, server, pw):
         M = manifest()
         pg = pw.new_page(viewport={"width": 390, "height": 844})
-        pg.goto(server + "?view=log")
+        pg.goto(server + "tour.html?view=log")
         pg.wait_for_selector(".logview")
         want = len({b["id"] for b in M["beats"] for v in b.get("copy", {}).values()
                     if isinstance(v, list) and any(isinstance(e, dict) and "detail" in e for e in v)})
         assert pg.locator("dl.logview__detail").count() >= want
         pg.close()
+
+
+# ---------------------------------------------------------------- the front page in a real browser
+
+FRONT_VIEWPORTS = [(360, 780), (412, 915), (820, 1180), (1024, 768), (1280, 720), (1440, 900), (1920, 1080)]
+
+
+@pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium)")
+class TestFront(_Browser):
+    """Phone first: nothing under the fixed header, no sideways scroll, a pinned exhibit only if its whole stage fits."""
+
+    def _open(self, pw, server, w, h, **kw):
+        pg = pw.new_page(viewport={"width": w, "height": h}, **kw)
+        errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
+        pg.goto(server)
+        pg.wait_for_selector("html.ready")
+        pg.errs = errs
+        return pg
+
+    def test_no_sideways_scroll_nothing_under_header(self, server, pw):
+        problems = []
+        for w, h in FRONT_VIEWPORTS:
+            pg = self._open(pw, server, w, h)
+            total = pg.evaluate("document.documentElement.scrollHeight")
+            y = 0
+            while y < total:
+                pg.evaluate(f"window.scrollTo(0,{y})")
+                pg.wait_for_timeout(120)
+                r = pg.evaluate("""() => {
+                  const hb = document.querySelector('.hdr').getBoundingClientRect().bottom;
+                  const bad = [];
+                  for (const e of document.querySelectorAll('h1,h2,h3,.btn,.cta,.chip,.fig,.fact')) {
+                    if (getComputedStyle(e).display === 'none') continue;  // hidden on purpose (the phone drops counts the hero already has)
+                    const b = e.getBoundingClientRect();
+                    if (!b.width || b.right > innerWidth + 0.5 || b.left < -0.5) bad.push(e.className + ' x ' + Math.round(b.left) + '-' + Math.round(b.right));
+                  }
+                  return { sx: document.documentElement.scrollWidth - innerWidth, hb, bad };
+                }""")
+                if r["sx"] > 0:
+                    problems.append(f"{w}x{h}@{y}: scrolls sideways by {r['sx']}px")
+                if r["bad"]:
+                    problems.append(f"{w}x{h}@{y}: off the sides {r['bad'][:3]}")
+                y += int(h * 0.8)
+            if pg.errs:
+                problems.append(f"{w}x{h}: console errors {pg.errs[:3]}")
+            pg.close()
+        assert not problems, "\n".join(problems)
+
+    def test_header_fits_on_a_phone(self, server, pw):
+        for w, h in ((360, 780), (412, 915)):
+            pg = self._open(pw, server, w, h)
+            r = pg.evaluate("""() => { const q = s => document.querySelector(s).getBoundingClientRect();
+              return { hdr: q('.hdr'), cta: q('.cta'), brand: q('.brand'), nav: q('.hdr nav') }; }""")
+            assert r["hdr"]["height"] <= 60, f"{w}: header is {r['hdr']['height']}px tall"
+            assert r["cta"]["right"] <= w and r["nav"]["right"] <= r["cta"]["left"] + 1, f"{w}: the CTA covers the nav {r}"
+            assert r["cta"]["width"] <= 48, f"{w}: the phone CTA is compact, not full size ({r['cta']['width']}px)"
+            pg.close()
+
+    def test_one_primary_button_on_the_first_phone_screen(self, server, pw):
+        pg = self._open(pw, server, 360, 780)
+        n = pg.evaluate("""() => [...document.querySelectorAll('.btn')].filter(b => { const r = b.getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0 && getComputedStyle(b).display !== 'none'; }).length""")
+        assert n == 1, f"{n} buttons on the first screen"
+        pg.close()
+
+    def test_hero_index_is_two_columns_on_a_phone(self, server, pw):
+        pg = self._open(pw, server, 360, 780)
+        xs = pg.evaluate("""() => [...document.querySelectorAll('.hero__idx .tiles > *')].map(e => Math.round(e.getBoundingClientRect().left))""")
+        assert len(xs) == 5 and len(set(xs)) <= 2, f"flagship tiles are not a 2-column grid: lefts {xs}"
+        pg.close()
+
+    def test_pins_only_when_the_whole_stage_fits(self, server, pw):
+        problems = []
+        for w, h in FRONT_VIEWPORTS:
+            pg = self._open(pw, server, w, h)
+            pg.wait_for_timeout(400)
+            info = pg.evaluate("""() => { const hdr = document.querySelector('.hdr').getBoundingClientRect().height;
+              return [...document.querySelectorAll('.ex')].map(ex => ({ id: ex.id, pinned: ex.classList.contains('is-pinned'),
+                need: ex.querySelector('.ex__stage').firstElementChild.getBoundingClientRect().height, avail: innerHeight - hdr })); }""")
+            for e in info:
+                if e["pinned"] and e["need"] > e["avail"] + 1:
+                    problems.append(f"{w}x{h}: {e['id']} is pinned but needs {e['need']:.0f}px of {e['avail']:.0f}")
+            if w <= 412 and any(e["pinned"] for e in info):
+                problems.append(f"{w}x{h}: an exhibit pinned on a phone")
+            pg.close()
+        assert not problems, "\n".join(problems)
+
+    def test_beats_advance_with_scroll(self, server, pw):
+        for w, h in ((360, 780), (1280, 720)):
+            pg = self._open(pw, server, w, h)
+            seen = set()
+            ex = pg.locator("#f-gateway")
+            top = pg.evaluate("document.querySelector('#f-gateway').getBoundingClientRect().top + scrollY")
+            hh = pg.evaluate("document.querySelector('#f-gateway').offsetHeight")
+            for f in (0.05, 0.35, 0.7, 0.95):
+                pg.evaluate(f"window.scrollTo(0,{top + hh * f - h * 0.4})")
+                pg.wait_for_timeout(250)
+                seen.add(ex.get_attribute("data-step"))
+            assert len(seen) >= 2, f"{w}x{h}: gateway never changes step ({seen})"
+            pg.close()
+
+    def test_old_tour_links_go_to_the_tour(self, server, pw):
+        M = manifest()
+        for q, want in (("?view=film", "tour.html?view=film"), ("?pace=0.2", "tour.html?pace=0.2"), ("#flume", "tour.html#flume"), ("#ask", "tour.html#ask")):
+            pg = pw.new_page(viewport={"width": 390, "height": 844})
+            pg.goto(server + q)
+            pg.wait_for_url(re.compile(re.escape(want) + "$"), timeout=8000)
+            pg.close()
+        pg = pw.new_page(viewport={"width": 390, "height": 844})
+        pg.goto(server + "#f-gateway")
+        pg.wait_for_selector("html.ready")
+        assert pg.url.endswith("/#f-gateway") and "tour.html" not in pg.url
+        pg.close()
+        assert M["beats"], "tour beats exist"
+
+    def test_reduced_motion_shows_final_states_and_never_pins(self, server, pw):
+        pg = self._open(pw, server, 1440, 900, reduced_motion="reduce")
+        assert pg.evaluate("document.documentElement.classList.contains('flat')")
+        assert pg.evaluate("document.querySelectorAll('.ex.is-pinned').length") == 0
+        steps = pg.evaluate("[...document.querySelectorAll('.ex')].map(e => [e.dataset.step, e.dataset.steps])")
+        assert all(int(a) == int(b) - 1 for a, b in steps), f"reduced motion shows the final step: {steps}"
+        pg.close()
+
+    def test_ask_form_posts_the_briefing_signup(self, server, pw):
+        A = manifest()["front"]["ask"]
+        for status, body in ((200, '{"ok": true, "id": "x"}'), (500, '{"ok": false, "error": "' + A["error"] + '"}')):
+            pg = self._open(pw, server, 390, 844)
+            sent = []
+
+            def answer(route, request, st=status, bd=body):
+                sent.append(request.post_data)
+                route.fulfill(status=st, content_type="application/json", body=bd)
+            pg.route("**/_forms/briefing", answer)
+            pg.evaluate("document.querySelector('#briefing').scrollIntoView()")
+            pg.fill("#briefing input[type=email]", "someone@example.com")
+            pg.click("#briefing button[type=submit]")
+            pg.wait_for_timeout(500)
+            assert sent and "someone@example.com" in sent[0], "the address goes to /_forms/briefing"
+            text = pg.inner_text("#briefing")
+            if status == 200:
+                assert A["done"] in text and pg.locator("#ask-form").count() == 0
+            else:
+                assert A["error"] in text and pg.locator("#ask-form button").is_enabled(), "a failed post says so and lets you retry"
+            pg.close()
 
 
 # ---------------------------------------------------------------- one press of Down is one section
@@ -579,7 +1003,7 @@ class TestStepping(_Browser):
         # the link is the last thing the header drops: it stays from a 900px window up to wide, and no header wraps
         for w, h in self.VIEWPORTS + [(1204, 800), (1210, 800), (1100, 800), (1024, 768), (820, 1180)]:
             pg = pw.new_page(viewport={"width": w, "height": h})
-            pg.goto(server + "?view=film")
+            pg.goto(server + "tour.html?view=film")
             pg.wait_for_selector(".hud")
             a = pg.locator("a.hud__sim")
             assert a.is_visible(), f"{w}: the 3D simulation link is hidden"
@@ -595,7 +1019,7 @@ class TestStepping(_Browser):
     def test_phone_reaches_the_simulation_from_the_footer(self, server, pw):
         M = manifest()["site"]
         pg = pw.new_page(viewport={"width": 390, "height": 844})
-        pg.goto(server)
+        pg.goto(server + "tour.html")
         pg.wait_for_selector(".logview")
         assert not pg.locator("a.hud__sim").is_visible() and pg.locator("a.foot__sim").is_visible()
         assert pg.locator("a.foot__sim").get_attribute("href") == M["viewSimulationHref"]
@@ -605,7 +1029,7 @@ class TestStepping(_Browser):
     def test_tablet_keeps_the_caret(self, server, pw):
         """760 to 900px opens the film: no Down key on a tablet, so the caret must be there (the gauge may go)."""
         pg = pw.new_page(viewport={"width": 820, "height": 1180}, has_touch=True)
-        pg.goto(server + "?view=film&pace=0.2")
+        pg.goto(server + "tour.html?view=film&pace=0.2")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(700)
         assert pg.locator(".next").is_visible() and not pg.locator(".gauge").is_visible()
@@ -615,7 +1039,7 @@ class TestStepping(_Browser):
 
     def test_reload_and_deep_links_keep_the_place(self, server, pw):
         pg = pw.new_page(viewport={"width": 1280, "height": 720})
-        pg.goto(server + "?view=film&pace=0.1")
+        pg.goto(server + "tour.html?view=film&pace=0.1")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(700)
         for _ in range(3):
@@ -630,7 +1054,7 @@ class TestStepping(_Browser):
         assert st == {"s": 3, "m": "rest", "b": "numbers"}, f"a reload lost the place: {st}"
         pg.close()
         pg = pw.new_page(viewport={"width": 1280, "height": 720})   # a fresh tab: the hash alone
-        pg.goto(server + "?view=film#staff")
+        pg.goto(server + "tour.html?view=film#staff")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(1200)
         assert pg.evaluate("document.querySelector('.stage').dataset.beat") == "staff"
@@ -640,7 +1064,7 @@ class TestStepping(_Browser):
         """1024x768: the department card is only as wide as the gap by the building. Nothing may run past it or be cut mid-sentence."""
         S = score()
         pg = pw.new_page(viewport={"width": 1024, "height": 768})
-        pg.goto(server + "?view=film")
+        pg.goto(server + "tour.html?view=film")
         pg.wait_for_selector(".hud")
         bad = []
         for mid in ("clock-records", "agents-desk", "runs-on-itself"):
@@ -671,7 +1095,7 @@ class TestStepping(_Browser):
     def test_header_does_not_jitter(self, server, pw):
         S = score()
         pg = pw.new_page(viewport={"width": 1280, "height": 720})
-        pg.goto(server + "?view=film")
+        pg.goto(server + "tour.html?view=film")
         pg.wait_for_selector(".hud")
         xs = {}
         for m in S["majors"][2:]:
@@ -684,7 +1108,7 @@ class TestStepping(_Browser):
 
     def test_log_view_deep_link_scrolls_to_the_entry(self, server, pw):
         pg = pw.new_page(viewport={"width": 390, "height": 844})
-        pg.goto(server + "?view=log#flume")
+        pg.goto(server + "tour.html?view=log#flume")
         pg.wait_for_selector("#log-flume")
         pg.wait_for_timeout(500)
         top = pg.evaluate("document.getElementById('log-flume').getBoundingClientRect().top")
@@ -693,7 +1117,7 @@ class TestStepping(_Browser):
 
     def test_log_view_has_no_empty_window_before_the_close(self, server, pw):
         pg = pw.new_page(viewport={"width": 390, "height": 844})
-        pg.goto(server + "?view=log")
+        pg.goto(server + "tour.html?view=log")
         pg.wait_for_selector(".logview__ask")
         assert pg.locator(".logview__you").count() == 0, "an unlit window with no label sits above the close"
         pg.close()
@@ -701,12 +1125,12 @@ class TestStepping(_Browser):
     def test_log_view_has_no_film_chrome(self, server, pw):
         for w, h in ((1280, 720), (390, 844)):
             pg = pw.new_page(viewport={"width": w, "height": h})
-            pg.goto(server + "?view=log")
+            pg.goto(server + "tour.html?view=log")
             pg.wait_for_selector(".logview")
             assert pg.locator(".gauge").count() == 0 and pg.locator(".next").count() == 0, f"{w}: the log view shows film chrome"
             pg.close()
         pg = pw.new_page(viewport={"width": 390, "height": 844})   # narrow screens open in the log view
-        pg.goto(server)
+        pg.goto(server + "tour.html")
         pg.wait_for_selector(".logview")
         assert pg.locator(".gauge").count() == 0
         pg.close()
@@ -714,7 +1138,7 @@ class TestStepping(_Browser):
     def test_reduced_motion_cuts(self, server, pw):
         ctx = pw.new_context(viewport={"width": 1280, "height": 720}, reduced_motion="reduce")
         pg = ctx.new_page()
-        pg.goto(server + "?view=film")
+        pg.goto(server + "tour.html?view=film")
         pg.wait_for_selector(".stage")
         pg.wait_for_timeout(600)
         pg.keyboard.press("ArrowDown")
@@ -729,7 +1153,7 @@ class TestStepping(_Browser):
         problems = []
         for w, h in ((1280, 720), (1440, 860), (820, 1180)):
             pg = pw.new_page(viewport={"width": w, "height": h})
-            pg.goto(server + "?view=film&pace=0.1")
+            pg.goto(server + "tour.html?view=film&pace=0.1")
             pg.wait_for_selector(".stage")
             pg.wait_for_timeout(700)
             for n in range(23):
