@@ -73,6 +73,19 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- A tour-set station (entrance, voxxy, library, staffing, soundwing) has no `Hideable` primitive in `PROP_NAMES`
+  (`src/assets/contract.ts`), so a station asset there cannot pass `manifest-replaces` honestly. Naming another
+  station's prop hides the floor; naming the set's own prop (`StaffingDesk`) makes `parseManifest` drop the whole
+  manifest. Ship `replaces: []`, flag it for the integrator, and expect that one failure. In step A, also grep the cast
+  for other components on your station: `discover()` gives the station to the first id in sort order
+  (2026-11-22, aai-llm-observability).
+- shoot.py poses each clip at 0.1, 0.5 and 0.9 of its length (`FRACS`). Put each clip's key pose (the punch down,
+  the item in the slot) on one of those times, or the frames, the verifier and Jarad never see it (2026-11-22).
+- A part that rolls part of a turn (an odometer step) snaps back in the 0.15 s crossfade to the next clip, which
+  holds it at rest. Roll whole turns: the exporter samples every frame and three slerps the short way, so a full
+  turn loops and crossfades clean. Each `mise run assets -- --only` takes ~2 min of Blender, so batch your fixes
+  per round (2026-11-22).
+
 - A 6.9 m tower that self-scored 8 failed verify on `manifest-height` alone; every glbcheck line was green. Steps D
   and G now say so (2026-11-21, candybar).
 - `AssetBody` freezes Idle on pause (time scale 0) behind an `isRunning()` guard, which is false at time scale 0, so
@@ -123,6 +136,9 @@ Verdict checks that fail most, and why:
   in the monorepo are listed but ignored (other writers). Do not edit the platform tree while a run is live.
 - `ship-score`: the agent scored under 7; read its NOTES rubric and the shots, not just the number.
 - `station-free`: another component already has the body for that station; pick a `near:` component or move one.
+- `manifest-replaces`: a station asset with an empty `replaces`. That failure is honest at a tour-set station, which
+  has no primitive to hide (see Lessons, 2026-11-22). Recover it from `asset-failed/` once the check exempts those
+  stations.
 
 The pick order, verifier and wrapper are documented in `forge/README.md`; tests are
 `python3 -m unittest tests.test_factory_forge` from `33god-platform/`.
