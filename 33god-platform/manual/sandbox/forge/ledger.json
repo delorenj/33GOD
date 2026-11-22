@@ -98,6 +98,32 @@
    "showcase_url": "https://s3.delo.sh/projects/33god/2026-11-21/factory-forge-candybar/index.html",
    "duration_s": 1956.0,
    "note": "lessons landed (1 path(s))"
+  },
+  {
+   "run": "2026-11-22T01:40-0500",
+   "id": "aai-llm-observability",
+   "mode": "build",
+   "outcome": "failed",
+   "score": 7.0,
+   "commit": null,
+   "tokens": {
+    "input": 5,
+    "output": 956,
+    "cache_creation": 124934,
+    "cache_read": 288861,
+    "total": 961,
+    "cost_usd": 12.420942500000004,
+    "turns": 3,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built \"the meter board\" for aai-llm-observability at the staffing station: a teal instrument cabinet whose every part comes from the record. A reader boom over the gateway desk dips twice in the 4 s Idle, matching the exporter's 2 s poll. There are tally drums for requests, tokens, spend and a red errors drum, a chart recorder whose pen writes as the paper runs, an allowance gauge, and a pinned "
+   },
+   "showcase_url": null,
+   "duration_s": 2169.0,
+   "note": "verification failed: manifest-replaces; lessons landed (1 path(s))",
+   "failed": [
+    "manifest-replaces"
+   ]
   }
  ]
 }
