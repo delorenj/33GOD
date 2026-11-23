@@ -297,6 +297,12 @@ services:
       SUMMARY_API_KEY: ${SUMMARY_API_KEY:-}
       SUMMARY_ENDPOINT: ${SUMMARY_ENDPOINT:-}
       SESSION_SUMMARY_MODEL: ${SESSION_SUMMARY_MODEL:-}
+      # torch/OpenMP default to one spin-waiting thread per host core (113
+      # threads on a 32-thread box) for a model that embeds one event at a time.
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      TOKENIZERS_PARALLELISM: "false"
+    cpus: 2
     ports:
       - target: 3002
         published: "3002"
