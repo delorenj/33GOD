@@ -101,6 +101,25 @@ if os.path.exists(st):
     en = (tomllib.load(open(st, "rb")).get("cli", {}).get("codex", {}) or {}).get("enabled")
     add("skills", "skillex-global-sync-off", en is not True, "skillex [cli.codex] enabled=%s" % en)
 
+# ---- projects: instructions/hooks in the user's own repos that wire agents to 33GOD
+# (~/code/33GOD itself is 33GOD by definition and is skipped)
+import glob
+PROJ = re.compile(r"big-chungus|burro-salmon|hindsight-cli|hindsight memory (recall|retain)|bb-hook|hook-hub")
+bad = []
+for pat in ("code/*/AGENTS.md", "code/*/CLAUDE.md", "code/*/*/AGENTS.md", "code/*/*/CLAUDE.md",
+            "code/*/.claude/settings.json", "code/*/*/.claude/settings.json", "code/*/mise.toml", "code/*/*/mise.toml"):
+    for f in glob.glob(os.path.join(HOME, pat)):
+        if "/code/33GOD/" in f or "/node_modules/" in f:
+            continue
+        try:
+            t = open(f, errors="ignore").read()
+        except OSError:
+            continue
+        hit = PROJ.search(t) or (f.endswith("settings.json") and re.search(r"hindsight|candystore|33god|bb-hook|hook-hub", t))
+        if hit:
+            bad.append("%s (%s)" % (f.replace(HOME, "~"), hit.group(0)))
+add("projects", "no-33god-project-wiring", not bad, "project files wiring agents to 33GOD: %s" % (sorted(set(bad)) or "none"))
+
 # ---- git: guards off, but the passive global ignore list stays (git-checkpoint runs `git add -A`)
 rc, hp = sh("git config --global --get core.hooksPath")
 add("git", "no-33god-git-guards", not hp.strip(), "core.hooksPath=%s" % (hp.strip() or "(unset)"))

@@ -71,24 +71,33 @@ plain-check now runs the Claude turn through `zsh -i`, the way Damian runs it, a
 
 ## Known gaps
 
-1. **ChatGPT.app GUI has not been relaunched.** It started 2026-11-20 21:51 with the gateway config, so Damian must Cmd+Q and reopen it. Until then, Desktop GUI turns still use the old config. Its Claude-import sync runs on launch and now imports a clean `~/.claude`.
+1. **ChatGPT.app GUI: closed.** Damian relaunched it 2026-11-21 17:18Z, after the 17:02Z switch, so the GUI loaded the plain config.
 2. **Claude login works in interactive terminals only.** That matches pre-33GOD. A `claude` started from a non-interactive shell has an expired stored login (see above); `/login` once in a terminal fixes that permanently through the keychain. Not tested over ssh: the Claude desktop app, which uses its own sign-in.
-3. **coaching-practice-catalog and org-chart are parked.** Damian's name is on the commits, but they were written in the 33GOD era inside Jarad's catalog. `33god-mode on` brings them back.
+3. **coaching-practice-catalog and org-chart stay parked.** Jarad decided 2026-11-23: they do not come back in plain mode. `33god-mode on` still restores them.
 4. **Still 33GOD, by design:**
    - The Hermes desks (gateway inference).
-   - The `mac-dev-journal-nightly` email, which uses the gateway token.
    - The starship prompt's pjangler segment.
    - The infra services.
    - GitMark's narrate step reads local Candystore at :8683 for commit-message context. It is read-only, uses local ollama, and is Damian's own tool.
 
-   None of these are Claude or Codex user config.
-5. **Project-level, not switched:**
-   - `~/code/CoachingAgentFramework` `AGENTS.md`/`CLAUDE.md` carry a mandatory session bootstrap. It loads `~/.agents/skills` and runs a Hindsight recall over ssh to big-chungus. Its `lamp-skills/.agents/skills` holds 91 vendored skills, including hindsight and vox-tts.
-   - `~/code/33GOD` itself is 33GOD by definition.
-
-   These are files in Damian's repos, so `33god-mode` does not edit them.
+   None of these are Claude or Codex user config. `mac-dev-journal-nightly` is **paused** since 2026-11-23 (Jarad); see below.
+5. **Project level: CoachingAgentFramework stripped 2026-11-23** (Jarad: "strip it"). See below. `~/code/33GOD` itself is 33GOD by definition.
 6. **Ego browser** may re-create `~/.agents/skills/ego-browser` on its next start or update. plain-check now flags it, and `33god-mode off` re-parks it.
 7. **Old threads:** 17 Codex threads were created on `automaticai/auto/orchestrator`. Resuming one may ask for that model, so start new threads.
+
+## Follow-ups decided by Jarad (2026-11-23)
+
+- **Dev Journal paused.** `candybar pause mac-dev-journal-nightly` on the Mac registry: state `paused`, 10 runs before, all succeeded. Its last gateway rows were 2026-11-22 11:00Z, one Opus and one Haiku call. The manifest (`candybar/deploy/mac/dev-journal-nightly/candybar.toml`, `7cca7b5`) records the pause and the resume command.
+- **CoachingAgentFramework stripped** (`AutomaticAI-io/CoachingAgentFramework` `89a4b3a`, on main):
+  - `AGENTS.md`, which `CLAUDE.md` and `GEMINI.md` link to: dropped the mandatory global-skills load and the Hindsight recall bootstrap that tunnelled over ssh to big-chungus.
+  - `hooks.master.json`, which generates `.claude/settings.json` and the Codex injection: dropped hindsight-recall, -retain and -session-end and the 33GOD skill-check reminder. Only the Slack session summary is left.
+  - `mise.toml`: dropped the `hindsight-gate` enter hook, which stood up a local Hindsight docker stack on every `cd`, and the hindsight tasks.
+  - Deleted the `hindsight-cli`, gate and setup scripts and `skills/hindsight-caf`.
+  - `lamp-skills`: dropped the vendored hindsight*, tailnet-multi-machine, vox-tts, tflo-* and workflow-router skills.
+  - Left in place: the Hermes PM adapter, plus the Plane ticket rule. That rule points at plane.delo.sh.
+- **Damian's checkout** was 266 commits behind. It was rebased onto the stripped main with no conflicts. His 2 local CAF-1 commits (`.plane.json`, `.project.json`) are kept but **not pushed**, because they are his. The `mise enter` hook sync ran on the Mac and left `~/.codex/hooks.json` byte-identical.
+- **plain-check gained `projects/no-33god-project-wiring`.** It scans `~/code/*` and `~/code/*/*` `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json` and `mise.toml` for Hindsight, big-chungus, bb-hook or hook-hub wiring. This catches the next CAF on any peer. `~/code/33GOD` is skipped.
+- 2026-11-23 14:29Z `plain-check.py --live`: **23/23 PASS**, all 3 live turns on Damian's own accounts, 0 Candystore events.
 
 ## Toggle
 
