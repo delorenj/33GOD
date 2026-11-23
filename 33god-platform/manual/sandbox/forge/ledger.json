@@ -124,6 +124,32 @@
    "failed": [
     "manifest-replaces"
    ]
+  },
+  {
+   "run": "2026-11-23T01:40-0500",
+   "id": "aai-llm-observability",
+   "mode": "build",
+   "outcome": "failed",
+   "score": 7.0,
+   "commit": null,
+   "tokens": {
+    "input": 4,
+    "output": 602,
+    "cache_creation": 2260,
+    "cache_read": 456453,
+    "total": 606,
+    "cost_usd": 12.938996499999996,
+    "turns": 2,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I rebuilt \"the meter board\" for `aai-llm-observability` at the staffing station, starting from last night's failed asset, and the verifier fails it again on `manifest-replaces` and nothing else. That check can't pass honestly at a tour-set station, so `replaces` stays `[]` and the fix is flagged in NOTES for the integrator; `aai-gateway` shares the station and will fail the same way. New tonight: "
+   },
+   "showcase_url": null,
+   "duration_s": 1474.0,
+   "note": "verification failed: manifest-replaces; lessons landed (1 path(s))",
+   "failed": [
+    "manifest-replaces"
+   ]
   }
  ]
 }
