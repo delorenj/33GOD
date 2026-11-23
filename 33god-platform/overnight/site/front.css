@@ -3,41 +3,14 @@
    720 (taller header), 900 (two columns, the nav grows names), 1180 (the nav grows full names). */
 
 /* ---------- tokens ---------- */
-/* TODO(design system): these five flagship accents (and the morning variants, the panel pair and the dawn colours)
-   are new. They go upstream into the design system's tokens.json first; then this block is written out from it,
-   the same way ds/tokens.css is. Until then this is the one place they live. */
+/* The flagship accents, the panel pair and the dawn colours live in accents.css (shared with the tour's phone layout).
+   Only this page's own layout tokens are here. */
 :root {
-  --acc-pjangler: #6fd49b;       --acc-pjangler-soft: #15281e;
-  --acc-gateway: #f4b740;        --acc-gateway-soft: #2c2311;
-  --acc-heyma: #f27a9c;          --acc-heyma-soft: #2d1820;
-  --acc-flume: #ab97f3;          --acc-flume-soft: #211c33;
-  --acc-holocene-auto: #4fc3e8;  --acc-holocene-auto-soft: #11252d;
-  --on-acc: #0e110e;
-  --panel: #191c19;
-  --panel-edge: #2c322d;
-  --dawn-1: #9fc4e6;  --dawn-2: #f6d7b0;  --dawn-3: #f3b98a;
-  --dawn-sun: #ffe2a8;  --dawn-hills: #53635a;  --dawn-road: #3b443e;  --dawn-line: #f6e8c8;
-
   --hdr: 56px;
   --gut: 16px;
   --maxw: 1360px;
   --sky-h: 48px;
 }
-[data-theme="morning"] {
-  --acc-pjangler: #1d8650;       --acc-pjangler-soft: #d9eee1;
-  --acc-gateway: #9a6500;        --acc-gateway-soft: #f4e6c6;
-  --acc-heyma: #b3345a;          --acc-heyma-soft: #f5d9e2;
-  --acc-flume: #5f45c4;          --acc-flume-soft: #e4def7;
-  --acc-holocene-auto: #0b7aa0;  --acc-holocene-auto-soft: #d3ebf3;
-  --on-acc: #ffffff;
-  --panel: #f6f8f6;
-  --panel-edge: #d1d7d2;
-}
-.f-pjangler { --acc: var(--acc-pjangler); --acc-soft: var(--acc-pjangler-soft); }
-.f-gateway { --acc: var(--acc-gateway); --acc-soft: var(--acc-gateway-soft); }
-.f-heyma { --acc: var(--acc-heyma); --acc-soft: var(--acc-heyma-soft); }
-.f-flume { --acc: var(--acc-flume); --acc-soft: var(--acc-flume-soft); }
-.f-holocene-auto { --acc: var(--acc-holocene-auto); --acc-soft: var(--acc-holocene-auto-soft); }
 @media (min-width: 720px) { :root { --hdr: 64px; --gut: clamp(20px, 3.2vw, 56px); --sky-h: clamp(36px, 6svh, 64px); } }
 
 /* ---------- base ---------- */

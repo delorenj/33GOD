@@ -973,6 +973,239 @@ class TestFront(_Browser):
             pg.close()
 
 
+# ---------------------------------------------------------------- the phone and small-tablet tour (the flow view)
+
+FLOW_PHONES = [(360, 640), (360, 780), (390, 844), (412, 915)]
+FLOW_TEXT_JS = """() => {
+  const small = [], w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let n;
+  while ((n = w.nextNode())) {
+    const el = n.parentElement; if (!n.textContent.trim() || !el || el.closest('script,style,noscript')) continue;
+    const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+    if (!r.width || !r.height || cs.visibility === 'hidden') continue;
+    const f = parseFloat(cs.fontSize); if (f < 14) small.push(f + 'px ' + el.className + ' "' + n.textContent.trim().slice(0, 24) + '"');
+  }
+  return small;
+}"""
+
+
+@pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium)")
+class TestFlow(_Browser):
+    """The tour on a phone (360-430px) and a small tablet: one column, each exhibit inline, a 14px floor, 44px targets, no sideways
+    scroll, nothing under the header; an exhibit pins only if its whole stage fits, and its beats advance off the scroll."""
+
+    def _open(self, pw, server, w, h, q="", **kw):
+        pg = pw.new_page(viewport={"width": w, "height": h}, **kw)
+        errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        pg.on("console", lambda m: errs.append(m.text) if m.type in ("error", "warning") else None)
+        pg.goto(server + "tour.html" + q)
+        pg.wait_for_selector(".fw[data-ready]")
+        pg.wait_for_timeout(300)
+        pg.errs = errs
+        return pg
+
+    def test_narrow_screens_open_the_flow_wide_ones_the_film(self, server, pw):
+        for w, h, want in ((360, 640, ".fw"), (412, 915, ".fw"), (768, 1024, ".fw"), (820, 1180, ".fw"), (1024, 768, ".stage"), (1280, 720, ".stage")):
+            pg = pw.new_page(viewport={"width": w, "height": h})
+            pg.goto(server + "tour.html")
+            pg.wait_for_selector(want)
+            other = ".stage" if want == ".fw" else ".fw"
+            assert pg.locator(other).count() == 0 and pg.locator(".logview").count() == 0, f"{w}x{h}: opened the wrong view"
+            pg.close()
+        pg = pw.new_page(viewport={"width": 390, "height": 844})
+        pg.goto(server + "tour.html?view=log")
+        pg.wait_for_selector(".logview")
+        assert pg.locator(".fw").count() == 0, "?view=log still opens the plain list"
+        pg.close()
+
+    def test_no_sideways_scroll_nothing_under_header_no_console_errors(self, server, pw):
+        problems = []
+        for w, h in FLOW_PHONES + [(768, 1024)]:
+            pg = self._open(pw, server, w, h)
+            pg.evaluate("document.querySelectorAll('details').forEach(d => d.open = true)")   # every disclosure open: the long subjects, the transcripts
+            pg.wait_for_timeout(200)
+            total = pg.evaluate("document.documentElement.scrollHeight")
+            y = 0
+            while y < total:
+                pg.evaluate(f"window.scrollTo(0,{y})")
+                pg.wait_for_timeout(60)
+                r = pg.evaluate("""() => {
+                  const hb = document.getElementById('fw-hdr').getBoundingClientRect().bottom, bad = [];
+                  for (const e of document.querySelectorAll('.fw h1, .fw h2, .fw h3, .fw-subj, .fw-btn, .fw-cta, .fw-chip, .fw-fig, .fw-dept, .fw-pool, .fw-ticket, .fw-tags li')) {
+                    const b = e.getBoundingClientRect(); if (!b.width) continue;
+                    if (b.right > innerWidth + 0.5 || b.left < -0.5) bad.push(e.className + ' x ' + Math.round(b.left) + '-' + Math.round(b.right));
+                  }
+                  return { sx: document.documentElement.scrollWidth - innerWidth, hb, bad };
+                }""")
+                if r["sx"] > 0:
+                    problems.append(f"{w}x{h}@{y}: scrolls sideways by {r['sx']}px")
+                if r["bad"]:
+                    problems.append(f"{w}x{h}@{y}: off the sides {r['bad'][:3]}")
+                y += int(h * 0.8)
+            # a jump lands the section's head just under the header, never behind it
+            for beat in manifest()["beats"][1:]:
+                pg.evaluate(f"document.getElementById('{beat['id']}').scrollIntoView()")
+                pg.wait_for_timeout(40)
+                top = pg.evaluate(f"document.querySelector('#{beat['id']} h2').getBoundingClientRect().top")
+                hb = pg.evaluate("document.getElementById('fw-hdr').getBoundingClientRect().bottom")
+                if top < hb - 0.5:
+                    problems.append(f"{w}x{h}: {beat['id']} heading is under the header ({top:.0f} < {hb:.0f})")
+            if pg.errs:
+                problems.append(f"{w}x{h}: console {pg.errs[:3]}")
+            pg.close()
+        assert not problems, "\n".join(problems[:20])
+
+    def test_nothing_readable_under_14px_and_every_target_is_44px(self, server, pw):
+        problems = []
+        for w, h in FLOW_PHONES:
+            pg = self._open(pw, server, w, h)
+            pg.evaluate("document.querySelectorAll('details').forEach(d => d.open = true)")
+            small = pg.evaluate(FLOW_TEXT_JS)
+            if small:
+                problems.append(f"{w}x{h}: {len(small)} text runs under 14px, e.g. {small[:3]}")
+            tiny = pg.evaluate("""() => [...document.querySelectorAll('.fw a[href], .fw button, .fw summary, .fw input:not(.gate__hp)')].filter(e => {
+                if (e.closest('.fw-tape')) return false; const r = e.getBoundingClientRect(); return r.width && (r.height < 43.5 || r.width < 43.5); })
+                .map(e => (e.className || e.tagName) + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height))""")
+            if tiny:
+                problems.append(f"{w}x{h}: targets under 44px {tiny[:4]}")
+            pg.close()
+        assert not problems, "\n".join(problems)
+
+    def test_header_is_compact_and_the_tour_button_is_gone(self, server, pw):
+        M = manifest()["site"]
+        for w, h in ((360, 640), (412, 915)):
+            pg = self._open(pw, server, w, h)
+            r = pg.evaluate("""() => { const q = s => document.querySelector(s).getBoundingClientRect();
+              return { hdr: q('.fw-hdr'), cta: q('.fw-cta'), brand: q('.fw-brand'), nav: q('.fw-nav') }; }""")
+            assert r["hdr"]["height"] <= 60, f"{w}: header is {r['hdr']['height']}px tall"
+            assert r["cta"]["right"] <= w and r["nav"]["right"] <= r["cta"]["left"] + 1, f"{w}: the CTA covers the nav {r}"
+            assert pg.locator(".fw-nav a").count() == len(M["nav"])
+            assert pg.locator("a.fw-brand").get_attribute("href") == "index.html", "the brand is the way back to the front page"
+            assert pg.get_by_text(M["viewFilm"], exact=True).count() == 0, "the page offers a tour of itself"
+            pg.click(".fw-cta")
+            pg.wait_for_timeout(900)
+            r = pg.evaluate("(() => { const b = document.querySelector('#ask input[type=email]').getBoundingClientRect(); return [b.top, b.bottom, document.getElementById('fw-hdr').getBoundingClientRect().bottom]; })()")
+            assert r[2] <= r[0] and r[1] <= h, f"{w}x{h}: the briefing CTA does not bring the form on screen under the header {r}"
+            pg.close()
+
+    def test_pins_only_when_the_whole_stage_fits(self, server, pw):
+        problems, pinned = [], {}
+        for w, h in FLOW_PHONES + [(768, 1024)]:
+            pg = self._open(pw, server, w, h)
+            info = pg.evaluate("""() => { const hdr = document.getElementById('fw-hdr').offsetHeight;
+              return [...document.querySelectorAll('.fw-s')].map(s => ({ id: s.id, pinned: s.classList.contains('is-pinned'),
+                need: s.firstElementChild.getBoundingClientRect().height, avail: innerHeight - hdr })); }""")
+            pinned[(w, h)] = sum(1 for e in info if e["pinned"])
+            # measured with the section pinned, its stage is the screen below the header: it never needs more
+            for e in info:
+                if e["pinned"] and e["need"] > e["avail"] + 1.5:
+                    problems.append(f"{w}x{h}: {e['id']} is pinned but its stage is {e['need']:.0f}px of {e['avail']:.0f}")
+            pg.close()
+        assert pinned[(360, 640)] == 0, f"a 640px-tall phone cannot hold a stage under the header: {pinned}"
+        assert pinned[(768, 1024)] >= 5, f"a tablet holds most stages: {pinned}"
+        assert not problems, "\n".join(problems)
+
+    def test_beats_advance_with_scroll_pinned_or_not(self, server, pw):
+        for w, h in ((360, 640), (390, 844), (768, 1024)):
+            pg = self._open(pw, server, w, h)
+            seen, pools = set(), set()
+            top = pg.evaluate("document.getElementById('gateway').getBoundingClientRect().top + scrollY")
+            hh = pg.evaluate("document.getElementById('gateway').offsetHeight")
+            for f in [x / 20 for x in range(0, 21)]:
+                pg.evaluate(f"window.scrollTo(0,{top + (hh - h * 0.5) * f})")
+                pg.wait_for_timeout(80)
+                seen.add(pg.inner_text("#gateway .fw-decision code"))
+                pools.add(pg.evaluate("[...document.querySelectorAll('#gateway .fw-pool')].map(p => p.className).join('|')"))
+            assert len(seen) >= 2 and len(pools) >= 2, f"{w}x{h}: the gateway never changes as you scroll ({seen})"
+            pg.close()
+
+    def test_every_word_is_still_on_the_page(self, server, pw):
+        M = manifest()
+        norm = lambda t: re.sub(r"\s+", "", t)   # the lead, the "More" and the notes are separate blocks: compare the words, not the spacing
+        pg = self._open(pw, server, 390, 844)
+        pg.evaluate("document.querySelectorAll('details').forEach(d => d.open = true)")
+        for i, b in enumerate(M["beats"]):
+            sid = "premise" if i == 0 else b["id"]
+            text = norm(pg.evaluate(f"document.getElementById('{sid}').textContent"))
+            for sentence in re.split(r"(?<=[.!?])\s+", b["body"]):   # the arrival's lead and "More" have the buttons between them
+                assert norm(sentence) in text, f"{b['id']}: the body is cut at {sentence!r}"
+            if b.get("copy", {}).get("aside"):
+                assert norm(b["copy"]["aside"]) in text, f"{b['id']}: the aside is cut"
+            for l in b.get("log", []):
+                assert norm(l["subject"]) in text, f"{b['id']}: event subject {l['subject']} is missing"
+                if l.get("note"):
+                    assert norm(l["note"]) in text, f"{b['id']}: the note on {l['subject']} is missing"
+        pg.close()
+
+    def test_default_view_is_short_on_words(self, server, pw):
+        """The point of the disclosures: far fewer words open by default than the list view, none lost (see the test above)."""
+        pg = self._open(pw, server, 412, 915)
+        flow = pg.evaluate("document.querySelector('.fw').innerText.split(/\\s+/).filter(Boolean).length")
+        pg.close()
+        pg = pw.new_page(viewport={"width": 412, "height": 915})
+        pg.goto(server + "tour.html?view=log")
+        pg.wait_for_selector(".logview")
+        log = pg.evaluate("document.querySelector('.logview').innerText.split(/\\s+/).filter(Boolean).length")
+        pg.close()
+        assert flow < 0.8 * log, f"the flow opens with {flow} words, the list with {log}"
+
+    def test_reduced_motion_never_pins_and_shows_final_states(self, server, pw):
+        for w, h in ((390, 844), (1440, 900)):
+            ctx = pw.new_context(viewport={"width": w, "height": h}, reduced_motion="reduce")
+            pg = ctx.new_page()
+            pg.goto(server + "tour.html")
+            pg.wait_for_selector(".fw[data-ready]")
+            pg.wait_for_timeout(300)
+            assert pg.evaluate("document.documentElement.classList.contains('fw-flat')")
+            assert pg.evaluate("document.querySelectorAll('.fw-s.is-pinned').length") == 0
+            last = manifest()["beats"][[b["id"] for b in manifest()["beats"]].index("gateway")]["copy"]["decisions"][-1]["route"]
+            assert pg.inner_text("#gateway .fw-decision code") == last, f"{w}: reduced motion shows the first state, not the last"
+            assert pg.evaluate("[...document.querySelectorAll('.fw-rv')].every(e => getComputedStyle(e).opacity === '1')")
+            ctx.close()
+
+    def test_the_footer_and_the_list_are_one_tap_apart(self, server, pw):
+        M = manifest()["site"]
+        pg = self._open(pw, server, 390, 844)
+        assert pg.locator(f'.fw-foot a[href="{M["viewSimulationHref"]}"]').count() == 1, "the footer carries the 3D simulation link"
+        pg.click(f'.fw-foot button:has-text("{M["viewLog"]}")')
+        pg.wait_for_selector(".logview")
+        assert pg.locator("a.hud__brief").is_visible() and pg.locator(".hud__nav button.btn").count() == 0, "the list's header offers the briefing, not the tour"
+        pg.click(f'.logview__tour')
+        pg.wait_for_selector(".fw[data-ready]")
+        pg.close()
+
+    def test_ask_form_posts_the_briefing_signup(self, server, pw):
+        A = beat(manifest(), "ask")["copy"]
+        pg = self._open(pw, server, 390, 844)
+        sent = []
+
+        def answer(route, request):
+            sent.append(request.post_data)
+            route.fulfill(status=200, content_type="application/json", body='{"ok": true, "id": "x"}')
+        pg.route("**/_forms/briefing", answer)
+        pg.evaluate("document.getElementById('ask').scrollIntoView()")
+        pg.fill("#ask-email-flow", "someone@example.com")
+        pg.click("#ask button[type=submit]")
+        pg.wait_for_timeout(500)
+        assert sent and "someone@example.com" in sent[0]
+        assert A["done"] in pg.inner_text("#ask")
+        pg.close()
+
+    def test_reload_and_deep_links_keep_the_place(self, server, pw):
+        pg = self._open(pw, server, 390, 844, "#heyma")
+        pg.wait_for_timeout(300)
+        top = pg.evaluate("document.querySelector('#heyma h2').getBoundingClientRect().top")
+        assert 40 < top < 400, f"#heyma did not land on its section (heading at {top})"
+        pg.evaluate("window.scrollTo(0, 7000)")
+        pg.wait_for_timeout(300)
+        y = pg.evaluate("scrollY")
+        pg.reload()
+        pg.wait_for_selector(".fw[data-ready]")
+        pg.wait_for_timeout(400)
+        assert abs(pg.evaluate("scrollY") - y) < 300, "a reload lost the place"
+        pg.close()
+
+
 # ---------------------------------------------------------------- one press of Down is one section
 
 @pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium)")
@@ -1018,13 +1251,14 @@ class TestStepping(_Browser):
 
     def test_phone_reaches_the_simulation_from_the_footer(self, server, pw):
         M = manifest()["site"]
-        pg = pw.new_page(viewport={"width": 390, "height": 844})
-        pg.goto(server + "tour.html")
-        pg.wait_for_selector(".logview")
-        assert not pg.locator("a.hud__sim").is_visible() and pg.locator("a.foot__sim").is_visible()
-        assert pg.locator("a.foot__sim").get_attribute("href") == M["viewSimulationHref"]
-        assert pg.evaluate("document.documentElement.scrollWidth") <= 390, "the phone header overflowed"
-        pg.close()
+        for q, sel in (("tour.html", ".fw-foot a[target=_blank]"), ("tour.html?view=log", "a.foot__sim")):
+            pg = pw.new_page(viewport={"width": 390, "height": 844})
+            pg.goto(server + q)
+            pg.wait_for_selector(".fw[data-ready], .logview")
+            assert not pg.locator("a.hud__sim").is_visible() and pg.locator(sel).is_visible(), q
+            assert pg.locator(sel).get_attribute("href") == M["viewSimulationHref"]
+            assert pg.evaluate("document.documentElement.scrollWidth") <= 390, "the phone header overflowed"
+            pg.close()
 
     def test_tablet_keeps_the_caret(self, server, pw):
         """760 to 900px opens the film: no Down key on a tablet, so the caret must be there (the gauge may go)."""
@@ -1129,10 +1363,10 @@ class TestStepping(_Browser):
             pg.wait_for_selector(".logview")
             assert pg.locator(".gauge").count() == 0 and pg.locator(".next").count() == 0, f"{w}: the log view shows film chrome"
             pg.close()
-        pg = pw.new_page(viewport={"width": 390, "height": 844})   # narrow screens open in the log view
+        pg = pw.new_page(viewport={"width": 390, "height": 844})   # narrow screens open in the flow, which has no film chrome either
         pg.goto(server + "tour.html")
-        pg.wait_for_selector(".logview")
-        assert pg.locator(".gauge").count() == 0
+        pg.wait_for_selector(".fw[data-ready]")
+        assert pg.locator(".gauge").count() == 0 and pg.locator(".next").count() == 0 and pg.locator(".stage").count() == 0
         pg.close()
 
     def test_reduced_motion_cuts(self, server, pw):

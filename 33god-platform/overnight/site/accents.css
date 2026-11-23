@@ -1,0 +1,51 @@
+/* 33GOD accents: the flagship colours, the part colours, the panel pair and the dawn colours.
+   Shared by the front page (front.css) and the tour's phone layout (flow.css). Tokens only; no page uses a raw colour. */
+
+/* TODO(design system): these accents (and the morning variants, the panel pair and the dawn colours) are new. They go
+   upstream into the design system's tokens.json first; then this file is written out from it, the same way
+   ds/tokens.css is. Until then this is the one place they live. */
+:root {
+  --acc-pjangler: #6fd49b;       --acc-pjangler-soft: #15281e;
+  --acc-gateway: #f4b740;        --acc-gateway-soft: #2c2311;
+  --acc-heyma: #f27a9c;          --acc-heyma-soft: #2d1820;
+  --acc-flume: #ab97f3;          --acc-flume-soft: #211c33;
+  --acc-holocene-auto: #4fc3e8;  --acc-holocene-auto-soft: #11252d;
+  --on-acc: #0e110e;
+  --panel: #191c19;
+  --panel-edge: #2c322d;
+  --dawn-1: #9fc4e6;  --dawn-2: #f6d7b0;  --dawn-3: #f3b98a;
+  --dawn-sun: #ffe2a8;  --dawn-hills: #53635a;  --dawn-road: #3b443e;  --dawn-line: #f6e8c8;
+
+  /* The tour's six parts: each one a colour. Arrival and the staff are the plain ink; the bylaws are the lake, the platform
+     the moss; the work and the voice take two flagship colours; "you" (the ask) is the ochre. */
+  --acc-arrival: var(--stage-ink-2);   --acc-arrival-soft: color-mix(in srgb, var(--stage-ink) 9%, transparent);
+  --acc-bylaws: var(--window-working); --acc-bylaws-soft: var(--g33-lake-soft);
+  --acc-platform: var(--window-shipped); --acc-platform-soft: var(--g33-moss-soft);
+  --acc-work: var(--acc-flume);        --acc-work-soft: var(--acc-flume-soft);
+  --acc-voice: var(--acc-heyma);       --acc-voice-soft: var(--acc-heyma-soft);
+  --acc-staff: var(--stage-ink-2);     --acc-staff-soft: color-mix(in srgb, var(--stage-ink) 9%, transparent);
+  --acc-ask: var(--g33-ochre-ink);     --acc-ask-soft: var(--g33-ochre-soft);
+}
+[data-theme="morning"] {
+  --acc-pjangler: #1d8650;       --acc-pjangler-soft: #d9eee1;
+  --acc-gateway: #9a6500;        --acc-gateway-soft: #f4e6c6;
+  --acc-heyma: #b3345a;          --acc-heyma-soft: #f5d9e2;
+  --acc-flume: #5f45c4;          --acc-flume-soft: #e4def7;
+  --acc-holocene-auto: #0b7aa0;  --acc-holocene-auto-soft: #d3ebf3;
+  --on-acc: #ffffff;
+  --panel: #f6f8f6;
+  --panel-edge: #d1d7d2;
+}
+/* A flagship class (front page) or a data-acc (tour): both set --acc and --acc-soft. */
+.f-pjangler, [data-acc="pjangler"] { --acc: var(--acc-pjangler); --acc-soft: var(--acc-pjangler-soft); }
+.f-gateway, [data-acc="gateway"] { --acc: var(--acc-gateway); --acc-soft: var(--acc-gateway-soft); }
+.f-heyma, [data-acc="heyma"] { --acc: var(--acc-heyma); --acc-soft: var(--acc-heyma-soft); }
+.f-flume, [data-acc="flume"] { --acc: var(--acc-flume); --acc-soft: var(--acc-flume-soft); }
+.f-holocene-auto, [data-acc="holocene-auto"] { --acc: var(--acc-holocene-auto); --acc-soft: var(--acc-holocene-auto-soft); }
+[data-acc="arrival"] { --acc: var(--acc-arrival); --acc-soft: var(--acc-arrival-soft); }
+[data-acc="bylaws"] { --acc: var(--acc-bylaws); --acc-soft: var(--acc-bylaws-soft); }
+[data-acc="platform"] { --acc: var(--acc-platform); --acc-soft: var(--acc-platform-soft); }
+[data-acc="work"] { --acc: var(--acc-work); --acc-soft: var(--acc-work-soft); }
+[data-acc="voice"] { --acc: var(--acc-voice); --acc-soft: var(--acc-voice-soft); }
+[data-acc="staff"] { --acc: var(--acc-staff); --acc-soft: var(--acc-staff-soft); }
+[data-acc="ask"] { --acc: var(--acc-ask); --acc-soft: var(--acc-ask-soft); }

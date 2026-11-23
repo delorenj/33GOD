@@ -22,6 +22,7 @@
   // Where every beat sits on the scroll, and the timelines inside it, is score.json (read by score.js):
   // one major per beat, minors for the set pieces' story beats. Thresholds below read the score.
   var SC = null;         // the compiled score, set at boot
+  var Flow = null;       // the phone layout (flow.js), built at boot from the pieces below
   var RV = 1 / 9;       // how much q an rv() reveal takes at its default rate: a reveal that should be
                          // up at a story beat starts this much before it
   var PER = 8;           // windows per floor
@@ -110,6 +111,10 @@
   function hrefOf(M, href) { return (href || '').replace('{site.viewSimulationHref}', M.site.viewSimulationHref); }
   function fmtTemplate(t, o) { return t.replace(/\{(\w+)\}/g, function (m, k) { return o[k] != null ? o[k] : m; }); }
   var BUS_PREFIX = /^bloodbank\.evt\./;
+  // Who gets the flow: under 900px wide (a phone, a small tablet held upright) or a reader who asked for less motion.
+  function flowWanted() {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(max-width: 900px)').matches; } catch (e) { return false; }
+  }
 
   /* ---------- the building's seating plan ---------- */
   // The seats an exhibit section lights, by name.
@@ -319,8 +324,9 @@
         props.view === 'film' ? site.nav.map(function (n) {
           return h('a', { key: n.beat, className: 'hud__link', href: '#' + n.beat, onClick: function (e) { e.preventDefault(); props.jumpTo(n.beat); } }, n.label);
         }) : null,
-        h('button', { type: 'button', className: 'btn btn--quiet', 'aria-pressed': props.view === 'log', onClick: props.toggleView },
-          props.view === 'log' ? site.viewFilm : site.viewLog),
+        props.view === 'log' && props.briefing ? h('a', { className: 'btn btn--primary hud__brief', href: '#log-ask', onClick: function (e) { e.preventDefault(); props.jumpTo('ask'); } }, site.cta)
+          : h('button', { type: 'button', className: 'btn btn--quiet', 'aria-pressed': props.view === 'log', onClick: props.toggleView },
+            props.view === 'log' ? site.viewFilm : site.viewLog),
         site.viewSimulationHref ? h('a', { className: 'btn btn--quiet hud__sim', href: site.viewSimulationHref, target: '_blank', rel: 'noopener' }, site.viewSimulation) : null,
         props.view === 'film' ? h('a', { className: 'hud__cta', href: '#ask', onClick: function (e) { e.preventDefault(); props.jumpTo('ask', 0.5); } }, site.cta) : null),
       // Where the tour is: the department on show, and how far through the building you are.
@@ -591,11 +597,12 @@
     var I = useMemo(function () { var m = {}; beats.forEach(function (b, n) { m[b.id] = n; }); return m; }, [beats]);
     var seats = useMemo(function () { return buildSeats(M); }, [M]);
 
-    var prefersLog = useMemo(function () {
-      return window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(max-width: 760px)').matches;
-    }, []);
-    var wantView = useMemo(function () { var v = new URLSearchParams(location.search).get('view'); return v === 'log' || v === 'film' ? v : null; }, []);
-    var viewSt = useState(wantView || (prefersLog ? 'log' : 'film')); var view = viewSt[0], setView = viewSt[1];
+    // Three views of the same manifest. The film is the pinned dolly (a screen wide and tall enough to hold a stage); the flow is
+    // the phone and small-tablet tour (one column, each exhibit inline); the list is the plain directory. A phone, a small tablet
+    // and a reader who asked for less motion get the flow; ?view=film|flow|log overrides, the buttons switch.
+    var tourView = useMemo(function () { return flowWanted() ? 'flow' : 'film'; }, []);
+    var wantView = useMemo(function () { var v = new URLSearchParams(location.search).get('view'); return v === 'log' || v === 'film' || v === 'flow' ? v : null; }, []);
+    var viewSt = useState(wantView || tourView); var view = viewSt[0], setView = viewSt[1];
     var posSt = useState({ i: 0, step: 0, q: 0 }); var pos = posSt[0], setPos = posSt[1];
     var sizeSt = useState({ w: 760, h: 640, bs: 1 }); var size = sizeSt[0], setSize = sizeSt[1];
     var subSt = useState(false); var submitted = subSt[0], setSubmitted = subSt[1];
@@ -753,13 +760,15 @@
 
     // Leaving either view starts the other at the top; reset the film's state so it never mounts a stale section.
     var toggleView = useCallback(function () {
-      setView(function (v) { return v === 'film' ? 'log' : 'film'; });
+      setView(function (v) { return v === 'log' ? tourView : 'log'; });
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* no history */ }
       window.scrollTo(0, 0);
       playY.current = 0; last.current.i = -1; last.current.step = -1;
       setPos({ i: 0, step: 0, q: 0 });
-    }, []);
+    }, [tourView]);
 
     if (view === 'log') return h(LogView, { M: M, toggleView: toggleView, submitted: submitted, onSubmit: function () { setSubmitted(true); } });
+    if (view === 'flow') return h(Flow.FlowView, { submitted: submitted, onSubmit: function () { setSubmitted(true); }, toList: toggleView });
 
     /* geometry: where a window is, in the scene */
     var ex = b.copy && b.copy.exhibit, focus = null;
@@ -970,12 +979,13 @@
       return function () { window.removeEventListener('hashchange', toHash); };
     }, []);
     return h('div', { className: 'logview' },
-      h(Header, { M: M, view: 'log', jump: function () { window.scrollTo(0, 0); }, jumpTo: function (id) { location.hash = id; }, toggleView: props.toggleView, where: { label: '', n: fmtTemplate(M.site.whereList, { total: total }) } }),
+      h(Header, { M: M, view: 'log', briefing: flowWanted(), jump: function () { window.scrollTo(0, 0); }, jumpTo: function (id) { location.hash = id; }, toggleView: props.toggleView, where: { label: '', n: fmtTemplate(M.site.whereList, { total: total }) } }),
       h('main', { id: 'log', className: 'logview__main' },
         h('p', { className: 'eyebrow' }, first.kicker),
         h('h1', { className: 'statement-act' }, first.title + ' ', h('span', { className: 'statement-hero__turn' }, first.titleTurn)),
         h('p', { className: 'cap__lede' }, first.body),
         h('p', { className: 'caption-note' }, M.site.logLead),
+        flowWanted() ? h('button', { type: 'button', className: 'btn btn--quiet logview__tour', onClick: props.toggleView }, M.site.viewFilm) : null,
         parts.map(function (a) {
           var here = M.beats.filter(function (bt) { return bt.act === a && bt.id !== 'premise' && bt !== ask; });
           if (!here.length) return null;
@@ -1006,6 +1016,12 @@
   function boot(M) {
     var root = document.getElementById('root');
     root.textContent = '';
+    var I = {}; M.beats.forEach(function (b, n) { I[b.id] = n; });
+    Flow = window.OvernightFlow.create({
+      React: React, h: h, O: O, SC: SC, M: M, I: I, seats: buildSeats(M), FLOORS: FLOORS, PER: PER, RV: RV, BUS_PREFIX: BUS_PREFIX,
+      windowStates: windowStates, detailOf: detailOf, fmtTemplate: fmtTemplate, hrefOf: hrefOf, pad2: pad2,
+      Mark: Mark, Watch: Watch, Ask: Ask, checklistDone: checklistDone, gwAt: gwAt, gwMeters: gwMeters, poolAt: poolAt, decisionAt: decisionAt
+    });
     ReactDOM.createRoot(root).render(h(Boundary, null, h(App, { M: M })));
   }
   // The score's majors are the manifest's sections, in order; counts the minors step through live in the copy.

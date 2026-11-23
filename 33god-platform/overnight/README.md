@@ -74,7 +74,9 @@ The tour and the front page share the manifest, the tokens and the design-system
 | `site/index.html` | The front page shell: head, the tour redirect, the icon sprite, `#front`. | Design |
 | `site/front.js` | Renders the front page from `manifest.json`'s `front` record; the drawn art, the pin-if-it-fits measuring, the scroll drivers. Plain JS, no libraries. | Design |
 | `site/front.css` | Front page styles and the flagship accent tokens. | Design |
-| `site/tour.html` | The 21-section tour (the old front page). | Design |
+| `site/tour.html` | The 21-section tour (the old front page): the shell, the icon sprite (a copy of `index.html`'s), and the scripts. | Design |
+| `site/flow.js`, `site/flow.css` | The phone and small-tablet tour (the "flow" view): `window.OvernightFlow.create(kit)`, called by `overnight.js`, which hands it the staging it shares with the film (`windowStates`, the seating plan, the score). All styles under `.fw`. | Design |
+| `site/accents.css` | The flagship and per-part accent tokens, shared by the front page and the tour's flow. Goes upstream into the design system's tokens first. | Design system first, then here |
 
 | Path | What it holds | Who edits it |
 |---|---|---|
@@ -134,8 +136,21 @@ Any entry in any list in a beat's `copy` (`departments`, `staff`, `figures`, `pa
 
 - A manifest or score that does not parse now shows a readable panel (file, message, line and column, the offending lines with a caret) instead of a blank page. A manifest that parses but has the wrong shape shows a panel too. Saving the fix publishes it.
 - `cd 33god-platform && python3 -m pytest tests/test_overnight_site.py` parses every JSON file (duplicate keys fail), checks the manifest's shape, that the score's majors match the beats in order, the budgets above and the house rules. It takes under a second. `OVERNIGHT_LAYOUT=1` also drives the film at three viewports and presses through the whole tour (`TestStepping`, at `?pace=0.2`); needs playwright and chromium, about 2.5 minutes. `tests/overnight_score_check.js` (plain node, run from the same file) checks the stations, moves and elevator readout against the real score. `OVERNIGHT_SITE=<dir>` points it at a copy.
-- `?view=log` and `?view=film` choose the view. The list view is the tour as a directory: one entry per section, with its real event subjects and no camera. (width under 760px and reduced motion still default to the log). `?pace=0.25` plays every move four times faster (see "The pace").
+- `?view=flow`, `?view=film` and `?view=log` choose the view. The list view is the tour as a directory: one entry per section, with its real event subjects and no camera. It is no longer a default anywhere: narrow screens and reduced motion open the flow (below), the footer's "Read as list" reaches the list, and its header offers the briefing (on a phone) instead of a button that offers the tour you are on. `?pace=0.25` plays every move four times faster (see "The pace").
 - `site.viewSimulation` ("View as 3D simulation") is a link in the header, next to "View as log", to `site.viewSimulationHref` (`https://manual.delo.sh/sandbox/?walk`: the Factory, a live 3D warehouse of 33GOD, in a new tab). It shows in both views. The header makes room for it by dropping the "In Development" status under 1360px wide and the five nav links under 1210px, so the link is the last thing to go. Under 600px (the phone log view) the header has no room, and the same link sits in the footer. The link points at a published `33god.waybill` of the real archive of 20 Nov 2026 (81,003 events from 41 components); to play another day, publish a new waybill and change the one href. The last section's “Open the 3D Factory” button and the hero's second link use the same href (`{site.viewSimulationHref}` in the copy).
+
+## The phone tour (the "flow" view)
+
+`tour.html` opens the flow on screens under 900px wide (a phone, a small tablet held upright) and under `prefers-reduced-motion`; wider screens open the film. `?view=film|flow|log` overrides. It is the same 21 sections and the same manifest, laid out the way the front page is: phone first, one column, every exhibit set inline.
+
+- **Header:** the brand (back to the front page), five icon links (the manifest's `site.nav`, `aria-current` follows the scroll, names show from 880px), a 44px briefing button, and six part-coloured bars that fill as you read. No "Take the tour" button.
+- **Each section** reads: a part-coloured icon tile and `NN · where`, the Illustration or Real-figures badge, kicker, a headline whose second sentence is set in the part's colour, a lead (the first sentence or two of `body`), a "More" disclosure for the rest and the `copy.aside`, the exhibit, the component chips, and a "Source and events" disclosure with the section's real event subjects (`b.log`). Nothing is dropped: the disclosures are native `<details>`, so every word is on the page and in the accessibility tree. A new part opens with a tinted band carrying the part statement.
+- **Colour:** one accent per part (Arrival and Staff ink, Bylaws lake, Platform moss, Work violet, Voice rose, Ask ochre), and a flagship's own accent where it has one (PJangler, Gateway, HeyMa, Flume, Holocene Auto). `data-acc` on a section sets `--acc`/`--acc-soft`; the tokens are in `accents.css`.
+- **Exhibits are staged by the film's own code.** `flow.js` reads `SC.minor(...)` and `windowStates(...)` at the section's own progress `q`, so the building, the gateway's pools, the checklist, the call, the transcript and the staff roll show the same beats the film does. Their sizes come from container queries (`@container piece`), so a tablet's half column and a phone's full column each get a fitted layout. Event subjects are chips that wrap after every dot (`bloodbank.evt.agent.hook.updated` never scrolls sideways).
+- **Pinning is measured, never assumed.** A section whose exhibit plays through a timeline pins only if its whole stage (with every disclosure closed) fits the small-viewport height minus the header (`100svh` probe, measured in JS, re-measured on resize, rotation, fonts loading and a disclosure opening); then it holds still for 45svh of scroll and its beats advance off that. Otherwise it flows, and its beats advance off where the exhibit sits in the viewport (reveal from 85% of the screen to 45% of the way up). A 640px-tall phone pins nothing; a 915px phone pins the short stages; a tablet pins most. Static sections (numbers, org chart, the two departments, the ask) just flow.
+- **Reduced motion** never pins and shows every final state (`q = 1`); the page opens the flow there on any width.
+- **Floors:** nothing readable under 14px (the design system's nameplate is lifted to 14px inside `.fw`), 44px targets (nav, button, disclosures, chips), 16px type in the briefing field (no iOS zoom), safe-area insets (`viewport-fit=cover`), no sideways scroll. Words and strings: `site.flow` in the manifest (home, front, more, source, transcript, staffHint, skip).
+- **Tests:** `TestFlow` in `tests/test_overnight_site.py` (`OVERNIGHT_LAYOUT=1`): the view choice by width, no sideways scroll or console errors at 360x640, 360x780, 390x844, 412x915 and 768x1024, nothing under the header on every jump, the 14px/44px floors with every disclosure open, pin-only-if-it-fits, beats advancing with scroll, every manifest word present, reduced motion, the form and the reload. `step-probe.py` and `scroll-probe.py` drive the film and still run at desktop size.
 
 ## The score: scroll offset markers
 
@@ -156,7 +171,7 @@ Any entry in any list in a beat's `copy` (`departments`, `staff`, `figures`, `pa
 - `score.js` and `dolly.js` have no dependencies and know nothing about this page. Any score-driven page gets the same: `Score.compile(spec)`, then `Dolly.create({ onFrame, move: score.move, seam: score.seam, origin })` for stepping, `Score.watch(score, cb)` for `{ progress, station, ready, moving }` (the elevator's reading and the "section done" signal), and `dolly.step(dir)` for a button. Details are at the top of each file.
 - **The building** is 12 floors of 8 windows: 96 seats. 80 are first-party components in the registry count (21 Nov 2026), one is yours and one is the seat Flume fills, which leaves 14 dark. PJangler builds a 13th floor. In an exhibit section the focus windows work and the rest are dark; elsewhere the building is lit.
 - **One cut**, from the building to the car, at Holocene Auto.
-- **Read as list** shows the same tour as one directory entry per beat. The page opens there under `prefers-reduced-motion` and on screens narrower than 760px.
+- **Read as list** shows the same tour as one directory entry per beat. It is reached from the header (wide screens) or the flow's footer; see "The phone tour".
 - **Crank**: leave the film at rest for 20 seconds and one line appears in the strip under the ground line, beside the caret, where no copy ever sits.
 - **Your place is in the URL.** Resting on a station writes the beat to the hash (`#pjangler`); a nav link or the briefing link does too, and the top clears it. A reload, or a shared `/#pjangler`, comes back there: the same station if this tab rested on it (kept in `sessionStorage`), else the beat's landing. The browser's own scroll restoration is off (`history.scrollRestoration = 'manual'`) so it does not fight that. Mid-body scrubbing is not saved: the hash is the last place you rested.
 
@@ -203,7 +218,7 @@ Counting rule: a number that is not in the repo or a dated query does not go on 
 
 ## Not built yet
 
-Sound. The tour (`tour.html`) still has no designed phone layout (phones get its list view); the front page is phone-first. Keyboard stepping per flagship (Down jumps a beat) is not built on the front page.
+Sound. Keyboard stepping per flagship (Down jumps a beat) is not built on the front page.
 
 ## Preview locally
 
