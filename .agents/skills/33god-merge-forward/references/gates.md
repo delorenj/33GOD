@@ -90,7 +90,11 @@ Select checks that demonstrate the slice's actual behavior:
   location, including scheduled jobs, before removing it. Preserve unrelated
   native settings; exercise affected consumers with their actual scheduler or
   noninteractive environment, not just the newly working CLI. Do not restore a
-  plaintext credential to satisfy a legacy reader; migrate that reader.
+  plaintext credential to satisfy a legacy reader; migrate that reader. When
+  disabling a platform integration, remove only platform-owned blocks; shared
+  settings such as a global git ignore may guard the user's own automation.
+  A running GUI app keeps its startup config until relaunched; a CLI turn with
+  its bundled binary proves the file, not the live app.
 - Compose, systemd, or launchd changes: resolve the effective configuration;
   select container contexts explicitly and restart only affected units.
   Verify the running artifact and intended client's reachability, not just
