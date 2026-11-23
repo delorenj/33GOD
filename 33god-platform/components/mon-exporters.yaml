@@ -24,7 +24,7 @@ relations:
 - to: bb-nats
   kind: reads
   via: nats-exporter -varz -jsz=all http://bloodbank-nats:8222
-  evidence: monitoring/compose.yml:224
+  evidence: monitoring/compose.yml:231
   anchor: '- "http://bloodbank-nats:8222"'
 evidence:
 - monitoring/compose.yml

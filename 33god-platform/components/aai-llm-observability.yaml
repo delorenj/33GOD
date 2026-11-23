@@ -28,12 +28,12 @@ relations:
 - to: bb-nats
   kind: consumes-from
   via: JetStream BLOODBANK_EVENTS durable, bloodbank.evt.llm.>
-  evidence: monitoring/aai-llm-observability/main.py:1317
+  evidence: monitoring/aai-llm-observability/main.py:1320
   anchor: subscription = await js.pull_subscribe(
 - to: bb-nats
   kind: publishes-to
   via: bloodbank.evt.llm.usage.recorded / allowance.observed
-  evidence: monitoring/aai-llm-observability/main.py:1285
+  evidence: monitoring/aai-llm-observability/main.py:1288
   anchor: 'await js.publish(subject, body.encode(), headers={"Nats-Msg-Id": event_id}, timeout=10)'
 - to: aai-gateway
   kind: reads

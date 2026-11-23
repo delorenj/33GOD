@@ -25,52 +25,52 @@ relations:
 - to: n8n
   kind: calls
   via: HTTPS probe n8n.delo.sh/healthz
-  evidence: ~/.config/infra-doctor/probes.yaml:17
+  evidence: ~/.config/infra-doctor/probes.yaml:18
   anchor: 'url: https://n8n.delo.sh/healthz'
 - to: hindsight
   kind: calls
   via: HTTPS probe api.hs.delo.sh/health
-  evidence: ~/.config/infra-doctor/probes.yaml:27
+  evidence: ~/.config/infra-doctor/probes.yaml:28
   anchor: 'url: https://api.hs.delo.sh/health'
 - to: aai-gateway
   kind: calls
   via: HTTPS probe api.automaticai.io/api/status
-  evidence: ~/.config/infra-doctor/probes.yaml:35
+  evidence: ~/.config/infra-doctor/probes.yaml:36
   anchor: 'url: https://api.automaticai.io/api/status'
 - to: vox
   kind: calls
   via: HTTPS probe vox.delo.sh
-  evidence: ~/.config/infra-doctor/probes.yaml:42
+  evidence: ~/.config/infra-doctor/probes.yaml:43
   anchor: 'url: https://vox.delo.sh'
 - to: ntfy
   kind: calls
   via: HTTPS probe ntfy.delo.sh/v1/health
-  evidence: ~/.config/infra-doctor/probes.yaml:49
+  evidence: ~/.config/infra-doctor/probes.yaml:50
   anchor: 'url: https://ntfy.delo.sh/v1/health'
 - to: traefik
   kind: calls
   via: HTTPS probe traefik.delo.sh
-  evidence: ~/.config/infra-doctor/probes.yaml:55
+  evidence: ~/.config/infra-doctor/probes.yaml:56
   anchor: 'url: https://traefik.delo.sh'
 - to: hermes-gw
   kind: calls
   via: hermes-gateway-check liveness|channels|restart
-  evidence: ~/.config/infra-doctor/probes.yaml:191
+  evidence: ~/.config/infra-doctor/probes.yaml:192
   anchor: 'type: hermes_gateway'
 - to: ntfy
   kind: calls
   via: ntfy-alert on probe state change
-  evidence: ~/.local/bin/infra-doctor:697
+  evidence: ~/.local/bin/infra-doctor:726
   anchor: '"$alert" --priority "$prio" --tags rotating_light \'
 - to: candybar-watchdog
   kind: reads
   via: file_age ~/.local/state/candybar-watchdog/ok
-  evidence: ~/.config/infra-doctor/probes.yaml:240
+  evidence: ~/.config/infra-doctor/probes.yaml:241
   anchor: 'path: /home/delorenj/.local/state/candybar-watchdog/ok'
 - to: hermes-gateway-watchdog
   kind: reads
   via: file_age ~/.local/state/hermes-gateway-watchdog/last-run
-  evidence: ~/.config/infra-doctor/probes.yaml:230
+  evidence: ~/.config/infra-doctor/probes.yaml:231
   anchor: 'path: /home/delorenj/.local/state/hermes-gateway-watchdog/last-run'
 evidence:
 - systemctl --user list-timers
