@@ -26,7 +26,8 @@ the station). Then `tools/assets/blender_run.py`, the Blender harness, and the b
 `src/assets/*/` as an exemplar. Work out which face each camera sees: the station's `view` in `src/content.ts` and
 `OVERVIEW`, turned into model space through the anchor's `rotY` (candybar: the station camera sees the right side,
 the overview the front), and put the record's main beat on a face a camera sees. A re-forge starts from the last
-failed run: read `~/.local/state/factory-forge/runs/<id>-<stamp>/verdict.json` and `asset-failed/` first.
+failed run: read `~/.local/state/factory-forge/runs/<id>-<stamp>/verdict.json` and `asset-failed/` first, copy its
+`build.py`, `NOTES.md` and `asset.json` into your directory, and spend the night on its weakest rubric lines.
 
 **B. Write `NOTES.md` first**, before geometry: *What it is in the warehouse*; *The four clips* (what is on screen,
 which real behaviour, cited to the record, what the item does at each socket); *Where it stands* (placement,
@@ -58,7 +59,11 @@ budget, clip, seam, socket and footprint checks). glbcheck does **not** check th
 Read `contact-sheet.png`, then `turn-*`, the clip frames, `visit-*` and `situ.png`; `console.json` must be empty.
 
 **F. Critique and improve.** Score against the rubric as a hard critic; write the three worst things; fix; rebuild;
-re-shoot into `-r2`. At most 3 rounds.
+re-shoot into `-r2`. At most 3 rounds. After round 1, also get an unanchored read: three read-only critics in
+parallel (readability in stills, data-truth against the record, the code and the bible, craft), given the shots
+dir, the record and `build.py`, never your conclusions. Keep the build running while they read. Check each claim
+against the code or the bible before you act on it. A tall part (a mast, a lamp) between the clip camera and a beat
+hides that beat in every frame.
 
 **G. Finish.** `asset.json` per the contract (`forge.run` = the run stamp, `forge.rounds` = rounds really done,
 `forge.score` honest, 7 to ship; `placement` agrees with the cast). Update the rubric lines in NOTES.md.
@@ -73,12 +78,21 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- A self-review passes its own inventions. The 2026-11-22 board scored 7 with a chart that ran on every copy
+  (Prometheus scrapes on a timer and Grafana draws), green "acked" lips (a signature is not a success stamp), prices
+  that `routes.json` does not hold, and a health lamp that blinked on fetches. The data-truth critic in step F caught
+  all four. Grep the cited code for every number, name and colour you draw. Belt blue and slot hatches are canon for
+  the belt and its envelope hatches, so never use them for an event leaving a reader (2026-11-23,
+  aai-llm-observability).
+
 - A tour-set station (entrance, voxxy, library, staffing, soundwing) has no `Hideable` primitive in `PROP_NAMES`
   (`src/assets/contract.ts`), so a station asset there cannot pass `manifest-replaces` honestly. Naming another
   station's prop hides the floor; naming the set's own prop (`StaffingDesk`) makes `parseManifest` drop the whole
   manifest. Ship `replaces: []`, flag it for the integrator, and expect that one failure. In step A, also grep the cast
   for other components on your station: `discover()` gives the station to the first id in sort order
-  (2026-11-22, aai-llm-observability).
+  (2026-11-22, aai-llm-observability). The re-forge failed the same way on 2026-11-23. `COOL_AFTER` parks a
+  component after two failures. `aai-gateway` shares `staffing` and will fail the same check, so a forge picked for a
+  tour-set station should improve the asset for `asset-failed/` recovery and not expect to ship.
 - shoot.py poses each clip at 0.1, 0.5 and 0.9 of its length (`FRACS`). Put each clip's key pose (the punch down,
   the item in the slot) on one of those times, or the frames, the verifier and Jarad never see it (2026-11-22).
 - A part that rolls part of a turn (an odometer step) snaps back in the 0.15 s crossfade to the next clip, which
