@@ -42,7 +42,8 @@ a { color: inherit; }
 .brand { display: flex; align-items: center; gap: 9px; text-decoration: none; flex: none; min-height: 44px; }
 .brand svg { width: 22px; height: 22px; }
 .brand b { display: none; font: 400 21px/1 var(--font-display); letter-spacing: -.01em; }
-.nav { flex: 1 1 auto; min-width: 0; display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+/* position: relative makes the nav the offsetParent of its links, so front.js can centre the current one in the strip (offsetLeft was measured from the header, which scrolled the first icon's ring under the wordmark) */
+.nav { position: relative; flex: 1 1 auto; min-width: 0; display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
 .nav::-webkit-scrollbar { display: none; }
 .nav a:first-child { margin-left: auto; }
 .nav a:last-child { margin-right: auto; }
@@ -138,7 +139,7 @@ a { color: inherit; }
 }
 
 /* ---------- the exhibit: one flagship ---------- */
-.ex { position: relative; --p: 0; scroll-margin-top: var(--hdr); }
+.ex { position: relative; scroll-margin-top: var(--hdr); }
 .ex__stage { display: flex; flex-direction: column; color: var(--stage-ink); border-top: 1px solid var(--stage-rule);
   background: radial-gradient(70% 55% at 80% 40%, var(--acc-soft), transparent 75%), var(--stage-ground); }
 .ex__in { width: 100%; max-width: var(--maxw); margin: auto; flex: none; padding: 28px var(--gut) 24px; display: grid; grid-template-columns: minmax(0, 1fr);
@@ -205,6 +206,8 @@ a { color: inherit; }
 .gw__wires path { fill: none; stroke: var(--panel-edge); stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: stroke .4s, opacity .4s; }
 .gw__wires path.hot { stroke: var(--acc); stroke-width: 2.5; stroke-dasharray: 6 6; animation: flow 1s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -12; } }
+/* the endless animations sleep while they are off screen (front.js toggles .is-live) */
+.gw__wires:not(.is-live) path.hot, .wave:not(.is-live) i { animation-play-state: paused; }
 .pools { display: grid; gap: 5px; }
 .pool { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 10px; row-gap: 5px; padding: 7px 12px; border-radius: 10px;
   background: color-mix(in srgb, var(--stage-ink) 4%, transparent); transition: background .4s, box-shadow .4s, opacity .4s; }

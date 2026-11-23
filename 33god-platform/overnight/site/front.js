@@ -4,7 +4,7 @@
 
    Layout, in one rule: an exhibit pins ONLY when its whole stage fits the small viewport (100svh minus the header),
    measured here in JS, at this width, with these fonts. Otherwise it flows as a normal section. Either way the
-   exhibit's three beats advance off scroll position (--p, data-step), so a phone, a short laptop and a tall tablet
+   exhibit's three beats advance off scroll position (data-step), so a phone, a short laptop and a tall tablet
    all get the same story and nothing is ever clipped. Reduced motion shows every final state and never pins. */
 (function () {
   'use strict';
@@ -309,10 +309,24 @@
   }
 
   /* ---------- the sky field behind the five exhibits, then the drivers ---------- */
-  var exs = [], navs = [], bars = [], hdrEl, navEl, probe, lastKey = '';
+  var exs = [], navs = [], bars = [], pieces = [], tickLis = [], geo = [], hdrEl, navEl, probe, lastKey = '', hdrNow = 56;
 
   function svh() { var h = probe ? probe.offsetHeight : 0; return h > 0 ? h : innerHeight; }
   function hdrH() { return hdrEl ? hdrEl.offsetHeight : 56; }
+
+  /* Geometry is read here, once per layout change (measure, a resize of the page body), never per scroll frame: the
+     frame() below is then pure arithmetic on scrollY, with no layout read to force a style recalc between its writes. */
+  var dirty = true;
+  function geom() {
+    hdrNow = hdrH();
+    var sy = scrollY;
+    exs.forEach(function (ex, i) {
+      var r = ex.getBoundingClientRect(), pr = pieces[i].getBoundingClientRect();
+      geo[i] = { top: r.top + sy, h: r.height, run: ex.offsetHeight - ex.firstElementChild.offsetHeight, pc: pr.top + sy + pr.height / 2 };
+    });
+    dirty = true;
+    req();
+  }
 
   /* Pin an exhibit only if its whole stage fits the visible height. The stage is measured unpinned, so the answer
      never depends on whether it is pinned now. */
@@ -328,7 +342,7 @@
     });
     root.style.setProperty('--avail', avail + 'px');
     lastKey = key;
-    req();
+    geom();
   }
 
   function gateway(ex, step) {
@@ -354,26 +368,32 @@
     });
   }
 
-  var ticking = false, lastActive = -2;
+  var ticking = false, lastActive = -2, lastY = -1, lastVh = -1, saveT = 0, barF = [];
   function req() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+
+  /* the scroll position is remembered for a reload, but only once scrolling settles: a storage write per frame is a main-thread stall */
+  function save() {
+    saveT = 0;
+    try { sessionStorage.setItem('front.y', String(Math.round(scrollY))); } catch (e) { /* private window */ }
+  }
 
   function frame() {
     ticking = false;
-    var vh = innerHeight, hdr = hdrH(), mid = hdr + (vh - hdr) * 0.5, active = -1;
+    var sy = scrollY, vh = innerHeight;
+    if (!dirty && sy === lastY && vh === lastVh) return;
+    dirty = false; lastY = sy; lastVh = vh;
+    var hdr = hdrNow, mid = hdr + (vh - hdr) * 0.5, active = -1;
     exs.forEach(function (ex, i) {
-      var rect = ex.getBoundingClientRect(), p = 1;
+      var g = geo[i], top = g.top - sy, p = 1;
       if (!flat) {
         if (ex.classList.contains('is-pinned')) {
-          var run = ex.offsetHeight - ex.firstElementChild.offsetHeight;
-          p = run > 0 ? clamp((hdr - rect.top) / run) : 0;
+          p = g.run > 0 ? clamp((hdr - top) / g.run) : 0;
         } else {
-          var pr = ex.querySelector('.ex__piece').getBoundingClientRect(), c = pr.top + pr.height / 2;
-          var a = vh * 0.85, b = hdr + (vh - hdr) * 0.45;
+          var c = g.pc - sy, a = vh * 0.85, b = hdr + (vh - hdr) * 0.45;
           p = clamp((a - c) / (a - b));
         }
       }
       var steps = +ex.dataset.steps || 3, step = flat ? steps - 1 : Math.min(steps - 1, Math.floor(p * steps));
-      ex.style.setProperty('--p', p.toFixed(3));
       if (ex.dataset.step !== String(step)) {
         ex.dataset.step = String(step);
         if (ex.dataset.flag === 'gateway') gateway(ex, step);
@@ -381,10 +401,16 @@
       var n = +ex.dataset.ticks;
       if (n) {
         var done = flat ? n : Math.min(n, Math.floor(p * n * 1.25) + 1);
-        ex.querySelectorAll(ex.dataset.tickSel).forEach(function (li, k) { li.classList.toggle('done', k < done); });
+        if (ex._done !== done) {
+          ex._done = done;
+          tickLis[i].forEach(function (li, k) { li.classList.toggle('done', k < done); });
+        }
       }
-      if (rect.top <= mid && rect.bottom > mid) active = i;
-      if (bars[i]) bars[i].style.setProperty('--f', rect.top > mid ? 0 : clamp((mid - rect.top) / Math.max(1, rect.height)).toFixed(3));
+      if (top <= mid && top + g.h > mid) active = i;
+      if (bars[i]) {
+        var f = top > mid ? '0' : clamp((mid - top) / Math.max(1, g.h)).toFixed(3);
+        if (barF[i] !== f) { barF[i] = f; bars[i].style.setProperty('--f', f); }
+      }
     });
     if (active !== lastActive) {
       lastActive = active;
@@ -396,7 +422,7 @@
         try { navEl.scrollTo({ left: to, behavior: flat ? 'auto' : 'smooth' }); } catch (e) { navEl.scrollLeft = to; }
       }
     }
-    try { sessionStorage.setItem('front.y', String(Math.round(scrollY))); } catch (e) { /* private window */ }
+    if (!saveT) saveT = setTimeout(save, 250);
   }
 
   function go(id, instant) {
@@ -409,10 +435,25 @@
 
   function wire() {
     addEventListener('scroll', req, { passive: true });
+    addEventListener('pagehide', save);
+    /* a resize re-measures (pinning depends on the width and the visible height); coalesced to once per frame, since a phone's address bar fires it on every scroll tick */
+    var rz = 0;
     addEventListener('resize', function () {
-      var avail = svh() - hdrH();
-      if (innerWidth + 'x' + avail !== lastKey) measure(); else req();
+      if (rz) return;
+      rz = requestAnimationFrame(function () {
+        rz = 0;
+        var avail = svh() - hdrH();
+        if (innerWidth + 'x' + avail !== lastKey) measure(); else { dirty = true; req(); }
+      });
     });
+    /* anything that moves the exhibits without a resize (a late font, the sign-up form swapping for its thanks): read the geometry again */
+    if (window.ResizeObserver) { var ro = new ResizeObserver(function () { geom(); }); ro.observe(document.getElementById('front')); }
+    /* the endless little animations (the live wire, the call's waveform) only run while they are on screen */
+    var anim = [].slice.call(document.querySelectorAll('.wave, .gw__wires'));
+    if (window.IntersectionObserver) {
+      var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle('is-live', e.isIntersecting); }); }, { rootMargin: '80px 0px' });
+      anim.forEach(function (el) { io.observe(el); });
+    } else anim.forEach(function (el) { el.classList.add('is-live'); });
     addEventListener('orientationchange', function () { setTimeout(measure, 250); });
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(measure);
@@ -467,6 +508,8 @@
     exs = [].slice.call(document.querySelectorAll('.ex'));
     navs = [].slice.call(document.querySelectorAll('.nav a'));
     bars = [].slice.call(document.querySelectorAll('.prog i'));
+    pieces = exs.map(function (ex) { return ex.querySelector('.ex__piece'); });
+    tickLis = exs.map(function (ex) { return ex.dataset.tickSel ? [].slice.call(ex.querySelectorAll(ex.dataset.tickSel)) : []; });
     hdrEl = document.getElementById('hdr'); navEl = document.getElementById('nav');
     probe = document.createElement('div');
     probe.setAttribute('aria-hidden', 'true');

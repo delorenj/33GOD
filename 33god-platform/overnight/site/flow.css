@@ -42,7 +42,8 @@ html.fw-flat .fw-rv { opacity: 1; transform: none; }
 .fw-brand { flex: none; display: flex; align-items: center; gap: 9px; min-width: 44px; min-height: 44px; text-decoration: none; color: var(--stage-ink); }
 .fw-brand svg { width: 22px; height: 22px; }
 .fw-brand b { display: none; font: 500 21px/1 var(--font-display); letter-spacing: -0.01em; }
-.fw-nav { flex: 1 1 auto; min-width: 0; display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+/* position: relative makes the nav the offsetParent of its links: flow.js centres the current one with offsetLeft, which was measured from the header (66px too far right once the strip overflows, at 320px) */
+.fw-nav { position: relative; flex: 1 1 auto; min-width: 0; display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
 .fw-nav::-webkit-scrollbar { display: none; }
 .fw-nav a:first-child { margin-left: auto; }
 .fw-nav a:last-child { margin-right: auto; }
@@ -198,6 +199,8 @@ summary.fw-fig__face::-webkit-details-marker { display: none; }
 .fw-tape { overflow: hidden; display: grid; gap: 6px; border-block: 1px solid var(--stage-rule); padding: 8px 0; }
 .fw-tape__row { display: flex; gap: 22px; width: max-content; font: 500 var(--fs-s)/1.4 var(--font-mono); color: var(--stage-ink-3); animation: fw-tape 60s linear infinite; }
 .fw-tape__row--b { animation-direction: reverse; animation-duration: 75s; }
+/* off screen: the loop holds still (flow.js toggles is-away) */
+.fw-s.is-away .fw-tape__row, .fw-s.is-away .fw-wave i { animation-play-state: paused; }
 @keyframes fw-tape { to { transform: translateX(-50%); } }
 
 /* The loop: the company runs on itself, a ring that draws as the story goes round */

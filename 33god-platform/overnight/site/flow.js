@@ -72,17 +72,25 @@
     }
 
     /* ---------- the building: the whole company in a few dozen pixels, staged by the film's own windowStates ---------- */
+    // A Building rebuilds ~100 windows; skip it whenever the staged states are the same as last time (shallow props, states by identity).
+    var MBuilding = React.memo(O.Building);
     function Locator(p) {
       var b = p.b, i = p.i, q = p.q, ex = b.copy && b.copy.exhibit, focus = null;
       if (ex) { focus = {}; ex.seats.forEach(function (n) { focus[n] = true; }); }
       var floors = i > I.pjangler || (i === I.pjangler && q >= 0.06) ? K.FLOORS + 1 : K.FLOORS;
       var step = Math.floor(q * STEPS);
+      var last = useRef(null);
       var w = useMemo(function () {
-        return K.windowStates({ q: q, step: step, I: I, i: i, seats: K.seats, floors: floors, submitted: !!p.submitted, focus: focus, live: !!(ex && ex.live) });
+        var nw = K.windowStates({ q: q, step: step, I: I, i: i, seats: K.seats, floors: floors, submitted: !!p.submitted, focus: focus, live: !!(ex && ex.live) });
+        var sig = nw.states.join(',') + '|' + nw.you + '|' + nw.youLit;
+        // Most steps change no window: hand back the previous result so the memoised Building below sees the same props.
+        if (last.current && last.current.sig === sig) return last.current.w;
+        last.current = { sig: sig, w: nw };
+        return nw;
       }, [step, floors, !!p.submitted, i]);
       var deco = p.size === 'xs';
       return h('div', { className: 'fw-bldg fw-bldg--' + p.size, 'aria-hidden': deco ? 'true' : null },
-        h(O.Building, { floors: floors, perFloor: K.PER, states: w.states, you: w.you, youLit: w.youLit, label: p.label || 'The company: a building of ' + floors + ' floors, one window per component.' }));
+        h(MBuilding, { floors: floors, perFloor: K.PER, states: w.states, you: w.you, youLit: w.youLit, label: p.label || 'The company: a building of ' + floors + ' floors, one window per component.' }));
     }
 
     /* ---------- the exhibits ---------- */
@@ -344,7 +352,7 @@
         seat && seat.line ? h('div', { className: 'fw-plate' }, h(O.Nameplate, { name: seat.name, line: seat.line, state: SC.minor('skillex', 'ship', p.q).beat < 1 ? 'working' : SC.minor('skillex', 'ship', p.q).beat < 2 ? 'shipped' : 'lit' })) : null);
     }
 
-    function Source(p) {
+    var Source = React.memo(function Source(p) {
       var b = p.b, c = b.copy || {};
       var notes = [c.stamp, c.tapeNote, c.cardNote, c.partsNote, c.stamp && c.stamp].filter(function (x, k, a) { return x && a.indexOf(x) === k; });
       return h(Disclosure, { label: W.source || 'Source and events', cls: 'fw-more--src' },
@@ -352,15 +360,29 @@
         (b.log || []).map(function (l, k) {
           return h('div', { key: k, className: 'fw-evt' }, h(Subject, { text: l.subject }), l.note ? h('p', null, l.note) : null);
         }));
-    }
+    });
+
+    // The words of a section never change as the exhibit plays: render them once per section, not once per scroll step.
+    var SectionCopy = React.memo(function SectionCopy(p) {
+      var b = p.b, c = b.copy || {};
+      var tp = titleParts(b.title), parts = leadOf(b.body, 150);
+      var rest = parts[1], hasMore = rest || c.aside;
+      return h('div', { className: 'fw-copy' },
+        b.kicker ? h('p', { className: 'fw-kicker' }, b.kicker) : null,
+        h('h2', { id: 'fw-h-' + b.id, className: 'fw-title' }, tp[0], tp[1] ? [' ', h('em', { key: 'e' }, tp[1])] : null),
+        parts[0] ? h('p', { className: 'fw-lede' }, parts[0]) : null,
+        hasMore ? h(Disclosure, { label: W.more || 'More', cls: 'fw-more--text' }, rest ? h('p', null, rest) : null, c.aside ? h('p', { className: 'fw-aside' }, c.aside) : null) : null);
+    });
+    var SectionTags = React.memo(function SectionTags(p) {
+      var b = p.b;
+      return b.tags && b.tags.length ? h('ul', { className: 'fw-tags', 'aria-label': 'Components' }, b.tags.map(function (t) { return h('li', { key: t }, t); })) : null;
+    });
 
     function Section(p) {
       var b = p.b, i = p.i, c = b.copy || {};
       var st = useState(flat ? STEPS : 0), step = st[0], q = Math.min(1, step / STEPS);
       useLayoutEffect(function () { p.reg[i] = st[1]; return function () { delete p.reg[i]; }; }, []);
       var badge = b.staged ? site.stagedLabel : (c.figures || c.stamp) && b.id !== 'bus' ? K.fmtTemplate(site.realLabel, { date: site.countedOn }) : '';
-      var tp = titleParts(b.title), parts = leadOf(b.body, 150), asideLong = c.aside && c.aside.length > 90;
-      var rest = parts[1], hasMore = rest || c.aside;
       var morning = b.id === 'holocene-auto';
       return h('section', { id: b.id, className: 'fw-s fw-s--' + b.id, 'data-i': i, 'data-acc': accOf(b), 'data-pin': PIN[b.id] ? '1' : null, 'data-theme': morning ? 'morning' : null, 'aria-labelledby': 'fw-h-' + b.id },
         h('div', { className: 'fw-stage' }, h('div', { className: 'fw-in' },
@@ -368,13 +390,9 @@
             h('span', { className: 'fw-ic' }, ico(BEAT_ICON[b.id] || 'cube')),
             h('span', { className: 'fw-meta' }, h('span', { className: 'fw-n' }, K.pad2(i + 1) + ' · ' + b.where.trim()), badge ? h('span', { className: 'fw-pill' + (b.staged ? '' : ' fw-pill--real') }, badge) : null),
             h(Locator, { b: b, i: i, q: q, size: 'xs', submitted: p.submitted })),
-          h('div', { className: 'fw-copy' },
-            b.kicker ? h('p', { className: 'fw-kicker' }, b.kicker) : null,
-            h('h2', { id: 'fw-h-' + b.id, className: 'fw-title' }, tp[0], tp[1] ? [' ', h('em', { key: 'e' }, tp[1])] : null),
-            parts[0] ? h('p', { className: 'fw-lede' }, parts[0]) : null,
-            hasMore ? h(Disclosure, { label: W.more || 'More', cls: 'fw-more--text' }, rest ? h('p', null, rest) : null, c.aside ? h('p', { className: 'fw-aside' }, c.aside) : null) : null),
+          h(SectionCopy, { b: b }),
           h('div', { className: 'fw-piece' }, h(Piece, { b: b, i: i, q: q, submitted: p.submitted, onSubmit: p.onSubmit })),
-          b.tags && b.tags.length ? h('ul', { className: 'fw-tags', 'aria-label': 'Components' }, b.tags.map(function (t) { return h('li', { key: t }, t); })) : null,
+          h(SectionTags, { b: b }),
           h(Source, { b: b }))));
     }
 
@@ -466,50 +484,76 @@
         probe.setAttribute('aria-hidden', 'true');
         probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100svh;visibility:hidden;pointer-events:none';
         document.body.appendChild(probe);
-        var raf = 0, lastActive = -2, lastKey = '', lastHash = '';
+        var raf = 0, lastActive = -2, lastKey = '', lastHash = '', saveT = 0, lastSY = 0;
+        // Geometry is read once (one layout), not once per section per scroll frame: every frame afterwards is arithmetic on
+        // these numbers and the scroll offset. Anything that can move a section (resize, a disclosure, a font, a section changing
+        // size, the pin classes) marks it dirty and the next frame reads it again.
+        var geo = [], hdrPx = 56, dirty = true;
+        var acts = secs.map(function (s) { return s.dataset.i != null ? beats[+s.dataset.i].act : 'I'; });
+        var homes = secs.map(function (s) { return s.querySelector('.fw-piece, .fw-hero__art') || s; });   // where --q lives: only the exhibit reads it
+        // Only exhibits with a scrubbed row (.fw-rv) or a meter read --q; writing it anywhere else restyles a subtree for nothing.
+        var readsQ = homes.map(function (el) { return !!el.querySelector('.fw-rv, .fw-meter'); });
+        var barF = bars.map(function () { return ''; });
         function svh() { var v = probe.offsetHeight; return v > 0 ? v : window.innerHeight; }
         function hdrH() { return hdr ? hdr.offsetHeight : 56; }
+        function readGeo() {
+          var sy = window.scrollY;
+          hdrPx = hdrH();
+          geo = secs.map(function (s, k) {
+            var r = s.getBoundingClientRect(), pr = homes[k] === s ? r : homes[k].getBoundingClientRect();
+            return { top: r.top + sy, h: r.height, pinned: s.classList.contains('is-pinned'), run: s.offsetHeight - s.firstElementChild.offsetHeight, ptop: pr.top + sy, ph: pr.height };
+          });
+          dirty = false;
+        }
+        function markDirty() { dirty = true; req(); }
 
         // Pin a section only if its whole stage fits the visible height. Measured unpinned, so the answer never depends on being pinned.
+        // Writes first, then reads, then writes: one layout for all 21 sections, not one each.
         function measure() {
           var avail = svh() - hdrH();
-          secs.forEach(function (s) {
-            s.classList.remove('is-pinned');
-            if (flat || !s.dataset.pin) return;
-            var need = s.firstElementChild.getBoundingClientRect().height;
-            s.dataset.need = Math.round(need);
-            if (need <= avail + 0.5) s.classList.add('is-pinned');
+          secs.forEach(function (s) { s.classList.remove('is-pinned'); });
+          var need = secs.map(function (s) { return (flat || !s.dataset.pin) ? -1 : s.firstElementChild.getBoundingClientRect().height; });
+          secs.forEach(function (s, k) {
+            if (need[k] < 0) return;
+            s.dataset.need = Math.round(need[k]);
+            if (need[k] <= avail + 0.5) s.classList.add('is-pinned');
           });
           doc.style.setProperty('--avail', avail + 'px');
           lastKey = window.innerWidth + 'x' + avail;
-          req();
+          markDirty();
         }
         function req() { if (!raf) raf = requestAnimationFrame(frame); }
         function frame() {
           raf = 0;
-          var vh = window.innerHeight, hd = hdrH(), mid = hd + (vh - hd) * 0.5, active = -1, actFrac = {};
+          if (dirty) readGeo();
+          var sy = window.scrollY, vh = window.innerHeight, hd = hdrPx; lastSY = sy;
+          var  mid = hd + (vh - hd) * 0.5, active = -1, actFrac = {};
+          var pa = vh * 0.85, pb = hd + (vh - hd) * 0.45, cap = (vh - hd) * 0.6;
+          // reads (arithmetic) for every section first, then the few DOM writes
+          var writes = [];
           secs.forEach(function (s, k) {
-            var rect = s.getBoundingClientRect(), p = 1;
+            var g = geo[k], top = g.top - sy, bottom = top + g.h, p = 1;
             if (!flat) {
-              if (s.classList.contains('is-pinned')) {
-                var run = s.offsetHeight - s.firstElementChild.offsetHeight;
-                p = run > 0 ? clamp((hd - rect.top) / run, 0, 1) : 0;
+              if (g.pinned) {
+                p = g.run > 0 ? clamp((hd - top) / g.run, 0, 1) : 0;
               } else {
-                var pc = s.querySelector('.fw-piece, .fw-hero__art') || s, pr = pc.getBoundingClientRect();
-                var vc = pr.top + Math.min(pr.height, (vh - hd) * 0.6) / 2, a = vh * 0.85, b = hd + (vh - hd) * 0.45;
-                p = clamp((a - vc) / (a - b), 0, 1);
+                var vc = g.ptop - sy + Math.min(g.ph, cap) / 2;
+                p = clamp((pa - vc) / (pa - pb), 0, 1);
               }
             }
             var key = p.toFixed(3);
-            if (s._p !== key) { s._p = key; s.style.setProperty('--q', key); }
+            if (s._p !== key) { s._p = key; if (readsQ[k]) homes[k].style.setProperty('--q', key); }
             var step = Math.round(p * STEPS);
-            if (s._step !== step) { s._step = step; if (reg[k]) reg[k](step); }
-            if (rect.top <= mid && rect.bottom > mid) active = k;
-            var act = s.dataset.i != null ? beats[+s.dataset.i].act : 'I';
-            var f = rect.top > mid ? 0 : rect.bottom < mid ? 1 : clamp((mid - rect.top) / Math.max(1, rect.height), 0, 1);
-            (actFrac[act] = actFrac[act] || []).push(f);
+            if (s._step !== step) { s._step = step; if (reg[k]) writes.push(reg[k], step); }
+            if (top <= mid && bottom > mid) active = k;
+            var f = top > mid ? 0 : bottom < mid ? 1 : clamp((mid - top) / Math.max(1, g.h), 0, 1);
+            (actFrac[acts[k]] = actFrac[acts[k]] || []).push(f);
           });
-          bars.forEach(function (bar) { var fs = actFrac[bar.dataset.act] || [0]; bar.style.setProperty('--f', (fs.reduce(function (x, y) { return x + y; }, 0) / fs.length).toFixed(3)); });
+          for (var w = 0; w < writes.length; w += 2) writes[w](writes[w + 1]);
+          bars.forEach(function (bar, n) {
+            var fs = actFrac[bar.dataset.act] || [0], v = (fs.reduce(function (x, y) { return x + y; }, 0) / fs.length).toFixed(3);
+            if (barF[n] !== v) { barF[n] = v; bar.style.setProperty('--f', v); }
+          });
           if (active !== lastActive) {
             lastActive = active;
             // the nav item that names the last section at or before this one
@@ -524,14 +568,36 @@
             var id = active > 0 ? beats[active].id : '';
             if (id !== lastHash) { lastHash = id; try { history.replaceState(null, '', location.pathname + location.search + (id ? '#' + id : '')); } catch (e) { /* no history */ } }
           }
-          try { sessionStorage.setItem('flow.y', String(Math.round(window.scrollY))); } catch (e) { /* private window */ }
+          // the place is saved when scrolling pauses (and when the page goes away), not on every frame
+          if (!saveT) saveT = setTimeout(saveY, 200);
         }
-        function onResize() { var avail = svh() - hdrH(); if (window.innerWidth + 'x' + avail !== lastKey) measure(); else req(); }
+        function saveY(live) { saveT = 0; try { sessionStorage.setItem('flow.y', String(Math.round(live === true ? window.scrollY : lastSY))); } catch (e) { /* private window */ } }
+        function onHide() { if (saveT) { clearTimeout(saveT); } saveY(true); }
+        function onResize() { var avail = svh() - hdrH(); if (window.innerWidth + 'x' + avail !== lastKey) measure(); else markDirty(); }
         // A disclosure opening can make a pinned stage too tall: measure again (toggle does not bubble, so capture it).
         function onToggle() { measure(); }
+        function onOrient() { setTimeout(measure, 250); }
+        // The looping decorations (the call's waveform, the event tape) pause while their section is off screen: no compositor
+        // animation ticking, no layers kept moving, for something nobody can see. They pick up where they stopped.
+        var io = null;
+        try {
+          if (!flat && window.IntersectionObserver) {
+            io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle('is-away', !e.isIntersecting); }); }, { rootMargin: '120px 0px' });
+            secs.forEach(function (s) { io.observe(s); });
+          }
+        } catch (e) { io = null; }
+        var ro = null;
+        try {
+          if (window.ResizeObserver) {
+            ro = new ResizeObserver(markDirty);
+            secs.forEach(function (s, k) { ro.observe(s); if (homes[k] !== s) ro.observe(homes[k]); });
+          }
+        } catch (e) { ro = null; }
         window.addEventListener('scroll', req, { passive: true });
         window.addEventListener('resize', onResize);
-        window.addEventListener('orientationchange', function () { setTimeout(measure, 250); });
+        window.addEventListener('orientationchange', onOrient);
+        window.addEventListener('pagehide', onHide);
+        document.addEventListener('visibilitychange', onHide);
         root.addEventListener('toggle', onToggle, true);
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
         try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) { /* ignore */ }
@@ -547,7 +613,9 @@
         return function () {
           doc.classList.remove('fw-on', 'fw-flat'); if (oldSkip) oldSkip.hidden = false;
           window.removeEventListener('scroll', req); window.removeEventListener('resize', onResize);
+          window.removeEventListener('orientationchange', onOrient); window.removeEventListener('pagehide', onHide); document.removeEventListener('visibilitychange', onHide);
           root.removeEventListener('toggle', onToggle, true);
+          if (ro) ro.disconnect(); if (io) io.disconnect(); if (saveT) clearTimeout(saveT);
           cancelAnimationFrame(raf); if (probe.parentNode) probe.parentNode.removeChild(probe);
         };
       }, []);

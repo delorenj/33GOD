@@ -299,6 +299,15 @@
   /* ---------- the elevator: a thin shaft on the left edge, a small car that goes from the top floor to the ground ----------
      Floors are the stations (the top, then the end of each section); the four act openings get a longer tick.
      Written by the page's watch (refs, never React state), so it costs nothing per frame. */
+  // The building re-renders on every step of a hold, but its windows only change at a handful of them: skip the
+  // reconcile when every window is in the state it was (the stage's hover plates and cards re-render around it).
+  var StageBuilding = React.memo(O.Building, function (a, b) {
+    if (a.floors !== b.floors || a.perFloor !== b.perFloor || a.you !== b.you || a.youLit !== b.youLit || a.size !== b.size || a.label !== b.label) return false;
+    var x = a.states, y = b.states; if (x === y) return true;
+    if (!x || !y || x.length !== y.length) return false;
+    for (var k = 0; k < x.length; k++) if (x[k] !== y[k]) return false;
+    return true;
+  });
   function Gauge(props) {
     var n = props.count, ticks = [];
     for (var k = 0; k < n; k++) ticks.push(h('i', { key: k, className: 'gauge__tick' + (props.acts.indexOf(k) >= 0 ? ' gauge__tick--act' : ''), style: { top: 'calc(7.5px + (100% - 17px) * ' + (k / (n - 1)).toFixed(5) + ')' } }));
@@ -616,12 +625,20 @@
     var dollyRef = useRef(null), playY = useRef(0);
     var gaugeRef = useRef(null), caretRef = useRef(null), tellRef = useRef(null), infoRef = useRef(null);
     var sizeRef = useRef(size); sizeRef.current = size;
+    // The track's distance from the document top, read once per measure: offsetTop in the per-frame path forced a style
+    // and layout flush every frame. Nothing above the track moves except at a resize or a font swap, and both re-measure.
+    var topRef = useRef(-1);
+    var trackTop = useCallback(function () {
+      if (topRef.current < 0 && trackRef.current) topRef.current = trackRef.current.offsetTop;
+      return topRef.current < 0 ? 0 : topRef.current;
+    }, []);
 
     var b = beats[pos.i];
     var floors = pos.i > I.pjangler || (pos.i === I.pjangler && pos.q >= 0.06) ? FLOORS + 1 : FLOORS;
 
     /* layout: the score in px, and the scene's size */
     var measure = useCallback(function () {
+      topRef.current = -1;
       var vh = window.innerHeight, y = SC.layout(vh);
       if (trackRef.current) trackRef.current.style.height = (y + vh) + 'px';
       if (sceneRef.current) {
@@ -634,11 +651,11 @@
 
     // A nav jump lands where a reader arriving at the section would (a rest point), or at body progress q.
     var jump = useCallback(function (i, q) {   // q: the section's body progress (its exhibit's timeline)
-      var top = trackRef.current ? trackRef.current.offsetTop : 0;
+      var top = trackTop();
       var px = top + Math.ceil(q != null ? SC.qPx(i, q) : SC.landing(i));
       setHash(i > 0 ? beats[i].id : '');
       if (dollyRef.current) dollyRef.current.jump(px); else window.scrollTo({ top: px, behavior: 'auto' });
-    }, [beats]);
+    }, [beats, trackTop]);
     var jumpTo = useCallback(function (id, q) { jump(I[id], q); }, [I, jump]);
 
     /* the dolly: scroll position in, camera out */
@@ -647,8 +664,9 @@
       if (info) infoRef.current = info;
       var stage = stageRef.current; if (!stage || !trackRef.current) return;
       if (!SC.total) return;
-      if (tellRef.current) tellRef.current(yAbs - trackRef.current.offsetTop, infoRef.current);   // the gauge, the caret, the crank
-      var y = clamp(yAbs - trackRef.current.offsetTop, 0, SC.total - 1);
+      var rel = yAbs - trackTop();
+      if (tellRef.current) tellRef.current(rel, infoRef.current);   // the gauge, the caret, the crank
+      var y = clamp(rel, 0, SC.total - 1);
       var S = SC.at(y), Mj = S.major;
       var i = S.i, bt = beats[i], next = beats[i + 1];
       // p: through the whole section; hold: through everything before it leaves; tr: the travel out;
@@ -676,7 +694,12 @@
         interRef.current.style.opacity = io; interRef.current.style.visibility = io > 0.01 ? 'visible' : 'hidden';
       }
       stage.style.setProperty('--p', p.toFixed(4));
-      stage.style.setProperty('--q', q.toFixed(4));
+      // --q is written where it is read (the cards on the overlay, the set piece, the glass pane): on the stage it inherited into the whole
+      // building and header, and every frame restyled hundreds of nodes that never look at it.
+      var qs = q.toFixed(4);
+      if (overlayRef.current) overlayRef.current.style.setProperty('--q', qs);
+      if (spRef.current) spRef.current.style.setProperty('--q', qs);
+      if (glassRef.current) glassRef.current.style.setProperty('--q', qs);
       if (bt.id === 'holocene-auto' && spRef.current) {
         var bars = spRef.current.querySelectorAll('.car__wave i');
         for (var k = 0; k < bars.length; k++) bars[k].style.height = waveAt(k, q).toFixed(1) + 'px';
@@ -688,7 +711,7 @@
       if (i !== last.current.i || step !== last.current.step || S.stop !== last.current.stop) {
         last.current.i = i; last.current.step = step; last.current.stop = S.stop; setPos({ i: i, step: step, q: q });
       }
-    }, [beats]);
+    }, [beats, trackTop]);
 
     // Seams and moves come from the score. A seam is a camera travel with its caption crossfade or a part's
     // statement handing over: stop in one and the dolly finishes it. A move is what one press of Down makes:
@@ -707,7 +730,8 @@
       var tell = window.Score.watch(SC, function (s) {
         var g = gaugeRef.current, c = caretRef.current, st = stageRef.current;
         if (g) {
-          g.style.setProperty('--gauge', s.progress.toFixed(4));
+          // On the car, not the gauge: the custom property inherits, and on the gauge it restyled every tick each frame.
+          if (g.lastElementChild) g.lastElementChild.style.setProperty('--gauge', s.progress.toFixed(4));
           var pct = String(Math.round(s.progress * 100));
           if (g.getAttribute('aria-valuenow') !== pct) g.setAttribute('aria-valuenow', pct);
           g.setAttribute('aria-valuetext', M.site.gaugeText.replace('{n}', s.section).replace('{total}', s.sections));
@@ -729,20 +753,20 @@
       var wasMoving = false;
       function armCrank() { if (last.current.i < beats.length - 1) setCrank(true); }
       tellRef.current = tell;
-      var dolly = window.Dolly.create({ onFrame: frame, seam: seam, move: move, origin: function () { return trackRef.current ? trackRef.current.offsetTop : 0; } });
+      var dolly = window.Dolly.create({ onFrame: frame, seam: seam, move: move, origin: trackTop });
       dollyRef.current = dolly;
       // Once, after the first measure: come back to the place the URL names. The hash wins over a stale session;
       // the same section in this tab's session comes back to its exact station, else the section's landing.
       function restore() {
         restored = true;
         if (typeof I[want] !== 'number' || !trackRef.current) return;
-        var saved = savedStation(), top = trackRef.current.offsetTop;
+        var saved = savedStation(), top = trackTop();
         if (saved && saved.id === want && saved.n > 0 && SC.stations[saved.n] != null) dolly.jump(top + Math.ceil(SC.stations[saved.n]));
         else jump(I[want], null);
         tell.force();
       }
       function onResize() {
-        var top = trackRef.current ? trackRef.current.offsetTop : 0;
+        var top = (topRef.current = -1, trackTop());
         var f = SC.total ? clamp((window.scrollY - top) / SC.total, 0, 1) : 0;
         dolly.cancel();
         measure();
@@ -914,7 +938,7 @@
                 h('div', { className: 'ground', 'aria-hidden': 'true' }),
                 h('div', { className: 'bldg', style: { '--bs': size.bs } },
                   floors > FLOORS ? h('span', { className: 'beacon' + (beaconOn ? ' is-on' : ''), 'aria-hidden': 'true', style: { left: PAD + NEW_FLOOR.launch * PITCH_X + WIN_W / 2 } }) : null,
-                  h(O.Building, { floors: floors, perFloor: PER, states: wst.states, you: wst.you, youLit: wst.youLit, size: 'lg', label: 'The company: a building of ' + floors + ' floors, one window per component. The one window that stays dark is yours.' }))),
+                  h(StageBuilding, { floors: floors, perFloor: PER, states: wst.states, you: wst.you, youLit: wst.youLit, size: 'lg', label: 'The company: a building of ' + floors + ' floors, one window per component. The one window that stays dark is yours.' }))),
               h('div', { className: 'overlay' + (hover ? ' is-hovering' : ''), ref: overlayRef }, over),
               GLASS[id] ? h('div', { className: 'glass-wrap' }, h(Glass, { M: M, id: id, q: q, glassRef: glassRef, origin: waxAt.x + 'px ' + waxAt.y + 'px', waxLine: seats.named.WAX.line })) : null,
               h('div', { className: 'sp-wrap', ref: spRef }, sp))),

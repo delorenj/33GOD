@@ -50,6 +50,9 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 /* ---------- the stage ---------- */
 .track { position: relative; }
 .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: flex; flex-direction: column; background: var(--stage-ground); --q: 0; --p: 0; }
+/* --p is only a readout (the probes read it) and the dolly writes it every frame: registered as non-inherited, so writing it
+   restyles the stage alone and not the whole subtree. --q is written on the two containers that read it (see overnight.js). */
+@property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
 
 .hud { position: relative; z-index: 6; display: flex; align-items: center; gap: 12px 28px; padding: 16px var(--stage-gutter); border-bottom: 1px solid var(--stage-rule); }
 .hud__brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
@@ -111,7 +114,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 .next[data-ready="true"] { opacity: 1; pointer-events: auto; transition: opacity 300ms var(--ease-settle); }
 .next:hover { color: var(--stage-ink); }
 .next:focus-visible { outline: 1px solid var(--stage-ink-2); outline-offset: 1px; }
-.next svg { display: block; animation: nudge 1.8s ease-in-out infinite; }
+/* The bob runs only while the caret is showing: an infinite animation on an invisible element still ticked the main thread
+   (a style recalc before every frame's script) all through every move, when the caret is hidden. */
+.next svg { display: block; }
+.next[data-ready="true"] svg { animation: nudge 1.8s ease-in-out infinite; }
 @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
 
 /* ---------- scroll-scrubbed reveals: no easing of their own, they follow the dolly ---------- */
@@ -391,7 +397,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: none; box-
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orbit, .next svg { animation: none; }
+  .orbit, .next svg, .next[data-ready="true"] svg { animation: none; }
   .next, .next[data-ready="true"] { transition: none; }
   .crank, .ticket, .judgment, .bus__does, .signal i { transition: none; }
 }
