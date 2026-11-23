@@ -1,0 +1,13 @@
+[candybar]
+name = "33god-fleet-recovery"
+description = "Temporary fleet recovery: stable queue/evidence gate, bounded local PM pass, proof-gated retirement"
+schedule = "*/5 * * * *"
+timezone = "America/New_York"
+enabled = false
+noise = true
+tags = ["ops", "fleet-recovery"]
+
+[candybar.runner]
+kind = "exec"
+argv = ["/usr/bin/python3", "-I", ".candybars/33god-fleet-recovery/check.py", "run"]
+timeout_s = 420
