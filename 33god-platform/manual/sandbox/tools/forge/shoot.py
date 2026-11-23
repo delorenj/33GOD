@@ -23,6 +23,7 @@ import contextlib
 import json
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -109,7 +110,10 @@ class Server:
     def start(self):
         self.proc = subprocess.Popen(
             ["npx", "--no-install", "vite", "preview", "--outDir", str(self.dist), "--host", "127.0.0.1", "--port", str(self.port), "--strictPort"],
-            cwd=SANDBOX, env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            cwd=SANDBOX, env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+            # npx forks the real vite server; terminating npx alone orphaned vite
+            # (35 leaked servers, 1.5 GiB, by 2026-11-23). Own group, killed whole.
+            start_new_session=True)
         for _ in range(100):
             if self.proc.poll() is not None:
                 raise RuntimeError("vite preview exited: " + (self.proc.stdout.read() or "")[-600:])
@@ -121,11 +125,16 @@ class Server:
         raise RuntimeError("vite preview never answered on " + self.url)
 
     def stop(self):
-        self.proc.terminate()
-        try:
-            self.proc.wait(5)
-        except subprocess.TimeoutExpired:
-            self.proc.kill()
+        for sig in (signal.SIGTERM, signal.SIGKILL):
+            try:
+                os.killpg(self.proc.pid, sig)
+            except ProcessLookupError:
+                return
+            try:
+                self.proc.wait(5)
+                return
+            except subprocess.TimeoutExpired:
+                continue
 
 
 def contact_sheet(out: Path, files: list[Path]) -> Path:
