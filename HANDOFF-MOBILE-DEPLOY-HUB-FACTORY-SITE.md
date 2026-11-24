@@ -58,7 +58,7 @@ Everything to edit is in this repo (`~/code/33GOD`). **Do not edit `~/code/mobil
 Each ticket carries its own numbered acceptance criteria. In brief:
 
 - **4A, placement.** The default is `near: soundwing`, beside the phone apps it delivers. `crew` is an agent workstation hall, and the hub isn't one. Change only the `factory:` block, then `atlas.py render && atlas.py check`, and commit the record together with the cast. Before you rewrite `runtime`/`surfaces`, check how the Android catch-up is started, because the hub's `.candybars/` holds only the iPad catch-up. Use only relation kinds that `atlas.py` already accepts.
-- **4B, body.** `factory-forge.sh --dry-run --component mobile-deploy-hub` first, then one real run. The manifest needs `placement: kiosk`, `replaces: []`, a footprint of at most 1.4 × 1.3, and handles env in and post out. A kiosk body animates only during waybill playback or on the turntable; record that as a gotcha. Do not edit anything in 33god-platform during the run (scope check).
+- **4B, body. ON HOLD (Jarad, 2026-11-24: $10-21 per model is too much).** Do not start a real forge run until Jarad chooses a cheaper path: either a trimmed forge loop or a kit pilot (see the comment on 33GOD-132). A dry run is fine. The contract shape still applies: The manifest needs `placement: kiosk`, `replaces: []`, a footprint of at most 1.4 × 1.3, and handles env in and post out. A kiosk body animates only during waybill playback or on the turntable; record that as a gotcha. Do not edit anything in 33god-platform during the run (scope check).
 - **4C, launch page.** Peggy chooses the tier and writes the copy. The art director signs off on the look and does the privacy review. A coding worker edits `manifest.json`. Do not use a flagship slot or a store-shelf card. The merge goes live, so it waits for Jarad's explicit go.
 - **4D, app records.** Every record goes automatically into the public `atlas/public.json`, and Navi is a client product. This waits for Jarad to accept it and say which apps can be named.
 
@@ -90,7 +90,7 @@ Each ticket carries its own numbered acceptance criteria. In brief:
 
 - **4C merge:** the launch page goes live on merge, so it needs an explicit go.
 - **4D:** which of Tower of Lost Things, Green In Between, Gruvato and Navi may be named in the public export. Navi is an AutomaticAI-io client product.
-- **Forge spend** beyond one run plus one retry for 4B.
+- **Forge spend for 4B:** none until Jarad picks the cheaper path (comment on 33GOD-132).
 - **Any new station, SetId or canon object**, such as an "outbound dock".
 - Grolf's planning-only intake on MOBI (33GOD-124 and FLUME-107) is a separate question. This epic does not depend on it.
 
