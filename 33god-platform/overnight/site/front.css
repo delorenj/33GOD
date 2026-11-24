@@ -405,6 +405,37 @@ a { color: inherit; }
 @media (min-width: 600px) { .depts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; } .orgband__in { padding: 64px var(--gut) 56px; } }
 @media (min-width: 1000px) { .depts { grid-template-columns: repeat(6, minmax(0, 1fr)); } .dept { padding: 14px 12px 14px; } .dept b { font-size: 12px; } .dept > span:last-child { font-size: 13px; } }
 
+/* ---------- the shelf: pieces that already ship on their own (data: front.shelf[]) ---------- */
+.shelf { border-top: 1px solid var(--stage-rule); scroll-margin-top: var(--hdr); display: block; }
+.shelf__in { max-width: var(--maxw); margin: 0 auto; padding: 36px var(--gut) 8px; }
+.shelf h2 { font: 400 clamp(28px, 7.6vw, 42px)/1.08 var(--font-display); letter-spacing: -.015em; margin: 12px 0 10px; text-wrap: balance; }
+.shelf__line { color: var(--stage-ink-2); font-size: 17px; max-width: 34em; }
+.shelf__list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 22px; }
+.shelf__card { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-width: 0; padding: 18px 16px 16px; border-radius: 16px;
+  background: var(--panel); border: 1px solid var(--panel-edge); }
+.shelf__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; }
+.shelf__card h3 { font: 400 28px/1.1 var(--font-display); letter-spacing: -.01em; }
+.spill { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; font: 600 14px/1.1 var(--font-mono); letter-spacing: .02em; white-space: nowrap; }
+.shelf__card--on-sale .spill { color: var(--window-shipped); background: var(--g33-moss-soft); }
+.shelf__card--preview .spill { color: var(--stage-ink-2); box-shadow: inset 0 0 0 1px var(--g33-line-strong); }
+.shelf__what { font-size: 16px; line-height: 1.45; color: var(--stage-ink-2); }
+.shelf__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.shelf__chips li { padding: 6px 11px; border-radius: 999px; font-size: 14px; line-height: 1.25; color: var(--stage-ink-2); box-shadow: inset 0 0 0 1px var(--stage-rule); }
+.shelf__offer { display: flex; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 2px; }
+.shelf__offer b { font: 600 16px/1.3 var(--font-sans); }
+.shelf__offer span { font: 500 14px/1.3 var(--font-mono); color: var(--stage-ink-3); }
+.btn--quiet { background: transparent; color: var(--stage-ink); box-shadow: inset 0 0 0 1px var(--g33-line-strong); }
+.btn--quiet:hover { box-shadow: inset 0 0 0 1px var(--stage-ink-3); }
+.shelf__card .btn { width: 100%; }
+.shelf__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; margin-top: 14px; }
+.shelf__foot .note { font-size: 14px; }
+@media (min-width: 640px) {
+  .shelf__in { padding: 56px var(--gut) 12px; }
+  .shelf__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .shelf__card { padding: 20px 20px 18px; }
+  .shelf__card .btn { width: auto; }
+}
+
 /* ---------- the counts, the ask, the foot ---------- */
 .well { border-top: 1px solid var(--stage-rule); padding: 44px var(--gut) 44px; text-align: center; }
 .well .kicker { margin-bottom: 12px; }

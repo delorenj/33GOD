@@ -453,6 +453,17 @@ FRONT_BUDGETS = {
     "ask.sending": (12, "the button label while the post is in flight"),
     "ask.error": (60, "14px under the form: two lines"),
     "ask.watch": (36, "15px text link, one line in 328px"),
+    "shelf.kicker": (24, "mono 12px caps, one line"),
+    "shelf.title": (44, "h2 is 28px at 360: two lines at 44"),
+    "shelf.line": (110, "17px, 3 lines in 328px"),
+    "shelf.stamp": (60, "mono 14px under the cards: two lines in 328px"),
+    "shelf.noOffer": (36, "16px bold offer line: one line at 36 in 296px"),
+    "shelf.name": (14, "28px display h3 beside the status pill"),
+    "shelf.pill": (16, "mono 14px pill beside the name: 'Android · Beta' (14) leaves 120px for the name"),
+    "shelf.line.card": (110, "16px in 296px: 4 lines at 110"),
+    "shelf.chip": (34, "14px pill: wraps to a second line past 34 chars, never past the card"),
+    "shelf.offer": (40, "16px bold, 296px: two lines at 40"),
+    "shelf.button": (28, "16px bold in a 296px button with a chevron: one line at 28"),
     "cta.short": (10, "label on the header button from 600px up"),
     "staged": (14, "the pill on every piece"),
 }
@@ -526,6 +537,18 @@ def _front_items(M):
             add("ha.standupTitle", f"{i}.standupTitle", p["standupTitle"])
             for j, d in enumerate(p["standup"]):
                 add("ha.standup", f"{i}.standup[{j}]", d)
+    H = F["shelfHead"]
+    for k in ("kicker", "title", "line", "stamp", "noOffer"):
+        add(f"shelf.{k}", f"front.shelfHead.{k}", H[k])
+    add("next.name", "front.shelfHead.next.label", H["next"]["label"])
+    for x in F["shelf"]:
+        w = f"front.shelf[{x['id']}]"
+        add("shelf.name", f"{w}.name", x["name"]); add("shelf.pill", f"{w}.pill", x["pill"])
+        add("shelf.line.card", f"{w}.line", x["line"]); add("shelf.button", f"{w}.button", x["button"])
+        for j, c in enumerate(x["chips"]):
+            add("shelf.chip", f"{w}.chips[{j}]", c)
+        if x["offer"]:
+            add("shelf.offer", f"{w}.offer", x["offer"])
     o = F["org"]
     for k in ("kicker", "title", "line"):
         add(f"org.{k}", f"front.org.{k}", o[k])
@@ -557,7 +580,7 @@ def test_front_copy_budgets(slot, where, text):
 def test_front_record_has_every_slot():
     F = manifest().get("front")
     assert isinstance(F, dict), "manifest.json: missing the top-level `front` record (the front page's words)"
-    for k in ("title", "aria", "stagedLabel", "ctaShort", "next", "hero", "stats", "flagships", "org", "well", "ask", "footer"):
+    for k in ("title", "aria", "stagedLabel", "ctaShort", "next", "hero", "stats", "flagships", "shelfHead", "shelf", "org", "well", "ask", "footer"):
         assert k in F, f"front.{k} is missing"
     for k in ("flagships", "progress", "skip", "home", "counts", "org", "more"):
         assert F["aria"].get(k), f"front.aria.{k}"
@@ -644,16 +667,139 @@ def test_front_files_and_links():
     # a front anchor must never be a tour beat id, or an old tour link could not be told from it
     M = manifest()
     beat_ids = {b["id"] for b in M["beats"]}
-    anchors = {"top", "flagships", "org-band", "counts", "briefing"} | {f"f-{f['id']}" for f in M["front"]["flagships"]}
+    anchors = {"top", "flagships", "shelf", "org-band", "counts", "briefing"} | {f"f-{f['id']}" for f in M["front"]["flagships"]}
     assert not (anchors & beat_ids), f"front anchors collide with tour beats: {anchors & beat_ids}"
     for f in M["front"]["flagships"]:
         assert f["next"]["to"] in anchors, f"{f['id']}: next points at {f['next']['to']!r}, not a front anchor"
+    assert M["front"]["shelfHead"]["next"]["to"] in anchors
     css = (SITE / "front.css").read_text(encoding="utf-8")
     # raw colours live only in the token blocks at the top of front.css
     body = css.split("/* ---------- base ---------- */", 1)[1]
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(", body), "front.css: a raw colour outside the token blocks"
     js = (SITE / "front.js").read_text(encoding="utf-8")
     assert not re.search(r"#[0-9a-fA-F]{6}\b", js), "front.js: a raw colour (use tokens)"
+
+
+# ---------------------------------------------------------------- the shelf (front.shelf[]): products that ship on their own in the store
+
+STORE = "https://store.automaticai.io"
+SHELF_STATUSES = ("on-sale", "preview")
+STORE_REPO = Path(os.environ.get("STORE_REPO") or Path.home() / "code" / "automaticai-store")
+
+
+def _shelf():
+    F = manifest()["front"]
+    return F["shelfHead"], F["shelf"]
+
+
+def test_front_shelf_schema():
+    """One generic card per entry: the same schema, the same budgets, and nothing but a store page to link to."""
+    H, shelf = _shelf()
+    for k in ("after", "kicker", "title", "line", "listed", "noOffer", "newTab", "stamp", "next"):
+        assert H.get(k), f"front.shelfHead.{k}"
+    assert "{date}" in H["listed"], "the offer line is dated per card"
+    assert shelf, "front.shelf is a list of at least one product"
+    ids = [x["id"] for x in shelf]
+    assert len(set(ids)) == len(ids), "one card per product"
+    for x in shelf:
+        w = f"front.shelf[{x['id']}]"
+        assert set(x) == {"id", "name", "status", "pill", "line", "chips", "offer", "listed", "href", "button"}, f"{w}: unexpected or missing keys {sorted(x)}"
+        assert x["status"] in SHELF_STATUSES, f"{w}.status must be one of {SHELF_STATUSES}"
+        assert 1 <= len(x["chips"]) <= 3, f"{w}: up to three chips"
+        assert all(c and isinstance(c, str) for c in x["chips"])
+        # https only, on the store's own host: never a payment link, an APK, a bucket or another site
+        assert x["href"].startswith(STORE + "/"), f"{w}.href must be a page on {STORE}"
+        assert re.fullmatch(re.escape(STORE) + r"/[a-z0-9-]+/", x["href"]), f"{w}.href must be the product's own page, one path segment, no query: {x['href']}"
+        assert not re.search(r"stripe|\.apk|s3\.delo\.sh", x["href"], re.I), f"{w}.href must not be a payment or download link"
+        assert x["href"] == f"{STORE}/{x['id']}/", f"{w}: the page is /{x['id']}/"
+        if x["status"] == "on-sale":
+            assert x["offer"] and "$" in x["offer"], f"{w}: an on-sale product shows its price"
+        else:
+            assert x["offer"] is None, f"{w}: a product that is not on sale shows no price"
+        assert not re.search(r"\bbuy\b|\bpurchase\b|\border\b", x["button"], re.I), f"{w}.button: the button opens a page, it does not buy"
+        assert re.fullmatch(r"\d{1,2} [A-Z][a-z]{2} 20\d\d", x["listed"]), f"{w}.listed is a date like '23 Nov 2026'"
+    # buyable first, not-on-sale last
+    flags = [x["status"] == "on-sale" for x in shelf]
+    assert flags == sorted(flags, reverse=True), "on-sale products come first, the rest last"
+    # the shelf sits after the flagship it names, and that flagship's Next link lands on it, so the chain is not skipped
+    F = manifest()["front"]
+    after = [f for f in F["flagships"] if f["id"] == H["after"]]
+    assert after, f"shelfHead.after names a flagship: {H['after']!r}"
+    assert after[0]["next"]["to"] == "shelf", "the flagship before the shelf links Next to it"
+    nxt = [f for f in F["flagships"] if f"f-{f['id']}" == H["next"]["to"]]
+    assert nxt and F["flagships"].index(nxt[0]) == F["flagships"].index(after[0]) + 1, "the shelf's Next goes to the flagship after it"
+    assert H["next"]["label"] == nxt[0]["name"]
+
+
+def test_front_shelf_house_rules():
+    H, shelf = _shelf()
+    seen = 0
+    for p, s in walk(manifest()["front"]):
+        if p.startswith("shelf"):
+            seen += 1
+            assert not re.search(r"clone anyone|consent|verif|battery|emergency|google play|iphone|\bios\b|voxy\b|stripe|\.apk", s, re.I), f"front.{p}: a claim the store page does not make: {s!r}"
+    assert seen > 10, "the claims check reached the shelf's strings"
+    hm = [x for x in shelf if x["id"] == "heyma"]
+    if hm:
+        assert hm[0]["status"] == "preview", "HeyMa is a preview until the store says otherwise"
+
+
+def _local_catalog():
+    path = STORE_REPO / "site" / "products.json"
+    return load(path) if path.exists() else None
+
+
+@pytest.mark.skipif(_local_catalog() is None, reason=f"no store checkout at {STORE_REPO} (set STORE_REPO)")
+def test_front_shelf_agrees_with_the_store_catalog_on_disk():
+    """The same drift guard the network check runs, against the store repo's products.json, so it runs everywhere the repo is cloned."""
+    _, shelf = _shelf()
+    _compare_with_catalog(shelf, _local_catalog())
+
+
+def _compare_with_catalog(shelf, catalog):
+    by_id = {p["id"]: p for p in catalog["products"]}
+    for x in shelf:
+        p = by_id.get(x["id"])
+        assert p, f"shelf[{x['id']}]: the store catalog has no such product"
+        assert x["href"] == p["url"], f"shelf[{x['id']}].href {x['href']} != catalog url {p['url']}"
+        assert x["name"] == p["name"], f"shelf[{x['id']}].name != catalog name"
+        assert x["status"] == p["status"], f"shelf[{x['id']}].status {x['status']} != catalog status {p['status']}"
+        assert x["pill"] == p["statusLabel"], f"shelf[{x['id']}].pill {x['pill']!r} != catalog statusLabel {p['statusLabel']!r}"
+        assert x["offer"] == (p["offer"]["text"] if p["offer"] else None), f"shelf[{x['id']}].offer {x['offer']!r} != catalog offer {p['offer']!r}"
+        if x["status"] == "on-sale":
+            assert x["line"] == p["tagline"], f"shelf[{x['id']}].line drifted from the catalog tagline"
+
+
+LIVE_LINKS = os.environ.get("OVERNIGHT_LIVE_LINKS") == "1"
+
+
+def _fetch(url):
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "33god-overnight-shelf-check"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return r.status, r.read().decode("utf-8", "replace")
+
+
+@pytest.mark.skipif(not LIVE_LINKS, reason="set OVERNIGHT_LIVE_LINKS=1 (fetches https://store.automaticai.io)")
+def test_front_shelf_matches_the_live_store():
+    """Never trust a status code: /heyma/ once answered 200 with the store's home page. Each shelf link's own <title> must name the
+    product, and the live catalog must agree on status, pill and price."""
+    _, shelf = _shelf()
+    status, body = _fetch(f"{STORE}/products.json")
+    assert status == 200
+    catalog = json.loads(body)
+    _compare_with_catalog(shelf, catalog)
+    by_id = {p["id"]: p for p in catalog["products"]}
+    for x in shelf:
+        status, html = _fetch(x["href"])
+        assert status == 200, f"{x['href']}: HTTP {status}"
+        m = re.search(r"<title>(.*?)</title>", html, re.S | re.I)
+        title = re.sub(r"\s+", " ", m.group(1)).strip() if m else ""
+        assert x["name"] in title, f"{x['href']}: <title> is {title!r}, which does not name {x['name']} (a soft 404 shows the store home page)"
+        assert title == by_id[x["id"]]["title"], f"{x['href']}: <title> {title!r} != catalog title {by_id[x['id']]['title']!r}"
+        if x["offer"]:
+            price = re.search(r"\$\d+(?:\.\d\d)?", x["offer"]).group(0)
+            assert price in html, f"{x['href']}: the page does not show the price {price} the shelf advertises"
 
 
 # ---------------------------------------------------------------- the pace: one press of Down is one section
@@ -971,6 +1117,97 @@ class TestFront(_Browser):
             else:
                 assert A["error"] in text and pg.locator("#ask-form button").is_enabled(), "a failed post says so and lets you retry"
             pg.close()
+
+
+    # ---- the shelf
+
+    def test_shelf_follows_heyma_and_the_next_chain_reaches_it(self, server, pw):
+        pg = self._open(pw, server, 390, 844)
+        order = pg.evaluate("""() => [...document.querySelectorAll('main > section')].map(s => s.id)""")
+        i = order.index("f-heyma")
+        assert order[i + 1] == "shelf" and order[i + 2] == "f-flume", f"the shelf sits right after HeyMa, before Flume: {order}"
+        assert pg.evaluate("document.querySelector('#shelf').matches('.ex, [data-flag]')") is False, "the shelf is not an exhibit: no pinning, no steps"
+        assert pg.evaluate("document.querySelectorAll('#shelf .ex__num, #shelf .tile__n').length") == 0, "no F-number on the shelf"
+        assert pg.evaluate("document.querySelector('#f-heyma .next').getAttribute('href')") == "#shelf"
+        assert pg.evaluate("document.querySelector('#shelf .next').getAttribute('href')") == "#f-flume"
+        # following the chain lands the shelf's heading below the header, then Flume's
+        for start, target in (("#f-heyma .next", "#shelf"), ("#shelf .next", "#f-flume")):
+            pg.evaluate(f"document.querySelector('{start}').scrollIntoView({{block: 'center'}})")
+            pg.wait_for_timeout(200)
+            pg.click(start)
+            pg.wait_for_timeout(1200)
+            r = pg.evaluate(f"({{ top: document.querySelector('{target}').getBoundingClientRect().top, hdr: document.querySelector('.hdr').getBoundingClientRect().bottom }})")
+            assert -2 <= r["top"] - r["hdr"] <= 6, f"{target}: lands at {r['top']:.0f}px under a {r['hdr']:.0f}px header"
+        pg.close()
+
+    def test_shelf_cards_links_and_floors(self, server, pw):
+        S = manifest()["front"]["shelf"]
+        problems = []
+        for w, h in FRONT_VIEWPORTS:
+            pg = self._open(pw, server, w, h)
+            pg.wait_for_timeout(300)
+            r = pg.evaluate("""() => {
+              const out = { cards: [], small: [], sx: document.documentElement.scrollWidth - innerWidth, hdr: document.querySelector('.hdr').getBoundingClientRect().bottom };
+              for (const c of document.querySelectorAll('#shelf .shelf__card')) {
+                const a = c.querySelector('a'), b = c.getBoundingClientRect(), ab = a.getBoundingClientRect();
+                out.cards.push({ id: c.dataset.shelf, href: a.href, target: a.target, rel: a.rel, btnH: ab.height, left: b.left, right: b.right, btnRight: ab.right,
+                  overflow: c.scrollWidth - c.clientWidth, offer: c.querySelector('.shelf__offer').innerText, pill: c.querySelector('.spill').innerText, primary: a.classList.contains('btn--quiet') ? 'quiet' : 'primary' });
+              }
+              const tw = document.createTreeWalker(document.querySelector('#shelf'), NodeFilter.SHOW_TEXT); let n;
+              while ((n = tw.nextNode())) {
+                const el = n.parentElement; if (!n.textContent.trim() || el.closest('.sr')) continue;
+                const f = parseFloat(getComputedStyle(el).fontSize); if (f < 14) out.small.push(f + 'px ' + el.className + ' ' + n.textContent.trim().slice(0, 20));
+              }
+              return out;
+            }""")
+            if r["sx"] > 0:
+                problems.append(f"{w}x{h}: scrolls sideways by {r['sx']}px")
+            if [c["id"] for c in r["cards"]] != [x["id"] for x in S]:
+                problems.append(f"{w}x{h}: cards {[c['id'] for c in r['cards']]} != manifest order")
+            for c, x in zip(r["cards"], S):
+                if c["href"] != x["href"] or c["target"] != "_blank" or "noopener" not in c["rel"]:
+                    problems.append(f"{w}x{h}: {c['id']} link {c['href']} target={c['target']} rel={c['rel']}")
+                if c["btnH"] < 44 or c["overflow"] > 0 or c["left"] < -0.5 or c["right"] > w + 0.5 or c["btnRight"] > c["right"] + 0.5:
+                    problems.append(f"{w}x{h}: {c['id']} box {c}")
+                if x["offer"] and x["offer"] not in c["offer"] or x["listed"] not in c["offer"]:
+                    problems.append(f"{w}x{h}: {c['id']} offer line {c['offer']!r} is not the dated offer")
+                if c["pill"] != x["pill"]:
+                    problems.append(f"{w}x{h}: {c['id']} pill {c['pill']!r}")
+                if (x["status"] == "on-sale") != (c["primary"] == "primary"):
+                    problems.append(f"{w}x{h}: {c['id']}: only a product on sale gets the primary button")
+            if w < 760 and r["small"]:
+                problems.append(f"{w}x{h}: text under the 14px floor in the shelf: {r['small'][:3]}")
+            pg.close()
+        assert not problems, "\n".join(problems)
+
+    def test_shelf_two_columns_from_a_tablet_one_on_a_phone(self, server, pw):
+        for w, h, cols in ((360, 780, 1), (412, 915, 1), (768, 1024, 2), (1024, 768, 2), (1440, 900, 2)):
+            pg = self._open(pw, server, w, h)
+            xs = pg.evaluate("""() => [...document.querySelectorAll('#shelf .shelf__card')].map(c => Math.round(c.getBoundingClientRect().left))""")
+            assert len(set(xs)) == cols, f"{w}x{h}: shelf cards at lefts {xs}, wanted {cols} column(s)"
+            pg.close()
+
+    def test_shelf_puts_buyable_first_whatever_the_data_order(self, server, pw):
+        M = manifest()
+        M["front"]["shelf"] = list(reversed(M["front"]["shelf"]))
+        pg = pw.new_page(viewport={"width": 390, "height": 844})
+        pg.route("**/manifest.json", lambda route, request: route.fulfill(status=200, content_type="application/json", body=json.dumps(M)))
+        pg.goto(server)
+        pg.wait_for_selector("html.ready")
+        ids = pg.evaluate("[...document.querySelectorAll('#shelf .shelf__card')].map(c => c.dataset.shelf)")
+        assert ids[0] == "earshot" and ids[-1] == "heyma", f"on-sale first, not-on-sale last: {ids}"
+        pg.close()
+
+    def test_shelf_drops_an_entry_that_is_not_a_store_page(self, server, pw):
+        M = manifest()
+        M["front"]["shelf"][0]["href"] = "https://buy.stripe.com/example"
+        pg = pw.new_page(viewport={"width": 390, "height": 844})
+        pg.route("**/manifest.json", lambda route, request: route.fulfill(status=200, content_type="application/json", body=json.dumps(M)))
+        pg.goto(server)
+        pg.wait_for_selector("html.ready")
+        ids = pg.evaluate("[...document.querySelectorAll('#shelf .shelf__card')].map(c => c.dataset.shelf)")
+        assert ids == ["heyma"], f"a card whose href is not on the store is never drawn: {ids}"
+        pg.close()
 
 
 # ---------------------------------------------------------------- the phone and small-tablet tour (the flow view)

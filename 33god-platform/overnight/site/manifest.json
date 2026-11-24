@@ -287,7 +287,7 @@
         "kicker": "The audio department",
         "headline": "HeyMa.",
         "headlineTurn": "Transcription, translation and dictation.",
-        "line": "The voice system: sound goes in, work comes out.",
+        "line": "The voice system: sound goes in, work comes out, and replies are spoken back.",
         "chips": [
           {
             "icon": "wave",
@@ -303,8 +303,8 @@
           }
         ],
         "next": {
-          "label": "Flume",
-          "to": "f-flume"
+          "label": "In the store",
+          "to": "shelf"
         },
         "piece": {
           "parts": [
@@ -466,6 +466,55 @@
           "stamp": "The memo pipeline under it replied to 87 voice memos in the 7 days to 21 Nov 2026. The car screen is an illustration.",
           "aria": "A car windshield at sunrise over a dashboard screen that reads: two things need you."
         }
+      }
+    ],
+    "shelfHead": {
+      "_readme": "The shelf after the HeyMa exhibit: pieces that already ship on their own in the AutomaticAI store. It is data, not a section: add a product to shelf[] below and it gets a card. Every entry mirrors a product in https://store.automaticai.io/products.json (id, url, status, pill = statusLabel, offer = offer.text, null while nothing is for sale); a test compares them, and OVERNIGHT_LIVE_LINKS=1 checks the live store. Buyable first, not-on-sale last. Never link a payment or download URL from here, only the store page.",
+      "after": "heyma",
+      "kicker": "In the store",
+      "title": "A few pieces already ship on their own.",
+      "line": "They live in the AutomaticAI store, apart from the platform in development.",
+      "listed": "Listed {date}",
+      "noOffer": "Nothing is for sale yet",
+      "newTab": "Opens in a new tab",
+      "stamp": "Status and offers are as the store lists them.",
+      "next": {
+        "label": "Flume",
+        "to": "f-flume"
+      }
+    },
+    "shelf": [
+      {
+        "id": "earshot",
+        "name": "Earshot",
+        "status": "on-sale",
+        "pill": "Android · Beta",
+        "line": "Drop a sound or text file in your own S3-compatible bucket and your Android phone says it out loud.",
+        "chips": [
+          "Plays or speaks files, no tap",
+          "Your bucket, never our servers",
+          "Held until your call ends"
+        ],
+        "offer": "$4.99 once, after a 30-day free trial",
+        "listed": "23 Nov 2026",
+        "href": "https://store.automaticai.io/earshot/",
+        "button": "See Earshot in the store"
+      },
+      {
+        "id": "heyma",
+        "name": "HeyMa",
+        "status": "preview",
+        "pill": "Preview",
+        "line": "The voice system, in parts. One part, a Mac app, is a public download.",
+        "chips": [
+          "HeyMa for Mac: public download",
+          "Voxxy: clone your own voice",
+          "Voxxy: not on sale yet"
+        ],
+        "offer": null,
+        "listed": "23 Nov 2026",
+        "href": "https://store.automaticai.io/heyma/",
+        "button": "See HeyMa in the store"
       }
     ],
     "org": {

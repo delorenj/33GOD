@@ -15,7 +15,7 @@ The tour has 21 sections in six parts: Arrival (building, thesis, lobby), The by
 
 `site/index.html` is the front page; the tour that used to be the front page is `site/tour.html` (same scripts, unchanged). The front page picks five flagships and gives each one a set piece: **PJangler** (a crane lifts a building; the 13th floor is the one that gets dropped), **the Gateway** (one door, a pool of subscriptions, metered and free routes), **HeyMa** (transcription, translation and dictation, with a phone frame for the call), **Flume** (the workforce: hire, onboard, review) and **Holocene Auto** (an Android Automotive app in internal testing, in front of a sunrise). Then one band of icon tiles for the org chart, the counts, and the briefing form.
 
-Order on the page: header (mark, flagship nav, one CTA, a five-segment progress strip), hero, five exhibits, the org band, "The building, counted." (five counts, dated 21 Nov 2026), the ask, the footer. The hero and the footer link to the tour ("Take the tour", `site.viewFilm`). Old tour links keep working: `index.html?view=` or `?pace=` redirects at once (an inline script), and `index.html#<beat-id>` redirects once the manifest is loaded, both to `tour.html` with the same query and hash. Front anchors are `top`, `flagships`, `f-<id>`, `org-band`, `counts` and `briefing`; a test keeps them from ever equalling a tour beat id.
+Order on the page: header (mark, flagship nav, one CTA, a five-segment progress strip), hero, five exhibits (with the store shelf right after HeyMa), the org band, "The building, counted." (five counts, dated 21 Nov 2026), the ask, the footer. The hero and the footer link to the tour ("Take the tour", `site.viewFilm`). Old tour links keep working: `index.html?view=` or `?pace=` redirects at once (an inline script), and `index.html#<beat-id>` redirects once the manifest is loaded, both to `tour.html` with the same query and hash. Front anchors are `top`, `flagships`, `f-<id>`, `org-band`, `counts` and `briefing`; a test keeps them from ever equalling a tour beat id.
 
 **Every word is in `manifest.json`'s top-level `front` record**, plus the org band's department names and lines, which it reads from the tour's `org-chart` beat so the two cannot drift. `front.js` fetches the manifest and renders everything from it; there is no copy in `index.html`, `front.js` or `front.css`, except the `<noscript>` line. The five flagship accents are `:root` tokens at the top of `front.css` (a dark and a morning variant each); they go upstream into the design system's `tokens.json`, and then out of `front.css`. No raw colours anywhere else.
 
@@ -29,6 +29,16 @@ What was borrowed from the two other directions (and what was not):
 | Showroom "Next F-0n" | a "Next: name" link with three step markers on every exhibit |
 | Org chart icons | one band of 12 department tiles in one neutral family colour, with one ochre "You" row, between Holocene Auto and the counts |
 | Not borrowed | hover-only content, six department colours, the bento grid |
+
+### The store shelf (`front.shelf[]`)
+
+Not a sixth flagship: Earshot is a $4.99 Android app, not a department, and the registry does not make it a HeyMa child. Pieces that already ship on their own in the AutomaticAI store ([store.automaticai.io](https://store.automaticai.io)) get one compact card each, in a section (`#shelf`) right after the HeyMa exhibit. No F-number, no pinning, no hero tile, no progress segment, and it is not in the header nav. Its heading says a few pieces ship on their own and live in the store "apart from the platform in development", so the "In Development" kicker and the briefing ask stay true.
+
+**It is data, not a section.** `front.shelfHead` holds the heading words and `after` (the flagship it follows); `front.shelf[]` holds one record per product: `id`, `name`, `status` (`on-sale` or `preview`), `pill` (the store's status label), `line` (110 chars), up to three `chips` (34 chars), `offer` (the store's own offer text, `null` while nothing is for sale), `listed` (the date the offer was read, shown on the card as "Listed 23 Nov 2026"), `href` and `button`. `front.js` draws one generic card per record: a product on sale gets the primary button, anything else a quiet one; buyable products are drawn first whatever the data order; an `href` that is not a page on `https://store.automaticai.io/` is never drawn; the link opens in a new tab with `rel="noopener"`. Adding a store product is one entry, with no JS or CSS.
+
+Rules for an entry: link only to the product's store page (`/<id>/`), never a payment link or a download URL; a button never says Buy (it opens a page); no battery, latency, emergency, traction, Google Play or iPhone claims, no "clone anyone", no consent or verification claim (HeyMa's Voxxy is "clone your own voice" and "not on sale yet"). The Next chain is HeyMa, then the shelf (`In the store`), then Flume (the shelf's own Next link), so nothing skips it.
+
+**The store's catalog is the source of truth.** `https://store.automaticai.io/products.json` (CORS `*`) lists every product with its page `<title>`, `status`, `statusLabel` and `offer.text`; the store's own home cards are drawn from it. Two tests keep the shelf from drifting: `test_front_shelf_agrees_with_the_store_catalog_on_disk` reads `~/code/automaticai-store/site/products.json` when that checkout exists (`STORE_REPO` overrides the path), and `OVERNIGHT_LIVE_LINKS=1 python3 -m pytest tests/test_overnight_site.py -k shelf` fetches the live catalog and each card's page, asserts the page `<title>` names the product and equals the catalog's, and that status, pill, price and URL agree. It never trusts a status code: `/heyma/` once answered HTTP 200 with the store home page.
 
 ### The phone is the binding viewport
 
@@ -57,13 +67,16 @@ It is the same sign-up as the tour's: `forms.js` posts `briefing` to `/_forms/br
 | `stat.short` / `stat.n` | 14 / 3 chars | the 2-up fact cell is about 100px |
 | `flagship.name` / `tag` | 14 / 34 chars | the tile is about 130px wide |
 | `flagship.headline` / `headlineTurn` / `line` | 16 / 44 / 110 chars | 33px h2, 17px lede |
+| `shelf.title` / `line` / `stamp` | 44 / 110 / 60 chars | 28px h2, 17px lede, mono 14px note |
+| `shelf` card `name` / `pill` / `line` | 14 / 16 / 110 chars | 28px h3 beside a mono 14px pill; 16px text in a 296px card |
+| `shelf` card `chips[]` / `offer` / `button` | 34 / 40 / 28 chars | 14px pill, 16px bold offer, a 296px button |
 | `chip.text` | 34 chars | one line beside a 36px icon |
 | `next.name` | 14 chars | "Next: name" beside the three markers |
 | `gw.say`, `hm.part.line`, `fl.role.line` | 90 / 44 / 56 chars | the panel cells at their narrowest |
 | `org.name` / `org.dept` | 14 / 24 chars | the tile is 104px wide |
 | `well.title` / `ask.title` | 28 chars | two lines |
 
-Tests: `test_front_record_has_every_slot` (the record has every slot the page reads), `test_front_house_rules` and `test_front_has_no_night_clock` (no "stealth", no "fleet", no night-shaped words, figures dated, staged pieces labelled), `test_front_files_and_links`, and `TestFront` (browser, `OVERNIGHT_LAYOUT=1`).
+Tests: `test_front_shelf_schema` and `test_front_shelf_house_rules` (the shelf), `test_front_record_has_every_slot` (the record has every slot the page reads), `test_front_house_rules` and `test_front_has_no_night_clock` (no "stealth", no "fleet", no night-shaped words, figures dated, staged pieces labelled), `test_front_files_and_links`, and `TestFront` (browser, `OVERNIGHT_LAYOUT=1`).
 
 ## What lives where
 

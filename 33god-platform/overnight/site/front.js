@@ -164,6 +164,33 @@
       '</div>' + (morning ? '' : '<div class="ex__sky" aria-hidden="true"></div>') + '</div></section>';
   }
 
+  /* The shelf: pieces that already ship on their own in the AutomaticAI store. One generic card per front.shelf[] entry, so a
+     new store product is one data entry and never a hand-built section. It only ever links to a page on the store itself
+     (never a payment or download URL), and buyable products come first, whatever the order in the data. */
+  var STORE = 'https://store.automaticai.io/';
+  function shelf() {
+    var H = F.shelfHead, list = (F.shelf || []).filter(function (x) { return typeof x.href === 'string' && x.href.indexOf(STORE) === 0; });
+    if (!H || !list.length) return '';
+    list = list.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
+      return ((b.x.status === 'on-sale') - (a.x.status === 'on-sale')) || (a.i - b.i);
+    }).map(function (o) { return o.x; });
+    var cards = list.map(function (x) {
+      var on = x.status === 'on-sale';
+      return '<li class="shelf__card shelf__card--' + esc(x.status) + '" data-shelf="' + esc(x.id) + '">' +
+        '<div class="shelf__top"><h3>' + esc(x.name) + '</h3><span class="spill">' + esc(x.pill) + '</span></div>' +
+        '<p class="shelf__what">' + esc(x.line) + '</p>' +
+        '<ul class="shelf__chips">' + x.chips.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+        '<p class="shelf__offer"><b>' + esc(x.offer || H.noOffer) + '</b><span>' + esc(t(H.listed, { date: x.listed })) + '</span></p>' +
+        '<a class="btn' + (on ? '' : ' btn--quiet') + '" href="' + esc(x.href) + '" target="_blank" rel="noopener">' + esc(x.button) + ' ' + ic('right') +
+        '<span class="sr"> (' + esc(H.newTab) + ')</span></a></li>';
+    }).join('');
+    return '<section class="shelf" id="shelf" aria-labelledby="shelf-h"><div class="shelf__in">' +
+      '<p class="kicker">' + esc(H.kicker) + '</p><h2 id="shelf-h">' + esc(H.title) + '</h2><p class="shelf__line">' + esc(H.line) + '</p>' +
+      '<ul class="shelf__list">' + cards + '</ul>' +
+      '<div class="shelf__foot"><p class="note">' + esc(H.stamp) + '</p>' +
+      '<a class="next" href="#' + esc(H.next.to) + '">' + esc(t(F.next, { name: H.next.label })) + ' ' + ic('down') + '</a></div></div></section>';
+  }
+
   function orgBand() {
     var b = M.beats.filter(function (x) { return x.id === 'org-chart'; })[0];
     var o = F.org, c = b.copy;
@@ -503,7 +530,7 @@
     TOTAL = M.beats.length;
     document.title = F.title;
     var host = document.getElementById('front');
-    host.innerHTML = '<a class="skip" href="#flagships">' + esc(F.aria.skip) + '</a>' + header() + '<main>' + hero() + F.flagships.map(exhibit).join('') + orgBand() + well() + ask() + '</main>' + footer();
+    host.innerHTML = '<a class="skip" href="#flagships">' + esc(F.aria.skip) + '</a>' + header() + '<main>' + hero() + F.flagships.map(function (f, i) { return exhibit(f, i) + (F.shelfHead && f.id === F.shelfHead.after ? shelf() : ''); }).join('') + orgBand() + well() + ask() + '</main>' + footer();
     heroArt(); pjArt(); skies(); dawnArt(); waves();
     exs = [].slice.call(document.querySelectorAll('.ex'));
     navs = [].slice.call(document.querySelectorAll('.nav a'));
