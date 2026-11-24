@@ -13,6 +13,7 @@ Point at a copy of the site (to prove the guard catches a break): OVERNIGHT_SITE
 """
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import re
@@ -684,6 +685,7 @@ def test_front_files_and_links():
 
 STORE = "https://store.automaticai.io"
 SHELF_STATUSES = ("on-sale", "preview")
+SHELF_OPT_OUT = {}  # catalog id -> why the front page leaves it off; empty while every store product is on the shelf
 STORE_REPO = Path(os.environ.get("STORE_REPO") or Path.home() / "code" / "automaticai-store")
 
 
@@ -695,15 +697,17 @@ def _shelf():
 def test_front_shelf_schema():
     """One generic card per entry: the same schema, the same budgets, and nothing but a store page to link to."""
     H, shelf = _shelf()
-    for k in ("after", "kicker", "title", "line", "listed", "noOffer", "newTab", "stamp", "next"):
+    for k in ("after", "kicker", "title", "line", "asOf", "noOffer", "newTab", "stamp", "next"):
         assert H.get(k), f"front.shelfHead.{k}"
-    assert "{date}" in H["listed"], "the offer line is dated per card"
+    assert "{date}" in H["asOf"], "the offer line is dated per card"
     assert shelf, "front.shelf is a list of at least one product"
     ids = [x["id"] for x in shelf]
     assert len(set(ids)) == len(ids), "one card per product"
     for x in shelf:
         w = f"front.shelf[{x['id']}]"
-        assert set(x) == {"id", "name", "status", "pill", "line", "chips", "offer", "listed", "href", "button"}, f"{w}: unexpected or missing keys {sorted(x)}"
+        # a date belongs to an offer: a card with nothing for sale has no "as of" line (it would read like a sale listing)
+        want = {"id", "name", "status", "pill", "line", "chips", "offer", "href", "button"} | ({"asOf"} if x["offer"] else set())
+        assert set(x) == want, f"{w}: unexpected or missing keys {sorted(x)}"
         assert x["status"] in SHELF_STATUSES, f"{w}.status must be one of {SHELF_STATUSES}"
         assert 1 <= len(x["chips"]) <= 3, f"{w}: up to three chips"
         assert all(c and isinstance(c, str) for c in x["chips"])
@@ -717,7 +721,8 @@ def test_front_shelf_schema():
         else:
             assert x["offer"] is None, f"{w}: a product that is not on sale shows no price"
         assert not re.search(r"\bbuy\b|\bpurchase\b|\border\b", x["button"], re.I), f"{w}.button: the button opens a page, it does not buy"
-        assert re.fullmatch(r"\d{1,2} [A-Z][a-z]{2} 20\d\d", x["listed"]), f"{w}.listed is a date like '23 Nov 2026'"
+        if x["offer"]:
+            assert re.fullmatch(r"\d{1,2} [A-Z][a-z]{2} 20\d\d", x["asOf"]), f"{w}.asOf is a date like '23 Nov 2026'"
     # buyable first, not-on-sale last
     flags = [x["status"] == "on-sale" for x in shelf]
     assert flags == sorted(flags, reverse=True), "on-sale products come first, the rest last"
@@ -766,8 +771,17 @@ def _compare_with_catalog(shelf, catalog):
         assert x["status"] == p["status"], f"shelf[{x['id']}].status {x['status']} != catalog status {p['status']}"
         assert x["pill"] == p["statusLabel"], f"shelf[{x['id']}].pill {x['pill']!r} != catalog statusLabel {p['statusLabel']!r}"
         assert x["offer"] == (p["offer"]["text"] if p["offer"] else None), f"shelf[{x['id']}].offer {x['offer']!r} != catalog offer {p['offer']!r}"
-        if x["status"] == "on-sale":
-            assert x["line"] == p["tagline"], f"shelf[{x['id']}].line drifted from the catalog tagline"
+        assert x["line"] == p["tagline"], f"shelf[{x['id']}].line drifted from the catalog tagline"
+        if x["offer"]:
+            when = datetime.date.fromisoformat(catalog["updated"])
+            assert x["asOf"] == f"{when.day} {when.strftime('%b %Y')}", f"shelf[{x['id']}].asOf {x['asOf']!r} != the catalog's updated date {catalog['updated']}: re-read the offer, then update both"
+        # a claim the store page makes only for normal messages must not lose that word on the way to a card
+        for text in [*x["chips"], x["line"], p["card"], p["tagline"]]:
+            if re.search(r"\bcalls?\b", text, re.I):
+                assert re.search(r"\bnormal\b", text, re.I), f"shelf[{x['id']}]: {text!r} says calls hold messages without 'normal' (the alarm channel plays over calls)"
+    # a product the store lists must be on the shelf, unless it is named here on purpose
+    missing = [i for i in by_id if i not in {x["id"] for x in shelf} and i not in SHELF_OPT_OUT]
+    assert not missing, f"the store lists {missing} but front.shelf has no entry for it (add one, or list it in SHELF_OPT_OUT with a reason)"
 
 
 LIVE_LINKS = os.environ.get("OVERNIGHT_LIVE_LINKS") == "1"
@@ -797,9 +811,13 @@ def test_front_shelf_matches_the_live_store():
         title = re.sub(r"\s+", " ", m.group(1)).strip() if m else ""
         assert x["name"] in title, f"{x['href']}: <title> is {title!r}, which does not name {x['name']} (a soft 404 shows the store home page)"
         assert title == by_id[x["id"]]["title"], f"{x['href']}: <title> {title!r} != catalog title {by_id[x['id']]['title']!r}"
+        text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+        assert by_id[x["id"]]["platform"] in text, f"{x['href']}: the page never says the catalog platform {by_id[x['id']]['platform']!r}"
         if x["offer"]:
             price = re.search(r"\$\d+(?:\.\d\d)?", x["offer"]).group(0)
             assert price in html, f"{x['href']}: the page does not show the price {price} the shelf advertises"
+        else:
+            assert not re.search(r"\$\d", html), f"{x['href']}: the shelf says nothing is for sale but the page shows a price"
 
 
 # ---------------------------------------------------------------- the pace: one press of Down is one section
@@ -1030,6 +1048,8 @@ class TestFront(_Browser):
             assert r["hdr"]["height"] <= 60, f"{w}: header is {r['hdr']['height']}px tall"
             assert r["cta"]["right"] <= w and r["nav"]["right"] <= r["cta"]["left"] + 1, f"{w}: the CTA covers the nav {r}"
             assert r["cta"]["width"] <= 48, f"{w}: the phone CTA is compact, not full size ({r['cta']['width']}px)"
+            small = pg.evaluate("""() => [...document.querySelectorAll('.hdr .nav a, .hdr .cta, .hdr .brand')].map(e => { const b = e.getBoundingClientRect(); return [e.className || e.id || e.tagName, Math.round(b.width), Math.round(b.height)]; }).filter(x => x[1] < 44 || x[2] < 44)""")
+            assert not small, f"{w}: header tap targets under 44px: {small}"
             pg.close()
 
     def test_one_primary_button_on_the_first_phone_screen(self, server, pw):
@@ -1169,8 +1189,10 @@ class TestFront(_Browser):
                     problems.append(f"{w}x{h}: {c['id']} link {c['href']} target={c['target']} rel={c['rel']}")
                 if c["btnH"] < 44 or c["overflow"] > 0 or c["left"] < -0.5 or c["right"] > w + 0.5 or c["btnRight"] > c["right"] + 0.5:
                     problems.append(f"{w}x{h}: {c['id']} box {c}")
-                if x["offer"] and x["offer"] not in c["offer"] or x["listed"] not in c["offer"]:
+                if x["offer"] and (x["offer"] not in c["offer"] or x["asOf"] not in c["offer"]):
                     problems.append(f"{w}x{h}: {c['id']} offer line {c['offer']!r} is not the dated offer")
+                if not x["offer"] and re.search(r"\d{4}|Offer as of", c["offer"]):
+                    problems.append(f"{w}x{h}: {c['id']} has nothing for sale but its offer line is dated: {c['offer']!r}")
                 if c["pill"] != x["pill"]:
                     problems.append(f"{w}x{h}: {c['id']} pill {c['pill']!r}")
                 if (x["status"] == "on-sale") != (c["primary"] == "primary"):

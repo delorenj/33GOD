@@ -180,7 +180,7 @@
         '<div class="shelf__top"><h3>' + esc(x.name) + '</h3><span class="spill">' + esc(x.pill) + '</span></div>' +
         '<p class="shelf__what">' + esc(x.line) + '</p>' +
         '<ul class="shelf__chips">' + x.chips.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
-        '<p class="shelf__offer"><b>' + esc(x.offer || H.noOffer) + '</b><span>' + esc(t(H.listed, { date: x.listed })) + '</span></p>' +
+        '<p class="shelf__offer"><b>' + esc(x.offer || H.noOffer) + '</b>' + (x.offer ? '<span>' + esc(t(H.asOf, { date: x.asOf })) + '</span>' : '') + '</p>' +
         '<a class="btn' + (on ? '' : ' btn--quiet') + '" href="' + esc(x.href) + '" target="_blank" rel="noopener">' + esc(x.button) + ' ' + ic('right') +
         '<span class="sr"> (' + esc(H.newTab) + ')</span></a></li>';
     }).join('');

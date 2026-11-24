@@ -287,7 +287,7 @@
         "kicker": "The audio department",
         "headline": "HeyMa.",
         "headlineTurn": "Transcription, translation and dictation.",
-        "line": "The voice system: sound goes in, work comes out, and replies are spoken back.",
+        "line": "The voice system: sound goes in, work comes out, and in our own setup replies are spoken back.",
         "chips": [
           {
             "icon": "wave",
@@ -474,7 +474,7 @@
       "kicker": "In the store",
       "title": "A few pieces already ship on their own.",
       "line": "They live in the AutomaticAI store, apart from the platform in development.",
-      "listed": "Listed {date}",
+      "asOf": "Offer as of {date}",
       "noOffer": "Nothing is for sale yet",
       "newTab": "Opens in a new tab",
       "stamp": "Status and offers are as the store lists them.",
@@ -493,10 +493,10 @@
         "chips": [
           "Plays or speaks files, no tap",
           "Your bucket, never our servers",
-          "Held until your call ends"
+          "Normal messages wait for calls"
         ],
         "offer": "$4.99 once, after a 30-day free trial",
-        "listed": "23 Nov 2026",
+        "asOf": "23 Nov 2026",
         "href": "https://store.automaticai.io/earshot/",
         "button": "See Earshot in the store"
       },
@@ -505,14 +505,13 @@
         "name": "HeyMa",
         "status": "preview",
         "pill": "Preview",
-        "line": "The voice system, in parts. One part, a Mac app, is a public download.",
+        "line": "The voice system, in parts. Mac dictation is downloadable; spoken replies are not out yet.",
         "chips": [
-          "HeyMa for Mac: public download",
+          "Mac dictation: public downloads",
           "Voxxy: clone your own voice",
           "Voxxy: not on sale yet"
         ],
         "offer": null,
-        "listed": "23 Nov 2026",
         "href": "https://store.automaticai.io/heyma/",
         "button": "See HeyMa in the store"
       }
