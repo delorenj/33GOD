@@ -1679,3 +1679,133 @@ class TestStepping(_Browser):
             pg.close()
         assert not problems, "\n".join(problems[:20])
 
+
+
+# ---------------------------------------------------------------- resize, rotation: a resized page must equal a fresh load
+#
+# Every page caches geometry (front.js geom(), flow.js readGeo(), the film's track top) and re-reads it only on a resize, a
+# font, or a ResizeObserver. On 2026-11-23 a perf pass dropped the front page's resize listener and 521 tests stayed green, because
+# none of them ever resized a page: pin decisions and --avail stayed at the old size until a reload. These tests open a page at
+# one size, resize it to another, and require the same state a fresh load at the second size gives, at several scroll positions.
+
+SNAPSHOT = """() => {
+  const keep = ['--avail', '--q', '--f'];
+  const props = [], pinned = [], steps = [];
+  document.querySelectorAll('*').forEach((e, i) => {
+    if (e.style && e.style.length) for (const k of keep) { const v = e.style.getPropertyValue(k); if (v !== '') props.push([i, k, v.trim()]); }
+    if (e.classList.contains('is-pinned')) pinned.push(e.id || e.className);
+    if (e.dataset && e.dataset.step !== undefined) steps.push([e.id || e.className, e.dataset.step]);
+  });
+  return { height: document.documentElement.scrollHeight, props, pinned, steps };
+}"""
+
+
+def _same(a, b):
+    """Differences between two SNAPSHOTs: numbers within 0.02 (or 1.5px for px) are equal."""
+    out = []
+    if abs(a["height"] - b["height"]) > 2:
+        out.append(f"page height {a['height']} vs fresh {b['height']}")
+    if a["pinned"] != b["pinned"]:
+        out.append(f"pinned {a['pinned']} vs fresh {b['pinned']}")
+    if a["steps"] != b["steps"]:
+        out.append(f"steps {a['steps']} vs fresh {b['steps']}")
+    pa = {(i, k): v for i, k, v in a["props"]}
+    pb = {(i, k): v for i, k, v in b["props"]}
+    for key in sorted(set(pa) | set(pb)):
+        va, vb = pa.get(key), pb.get(key)
+        if va == vb:
+            continue
+        try:
+            fa, fb = float(va.replace("px", "")), float(vb.replace("px", ""))
+            if abs(fa - fb) <= (1.5 if "px" in (va or "") else 0.02):
+                continue
+        except (AttributeError, ValueError):
+            pass
+        out.append(f"element {key[0]} {key[1]} = {va} vs fresh {vb}")
+    return out
+
+
+@pytest.mark.skipif(not LAYOUT, reason="set OVERNIGHT_LAYOUT=1 (needs playwright + chromium)")
+class TestResize(_Browser):
+    """A page resized (or a phone rotated) must look and behave like a fresh load at the new size."""
+
+    def _settle(self, pg, ms=450):
+        """Wait out the rAF-coalesced resize handling, then until fonts are in and the page height holds still for 4 frames
+        spaced 120ms apart (a fresh load reflows for up to a second while late fonts and the exhibits' measure land)."""
+        pg.wait_for_timeout(ms)
+        pg.evaluate("""() => new Promise(done => {
+          const t0 = performance.now(); let last = -1, same = 0;
+          (document.fonts ? document.fonts.ready : Promise.resolve()).then(function poll() {
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              const h = document.documentElement.scrollHeight;
+              same = h === last ? same + 1 : 0; last = h;
+              if (same >= 3 || performance.now() - t0 > 6000) done(); else setTimeout(poll, 120);
+            }));
+          });
+        })""")
+
+    def _compare(self, pw, url, ready, a, b, fractions=(0.0, 0.2, 0.45, 0.7, 0.95)):
+        problems = []
+        resized = pw.new_page(viewport={"width": a[0], "height": a[1]})
+        errs = []
+        resized.on("pageerror", lambda e: errs.append(str(e)))
+        resized.goto(url); resized.wait_for_selector(ready); self._settle(resized)
+        resized.evaluate("window.scrollTo(0, document.documentElement.scrollHeight * 0.3)"); self._settle(resized, 250)
+        resized.set_viewport_size({"width": b[0], "height": b[1]}); self._settle(resized, 700)
+        fresh = pw.new_page(viewport={"width": b[0], "height": b[1]})
+        fresh.goto(url); fresh.wait_for_selector(ready); self._settle(fresh)
+        for f in fractions:
+            for pg in (resized, fresh):
+                pg.evaluate(f"window.scrollTo(0, Math.round((document.documentElement.scrollHeight - innerHeight) * {f}))")
+                self._settle(pg)
+            for d in _same(resized.evaluate(SNAPSHOT), fresh.evaluate(SNAPSHOT)):
+                problems.append(f"{a[0]}x{a[1]} -> {b[0]}x{b[1]} at {int(f * 100)}%: {d}")
+        if errs:
+            problems.append(f"{a} -> {b}: page errors {errs[:3]}")
+        resized.close(); fresh.close()
+        return problems
+
+    def test_front_page(self, server, pw):
+        problems = []
+        for a, b in (((1280, 900), (900, 500)), ((900, 500), (1280, 900)), ((390, 844), (844, 390)), ((844, 390), (390, 844)), ((1440, 900), (412, 915))):
+            problems += self._compare(pw, server, "html.ready", a, b)
+        assert not problems, "\n".join(problems[:25])
+
+    def test_flow_view(self, server, pw):
+        problems = []
+        for a, b in (((390, 844), (768, 1024)), ((768, 1024), (390, 844)), ((390, 844), (844, 390)), ((844, 390), (390, 844)), ((360, 640), (430, 932))):
+            problems += self._compare(pw, server + "tour.html?view=flow", ".fw[data-ready]", a, b)
+        assert not problems, "\n".join(problems[:25])
+
+    def test_film_view(self, server, pw):
+        """The film caches the track's top; after a resize, the page height and where Down lands must match a fresh load."""
+        url = server + "tour.html?view=film&pace=0.2"
+
+        def press(pg, n):
+            for _ in range(n):
+                pg.keyboard.press("ArrowDown")
+                try:
+                    pg.wait_for_function("document.querySelector('.stage').dataset.motion === 'moving'", timeout=1500)
+                except Exception:
+                    pass
+                pg.wait_for_function("document.querySelector('.stage').dataset.motion === 'rest'", timeout=60000)
+                pg.wait_for_timeout(80)
+
+        def state(pg):
+            return pg.evaluate("() => ({ y: Math.round(scrollY), station: +document.querySelector('.stage').dataset.station, height: document.documentElement.scrollHeight })")
+
+        problems = []
+        for a, b, before, after in (((1280, 720), (1000, 640), 2, 1), ((1000, 640), (1440, 900), 4, 2)):
+            resized = pw.new_page(viewport={"width": a[0], "height": a[1]})
+            resized.goto(url); resized.wait_for_selector(".stage"); self._settle(resized, 900)
+            press(resized, before)
+            resized.set_viewport_size({"width": b[0], "height": b[1]}); self._settle(resized, 900)
+            press(resized, after)
+            fresh = pw.new_page(viewport={"width": b[0], "height": b[1]})
+            fresh.goto(url); fresh.wait_for_selector(".stage"); self._settle(fresh, 900)
+            press(fresh, before + after)
+            r, f = state(resized), state(fresh)
+            if r["station"] != f["station"] or abs(r["y"] - f["y"]) > 2 or abs(r["height"] - f["height"]) > 2:
+                problems.append(f"{a} -> {b}, {before}+{after} presses: resized {r} vs fresh {f}")
+            resized.close(); fresh.close()
+        assert not problems, "\n".join(problems)
