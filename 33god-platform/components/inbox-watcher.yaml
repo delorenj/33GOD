@@ -25,7 +25,7 @@ relations:
 - to: minio
   kind: reads
   via: mc ls/cp delo/holocene-auto inbox/ prefix
-  evidence: holocene/services/inbox-watcher/memo_common.py:375
+  evidence: holocene/services/inbox-watcher/memo_common.py:401
   anchor: 'def s3_list_inbox(timeout: int = 60) -> list[dict]:'
 - to: minio
   kind: writes
@@ -54,17 +54,17 @@ relations:
 - to: candystore
   kind: reads
   via: GET CANDYSTORE_URL /events?correlationid=<memo_id>
-  evidence: holocene/services/inbox-watcher/memo_common.py:482
+  evidence: holocene/services/inbox-watcher/memo_common.py:508
   anchor: url = f"{CANDYSTORE_URL}/events?correlationid={urllib.parse.quote(correlation_id)}&limit={limit}"
 - to: bb-nats
   kind: calls
   via: HTTP monitor :8222 /jsz?consumers=true
-  evidence: holocene/services/inbox-watcher/memo_common.py:804
+  evidence: holocene/services/inbox-watcher/memo_common.py:830
   anchor: body = http_json(f"{NATS_MONITOR_URL}/jsz?consumers=true&streams=true&config=true", timeout=4)
 - to: agents-registry
   kind: reads
   via: MEMO_AGENT_REGISTRY registry_route() yaml
-  evidence: holocene/services/inbox-watcher/memo_common.py:178
+  evidence: holocene/services/inbox-watcher/memo_common.py:204
   anchor: parsed = yaml.safe_load(REGISTRY_PATH.read_text(encoding="utf-8"))
 evidence:
 - holocene/services/inbox-watcher
