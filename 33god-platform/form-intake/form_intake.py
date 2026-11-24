@@ -10,9 +10,22 @@ A site we host somewhere else (the store on Cloudflare Pages) posts
 cross-origin to ``https://forms.delo.sh/_forms/<form>``. Only origins listed in
 ``FORM_INTAKE_CORS_ORIGINS`` (exact ``https://host`` origins, comma or space
 separated) get a CORS preflight and CORS headers, and their rows are stored
-under the Origin's host. Any other cross-origin POST is refused with 403. A
-request with no Origin, ``Origin: null`` or an Origin on the request's own host
-is same-origin and works as before.
+under the Origin's host. Any other cross-origin POST is refused with 403, and so
+is ``Origin: null`` (an opaque origin: a sandboxed frame, a file or data URL;
+none of our pages sends it). A request with no Origin or an Origin on the
+request's own host is same-origin and works as before, except on the hosts in
+``FORM_INTAKE_CORS_HOSTS`` (default ``forms.delo.sh``): they serve no pages, so
+they take only posts from a listed Origin and never store a row under their own
+name.
+
+A row from a site off delo.sh reaches the bus with no address: only short
+slug-like field values (``product=heyma``) are published, every other field is
+named in ``withheld``. The SQLite row is the only copy of what the visitor typed.
+
+A plain HTML form post (no JavaScript) from a listed Origin is answered
+``303`` back to the page: ``<origin><_back>#<form>-saved`` or ``#<form>-error``,
+where ``_back`` is an optional hidden path field (the Referer is only the origin
+under the default referrer policy).
 
 Each submission is:
 
@@ -37,8 +50,9 @@ Request contract (JSON or urlencoded body, max 16 KiB):
 * per-IP rate limit: 8 submissions per 10 minutes
 
 Responses: ``201 {"ok": true, "id": ...}``, ``400``/``403``/``413``/``429`` with
-``{"ok": false, "error": ...}``. ``OPTIONS /_forms/<form>`` from an allowlisted
-origin answers ``204`` with the CORS headers; from any other origin, ``403``.
+``{"ok": false, "error": ...}``; ``303`` back to the page for a listed site's
+plain form post. ``OPTIONS /_forms/<form>`` from an allowlisted origin answers
+``204`` with the CORS headers; from any other origin, ``403``.
 """
 from __future__ import annotations
 
@@ -79,7 +93,14 @@ LISTEN = os.environ.get("FORM_INTAKE_LISTEN", "172.17.0.1:18811")
 BB = os.environ.get("FORM_INTAKE_BB", str(Path.home() / ".local/bin/bb"))
 SITE_RE = re.compile(os.environ.get("FORM_INTAKE_SITES", r"^([a-z0-9-]+\.)*delo\.sh$"))
 CORS_ORIGINS = parse_origins(os.environ.get("FORM_INTAKE_CORS_ORIGINS", ""))
+# Endpoint hosts that serve no pages: only a listed Origin may post there (no same-origin rows).
+CORS_HOSTS = frozenset(h.lower() for h in re.split(r"[\s,]+", os.environ.get("FORM_INTAKE_CORS_HOSTS", "forms.delo.sh")) if h)
 CORS_MAX_AGE = 86400
+BACK_RE = re.compile(r"^/(?!/)[A-Za-z0-9/_.~-]{0,200}$")
+# Off-delo.sh rows publish a field's value only when it looks like an id (product=heyma), never a
+# typed address, name or message.
+PUBLIC_VALUE_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
+PERSONAL_FIELDS = frozenset({"email", "name", "phone", "message", "address", "company"})
 EVENT_TYPE = "bloodbank.messaging.webform.received"
 
 FORM_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
@@ -165,22 +186,21 @@ def rate_ok(ip: str, now: float) -> bool:
     return True
 
 
-def mask_email(value: str) -> str:
-    """a***@example.com: enough to recognise a sign-up in a push, not the address itself."""
-    local, sep, domain = value.partition("@")
-    return f"{local[:1]}***@{domain}" if sep and local else value
-
-
 def event_data(row: sqlite3.Row) -> dict:
     fields = json.loads(row["fields"])
+    withheld: list[str] = []
     if not SITE_RE.match(row["site"]):
         # A site off delo.sh (a CORS origin) is public-facing: its privacy policy promises the address is
-        # deleted on request, so the SQLite row stays the only full copy and the bus (Candystore keeps
-        # every event) only ever sees it masked.
-        fields = {k: mask_email(v) if k == "email" else v for k, v in fields.items()}
+        # deleted on request, and Candystore keeps every event (ntfy caches the push), so the bus gets
+        # no typed value at all, not even a masked address. The SQLite row is the only copy.
+        public = {k: v for k, v in fields.items() if k not in PERSONAL_FIELDS and PUBLIC_VALUE_RE.match(v)}
+        withheld = sorted(set(fields) - set(public))
+        fields = public
     email = fields.get("email", "")
     name = fields.get("name", "")
     message = fields.get("message") or ", ".join(f"{k}: {v}" for k, v in fields.items())[:500]
+    if withheld:
+        message = f"{row['form']} from {row['site']}" + (f": {message}" if message else "")
     data = {
         "schema_version": 1,
         "direction": "inbound",
@@ -189,6 +209,7 @@ def event_data(row: sqlite3.Row) -> dict:
         "sender": {"handle": email or "anonymous", **({"display_name": name} if name else {})},
         "content": {"text": message or "(empty)", "format": "plain"},
         "fields": fields,
+        **({"withheld": withheld} if withheld else {}),
         "received_at": row["received_at"],
         "message_id": row["id"],
         "thread_id": f"{row['site']}:{row['form']}",
@@ -226,11 +247,14 @@ def emit(submission_id: str) -> bool:
 class Handler(BaseHTTPRequestHandler):
     server_version = "form-intake/1"
 
-    def _send(self, status: int, body: dict | None, cors: str | None = None, preflight: bool = False) -> None:
+    def _send(self, status: int, body: dict | None, cors: str | None = None, preflight: bool = False,
+              location: str | None = None) -> None:
         raw = json.dumps(body).encode() if body is not None else b""
         self.send_response(status)
         if body is not None:
             self.send_header("Content-Type", "application/json")
+        if location:
+            self.send_header("Location", location)
         self.send_header("Cache-Control", "no-store")
         self.send_header("Vary", "Origin")
         if cors:
@@ -248,9 +272,8 @@ class Handler(BaseHTTPRequestHandler):
         return host.strip().split(":")[0].lower()
 
     def _origin(self) -> str:
-        """The request's Origin, normalized; '' when absent or the opaque 'null'."""
-        origin = (self.headers.get("Origin") or "").strip().rstrip("/").lower()
-        return "" if origin == "null" else origin
+        """The request's Origin, normalized; '' when absent, 'null' for an opaque origin."""
+        return (self.headers.get("Origin") or "").strip().rstrip("/").lower()
 
     def _cors(self) -> str | None:
         """The Origin to echo in CORS headers: only an allowlisted one."""
@@ -260,21 +283,42 @@ class Handler(BaseHTTPRequestHandler):
     def _resolve_site(self) -> str:
         """The site a submission belongs to.
 
-        Same-origin (no Origin, Origin null, or an Origin on the request's own host): the request
-        host, which must match FORM_INTAKE_SITES, exactly as before. Cross-origin: the allowlisted
-        Origin's host; any other Origin is refused, never stored under a name it chose.
+        Same-origin (no Origin, or an Origin on the request's own host): the request host, which must
+        match FORM_INTAKE_SITES, exactly as before. Cross-origin: the allowlisted Origin's host; any
+        other Origin is refused, never stored under a name it chose. ``Origin: null`` is opaque (a
+        sandboxed frame, a file or data URL, which any third-party page can make), never same-origin.
+        A FORM_INTAKE_CORS_HOSTS host serves no pages, so it takes only an allowlisted Origin.
         """
         host, origin = self._site(), self._origin()
         if not SITE_RE.match(host):
             raise Rejected(400, f"site {host!r} is not served")
+        if origin in CORS_ORIGINS:
+            return urlsplit(origin).hostname or ""
+        if host in CORS_HOSTS:
+            raise Rejected(403, "This site cannot send forms here.")
         if not origin:
             return host
         origin_host = (urlsplit(origin).hostname or "") if ORIGIN_RE.match(origin) else ""
         if origin_host == host:
             return host
-        if origin in CORS_ORIGINS:
-            return origin_host
         raise Rejected(403, "This site cannot send forms here.")
+
+    def _navigation(self) -> bool:
+        """A plain HTML form post (no JavaScript): the browser navigates and shows whatever comes back."""
+        if "application/json" in (self.headers.get("Content-Type") or ""):
+            return False
+        mode = (self.headers.get("Sec-Fetch-Mode") or "").lower()
+        return mode == "navigate" or (not mode and "text/html" in (self.headers.get("Accept") or ""))
+
+    def _back(self, cors: str, fields: dict[str, str] | None, outcome: str, form: str) -> str:
+        """Where a plain form post from an allowlisted origin goes back to: that origin, never elsewhere."""
+        path = (fields or {}).get("_back", "")
+        if not BACK_RE.match(path):
+            ref = urlsplit(self.headers.get("Referer") or "")
+            same = ref.scheme and f"{ref.scheme}://{ref.netloc}".lower() == cors
+            path = ref.path if same and BACK_RE.match(ref.path or "") else "/"
+        frag = f"{form}-{outcome}" if FORM_RE.match(form or "") else f"form-{outcome}"
+        return f"{cors}{path}#{frag}"
 
     def _form(self) -> str:
         parts = self.path.split("?")[0].strip("/").split("/")
@@ -310,16 +354,25 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         cors = self._cors()
+        # No JavaScript: a listed site's plain form post goes back to its own page, never to our JSON.
+        nav = bool(cors) and self._navigation()
+        form, posted = "", None
+
+        def done(status: int, body: dict) -> None:
+            if nav:
+                return self._send(303, None, location=self._back(cors, posted, "saved" if body.get("ok") else "error", form))
+            self._send(status, body, cors=cors)
+
         try:
             form = self._form()
             site = self._resolve_site()
             length = int(self.headers.get("Content-Length") or 0)
             if length > MAX_BODY:
                 raise Rejected(413, "body too large")
-            fields = parse_fields(self.rfile.read(length), self.headers.get("Content-Type", ""))
-            if fields.get("_hp"):
-                return self._send(201, {"ok": True, "id": str(uuid.uuid4())}, cors=cors)
-            fields = {k: v for k, v in fields.items() if not k.startswith("_")}
+            posted = parse_fields(self.rfile.read(length), self.headers.get("Content-Type", ""))
+            if posted.get("_hp"):
+                return done(201, {"ok": True, "id": str(uuid.uuid4())})
+            fields = {k: v for k, v in posted.items() if not k.startswith("_")}
             if not any(fields.values()):
                 raise Rejected(400, "empty submission")
             if "email" in fields and not EMAIL_RE.match(fields["email"]):
@@ -335,12 +388,12 @@ class Handler(BaseHTTPRequestHandler):
                     (sid, now, site, form, json.dumps(fields), (self.headers.get("Referer") or "")[:500] or None,
                      self._ip(), (self.headers.get("User-Agent") or "")[:300]))
             threading.Thread(target=emit, args=(sid,), daemon=True).start()
-            self._send(201, {"ok": True, "id": sid}, cors=cors)
+            done(201, {"ok": True, "id": sid})
         except Rejected as r:
-            self._send(r.status, {"ok": False, "error": r.error}, cors=cors)
+            done(r.status, {"ok": False, "error": r.error})
         except Exception as exc:  # noqa: BLE001
             print(f"form-intake: {exc!r}", file=sys.stderr, flush=True)
-            self._send(500, {"ok": False, "error": "Could not save that. Try again in a minute."}, cors=cors)
+            done(500, {"ok": False, "error": "Could not save that. Try again in a minute."})
 
     def log_message(self, fmt: str, *args) -> None:
         print(f"form-intake: {self._ip()} {fmt % args}", file=sys.stderr, flush=True)

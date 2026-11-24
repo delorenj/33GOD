@@ -21,6 +21,14 @@ import pytest
 SRC = Path(__file__).resolve().parents[1] / "form-intake" / "form_intake.py"
 
 
+class _Keep3xx(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a, **kw):  # a 303 is the answer under test, not something to follow
+        return None
+
+
+_NO_REDIRECTS = urllib.request.build_opener(_Keep3xx)
+
+
 @pytest.fixture()
 def intake(tmp_path, monkeypatch):
     log = tmp_path / "bb.log"
@@ -37,16 +45,18 @@ def intake(tmp_path, monkeypatch):
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{srv.server_address[1]}"
 
-    def call(method, path, body=None, host="33god.delo.sh", ctype="application/json", ip="203.0.113.9", origin=None):
+    def call(method, path, body=None, host="33god.delo.sh", ctype="application/json", ip="203.0.113.9", origin=None,
+             headers=None):
         data = None
         if body is not None:
             data = json.dumps(body).encode() if ctype == "application/json" else body.encode()
-        headers = {"Content-Type": ctype, "X-Forwarded-Host": host, "CF-Connecting-IP": ip, "Referer": f"https://{host}/"}
+        hdrs = {"Content-Type": ctype, "X-Forwarded-Host": host, "CF-Connecting-IP": ip, "Referer": f"https://{host}/"}
         if origin is not None:
-            headers["Origin"] = origin
-        req = urllib.request.Request(base + path, data=data, method=method, headers=headers)
+            hdrs["Origin"] = origin
+        hdrs.update(headers or {})
+        req = urllib.request.Request(base + path, data=data, method=method, headers=hdrs)
         try:
-            with urllib.request.urlopen(req, timeout=5) as r:
+            with _NO_REDIRECTS.open(req, timeout=5) as r:
                 raw, status, hdrs = r.read(), r.status, r.headers
         except urllib.error.HTTPError as e:
             raw, status, hdrs = e.read(), e.code, e.headers
@@ -198,10 +208,12 @@ def test_allowlisted_cross_origin_post_is_stored_under_the_origin_host(intake):
     assert args[args.index("--source") + 1] == "urn:33god:form-intake:store.automaticai.io"
     data = json.loads(args[args.index("--data") + 1])
     assert data["thread_id"] == "store.automaticai.io:store-notify"
-    # The store promises deletion on request: the bus (Candystore keeps every event) only sees a masked address.
-    assert data["sender"]["handle"] == "t***@automaticai.io" and data["fields"]["email"] == "t***@automaticai.io"
-    assert data["fields"]["product"] == "heyma"
-    assert "test+heyma" not in log.read_text()
+    # The store promises deletion on request: the bus (Candystore keeps every event, ntfy caches the push)
+    # gets no address at all, masked or not. The SQLite row is the only copy.
+    assert data["fields"] == {"product": "heyma"} and data["withheld"] == ["email"]
+    assert data["sender"]["handle"] == "anonymous"
+    assert data["content"]["text"] == "store-notify from store.automaticai.io: product: heyma"
+    assert "@" not in log.read_text() and "automaticai.io" not in data["content"]["text"].split(": ", 1)[1]
 
 
 def test_allowlist_matches_case_and_trailing_slash_insensitively(intake):
@@ -245,13 +257,118 @@ def test_cross_origin_post_still_needs_a_served_endpoint_host(intake):
     assert status == 400 and "not served" in body["error"]
 
 
-@pytest.mark.parametrize("origin", [None, "null", "https://33god.delo.sh", "https://33god.delo.sh/", "http://33god.delo.sh"])
+@pytest.mark.parametrize("origin", [None, "https://33god.delo.sh", "https://33god.delo.sh/", "http://33god.delo.sh"])
 def test_same_origin_delo_sh_is_unchanged(intake, origin):
     mod, post, _, _ = intake
     status, body, h = post.call("POST", "/_forms/briefing", {"email": "s@example.com"}, origin=origin)
     assert status == 201, body
     assert "Access-Control-Allow-Origin" not in h
     assert _row(mod, body["id"])["site"] == "33god.delo.sh"
+
+
+@pytest.mark.parametrize("host", ["33god.delo.sh", "forms.delo.sh"])
+@pytest.mark.parametrize("ctype,body", [("application/json", {"email": "victim@example.org", "product": "heyma"}),
+                                        ("application/x-www-form-urlencoded", "email=victim%40example.org&product=heyma")])
+def test_an_opaque_null_origin_is_refused_everywhere(intake, host, ctype, body):
+    # A sandboxed iframe on any third-party page sends Origin: null; none of our pages ever does.
+    mod, post, log, _ = intake
+    status, payload, h = post.call("POST", "/_forms/store-notify", body, host=host, ctype=ctype, origin="null",
+                                   headers={"Sec-Fetch-Mode": "navigate"})
+    assert status == 403 and payload["ok"] is False
+    assert "Access-Control-Allow-Origin" not in h and "Location" not in h
+    with mod.db() as c:
+        assert c.execute("SELECT count(*) FROM submissions").fetchone()[0] == 0
+    assert not log.exists()
+
+
+@pytest.mark.parametrize("origin", [None, "https://forms.delo.sh"])
+def test_the_cors_endpoint_host_takes_only_an_allowlisted_origin(intake, origin):
+    # forms.delo.sh serves no pages, so a row can never be stored under its own name.
+    mod, post, _, _ = intake
+    status, body = post("/_forms/store-notify", {"email": "a@example.com", "product": "heyma"}, host="forms.delo.sh", origin=origin)
+    assert status == 403 and body["ok"] is False
+    with mod.db() as c:
+        assert c.execute("SELECT count(*) FROM submissions WHERE site = 'forms.delo.sh'").fetchone()[0] == 0
+
+
+def test_a_delo_sh_row_with_personal_fields_publishes_them_and_an_off_site_row_withholds_them(intake):
+    mod, post, log, _ = intake
+    status, body, _ = post.call("POST", "/_forms/contact", {"email": "x@example.org", "name": "Ann Lee", "message": "Hi there",
+                                                           "product": "heyma", "plan": "Big Plan"}, host="forms.delo.sh", origin=STORE)
+    assert status == 201
+    _wait_emitted(mod, body["id"])
+    args = log.read_text().splitlines()
+    data = json.loads(args[args.index("--data") + 1])
+    assert data["fields"] == {"product": "heyma"}
+    assert data["withheld"] == ["email", "message", "name", "plan"]
+    assert "Ann" not in log.read_text() and "Hi there" not in log.read_text() and "@" not in log.read_text()
+    assert json.loads(_row(mod, body["id"])["fields"])["name"] == "Ann Lee"  # the row keeps all of it
+
+
+# --- no JavaScript: a plain form post from a listed site goes back to its page --------------------
+
+NAV = {"Sec-Fetch-Mode": "navigate", "Accept": "text/html,application/xhtml+xml"}
+FORM = "application/x-www-form-urlencoded"
+
+
+def test_a_plain_form_post_from_a_listed_origin_is_303_back_to_its_page(intake):
+    mod, post, _, _ = intake
+    status, body, h = post.call("POST", "/_forms/store-notify", "email=n%40example.com&product=heyma&_back=%2Fheyma%2F&_hp=",
+                                host="forms.delo.sh", ctype=FORM, origin=STORE, headers=NAV)
+    assert status == 303 and body is None
+    assert h["Location"] == "https://store.automaticai.io/heyma/#store-notify-saved"
+    with mod.db() as c:
+        rows = c.execute("SELECT * FROM submissions").fetchall()
+    assert len(rows) == 1 and json.loads(rows[0]["fields"]) == {"email": "n@example.com", "product": "heyma"}  # _back not stored
+
+
+@pytest.mark.parametrize("body,frag", [("email=nope&product=heyma&_back=%2Fheyma%2F", "store-notify-error"),
+                                       ("email=bot%40example.com&_hp=x&_back=%2Fheyma%2F", "store-notify-saved"),
+                                       ("email=&_back=%2Fheyma%2F", "store-notify-error")])
+def test_a_plain_form_post_error_or_honeypot_also_goes_back(intake, body, frag):
+    mod, post, _, _ = intake
+    status, _, h = post.call("POST", "/_forms/store-notify", body, host="forms.delo.sh", ctype=FORM, origin=STORE, headers=NAV)
+    assert status == 303 and h["Location"] == f"https://store.automaticai.io/heyma/#{frag}"
+    with mod.db() as c:
+        assert c.execute("SELECT count(*) FROM submissions").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize("back", ["%2F%2Fevil.example.com%2F", "https%3A%2F%2Fevil.example.com%2F", "heyma", "%2Fa%3Fb%3Dc"])
+def test_the_way_back_never_leaves_the_listed_origin(intake, back):
+    _, post, _, _ = intake
+    status, _, h = post.call("POST", "/_forms/store-notify", f"email=w%40example.com&product=heyma&_back={back}",
+                             host="forms.delo.sh", ctype=FORM, origin=STORE, headers={**NAV, "Referer": "https://evil.example.com/x/"})
+    assert status == 303 and h["Location"] == "https://store.automaticai.io/#store-notify-saved"
+
+
+def test_the_way_back_can_come_from_a_same_origin_referer(intake):
+    _, post, _, _ = intake
+    status, _, h = post.call("POST", "/_forms/store-notify", "email=r%40example.com&product=heyma", host="forms.delo.sh",
+                             ctype=FORM, origin=STORE, headers={**NAV, "Referer": "https://store.automaticai.io/voxxy/?x=1"})
+    assert status == 303 and h["Location"] == "https://store.automaticai.io/voxxy/#store-notify-saved"
+
+
+@pytest.mark.parametrize("ctype,body,headers", [
+    ("application/json", {"email": "j@example.com", "product": "heyma"}, NAV),                 # JSON callers: unchanged
+    (FORM, "email=f%40example.com&product=heyma", {"Sec-Fetch-Mode": "cors"}),                # a script's urlencoded fetch
+])
+def test_script_callers_still_get_json(intake, ctype, body, headers):
+    _, post, _, _ = intake
+    status, payload, h = post.call("POST", "/_forms/store-notify", body, host="forms.delo.sh", ctype=ctype, origin=STORE, headers=headers)
+    assert status == 201 and payload["ok"] and "Location" not in h and h["Access-Control-Allow-Origin"] == STORE
+
+
+def test_a_plain_form_post_from_an_unlisted_origin_is_403_not_a_redirect(intake):
+    _, post, _, _ = intake
+    status, payload, h = post.call("POST", "/_forms/store-notify", "email=u%40example.com", host="forms.delo.sh", ctype=FORM,
+                                   origin="https://evil.example.com", headers=NAV)
+    assert status == 403 and payload["ok"] is False and "Location" not in h
+
+
+def test_same_origin_delo_sh_plain_form_post_still_gets_json(intake):
+    _, post, _, _ = intake
+    status, payload, h = post.call("POST", "/_forms/contact", "email=d%40example.com", ctype=FORM, origin="https://33god.delo.sh", headers=NAV)
+    assert status == 201 and payload["ok"] and "Location" not in h
 
 
 def test_another_delo_sh_page_cannot_post_cross_origin(intake):

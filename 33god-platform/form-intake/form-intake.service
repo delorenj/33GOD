@@ -13,6 +13,8 @@ Environment=FORM_INTAKE_LISTEN=172.17.0.1:18811
 # Exact origins (not on delo.sh) allowed to post cross-origin; rows are stored under the origin's host.
 # Add a site here, then: systemctl --user daemon-reload && systemctl --user restart form-intake
 Environment="FORM_INTAKE_CORS_ORIGINS=https://store.automaticai.io"
+# Endpoint hosts that serve no pages: they take only a listed Origin, never a same-origin row.
+Environment=FORM_INTAKE_CORS_HOSTS=forms.delo.sh
 ExecStart=/usr/bin/python3 /home/delorenj/code/33GOD/33god-platform/form-intake/form_intake.py serve
 Restart=on-failure
 RestartSec=3

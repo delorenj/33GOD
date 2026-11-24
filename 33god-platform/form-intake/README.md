@@ -60,10 +60,22 @@ name (Cloudflare wildcard DNS, the tunnel, Traefik).
 - The row's `site` is the listed Origin's host (`store.automaticai.io`), never the endpoint host.
 - A POST whose Origin is another host and is not listed is refused with `403`, preflight or not
   (a plain `<form>` post skips the preflight). That includes one `*.delo.sh` page posting to another.
-- No `Origin`, `Origin: null` or an Origin on the request's own host is same-origin: unchanged.
-- The Bloodbank event for a row from such a site carries the address masked (`t***@example.com`):
-  Candystore keeps every event, and those sites promise deletion on request, so the SQLite row is the
-  only full copy and `delete` really removes it. `*.delo.sh` rows publish the full address, as before.
+- `Origin: null` is refused with `403` on every host. It is an opaque origin (a sandboxed iframe, a
+  `file:` or `data:` page), which any third-party page can make; none of our pages ever sends it.
+- No `Origin` or an Origin on the request's own host is same-origin: unchanged on every `*.delo.sh`
+  site. The exception is the hosts in `FORM_INTAKE_CORS_HOSTS` (default `forms.delo.sh`): they serve
+  no pages, so they take only a listed Origin, and no row is ever stored under their own name.
+- The Bloodbank event for a row from such a site carries **no address**: only field values that look
+  like an id (`product=heyma`) are published, and every other field is named in `withheld`
+  (`sender.handle` is `anonymous`). Candystore keeps every event and ntfy caches the push, and those
+  sites promise deletion on request, so the SQLite row is the only copy and `delete` really removes it.
+  `*.delo.sh` rows publish every field, as before.
+- **No JavaScript:** a plain HTML form post (urlencoded, `Sec-Fetch-Mode: navigate`) from a listed
+  Origin is answered `303` back to that origin, never JSON: `Location: <origin><_back>#<form>-saved`
+  (or `#<form>-error`). `_back` is an optional hidden field holding the page path (`/heyma/`); under
+  the default referrer policy the browser's Referer is only the origin. A `_back` that is not a plain
+  path falls back to the Referer's path on that origin, then to `/`. Script callers (JSON, or
+  `Sec-Fetch-Mode: cors`) get JSON as before.
 
 ```bash
 curl -si -X OPTIONS https://forms.delo.sh/_forms/store-notify -H 'Origin: https://store.automaticai.io' \
@@ -76,14 +88,17 @@ curl -si -X OPTIONS https://forms.delo.sh/_forms/store-notify -H 'Origin: https:
 FI=~/code/33GOD/33god-platform/form-intake/form_intake.py
 python3 $FI list                                    # newest first, with each row's id
 python3 $FI list --form briefing --json
-python3 $FI list --form store-notify --field product=heyma --emails   # each address once, oldest first
+python3 $FI list --site store.automaticai.io --form store-notify --field product=heyma --emails   # each address once, oldest first
 python3 $FI delete --email someone@example.com      # a deletion request: every row with that address
-python3 $FI delete --form store-notify --field product=heyma          # a list that has been used
+python3 $FI delete --site store.automaticai.io --form store-notify --field product=heyma   # a list that has been used
 python3 $FI delete --id <id>                        # one row (a test)
 python3 $FI replay                                  # re-emit rows the bus missed
 ```
 
-`delete` refuses to run without a filter. Each row holds the fields, the time, the page address
+Always pass `--site` for a send list: a row posted to `/_forms/store-notify` on some other host is
+stored under that host, and `--site store.automaticai.io` keeps it off the list. The store's
+`mise run deploy` runs `notify-guard`, which refuses a deploy while a product that is already on sale
+still has sign-ups waiting (see the store README). `delete` refuses to run without a filter. Each row holds the fields, the time, the page address
 (`Referer`), the IP and the browser's user-agent; the store's privacy page says so.
 
 ## Run it
@@ -96,4 +111,5 @@ curl -s https://33god.delo.sh/_forms/health
 
 The Traefik route lives in DeLoContainers: `~/docker/core/traefik/traefik-data/dynamic/form-intake.yml`.
 Tests: `pytest tests/test_form_intake.py` (real handler, temp DB, stub `bb`; CORS allowlist,
-preflight, cross-origin refusals, same-origin unchanged, list/delete).
+preflight, cross-origin and `null` refusals, the endpoint-only host, same-origin unchanged, no address
+on the bus for off-site rows, the no-JS `303`, list/delete).
