@@ -62,12 +62,14 @@ Select checks that demonstrate the slice's actual behavior:
   before shaping the model, then inspect the meaningful animation from those
   views, not just in close-up. A camera outside the write allowlist cannot be
   moved later. Clean asset validation, typechecks, and console output do not
-  prove the mechanism reads from there. Use the Factory's temporary-output
-  checks; its normal build output is a live deploy, not an authorized
-  validation step in an asset-only run. Check the verifier's manifest rules
-  against the assigned placement before building. If a required field cannot
-  be true (for example, nothing hideable at the station), leave it honest, flag
-  it for the integrator, and report the verifier failure rather than a pass.
+  prove the mechanism reads from there. Forge stills omit behavior a runtime
+  Driver adds; exercise it on the floor or report it unverified. Use the
+  Factory's temporary-output checks; its normal build output is a live
+  deploy, not an authorized validation step in an asset-only run. Check the
+  verifier's manifest rules against the assigned placement before building. If
+  a required field cannot be true (for example, nothing hideable at the
+  station), leave it honest, flag it for the integrator, and report the
+  verifier failure rather than a pass.
 - Scroll/playhead changes: exercise small wheel and keyboard inputs separated
   by pauses in both directions across a transition, including stopping midway,
   plus a held key's auto-repeat. Verify progress is not snapped back to the
