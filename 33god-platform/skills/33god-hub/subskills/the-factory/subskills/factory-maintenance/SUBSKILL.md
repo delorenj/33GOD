@@ -78,6 +78,13 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- `mise run assets` timing out at 300 s with no Blender output is not your build.py. Check
+  `cat /proc/<blender pid>/wchan`. `request_wait_answer` means Blender is hung on a stuck gvfs FUSE backend
+  (`gvfsd-mtp` under `/run/user/1000/gvfs`). Kill that backend and the build takes under 1 s. A station whose cast
+  has two members (cataloguer: `enricher` + `turn-enricher`) needs a Driver. It draws the other member's primitive
+  statically and routes its visits (by tag) to that member's spots, with release from its runner. Pick a Work
+  variant from the loaded waybill span's `attrs`, not by alternating. A noise branch that emits no event never
+  reaches a visit, so do not play it (2026-11-24, turn-enricher).
 - A self-review passes its own inventions. The 2026-11-22 board scored 7 with a chart that ran on every copy
   (Prometheus scrapes on a timer and Grafana draws), green "acked" lips (a signature is not a success stamp), prices
   that `routes.json` does not hold, and a health lamp that blinked on fetches. The data-truth critic in step F caught
