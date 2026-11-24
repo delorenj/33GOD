@@ -68,6 +68,14 @@ URL="$(python3 "$HOME/.agents/skills/artifacts/scripts/publish.py" "$OUT/atlas-d
         --name atlas-drift --project 33god 2>"$OUT/publish.err" | tail -1)"
 case "$URL" in https://*) ;; *) echo "atlas-drift: publish failed: $(tail -3 "$OUT/publish.err")" >&2; URL="" ;; esac
 
+# File as the Director's PM, not the operator: without its own key px falls back to the shared default and
+# every drift ticket shows Jarad as author. `flume access as` hands over 33god-pm's adopted Plane key reference.
+FLUME_BIN="$(command -v flume || echo "$HOME/.local/bin/flume")"
+if AS_KEY="$("$FLUME_BIN" access as 33god-pm -- printenv PLANE_API_KEY 2>"$OUT/plane-as.err")" && [ -n "$AS_KEY" ]; then
+  export PLANE_API_KEY="$AS_KEY"
+else
+  echo "atlas-drift: filing with the shared key: $(tail -1 "$OUT/plane-as.err")" >&2
+fi
 created="$(px task create "Atlas drift: $NEED finding(s) need a person" --idempotency-key "atlas-drift-$DIGEST" 2>&1)" \
   || { echo "atlas-drift: ticket create failed: $created" >&2; exit 2; }
 REF="$(grep -oE '\b[A-Z0-9]*[A-Z][A-Z0-9]*-[0-9]+\b' <<<"$created" | head -1)"
