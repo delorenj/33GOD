@@ -27,6 +27,11 @@ relations:
   via: VinylSession to vinyl serve :7733 (mic stream)
   evidence: ~/code/shortwave/app/src/main/java/sh/delo/shortwave/MainActivity.kt:185
   anchor: val s = VinylSession(host, port, prefs.vinylToken, this)
+- to: mobile-deploy-hub
+  kind: calls
+  via: deploy.yml invokes the hub's reusable mobile-deploy workflow for the Android app
+  evidence: ~/code/shortwave/.github/workflows/deploy.yml:55
+  anchor: 'uses: delorenj/mobile-deploy-hub/.github/workflows/mobile-deploy.yml@v1'
 evidence:
 - systemctl --user show shortwave-relay Description
 confidence: medium

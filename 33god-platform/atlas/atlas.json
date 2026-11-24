@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "registry_digest": "acae57e6a8c04290b64919277f2b067676d00a71910c9872582617b7b8e12d77",
+  "registry_digest": "88cc09d5a13d9243ef376952c8049cf5b046ece32a79d24a8736cf1ba2708c5c",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -2511,6 +2511,12 @@
       "via": "bucket earshot/<channel>/ via the delo mc alias"
     },
     {
+      "from": "earshot",
+      "to": "mobile-deploy-hub",
+      "kind": "calls",
+      "via": "deploy.yml invokes the hub's reusable mobile-deploy workflow for the Android app"
+    },
+    {
       "from": "enricher",
       "to": "bb-dapr",
       "kind": "consumes-from",
@@ -3465,6 +3471,12 @@
       "via": "VinylSession to vinyl serve :7733 (mic stream)"
     },
     {
+      "from": "shortwave",
+      "to": "mobile-deploy-hub",
+      "kind": "calls",
+      "via": "deploy.yml invokes the hub's reusable mobile-deploy workflow for the Android app"
+    },
+    {
       "from": "skillex",
       "to": "hermes-fleet",
       "kind": "writes",
@@ -3710,6 +3722,6 @@
     "first_party": 80,
     "external": 20,
     "live": 88,
-    "edges": 300
+    "edges": 302
   }
 }

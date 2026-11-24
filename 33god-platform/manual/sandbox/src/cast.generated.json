@@ -1,7 +1,7 @@
 {
   "format": "33god.factory-cast",
   "version": 1,
-  "digest": "54d7fea04a3244523366a3c2232fd170b119ad1204edc3bf34c2685aff480db4",
+  "digest": "86f413e3daa8bb29c8bd16c6caf1362cea2f3e68d8aedf20c671d74680339b45",
   "components": {
     "aai-gateway": {
       "name": "AutomaticAI LLM gateway",
@@ -611,7 +611,7 @@
       "domain": "G5",
       "first_party": true,
       "station": null,
-      "near": "crew",
+      "near": "soundwing",
       "aliases": []
     },
     "momo": {

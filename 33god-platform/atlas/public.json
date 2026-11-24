@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "note": "Scrubbed Atlas export for public showcase pages. Generated; do not edit.",
-  "registry_digest": "acae57e6a8c04290b64919277f2b067676d00a71910c9872582617b7b8e12d77",
+  "registry_digest": "88cc09d5a13d9243ef376952c8049cf5b046ece32a79d24a8736cf1ba2708c5c",
   "system": {
     "id": "33god",
     "name": "33GOD",
@@ -2198,6 +2198,11 @@
       "kind": "stores-in"
     },
     {
+      "from": "earshot",
+      "to": "mobile-deploy-hub",
+      "kind": "calls"
+    },
+    {
       "from": "enricher",
       "to": "bb-dapr",
       "kind": "consumes-from"
@@ -2990,6 +2995,11 @@
     {
       "from": "shortwave",
       "to": "vinyl",
+      "kind": "calls"
+    },
+    {
+      "from": "shortwave",
+      "to": "mobile-deploy-hub",
       "kind": "calls"
     },
     {

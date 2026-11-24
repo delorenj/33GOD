@@ -26,7 +26,7 @@ relations:
 - to: bb-nats
   kind: publishes-to
   via: bb-emit --strict bloodbank.project.deployment.{completed,failed}
-  evidence: ~/code/mobile-deploy-hub/tools/catchup/catchup.mjs:905
+  evidence: ~/code/mobile-deploy-hub/tools/catchup/catchup.mjs:1011
   anchor: emit = event => sendCatchupEvent({ event, env, home }),
 evidence:
 - ~/code/mobile-deploy-hub/README.md
@@ -38,4 +38,4 @@ surfaces:
 - producer:mobile-deploy-hub-catchup
 - systemd:mobile-deploy-hub-catchup.service
 factory:
-  near: crew
+  near: soundwing

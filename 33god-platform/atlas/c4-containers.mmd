@@ -156,6 +156,7 @@ flowchart LR
   c_delosip -->|calls| c_ntfy
   c_delosip -->|reads| c_onepassword
   c_earshot -->|stores-in| c_minio
+  c_earshot -->|calls| c_mobile_deploy_hub
   c_enricher -->|consumes-from| c_bloodbank
   c_enricher -->|writes| c_candystore
   c_enricher -->|publishes-to| c_bloodbank
@@ -263,6 +264,7 @@ flowchart LR
   c_pr_crusher -->|routes-llm-via| c_aai_gateway
   c_pr_crusher -->|reads| c_onepassword
   c_shortwave -->|calls| c_heyma
+  c_shortwave -->|calls| c_mobile_deploy_hub
   c_skillex -->|writes| c_hermes_fleet
   c_target_watch -->|publishes-to| c_bloodbank
   c_target_watch -->|calls| c_pilot
