@@ -514,6 +514,21 @@
         "offer": null,
         "href": "https://store.automaticai.io/heyma/",
         "button": "See HeyMa in the store"
+      },
+      {
+        "id": "voxxy",
+        "name": "Voxxy",
+        "status": "preview",
+        "pill": "Preview",
+        "line": "Text to speech in a voice you choose: one of ours, one you describe, or your own.",
+        "chips": [
+          "Your own voice, or one described",
+          "Self-hosted edition first",
+          "Not on sale yet"
+        ],
+        "offer": null,
+        "href": "https://store.automaticai.io/voxxy/",
+        "button": "See Voxxy in the store"
       }
     ],
     "org": {
