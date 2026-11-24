@@ -83,7 +83,7 @@ def test_stores_then_publishes(intake):
     args = log.read_text().splitlines()
     assert args[args.index("--type") + 1] == "bloodbank.messaging.webform.received"
     data = json.loads(args[args.index("--data") + 1])
-    assert data["sender"]["handle"] == "a@example.com"
+    assert data["sender"]["handle"] == "a@example.com"  # delo.sh sites: unchanged, the full address
     assert data["thread_id"] == "33god.delo.sh:briefing" and data["message_id"] == body["id"]
 
 
@@ -196,7 +196,12 @@ def test_allowlisted_cross_origin_post_is_stored_under_the_origin_host(intake):
     assert json.loads(row["fields"]) == {"email": "test+heyma@automaticai.io", "product": "heyma"}
     args = log.read_text().splitlines()
     assert args[args.index("--source") + 1] == "urn:33god:form-intake:store.automaticai.io"
-    assert json.loads(args[args.index("--data") + 1])["thread_id"] == "store.automaticai.io:store-notify"
+    data = json.loads(args[args.index("--data") + 1])
+    assert data["thread_id"] == "store.automaticai.io:store-notify"
+    # The store promises deletion on request: the bus (Candystore keeps every event) only sees a masked address.
+    assert data["sender"]["handle"] == "t***@automaticai.io" and data["fields"]["email"] == "t***@automaticai.io"
+    assert data["fields"]["product"] == "heyma"
+    assert "test+heyma" not in log.read_text()
 
 
 def test_allowlist_matches_case_and_trailing_slash_insensitively(intake):

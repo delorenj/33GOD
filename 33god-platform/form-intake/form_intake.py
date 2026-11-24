@@ -165,8 +165,19 @@ def rate_ok(ip: str, now: float) -> bool:
     return True
 
 
+def mask_email(value: str) -> str:
+    """a***@example.com: enough to recognise a sign-up in a push, not the address itself."""
+    local, sep, domain = value.partition("@")
+    return f"{local[:1]}***@{domain}" if sep and local else value
+
+
 def event_data(row: sqlite3.Row) -> dict:
     fields = json.loads(row["fields"])
+    if not SITE_RE.match(row["site"]):
+        # A site off delo.sh (a CORS origin) is public-facing: its privacy policy promises the address is
+        # deleted on request, so the SQLite row stays the only full copy and the bus (Candystore keeps
+        # every event) only ever sees it masked.
+        fields = {k: mask_email(v) if k == "email" else v for k, v in fields.items()}
     email = fields.get("email", "")
     name = fields.get("name", "")
     message = fields.get("message") or ", ".join(f"{k}: {v}" for k, v in fields.items())[:500]

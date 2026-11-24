@@ -61,6 +61,9 @@ name (Cloudflare wildcard DNS, the tunnel, Traefik).
 - A POST whose Origin is another host and is not listed is refused with `403`, preflight or not
   (a plain `<form>` post skips the preflight). That includes one `*.delo.sh` page posting to another.
 - No `Origin`, `Origin: null` or an Origin on the request's own host is same-origin: unchanged.
+- The Bloodbank event for a row from such a site carries the address masked (`t***@example.com`):
+  Candystore keeps every event, and those sites promise deletion on request, so the SQLite row is the
+  only full copy and `delete` really removes it. `*.delo.sh` rows publish the full address, as before.
 
 ```bash
 curl -si -X OPTIONS https://forms.delo.sh/_forms/store-notify -H 'Origin: https://store.automaticai.io' \
