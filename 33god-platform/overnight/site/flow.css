@@ -35,7 +35,7 @@ html.fw-flat .fw-rv { opacity: 1; transform: none; }
 
 /* ---------- header: five icons, the briefing, and six bars for where you are ---------- */
 .fw-hdr { position: sticky; top: 0; z-index: 40; height: var(--hdr); padding-top: env(safe-area-inset-top, 0px);
-  background: color-mix(in srgb, var(--stage-ground) 92%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--stage-ground) 97%, transparent);
   border-bottom: 1px solid var(--stage-rule); }
 .fw-hdr__in { height: 100%; display: flex; align-items: center; gap: 6px; max-width: 64rem; margin: 0 auto;
   padding: 0 max(var(--gut), env(safe-area-inset-right)) 0 max(var(--gut), env(safe-area-inset-left)); }

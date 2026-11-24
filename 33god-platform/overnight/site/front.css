@@ -35,8 +35,7 @@ a { color: inherit; }
 
 /* ---------- header: the five flagships are the nav ---------- */
 .hdr { position: fixed; inset: 0 0 auto; height: var(--hdr); z-index: 50;
-  background: color-mix(in srgb, var(--stage-ground) 90%, transparent);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--stage-ground) 97%, transparent);
   border-bottom: 1px solid var(--stage-rule); }
 .hdr__in { height: 100%; display: flex; align-items: center; gap: 8px; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gut); }
 .brand { display: flex; align-items: center; gap: 9px; text-decoration: none; flex: none; min-height: 44px; }
@@ -153,7 +152,7 @@ a { color: inherit; }
 .ex.is-pinned .ex__stage { position: sticky; top: var(--hdr); height: calc(100svh - var(--hdr)); overflow: hidden; }
 .ex__badge { display: flex; align-items: center; gap: 14px; }
 .ex__icon { display: grid; place-items: center; width: 56px; aspect-ratio: 1; border-radius: 16px; background: var(--acc); color: var(--on-acc); font-size: 30px; flex: none;
-  box-shadow: 0 12px 40px -12px color-mix(in srgb, var(--acc) 70%, transparent); }
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--acc) 70%, transparent); }
 .ex__icon .i { stroke-width: 1.6; }
 .ex__meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .ex__num { font: 700 13px/1 var(--font-mono); letter-spacing: .14em; color: var(--acc); }
@@ -170,7 +169,7 @@ a { color: inherit; }
 .steps i:first-child, .ex[data-step="1"] .steps i:nth-child(-n+2), .ex[data-step="2"] .steps i { background: var(--acc); }
 .next { font: 600 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--stage-ink-3); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
 .next:hover { color: var(--stage-ink); }
-.panel { width: 100%; background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 16px; box-shadow: 0 40px 90px -50px color-mix(in srgb, var(--acc) 55%, transparent); }
+.panel { width: 100%; background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 16px; box-shadow: 0 24px 44px -28px color-mix(in srgb, var(--acc) 55%, transparent); }
 .panel__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--panel-edge); font: 600 13px/1 var(--font-mono); }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font: 600 11px/1 var(--font-mono); letter-spacing: .04em; white-space: nowrap;
   color: var(--acc); background: var(--acc-soft); }
@@ -267,7 +266,7 @@ a { color: inherit; }
 .hm__note { font: italic 400 15px/1.3 var(--font-display); color: var(--stage-ink-3); }
 .phone { width: min(100%, 300px); margin: 0 auto; }
 .phone__body { display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 16px; border-radius: 34px; background: var(--facade); border: 1px solid var(--facade-edge);
-  box-shadow: 0 0 0 5px var(--window-dark), 0 30px 70px -30px color-mix(in srgb, var(--acc) 50%, transparent); }
+  box-shadow: 0 0 0 5px var(--window-dark), 0 18px 36px -18px color-mix(in srgb, var(--acc) 50%, transparent); }
 .phone__top { display: flex; justify-content: center; padding: 2px 0 4px; }
 .island { width: 78px; height: 20px; border-radius: 12px; background: var(--sky-0200); box-shadow: inset 0 0 0 1px var(--stage-rule); }
 .call__head { display: flex; align-items: center; gap: 8px; font: 600 11.5px/1.25 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--stage-ink-2); }
@@ -336,7 +335,7 @@ a { color: inherit; }
 .org__lvl .role { width: 100%; }
 .role--open { background: transparent; border: 1.5px dashed var(--g33-line-strong); box-shadow: none; transition: background .5s, border-color .5s, box-shadow .5s; }
 .role--open .i { color: var(--stage-ink-3); }
-.ex[data-step="1"] .role--open, .ex[data-step="2"] .role--open { border-color: var(--acc); background: var(--acc-soft); box-shadow: 0 0 30px -6px color-mix(in srgb, var(--acc) 60%, transparent); }
+.ex[data-step="1"] .role--open, .ex[data-step="2"] .role--open { border-color: var(--acc); background: var(--acc-soft); box-shadow: 0 0 16px -4px color-mix(in srgb, var(--acc) 60%, transparent); }
 .ex[data-step="1"] .role--open .i, .ex[data-step="2"] .role--open .i { color: var(--acc); }
 .fl__bar { display: flex; }
 .pipe { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
