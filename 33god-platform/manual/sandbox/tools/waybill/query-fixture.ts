@@ -59,7 +59,7 @@ const BASE: Stream[] = [
 ]
 
 const DESKS = ['33god-pm', 'gruvato-pm', 'tolt-pm', 'bloodbank-pm', 'holocene-pm', 'flume-pm', 'pilot-pm', 'candystore-pm', 'candybar-pm', 'monitoring-pm', 'manual-pm', 'atlas-pm', 'waybill-pm', 'earshot-pm', 'heyma-pm',
-  'vox-pm', 'milkshake-pm', 'curator-pm', 'deckard-pm', 'krebs-pm', 'plane-pm', 'hindsight-pm', 'aai-pm', 'delosip-pm', 'crank-pm', 'launch-director', 'jev-pm', 'ntfy-pm', 'asm-pm', 'cost-pm',
+  'vox-pm', 'milkshake-pm', 'curator-pm', 'deckard-pm', 'krebs-pm', 'plane-pm', 'hindsight-pm', 'aai-pm', 'delosip-pm', 'crank-pm', 'earshot-pm', 'jev-pm', 'ntfy-pm', 'asm-pm', 'cost-pm',
   'artifact-pm', 'sentinel-pm', 'target-pm', 'wax-pm', 'tiller-pm', 'gib-pm', 'hands-pm', 'staffing-pm', 'lessons-pm']
 
 export interface FixtureOpts { big?: boolean }
@@ -153,7 +153,7 @@ export function buildQuery(opts: FixtureOpts = {}): Record<string, unknown> {
   add('kimi', 'llm.usage.updated', 2, 3)
   const kimiIds = kept.slice(kimi).map((k) => k.id)
   const tools = kept.length
-  add('hermes-agent:launch-director', 'agent.tool.executed', 4, 3)
+  add('hermes-agent:earshot-pm', 'agent.tool.executed', 4, 3)
   const toolEv = kept.slice(tools)
   const hookFail = kept.filter((k) => k.type.endsWith('hook.invocation.failed'))
   // dead letters: refused by Candystore's archive
@@ -226,7 +226,7 @@ export function buildQuery(opts: FixtureOpts = {}): Record<string, unknown> {
   // synthesized spans: tool pairs, llm calls, hook invocations
   toolEv.forEach((k, i) => {
     const tid = `toolu_${String(i + 1).padStart(4, '0')}`
-    spans.push({ id: `tool:${tid}`, kind: 'tool', component: 'hermes-desk:launch-director', name: i % 2 ? 'Read' : 'Bash', summary: i % 2 ? 'Read a file' : 'Ran a command', phase: 'tool', t0: k.t, t1: k.t + 1800, status: 'ok', parent: `chapter:${k.ch}`, refs: { tool_use_id: tid, event_id: k.id }, attrs: {}, evidence: ['candystore'] })
+    spans.push({ id: `tool:${tid}`, kind: 'tool', component: 'hermes-desk:earshot-pm', name: i % 2 ? 'Read' : 'Bash', summary: i % 2 ? 'Read a file' : 'Ran a command', phase: 'tool', t0: k.t, t1: k.t + 1800, status: 'ok', parent: `chapter:${k.ch}`, refs: { tool_use_id: tid, event_id: k.id }, attrs: {}, evidence: ['candystore'] })
   })
   kimiIds.forEach((id, i) => {
     const k = final.find((x) => x.id === id)!

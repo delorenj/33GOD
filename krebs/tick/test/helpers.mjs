@@ -152,7 +152,7 @@ function agent(id, plane, extra = {}) {
   };
 }
 
-/** A registry like the real one: TOLT shared by three scopes, an advisory launch director, a solo board. */
+/** A registry like the real one: TOLT shared by three scopes, an advisory row, a solo board. */
 export function registryFixture() {
   return {
     schema_version: 1,
@@ -160,7 +160,7 @@ export function registryFixture() {
       "tolt-pm": agent("tolt-pm", { workspace: WS, project_id: TOLT, identifier: "TOLT", scope_label: "repo:game", scope_default: true }, { repo: "tolt" }),
       "lost-things-forge-pm": agent("lost-things-forge-pm", { workspace: WS, project_id: TOLT, identifier: "TOLT", scope_label: "repo:forge" }),
       "tolt-director": agent("tolt-director", { workspace: WS, project_id: TOLT, identifier: "TOLT", scope_label: "repo:tolt" }, { repo: "tolt", role: "director" }),
-      "tolt-launch-director": agent("tolt-launch-director", { workspace: WS, identifier: "TOLT" }, { board_scope: "advisory" }),
+      "tolt-advisor": agent("tolt-advisor", { workspace: WS, identifier: "TOLT" }, { board_scope: "advisory" }),
       "solo-pm": agent("solo-pm", { workspace: WS, project_id: SOLO, identifier: "SOLO", wip: 1, review: true }),
       "other-pm": agent("other-pm", { workspace: WS, project_id: OTHER, identifier: "OTH" }),
       "retired-pm": agent("retired-pm", { workspace: WS, project_id: "b-retired", identifier: "RET" }, { bloodbank: { enabled: false } }),

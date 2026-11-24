@@ -15,7 +15,7 @@ test("scopes: every owning row; advisory, retired, disabled and plane-less rows 
   const { scopes, skipped } = scopesFromRegistry(registryFixture(), { activation, executionMode: legacy });
   assert.deepEqual(scopes.map((s) => s.agentId), ["lost-things-forge-pm", "other-pm", "solo-pm", "tolt-director", "tolt-pm"]);
   const why = Object.fromEntries(skipped.map((s) => [s.agentId, s.why]));
-  assert.match(why["tolt-launch-director"], /names no board/);
+  assert.match(why["tolt-advisor"], /names no board/);
   assert.match(why["retired-pm"], /bloodbank.enabled is false/);
   assert.equal(why["no-plane"], undefined, "a row without a plane block is not considered at all");
 
@@ -54,7 +54,7 @@ test("scopes: a repo fenced to a non-legacy execution.mode is skipped", () => {
 test("scopes: --board filters by identifier (any case) or board id", () => {
   const byKey = scopesFromRegistry(registryFixture(), { activation, executionMode: legacy, board: "tolt" });
   assert.deepEqual(byKey.scopes.map((s) => s.agentId), ["lost-things-forge-pm", "tolt-director", "tolt-pm"]);
-  assert.equal(byKey.matchedRows, 4, "the advisory launch director row names TOLT too");
+  assert.equal(byKey.matchedRows, 4, "the advisory row names TOLT too");
   const byId = scopesFromRegistry(registryFixture(), { activation, executionMode: legacy, board: "b-solo" });
   assert.deepEqual(byId.scopes.map((s) => s.agentId), ["solo-pm"]);
   assert.equal(scopesFromRegistry(registryFixture(), { activation, executionMode: legacy, board: "NOPE" }).matchedRows, 0);

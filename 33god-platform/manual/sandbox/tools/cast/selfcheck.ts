@@ -35,7 +35,7 @@ const EMITTED = [
   // ids that are not registry components: vendor CLIs, devices, and the recorder's own meta ids
   'ext:claude-code', 'ext:codex-cli', 'ext:codex-exec', 'ext:codex-desktop', 'ext:nanoleaf', 'ext:orca', 'ext:codex-mcp-helper-reaper', 'ext:hook-command', 'ext:unknown', 'ext:antigravity', 'copilot-cli', 'antigravity-cli', 'tenant-annex', 'zellij-sentinel',
   // keyed families the resolver mints: Hermes desks and tenants
-  'hermes-desk:tolt-pm', 'hermes-desk:unknown', 'hermes-desk:33god-pm', 'hermes-desk:gruvato-pm', 'hermes-desk:launch-director', 'tenant:tiller', 'tenant:gruvato', 'tenant:gib',
+  'hermes-desk:tolt-pm', 'hermes-desk:unknown', 'hermes-desk:33god-pm', 'hermes-desk:gruvato-pm', 'hermes-desk:earshot-pm', 'tenant:tiller', 'tenant:gruvato', 'tenant:gib',
   // query mode (Candystore night waybills): the components the resolver names for every producer a night holds
   'momo', 'candybar-steward', 'crank', 'earshot', 'delosip', 'plane-hook', 'aai-gateway', 'aai-llm-observability',
   'unknown', 'waybill',
