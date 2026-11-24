@@ -439,7 +439,8 @@ def cmd_list(a: argparse.Namespace) -> int:
             email = r["fields"].get("email", "").strip().lower()
             if email:
                 seen.setdefault(email, None)
-        print("\n".join(seen))
+        if seen:  # an empty list prints nothing, so `| wc -l` counts 0 and not a blank line
+            print("\n".join(seen))
     elif a.json:
         print(json.dumps(rows, indent=2))
     else:

@@ -1222,13 +1222,15 @@ class TestFront(_Browser):
 
     def test_shelf_drops_an_entry_that_is_not_a_store_page(self, server, pw):
         M = manifest()
+        dropped = M["front"]["shelf"][0]["id"]
+        kept = sorted(e["id"] for e in M["front"]["shelf"][1:])
         M["front"]["shelf"][0]["href"] = "https://buy.stripe.com/example"
         pg = pw.new_page(viewport={"width": 390, "height": 844})
         pg.route("**/manifest.json", lambda route, request: route.fulfill(status=200, content_type="application/json", body=json.dumps(M)))
         pg.goto(server)
         pg.wait_for_selector("html.ready")
         ids = pg.evaluate("[...document.querySelectorAll('#shelf .shelf__card')].map(c => c.dataset.shelf)")
-        assert ids == ["heyma"], f"a card whose href is not on the store is never drawn: {ids}"
+        assert dropped not in ids and sorted(ids) == kept, f"a card whose href is not on the store is never drawn: {ids}"
         pg.close()
 
 

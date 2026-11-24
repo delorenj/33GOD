@@ -400,6 +400,8 @@ def test_list_emails_by_product_is_the_one_time_send_list(intake, capsys):
     out = _cli(mod, capsys, "list", "--form", "store-notify", "--field", "product=heyma", "--emails")
     assert out.split() == ["a@example.com", "b@example.com"]
     assert "c@example.com" in _cli(mod, capsys, "list", "--form", "store-notify", "--site", "store.automaticai.io")
+    # An empty list prints nothing at all: `| wc -l` is the count the go-on-sale procedure reads.
+    assert _cli(mod, capsys, "list", "--form", "store-notify", "--field", "product=nobody", "--emails") == ""
 
 
 def test_delete_by_email_and_by_field(intake, capsys):
