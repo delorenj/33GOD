@@ -150,6 +150,29 @@
    "failed": [
     "manifest-replaces"
    ]
+  },
+  {
+   "run": "2026-11-24T01:40-0500",
+   "id": "turn-enricher",
+   "mode": "build",
+   "outcome": "shipped",
+   "score": 8.0,
+   "commit": "b6e8069",
+   "tokens": {
+    "input": 44,
+    "output": 43582,
+    "cache_creation": 138916,
+    "cache_read": 3126129,
+    "total": 43626,
+    "cost_usd": 20.868585250000002,
+    "turns": 30,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built \"The tagging desk\" for turn-enricher, the asset that takes over station `cataloguer` (replaces Cataloguer). It is an unmanned purple Memory-zone desk with these parts:\n- an in-tray and a slanted lectern with a reading lamp;\n- a red/green signal gauge with a tick at the 0.5 threshold, whose lamp lights while the desk calls Jev;\n- a lavender facts board with action, artifact and blocker tabs"
+   },
+   "showcase_url": "https://s3.delo.sh/projects/33god/2026-11-24/factory-forge-turn-enricher/index.html",
+   "duration_s": 3685.0,
+   "note": "lessons landed (1 path(s))"
   }
  ]
 }
