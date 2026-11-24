@@ -38,6 +38,7 @@ changelog, skill routing, and backfill coordination.
 | One prompt's end-to-end flight record (hooks, events, consumers, model calls) and its Factory replay | Waybill (`33god-platform/waybill`, `manual/sandbox`) via the `waybill` skill |
 | The Factory: the 3D warehouse of 33GOD, where each Atlas component stands on the floor, its 3D asset and animation, the nightly forge | The Factory (`33god-platform/manual/sandbox`) via the [the-factory sub-skill](subskills/the-factory/SUBSKILL.md) |
 | Audio and document enrichment pipelines; voice/transcription interface | HeyMa / Wax (the `heyma` hub); TTS via Vox |
+| Selling anything: the AutomaticAI Store (`store.automaticai.io`), product catalog and prices, checkout gates, license keys, on-sale sign-ups, the Monetization Register | The store repo's `monetization` hub (`~/code/automaticai-store/skills/monetization/SKILL.md`; `skillex skill show monetization`) |
 
 ## Platform skills
 
@@ -52,6 +53,7 @@ matching one rather than re-deriving its decisions here.
 | Publishing or composing skill packs | `skillex-skill-registry` (owned by the skillex repo) |
 | UX ideation from captured intent, Stitch screen/variant exploration, and a selected design handoff into BMAD UX | `stitch`; `bmad-ux` owns Discovery and final DESIGN.md / EXPERIENCE.md |
 | Anything HeyMa/Wax: provenance, CLI, folder bindings, passes, calls, n8n EP graphs, the read-only Holocene Wax tab | the `heyma` hub (`~/HeyMa/skills/heyma/SKILL.md`; `skillex skill show heyma`) |
+| Adding a product to the store, putting one on sale, an on-sale sign-up form on any site (form-intake `/_forms`, `forms.delo.sh`), the on-sale email, the 33GOD front-page store shelf, a Steve Jobs product review | the `monetization` hub (`~/code/automaticai-store/skills/monetization/SKILL.md`; `skillex skill show monetization`). Its notify-signups sub-skill is the one way to reuse form-intake from a new site |
 | Wax recording, diarization, archive or execution incident | the `heyma` hub's doctor sub-skill (`~/HeyMa/skills/heyma/subskills/doctor/SUBSKILL.md`) |
 | Implementing a reusable text/frontmatter enrichment pass | the `heyma` hub's create-enrichment-pass sub-skill (`~/HeyMa/skills/heyma/subskills/create-enrichment-pass/SUBSKILL.md`) |
 | Designing or changing metrics, logs, traces, dashboards or cross-system observability | `monitoring-stack` |
