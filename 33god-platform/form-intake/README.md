@@ -1,7 +1,9 @@
 # form-intake
 
 One form backend for every page we host. Any page on a `*.delo.sh` site can `POST /_forms/<form>`
-to its own origin; there is no CORS, no per-site backend and no third-party form service.
+to its own origin; a site we host somewhere else posts cross-origin to
+`https://forms.delo.sh/_forms/<form>` (see "Sites off delo.sh"). There is no per-site backend and
+no third-party form service.
 
 ```
 page ──POST /_forms/briefing──▶ Traefik (form-intake.yml, every *.delo.sh host, priority 1100)
@@ -42,13 +44,44 @@ filled in, the request gets a fake 201 and nothing is kept); 8 submissions per I
 (the IP is Cloudflare's `CF-Connecting-IP`). The site is the `X-Forwarded-Host`; only hosts
 matching `FORM_INTAKE_SITES` (default `*.delo.sh`) are accepted.
 
-## Read what came in
+## Sites off delo.sh (CORS)
+
+A site we host outside `*.delo.sh` (the AutomaticAI store on Cloudflare Pages is the first) posts
+JSON to `https://forms.delo.sh/_forms/<form>`. `forms.delo.sh` is a dedicated host: the `forms`
+router in `form-intake.yml` sends the whole host here, and it reaches us like every `*.delo.sh`
+name (Cloudflare wildcard DNS, the tunnel, Traefik).
+
+- `FORM_INTAKE_CORS_ORIGINS` (set in `form-intake.service`) lists the exact origins allowed, e.g.
+  `https://store.automaticai.io`. Add a site there, `systemctl --user daemon-reload`, restart.
+- `OPTIONS /_forms/<form>` from a listed origin answers `204` with
+  `Access-Control-Allow-Origin: <that origin>`, `Allow-Methods: POST`, `Allow-Headers: content-type`,
+  `Max-Age: 86400`; every POST answer to it (errors too) carries `Access-Control-Allow-Origin`, so
+  the page can show the error. Any other origin gets `403` and no CORS headers.
+- The row's `site` is the listed Origin's host (`store.automaticai.io`), never the endpoint host.
+- A POST whose Origin is another host and is not listed is refused with `403`, preflight or not
+  (a plain `<form>` post skips the preflight). That includes one `*.delo.sh` page posting to another.
+- No `Origin`, `Origin: null` or an Origin on the request's own host is same-origin: unchanged.
 
 ```bash
-python3 ~/code/33GOD/33god-platform/form-intake/form_intake.py list               # newest first
-python3 ~/code/33GOD/33god-platform/form-intake/form_intake.py list --form briefing --json
-python3 ~/code/33GOD/33god-platform/form-intake/form_intake.py replay             # re-emit rows the bus missed
+curl -si -X OPTIONS https://forms.delo.sh/_forms/store-notify -H 'Origin: https://store.automaticai.io' \
+  -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type'
 ```
+
+## Read and delete what came in
+
+```bash
+FI=~/code/33GOD/33god-platform/form-intake/form_intake.py
+python3 $FI list                                    # newest first, with each row's id
+python3 $FI list --form briefing --json
+python3 $FI list --form store-notify --field product=heyma --emails   # each address once, oldest first
+python3 $FI delete --email someone@example.com      # a deletion request: every row with that address
+python3 $FI delete --form store-notify --field product=heyma          # a list that has been used
+python3 $FI delete --id <id>                        # one row (a test)
+python3 $FI replay                                  # re-emit rows the bus missed
+```
+
+`delete` refuses to run without a filter. Each row holds the fields, the time, the page address
+(`Referer`), the IP and the browser's user-agent; the store's privacy page says so.
 
 ## Run it
 
@@ -59,4 +92,5 @@ curl -s https://33god.delo.sh/_forms/health
 ```
 
 The Traefik route lives in DeLoContainers: `~/docker/core/traefik/traefik-data/dynamic/form-intake.yml`.
-Tests: `pytest tests/test_form_intake.py` (real handler, temp DB, stub `bb`).
+Tests: `pytest tests/test_form_intake.py` (real handler, temp DB, stub `bb`; CORS allowlist,
+preflight, cross-origin refusals, same-origin unchanged, list/delete).

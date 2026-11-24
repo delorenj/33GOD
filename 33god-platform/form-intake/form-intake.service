@@ -1,4 +1,5 @@
-# form-intake: the POST /_forms/<form> backend for every *.delo.sh page.
+# form-intake: the POST /_forms/<form> backend for every *.delo.sh page, and for the sites we host
+# elsewhere that post cross-origin to https://forms.delo.sh/_forms/<form>.
 # Installed with `systemctl --user link` from 33god-platform/form-intake (see README.md).
 [Unit]
 Description=form-intake (web form submissions -> SQLite + bloodbank.messaging.webform.received)
@@ -9,6 +10,9 @@ Wants=network-online.target
 Type=simple
 Environment=PATH=/home/delorenj/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=FORM_INTAKE_LISTEN=172.17.0.1:18811
+# Exact origins (not on delo.sh) allowed to post cross-origin; rows are stored under the origin's host.
+# Add a site here, then: systemctl --user daemon-reload && systemctl --user restart form-intake
+Environment="FORM_INTAKE_CORS_ORIGINS=https://store.automaticai.io"
 ExecStart=/usr/bin/python3 /home/delorenj/code/33GOD/33god-platform/form-intake/form_intake.py serve
 Restart=on-failure
 RestartSec=3
