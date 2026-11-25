@@ -236,21 +236,16 @@
   /* ---------- the drawn pieces ---------- */
   var FLAG_COLOUR = { pjangler: 'var(--acc-pjangler)', gateway: 'var(--acc-gateway)', heyma: 'var(--acc-heyma)', flume: 'var(--acc-flume)', 'holocene-auto': 'var(--acc-holocene-auto)' };
 
-  function stars(parent, seed, n, w, h) {
-    var r = rng(seed);
-    for (var i = 0; i < n; i++) svgEl('circle', { cx: (r() * w).toFixed(1), cy: (Math.pow(r(), 1.5) * h).toFixed(1), r: (0.5 + r() * 1.1).toFixed(2), fill: 'var(--window-lit)', opacity: (0.25 + r() * 0.55).toFixed(2) }, parent);
-  }
-
-  /* The hero building: 12 floors of 8 windows, five lit in the flagships' colours and one in yours, a skyline either side. */
+  /* The hero building: 12 floors of 8 windows, five lit in the flagships' colours and one in yours, a skyline either side.
+     The sky behind it is live (sky.js): the ground line is its horizon, and the lit windows (data-sky-emit) send sparks up. */
   function heroArt() {
     var hb = document.getElementById('hero-bldg'); if (!hb) return;
     var r = rng(33);
-    stars(hb, 5, 30, 360, 130);
-    svgEl('rect', { x: 8, y: 196, width: 70, height: 86, fill: 'var(--facade)', opacity: '.75' }, hb);
-    svgEl('rect', { x: 28, y: 168, width: 40, height: 30, fill: 'var(--facade)', opacity: '.75' }, hb);
-    svgEl('rect', { x: 282, y: 176, width: 70, height: 106, fill: 'var(--facade)', opacity: '.75' }, hb);
+    svgEl('rect', { x: 8, y: 196, width: 70, height: 86, fill: 'var(--facade)', stroke: 'var(--facade-edge)' }, hb);
+    svgEl('rect', { x: 28, y: 168, width: 40, height: 30, fill: 'var(--facade)', stroke: 'var(--facade-edge)' }, hb);
+    svgEl('rect', { x: 282, y: 176, width: 70, height: 106, fill: 'var(--facade)', stroke: 'var(--facade-edge)' }, hb);
     [[18, 214, 'var(--acc-pjangler)'], [46, 238, 'var(--window-lit)'], [296, 196, 'var(--acc-heyma)'], [322, 226, 'var(--acc-gateway)'], [306, 254, 'var(--window-lit)']].forEach(function (w) {
-      svgEl('rect', { x: w[0], y: w[1], width: 8, height: 6, fill: w[2], opacity: '.5' }, hb);
+      svgEl('rect', { x: w[0], y: w[1], width: 8, height: 6, fill: w[2], opacity: '.5', 'data-sky-emit': '.5' }, hb);
     });
     svgEl('path', { d: 'M180 30V10', stroke: 'var(--facade-edge)', 'stroke-width': 2 }, hb);
     svgEl('rect', { x: 177, y: 5, width: 6, height: 5, fill: 'var(--window-lit)' }, hb);
@@ -261,26 +256,27 @@
       if (s) {
         var col = s === 'you' ? 'var(--window-you)' : FLAG_COLOUR[s];
         svgEl('rect', { x: x - 3, y: y - 3, width: 20, height: 16, rx: 3, fill: col, opacity: '.22' }, hb);
-        svgEl('rect', { x: x, y: y, width: 14, height: 10, rx: 1, fill: col }, hb);
+        svgEl('rect', { x: x, y: y, width: 14, height: 10, rx: 1, fill: col, 'data-sky-emit': '4' }, hb);
         continue;
       }
       var v = r();
-      svgEl('rect', { x: x, y: y, width: 14, height: 10, rx: 1, fill: v < 0.34 ? 'var(--window-dark)' : v < 0.5 ? 'var(--window-working)' : 'var(--window-lit)', opacity: v >= 0.5 ? '.78' : '1' }, hb);
+      var lw = { x: x, y: y, width: 14, height: 10, rx: 1, fill: v < 0.34 ? 'var(--window-dark)' : v < 0.5 ? 'var(--window-working)' : 'var(--window-lit)', opacity: v >= 0.5 ? '.78' : '1' };
+      if (v >= 0.5 && r() < 0.3) lw['data-sky-emit'] = '.35';
+      svgEl('rect', lw, hb);
     }
-    svgEl('path', { d: 'M0 282H360', stroke: 'var(--stage-rule)', 'stroke-width': 2 }, hb);
+    svgEl('path', { d: 'M0 282H360', stroke: 'var(--stage-rule)', 'stroke-width': 2, 'data-sky-horizon': '' }, hb);
   }
 
   /* PJangler: twelve floors, a crane, and the thirteenth floor on its sling. */
   function pjArt() {
     var a = document.getElementById('pj-art'); if (!a) return;
     var r = rng(7);
-    stars(a, 9, 16, 260, 90);
     var crane = svgEl('g', { stroke: 'var(--g33-line-strong)', fill: 'none', 'stroke-width': 2 }, a);
     svgEl('path', { d: 'M206 320V34M218 320V34' }, crane);
     svgEl('path', { d: 'M206 320l12-24-12-24 12-24-12-24 12-24-12-24 12-24-12-24 12-24-12-24', 'stroke-width': 1 }, crane);
     svgEl('path', { d: 'M62 30h188M62 38h140M206 34l6-14 6 14', 'stroke-width': 1.5 }, crane);
     svgEl('rect', { x: 232, y: 38, width: 18, height: 12, fill: 'var(--g33-line-strong)', stroke: 'none' }, crane);
-    svgEl('rect', { x: 24, y: 80, width: 140, height: 240, fill: 'var(--facade)', stroke: 'var(--facade-edge)' }, a);
+    svgEl('rect', { x: 24, y: 80, width: 140, height: 240, fill: 'var(--facade)', stroke: 'var(--facade-edge)', 'data-sky-horizon': '' }, a);
     for (var f = 0; f < 12; f++) for (var c = 0; c < 8; c++) {
       var v = r();
       svgEl('rect', { 'class': 'w' + (v < 0.35 ? '' : v < 0.5 ? ' k' : ' l'), x: 31 + c * 16.2, y: 88 + f * 19.5, width: 12, height: 9, rx: 1 }, a);
@@ -293,17 +289,16 @@
     for (var k = 0; k < 8; k++) svgEl('rect', { 'class': 'w13', x: 31 + k * 16.2, y: 64, width: 12, height: 9, rx: 1 }, g);
   }
 
-  /* The skyline strip under each dark stage: a few lit windows, a few stars, nothing near the words. */
+  /* The skyline strip under each dark stage: a few lit windows under a live sky (sky.js), nothing near the words. */
   function skies() {
     [].forEach.call(document.querySelectorAll('.ex__sky'), function (host, n) {
       var r = rng(101 + n * 17);
       var s = svgEl('svg', { viewBox: '0 0 1600 90', preserveAspectRatio: 'xMidYMax slice', 'aria-hidden': 'true' }, host);
-      stars(s, 40 + n, 46, 1600, 60);
       var x = -10;
       while (x < 1610) {
         var w = 28 + Math.floor(r() * 54), h = 12 + Math.floor(Math.pow(r(), 1.4) * 52);
         svgEl('rect', { x: x, y: 90 - h, width: w, height: h, fill: 'var(--facade)', stroke: 'var(--facade-edge)', 'stroke-width': 1 }, s);
-        for (var j = 0; j < 3; j++) if (r() < 0.45) svgEl('rect', { x: x + 5 + Math.floor(r() * Math.max(1, w - 14)), y: 90 - h + 6 + Math.floor(r() * Math.max(1, h - 14)), width: 5, height: 4, fill: r() < 0.25 ? 'var(--window-you)' : 'var(--window-working)', opacity: '.5' }, s);
+        for (var j = 0; j < 3; j++) if (r() < 0.45) svgEl('rect', { x: x + 5 + Math.floor(r() * Math.max(1, w - 14)), y: 90 - h + 6 + Math.floor(r() * Math.max(1, h - 14)), width: 5, height: 4, fill: r() < 0.25 ? 'var(--window-you)' : 'var(--window-working)', opacity: '.5', 'data-sky-emit': '1' }, s);
         x += w + 4 + Math.floor(r() * 16);
       }
     });
@@ -320,6 +315,27 @@
     svgEl('path', { d: 'M0 160 70 140 130 152 210 128 290 150 360 134 440 156 520 138 600 150V220H0z', fill: 'var(--dawn-hills)', opacity: '.55' }, a);
     svgEl('path', { d: 'M0 220 270 150h60L600 220z', fill: 'var(--dawn-road)' }, a);
     svgEl('path', { d: 'M300 156v8M300 172v12M300 194v18', stroke: 'var(--dawn-line)', 'stroke-width': 4, 'stroke-linecap': 'round' }, a);
+  }
+
+  /* The live sky (sky.js) behind every night drawing: the hero building gets the whole show (a distant city on its horizon,
+     meteors, sparks from its windows), each skyline strip its own stars and sparks, the PJangler crane a quiet sky. Without
+     sky.js the drawings stand on the plain ground, which is how they looked before. */
+  function nightSky() {
+    var S = window.G33Sky; if (!S) return;
+    var hero = document.querySelector('.hero__art');
+    /* The hero's sky reaches past the drawing to the page's right edge and up to the header, and dissolves before it
+       reaches the words: beside them on a wide screen (two columns), above them on a phone. */
+    var wide = function () { try { return matchMedia('(min-width: 900px) and (min-aspect-ratio: 1/1)').matches; } catch (e) { return false; } };
+    var room = function (host, r) {
+      var top = Math.max(0, r.top - (document.getElementById('top').getBoundingClientRect().top + hdrH()));
+      var right = Math.max(0, root.clientWidth - r.right);
+      return wide() ? [top, right, 0, Math.round(r.width * 0.3)] : [Math.min(top, 22), right, 0, Math.max(0, r.left)];
+    };
+    if (hero) S.mount(hero, { seed: 33, density: 520, max: 420, skyline: 2, meteors: 6, motes: 8, bleed: room,
+      fade: function (host, r) { var b = room(host, r); return wide() ? [Math.min(90, b[0]), 0, 0, b[3] + Math.round(r.width * 0.12)] : [b[0] + 12, 0, 0, 0]; } });
+    [].forEach.call(document.querySelectorAll('.ex__sky'), function (host, n) { S.mount(host, { seed: 40 + n, density: 700, band: 0.9, meteors: 1.5, motes: 2.5 }); });
+    var pj = document.querySelector('.pj__sky');
+    if (pj) S.mount(pj, { seed: 9, density: 260, max: 60, pointer: false });
   }
 
   function waves() {
@@ -351,6 +367,7 @@
       var r = ex.getBoundingClientRect(), pr = pieces[i].getBoundingClientRect();
       geo[i] = { top: r.top + sy, h: r.height, run: ex.offsetHeight - ex.firstElementChild.offsetHeight, pc: pr.top + sy + pr.height / 2 };
     });
+    if (window.G33Sky) window.G33Sky.place();
     dirty = true;
     req();
   }
@@ -531,7 +548,7 @@
     document.title = F.title;
     var host = document.getElementById('front');
     host.innerHTML = '<a class="skip" href="#flagships">' + esc(F.aria.skip) + '</a>' + header() + '<main>' + hero() + F.flagships.map(function (f, i) { return exhibit(f, i) + (F.shelfHead && f.id === F.shelfHead.after ? shelf() : ''); }).join('') + orgBand() + well() + ask() + '</main>' + footer();
-    heroArt(); pjArt(); skies(); dawnArt(); waves();
+    heroArt(); pjArt(); skies(); dawnArt(); waves(); nightSky();
     exs = [].slice.call(document.querySelectorAll('.ex'));
     navs = [].slice.call(document.querySelectorAll('.nav a'));
     bars = [].slice.call(document.querySelectorAll('.prog i'));

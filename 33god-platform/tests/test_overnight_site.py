@@ -380,7 +380,7 @@ def test_template_tokens():
 
 # ---------------------------------------------------------------- the front page (index.html)
 
-FRONT_FILES = ("index.html", "front.js", "front.css", "tour.html")
+FRONT_FILES = ("index.html", "front.js", "front.css", "tour.html", "sky.js")
 
 # Budgets for the front record, measured at 360x780: the binding viewport now, because the phone is a first-class target.
 # slot: (max chars, why). 328px is the text column at 360 (16px gutters); the measurements are in the README.
@@ -680,6 +680,20 @@ def test_front_files_and_links():
     js = (SITE / "front.js").read_text(encoding="utf-8")
     assert not re.search(r"#[0-9a-fA-F]{6}\b", js), "front.js: a raw colour (use tokens)"
 
+
+
+def test_front_sky_is_live_and_tokens_only():
+    """The night sky is sky.js, not static dots: front.js draws no stars of its own, sky.js loads before front.js, and
+    sky.js has no raw colour (every colour is a token read from the host, so a themed host re-colours it)."""
+    idx = (SITE / "index.html").read_text(encoding="utf-8")
+    assert idx.index('src="sky.js"') < idx.index('src="front.js"'), "sky.js must load before front.js mounts it"
+    front = (SITE / "front.js").read_text(encoding="utf-8")
+    assert "function stars(" not in front, "front.js still draws static stars"
+    assert "window.G33Sky" in front and "S.mount(" in front and "data-sky-horizon" in front and "data-sky-emit" in front
+    sky = (SITE / "sky.js").read_text(encoding="utf-8")
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", sky), "sky.js: a raw hex colour (use tokens)"
+    assert not re.search(r"\[\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\]", sky), "sky.js: a raw [r, g, b] colour (use tokens)"
+    assert "prefers-reduced-motion" in sky and "IntersectionObserver" in sky and "document.hidden" in sky
 
 # ---------------------------------------------------------------- the shelf (front.shelf[]): products that ship on their own in the store
 
@@ -1114,6 +1128,47 @@ class TestFront(_Browser):
         assert pg.evaluate("document.querySelectorAll('.ex.is-pinned').length") == 0
         steps = pg.evaluate("[...document.querySelectorAll('.ex')].map(e => [e.dataset.step, e.dataset.steps])")
         assert all(int(a) == int(b) - 1 for a, b in steps), f"reduced motion shows the final step: {steps}"
+        pg.close()
+
+    def test_night_sky_is_live_where_it_is_seen(self, server, pw):
+        """sky.js: the hero sky, one per skyline strip and the PJangler crane mount; a field on screen animates and draws,
+        a field far off screen is paused, and nothing reaches past the page's right edge."""
+        for w, h in ((390, 844), (1440, 900)):
+            pg = self._open(pw, server, w, h)
+            pg.wait_for_timeout(400)
+            st = pg.evaluate("G33Sky.stats()")
+            hosts = [x["host"] for x in st]
+            assert hosts.count("ex__sky") == len(pg.query_selector_all(".ex__sky")) >= 4, f"{w}: a strip has no sky: {hosts}"
+            assert "hero__art" in hosts and "pj__sky" in hosts, f"{w}: {hosts}"
+            hero = st[hosts.index("hero__art")]
+            assert hero["live"] and hero["stars"] > 40 and hero["emitters"] >= 6 and hero["skyline"] == 2, f"{w}: hero sky {hero}"
+            f0 = hero["frames"]; pg.wait_for_timeout(600)
+            assert pg.evaluate("G33Sky.stats()")[hosts.index("hero__art")]["frames"] > f0 + 5, f"{w}: the hero sky is not animating"
+            lit = pg.evaluate("""() => { const c = document.querySelector('.hero__art > canvas.g33-sky'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+              let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 40) n++; return n; }""")
+            assert lit > 150, f"{w}: the hero sky drew {lit} pixels"
+            right = pg.evaluate("Math.max(...[...document.querySelectorAll('canvas.g33-sky')].map(c => c.getBoundingClientRect().right))")
+            assert right <= pg.evaluate("document.documentElement.clientWidth") + 0.5, f"{w}: a sky reaches past the page ({right})"
+            pg.evaluate("document.querySelector('#f-heyma .ex__sky').scrollIntoView({block: 'center'})")
+            pg.wait_for_timeout(500)
+            st = pg.evaluate("G33Sky.stats()")
+            assert not st[hosts.index("hero__art")]["live"], f"{w}: the hero sky still animates off screen"
+            assert any(x["live"] for x in st if x["host"] == "ex__sky"), f"{w}: no strip sky animates on screen"
+            assert not pg.errs, pg.errs
+            pg.close()
+
+    def test_night_sky_is_still_under_reduced_motion(self, server, pw):
+        pg = self._open(pw, server, 1440, 900, reduced_motion="reduce")
+        pg.wait_for_timeout(300)
+        a = pg.evaluate("G33Sky.stats()")
+        pg.wait_for_timeout(800)
+        b = pg.evaluate("G33Sky.stats()")
+        assert a and all(x["flat"] for x in a), a
+        assert [x["frames"] for x in a] == [x["frames"] for x in b], f"reduced motion animates the sky: {a} -> {b}"
+        assert all(x["motes"] == 0 for x in b), "reduced motion releases sparks"
+        lit = pg.evaluate("""() => { const c = document.querySelector('.hero__art > canvas.g33-sky'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+          let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 40) n++; return n; }""")
+        assert lit > 150, f"reduced motion still shows a sky (one still frame): {lit} pixels"
         pg.close()
 
     def test_ask_form_posts_the_briefing_signup(self, server, pw):
