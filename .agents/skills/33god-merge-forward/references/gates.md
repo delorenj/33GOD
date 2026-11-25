@@ -70,19 +70,25 @@ Select checks that demonstrate the slice's actual behavior:
   a required field cannot be true (for example, nothing hideable at the
   station), leave it honest, flag it for the integrator, and report the
   verifier failure rather than a pass.
-- Scroll/playhead changes: exercise small wheel and keyboard inputs separated
-  by pauses in both directions across a transition, including stopping midway,
-  plus a held key's auto-repeat. Verify progress is not snapped back to the
-  starting boundary and a held key cannot outrun the playhead; frame-motion
-  counts or one fast continuous scroll miss these failures. Check layout at
-  small-laptop and tablet viewports, not only one desktop size.
+- Scroll/playhead and page-layout changes: exercise small wheel and keyboard
+  inputs separated by pauses in both directions across a transition, including
+  stopping midway, plus a held key's auto-repeat. Verify progress is not snapped
+  back to the starting boundary and a held key cannot outrun the playhead;
+  frame-motion counts or one fast continuous scroll miss these failures. Check
+  layout at small-laptop and tablet viewports, not only one desktop size. When
+  positions are cached rather than measured per frame, resize a loaded page and
+  compare it with a fresh load at the target size, snapshotting both only after
+  fonts load and page height stops changing. For frame-rate work on the shared
+  box, run old and new interleaved and compare rendering CPU time; fps swings
+  with load.
 - Event-derived replay changes (select affected paths): reconcile totals with
   source events, separating activity credited to another component from counted
   events. Check attribution precedence with representative jobs and handlers.
   On the page, verify real versus staged labels and behavior at beat boundaries,
   view-switch restoration, and staged fallback for malformed or incompatible
-  replay data. Check public output omits private event details even when those
-  events still count.
+  replay data. Public output must copy only an allowlist of event fields; fetch
+  the published copy anonymously and search it for private names, paths, and
+  keys, even though those events still count.
 - Public product copy: check each capability claim against live source and
   runtime state, such as route config and scheduler history, not the brief or
   design docs. A paused job or unbuilt input is not a present capability; reword

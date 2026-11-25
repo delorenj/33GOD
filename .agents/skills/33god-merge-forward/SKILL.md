@@ -79,8 +79,9 @@ Changes to these boundaries require an explicit product decision. Routine implem
    When a change crosses a nested component boundary, run that component's
    focused checks and land its canonical commit before parent gates that inspect
    the component source; then advance the root pin and run integrated checks.
-5. Reconstruct inherited work as a coherent unit and stage explicit paths; do
-   not sweep unrelated WIP. Commit and push the component, then advance and push
+5. Reconstruct inherited work as a coherent unit and stage explicit paths, or
+   only your hunks when a peer session shares the checkout or file; do not
+   sweep unrelated WIP. Commit and push the component, then advance and push
    the root pin. Do not treat a dirty nested checkout as canonical source for an
    acceptance gate. Before retiring a branch after a squash or rebase merge,
    check provider merge state and unpushed content, because local ancestry may
