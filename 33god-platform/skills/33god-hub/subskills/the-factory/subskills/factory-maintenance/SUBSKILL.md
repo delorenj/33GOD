@@ -91,6 +91,13 @@ this run taught you into this file: fix the step that misled you or add one date
   all four. Grep the cited code for every number, name and colour you draw. Belt blue and slot hatches are canon for
   the belt and its envelope hatches, so never use them for an event leaving a reader (2026-11-23,
   aai-llm-observability).
+- The clip camera sits 65 degrees right (plus `rotationY`, which turns the asset on the stage too), so a tall part
+  at the front-right hides the Work beat; keep the right end behind the bench's front line. Blinks between the
+  0.1/0.5/0.9 fracs leave Idle's three frames identical; a hand swinging out, upright, out is alive in all three and
+  still seams. Point the data-truth critic at the component's own ledger, read-only: wax.db gave the real pass mix,
+  per-pass run times (Work lengths) and three events per command, none of which the record holds. `Clip.key`'s
+  `interp='LINEAR'` never reaches the exported curve (the glb samples eased): for a constant-speed contact (a paddle
+  shoving an item) key every whole frame of the segment. Read the glb's samples to check (2026-11-25, wax).
 
 - A tour-set station (entrance, voxxy, library, staffing, soundwing) has no `Hideable` primitive in `PROP_NAMES`
   (`src/assets/contract.ts`), so a station asset there cannot pass `manifest-replaces` honestly. Naming another
