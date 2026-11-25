@@ -75,8 +75,10 @@ Select checks that demonstrate the slice's actual behavior:
   stopping midway, plus a held key's auto-repeat. Verify progress is not snapped
   back to the starting boundary and a held key cannot outrun the playhead;
   frame-motion counts or one fast continuous scroll miss these failures. Check
-  layout at small-laptop and tablet viewports, not only one desktop size. When
-  positions are cached rather than measured per frame, resize a loaded page and
+  layout at phone, tablet, and small-laptop viewports, not only one desktop
+  size; on a phone, check sideways scroll, content under a fixed header, and
+  pinned stages taller than the visible height. When positions are cached
+  rather than measured per frame, resize a loaded page and
   compare it with a fresh load at the target size, snapshotting both only after
   fonts load and page height stops changing. For frame-rate work on the shared
   box, run old and new interleaved and compare rendering CPU time; fps swings
@@ -93,6 +95,8 @@ Select checks that demonstrate the slice's actual behavior:
   runtime state, such as route config and scheduler history, not the brief or
   design docs. A paused job or unbuilt input is not a present capability; reword
   it or label it staged, and tell the user where copy departs from the brief.
+  For outbound product or store links, read the landed page's content: a host
+  that serves its home page with 200 for unknown paths hides a missing page.
 - Release-console uploads: a platform consumes a version/build identifier once it enters any release draft, so `already used` means attached to a draft elsewhere, not uploaded. Before minting a new identifier or re-dropping the same artifact, read the track's drafts, its artifact library, and sibling tracks read-only to find the owning draft, and add from the library rather than re-uploading. Page metadata can lag processing or drop entries; decode the artifact's own manifest and signature to confirm version, package, and signing identity.
 - Configuration or credential-location changes: inspect consumers of the old
   location, including scheduled jobs, before removing it. Preserve unrelated
