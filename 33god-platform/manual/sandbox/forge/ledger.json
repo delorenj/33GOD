@@ -173,6 +173,32 @@
    "showcase_url": "https://s3.delo.sh/projects/33god/2026-11-24/factory-forge-turn-enricher/index.html",
    "duration_s": 3685.0,
    "note": "lessons landed (1 path(s))"
+  },
+  {
+   "run": "2026-11-25T01:40-0500",
+   "id": "wax",
+   "mode": "build",
+   "outcome": "failed",
+   "score": 8.0,
+   "commit": null,
+   "tokens": {
+    "input": 3,
+    "output": 1017,
+    "cache_creation": 1632,
+    "cache_read": 464951,
+    "total": 1020,
+    "cost_usd": 28.658265749999984,
+    "turns": 2,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built **wax as \"The pass line\"**, the soundwing station, and the forge verifier now fails only one of its 47 checks: `manifest-replaces`, which an asset on a tour-set station can't pass because there is no primitive to hide. The machine runs left to right:\n\n- **Inbox:** a pink bin of wax-cylinder recordings, with a clock that swings each time the idle worker looks in.\n- **Reader:** a pink horn o"
+   },
+   "showcase_url": null,
+   "duration_s": 2604.0,
+   "note": "verification failed: manifest-replaces; lessons landed (1 path(s))",
+   "failed": [
+    "manifest-replaces"
+   ]
   }
  ]
 }
