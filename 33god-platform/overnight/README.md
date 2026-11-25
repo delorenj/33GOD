@@ -24,7 +24,7 @@ What was borrowed from the two other directions (and what was not):
 | Graft | Became |
 |---|---|
 | Tour link | "Take the tour" in the hero (a text link beside the one button) and in the footer |
-| Night-lite illustration | the PJangler crane and 13th floor, the sunrise behind the Holocene Auto screen, a skyline-and-stars strip along the foot of each dark stage (in flow, never behind text), a phone frame for the HeyMa call |
+| Night-lite illustration | the PJangler crane and 13th floor, the sunrise behind the Holocene Auto screen, a skyline strip under a live sky along the foot of each dark stage (in flow, never behind text), a phone frame for the HeyMa call |
 | Showroom stats row | four registry counts with icons in the hero (components, domains, event schemas, connections); the closing band shows all five, with "1 human" |
 | Showroom "Next F-0n" | a "Next: name" link with three step markers on every exhibit |
 | Org chart icons | one band of 12 department tiles in one neutral family colour, with one ochre "You" row, between Holocene Auto and the counts |
@@ -50,6 +50,20 @@ The page is designed at 360x780 first (the design range is 360 to 430). Rules, e
 - **Set pieces adapt to their own width**, not the viewport's (`@container piece`), so a pinned panel and a flowing panel use the same layout rules.
 - **A 14px floor below 760px.** Nothing a person reads is under 14px on a phone (`--fs-s` in the phone block at the end of `front.css`); tap targets are 44px (Next links, footer links, the brand). Only the step bars and star dots are smaller. On a phone each exhibit reads badge, headline, line, the piece, the three bullets, Next; the gateway stats are 2x2, the HeyMa part cards are compact, the org tiles are 2 up (3 from 500px), and the closing band shows only "1 human" (the four registry counts are in the hero already).
 - No horizontal scroll, nothing under the fixed header, nothing cut off; `prefers-reduced-motion` never pins and shows each piece's final state; a reload restores the scroll position.
+
+### The night sky (`site/sky.js`)
+
+The stars are live. `sky.js` is a small, dependency-free canvas module (`window.G33Sky`) that puts two canvases on a host: the host becomes an isolated stacking context, the sky canvas sits at `z-index: -1` behind the SVG city, and a spark canvas sits at `z-index: 1` in front of it, so sparks rise past the buildings. The sky canvas draws, back to front: three parallax star layers (each drifts against the scroll at its own rate, twinkles, leans toward a mouse pointer and streaks briefly on a fast flick), occasional meteors, and a two-layer distant skyline standing on the horizon with a warm horizon glow and windows that switch on and off (it sinks behind the ground line as you scroll). The spark canvas carries sparks that leave lit windows in their own colours and drift up; the pointer pushes them aside.
+
+| Field | Where | What it gets |
+|---|---|---|
+| Hero | `.hero__art`, bled to the page's right edge and up to the header; dissolves before the copy (beside it on a two-column screen, above it on a phone) | everything: horizon = the SVG ground line; sparks from the flagship and "you" windows (weight 4), the antenna (3), the side buildings' windows (.5) and a third of the lit windows (.35) |
+| Skyline strips | every `.ex__sky` under a dark exhibit, bled up into the empty space above the strip | stars, rare meteors, sparks from the strip's lit windows |
+| PJangler | `.pj__sky`, horizon = the crane's baseline | a quiet sky, no pointer lean |
+
+The page marks up, the module reads: `data-sky-horizon` on the element whose top edge is the ground, `data-sky-emit="weight"` on a lit window (its computed `fill` is the spark colour). Every colour is a token read inside the host at layout time (`--window-lit`, `--window-working`, `--window-you`, `--facade`, `--facade-edge`, `--stage-rule`), so a `[data-theme]` host re-colours it; a page without `--window-lit` gets no sky rather than a guessed colour. A static page can mount one without JS of its own: `<div data-sky="meteors motes skyline" data-sky-seed="7">` plus `<script src="sky.js">`. `bleed` and `fade` options (four edges, or a function of the host) let a field reach past its box and dissolve at the edges; the fade is a CSS mask, so the compositor does it.
+
+Rules it keeps (the same as `front.js`): geometry is read at mount, on a ResizeObserver of the host, on a viewport resize and when `front.js` `geom()` calls `G33Sky.place()`, never per frame (a sticky host's position is computed from cached geometry); only fields on screen animate (IntersectionObserver), nothing runs in a hidden tab, a calm page (no scroll, pointer settled, no meteor) draws at 30 fps, the spark canvas clears only last frame's box, devicePixelRatio drops with canvas area (3 / 2 / 1.5), and `prefers-reduced-motion` draws one still frame per layout and never animates. Tests: `test_front_sky_is_live_and_tokens_only` (no static stars left, no raw colour in `sky.js`) and, in `TestFront`, `test_night_sky_is_live_where_it_is_seen` and `test_night_sky_is_still_under_reduced_motion`. `G33Sky.stats()` reports what each field is doing.
 
 ### The briefing form on the front page
 

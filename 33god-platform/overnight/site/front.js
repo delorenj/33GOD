@@ -248,7 +248,7 @@
       svgEl('rect', { x: w[0], y: w[1], width: 8, height: 6, fill: w[2], opacity: '.5', 'data-sky-emit': '.5' }, hb);
     });
     svgEl('path', { d: 'M180 30V10', stroke: 'var(--facade-edge)', 'stroke-width': 2 }, hb);
-    svgEl('rect', { x: 177, y: 5, width: 6, height: 5, fill: 'var(--window-lit)' }, hb);
+    svgEl('rect', { x: 177, y: 5, width: 6, height: 5, fill: 'var(--window-lit)', 'data-sky-emit': '3' }, hb);
     svgEl('rect', { x: 100, y: 30, width: 160, height: 252, fill: 'var(--facade)', stroke: 'var(--facade-edge)' }, hb);
     var special = { '1-2': 'pjangler', '3-6': 'gateway', '5-1': 'heyma', '7-4': 'flume', '9-6': 'holocene-auto', '11-3': 'you' };
     for (var f = 0; f < 12; f++) for (var c = 0; c < 8; c++) {
@@ -261,7 +261,7 @@
       }
       var v = r();
       var lw = { x: x, y: y, width: 14, height: 10, rx: 1, fill: v < 0.34 ? 'var(--window-dark)' : v < 0.5 ? 'var(--window-working)' : 'var(--window-lit)', opacity: v >= 0.5 ? '.78' : '1' };
-      if (v >= 0.5 && r() < 0.3) lw['data-sky-emit'] = '.35';
+      if (v >= 0.5 && (f * 8 + c) % 3 === 0) lw['data-sky-emit'] = '.35';
       svgEl('rect', lw, hb);
     }
     svgEl('path', { d: 'M0 282H360', stroke: 'var(--stage-rule)', 'stroke-width': 2, 'data-sky-horizon': '' }, hb);
@@ -276,12 +276,12 @@
     svgEl('path', { d: 'M206 320l12-24-12-24 12-24-12-24 12-24-12-24 12-24-12-24 12-24-12-24', 'stroke-width': 1 }, crane);
     svgEl('path', { d: 'M62 30h188M62 38h140M206 34l6-14 6 14', 'stroke-width': 1.5 }, crane);
     svgEl('rect', { x: 232, y: 38, width: 18, height: 12, fill: 'var(--g33-line-strong)', stroke: 'none' }, crane);
-    svgEl('rect', { x: 24, y: 80, width: 140, height: 240, fill: 'var(--facade)', stroke: 'var(--facade-edge)', 'data-sky-horizon': '' }, a);
+    svgEl('rect', { x: 24, y: 80, width: 140, height: 240, fill: 'var(--facade)', stroke: 'var(--facade-edge)' }, a);
     for (var f = 0; f < 12; f++) for (var c = 0; c < 8; c++) {
       var v = r();
       svgEl('rect', { 'class': 'w' + (v < 0.35 ? '' : v < 0.5 ? ' k' : ' l'), x: 31 + c * 16.2, y: 88 + f * 19.5, width: 12, height: 9, rx: 1 }, a);
     }
-    svgEl('path', { d: 'M0 320.5H260', stroke: 'var(--g33-line-strong)' }, a);
+    svgEl('path', { d: 'M0 320.5H260', stroke: 'var(--g33-line-strong)', 'data-sky-horizon': '' }, a);
     svgEl('rect', { x: 86, y: 28, width: 16, height: 10, fill: 'var(--acc-pjangler)' }, a);
     var g = svgEl('g', { 'class': 'floor13' }, a);
     svgEl('path', { 'class': 'sling', d: 'M94 33L28 56M94 33L160 56', stroke: 'var(--acc-pjangler)', 'stroke-width': 1.2, fill: 'none' }, g);
@@ -333,9 +333,18 @@
     };
     if (hero) S.mount(hero, { seed: 33, density: 520, max: 420, skyline: 2, meteors: 6, motes: 8, bleed: room,
       fade: function (host, r) { var b = room(host, r); return wide() ? [Math.min(90, b[0]), 0, 0, b[3] + Math.round(r.width * 0.12)] : [b[0] + 12, 0, 0, 0]; } });
-    [].forEach.call(document.querySelectorAll('.ex__sky'), function (host, n) { S.mount(host, { seed: 40 + n, density: 700, band: 0.9, meteors: 1.5, motes: 2.5 }); });
+    /* a strip's sky also fills the empty room above it, up to the exhibit's last line (never behind it) */
+    var above = function (host, r) {
+      var prev = host.previousElementSibling; if (!prev) return [0, 0, 0, 0];
+      var pr = prev.getBoundingClientRect(), pad = parseFloat(getComputedStyle(prev).paddingBottom) || 0;
+      return [Math.round(clamp(r.top - pr.bottom + pad - 6, 0, 140)), 0, 0, 0];
+    };
+    [].forEach.call(document.querySelectorAll('.ex__sky'), function (host, n) {
+      S.mount(host, { seed: 40 + n, density: 420, max: 240, band: 0.9, meteors: 1.5, motes: 3, bleed: above,
+        fade: function (h, r) { return [Math.round(above(h, r)[0] * 0.8), 0, 0, 0]; } });
+    });
     var pj = document.querySelector('.pj__sky');
-    if (pj) S.mount(pj, { seed: 9, density: 260, max: 60, pointer: false });
+    if (pj) S.mount(pj, { seed: 9, density: 380, max: 90, pointer: false });
   }
 
   function waves() {
@@ -548,13 +557,14 @@
     document.title = F.title;
     var host = document.getElementById('front');
     host.innerHTML = '<a class="skip" href="#flagships">' + esc(F.aria.skip) + '</a>' + header() + '<main>' + hero() + F.flagships.map(function (f, i) { return exhibit(f, i) + (F.shelfHead && f.id === F.shelfHead.after ? shelf() : ''); }).join('') + orgBand() + well() + ask() + '</main>' + footer();
-    heroArt(); pjArt(); skies(); dawnArt(); waves(); nightSky();
+    heroArt(); pjArt(); skies(); dawnArt(); waves();
     exs = [].slice.call(document.querySelectorAll('.ex'));
     navs = [].slice.call(document.querySelectorAll('.nav a'));
     bars = [].slice.call(document.querySelectorAll('.prog i'));
     pieces = exs.map(function (ex) { return ex.querySelector('.ex__piece'); });
     tickLis = exs.map(function (ex) { return ex.dataset.tickSel ? [].slice.call(ex.querySelectorAll(ex.dataset.tickSel)) : []; });
     hdrEl = document.getElementById('hdr'); navEl = document.getElementById('nav');
+    nightSky();
     probe = document.createElement('div');
     probe.setAttribute('aria-hidden', 'true');
     probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100svh;visibility:hidden;pointer-events:none';
