@@ -72,7 +72,16 @@ services:
     restart: unless-stopped
 
   candystore-postgres:
-    image: pgvector/pgvector:pg16
+    # Debian release pinned, PG major floating. The bare `pg16` tag follows
+    # pgvector's default Debian base, and `pg16-trixie` already exists: when
+    # the default flips, a pull silently moves this live data dir from glibc
+    # 2.36 to 2.41 under indexes sorted by 2.36. That is how project_dir_map
+    # lost its primary key's uniqueness (initdb on postgres:16-alpine/musl,
+    # moved to this Debian image 2026-10-06 with no REINDEX; 63 duplicate
+    # keys by 2026-11-26). Moving to trixie is a planned migration: REINDEX
+    # every collatable index, then record the new version
+    # (candystore `mise run db:check` must report no drift).
+    image: pgvector/pgvector:pg16-bookworm
     container_name: candystore-postgres
     environment:
       POSTGRES_USER: candystore
