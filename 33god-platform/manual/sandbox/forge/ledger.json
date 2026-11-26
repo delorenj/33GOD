@@ -199,6 +199,32 @@
    "failed": [
     "manifest-replaces"
    ]
+  },
+  {
+   "run": "2026-11-26T01:40-0500",
+   "id": "wax",
+   "mode": "build",
+   "outcome": "failed",
+   "score": 8.0,
+   "commit": null,
+   "tokens": {
+    "input": 46,
+    "output": 37918,
+    "cache_creation": 330675,
+    "cache_read": 4337079,
+    "total": 37964,
+    "cost_usd": 18.273402249999997,
+    "turns": 27,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I re-forged wax at the soundwing station in two critique rounds, starting from the 2026-11-25 asset that scored 8. It is a pink pass line: an inbox of wax cylinders, a horn and mandrel reader with a lit transcribe lamp, a plum comb of nine stamp heads that stamp a bar onto a paper transcript, amber lamps and cable for the passes that call outside services, and a plum outbox that sends grey envelop"
+   },
+   "showcase_url": null,
+   "duration_s": 2852.0,
+   "note": "verification failed: manifest-replaces; lessons landed (1 path(s))",
+   "failed": [
+    "manifest-replaces"
+   ]
   }
  ]
 }
