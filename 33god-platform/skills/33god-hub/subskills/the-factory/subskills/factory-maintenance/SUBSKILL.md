@@ -27,7 +27,8 @@ the station). Then `tools/assets/blender_run.py`, the Blender harness, and the b
 `OVERVIEW`, turned into model space through the anchor's `rotY` (candybar: the station camera sees the right side,
 the overview the front), and put the record's main beat on a face a camera sees. A re-forge starts from the last
 failed run: read `~/.local/state/factory-forge/runs/<id>-<stamp>/verdict.json` and `asset-failed/` first, copy its
-`build.py`, `NOTES.md` and `asset.json` into your directory, and spend the night on its weakest rubric lines.
+`build.py`, `NOTES.md` and `asset.json` into your directory, and spend the night on its weakest rubric lines. "Mode:
+build (no asset yet)" can still have one: `ls ~/.local/state/factory-forge/runs/<id>-*` before you sketch.
 
 **B. Write `NOTES.md` first**, before geometry: *What it is in the warehouse*; *The four clips* (what is on screen,
 which real behaviour, cited to the record, what the item does at each socket); *Where it stands* (placement,
@@ -78,6 +79,13 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- The station camera bounds `scale`: check the footprint's front corners against the set's `view` before scaling
+  up (soundwing's left edge is ~28 degrees off axis, reached at scale 1; 1.2 cut the inbox). A whole-frame swap
+  (hide one mesh, show its twin) still blends for one displayed frame, because three interpolates between samples:
+  stand both copies on the same spot for one frame and move a part only while it is hidden. Key each Work variant
+  to its own ledger weight (wax diarization 28 s when it runs, 0.2 s when skipped), not one length per pass. The
+  gvfs hang recurred (kill `gvfsd-mtp`). A critic the harness cuts off returns nothing: check its jsonl once, then
+  cover that lens by hand rather than wait (2026-11-26, wax).
 - `mise run assets` timing out at 300 s with no Blender output is not your build.py. Check
   `cat /proc/<blender pid>/wchan`. `request_wait_answer` means Blender is hung on a stuck gvfs FUSE backend
   (`gvfsd-mtp` under `/run/user/1000/gvfs`). Kill that backend and the build takes under 1 s. A station whose cast
