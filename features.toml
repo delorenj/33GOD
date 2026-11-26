@@ -162,7 +162,7 @@ initiatives = ["I-9"]
 summary = "Project-declared backups: a project's .emma.toml names the files, folders or exports to back up; Forever Ago registers, plans and (later) runs them. Candybar owns when, pjangler owns identity, owners of the data own their export verbs"
 repo = "delorenj/forever-ago"              # proposed hub; not authorization for a new repo
 status = "planned"
-today = ["forever-ago src (jobs, list: legacy discovery only)", "candybar candybars forever-ago-vault, forever-ago-voxxy-voices (clock join only)",
+today = ["forever-ago 0.4.0 src/emma (register, adopt, projects, plan, retention plan; observe-only, no capture or prune)", "forever-ago src (jobs, list: legacy discovery)", "candybar candybars forever-ago-vault, forever-ago-voxxy-voices (clock join only)",
          "candystore retention.py prune/restore + candystore-event-retention candybar (source retention, archives)",
          "design: forever-ago docs/EMMA-DESIGN.md (INFR-170)"]
 requires = ["project.identity", "clock"]    # identity via `pj info --json` until /v1/resolve lands; Emma mints no identity and runs no scheduler
