@@ -80,9 +80,12 @@ Select checks that demonstrate the slice's actual behavior:
   pinned stages taller than the visible height. When positions are cached
   rather than measured per frame, resize a loaded page and
   compare it with a fresh load at the target size, snapshotting both only after
-  fonts load and page height stops changing. For frame-rate work on the shared
-  box, run old and new interleaved and compare rendering CPU time; fps swings
-  with load.
+  fonts load and page height stops changing. For frame-rate or animation work
+  on the shared box, run old and new interleaved and compare main-thread busy
+  time under CPU throttling at 1x and 2x pixel density; 60 fps can hide a
+  costly frame loop. If a timing test fails under load, check whether its page
+  loads the changed code, then rerun it and the untested remainder on a
+  settled box rather than the whole suite.
 - Event-derived replay changes (select affected paths): reconcile totals with
   source events, separating activity credited to another component from counted
   events. Check attribution precedence with representative jobs and handlers.
