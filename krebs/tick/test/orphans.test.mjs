@@ -303,6 +303,12 @@ test("turnState: a coding worker in a worktree named for the ticket is live; a d
     false,
     "a mention that is not a worker",
   );
+  const held = turnState({
+    ...base,
+    mentions: [{ ...worker("/home/x/code/gruvato/.worktrees/gruv-21-fix", 5, "claude"), data: { working_directory: "/home/x/code/gruvato/.worktrees/gruv-21-fix", invocation_id: "74b37aee-208a-40cf", zellij_pane_id: 12 } }],
+  });
+  assert.match(held.why, /claude worker \(session 74b37aee, pane 12\) in /, "the why names the holding session and pane");
+  assert.match(turnState({ ...base, mentions: [worker("/home/x/code/gruvato/.worktrees/gruv-21-fix", 5)] }).why, /codex worker in /, "no holder fields, no suffix");
 });
 
 test("keyPattern matches the key as a whole token", () => {

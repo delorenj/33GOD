@@ -92,6 +92,23 @@ function cliOf(event) {
 }
 
 /**
+ * Who is holding the ticket, for the "why": the agent session id and zellij pane, when the
+ * event carries them. A supervising session parked in a ticket's worktree (a parent reading
+ * evidence, a reviewer) looks exactly like a worker to rule 4; naming the session and pane lets
+ * whoever reads `krebs status` see that it is them (EARS-59, 2026-11-26: a crank-nudged parent
+ * session kept its own ticket "live" for hours).
+ */
+function holderOf(event) {
+  const data = asObject(event.data);
+  const session = data.invocation_id || data.session_id || asObject(data.payload).session_id || event.correlationid || null;
+  const pane = data.zellij_pane_id ?? null;
+  const parts = [];
+  if (session) parts.push(`session ${String(session).slice(0, 8)}`);
+  if (pane !== null && pane !== undefined && pane !== "") parts.push(`pane ${pane}`);
+  return parts.length ? ` (${parts.join(", ")})` : "";
+}
+
+/**
  * The verdict for one ticket, from its correlation-id events and the recent
  * events that mention its key. Pure: no I/O.
  * Returns {live: boolean, why: string, lastEnd: {type, at} | null}; a verdict that is live only because of
@@ -175,7 +192,7 @@ export function turnState({ correlated = [], mentions = [], sent = [], key, nowM
     if (t === null || nowMs - t >= QUIET_MS) continue;
     if (!cliOf(e)) continue;
     if (pattern.test(workdirOf(e))) {
-      return { live: true, why: `a ${cliOf(e)} worker in ${workdirOf(e)} was active ${ago(nowMs, t)}`, lastEnd: end, busyUntil: t + QUIET_MS };
+      return { live: true, why: `a ${cliOf(e)} worker${holderOf(e)} in ${workdirOf(e)} was active ${ago(nowMs, t)}`, lastEnd: end, busyUntil: t + QUIET_MS };
     }
   }
   const why = end
