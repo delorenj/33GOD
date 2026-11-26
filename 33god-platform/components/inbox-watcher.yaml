@@ -34,22 +34,22 @@ relations:
 - to: transcribe
   kind: calls
   via: TRANSCRIBE CLI --no-diarization --ephemeral
-  evidence: holocene/services/inbox-watcher/inbox_watcher.py:1731
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:1784
   anchor: 'def _transcribe_run(self, tmp: Path, audio: Path, mid: str, key: str, agent: str, audio_s: float | None,'
 - to: vox
   kind: calls
   via: POST VOX_URL /synthesize-url
-  evidence: holocene/services/inbox-watcher/inbox_watcher.py:4871
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:5166
   anchor: 'def parse_transcript(md: str) -> str:'
 - to: bb-nats
   kind: publishes-to
   via: bb-emit command bloodbank.cmd.agent.invocation.invoke|start
-  evidence: holocene/services/inbox-watcher/inbox_watcher.py:2497
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:2550
   anchor: brief_id=fu.get("brief_id"), brief_sha256=fu.get("brief_sha256"),
 - to: bb-nats
   kind: publishes-to
   via: bb-emit facts bloodbank.audio.memo.<stage>
-  evidence: holocene/services/inbox-watcher/inbox_watcher.py:1021
+  evidence: holocene/services/inbox-watcher/inbox_watcher.py:1040
   anchor: 'return "interactive", None # unreachable'
 - to: candystore
   kind: reads
