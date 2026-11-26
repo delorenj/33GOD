@@ -700,7 +700,7 @@ def test_front_sky_is_live_and_tokens_only():
 STORE = "https://store.automaticai.io"
 SHELF_STATUSES = ("on-sale", "preview")
 SHELF_OPT_OUT = {}  # catalog id -> why the front page leaves it off; empty while every store product is on the shelf
-STORE_REPO = Path(os.environ.get("STORE_REPO") or Path.home() / "code" / "automaticai-store")
+STORE_REPO = Path(os.environ.get("STORE_REPO") or Path.home() / "code" / "storefront")
 
 
 def _shelf():
