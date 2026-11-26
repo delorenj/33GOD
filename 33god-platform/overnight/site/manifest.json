@@ -463,8 +463,21 @@
             "The reply is voiced and plays back.",
             "The first real drive test is still ahead."
           ],
-          "stamp": "The memo pipeline under it replied to 87 voice memos in the 7 days to 21 Nov 2026. The car screen is an illustration.",
-          "aria": "A car windshield at sunrise over a dashboard screen that reads: two things need you."
+          "stamp": "The memo pipeline under it replied to 87 voice memos in the 7 days to 21 Nov 2026. The video is the app itself, on a real dash.",
+          "aria": "A car windshield at sunrise over a dashboard screen that reads: two things need you.",
+          "video": {
+            "_readme": "A real demo video on a flagship (any flagship may have one; on Holocene Auto it replaces the drawn car screen). Only v.delo.sh is ever drawn: publish with the artifacts skill (video.py) and copy the share page, the mp4 and the poster from its receipt. size is the file's [width, height]; crop is the [x, y, w, h] of the source that holds the picture (footage inside black bars), and the poster crops the same way. It plays muted and looped while on screen; open is the link to the full player, with sound.",
+            "page": "https://v.delo.sh/01848684aa8a9d02/holocene-auto-agent-pad",
+            "src": "https://v.delo.sh/01848684aa8a9d02/holocene-auto-agent-pad-44e195d99b.mp4",
+            "poster": "https://v.delo.sh/01848684aa8a9d02/holocene-auto-agent-pad-b79ebf254e.jpg",
+            "size": [1280, 720],
+            "crop": [440, 154, 402, 300],
+            "label": "Holocene Auto on a car's dashboard screen: the agent roster, and the Record for Holocene button.",
+            "tag": "Real footage",
+            "open": "Watch it with sound",
+            "play": "Play the video",
+            "pause": "Pause the video"
+          }
         }
       }
     ],

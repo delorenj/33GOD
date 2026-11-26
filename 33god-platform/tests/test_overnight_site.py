@@ -467,6 +467,10 @@ FRONT_BUDGETS = {
     "shelf.button": (28, "16px bold in a 296px button with a chevron: one line at 28"),
     "cta.short": (10, "label on the header button from 600px up"),
     "staged": (14, "the pill on every piece"),
+    "video.label": (120, "the video's accessible name (read aloud, never drawn)"),
+    "video.tag": (16, "mono 14px pill over the top-left corner of the picture"),
+    "video.open": (24, "14px text link under the picture, one line with two icons"),
+    "video.button": (24, "the play/pause button's accessible name"),
 }
 
 
@@ -538,6 +542,11 @@ def _front_items(M):
             add("ha.standupTitle", f"{i}.standupTitle", p["standupTitle"])
             for j, d in enumerate(p["standup"]):
                 add("ha.standup", f"{i}.standup[{j}]", d)
+        v = p.get("video")
+        if v:
+            add("video.label", f"{i}.video.label", v["label"]); add("video.tag", f"{i}.video.tag", v["tag"])
+            add("video.open", f"{i}.video.open", v["open"])
+            add("video.button", f"{i}.video.play", v["play"]); add("video.button", f"{i}.video.pause", v["pause"])
     H = F["shelfHead"]
     for k in ("kicker", "title", "line", "stamp", "noOffer"):
         add(f"shelf.{k}", f"front.shelfHead.{k}", H[k])
@@ -639,7 +648,12 @@ def test_front_house_rules():
     assert "21 Nov 2026" in F["flagships"][1]["piece"]["stamp"], "the gateway's counts are dated"
     assert "illustration" in F["flagships"][1]["piece"]["stamp"].lower()
     for f in F["flagships"][2:]:
-        assert "illustration" in f["piece"]["stamp"].lower(), f"{f['id']}: the staged piece says so"
+        if f["piece"].get("video") and f["id"] == "holocene-auto":
+            # the footage replaces the drawn screen: the panel is not staged any more, and must not say it is
+            assert "illustration" not in f["piece"]["stamp"].lower(), f"{f['id']}: real footage is not an illustration"
+            assert "video" in f["piece"]["stamp"].lower(), f"{f['id']}: the stamp says the video is the real thing"
+        else:
+            assert "illustration" in f["piece"]["stamp"].lower(), f"{f['id']}: the staged piece says so"
     assert F["stagedLabel"] == M["site"]["stagedLabel"]
     assert "forms.js" in (SITE / "index.html").read_text(encoding="utf-8"), "the front sign-up posts through forms.js"
     assert "G33Forms.submit('briefing'" in (SITE / "front.js").read_text(encoding="utf-8")
@@ -680,6 +694,53 @@ def test_front_files_and_links():
     js = (SITE / "front.js").read_text(encoding="utf-8")
     assert not re.search(r"#[0-9a-fA-F]{6}\b", js), "front.js: a raw colour (use tokens)"
 
+
+
+VIDEO_HOST = "https://v.delo.sh/"
+
+
+def test_front_videos_are_real_and_on_the_video_host():
+    """piece.video: a real demo video on a flagship. Only v.delo.sh (the one video host) is ever linked, the mp4, poster and
+    share page belong to one published video (same token), and the crop stays inside the frame. Holocene Auto has one."""
+    F = manifest()["front"]
+    seen = 0
+    for f in F["flagships"]:
+        v = f["piece"].get("video")
+        if not v:
+            continue
+        seen += 1
+        w = f"front.{f['id']}.piece.video"
+        for k in ("page", "src", "poster", "size", "label", "tag", "open", "play", "pause"):
+            assert v.get(k), f"{w}.{k} is missing"
+        for k in ("page", "src", "poster"):
+            assert v[k].startswith(VIDEO_HOST), f"{w}.{k}: {v[k]!r} is not on {VIDEO_HOST}"
+        token = v["page"][len(VIDEO_HOST):].split("/")[0]
+        assert re.fullmatch(r"[0-9a-f]{16}", token), f"{w}.page: no share token in {v['page']!r}"
+        name = v["page"].rstrip("/").rsplit("/", 1)[1]
+        assert v["src"].startswith(f"{VIDEO_HOST}{token}/{name}-") and v["src"].endswith(".mp4"), f"{w}.src is not this video's mp4"
+        assert v["poster"].startswith(f"{VIDEO_HOST}{token}/{name}-") and v["poster"].endswith(".jpg"), f"{w}.poster is not this video's poster"
+        W, H = v["size"]
+        assert W > 0 and H > 0
+        if "crop" in v:
+            x, y, cw, ch = v["crop"]
+            assert cw > 0 and ch > 0 and x >= 0 and y >= 0 and x + cw <= W and y + ch <= H, f"{w}.crop {v['crop']} is outside the {W}x{H} frame"
+    assert seen >= 1 and F["flagships"][4]["piece"].get("video"), "Holocene Auto shows its real footage"
+    js = (SITE / "front.js").read_text(encoding="utf-8")
+    assert "var VIDEO_HOST = '" + VIDEO_HOST + "'" in js, "front.js draws videos only from the video host"
+
+
+@pytest.mark.skipif(os.environ.get("OVERNIGHT_LIVE_LINKS") != "1", reason="set OVERNIGHT_LIVE_LINKS=1 (fetches https://v.delo.sh)")
+def test_front_videos_are_live():
+    import urllib.request
+    for f in manifest()["front"]["flagships"]:
+        v = f["piece"].get("video")
+        if not v:
+            continue
+        page = urllib.request.urlopen(v["page"], timeout=20).read().decode("utf-8", "replace")
+        assert v["src"] in page and v["poster"] in page, f"{f['id']}: the share page no longer plays this mp4/poster (republished?)"
+        req = urllib.request.Request(v["src"], headers={"Range": "bytes=0-1"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            assert r.status == 206 and r.headers.get("Content-Type") == "video/mp4", f"{f['id']}: {v['src']} does not serve ranged mp4"
 
 
 def test_front_sky_is_live_and_tokens_only():
@@ -1196,6 +1257,49 @@ class TestFront(_Browser):
 
     # ---- the shelf
 
+    def test_demo_video_is_cropped_and_fits(self, server, pw):
+        """Holocene Auto's real footage replaces the drawn screen: the frame shows only the cropped picture, never pokes out
+        of its panel, the button and the sound link are 44px targets, and nothing starts by itself under reduced motion."""
+        v = manifest()["front"]["flagships"][4]["piece"]["video"]
+        x, y, cw, ch = v["crop"]
+        for w, h in ((360, 780), (412, 915), (1280, 720), (1440, 900)):
+            pg = self._open(pw, server, w, h)
+            pg.evaluate("document.querySelector('#f-holocene-auto .demo').scrollIntoView({block: 'center'})")
+            pg.wait_for_timeout(300)
+            r = pg.evaluate("""() => { const ex = document.querySelector('#f-holocene-auto'), q = s => ex.querySelector(s), b = e => e.getBoundingClientRect();
+              const fr = b(q('.demo__frame')), vd = b(q('.demo__frame video')), pn = b(q('.panel')), bt = b(q('.demo__play')), op = b(q('.demo__open'));
+              return { fr: [fr.left, fr.top, fr.width, fr.height], vd: [vd.left, vd.top, vd.width, vd.height], pn: [pn.left, pn.right],
+                bt: [bt.width, bt.height], op: [op.width, op.height], car: !!q('.car'), pill: !!q('.standup .pill'),
+                src: q('video source').src, poster: q('video').poster, href: q('.demo__open').href, target: q('.demo__open').target }; }""")
+            assert not r["car"] and not r["pill"], f"{w}x{h}: the drawn screen or its staged pill is still there"
+            assert r["src"] == v["src"] and r["poster"] == v["poster"] and r["href"] == v["page"] and r["target"] == "_blank"
+            fx, fy, fw, fh = r["fr"]
+            assert abs(fw / fh - cw / ch) < 0.02, f"{w}x{h}: frame is {fw:.0f}x{fh:.0f}, not the crop's {cw}:{ch}"
+            assert fx >= r["pn"][0] - 0.5 and fx + fw <= r["pn"][1] + 0.5, f"{w}x{h}: the frame pokes out of its panel"
+            vx, vy, vw, vh = r["vd"]
+            s = fw / cw
+            assert abs((fx - vx) - x * s) < 1.5 and abs((fy - vy) - y * s) < 1.5 and abs(vw - v["size"][0] * s) < 2, f"{w}x{h}: crop is off {r}"
+            assert min(r["bt"]) >= 44 and r["op"][1] >= 44, f"{w}x{h}: video targets under 44px {r['bt']} {r['op']}"
+            assert not pg.errs, f"{w}x{h}: console errors {pg.errs[:3]}"
+            pg.close()
+        pg = self._open(pw, server, 1440, 900, reduced_motion="reduce")
+        pg.evaluate("document.querySelector('#f-holocene-auto .demo').scrollIntoView({block: 'center'})")
+        pg.wait_for_timeout(500)
+        assert pg.evaluate("document.querySelector('#f-holocene-auto video').paused"), "reduced motion: the video started by itself"
+        pg.close()
+
+    def test_deep_link_to_a_flagship_lands_on_it(self, server, pw):
+        """#f-holocene-auto lands on the exhibit, at every width: late fonts re-pin the exhibits above it, which used to
+        leave a 1440x900 reader 3,000px short of it, on the shelf."""
+        for w, h in ((390, 844), (1440, 900), (1920, 1080)):
+            pg = pw.new_page(viewport={"width": w, "height": h})
+            pg.goto(server + "#f-holocene-auto")
+            pg.wait_for_selector("html.ready")
+            pg.wait_for_timeout(1500)
+            top = pg.evaluate("document.querySelector('#f-holocene-auto').getBoundingClientRect().top - document.querySelector('.hdr').getBoundingClientRect().bottom")
+            assert -2 <= top <= 2, f"{w}x{h}: #f-holocene-auto landed {top:.0f}px from the header"
+            pg.close()
+
     def test_shelf_follows_heyma_and_the_next_chain_reaches_it(self, server, pw):
         pg = self._open(pw, server, 390, 844)
         order = pg.evaluate("""() => [...document.querySelectorAll('main > section')].map(s => s.id)""")
@@ -1288,6 +1392,27 @@ class TestFront(_Browser):
         assert dropped not in ids and sorted(ids) == kept, f"a card whose href is not on the store is never drawn: {ids}"
         pg.close()
 
+
+    def test_a_video_on_any_flagship_sits_under_its_piece_and_only_from_the_video_host(self, server, pw):
+        """piece.video is one level up from Holocene Auto: on any other flagship it stacks under the set piece (never
+        beside it), and a video that is not on v.delo.sh is never drawn."""
+        M = manifest()
+        v = dict(M["front"]["flagships"][4]["piece"]["video"])
+        M["front"]["flagships"][1]["piece"]["video"] = v
+        M["front"]["flagships"][3]["piece"]["video"] = dict(v, src="https://example.com/x.mp4")
+        for w, h in ((390, 844), (1440, 900)):
+            pg = pw.new_page(viewport={"width": w, "height": h})
+            pg.route("**/manifest.json", lambda route, request: route.fulfill(status=200, content_type="application/json", body=json.dumps(M)))
+            pg.goto(server)
+            pg.wait_for_selector("html.ready")
+            r = pg.evaluate("""() => { const b = s => document.querySelector(s).getBoundingClientRect();
+              const pn = b('#f-gateway .ex__piece > .panel'), dm = b('#f-gateway .ex__piece > .demo');
+              return { below: dm.top >= pn.bottom - 0.5, panelW: pn.width, pieceW: b('#f-gateway .ex__piece').width,
+                       flume: !!document.querySelector('#f-flume .demo') }; }""")
+            assert r["below"], f"{w}x{h}: the gateway's video is not under its piece {r}"
+            assert r["panelW"] >= r["pieceW"] - 1, f"{w}x{h}: the video squeezed the gateway's panel {r}"
+            assert not r["flume"], f"{w}x{h}: a video off the video host was drawn"
+            pg.close()
 
 # ---------------------------------------------------------------- the phone and small-tablet tour (the flow view)
 

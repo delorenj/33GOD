@@ -13,7 +13,7 @@ The tour has 21 sections in six parts: Arrival (building, thesis, lobby), The by
 
 ## The front page ("Flagships")
 
-`site/index.html` is the front page; the tour that used to be the front page is `site/tour.html` (same scripts, unchanged). The front page picks five flagships and gives each one a set piece: **PJangler** (a crane lifts a building; the 13th floor is the one that gets dropped), **the Gateway** (one door, a pool of subscriptions, metered and free routes), **HeyMa** (transcription, translation and dictation, with a phone frame for the call), **Flume** (the workforce: hire, onboard, review) and **Holocene Auto** (an Android Automotive app in internal testing, in front of a sunrise). Then one band of icon tiles for the org chart, the counts, and the briefing form.
+`site/index.html` is the front page; the tour that used to be the front page is `site/tour.html` (same scripts, unchanged). The front page picks five flagships and gives each one a set piece: **PJangler** (a crane lifts a building; the 13th floor is the one that gets dropped), **the Gateway** (one door, a pool of subscriptions, metered and free routes), **HeyMa** (transcription, translation and dictation, with a phone frame for the call), **Flume** (the workforce: hire, onboard, review) and **Holocene Auto** (an Android Automotive app in internal testing: the real footage of it on a car's dash, in a morning-lit section). Then one band of icon tiles for the org chart, the counts, and the briefing form.
 
 Order on the page: header (mark, flagship nav, one CTA, a five-segment progress strip), hero, five exhibits (with the store shelf right after HeyMa), the org band, "The building, counted." (five counts, dated 21 Nov 2026), the ask, the footer. The hero and the footer link to the tour ("Take the tour", `site.viewFilm`). Old tour links keep working: `index.html?view=` or `?pace=` redirects at once (an inline script), and `index.html#<beat-id>` redirects once the manifest is loaded, both to `tour.html` with the same query and hash. Front anchors are `top`, `flagships`, `f-<id>`, `org-band`, `counts` and `briefing`; a test keeps them from ever equalling a tour beat id.
 
@@ -29,6 +29,21 @@ What was borrowed from the two other directions (and what was not):
 | Showroom "Next F-0n" | a "Next: name" link with three step markers on every exhibit |
 | Org chart icons | one band of 12 department tiles in one neutral family colour, with one ochre "You" row, between Holocene Auto and the counts |
 | Not borrowed | hover-only content, six department colours, the bento grid |
+
+### Demo videos (`piece.video`)
+
+Any flagship's `piece` may carry a `video` record: real footage of the thing, not a drawing. Holocene Auto has one, and it takes the place of the drawn car screen (the panel then drops its "Illustration" pill, and its stamp says the video is the real thing; a test holds both ways). On any other flagship the video sits under the set piece. The record is data only, so adding one is a manifest edit with no JS or CSS:
+
+| Field | What |
+|---|---|
+| `page`, `src`, `poster` | the share page, mp4 and poster from a `video.py` receipt (the `artifacts` skill). Only `https://v.delo.sh/` is ever drawn, and a test checks all three belong to one published video (same token and name) |
+| `size` | the file's `[width, height]` |
+| `crop` | optional `[x, y, w, h]` of the source that holds the picture. The Holocene Auto clip is a 402x300 picture inside 1280x720 of black, so the page shows only that box. The poster crops the same way; it is pure CSS on the hosted file, nothing re-encoded |
+| `label`, `tag`, `open`, `play`, `pause` | the accessible name, the "Real footage" pill, the "Watch it with sound" link (to the share page, new tab) and the button's two names |
+
+It plays muted and looped while at least half of it is on screen and pauses off screen; the button pauses it for good (until pressed again); under `prefers-reduced-motion` it never starts by itself. The frame is never taller than about a third of the screen (`max(34svh, 200px)`), so a pinned exhibit still fits. To swap the clip, publish the new one with `video.py` and paste its three URLs (republishing under the same name changes the file hashes, so the old `src` and `poster` stop working; `OVERNIGHT_LIVE_LINKS=1 python3 -m pytest tests/test_overnight_site.py -k videos` catches that). Tests: `test_front_videos_are_real_and_on_the_video_host`, `test_front_videos_are_live` (live), and `TestFront.test_demo_video_is_cropped_and_fits`.
+
+A deep link to a flagship (`#f-holocene-auto`) lands on it at every width: late fonts re-pin the exhibits above it, so every re-measure lands it again until the reader touches the page (`TestFront.test_deep_link_to_a_flagship_lands_on_it`).
 
 ### The store shelf (`front.shelf[]`)
 

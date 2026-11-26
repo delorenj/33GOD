@@ -384,6 +384,32 @@ a { color: inherit; }
 .standup li.done small { color: var(--acc); }
 .standup li.ahead { font-style: italic; }
 .ha .stamp { padding: 0 2px; }
+/* a real demo video (piece.video): the picture is cropped out of its black bars by the custom properties front.js sets
+   from the record's crop; the frame is never taller than about a third of the screen, so a pinned exhibit still fits */
+.demo { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+.ex__piece:has(> .demo) { flex-direction: column; align-items: stretch; }
+.ex__piece > .demo { margin-top: 14px; }
+.demo__frame { --demo-h: max(34svh, 200px); position: relative; overflow: hidden; aspect-ratio: var(--ar); width: min(100%, calc(var(--demo-h) * var(--ar)));
+  margin-inline: auto; border-radius: 14px; background: var(--sky-1802); box-shadow: inset 0 0 0 1px var(--panel-edge); }
+.demo__frame video { position: absolute; left: var(--vx); top: var(--vy); width: var(--vw); height: var(--vh); max-width: none; object-fit: fill; display: block; }
+.demo__tag { position: absolute; left: 10px; top: 10px; display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 999px; pointer-events: none;
+  font: 600 11px/1 var(--font-mono); letter-spacing: .04em; color: var(--window-lit); background: color-mix(in srgb, var(--sky-1802) 74%, transparent); }
+.demo__tag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--window-working); }
+.demo__play { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%;
+  cursor: pointer; color: var(--window-lit); background: color-mix(in srgb, var(--sky-1802) 70%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--window-lit) 35%, transparent); transition: opacity .3s, background .3s; }
+.demo__play .i { font-size: 26px; }
+.demo__on { fill: currentColor; }
+.demo__off { display: none; }
+.demo__play:hover { background: color-mix(in srgb, var(--sky-1802) 88%, transparent); }
+.demo__play:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.is-playing .demo__play { left: auto; top: auto; right: 8px; bottom: 8px; width: 44px; height: 44px; margin: 0; opacity: .6; }
+.is-playing .demo__play:hover, .is-playing .demo__play:focus-visible { opacity: 1; }
+.is-playing .demo__play .i { font-size: 20px; }
+.is-playing .demo__on { display: none; }
+.is-playing .demo__off { display: block; }
+.demo figcaption { display: flex; justify-content: center; }
+.demo__open { font-size: 14px; }
 @container piece (min-width: 520px) { .ha { padding: 18px; gap: 16px; } .car__wind { height: clamp(120px, 22svh, 170px); } .screen { margin: -40px 22px 18px; padding: 18px 22px; } }
 
 /* ---------- the org band: agents are employees ---------- */
@@ -490,7 +516,7 @@ a { color: inherit; }
   :root { --fs-s: 14px; }
   .kicker, .note, .tile__n, .tile__tag, .fact__l, .ex__num, .next, .pill, .stamp, .panel__bar, .gw__ask small, .pool__n, .pool__kind, .pool__state,
   .chain, .gw__say b, .stats dd, .part b, .part span, .call__head, .line small, .pj__cap, .pj__cap .tag, .check small, .role b, .role span, .pipe li,
-  .screen__top, .screen__bot, .standup h3, .standup li small, .dept b, .dept > span:last-child, .you b, .fig dd { font-size: var(--fs-s); }
+  .screen__top, .screen__bot, .standup h3, .standup li small, .dept b, .dept > span:last-child, .you b, .fig dd, .demo__tag { font-size: var(--fs-s); }
   .kicker, .next, .pool__state, .part b, .role b, .pipe li, .standup h3, .you b, .dept b, .call__head, .gw__ask small, .check small, .gw__say b, .tile__n, .ex__num { letter-spacing: .03em; }
   .kicker { letter-spacing: .06em; }
   .ex__meta .kicker { letter-spacing: .04em; }

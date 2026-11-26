@@ -134,18 +134,42 @@
         '<div class="fl__bar">' + pill() + '</div><ol class="pipe">' + pipe + '</ol><p class="stamp">' + esc(p.stamp) + '</p></div>';
     }
     if (f.id === 'holocene-auto') {
-      var s = p.screen;
+      var s = p.screen, film = demo(p.video);
       var li = p.standup.map(function (x, i) { return '<li' + (i === p.standup.length - 1 ? ' class="ahead"' : '') + '><small>0' + (i + 1) + '</small><span>' + esc(x) + '</span></li>'; }).join('');
-      return '<div class="panel ha"><div class="car" role="img" aria-label="' + esc(p.aria) + '">' +
+      /* the real footage, when there is any, takes the drawn car screen's place (and the panel is no longer staged) */
+      return '<div class="panel ha">' + (film || '<div class="car" role="img" aria-label="' + esc(p.aria) + '">' +
         '<svg class="car__wind" id="ha-wind" viewBox="0 0 600 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>' +
         '<div class="screen"><div class="screen__top"><svg class="mk" aria-hidden="true"><use href="#mark"/></svg><span>' + esc(s.product) + '</span><span class="on">' + ic('speaker') + esc(s.signal) + '</span></div>' +
         '<p class="screen__big">' + esc(s.line) + '</p>' +
-        '<div class="screen__bot"><b>' + ic('check') + esc(s.count) + '</b><span>' + esc(s.sub) + '</span></div></div></div>' +
-        '<div class="standup"><h3>' + ic('car') + esc(p.standupTitle) + pill() + '</h3><ol>' + li + '</ol></div>' +
+        '<div class="screen__bot"><b>' + ic('check') + esc(s.count) + '</b><span>' + esc(s.sub) + '</span></div></div></div>') +
+        '<div class="standup"><h3>' + ic('car') + esc(p.standupTitle) + (film ? '' : pill()) + '</h3><ol>' + li + '</ol></div>' +
         '<p class="stamp">' + esc(p.stamp) + '</p></div>';
     }
     return '';
   }
+
+  /* A real demo video on a flagship (piece.video): data, not a section. Any flagship may carry one; Holocene Auto's
+     replaces its drawn screen, anyone else's sits under its set piece. Only the one video host is ever drawn, so a typo
+     or a download link never reaches the page. `crop` [x, y, w, h] (source pixels) shows only the part of the frame
+     that holds the picture, for footage inside black bars; the poster is cropped the same way. It plays muted and
+     looped while it is on screen, pauses off it, never starts by itself under reduced motion, and links to the full
+     player for sound. */
+  var VIDEO_HOST = 'https://v.delo.sh/';
+  function onHost(u) { return typeof u === 'string' && u.indexOf(VIDEO_HOST) === 0 && u.length > VIDEO_HOST.length; }
+  function demo(v) {
+    if (!v || !onHost(v.src) || !onHost(v.poster) || !onHost(v.page) || !v.size || !(v.size[0] > 0 && v.size[1] > 0)) return '';
+    var W = v.size[0], H = v.size[1], c = v.crop && v.crop[2] > 0 && v.crop[3] > 0 ? v.crop : [0, 0, W, H];
+    var pct = function (x) { return (Math.round(x * 10000) / 100) + '%'; };
+    var box = '--ar:' + c[2] + ' / ' + c[3] + ';--vw:' + pct(W / c[2]) + ';--vh:' + pct(H / c[3]) + ';--vx:' + pct(-c[0] / c[2]) + ';--vy:' + pct(-c[1] / c[3]);
+    return '<figure class="demo"><div class="demo__frame" style="' + box + '">' +
+      '<video muted loop playsinline preload="none" disablepictureinpicture poster="' + esc(v.poster) + '" aria-label="' + esc(v.label) + '">' +
+      '<source src="' + esc(v.src) + '" type="video/mp4"></video>' +
+      '<span class="demo__tag">' + esc(v.tag) + '</span>' +
+      '<button class="demo__play" type="button" aria-label="' + esc(v.play) + '" data-play="' + esc(v.play) + '" data-pause="' + esc(v.pause) + '">' +
+      ic('play', 'demo__on') + ic('pause', 'demo__off') + '</button></div>' +
+      '<figcaption><a class="textlink demo__open" href="' + esc(v.page) + '" target="_blank" rel="noopener">' + ic('speaker') + esc(v.open) + ' ' + ic('right') + '</a></figcaption></figure>';
+  }
+  function demoAfter(f) { return f.id === 'holocene-auto' ? '' : demo(f.piece.video); }
 
   function exhibit(f, i) {
     var steps = '<span class="steps" aria-hidden="true"><i></i><i></i><i></i></span>';
@@ -159,7 +183,7 @@
       '<div class="ex__copy"><div class="ex__badge"><span class="ex__icon">' + ic(f.icon) + '</span><span class="ex__meta"><span class="ex__num">' + esc(f.num) + '</span><span class="kicker">' + esc(f.kicker) + '</span></span></div>' +
       '<h2 id="h-' + f.id + '">' + esc(f.headline) + ' <em>' + esc(f.headlineTurn) + '</em></h2>' +
       '<p class="ex__line">' + esc(f.line) + '</p>' + chips(f) + '</div>' +
-      '<div class="ex__piece">' + pieceHtml(f) + '</div>' +
+      '<div class="ex__piece">' + pieceHtml(f) + demoAfter(f) + '</div>' +
       '<div class="ex__foot">' + steps + next + '</div>' +
       '</div>' + (morning ? '' : '<div class="ex__sky" aria-hidden="true"></div>') + '</div></section>';
   }
@@ -368,7 +392,7 @@
 
   /* Geometry is read here, once per layout change (measure, a resize of the page body), never per scroll frame: the
      frame() below is then pure arithmetic on scrollY, with no layout read to force a style recalc between its writes. */
-  var dirty = true;
+  var dirty = true, landing = '';
   function geom() {
     hdrNow = hdrH();
     var sy = scrollY;
@@ -396,6 +420,9 @@
     root.style.setProperty('--avail', avail + 'px');
     lastKey = key;
     geom();
+    /* a deep link (#f-holocene-auto) lands before late fonts re-pin the exhibits above it, which moves it by thousands of
+       pixels on a wide screen; until the reader touches the page, every re-measure lands it again */
+    if (landing) go(landing, true);
   }
 
   function gateway(ex, step) {
@@ -507,6 +534,21 @@
       var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle('is-live', e.isIntersecting); }); }, { rootMargin: '80px 0px' });
       anim.forEach(function (el) { io.observe(el); });
     } else anim.forEach(function (el) { el.classList.add('is-live'); });
+    /* demo videos: muted loops that play only while at least half on screen (never by themselves under reduced motion);
+       the button plays or pauses, and a pause by hand sticks until the next press */
+    [].forEach.call(document.querySelectorAll('.demo'), function (fig) {
+      var v = fig.querySelector('video'), b = fig.querySelector('.demo__play');
+      fig._want = !flat;
+      function sync() { var on = !v.paused; fig.classList.toggle('is-playing', on); b.setAttribute('aria-label', on ? b.dataset.pause : b.dataset.play); }
+      function play() { var pr = v.play(); if (pr && pr.catch) pr.catch(function (er) { if (er && er.name === 'NotAllowedError') fig._want = false; sync(); });  /* only a refusal (autoplay blocked, low power) stops it for good; an AbortError is our own off-screen pause */ }
+      v.addEventListener('play', sync); v.addEventListener('pause', sync);
+      b.addEventListener('click', function () { if (v.paused) { fig._want = true; play(); } else { fig._want = false; v.pause(); } });
+      if (window.IntersectionObserver) {
+        new IntersectionObserver(function (es) {
+          es.forEach(function (e) { if (e.isIntersecting && fig._want && !document.hidden) play(); else if (!e.isIntersecting && !v.paused) v.pause(); });
+        }, { threshold: 0.5 }).observe(fig.querySelector('.demo__frame'));
+      }
+    });
     addEventListener('orientationchange', function () { setTimeout(measure, 250); });
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(measure);
@@ -573,7 +615,12 @@
     wire();
     measure();
     var nt = ''; try { nt = (performance.getEntriesByType('navigation')[0] || {}).type || ''; } catch (e) { nt = ''; }
-    if (want && document.getElementById(want)) go(want, true);
+    if (want && document.getElementById(want)) {
+      landing = want; go(want, true);
+      var settle = function () { landing = ''; };
+      ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (ev) { addEventListener(ev, settle, { passive: true, once: true }); });
+      setTimeout(settle, 4000);
+    }
     else if (nt === 'reload' || nt === 'back_forward') {
       var y = 0; try { y = +sessionStorage.getItem('front.y') || 0; } catch (e) { y = 0; }
       if (y) scrollTo(0, y);
