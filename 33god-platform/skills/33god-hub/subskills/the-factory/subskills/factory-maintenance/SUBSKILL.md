@@ -79,6 +79,14 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- The glTF exporter drops a constant channel, and three then shows the node's rest pose: a lamp keyed lit for a
+  whole clip (`start_on`, no change) rendered off. List each animation's channels from the glb JSON after a build;
+  give a held non-rest value a small breathe. The forge camera's fit is `max(footprint, height)`, so a tall
+  mezzanine shrinks the desk: lower the deck rather than the props. Read `src/tour/script.ts` in step A, it may
+  already name the component's object and character (the memo desk, Priya, a reel). Where the sim's traffic at a
+  shared station belongs to another member (control's belt copies are Holocene's), pick `handles` that do not take
+  it. Kill the gvfs backend with `pkill -x gvfsd-mtp`; `-f` matches your own shell (2026-11-27, inbox-watcher).
+
 - The station camera bounds `scale`: check the footprint's front corners against the set's `view` before scaling
   up (soundwing's left edge is ~28 degrees off axis, reached at scale 1; 1.2 cut the inbox). A whole-frame swap
   (hide one mesh, show its twin) still blends for one displayed frame, because three interpolates between samples:
