@@ -60,11 +60,15 @@ Select checks that demonstrate the slice's actual behavior:
   route verification when the changed behavior is visible there.
 - Factory asset changes: read the fixed overview and station camera views
   before shaping the model, then inspect the meaningful animation from those
-  views, not just in close-up. A camera outside the write allowlist cannot be
-  moved later. Clean asset validation, typechecks, and console output do not
-  prove the mechanism reads from there. Forge stills omit behavior a runtime
-  Driver adds; exercise it on the floor or report it unverified. Use the
-  Factory's temporary-output checks; its normal build output is a live
+  views in exported playback, not just in a modeling close-up. The Factory
+  exporter can drop a property held constant for a whole clip and restore its
+  resting value; check held states such as lit lamps in the export. A passing
+  verifier does not prove fixed-camera readability; do not move an out-of-scope
+  camera to make the asset pass. Forge stills omit behavior a
+  runtime Driver adds; exercise it on the floor or report it unverified. If no
+  relevant traffic reaches the station, report idle-only floor proof and hand
+  off the integration gap rather than editing out-of-scope simulation code.
+  Use the Factory's temporary-output checks; its normal build output is a live
   deploy, not an authorized validation step in an asset-only run. Check the
   verifier's manifest rules against the assigned placement before building. If
   a required field cannot be true (for example, nothing hideable at the
