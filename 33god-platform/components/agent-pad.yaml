@@ -26,17 +26,17 @@ relations:
 - to: bb-nats
   kind: publishes-to
   via: core NATS bloodbank.evt.audio.memo.{uploaded,played,notified,failed}, audio.earshot.*
-  evidence: holocene/services/upload-proxy/upload_proxy.py:1047
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1052
   anchor: + (f" (peak {peak} dBFS, threshold {SILENCE_DBFS:g})" if peak is not None else ""))[:300],
 - to: bb-nats
   kind: consumes-from
   via: core SUB bloodbank.evt.audio.memo.> and agent.invocation.progressed
-  evidence: holocene/services/upload-proxy/upload_proxy.py:1331
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1310
   anchor: 'def work():'
 - to: minio
   kind: writes
   via: mc cp delo/holocene-auto/inbox/<agent>/... (upload proxy)
-  evidence: holocene/services/upload-proxy/upload_proxy.py:1490
+  evidence: holocene/services/upload-proxy/upload_proxy.py:1530
   anchor: del self._ring[:-self._ring_max]
 - to: minio
   kind: reads
@@ -46,7 +46,7 @@ relations:
 - to: inbox-watcher
   kind: calls
   via: POST WATCHER_WAKE_URL :8697/wake
-  evidence: holocene/services/upload-proxy/upload_proxy.py:121
+  evidence: holocene/services/upload-proxy/upload_proxy.py:126
   anchor: NATS_HOST = os.environ.get("NATS_HOST", "host.docker.internal")
 - to: agents-registry
   kind: reads

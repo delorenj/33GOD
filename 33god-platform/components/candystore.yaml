@@ -53,7 +53,7 @@ relations:
 - to: pjangler
   kind: calls
   via: pjangler list --json (project sync)
-  evidence: candystore/candystore/projects.py:75
+  evidence: candystore/candystore/projects.py:74
   anchor: 'completed = subprocess.run( # noqa: S603 - fixed binary, no shell, no user input'
 evidence:
 - bloodbank/CLAUDE.md:187

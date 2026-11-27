@@ -37,7 +37,7 @@ relations:
 - to: candystore
   kind: reads
   via: GET :8683/events/<id>/raw; candystore context latest
-  evidence: bloodbank/services/hook-hub/concerns.py:321
+  evidence: bloodbank/services/hook-hub/concerns.py:324
   anchor: f"{candystore_base()}/events/{urllib.parse.quote(base)}/raw", timeout=0.5
 - to: candybar
   kind: reads
