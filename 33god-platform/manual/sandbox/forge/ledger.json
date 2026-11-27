@@ -225,6 +225,29 @@
    "failed": [
     "manifest-replaces"
    ]
+  },
+  {
+   "run": "2026-11-27T01:40-0500",
+   "id": "inbox-watcher",
+   "mode": "build",
+   "outcome": "shipped",
+   "score": 7.0,
+   "commit": "75e801b",
+   "tokens": {
+    "input": 39,
+    "output": 47724,
+    "cache_creation": 75049,
+    "cache_read": 3213719,
+    "total": 47763,
+    "cost_usd": 18.030089000000004,
+    "turns": 25,
+    "is_error": false,
+    "subtype": "success",
+    "result_excerpt": "I built \"The memo desk\", the inbox-watcher's body on the `control` mezzanine, and the forge's own verifier passes it with no failed checks. It's a burnt-orange desk up in the control room, and it hides the old `ControlRoom` block. The tape copy comes out of a riser from MinIO's shelf, the brass bell is rung by `/wake`, and the watch lamp ticks once a second. A reel spins on a player, with a level "
+   },
+   "showcase_url": "https://s3.delo.sh/projects/33god/2026-11-27/factory-forge-inbox-watcher/index.html",
+   "duration_s": 2585.0,
+   "note": "lessons landed (1 path(s))"
   }
  ]
 }
