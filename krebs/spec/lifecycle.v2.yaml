@@ -29,7 +29,7 @@
 #      Candystore, and the triage quiet window drops from 10 minutes to 2.
 #
 # Human-readable companion: ../docs/lifecycle.md.
-spec_version: 2.4.0
+spec_version: 2.5.0
 
 lanes:                       # exact Plane state names; order is the board order
   - {name: Backlog,     group: backlog,   default: true}
@@ -80,6 +80,7 @@ container_labels: [epic, "epic:*"]
 slots:
   unit: scope                # one owner per scope: a registry row (board, or board + scope_label)
   default: 2                 # override per row: agents-registry.yaml plane.wip
+  polish: 4                  # a repo whose committed .launch.yaml says mode: polish gets max(plane.wip or default, polish.wip or this); other modes unchanged
   occupied_by: In Progress AND NOT lifecycle:review AND NOT any hold_label   # epics included (owner decision 5)
   over_limit: drain          # Krebs never evicts; it dispatches nothing until a slot frees
 

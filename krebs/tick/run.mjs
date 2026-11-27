@@ -426,6 +426,7 @@ export async function runTick({
       scopeLabels: scope.scopeLabels,
       scopeDefault: scope.scopeDefault,
       wip: scope.wip,
+      mode: scope.mode ?? "develop",
       review: scope.review,
       tickets: 0,
       occupied: [],

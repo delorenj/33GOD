@@ -4,7 +4,7 @@
 // ticket out of the flow, what makes a ticket a container, the dispatch order,
 // and how a board's states map onto the five stock lanes.
 
-export const SPEC_VERSION = "2.4.0";
+export const SPEC_VERSION = "2.5.0";
 
 export const LABEL = Object.freeze({
   working: "agent:working",
@@ -24,6 +24,9 @@ export const HOLD_LABELS = Object.freeze([LABEL.needsInput, LABEL.blocked, LABEL
 
 /** spec slots.default; a registry row overrides it with plane.wip. */
 export const DEFAULT_WIP = 2;
+
+/** spec slots.polish: a repo declaring `.launch.yaml mode: polish` gets at least this many slots (its polish.wip when larger). */
+export const POLISH_DEFAULT_WIP = 4;
 
 /** Dispatch order, second key (spec transitions.dispatch.order). */
 export const PRIORITY_RANK = Object.freeze({ urgent: 0, high: 1, medium: 2, low: 3, none: 4 });

@@ -3,7 +3,8 @@
 function scopeName(s) {
   const labels = s.scopeLabels?.length ? ` ${s.scopeLabels.join("+")}` : "";
   const dflt = s.scopeDefault ? " (default)" : "";
-  return `${s.identifier ?? s.boardId}${labels}${dflt} -> ${s.agentId}`;
+  const mode = s.mode === "polish" || s.mode === "launch" ? `  mode:${s.mode}` : "";
+  return `${s.identifier ?? s.boardId}${labels}${dflt} -> ${s.agentId}${mode}`;
 }
 
 function list(items, fmt) {

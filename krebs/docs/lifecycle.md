@@ -66,7 +66,7 @@ stateDiagram-v2
 ## Slots
 
 - **Unit:** one registry row in `agents-registry.yaml`, meaning a board, or a board plus a scope label. TOLT, for example, has separate slots for `repo:game`, `repo:forge` and `repo:tolt`.
-- **Count:** 2 by default. A row can override it with `plane.wip`.
+- **Count:** 2 by default. A row can override it with `plane.wip`. When the scope's repo commits a `.launch.yaml` with `mode: polish`, the scope runs more lanes: `max(plane.wip or 2, polish.wip or 4)`. Any other mode (or a missing or broken file) changes nothing. Krebs reads the mode, never writes it; `krebs status` and the tick summary show it in the scope header (`mode:polish`, `mode:launch`) for the modes that are not the default.
 - **What counts as occupied:** an In Progress ticket that has neither `lifecycle:review` nor a hold label. Waiting on a verdict or on a person does not hold a slot. An epic in In Progress does hold one.
 - **Over the limit:** the queue drains. Krebs never evicts a ticket; it dispatches nothing until a slot frees up.
 

@@ -27,7 +27,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { DEFAULT_WIP } from "./lifecycle.mjs";
+import { DEFAULT_WIP, POLISH_DEFAULT_WIP } from "./lifecycle.mjs";
 
 const RETIRED = new Set(["retired", "suspended", "offboarded"]);
 
@@ -96,6 +96,33 @@ export function executionModeAt(projectPath) {
   }
 }
 
+export const LAUNCH_MODES = Object.freeze(["develop", "launch", "polish", "live"]);
+
+/**
+ * The repo's committed `.launch.yaml`: the declared mode and, for polish, its
+ * `polish.wip`. Read with a small tolerant line reader (krebs has no yaml
+ * dependency; only the block style of the declaration shape is understood).
+ * Normalisation is the shared one: lowercased; `steady` is the legacy alias of
+ * develop; a missing, unreadable, broken or unknown declaration reads as
+ * develop and is never an error.
+ */
+export function launchModeAt(projectPath) {
+  const none = { mode: "develop", polishWip: null };
+  let raw;
+  try {
+    raw = readFileSync(join(projectPath, ".launch.yaml"), "utf8");
+  } catch {
+    return none;
+  }
+  const declared = raw.match(/^mode:\s*["']?([A-Za-z-]+)["']?\s*(?:#.*)?$/m)?.[1]?.toLowerCase() ?? "";
+  const mode = declared === "steady" ? "develop" : LAUNCH_MODES.includes(declared) ? declared : "develop";
+  // polish.wip: a `wip:` line indented under the top-level `polish:` block.
+  const block = raw.match(/^polish:[ \t]*(?:#.*)?\n((?:[ \t]+\S[^\n]*(?:\n|$))+)/m)?.[1] ?? "";
+  const wipText = block.match(/^[ \t]+wip:[ \t]*(\d+)[ \t]*(?:#.*)?$/m)?.[1];
+  const polishWip = wipText === undefined ? null : Number(wipText);
+  return { mode, polishWip: Number.isInteger(polishWip) && polishWip >= 0 ? polishWip : null };
+}
+
 /** Does `--board KEY` select this board? KEY is the identifier (case-insensitive) or the board id. */
 export function boardMatches(key, { identifier, boardId }) {
   if (!key) return true;
@@ -108,6 +135,7 @@ export function boardMatches(key, { identifier, boardId }) {
  *
  * opts.activation      bloodbankActivation from the n8n package (required)
  * opts.executionMode   (projectPath) => mode; default reads .project.json
+ * opts.launchMode      (projectPath) => {mode, polishWip}; default reads .launch.yaml
  * opts.board           --board KEY filter (rows on other boards are left out entirely)
  * opts.defaultWorkspace  used when a plane block names no workspace
  * opts.excludeWorkspaces  workspaces Krebs never writes (client boards are owner-reserved:
@@ -117,7 +145,7 @@ export const CLIENT_WORKSPACES = ["automaticai"];
 // Boards the owner keeps off the lifecycle (spec out_of_scope.boards): TIKT is a human content pipeline.
 export const EXEMPT_BOARDS = ["TIKT"];
 
-export function scopesFromRegistry(registry, { activation, executionMode = executionModeAt, board, defaultWorkspace, excludeWorkspaces = CLIENT_WORKSPACES } = {}) {
+export function scopesFromRegistry(registry, { activation, executionMode = executionModeAt, launchMode = launchModeAt, board, defaultWorkspace, excludeWorkspaces = CLIENT_WORKSPACES } = {}) {
   if (typeof activation !== "function") throw new Error("scopesFromRegistry needs the bloodbankActivation function");
   const agents = mapping(mapping(registry)?.agents);
   if (!agents) throw new Error("agents registry has no agents mapping");
@@ -155,7 +183,11 @@ export function scopesFromRegistry(registry, { activation, executionMode = execu
     if (identifier && EXEMPT_BOARDS.includes(identifier.toUpperCase())) { skip(`board ${identifier} is out of scope (owner keeps its own lanes)`); continue; }
     if (plane.krebs === false) { skip("plane.krebs is false (opted out of Krebs dispatch)"); continue; }
 
-    const { wip, warning } = wipOf(plane);
+    const { wip: rowWip, warning } = wipOf(plane);
+    // spec slots.polish: a repo whose committed .launch.yaml declares mode polish
+    // runs more lanes; plane.wip (or the default) still wins when it is larger.
+    const launch = projectPath ? launchMode(projectPath) : { mode: "develop", polishWip: null };
+    const wip = launch.mode === "polish" ? Math.max(rowWip, launch.polishWip ?? POLISH_DEFAULT_WIP) : rowWip;
     scopes.push({
       agentId,
       repo: text(row.repo) || null,
@@ -167,6 +199,7 @@ export function scopesFromRegistry(registry, { activation, executionMode = execu
       scopeLabels: scopeLabelsOf(plane),
       scopeDefault: plane.scope_default === true,
       wip,
+      mode: launch.mode,
       review: plane.review === true,
       warnings: warning ? [warning] : [],
     });

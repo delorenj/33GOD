@@ -35,10 +35,11 @@ const { fleet, nats, registry: bbRegistry } = loadBloodbank();
 const NOW = new Date("2026-11-20T11:37:00Z");
 const at = (hhmmss) => `2026-11-20T${hhmmss}Z`;
 
-async function plan({ issues, now = NOW, wip = 2, review = false, relations = {}, journal = new MemoryJournal() }) {
+async function plan({ issues, now = NOW, wip = 2, review = false, relations = {}, journal = new MemoryJournal(), projectPath = null }) {
   const registry = registryFixture();
   registry.agents["solo-pm"].plane.wip = wip;
   registry.agents["solo-pm"].plane.review = review;
+  if (projectPath) registry.agents["solo-pm"].project_path = projectPath;
   const plane = new FakePlane({ [SOLO]: { issues, relations } });
   const { scopes, skipped } = scopesFromRegistry(registry, { activation: bbRegistry.bloodbankActivation, executionMode: () => "legacy", board: "SOLO" });
   let inspected = [];
@@ -326,7 +327,7 @@ test("buildStatus and the human formats: stable JSON shape, idle line, why-nothi
   assert.equal(status.tick.last.triaged, 1);
   assert.equal(status.tick.nextEstimate, "2026-11-20T11:40:00.000Z");
   const s = status.scopes[0];
-  assert.deepEqual(Object.keys(s), ["board", "boardId", "agentId", "scopeLabels", "wip", "occupied", "free", "overLimit", "reviewRequired", "idle", "inFlight", "idleReason", "tickets", "counts", "recent", "warnings", "errors"]);
+  assert.deepEqual(Object.keys(s), ["board", "boardId", "agentId", "scopeLabels", "wip", "mode", "occupied", "free", "overLimit", "reviewRequired", "idle", "inFlight", "idleReason", "tickets", "counts", "recent", "warnings", "errors"]);
   assert.deepEqual(Object.keys(s.tickets[0]), ["key", "title", "lane", "state", "labels", "updatedAt", "stage", "stageLabel", "reason", "eta", "etaNote", "queuePosition", "blockedBy"]);
   assert.equal(s.tickets.length, 7);
   assert.match(s.idleReason, /5 Todo ticket\(s\) untriaged; triage is serialized at 1 per 10 min per scope; next: SOLO-12 at ~11:40Z, last: SOLO-28 at ~12:20Z/);
@@ -342,6 +343,28 @@ test("buildStatus and the human formats: stable JSON shape, idle line, why-nothi
   const idleScope = { ...s, idle: true, tickets: [], inFlight: [], errors: [], board: "ZZ", agentId: "zz-pm", scopeLabels: [], occupied: [] };
   assert.match(formatStatus({ ...status, scopes: [idleScope] }), /idle \(1\): ZZ/);
   assert.equal(formatTicket(status, { row: s.tickets[0], scope: s, trail: s.recent, turns: [] }).includes(s.tickets[0].key), true);
+});
+
+test("polish mode: the scope gets more lanes and its headers say mode:polish", async () => {
+  const repo = tempDir();
+  writeFileSync(join(repo, ".launch.yaml"), "mode: polish\npolish:\n  wip: 5\n");
+  const statusOf = (p) =>
+    buildStatus({
+      inspected: p.inspected,
+      journalEntries: [],
+      nowMs: NOW.getTime(),
+      turnsByScope: new Map([[`${SOLO}|solo-pm`, { ok: true, error: null, byTicket: new Map() }]]),
+      candystore: { ok: true, error: null },
+      lastBoardTurn: new Map(),
+      reviewsSent: new Map(),
+    });
+  const polish = statusOf(await plan({ issues: PX_ISSUES(), projectPath: repo }));
+  const s = polish.scopes[0];
+  assert.deepEqual([s.mode, s.wip], ["polish", 5], "polish.wip 5 beats the row's 2");
+  assert.match(formatStatus(polish), /^== SOLO -> solo-pm {2}mode:polish {3}wip 0\/5/m);
+  const develop = statusOf(await plan({ issues: PX_ISSUES() }));
+  assert.equal(develop.scopes[0].mode, "develop");
+  assert.match(formatStatus(develop), /^== SOLO -> solo-pm {3}wip 0\/2/m, "develop headers are unchanged");
 });
 
 test("recentActivity keeps the newest N actions of one agent only", () => {

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { executionModeAt, scopesFromRegistry, wipOf } from "../registry.mjs";
+import { executionModeAt, launchModeAt, scopesFromRegistry, wipOf } from "../registry.mjs";
 import { loadBloodbank } from "../deps.mjs";
 import { registryFixture, tempDir, TOLT } from "./helpers.mjs";
 
@@ -79,6 +79,51 @@ test("executionModeAt: .project.json execution.mode, legacy when absent or unrea
   assert.equal(executionModeAt(managed), "shadow");
   assert.equal(executionModeAt(plain), "legacy");
   assert.equal(executionModeAt(join(dir, "missing")), "legacy");
+});
+
+test("launchModeAt: mode and polish.wip, tolerantly; steady is develop; broken is develop, never an error", () => {
+  const dir = tempDir();
+  const repo = join(dir, "repo");
+  mkdirSync(repo);
+  assert.deepEqual(launchModeAt(join(dir, "missing")), { mode: "develop", polishWip: null });
+  writeFileSync(join(repo, ".launch.yaml"), "mode: polish\ndeclared: 2026-11-27\npolish:\n  focus: [ux]\n  wip: 6\n  cadence: \"*/15 * * * *\"\n");
+  assert.deepEqual(launchModeAt(repo), { mode: "polish", polishWip: 6 });
+  writeFileSync(join(repo, ".launch.yaml"), "mode: polish\n");
+  assert.deepEqual(launchModeAt(repo), { mode: "polish", polishWip: null });
+  writeFileSync(join(repo, ".launch.yaml"), 'mode: "Launch"  # racing\n');
+  assert.deepEqual(launchModeAt(repo), { mode: "launch", polishWip: null });
+  writeFileSync(join(repo, ".launch.yaml"), "mode: steady\n");
+  assert.equal(launchModeAt(repo).mode, "develop", "steady is the legacy alias of develop");
+  writeFileSync(join(repo, ".launch.yaml"), "mode: whatever\n");
+  assert.equal(launchModeAt(repo).mode, "develop", "unknown modes read as develop");
+  writeFileSync(join(repo, ".launch.yaml"), "\x00 not: [yaml\n  - ][\n");
+  assert.deepEqual(launchModeAt(repo), { mode: "develop", polishWip: null }, "a broken file is develop, never an error");
+  writeFileSync(join(repo, ".launch.yaml"), "live:\n  mode: polish\n  wip: 9\n");
+  assert.deepEqual(launchModeAt(repo), { mode: "develop", polishWip: null }, "only top-level mode: and polish: count");
+});
+
+test("scopes: a repo declaring .launch.yaml mode polish gets max(plane.wip or 2, polish.wip or 4)", () => {
+  const dir = tempDir();
+  const mk = (name, yaml) => {
+    const p = join(dir, name);
+    mkdirSync(p);
+    writeFileSync(join(p, ".launch.yaml"), yaml);
+    return p;
+  };
+  const reg = registryFixture();
+  reg.agents["tolt-pm"].project_path = mk("polish-default", "mode: polish\n"); // no plane.wip, no polish.wip
+  reg.agents["tolt-director"].project_path = mk("polish-6", "mode: polish\npolish:\n  wip: 6\n");
+  reg.agents["lost-things-forge-pm"].project_path = mk("broken", "mode: [broken\n  ][\n");
+  reg.agents["other-pm"].project_path = mk("launch", "mode: launch\n");
+  reg.agents["solo-pm"].project_path = mk("polish-big-row", "mode: polish\npolish:\n  wip: 3\n");
+  reg.agents["solo-pm"].plane.wip = 7; // an explicit larger plane.wip still wins
+  const { scopes } = scopesFromRegistry(reg, { activation, executionMode: legacy });
+  const by = Object.fromEntries(scopes.map((s) => [s.agentId, s]));
+  assert.deepEqual([by["tolt-pm"].wip, by["tolt-pm"].mode], [4, "polish"], "polish defaults to 4 lanes");
+  assert.deepEqual([by["tolt-director"].wip, by["tolt-director"].mode], [6, "polish"]);
+  assert.deepEqual([by["lost-things-forge-pm"].wip, by["lost-things-forge-pm"].mode], [2, "develop"], "broken yaml: unchanged, never an error");
+  assert.deepEqual([by["other-pm"].wip, by["other-pm"].mode], [2, "launch"], "launch lanes unchanged, mode carried");
+  assert.deepEqual([by["solo-pm"].wip, by["solo-pm"].mode], [7, "polish"]);
 });
 
 test("scopes: client workspaces and plane.krebs false are never scopes", () => {

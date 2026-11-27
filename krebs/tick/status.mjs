@@ -301,7 +301,7 @@ function fmtMin(n) {
 /**
  * Classify one scope.
  *
- *   scope    {agentId, identifier, boardId, wip, review, ...}
+ *   scope    {agentId, identifier, boardId, wip, mode, review, ...}
  *   out      the tick's plan for this scope (a dry-run report scope)
  *   tickets  normalized tickets owned by the scope (select.normalizeTicket)
  *   nowMs    the clock
@@ -659,6 +659,7 @@ export function buildStatus({ inspected, journalEntries, nowMs, turnsByScope, ca
       agentId: scope.agentId,
       scopeLabels: scope.scopeLabels ?? [],
       wip: scope.wip,
+      mode: scope.mode ?? "develop",
       occupied: out.occupied,
       free: out.free,
       overLimit: out.overLimit,
@@ -737,7 +738,8 @@ function parkedSummary(rows) {
 
 function scopeHeader(s) {
   const labels = s.scopeLabels.length ? ` ${s.scopeLabels.join("+")}` : "";
-  return `${s.board}${labels} -> ${s.agentId}`;
+  const mode = s.mode === "polish" || s.mode === "launch" ? `  mode:${s.mode}` : "";
+  return `${s.board}${labels} -> ${s.agentId}${mode}`;
 }
 
 export function formatStatus(status, { compact = false, ticket = null } = {}) {
