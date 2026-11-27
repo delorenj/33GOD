@@ -45,7 +45,7 @@ Scopes come from `~/.hermes/agents-registry.yaml`, one per row that has a `plane
 
 On a shared board, each ticket is routed by `resolveFleetAgentForBoard`, the same resolver the n8n Fleet node and pickup chip use (`scope_label`, then `scope_default`). Krebs and the chip therefore always agree on which scope owns a ticket. Unlabelled TOLT intake belongs to `tolt-pm`.
 
-Row knobs: `plane.wip` (non-negative integer, default 2) and `plane.review` (when `true`, handback is `lifecycle:review`; otherwise the ticket is closed Done). The handback rule is appended to the dispatch prompt.
+Row knobs: `plane.wip` (non-negative integer, default 2) and `plane.review` (when `true`, handback is `lifecycle:review`; otherwise the ticket is closed Done). The handback rule is appended to the dispatch prompt. When the scope's repo commits a `.launch.yaml` with `mode: polish`, the scope runs more lanes: `max(plane.wip or 2, polish.wip or 4)`; the declared mode is carried on the scope as `mode` and shown in status headers (`mode:polish`, `mode:launch`) when it is not the default.
 
 ## Journal
 
@@ -88,7 +88,7 @@ With `krebs watch` alive, N untriaged tickets dropped into Todo at once on one s
           overdue: bool, nextEstimate },
   candystore: { ok, error, url },
   registry, journal,
-  scopes: [ { board, boardId, agentId, scopeLabels, wip, occupied: [key], free, overLimit, reviewRequired,
+  scopes: [ { board, boardId, agentId, scopeLabels, wip, mode, occupied: [key], free, overLimit, reviewRequired,
               idle: bool,                       // no Todo / In Progress ticket at all
               inFlight: [ {key, title, kind, reason, state: running|queued|detached|sent, since, runningMinutes, invocationId} ],
               idleReason: string | null,        // set when inFlight is empty

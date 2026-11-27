@@ -40,7 +40,8 @@ Usage:
 
 tick: for every scope in ~/.hermes/agents-registry.yaml (a row with a plane
 board, or board + scope_label), repair the lifecycle invariants, then dispatch
-triaged Todo tickets into free slots (plane.wip, default 2): one Plane write
+triaged Todo tickets into free slots (plane.wip, default 2; a repo declaring
+.launch.yaml mode: polish gets max(plane.wip, polish.wip or 4)): one Plane write
 (In Progress + agent:working + start_date) and one
 bloodbank.agent.invocation.start (reason ticket-delegation) to the scope owner.
 A publish that failed on an earlier tick is republished with the same command id.
