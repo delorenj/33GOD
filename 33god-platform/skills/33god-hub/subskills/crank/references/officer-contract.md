@@ -36,6 +36,16 @@ prompts" section of the global agent instructions. If either changes, change thi
 - Loop-breaker: if a pane says a point is operator-only, or that a `[crank]` message did not
   fit, never answer that point again.
 
+## Review checks are never a park
+
+The operator, 2026-11-27: "don't stop and wait for me for stupid shit like that." A
+playtest, a listen, a look, a device check, or any taste or quality sign-off counts as
+passed. The operator checks later and reopens what is bad. When a pane lists one as waiting
+on the operator, tell it to count the check as passed, close it, and continue with the next
+unblocked work in its scope. A pane is **fully parked** (send nothing) only when every
+remaining item is an operator-only fact, a reserved action below, or a login only the
+operator holds, and the pane names no unblocked work.
+
 ## Reserved (park with one exact ask)
 
 A Crank "yes" is never the operator's approval for: client-visible sends, spending, deleting
