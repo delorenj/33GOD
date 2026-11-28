@@ -67,8 +67,9 @@ Changes to these boundaries require an explicit product decision. Routine implem
    have skipped dispatch, and a PM handoff does not prove a worker claimed or
    executed the ticket. If a remote target becomes unreachable, bound the
    health probes and stop dependent work rather than polling for hours. After
-   recovery, check affected services, read completed task and verifier outputs,
-   and resume only unfinished tasks. A workflow completion notice is neither
+   recovery or a delayed wakeup, read the latest task and verifier outputs and
+   resume only unfinished work; check affected services when recovering.
+   A workflow completion notice is neither
    user approval nor an acceptance result. Read requested or already-running
    review outputs before final closeout: fix confirmed in-scope findings, rerun
    their focused checks, and name any deferred finding and why. Small verified

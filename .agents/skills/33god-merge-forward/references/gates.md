@@ -59,8 +59,10 @@ Select checks that demonstrate the slice's actual behavior:
 - Holocene code changes: typecheck and build; add browser interaction or live
   route verification when the changed behavior is visible there.
 - Factory asset changes: read the fixed overview and station camera views
-  before shaping the model, then inspect the meaningful animation from those
-  views in exported playback, not just in a modeling close-up. The Factory
+  before shaping the model. Compare early, middle, and late poses of meaningful
+  action beats from those views in exported playback: travel hidden behind
+  props, an output covering the screen, or a parked pose can obscure the action
+  despite a clean modeling close-up. The Factory
   exporter can drop a property held constant for a whole clip and restore its
   resting value; check held states such as lit lamps in the export. A passing
   verifier does not prove fixed-camera readability; do not move an out-of-scope
