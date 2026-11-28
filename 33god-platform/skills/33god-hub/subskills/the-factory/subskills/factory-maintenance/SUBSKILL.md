@@ -79,6 +79,12 @@ this run taught you into this file: fix the step that misled you or add one date
 
 ### Lessons (dated, newest first; fold into the steps above when one generalises)
 
+- A tall screen yawed toward the clip camera hides everything behind-left of it (r1's door slot and channel were
+  invisible): lay the Work beats on the camera's side and in front of the screen's plane, and check with the line
+  from each part toward (sin 65°, cos 65°). A poster's corner is canon as a form pad (schema) plus a stamp, not a
+  yellow pad (a sticky note off the belt is banned) or a "clip" (a durable consumer); key the sheet's writing after
+  the code's success point (the 200), never during Accept. Keep a hidden part at a uniform 0.001 scale: (1, 1, 0.01)
+  left a visible hairline (2026-11-28, agent-pad, entrance: `manifest-replaces` failed again as expected).
 - The glTF exporter drops a constant channel, and three then shows the node's rest pose: a lamp keyed lit for a
   whole clip (`start_on`, no change) rendered off. List each animation's channels from the glb JSON after a build;
   give a held non-rest value a small breathe. The forge camera's fit is `max(footprint, height)`, so a tall
